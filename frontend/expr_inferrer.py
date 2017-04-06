@@ -403,6 +403,25 @@ def infer_binary_operation(node, context, constraints_problem):
     return binary_operation_type(left_type, node.op, right_type, constraints_problem)
 
 
+def _unary_operation_type(op, value_type):
+    if isinstance(op, ast.Invert):
+        if isinstance(value_type, Generic):
+            value_type.narrow([TInt()])
+        elif not value_type.is_subtype(TInt()):
+            raise TypeError("Cannot perform ~ operation on type {}.".format(value_type))
+        return TInt()
+
+    if isinstance(value_type, Generic):
+        value_type.narrow([TNumber()])
+        return value_type
+
+    if isinstance(value_type, TNumber):
+        if isinstance(value_type, TBool):
+            return TInt()
+        return value_type
+    raise TypeError("Cannot perform unary operation on type {}.".format(value_type))
+
+
 def infer_unary_operation(node, context, constraints_problem):
     """Infer the type for unary operations
 
@@ -411,22 +430,10 @@ def infer_unary_operation(node, context, constraints_problem):
     if isinstance(node.op, ast.Not):  # (not expr) always gives bool type
         return TBool()
 
-    unary_type = UnionTypes({infer(node.operand, context, constraints_problem)})
+    unary_type = infer(node.operand, context, constraints_problem)
     result_type = UnionTypes()
-    for t in unary_type.types:
-        if isinstance(node.op, ast.Invert):
-            if t.is_subtype(TInt()):
-                result_type.union(TInt())
-            else:
-                raise TypeError("Cannot perform ~ operation on type {}.".format(t))
-        else:
-            if isinstance(t, TNumber):
-                if isinstance(t, TBool):
-                    result_type.union(TInt())
-                else:
-                    result_type.union(t)
-            else:
-                raise TypeError("Cannot perform unary operation on type {}.".format(t))
+    for t in (unary_type.types if isinstance(unary_type, UnionTypes) else [unary_type]):
+        result_type.union(_unary_operation_type(node.op, t))
     if len(result_type.types) == 1:
         return list(result_type.types)[0]
     return result_type
