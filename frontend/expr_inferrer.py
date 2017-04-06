@@ -493,18 +493,25 @@ def _infer_index_subscript(indexed_type, index_type, constraints_problem):
 
 
 def _infer_slice_subscript(sliced_type):
+    if isinstance(sliced_type, Generic):
+        sliced_type.narrow([TSequence()])
+        return sliced_type
     if not pred.is_sequence(sliced_type):
         raise TypeError("Cannot slice a non sequence.")
     if isinstance(sliced_type, TTuple):
         return sliced_type.get_possible_tuple_slicings()
-    if pred.is_sequence(sliced_type):
-        return sliced_type
-    raise TypeError("Cannot slice a non sequence.")
+
+    return sliced_type
 
 
-def _all_int(union):
-    for t in union.types:
-        if not t.is_subtype(TInt()):
+def _all_int(types):
+    for t in (types.types if isinstance(types, UnionTypes) else [types]):
+        if isinstance(t, Generic):
+            try:
+                t.narrow([TInt()])
+            except ValueError:
+                return False
+        elif not t.is_subtype(TInt()):
             return False
     return True
 
@@ -527,20 +534,20 @@ def infer_subscript(node, context, constraints_problem):
                 subscript_type.union(_infer_index_subscript(indexed_t, index_t, constraints_problem))
     else:
         if node.slice.lower:
-            lower_type = UnionTypes(infer(node.slice.lower, context, constraints_problem))
+            lower_type = infer(node.slice.lower, context, constraints_problem)
             if not _all_int(lower_type):
                 raise KeyError("Slicing lower bound should be integer.")
         if node.slice.upper:
-            upper_type = UnionTypes(infer(node.slice.upper, context, constraints_problem))
+            upper_type = infer(node.slice.upper, context, constraints_problem)
             if not _all_int(upper_type):
                 raise KeyError("Slicing upper bound should be integer.")
         if node.slice.step:
-            step_type = UnionTypes(infer(node.slice.step, context, constraints_problem))
+            step_type = infer(node.slice.step, context, constraints_problem)
             if not _all_int(step_type):
                 raise KeyError("Slicing step should be integer.")
 
-        for indexed_t in indexed_types.types:
-            subscript_type.union(indexed_t)
+        for indexed_t in (indexed_types.types if isinstance(indexed_types, UnionTypes) else [indexed_types]):
+            subscript_type.union(_infer_slice_subscript(indexed_t))
 
     if len(subscript_type.types) == 1:
         return list(subscript_type.types)[0]
