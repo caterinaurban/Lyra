@@ -151,15 +151,15 @@ def _addition_constraint(left_type, right_type, result_type):
 operation_id = 0
 
 
-def _perform_generic_binary_operation(left_generic, right_generic, result_types,
-                                      constraints_problem, constraint_func=None):
+def _perform_generic_operation(generics, result_types,
+                               constraints_problem, constraint_func=None):
     global operation_id
     operation_id += 1
     tmp_name = "tmp" + str(operation_id)
     result_type = Generic(result_types, tmp_name, constraints_problem)
     constraints_problem.addVariable(tmp_name, result_type)
     if constraint_func:
-        constraints_problem.addConstraint(constraint_func, [left_generic.variable, right_generic.variable, tmp_name])
+        constraints_problem.addConstraint(constraint_func, [v.variable for v in generics] + [tmp_name])
     return result_type
 
 
@@ -168,8 +168,8 @@ def _infer_add(left_type, right_type, constraints_problem):
         left_type.narrow([TNumber(), TSequence()])
         right_type.narrow([TNumber(), TSequence()])
 
-        return _perform_generic_binary_operation(left_type, right_type, [TNumber(), TSequence()],
-                                                 constraints_problem, _addition_constraint)
+        return _perform_generic_operation([left_type, right_type], [TNumber(), TSequence()],
+                                          constraints_problem, _addition_constraint)
 
     if isinstance(right_type, Generic):
         # Swap
@@ -230,8 +230,8 @@ def _infer_mult(left_type, right_type, constraints_problem):
         left_type.narrow([TNumber(), TSequence()])
         right_type.narrow([TNumber(), TSequence()])
 
-        return _perform_generic_binary_operation(left_type, right_type, [TNumber(), TSequence()],
-                                                 constraints_problem, _mult_constraint)
+        return _perform_generic_operation([left_type, right_type], [TNumber(), TSequence()],
+                                          constraints_problem, _mult_constraint)
 
     if isinstance(right_type, Generic):
         # Swap
@@ -282,8 +282,8 @@ def _infer_div(left_type, right_type, constraints_problem):
         left_type.narrow([TNumber()])
         right_type.narrow([TNumber()])
 
-        return _perform_generic_binary_operation(left_type, right_type, [TFloat(), TComplex()],
-                                                 constraints_problem, _div_constraint)
+        return _perform_generic_operation([left_type, right_type], [TFloat(), TComplex()],
+                                          constraints_problem, _div_constraint)
 
     if isinstance(right_type, Generic):
         # Swap
@@ -294,13 +294,8 @@ def _infer_div(left_type, right_type, constraints_problem):
     if isinstance(left_type, Generic):
         left_type.narrow([TNumber()])
 
-        global operation_id
-        operation_id += 1
-        tmp_name = "tmp" + str(operation_id)
-        result_type = Generic([TFloat(), TComplex()], tmp_name, constraints_problem)
-        constraints_problem.addVariable(tmp_name, result_type)
-        constraints_problem.addConstraint(_div_constraint_one_generic, [left_type.variable, tmp_name])
-        return result_type
+        return _perform_generic_operation([left_type], [TFloat(), TComplex()], constraints_problem,
+                                          _div_constraint_one_generic)
 
     if isinstance(left_type, TNumber) and isinstance(right_type, TNumber):
         if isinstance(left_type, TComplex) or isinstance(right_type, TComplex):
@@ -314,8 +309,7 @@ def _infer_arithmetic(left_type, right_type, constraints_problem):
         left_type.narrow([TNumber()])
         right_type.narrow([TNumber()])
 
-        return _perform_generic_binary_operation(left_type, right_type, [TNumber()],
-                                                 constraints_problem)
+        return _perform_generic_operation([], [TNumber()], constraints_problem)
 
     if isinstance(right_type, Generic):
         # Swap
@@ -345,8 +339,8 @@ def _infer_bitwise(left_type, right_type, constraints_problem):
         left_type.narrow([TInt()])
         right_type.narrow([TInt()])
 
-        return _perform_generic_binary_operation(left_type, right_type, [TInt()],
-                                                 constraints_problem)
+        return _perform_generic_operation([], [TInt()],
+                                          constraints_problem)
 
     if isinstance(right_type, Generic):
         # Swap
@@ -454,9 +448,31 @@ def infer_if_expression(node, context, constraints_problem):
         return result_type
 
 
-def _infer_index_subscript(indexed_type, index_type):
+def _index_constraint(indexed_type, index_type, result_type):
+    if isinstance(indexed_type, TSequence):
+        return index_type.is_subtype(TInt())
+    return isinstance(indexed_type, TDictionary)
+
+
+def _infer_index_subscript(indexed_type, index_type, constraints_problem):
+    if isinstance(indexed_type, Generic) and isinstance(indexed_type, Generic):
+        indexed_type.narrow([TSequence(), TDictionary()])
+        index_type.narrow([TInt(), Type()])
+
+        return _perform_generic_operation([indexed_type, index_type], [Type()], constraints_problem, _index_constraint)
+
+    if isinstance(indexed_type, Generic):
+        indexed_type.narrow([TSequence(), TDictionary()])
+        return _perform_generic_operation([], [Type()], constraints_problem)
+
+    if isinstance(index_type, Generic):
+        if isinstance(indexed_type, TSequence):
+            index_type.narrow([TInt()])
+        elif isinstance(indexed_type, TDictionary):
+            index_type.narrow([indexed_type.key_type])
+
     if pred.is_sequence(indexed_type):
-        if not index_type.is_subtype(TInt()):
+        if not (index_type.is_subtype(TInt()) or isinstance(index_type, Generic)):
             raise KeyError("Cannot index a sequence with an index of type {}.".format(index_type))
 
     if isinstance(indexed_type, TString):
@@ -501,14 +517,14 @@ def infer_subscript(node, context, constraints_problem):
         node: the subscript node to be inferred
     """
 
-    indexed_types = UnionTypes(infer(node.value, context, constraints_problem))
+    indexed_types = infer(node.value, context, constraints_problem)
 
     subscript_type = UnionTypes()
     if isinstance(node.slice, ast.Index):
-        index_types = UnionTypes(infer(node.slice.value, context, constraints_problem))
-        for index_t in index_types.types:
-            for indexed_t in indexed_types.types:
-                subscript_type.union(_infer_index_subscript(indexed_t, index_t))
+        index_types = infer(node.slice.value, context, constraints_problem)
+        for index_t in (index_types.types if isinstance(index_types, UnionTypes) else [index_types]):
+            for indexed_t in (indexed_types.types if isinstance(indexed_types, UnionTypes) else [indexed_types]):
+                subscript_type.union(_infer_index_subscript(indexed_t, index_t, constraints_problem))
     else:
         if node.slice.lower:
             lower_type = UnionTypes(infer(node.slice.lower, context, constraints_problem))

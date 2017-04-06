@@ -161,7 +161,10 @@ class Generic(list, Type):
         return hash(self.get_name())
 
     def get_name(self):
-        return "Generic" + str(self)
+        return "Generic[" + ",".join([x.get_name() for x in self]) + "]"
+
+    def __str__(self):
+        return self.get_name()
 
     def __init__(self, set, variable=None, constraint_problem=None):
         """
