@@ -57,6 +57,7 @@ def _infer_assignment_target(target, context, value_type):
                 raise TypeError("The type of {} is {}. Cannot assign it to {}.".format(target.id, var_type, value_type))
         else:
             context.set_type(target.id, value_type)
+
     elif isinstance(target, ast.Tuple) or isinstance(target, ast.List):  # Tuple/List assignment
         if not pred.is_sequence(value_type):
             raise ValueError("Cannot unpack a non sequence.")
@@ -102,10 +103,10 @@ def _infer_assignment_target(target, context, value_type):
         raise NotImplementedError("The inference for {} assignment is not supported.".format(type(target).__name__))
 
 
-def _infer_assign(node, context):
+def _infer_assign(node, context, constraint_problem):
     """Infer the types of target variables in an assignment node."""
-    value_type = expr.infer(node.value,
-                            context)  # The type of the value assigned to the targets in the assignment statement.
+    # The type of the value assigned to the targets in the assignment statement.
+    value_type = expr.infer(node.value, context, constraint_problem)
     for target in node.targets:
         _infer_assignment_target(target, context, value_type)
 
@@ -288,9 +289,9 @@ def _infer_try(node, context):
     return try_type
 
 
-def infer(node, context):
+def infer(node, context, constraint_problem=None):
     if isinstance(node, ast.Assign):
-        return _infer_assign(node, context)
+        return _infer_assign(node, context, constraint_problem)
     elif isinstance(node, ast.AugAssign):
         return _infer_augmented_assign(node, context)
     elif isinstance(node, ast.Return):
