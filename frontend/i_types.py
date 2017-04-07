@@ -1,4 +1,3 @@
-from abc import ABCMeta
 from frontend.context import Context
 import os
 
@@ -48,7 +47,7 @@ class SubtypesTree:
 subtypes_tree = SubtypesTree()
 
 
-class Type():
+class Type:
     """This class is the top-parent of all possible inferred types of a Python program.
     Every type has its own class that inherits this class.
     """
@@ -161,7 +160,7 @@ class Generic(list, Type):
         return hash(self.get_name())
 
     def get_name(self):
-        return "Generic[" + ",".join([x.get_name() for x in self]) + "]"
+        return "Generic{{{}}}[{}]".format(self.variable,",".join([x.get_name() for x in self]))
 
     def __str__(self):
         return self.get_name()
@@ -214,6 +213,20 @@ class Generic(list, Type):
             raise ValueError("Narrowed domain is empty.")
 
         self.constraint_problem.setDomain(self.variable, self)
+
+    def intersect(self, other_generic):
+        result = set()
+        for t1 in self:
+            for t2 in other_generic:
+                if t1.is_subtype(t2):
+                    result.add(t1)
+                elif t2.is_subtype(t1):
+                    result.add(t2)
+        return list(result)
+
+    def setVariable(self, variable):
+        self.variable = variable
+        self.constraint_problem.addVariable(variable, self)
 
     def resetState(self):
         """
@@ -434,11 +447,12 @@ class TFunction(TObject):
         arg_types ([Type]): A list of types for the function arguments.
     """
 
-    def __init__(self, t_r, t_a):
+    def __init__(self, t_r, t_a, constraints):
         super().__init__()
         self.return_type = t_r
         self.arg_types = t_a
         self.name = "function"
+        self.constraints = constraints
 
     def is_subtype(self, t):
         if isinstance(t, Generic) and t.has_supertype(self):

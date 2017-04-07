@@ -151,12 +151,16 @@ def _addition_constraint(left_type, right_type, result_type):
 operation_id = 0
 
 
-def _perform_generic_operation(generics, result_types,
+def _perform_generic_operation(generics, result_type,
                                constraints_problem, constraint_func=None):
     global operation_id
     operation_id += 1
     tmp_name = "tmp" + str(operation_id)
-    result_type = Generic(result_types, tmp_name, constraints_problem)
+    if not isinstance(result_type, Generic):
+        result_type = Generic(result_type, tmp_name, constraints_problem)
+    else:
+        result_type.variable = tmp_name
+        result_type.constraint_problem = constraints_problem
     constraints_problem.addVariable(tmp_name, result_type)
     if constraint_func:
         constraints_problem.addConstraint(constraint_func, [v.variable for v in generics] + [tmp_name])
@@ -168,14 +172,14 @@ def _infer_add(left_type, right_type, constraints_problem):
         left_type.narrow([TNumber(), TSequence()])
         right_type.narrow([TNumber(), TSequence()])
 
-        return _perform_generic_operation([left_type, right_type], [TNumber(), TSequence()],
+        result_types = left_type.intersect(right_type)
+
+        return _perform_generic_operation([left_type, right_type], result_types,
                                           constraints_problem, _addition_constraint)
 
     if isinstance(right_type, Generic):
         # Swap
-        tmp = right_type
-        right_type = left_type
-        left_type = tmp
+        left_type, right_type = right_type, left_type
 
     if isinstance(left_type, Generic):
         if isinstance(right_type, TNumber):
@@ -235,9 +239,7 @@ def _infer_mult(left_type, right_type, constraints_problem):
 
     if isinstance(right_type, Generic):
         # Swap
-        tmp = right_type
-        right_type = left_type
-        left_type = tmp
+        left_type, right_type = right_type, left_type
 
     if isinstance(left_type, Generic):
         if right_type.is_subtype(TSequence()):
@@ -287,9 +289,7 @@ def _infer_div(left_type, right_type, constraints_problem):
 
     if isinstance(right_type, Generic):
         # Swap
-        tmp = right_type
-        right_type = left_type
-        left_type = tmp
+        left_type, right_type = right_type, left_type
 
     if isinstance(left_type, Generic):
         left_type.narrow([TNumber()])
@@ -313,9 +313,7 @@ def _infer_arithmetic(left_type, right_type, constraints_problem):
 
     if isinstance(right_type, Generic):
         # Swap
-        tmp = right_type
-        right_type = left_type
-        left_type = tmp
+        left_type, right_type = right_type, left_type
 
     if isinstance(left_type, Generic):
         left_type.narrow([TNumber()])
@@ -344,9 +342,7 @@ def _infer_bitwise(left_type, right_type, constraints_problem):
 
     if isinstance(right_type, Generic):
         # Swap
-        tmp = right_type
-        right_type = left_type
-        left_type = tmp
+        left_type, right_type = right_type, left_type
 
     if isinstance(left_type, Generic):
         left_type.narrow([TInt()])
@@ -455,15 +451,21 @@ def _index_constraint(indexed_type, index_type, result_type):
 
 
 def _infer_index_subscript(indexed_type, index_type, constraints_problem):
-    if isinstance(indexed_type, Generic) and isinstance(indexed_type, Generic):
-        indexed_type.narrow([TSequence(), TDictionary()])
+    if isinstance(index_type, Generic) and isinstance(indexed_type, Generic):
+        v_type = Generic([Type()])
+        indexed_type.narrow([TSequence(), TDictionary(t_v=v_type)])
         index_type.narrow([TInt(), Type()])
 
-        return _perform_generic_operation([indexed_type, index_type], [Type()], constraints_problem, _index_constraint)
+        return _perform_generic_operation([indexed_type, index_type], v_type, constraints_problem, _index_constraint)
 
     if isinstance(indexed_type, Generic):
-        indexed_type.narrow([TSequence(), TDictionary()])
-        return _perform_generic_operation([], [Type()], constraints_problem)
+        v_type = Generic([Type()])
+        if not index_type.is_subtype(TInt()):
+            indexed_type.narrow([TDictionary(t_k=index_type, t_v=v_type)])
+        else:
+            indexed_type.narrow([TSequence(), TDictionary(t_k=index_type, t_v=v_type)])
+
+        return _perform_generic_operation([], v_type, constraints_problem)
 
     if isinstance(index_type, Generic):
         if isinstance(indexed_type, TSequence):

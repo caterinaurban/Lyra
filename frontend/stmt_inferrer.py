@@ -12,6 +12,10 @@ Infers the types for the following expressions:
     - With(withitem* items, stmt* body)
     - AsyncWith(withitem* items, stmt* body)
     - Try(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)
+    - FunctionDef(identifier name, arguments args,
+                       stmt* body, expr* decorator_list, expr? returns)
+    - AsyncFunctionDef(identifier name, arguments args,
+                             stmt* body, expr* decorator_list, expr? returns)
 
     TODO:
     - Import(alias* names)
@@ -26,6 +30,7 @@ import frontend.predicates as pred
 import sys
 
 from frontend.i_types import *
+from frontend.constraint.constraint import *
 
 
 def _infer_assignment_target(target, context, value_type):
@@ -56,6 +61,9 @@ def _infer_assignment_target(target, context, value_type):
             elif not value_type.is_subtype(var_type):
                 raise TypeError("The type of {} is {}. Cannot assign it to {}.".format(target.id, var_type, value_type))
         else:
+            if isinstance(value_type, Generic) and not value_type.variable:
+                # Happens only when the target is an iteration target
+                value_type.setVariable(target.id)
             context.set_type(target.id, value_type)
 
     elif isinstance(target, ast.Tuple) or isinstance(target, ast.List):  # Tuple/List assignment
@@ -113,7 +121,7 @@ def _infer_assign(node, context, constraint_problem):
     return TNone()
 
 
-def _infer_augmented_assign(node, context):
+def _infer_augmented_assign(node, context, constraint_problem):
     """Infer the types for augmented assignments
 
     Examples:
@@ -122,14 +130,14 @@ def _infer_augmented_assign(node, context):
 
     TODO: Attribute augmented assignment
     """
-    target_type = expr.infer(node.target, context)
-    value_type = expr.infer(node.value, context)
-    result_type = expr.binary_operation_type(target_type, node.op, value_type)
+    target_type = expr.infer(node.target, context, constraint_problem)
+    value_type = expr.infer(node.value, context, constraint_problem)
+    result_type = expr.binary_operation_type(target_type, node.op, value_type, constraint_problem)
     if isinstance(node.target, ast.Name):
         # If result_type was a supertype of target_type, replace it in the context
         context.set_type(node.target.id, result_type)
     elif isinstance(node.target, ast.Subscript):
-        indexed_type = expr.infer(node.target.value, context)
+        indexed_type = expr.infer(node.target.value, context, constraint_problem)
         if isinstance(indexed_type, TString):
             raise TypeError("String objects don't support item assignment.")
         elif isinstance(indexed_type, TTuple):
@@ -151,7 +159,7 @@ def _infer_augmented_assign(node, context):
     return TNone()
 
 
-def _delete_element(target, context):
+def _delete_element(target, context, constraint_problem):
     """Remove (if needed) a target from the context
 
     Cases:
@@ -163,33 +171,33 @@ def _delete_element(target, context):
     """
     if isinstance(target, (ast.Tuple, ast.List)):  # Multiple deletions
         for elem in target.elts:
-            _delete_element(elem, context)
+            _delete_element(elem, context, constraint_problem)
     elif isinstance(target, ast.Name):
         context.delete_type(target.id)
     elif isinstance(target, ast.Subscript):
-        indexed_type = expr.infer(target.value, context)
+        indexed_type = expr.infer(target.value, context, constraint_problem)
         if isinstance(indexed_type, TString):
             raise TypeError("String objects don't support item deletion.")
         elif isinstance(indexed_type, TTuple):
             raise TypeError("Tuple objects don't support item deletion.")
 
 
-def _infer_delete(node, context):
+def _infer_delete(node, context, constraint_problem):
     """Remove (if needed) the type of the deleted items in the current context"""
     for target in node.targets:
-        _delete_element(target, context)
+        _delete_element(target, context, constraint_problem)
 
     return TNone()
 
 
-def _infer_body(body, context):
+def _infer_body(body, context, constraints_problem):
     """Infer the type of a code block containing multiple statements"""
     body_type = TNone()
     for stmt in body:
-        stmt_type = infer(stmt, context)
-        if body_type.is_subtype(stmt_type):
+        stmt_type = infer(stmt, context, constraints_problem)
+        if body_type.is_subtype(stmt_type) or isinstance(body_type, TNone):
             body_type = stmt_type
-        elif not stmt_type.is_subtype(body_type):
+        elif not (stmt_type.is_subtype(body_type) or isinstance(stmt_type, TNone)):
             if isinstance(body_type, UnionTypes):
                 body_type.union(stmt_type)
             elif isinstance(stmt_type, UnionTypes):
@@ -201,7 +209,7 @@ def _infer_body(body, context):
     return body_type
 
 
-def _infer_control_flow(node, context):
+def _infer_control_flow(node, context, constraint_problem):
     """Infer the type(s) for an if/while/for statements block.
 
     Arguments:
@@ -217,8 +225,8 @@ def _infer_control_flow(node, context):
 
         type: Union{String, Float}
     """
-    body_type = _infer_body(node.body, context)
-    else_type = _infer_body(node.orelse, context)
+    body_type = _infer_body(node.body, context, constraint_problem)
+    else_type = _infer_body(node.orelse, context, constraint_problem)
 
     if body_type.is_subtype(else_type):
         return else_type
@@ -234,7 +242,7 @@ def _infer_control_flow(node, context):
     return UnionTypes({body_type, else_type})
 
 
-def _infer_for(node, context):
+def _infer_for(node, context, constraint_problem):
     """Infer the type for a for loop node
 
     Limitation:
@@ -243,73 +251,125 @@ def _infer_for(node, context):
                 for x in (1, 2.0, "string"):
                     ....
     """
-    iter_type = expr.infer(node.iter, context)
-    if not isinstance(iter_type, (TList, TSet, TIterator, TBytesString, TDictionary, TString)):
-        raise TypeError("The iterable should only be a set, list or iterator. Found {}.".format(iter_type))
+    iter_type = expr.infer(node.iter, context, constraint_problem)
+    value_type = iter_type
+    if isinstance(iter_type, Generic):
+        value_type = key_type = Generic([Type()], constraint_problem=constraint_problem)
+        iter_type.narrow([TSequence(), TDictionary(t_k=key_type), TSet(t=key_type)])
+    elif not isinstance(iter_type, (TList, TSet, TIterator, TBytesString, TDictionary, TString)):
+        raise TypeError("{} is not iterable.".format(iter_type))
 
     # Infer the target in the loop, inside the global context
     # Cases:
     # - Var name. Ex: for i in range(5)..
     # - Tuple. Ex: for (a,b) in [(1,"st"), (3,"st2")]..
     # - List. Ex: for [a,b] in [(1, "st"), (3, "st2")]..
-    value_type = iter_type
     if isinstance(iter_type, (TList, TSet, TIterator)):
         value_type = value_type.type
     elif isinstance(iter_type, TDictionary):
         value_type = value_type.key_type
+
     _infer_assignment_target(node.target, context, value_type)
 
-    return _infer_control_flow(node, context)
+    return _infer_control_flow(node, context, constraint_problem)
 
 
-def _infer_with(node, context):
+def _infer_with(node, context, constraint_problem):
     """Infer the types for a with block"""
     for item in node.items:
         if item.optional_vars:
-            item_type = expr.infer(item.context_expr, context)
+            item_type = expr.infer(item.context_expr, context, constraint_problem)
             _infer_assignment_target(item.optional_vars, context, item_type)
 
-    return _infer_body(node.body, context)
+    return _infer_body(node.body, context, constraint_problem)
 
 
-def _infer_try(node, context):
+def _infer_try(node, context, constraint_problem):
     """Infer the types for a try/except/else block"""
     try_type = UnionTypes()
 
-    try_type.union(_infer_body(node.body, context))
-    try_type.union(_infer_body(node.orelse, context))
-    try_type.union(_infer_body(node.finalbody, context))
+    try_type.union(_infer_body(node.body, context, constraint_problem))
+    try_type.union(_infer_body(node.orelse, context, constraint_problem))
+    try_type.union(_infer_body(node.finalbody, context, constraint_problem))
     # TODO: Infer exception handlers as classes
 
     for handler in node.handlers:
-        try_type.union(_infer_body(handler.body, context))
+        try_type.union(_infer_body(handler.body, context, constraint_problem))
 
     if len(try_type.types) == 1:
         return list(try_type.types)[0]
     return try_type
 
 
+def init_func_def(args, context):
+    """Initialize the local context of the function and the constraints problem for the args domains."""
+    # TODO handle starred args
+    function_context = Context(parent_context=context)
+    constraints_problem = Problem()
+
+    for arg in args:
+        # TODO use annotation if possible
+        domain = Generic([Type()], arg.arg, constraints_problem)
+        function_context.set_type(arg.arg, domain)
+        constraints_problem.addVariable(arg.arg, domain)
+
+    return function_context, constraints_problem
+
+
+def _narrow_with_constraints(t, solutions):
+    """Narrow a Generic type t based on values appearing in the constraints problem solutions"""
+    if not isinstance(t, Generic):
+        return
+    possible = []
+    for sol in solutions:
+        possible.append(sol[t.variable])
+    t.narrow(possible)
+
+
+def infer_func_def(node, context):
+    function_context, constraint_problem = init_func_def(node.args.args, context)
+    return_type = _infer_body(node.body, function_context, constraint_problem)
+
+    args_types = []
+    for arg in node.args.args:
+        args_types.append(function_context.get_type(arg.arg))
+
+    constraints_sols = constraint_problem.getSolutions()
+
+    _narrow_with_constraints(return_type, constraints_sols)
+    for arg_t in args_types:
+        _narrow_with_constraints(arg_t, constraints_sols)
+    function_type = TFunction(return_type, args_types, constraints_sols)
+    context.set_type(node.name, function_type)
+    return TNone()
+
+
 def infer(node, context, constraint_problem=None):
     if isinstance(node, ast.Assign):
         return _infer_assign(node, context, constraint_problem)
     elif isinstance(node, ast.AugAssign):
-        return _infer_augmented_assign(node, context)
+        return _infer_augmented_assign(node, context, constraint_problem)
     elif isinstance(node, ast.Return):
-        return expr.infer(node.value, context)
+        return expr.infer(node.value, context, constraint_problem)
     elif isinstance(node, ast.Delete):
-        return _infer_delete(node, context)
+        return _infer_delete(node, context, constraint_problem)
     elif isinstance(node, (ast.If, ast.While)):
-        return _infer_control_flow(node, context)
+        return _infer_control_flow(node, context, constraint_problem)
     elif isinstance(node, ast.For):
-        return _infer_for(node, context)
+        return _infer_for(node, context, constraint_problem)
     elif sys.version_info[0] >= 3 and sys.version_info[1] >= 5 and isinstance(node, ast.AsyncFor):
         # AsyncFor is introduced in Python 3.5
-        return _infer_for(node, context)
+        return _infer_for(node, context, constraint_problem)
     elif isinstance(node, ast.With):
-        return _infer_with(node, context)
+        return _infer_with(node, context, constraint_problem)
     elif sys.version_info[0] >= 3 and sys.version_info[1] >= 5 and isinstance(node, ast.AsyncWith):
         # AsyncWith is introduced in Python 3.5
-        return _infer_with(node, context)
+        return _infer_with(node, context, constraint_problem)
     elif isinstance(node, ast.Try):
-        return _infer_try(node, context)
+        return _infer_try(node, context, constraint_problem)
+    elif isinstance(node, ast.FunctionDef):
+        return infer_func_def(node, context)
+    elif sys.version_info[0] >= 3 and sys.version_info[1] >= 5 and isinstance(node, ast.AsyncFunctionDef):
+        # AsyncWith is introduced in Python 3.5
+        return infer_func_def(node, context)
     return TNone()
