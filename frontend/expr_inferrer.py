@@ -639,6 +639,69 @@ def infer_dict_comprehension(node, context, constraints_problem):
     return TDictionary(key_type, val_type)
 
 
+def _verify_args_subtyping(call_types, func_arg_types):
+    for arg_name in call_types:
+        func_arg_type = func_arg_types[arg_name]
+        call_type = call_types[arg_name]
+
+        if not call_type.is_subtype(func_arg_type):
+            raise TypeError("Expecting argument of type {}, but {} is given.".format(func_arg_type, call_type))
+
+
+def _get_satisfying_constraints(args_name_to_type, constraints):
+    sat = [con for con in constraints
+           if all(args_name_to_type[name].is_subtype(con[name]) for name in args_name_to_type)]
+
+    return sat
+
+
+def _get_args_name_to_type(args_types, keyword_args_types, func_type):
+    if len(args_types) + len(keyword_args_types) != len(func_type.args_name_to_type):
+        raise TypeError("Expecting {} args, but {} are given.".format(len(func_type.args_name_to_type),
+                                                                      len(args_types) + len(keyword_args_types)))
+    for i in range(len(args_types)):
+        arg_name = func_type.args_order_to_type[i].name
+        if arg_name in keyword_args_types:
+            raise TypeError("Multiple values for argument {} are given.".format(arg_name))
+        keyword_args_types[arg_name] = args_types[i]
+
+    return keyword_args_types
+
+
+def _get_args_types(args, keyword_args, context, constraints_problem):
+    arg_types = []
+    keyword_args_types = {}
+
+    for arg in args:
+        arg_types.append(infer(arg, context, constraints_problem))
+
+    for name in keyword_args:
+        keyword_args_types[name] = infer(keyword_args[name], context, constraints_problem)
+
+    return arg_types, keyword_args_types
+
+
+def infer_function_call(node, context, constraints_problem):
+    func_type = infer(node.func, context, constraints_problem)
+
+    args_types, keyword_args_types = _get_args_types(node.args, node.keywords, context, constraints_problem)
+    args_name_to_type = _get_args_name_to_type(args_types, keyword_args_types, func_type)
+
+    _verify_args_subtyping(args_name_to_type, func_type.args_name_to_type)
+    satisfying_constraints = _get_satisfying_constraints(args_name_to_type, func_type.constraints)
+    if len(satisfying_constraints) == 0:
+        raise TypeError("The combination for the arguments types is not allowed.")
+
+    if not isinstance(func_type.return_type, Generic):
+        return func_type.return_type
+
+    return_type = UnionTypes()
+    for con in satisfying_constraints:
+        return_type.union(con[func_type.return_type.variable])
+
+    return return_type if len(return_type.types) > 1 else list(return_type.types)[0]
+
+
 def infer(node, context, constraints_problem):
     """Infer the type of a given AST node"""
     if isinstance(node, ast.Num):
@@ -684,4 +747,6 @@ def infer(node, context, constraints_problem):
         return infer_sequence_comprehension(node, TSet, context, constraints_problem)
     elif isinstance(node, ast.DictComp):
         return infer_dict_comprehension(node, context, constraints_problem)
+    elif isinstance(node, ast.Call):
+        return infer_function_call(node, context, constraints_problem)
     raise NotImplementedError("Inference for expression {} is not implemented yet.".format(type(node).__name__))

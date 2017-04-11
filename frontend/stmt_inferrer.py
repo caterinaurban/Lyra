@@ -330,17 +330,21 @@ def infer_func_def(node, context):
     function_context, constraint_problem = init_func_def(node.args.args, context)
     return_type = _infer_body(node.body, function_context, constraint_problem)
 
-    args_types = []
+    args_order_to_type = []
+    args_name_to_type = {}
     for arg in node.args.args:
-        args_types.append(function_context.get_type(arg.arg))
+        arg_type = function_context.get_type(arg.arg)
+        args_order_to_type.append(FunctionArgumentType(arg.arg, arg_type))
+        args_name_to_type[arg.arg] = arg_type
 
     constraints_sols = constraint_problem.getSolutions()
 
     _narrow_with_constraints(return_type, constraints_sols)
-    for arg_t in args_types:
-        _narrow_with_constraints(arg_t, constraints_sols)
-    function_type = TFunction(return_type, args_types, constraints_sols)
+    for arg_t in args_order_to_type:
+        _narrow_with_constraints(arg_t.type, constraints_sols)
+    function_type = TFunction(return_type, args_name_to_type, args_order_to_type, constraints_sols)
     context.set_type(node.name, function_type)
+
     return TNone()
 
 

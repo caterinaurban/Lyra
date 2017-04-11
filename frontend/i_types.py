@@ -78,7 +78,7 @@ class TObject(Type):
         self.name = "object"
 
     def is_subtype(self, t):
-        return isinstance(self, type(t))
+        return isinstance(self, type(t)) or (isinstance(t, Generic) and t.has_supertype(self))
 
 
 class TClass(TObject):
@@ -439,18 +439,28 @@ class TSet(TObject):
         return "{}({})".format(self.name, self.type.get_name())
 
 
+class FunctionArgumentType:
+    def __init__(self, name, t):
+        self.name = name
+        self.type = t
+
+
 class TFunction(TObject):
     """Type given to a function.
 
     Attributes:
         return_type (Type): Type of the function return value.
-        arg_types ([Type]): A list of types for the function arguments.
+        args_name_to_type ({str: Type}): A mapping from the arguments' names to their types.
+        args_order_to_type ([Type]): A mapping from the arguments' order to their types
+        constraints ([{str: Type}]): A list of mappings from arg names to types,
+                                    representing the possible args types combinations.
     """
 
-    def __init__(self, t_r, t_a, constraints):
+    def __init__(self, r_t, a_n_t, a_o_t, constraints):
         super().__init__()
-        self.return_type = t_r
-        self.arg_types = t_a
+        self.return_type = r_t
+        self.args_name_to_type = a_n_t
+        self.args_order_to_type = a_o_t
         self.name = "function"
         self.constraints = constraints
 
@@ -461,17 +471,17 @@ class TFunction(TObject):
             return True
         if not isinstance(t, TFunction):
             return False
-        if len(self.arg_types) != len(t.arg_types):
+        if len(self.args_name_to_type) != len(t.arg_types):
             return False
         if not self.return_type.is_subtype(t.return_type):
             return False
-        for i in range(len(self.arg_types)):
-            if not t.arg_types[i].is_subtype(self.arg_types[i]):
+        for i in range(len(self.args_order_to_type)):
+            if not t.args_order_to_type[i].is_subtype(self.args_order_to_type[i].type):
                 return False
         return True
 
     def get_name(self):
-        args_types_names = [t.get_name() for t in self.arg_types]
+        args_types_names = [t.type.get_name() for t in self.args_order_to_type]
         return "{}({}) --> {}".format(self.name, ",".join(args_types_names), self.return_type.get_name())
 
 
