@@ -33,7 +33,7 @@ from frontend.i_types import *
 from frontend.constraint.constraint import *
 
 
-def _infer_assignment_target(target, context, value_type):
+def _infer_assignment_target(target, context, value_type, constraint_problem):
     """Infer the type of a target in an assignment
 
     Attributes:
@@ -72,14 +72,14 @@ def _infer_assignment_target(target, context, value_type):
         for i in range(len(target.elts)):
             seq_elem = target.elts[i]
             if isinstance(value_type, TString):
-                _infer_assignment_target(seq_elem, context, value_type)
+                _infer_assignment_target(seq_elem, context, value_type, constraint_problem)
             elif isinstance(value_type, TList):
-                _infer_assignment_target(seq_elem, context, value_type.type)
+                _infer_assignment_target(seq_elem, context, value_type.type, constraint_problem)
             elif isinstance(value_type, TTuple):
-                _infer_assignment_target(seq_elem, context, value_type.types[i])
+                _infer_assignment_target(seq_elem, context, value_type.types[i], constraint_problem)
     elif isinstance(target, ast.Subscript):  # Subscript assignment
-        expr.infer(target, context)
-        indexed_type = expr.infer(target.value, context)
+        expr.infer(target, context, constraint_problem)
+        indexed_type = expr.infer(target.value, context, constraint_problem)
         if isinstance(indexed_type, TString):
             raise TypeError("String objects don't support item assignment.")
         elif isinstance(indexed_type, TTuple):
@@ -116,7 +116,7 @@ def _infer_assign(node, context, constraint_problem):
     # The type of the value assigned to the targets in the assignment statement.
     value_type = expr.infer(node.value, context, constraint_problem)
     for target in node.targets:
-        _infer_assignment_target(target, context, value_type)
+        _infer_assignment_target(target, context, value_type, constraint_problem)
 
     return TNone()
 
@@ -228,9 +228,9 @@ def _infer_control_flow(node, context, constraint_problem):
     body_type = _infer_body(node.body, context, constraint_problem)
     else_type = _infer_body(node.orelse, context, constraint_problem)
 
-    if body_type.is_subtype(else_type):
+    if body_type.is_subtype(else_type) or isinstance(body_type, TNone):
         return else_type
-    elif else_type.is_subtype(body_type):
+    elif else_type.is_subtype(body_type) or isinstance(else_type, TNone):
         return body_type
 
     if isinstance(body_type, UnionTypes):
@@ -269,7 +269,7 @@ def _infer_for(node, context, constraint_problem):
     elif isinstance(iter_type, TDictionary):
         value_type = value_type.key_type
 
-    _infer_assignment_target(node.target, context, value_type)
+    _infer_assignment_target(node.target, context, value_type, constraint_problem)
 
     return _infer_control_flow(node, context, constraint_problem)
 
@@ -279,7 +279,7 @@ def _infer_with(node, context, constraint_problem):
     for item in node.items:
         if item.optional_vars:
             item_type = expr.infer(item.context_expr, context, constraint_problem)
-            _infer_assignment_target(item.optional_vars, context, item_type)
+            _infer_assignment_target(item.optional_vars, context, item_type, constraint_problem)
 
     return _infer_body(node.body, context, constraint_problem)
 
@@ -288,15 +288,25 @@ def _infer_try(node, context, constraint_problem):
     """Infer the types for a try/except/else block"""
     try_type = UnionTypes()
 
-    try_type.union(_infer_body(node.body, context, constraint_problem))
-    try_type.union(_infer_body(node.orelse, context, constraint_problem))
-    try_type.union(_infer_body(node.finalbody, context, constraint_problem))
+    body_type = _infer_body(node.body, context, constraint_problem)
+    else_type = _infer_body(node.orelse, context, constraint_problem)
+    final_type = _infer_body(node.finalbody, context, constraint_problem)
+    if not isinstance(body_type, TNone):
+        try_type.union(body_type)
+    if not isinstance(else_type, TNone):
+        try_type.union(else_type)
+    if not isinstance(final_type, TNone):
+        try_type.union(final_type)
     # TODO: Infer exception handlers as classes
 
     for handler in node.handlers:
-        try_type.union(_infer_body(handler.body, context, constraint_problem))
+        handler_body_type = _infer_body(handler.body, context, constraint_problem)
+        if not isinstance(handler_body_type, TNone):
+            try_type.union(handler_body_type)
 
-    if len(try_type.types) == 1:
+    if len(try_type.types) == 0:
+        return TNone()
+    elif len(try_type.types) == 1:
         return list(try_type.types)[0]
     return try_type
 
