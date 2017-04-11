@@ -22,12 +22,12 @@ Infers the types for the following expressions:
     - ListComp(expr elt, comprehension* generators)
     - SetComp(expr elt, comprehension* generators)
     - DictComp(expr key, expr value, comprehension* generators)
+    - Call(expr func, expr* args, keyword* keywords)
 
 TODO:
     - Lambda(arguments args, expr body)
     - GeneratorExp(expr elt, comprehension* generators)
     - YieldFrom(expr value)
-    - Call(expr func, expr* args, keyword* keywords)
     - Attribute(expr value, identifier attr, expr_co0ontext ctx)
     - Starred(expr value, expr_context ctx)
 """
@@ -640,6 +640,12 @@ def infer_dict_comprehension(node, context, constraints_problem):
 
 
 def _verify_args_subtyping(call_types, func_arg_types):
+    """Verify that the function call types are subtypes to the inferred types for the arguments
+    
+    Attributes:
+        call_types: The function call arguments inferred types
+        func_arg_types: The previously inferred function arguments types
+    """
     for arg_name in call_types:
         func_arg_type = func_arg_types[arg_name]
         call_type = call_types[arg_name]
@@ -649,6 +655,12 @@ def _verify_args_subtyping(call_types, func_arg_types):
 
 
 def _get_satisfying_constraints(args_name_to_type, constraints):
+    """Get the constraints that are satisfied by the function call combination
+    
+    Attributes:
+        args_name_to_type: mapping from call args names to their inferred types
+        constraints: list of constraints previously generated in the function inference.
+    """
     sat = [con for con in constraints
            if all(args_name_to_type[name].is_subtype(con[name]) for name in args_name_to_type)]
 
@@ -656,6 +668,13 @@ def _get_satisfying_constraints(args_name_to_type, constraints):
 
 
 def _get_args_name_to_type(args_types, keyword_args_types, func_type):
+    """Merge the positional args with the keywords args in a dict mapping arg name to its type
+    
+    Attributes:
+        args_types: Call's positional arguments types
+        keyword_args_types: Call's keyword arguments types
+        func_type: Previously inferred function type
+    """
     if len(args_types) + len(keyword_args_types) != len(func_type.args_name_to_type):
         raise TypeError("Expecting {} args, but {} are given.".format(len(func_type.args_name_to_type),
                                                                       len(args_types) + len(keyword_args_types)))
@@ -669,6 +688,13 @@ def _get_args_name_to_type(args_types, keyword_args_types, func_type):
 
 
 def _get_args_types(args, keyword_args, context, constraints_problem):
+    """Infer the types for the function call args
+    
+    Attributes:
+        args: List of AST arg nodes.
+        keyword_args: List of AST keyword arg nodes.
+        context: The current inference context
+    """
     arg_types = []
     keyword_args_types = {}
 
@@ -681,7 +707,32 @@ def _get_args_types(args, keyword_args, context, constraints_problem):
     return arg_types, keyword_args_types
 
 
+def _unify_with_generics(type_to_unify, args_name_to_type):
+    """Unify the generics in the return type with the types of the call arguments"""
+    if isinstance(type_to_unify, Generic):
+        if type_to_unify.variable in args_name_to_type:
+            return args_name_to_type[type_to_unify.variable]
+        return type_to_unify
+    if isinstance(type_to_unify, TList):
+        return TList(_unify_with_generics(type_to_unify.type, args_name_to_type))
+    elif isinstance(type_to_unify, TTuple):
+        tuple_types = []
+        for t in type_to_unify.types:
+            tuple_types.append(_unify_with_generics(t, args_name_to_type))
+        return TTuple(tuple_types)
+    elif isinstance(type_to_unify, TSet):
+        return TSet(_unify_with_generics(type_to_unify.type, args_name_to_type))
+    elif isinstance(type_to_unify, TDictionary):
+        key_type = _unify_with_generics(type_to_unify.key_type, args_name_to_type)
+        val_type = _unify_with_generics(type_to_unify.value_type, args_name_to_type)
+        return TDictionary(key_type, val_type)
+    elif isinstance(type_to_unify, TIterator):
+        return TIterator(_unify_with_generics(type_to_unify.type, args_name_to_type))
+    return type_to_unify
+
+
 def infer_function_call(node, context, constraints_problem):
+    """Infer the type of a function call"""
     func_type = infer(node.func, context, constraints_problem)
 
     args_types, keyword_args_types = _get_args_types(node.args, node.keywords, context, constraints_problem)
@@ -692,8 +743,10 @@ def infer_function_call(node, context, constraints_problem):
     if len(satisfying_constraints) == 0:
         raise TypeError("The combination for the arguments types is not allowed.")
 
-    if not isinstance(func_type.return_type, Generic):
-        return func_type.return_type
+    return_type = _unify_with_generics(func_type.return_type, args_name_to_type)
+
+    if not isinstance(return_type, Generic):
+        return return_type
 
     return_type = UnionTypes()
     for con in satisfying_constraints:
