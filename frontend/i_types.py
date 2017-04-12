@@ -413,8 +413,8 @@ class TDictionary(TObject):
             return True
         if type(t) in [TObject, Type]:
             return True
-        return (isinstance(t, TDictionary) and isinstance(self.key_type, type(t.key_type))
-                and isinstance(self.value_type, type(t.value_type)))
+        return (isinstance(t, TDictionary) and self.key_type.is_subtype(t.key_type)
+                and self.value_type.is_subtype(t.value_type))
 
     def get_name(self):
         return "{}({}:{})".format(self.name, self.key_type.get_name(), self.value_type.get_name())

@@ -336,7 +336,7 @@ def _narrow_with_constraints(t, solutions):
     t.narrow(possible)
 
 
-def infer_func_def(node, context):
+def function_type(node, context):
     function_context, constraint_problem = init_func_def(node.args.args, context)
     return_type = _infer_body(node.body, function_context, constraint_problem)
 
@@ -352,8 +352,12 @@ def infer_func_def(node, context):
     _narrow_with_constraints(return_type, constraints_sols)
     for arg_t in args_order_to_type:
         _narrow_with_constraints(arg_t.type, constraints_sols)
-    function_type = TFunction(return_type, args_name_to_type, args_order_to_type, constraints_sols)
-    context.set_type(node.name, function_type)
+    return TFunction(return_type, args_name_to_type, args_order_to_type, constraints_sols)
+
+
+def infer_func_def(node, context):
+    func_def_type = function_type(node, context)
+    context.set_type(node.name, func_def_type)
 
     return TNone()
 
