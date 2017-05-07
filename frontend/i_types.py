@@ -1,4 +1,3 @@
-from abc import ABCMeta, abstractmethod
 from frontend.context import Context
 import os
 
@@ -48,24 +47,17 @@ class SubtypesTree:
 subtypes_tree = SubtypesTree()
 
 
-class Type(metaclass=ABCMeta):
+class Type:
     """This class is the top-parent of all possible inferred types of a Python program.
     Every type has its own class that inherits this class.
     """
-
-    @abstractmethod
     def is_subtype(self, t):
-        """Check if this type is a subtype of the parameter type.
-
-        Arguments:
-            t (Type): The type to check the subtype relationship against.
-        """
-        pass
+        return isinstance(self, type(t))
 
     def get_name(self):
         if hasattr(self, 'name'):
             return self.name
-        raise NotImplementedError("This type has no name.")
+        return "Type"
 
     # Two types are considered identical if their names exactly match.
     def __eq__(self, other):
@@ -78,14 +70,27 @@ class Type(metaclass=ABCMeta):
         return self.get_name()
 
 
-class TClass(Type):
+class TObject(Type):
+    """This class is the top-parent of all possible inferred types of a Python program.
+    Every type has its own class that inherits this class.
+    """
+    def __init__(self):
+        self.name = "object"
+
+    def is_subtype(self, t):
+        return isinstance(self, type(t)) or (isinstance(t, Generic) and t.has_supertype(self))
+
+
+class TClass(TObject):
     """Type given to a user defined class.
 
     Attributes:
         name (str): Class name.
         context (Context): Contains a mapping between variables and types within the scope of this class.
     """
+
     def __init__(self, name, context=Context()):
+        super().__init__()
         self.name = name
         self.context = context
 
@@ -99,26 +104,17 @@ class TClass(Type):
         return ""
 
 
-class TObject(Type):
+class TNone(TObject):
     def __init__(self):
-        self.name = "object"
-
-    def is_subtype(self, t):
-        return isinstance(t, TObject)
-
-
-class TNone(Type):
-    def __init__(self):
+        super().__init__()
         self.name = "None"
 
-    def is_subtype(self, t):
-        return isinstance(t, (TNone, TObject))
 
-
-class TNumber(Type, metaclass=ABCMeta):
+class TNumber(TObject):
     def __init__(self):
+        super().__init__()
         self.strength = -1
-        self.name = ""
+        self.name = "Number"
 
 
 class TInt(TNumber):
@@ -127,18 +123,12 @@ class TInt(TNumber):
         self.strength = 1
         self.name = "int"
 
-    def is_subtype(self, t):
-        return isinstance(t, (TInt, TObject))
 
-
-class TBool(TNumber):
+class TBool(TInt):
     def __init__(self):
         super().__init__()
         self.strength = 0
         self.name = "bool"
-
-    def is_subtype(self, t):
-        return isinstance(t, (TBool, TInt, TObject))
 
 
 class TFloat(TNumber):
@@ -147,9 +137,6 @@ class TFloat(TNumber):
         self.strength = 2
         self.name = "float"
 
-    def is_subtype(self, t):
-        return isinstance(t, (TFloat, TObject))
-
 
 class TComplex(TNumber):
     def __init__(self):
@@ -157,36 +144,161 @@ class TComplex(TNumber):
         self.strength = 3
         self.name = "complex"
 
-    def is_subtype(self, t):
-        return isinstance(t, (TComplex, TObject))
+
+class Generic(list, Type):
+    """
+    Class used to control possible values for variables
+
+    When list or tuples are used as domains, they are automatically
+    converted to an instance of that class.
+    """
+
+    def __eq__(self, other):
+        return self.get_name() == other.get_name()
+
+    def __hash__(self):
+        return hash(self.get_name())
+
+    def get_name(self):
+        return "Generic{{{}}}[{}]".format(self.variable,",".join([x.get_name() for x in self]))
+
+    def __str__(self):
+        return self.get_name()
+
+    def __init__(self, set, variable=None, constraint_problem=None):
+        """
+        @param set: Set of values that the given variables may assume
+        @type  set: set of objects comparable by equality
+        """
+        list.__init__(self, set)
+        self._hidden = []
+        self._states = []
+        self.constraint_problem = constraint_problem
+        self.variable = variable
+
+    def has_supertype(self, t):
+        """Check if this Generic has a supertype for t"""
+        for ti in self:
+            if t.is_subtype(ti):
+                return True
+        return False
+
+    def narrow(self, domain_filter):
+        """Narrow the domain of this Generic
+        Example:
+            x = Domain([Type()])
+            x.narrow([TNumber(), TSequence()]) --> x = Domain([TNumber, TSequence])
+            x.narrow([TBool()]) --> x = Domain([TBool()])
+        """
+        to_remove = []
+        to_add = []
+        for t in self:
+            keep = True
+            has_sup = False
+            for t2 in domain_filter:
+                if t2.is_subtype(t):
+                    keep = False
+                    if t2 not in to_add:
+                        to_add.append(t2)
+                elif t.is_subtype(t2):
+                    has_sup = True
+            if (not keep) or (not has_sup):
+                to_remove.append(t)
+        for t in to_add:
+            self.append(t)
+        for t in to_remove:
+            self.remove(t)
+
+        if len(self) == 0:
+            raise ValueError("Narrowed domain is empty.")
+
+        self.constraint_problem.setDomain(self.variable, self)
+
+    def intersect(self, other_generic):
+        result = set()
+        for t1 in self:
+            for t2 in other_generic:
+                if t1.is_subtype(t2):
+                    result.add(t1)
+                elif t2.is_subtype(t1):
+                    result.add(t2)
+        return list(result)
+
+    def setVariable(self, variable):
+        self.variable = variable
+        self.constraint_problem.addVariable(variable, self)
+
+    def resetState(self):
+        """
+        Reset to the original domain state, including all possible values
+        """
+        self.extend(self._hidden)
+        del self._hidden[:]
+        del self._states[:]
+
+    def pushState(self):
+        """
+        Save current domain state
+
+        Variables hidden after that call are restored when that state
+        is popped from the stack.
+        """
+        self._states.append(len(self))
+
+    def popState(self):
+        """
+        Restore domain state from the top of the stack
+
+        Variables hidden since the last popped state are then available
+        again.
+        """
+        diff = self._states.pop() - len(self)
+        if diff:
+            self.extend(self._hidden[-diff:])
+            del self._hidden[-diff:]
+
+    def hideValue(self, value):
+        """
+        Hide the given value from the domain
+
+        After that call the given value won't be seen as a possible value
+        on that domain anymore. The hidden value will be restored when the
+        previous saved state is popped.
+
+        @param value: Object currently available in the domain
+        """
+        list.remove(self, value)
+        self._hidden.append(value)
 
 
-class TSequence(Type, metaclass=ABCMeta):
-    pass
+class TSequence(TObject):
+    def __init__(self):
+        super().__init__()
+        self.name = "Sequence"
 
 
-class TMutableSequence(TSequence, metaclass=ABCMeta):
-    pass
+class TMutableSequence(TSequence):
+    def __init__(self):
+        super().__init__()
+        self.name = "MutableSequence"
 
 
-class TImmutableSequence(TSequence, metaclass=ABCMeta):
-    pass
+class TImmutableSequence(TSequence):
+    def __init__(self):
+        super().__init__()
+        self.name = "Immutable Sequence"
 
 
 class TString(TImmutableSequence):
     def __init__(self):
+        super().__init__()
         self.name = "str"
-
-    def is_subtype(self, t):
-        return isinstance(t, (TString, TObject))
 
 
 class TBytesString(TImmutableSequence):
     def __init__(self):
+        super().__init__()
         self.name = "bytes"
-
-    def is_subtype(self, t):
-        return isinstance(t, (TString, TObject))
 
 
 class TList(TMutableSequence):
@@ -196,12 +308,15 @@ class TList(TMutableSequence):
         type (Type): Type of the list elements
     """
 
-    def __init__(self, t):
+    def __init__(self, t=Generic([Type()])):
+        super().__init__()
         self.type = t
         self.name = "list"
 
     def is_subtype(self, t):
-        if isinstance(t, TObject):
+        if isinstance(t, Generic) and t.has_supertype(self):
+            return True
+        if type(t) in [TObject, TMutableSequence, TSequence, Type]:
             return True
         return isinstance(t, TList) and self.type.get_name() == t.type.get_name()
 
@@ -217,11 +332,14 @@ class TTuple(TImmutableSequence):
     """
 
     def __init__(self, t):
+        super().__init__()
         self.types = t
         self.name = "tuple"
 
     def is_subtype(self, t):
-        if isinstance(t, TObject):
+        if isinstance(t, Generic) and t.has_supertype(self):
+            return True
+        if type(t) in [TObject, TImmutableSequence, TSequence, Type]:
             return True
         if not isinstance(t, TTuple):
             return False
@@ -254,18 +372,21 @@ class TTuple(TImmutableSequence):
         return UnionTypes(slices)
 
 
-class TIterator(Type):
+class TIterator(TObject):
     """Type given to an iterator.
 
     Attributes:
         type (Type): Type of the iterator.
     """
 
-    def __init__(self, t):
+    def __init__(self, t=Generic([Type()])):
+        super().__init__()
         self.type = t
 
     def is_subtype(self, t):
-        if isinstance(t, TObject):
+        if isinstance(t, Generic) and t.has_supertype(self):
+            return True
+        if type(t) in [TObject, Type]:
             return True
         return isinstance(t, TIterator) and isinstance(self.type, type(t.type))
 
@@ -273,7 +394,7 @@ class TIterator(Type):
         return "Iterator({})".format(self.type.get_name())
 
 
-class TDictionary(Type):
+class TDictionary(TObject):
     """Type given to a dictionary, whose keys are of the same type, and values are of the same type.
 
     Attributes:
@@ -281,30 +402,36 @@ class TDictionary(Type):
         value_type (Type): Type of the dictionary values.
     """
 
-    def __init__(self, t_k, t_v):
+    def __init__(self, t_k=Generic([Type()]), t_v=Generic([Type()])):
+        super().__init__()
         self.key_type = t_k
         self.value_type = t_v
         self.name = "dict"
 
     def is_subtype(self, t):
-        if isinstance(t, TObject):
+        if isinstance(t, Generic) and t.has_supertype(self):
             return True
-        return (isinstance(t, TDictionary) and isinstance(self.key_type, type(t.key_type))
-                and isinstance(self.value_type, type(t.value_type)))
+        if type(t) in [TObject, Type]:
+            return True
+        return (isinstance(t, TDictionary) and self.key_type.is_subtype(t.key_type)
+                and self.value_type.is_subtype(t.value_type))
 
     def get_name(self):
         return "{}({}:{})".format(self.name, self.key_type.get_name(), self.value_type.get_name())
 
 
-class TSet(Type):
+class TSet(TObject):
     """Type given to homogeneous sets"""
 
-    def __init__(self, t):
+    def __init__(self, t=Generic([Type()])):
+        super().__init__()
         self.type = t
         self.name = "set"
 
     def is_subtype(self, t):
-        if isinstance(t, TObject):
+        if isinstance(t, Generic) and t.has_supertype(self):
+            return True
+        if type(t) in [TObject, Type]:
             return True
         return isinstance(t, TSet) and self.type.is_subtype(t.type)
 
@@ -312,35 +439,49 @@ class TSet(Type):
         return "{}({})".format(self.name, self.type.get_name())
 
 
-class TFunction(Type):
+class FunctionArgumentType:
+    def __init__(self, name, t):
+        self.name = name
+        self.type = t
+
+
+class TFunction(TObject):
     """Type given to a function.
 
     Attributes:
         return_type (Type): Type of the function return value.
-        arg_types ([Type]): A list of types for the function arguments.
+        args_name_to_type ({str: Type}): A mapping from the arguments' names to their types.
+        args_order_to_type ([Type]): A mapping from the arguments' order to their types
+        constraints ([{str: Type}]): A list of mappings from arg names to types,
+                                    representing the possible args types combinations.
     """
 
-    def __init__(self, t_r, t_a):
-        self.return_type = t_r
-        self.arg_types = t_a
+    def __init__(self, r_t, a_n_t, a_o_t, constraints):
+        super().__init__()
+        self.return_type = r_t
+        self.args_name_to_type = a_n_t
+        self.args_order_to_type = a_o_t
         self.name = "function"
+        self.constraints = constraints
 
     def is_subtype(self, t):
-        if isinstance(t, TObject):
+        if isinstance(t, Generic) and t.has_supertype(self):
+            return True
+        if type(t) in [TObject, Type]:
             return True
         if not isinstance(t, TFunction):
             return False
-        if len(self.arg_types) != len(t.arg_types):
+        if len(self.args_name_to_type) != len(t.arg_types):
             return False
         if not self.return_type.is_subtype(t.return_type):
             return False
-        for i in range(len(self.arg_types)):
-            if not t.arg_types[i].is_subtype(self.arg_types[i]):
+        for i in range(len(self.args_order_to_type)):
+            if not t.args_order_to_type[i].is_subtype(self.args_order_to_type[i].type):
                 return False
         return True
 
     def get_name(self):
-        args_types_names = [t.get_name() for t in self.arg_types]
+        args_types_names = [t.type.get_name() for t in self.args_order_to_type]
         return "{}({}) --> {}".format(self.name, ",".join(args_types_names), self.return_type.get_name())
 
 
@@ -352,8 +493,9 @@ class UnionTypes(Type):
     """
 
     def __init__(self, t=set()):
+        super().__init__()
         self.types = set()
-        if isinstance(t, Type):
+        if isinstance(t, TObject):
             self.union(t)
         else:
             for ti in t:

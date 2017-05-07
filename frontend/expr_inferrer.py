@@ -22,12 +22,12 @@ Infers the types for the following expressions:
     - ListComp(expr elt, comprehension* generators)
     - SetComp(expr elt, comprehension* generators)
     - DictComp(expr key, expr value, comprehension* generators)
+    - Call(expr func, expr* args, keyword* keywords)
 
 TODO:
     - Lambda(arguments args, expr body)
     - GeneratorExp(expr elt, comprehension* generators)
     - YieldFrom(expr value)
-    - Call(expr func, expr* args, keyword* keywords)
     - Attribute(expr value, identifier attr, expr_co0ontext ctx)
     - Starred(expr value, expr_context ctx)
 """
@@ -71,12 +71,12 @@ def infer_numeric(node):
         return TComplex()
 
 
-def _get_elements_types(elts, context):
+def _get_elements_types(elts, context, constraints_problem):
     if len(elts) == 0:
         return TNone()
     types = UnionTypes()
     for i in range(0, len(elts)):
-        cur_type = infer(elts[i], context)
+        cur_type = infer(elts[i], context, constraints_problem)
         types.union(cur_type)
 
     if len(types.types) == 1:
@@ -84,34 +84,34 @@ def _get_elements_types(elts, context):
     return types
 
 
-def infer_list(node, context):
+def infer_list(node, context, constraints_problem):
     """Infer the type of a homogeneous list
 
     Returns: TList(Type t), where t is the type of the list elements
     """
-    return TList(_get_elements_types(node.elts, context))
+    return TList(_get_elements_types(node.elts, context, constraints_problem))
 
 
-def infer_dict(node, context):
+def infer_dict(node, context, constraints_problem):
     """Infer the type of a dictionary with homogeneous key set and value set
 
     Returns: TDictionary(Type k_t, Type v_t), where:
             k_t is the type of dictionary keys
             v_t is the type of dictionary values
     """
-    keys_type = _get_elements_types(node.keys, context)
-    values_type = _get_elements_types(node.values, context)
+    keys_type = _get_elements_types(node.keys, context, constraints_problem)
+    values_type = _get_elements_types(node.values, context, constraints_problem)
     return TDictionary(keys_type, values_type)
 
 
-def infer_tuple(node, context):
+def infer_tuple(node, context, constraints_problem):
     """Infer the type of a tuple
 
     Returns: TTuple(Type[] t), where t is a list of the tuple's elements types
     """
     tuple_types = []
     for elem in node.elts:
-        elem_type = infer(elem, context)
+        elem_type = infer(elem, context, constraints_problem)
         tuple_types.append(elem_type)
 
     return TTuple(tuple_types)
@@ -126,19 +126,77 @@ def infer_name_constant(node):
     raise NotImplementedError("The inference for {} is not supported.".format(node.value))
 
 
-def infer_set(node, context):
+def infer_set(node, context, constraints_problem):
     """Infer the type of a homogeneous set
 
     Returns: TSet(Type t), where t is the type of the set elements
     """
-    return TSet(_get_elements_types(node.elts, context))
+    return TSet(_get_elements_types(node.elts, context, constraints_problem))
 
 
 def _get_stronger_numeric(num1, num2):
     return num1 if num1.strength > num2.strength else num2
 
 
-def _infer_add(left_type, right_type):
+def _addition_constraint(left_type, right_type, result_type):
+    if left_type.is_subtype(TNumber()) and right_type.is_subtype(TNumber()):
+        return result_type.is_subtype(TNumber())
+    if left_type.is_subtype(TSequence()) and right_type.is_subtype(TSequence()):
+        return result_type.is_subtype(TSequence())
+    return False
+
+
+# A unique ID given to the binary operation involving generic types, to be used in the constraint solving.
+# It's incremented during every operation inference.
+operation_id = 0
+
+
+def _perform_generic_operation(generics, result_type,
+                               constraints_problem, constraint_func=None):
+    global operation_id
+    operation_id += 1
+    tmp_name = "tmp" + str(operation_id)
+    if not isinstance(result_type, Generic):
+        result_type = Generic(result_type, tmp_name, constraints_problem)
+    else:
+        result_type.variable = tmp_name
+        result_type.constraint_problem = constraints_problem
+    constraints_problem.addVariable(tmp_name, result_type)
+    if constraint_func:
+        constraints_problem.addConstraint(constraint_func, [v.variable for v in generics] + [tmp_name])
+    return result_type
+
+
+def _infer_add(left_type, right_type, constraints_problem):
+    if isinstance(left_type, Generic) and isinstance(right_type, Generic):
+        left_type.narrow([TNumber(), TSequence()])
+        right_type.narrow([TNumber(), TSequence()])
+
+        result_types = left_type.intersect(right_type)
+
+        return _perform_generic_operation([left_type, right_type], result_types,
+                                          constraints_problem, _addition_constraint)
+
+    if isinstance(right_type, Generic):
+        # Swap
+        left_type, right_type = right_type, left_type
+
+    if isinstance(left_type, Generic):
+        if isinstance(right_type, TNumber):
+            left_type.narrow([TNumber()])
+            if isinstance(right_type, TComplex):
+                return right_type
+            if isinstance(right_type, TFloat):
+                if TNumber() in left_type or TComplex() in left_type:
+                    return left_type
+                return TFloat()
+            if TNumber() in left_type or TComplex() in left_type or TFloat() in left_type:
+                return left_type
+            return TInt()
+        elif isinstance(right_type, TSequence):
+            left_type.narrow([right_type])
+            return right_type
+
     if isinstance(left_type, TNumber) and isinstance(right_type, TNumber):
         # arithmetic addition
         return _get_stronger_numeric(left_type, right_type)
@@ -161,7 +219,39 @@ def _infer_add(left_type, right_type):
     raise TypeError("Cannot perform operation + on two types {} and {}".format(left_type, right_type))
 
 
-def _infer_mult(left_type, right_type):
+def _mult_constraint(left_type, right_type, result_type):
+    if left_type.is_subtype(TNumber()) and right_type.is_subtype(TNumber()):
+        return result_type.is_subtype(TNumber())
+    if left_type.is_subtype(TSequence()) and right_type.is_subtype(TNumber()):
+        return result_type.is_subtype(TSequence())
+    if left_type.is_subtype(TNumber()) and right_type.is_subtype(TSequence()):
+        return result_type.is_subtype(TSequence())
+    return False
+
+
+def _infer_mult(left_type, right_type, constraints_problem):
+    if isinstance(left_type, Generic) and isinstance(right_type, Generic):
+        left_type.narrow([TNumber(), TSequence()])
+        right_type.narrow([TNumber(), TSequence()])
+
+        return _perform_generic_operation([left_type, right_type], [TNumber(), TSequence()],
+                                          constraints_problem, _mult_constraint)
+
+    if isinstance(right_type, Generic):
+        # Swap
+        left_type, right_type = right_type, left_type
+
+    if isinstance(left_type, Generic):
+        if right_type.is_subtype(TSequence()):
+            left_type.narrow([TInt()])
+            return right_type
+        elif right_type.is_subtype(TInt()):
+            left_type.narrow([TNumber(), TSequence()])
+            return left_type
+        elif right_type.is_subtype(TNumber()):
+            left_type.narrow([TNumber()])
+            return left_type
+
     if isinstance(left_type, TNumber) and isinstance(right_type, TNumber):
         return _get_stronger_numeric(left_type, right_type)
     # TODO handle tuple multiplication
@@ -173,28 +263,98 @@ def _infer_mult(left_type, right_type):
     raise TypeError("Cannot perform operation * on two types {} and {}".format(left_type, right_type))
 
 
-def _infer_div(left_type, right_type):
+def _div_constraint(left_type, right_type, result_type):
+    if isinstance(left_type, TComplex) or isinstance(right_type, TComplex):
+        return isinstance(result_type, TComplex)
+    if type(left_type) is TNumber or type(right_type) is TNumber:
+        return isinstance(result_type, (TFloat, TComplex))
+    return isinstance(result_type, TFloat)
+
+
+def _div_constraint_one_generic(left_type, result_type):
+    if isinstance(left_type, TComplex):
+        return isinstance(result_type, TComplex)
+    if type(left_type) is TNumber:
+        return isinstance(result_type, (TFloat, TComplex))
+    return isinstance(result_type, TFloat)
+
+
+def _infer_div(left_type, right_type, constraints_problem):
+    if isinstance(left_type, Generic) and isinstance(right_type, Generic):
+        left_type.narrow([TNumber()])
+        right_type.narrow([TNumber()])
+
+        return _perform_generic_operation([left_type, right_type], [TFloat(), TComplex()],
+                                          constraints_problem, _div_constraint)
+
+    if isinstance(right_type, Generic):
+        # Swap
+        left_type, right_type = right_type, left_type
+
+    if isinstance(left_type, Generic):
+        left_type.narrow([TNumber()])
+
+        return _perform_generic_operation([left_type], [TFloat(), TComplex()], constraints_problem,
+                                          _div_constraint_one_generic)
+
     if isinstance(left_type, TNumber) and isinstance(right_type, TNumber):
+        if isinstance(left_type, TComplex) or isinstance(right_type, TComplex):
+            return TComplex()
         return TFloat()
     raise TypeError("Cannot perform operation / on two types {} and {}".format(left_type, right_type))
 
 
-def _infer_arithmetic(left_type, right_type):
+def _infer_arithmetic(left_type, right_type, constraints_problem):
+    if isinstance(left_type, Generic) and isinstance(right_type, Generic):
+        left_type.narrow([TNumber()])
+        right_type.narrow([TNumber()])
+
+        return _perform_generic_operation([], [TNumber()], constraints_problem)
+
+    if isinstance(right_type, Generic):
+        # Swap
+        left_type, right_type = right_type, left_type
+
+    if isinstance(left_type, Generic):
+        left_type.narrow([TNumber()])
+        if isinstance(right_type, TComplex):
+            return right_type
+        if TNumber() in left_type or TComplex() in left_type:
+            return left_type
+        if isinstance(right_type, TFloat):
+            return right_type
+        if TFloat() in left_type:
+            return left_type
+        return TInt()
+
     if isinstance(left_type, TNumber) and isinstance(right_type, TNumber):
         return _get_stronger_numeric(left_type, right_type)
     raise TypeError("Cannot perform arithmetic operation on two types {} and {}".format(left_type, right_type))
 
 
-def _infer_bitwise(left_type, right_type):
+def _infer_bitwise(left_type, right_type, constraints_problem):
+    if isinstance(left_type, Generic) and isinstance(right_type, Generic):
+        left_type.narrow([TInt()])
+        right_type.narrow([TInt()])
+
+        return _perform_generic_operation([], [TInt()],
+                                          constraints_problem)
+
+    if isinstance(right_type, Generic):
+        # Swap
+        left_type, right_type = right_type, left_type
+
+    if isinstance(left_type, Generic):
+        left_type.narrow([TInt()])
+        if isinstance(right_type, TInt):
+            return TInt()
+
     if left_type.is_subtype(TInt()) and right_type.is_subtype(TInt()):
         return _get_stronger_numeric(left_type, right_type)
     raise TypeError("Cannot perform bitwise operation on two types {} and {}".format(left_type, right_type))
 
 
-def binary_operation_type(left_type, op, right_type):
-    left_type = UnionTypes({left_type})
-    right_type = UnionTypes({right_type})
-
+def binary_operation_type(left_type, op, right_type, constraints_problem):
     if isinstance(op, ast.Add):
         inference_func = _infer_add
     elif isinstance(op, ast.Mult):
@@ -207,9 +367,9 @@ def binary_operation_type(left_type, op, right_type):
         inference_func = _infer_arithmetic
 
     result_type = UnionTypes()
-    for l_t in left_type.types:
-        for r_t in right_type.types:
-            result_type.union(inference_func(l_t, r_t))
+    for l_t in (left_type.types if isinstance(left_type, UnionTypes) else [left_type]):
+        for r_t in (right_type.types if isinstance(right_type, UnionTypes) else [right_type]):
+            result_type.union(inference_func(l_t, r_t, constraints_problem))
 
     if len(result_type.types) == 0:
         raise TypeError("Cannot perform operation ({}) on two types: {} and {}".format(type(op).__name__,
@@ -219,7 +379,7 @@ def binary_operation_type(left_type, op, right_type):
     return result_type
 
 
-def infer_binary_operation(node, context):
+def infer_binary_operation(node, context, constraints_problem):
     """Infer the type of binary operations
 
     Handled cases:
@@ -227,13 +387,32 @@ def infer_binary_operation(node, context):
         - Sequence concatenation, ex: [1,2,3] + [4,5,6] --> [1,2,3,4,5,6]
         - Arithmetic and bitwise operations, ex: (1 + 2) * 7 & (2 | -123) / 3
     """
-    left_type = infer(node.left, context)
-    right_type = infer(node.right, context)
+    left_type = infer(node.left, context, constraints_problem)
+    right_type = infer(node.right, context, constraints_problem)
 
-    return binary_operation_type(left_type, node.op, right_type)
+    return binary_operation_type(left_type, node.op, right_type, constraints_problem)
 
 
-def infer_unary_operation(node, context):
+def _unary_operation_type(op, value_type):
+    if isinstance(op, ast.Invert):
+        if isinstance(value_type, Generic):
+            value_type.narrow([TInt()])
+        elif not value_type.is_subtype(TInt()):
+            raise TypeError("Cannot perform ~ operation on type {}.".format(value_type))
+        return TInt()
+
+    if isinstance(value_type, Generic):
+        value_type.narrow([TNumber()])
+        return value_type
+
+    if isinstance(value_type, TNumber):
+        if isinstance(value_type, TBool):
+            return TInt()
+        return value_type
+    raise TypeError("Cannot perform unary operation on type {}.".format(value_type))
+
+
+def infer_unary_operation(node, context, constraints_problem):
     """Infer the type for unary operations
 
     Examples: -5, not 1, ~2
@@ -241,34 +420,22 @@ def infer_unary_operation(node, context):
     if isinstance(node.op, ast.Not):  # (not expr) always gives bool type
         return TBool()
 
-    unary_type = UnionTypes({infer(node.operand, context)})
+    unary_type = infer(node.operand, context, constraints_problem)
     result_type = UnionTypes()
-    for t in unary_type.types:
-        if isinstance(node.op, ast.Invert):
-            if t.is_subtype(TInt()):
-                result_type.union(TInt())
-            else:
-                raise TypeError("Cannot perform ~ operation on type {}.".format(t))
-        else:
-            if isinstance(t, TNumber):
-                if isinstance(t, TBool):
-                    result_type.union(TInt())
-                else:
-                    result_type.union(t)
-            else:
-                raise TypeError("Cannot perform unary operation on type {}.".format(t))
+    for t in (unary_type.types if isinstance(unary_type, UnionTypes) else [unary_type]):
+        result_type.union(_unary_operation_type(node.op, t))
     if len(result_type.types) == 1:
         return list(result_type.types)[0]
     return result_type
 
 
-def infer_if_expression(node, context):
+def infer_if_expression(node, context, constraints_problem):
     """Infer expressions like: {(a) if (test) else (b)}.
 
     Return a union type of both (a) and (b) types.
     """
-    a_type = infer(node.body, context)
-    b_type = infer(node.orelse, context)
+    a_type = infer(node.body, context, constraints_problem)
+    b_type = infer(node.orelse, context, constraints_problem)
 
     result_type = UnionTypes({a_type, b_type})
     if len(result_type.types) == 1:
@@ -277,9 +444,37 @@ def infer_if_expression(node, context):
         return result_type
 
 
-def _infer_index_subscript(indexed_type, index_type):
-    if pred.is_sequence(indexed_type):
+def _index_constraint(indexed_type, index_type, result_type):
+    if isinstance(indexed_type, TSequence):
+        return index_type.is_subtype(TInt())
+    return isinstance(indexed_type, TDictionary)
+
+
+def _infer_index_subscript(indexed_type, index_type, constraints_problem):
+    if isinstance(index_type, Generic) and isinstance(indexed_type, Generic):
+        v_type = Generic([Type()])
+        indexed_type.narrow([TSequence(), TDictionary(t_v=v_type)])
+        index_type.narrow([TInt(), Type()])
+
+        return _perform_generic_operation([indexed_type, index_type], v_type, constraints_problem, _index_constraint)
+
+    if isinstance(indexed_type, Generic):
+        v_type = Generic([Type()])
         if not index_type.is_subtype(TInt()):
+            indexed_type.narrow([TDictionary(t_k=index_type, t_v=v_type)])
+        else:
+            indexed_type.narrow([TSequence(), TDictionary(t_k=index_type, t_v=v_type)])
+
+        return _perform_generic_operation([], v_type, constraints_problem)
+
+    if isinstance(index_type, Generic):
+        if isinstance(indexed_type, TSequence):
+            index_type.narrow([TInt()])
+        elif isinstance(indexed_type, TDictionary):
+            index_type.narrow([indexed_type.key_type])
+
+    if pred.is_sequence(indexed_type):
+        if not (index_type.is_subtype(TInt()) or isinstance(index_type, Generic)):
             raise KeyError("Cannot index a sequence with an index of type {}.".format(index_type))
 
     if isinstance(indexed_type, TString):
@@ -300,23 +495,30 @@ def _infer_index_subscript(indexed_type, index_type):
 
 
 def _infer_slice_subscript(sliced_type):
+    if isinstance(sliced_type, Generic):
+        sliced_type.narrow([TSequence()])
+        return sliced_type
     if not pred.is_sequence(sliced_type):
         raise TypeError("Cannot slice a non sequence.")
     if isinstance(sliced_type, TTuple):
         return sliced_type.get_possible_tuple_slicings()
-    if pred.is_sequence(sliced_type):
-        return sliced_type
-    raise TypeError("Cannot slice a non sequence.")
+
+    return sliced_type
 
 
-def _all_int(union):
-    for t in union.types:
-        if not t.is_subtype(TInt()):
+def _all_int(types):
+    for t in (types.types if isinstance(types, UnionTypes) else [types]):
+        if isinstance(t, Generic):
+            try:
+                t.narrow([TInt()])
+            except ValueError:
+                return False
+        elif not t.is_subtype(TInt()):
             return False
     return True
 
 
-def infer_subscript(node, context):
+def infer_subscript(node, context, constraints_problem):
     """Infer expressions like: x[1], x["a"], x[1:2], x[1:].
     Where x	may be: a list, dict, tuple, str
 
@@ -324,30 +526,30 @@ def infer_subscript(node, context):
         node: the subscript node to be inferred
     """
 
-    indexed_types = UnionTypes(infer(node.value, context))
+    indexed_types = infer(node.value, context, constraints_problem)
 
     subscript_type = UnionTypes()
     if isinstance(node.slice, ast.Index):
-        index_types = UnionTypes(infer(node.slice.value, context))
-        for index_t in index_types.types:
-            for indexed_t in indexed_types.types:
-                subscript_type.union(_infer_index_subscript(indexed_t, index_t))
+        index_types = infer(node.slice.value, context, constraints_problem)
+        for index_t in (index_types.types if isinstance(index_types, UnionTypes) else [index_types]):
+            for indexed_t in (indexed_types.types if isinstance(indexed_types, UnionTypes) else [indexed_types]):
+                subscript_type.union(_infer_index_subscript(indexed_t, index_t, constraints_problem))
     else:
         if node.slice.lower:
-            lower_type = UnionTypes(infer(node.slice.lower, context))
+            lower_type = infer(node.slice.lower, context, constraints_problem)
             if not _all_int(lower_type):
                 raise KeyError("Slicing lower bound should be integer.")
         if node.slice.upper:
-            upper_type = UnionTypes(infer(node.slice.upper, context))
+            upper_type = infer(node.slice.upper, context, constraints_problem)
             if not _all_int(upper_type):
                 raise KeyError("Slicing upper bound should be integer.")
         if node.slice.step:
-            step_type = UnionTypes(infer(node.slice.step, context))
+            step_type = infer(node.slice.step, context, constraints_problem)
             if not _all_int(step_type):
                 raise KeyError("Slicing step should be integer.")
 
-        for indexed_t in indexed_types.types:
-            subscript_type.union(indexed_t)
+        for indexed_t in (indexed_types.types if isinstance(indexed_types, UnionTypes) else [indexed_types]):
+            subscript_type.union(_infer_slice_subscript(indexed_t))
 
     if len(subscript_type.types) == 1:
         return list(subscript_type.types)[0]
@@ -369,9 +571,9 @@ def infer_name(node, context):
     return context.get_type(node.id)
 
 
-def infer_generators(generators, local_context):
+def infer_generators(generators, local_context, constraints_problem):
     for gen in generators:
-        iter_type = UnionTypes(infer(gen.iter, local_context))
+        iter_type = UnionTypes(infer(gen.iter, local_context, constraints_problem))
         if not (pred.all_instance(iter_type, (TList, TSet, TDictionary))):
             raise TypeError("The iterable should be only a list, a set or a dict. Found {}.", iter_type)
 
@@ -393,7 +595,7 @@ def infer_generators(generators, local_context):
         local_context.set_type(gen.target.id, target_type)
 
 
-def infer_sequence_comprehension(node, sequence_type, context):
+def infer_sequence_comprehension(node, sequence_type, context, constraints_problem):
     """Infer the type of a list comprehension
 
     Attributes:
@@ -411,11 +613,11 @@ def infer_sequence_comprehension(node, sequence_type, context):
         The iteration target should be always a variable name.
     """
     local_context = Context(parent_context=context)
-    infer_generators(node.generators, local_context)
-    return sequence_type(infer(node.elt, local_context))
+    infer_generators(node.generators, local_context, constraints_problem)
+    return sequence_type(infer(node.elt, local_context, constraints_problem))
 
 
-def infer_dict_comprehension(node, context):
+def infer_dict_comprehension(node, context, constraints_problem):
     """Infer the type of a dictionary comprehension
 
     Attributes:
@@ -431,13 +633,129 @@ def infer_dict_comprehension(node, context):
         The iteration target should be always a variable name.
     """
     local_context = Context(parent_context=context)
-    infer_generators(node.generators, local_context)
-    key_type = infer(node.key, local_context)
-    val_type = infer(node.value, local_context)
+    infer_generators(node.generators, local_context, constraints_problem)
+    key_type = infer(node.key, local_context, constraints_problem)
+    val_type = infer(node.value, local_context, constraints_problem)
     return TDictionary(key_type, val_type)
 
 
-def infer(node, context):
+def _verify_args_subtyping(call_types, func_arg_types):
+    """Verify that the function call types are subtypes to the inferred types for the arguments
+    
+    Attributes:
+        call_types: The function call arguments inferred types
+        func_arg_types: The previously inferred function arguments types
+    """
+    for arg_name in call_types:
+        func_arg_type = func_arg_types[arg_name]
+        call_type = call_types[arg_name]
+
+        if not call_type.is_subtype(func_arg_type):
+            raise TypeError("Expecting argument of type {}, but {} is given.".format(func_arg_type, call_type))
+
+
+def _get_satisfying_constraints(args_name_to_type, constraints):
+    """Get the constraints that are satisfied by the function call combination
+    
+    Attributes:
+        args_name_to_type: mapping from call args names to their inferred types
+        constraints: list of constraints previously generated in the function inference.
+    """
+    sat = [con for con in constraints
+           if all(args_name_to_type[name].is_subtype(con[name]) for name in args_name_to_type)]
+
+    return sat
+
+
+def _get_args_name_to_type(args_types, keyword_args_types, func_type):
+    """Merge the positional args with the keywords args in a dict mapping arg name to its type
+    
+    Attributes:
+        args_types: Call's positional arguments types
+        keyword_args_types: Call's keyword arguments types
+        func_type: Previously inferred function type
+    """
+    if len(args_types) + len(keyword_args_types) != len(func_type.args_name_to_type):
+        raise TypeError("Expecting {} args, but {} are given.".format(len(func_type.args_name_to_type),
+                                                                      len(args_types) + len(keyword_args_types)))
+    for i in range(len(args_types)):
+        arg_name = func_type.args_order_to_type[i].name
+        if arg_name in keyword_args_types:
+            raise TypeError("Multiple values for argument {} are given.".format(arg_name))
+        keyword_args_types[arg_name] = args_types[i]
+
+    return keyword_args_types
+
+
+def _get_args_types(args, keyword_args, context, constraints_problem):
+    """Infer the types for the function call args
+    
+    Attributes:
+        args: List of AST arg nodes.
+        keyword_args: List of AST keyword arg nodes.
+        context: The current inference context
+    """
+    arg_types = []
+    keyword_args_types = {}
+
+    for arg in args:
+        arg_types.append(infer(arg, context, constraints_problem))
+
+    for name in keyword_args:
+        keyword_args_types[name] = infer(keyword_args[name], context, constraints_problem)
+
+    return arg_types, keyword_args_types
+
+
+def _unify_with_generics(type_to_unify, args_name_to_type):
+    """Unify the generics in the return type with the types of the call arguments"""
+    if isinstance(type_to_unify, Generic):
+        if type_to_unify.variable in args_name_to_type:
+            return args_name_to_type[type_to_unify.variable]
+        return type_to_unify
+    if isinstance(type_to_unify, TList):
+        return TList(_unify_with_generics(type_to_unify.type, args_name_to_type))
+    elif isinstance(type_to_unify, TTuple):
+        tuple_types = []
+        for t in type_to_unify.types:
+            tuple_types.append(_unify_with_generics(t, args_name_to_type))
+        return TTuple(tuple_types)
+    elif isinstance(type_to_unify, TSet):
+        return TSet(_unify_with_generics(type_to_unify.type, args_name_to_type))
+    elif isinstance(type_to_unify, TDictionary):
+        key_type = _unify_with_generics(type_to_unify.key_type, args_name_to_type)
+        val_type = _unify_with_generics(type_to_unify.value_type, args_name_to_type)
+        return TDictionary(key_type, val_type)
+    elif isinstance(type_to_unify, TIterator):
+        return TIterator(_unify_with_generics(type_to_unify.type, args_name_to_type))
+    return type_to_unify
+
+
+def infer_function_call(node, context, constraints_problem):
+    """Infer the type of a function call"""
+    func_type = infer(node.func, context, constraints_problem)
+
+    args_types, keyword_args_types = _get_args_types(node.args, node.keywords, context, constraints_problem)
+    args_name_to_type = _get_args_name_to_type(args_types, keyword_args_types, func_type)
+
+    _verify_args_subtyping(args_name_to_type, func_type.args_name_to_type)
+    satisfying_constraints = _get_satisfying_constraints(args_name_to_type, func_type.constraints)
+    if len(satisfying_constraints) == 0:
+        raise TypeError("The combination for the arguments types is not allowed.")
+
+    return_type = _unify_with_generics(func_type.return_type, args_name_to_type)
+
+    if not isinstance(return_type, Generic):
+        return return_type
+
+    return_type = UnionTypes()
+    for con in satisfying_constraints:
+        return_type.union(con[func_type.return_type.variable])
+
+    return return_type if len(return_type.types) > 1 else list(return_type.types)[0]
+
+
+def infer(node, context, constraints_problem):
     """Infer the type of a given AST node"""
     if isinstance(node, ast.Num):
         return infer_numeric(node)
@@ -450,36 +768,38 @@ def infer(node, context):
     elif isinstance(node, ast.Bytes):
         return TBytesString()
     elif isinstance(node, ast.List):
-        return infer_list(node, context)
+        return infer_list(node, context, constraints_problem)
     elif isinstance(node, ast.Dict):
-        return infer_dict(node, context)
+        return infer_dict(node, context, constraints_problem)
     elif isinstance(node, ast.Tuple):
-        return infer_tuple(node, context)
+        return infer_tuple(node, context, constraints_problem)
     elif isinstance(node, ast.NameConstant):
         return infer_name_constant(node)
     elif isinstance(node, ast.Set):
-        return infer_set(node, context)
+        return infer_set(node, context, constraints_problem)
     elif isinstance(node, ast.BinOp):
-        return infer_binary_operation(node, context)
+        return infer_binary_operation(node, context, constraints_problem)
     elif isinstance(node, ast.UnaryOp):
-        return infer_unary_operation(node, context)
+        return infer_unary_operation(node, context, constraints_problem)
     elif isinstance(node, ast.IfExp):
-        return infer_if_expression(node, context)
+        return infer_if_expression(node, context, constraints_problem)
     elif isinstance(node, ast.Subscript):
-        return infer_subscript(node, context)
+        return infer_subscript(node, context, constraints_problem)
     elif sys.version_info[0] >= 3 and sys.version_info[1] >= 5 and isinstance(node, ast.Await):
         # Await and Async were introduced in Python 3.5
-        return infer(node.value, context)
+        return infer(node.value, context, constraints_problem)
     elif isinstance(node, ast.Yield):
-        return infer(node.value, context)
+        return infer(node.value, context, constraints_problem)
     elif isinstance(node, ast.Compare):
         return infer_compare(node)
     elif isinstance(node, ast.Name):
         return infer_name(node, context)
     elif isinstance(node, ast.ListComp):
-        return infer_sequence_comprehension(node, TList, context)
+        return infer_sequence_comprehension(node, TList, context, constraints_problem)
     elif isinstance(node, ast.SetComp):
-        return infer_sequence_comprehension(node, TSet, context)
+        return infer_sequence_comprehension(node, TSet, context, constraints_problem)
     elif isinstance(node, ast.DictComp):
-        return infer_dict_comprehension(node, context)
+        return infer_dict_comprehension(node, context, constraints_problem)
+    elif isinstance(node, ast.Call):
+        return infer_function_call(node, context, constraints_problem)
     raise NotImplementedError("Inference for expression {} is not implemented yet.".format(type(node).__name__))
