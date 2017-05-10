@@ -27,8 +27,6 @@ TODO:
     - Lambda(arguments args, expr body)
     - GeneratorExp(expr elt, comprehension* generators)
     - YieldFrom(expr value)
-    - Call(expr func, expr* args, keyword* keywords)
-    - Attribute(expr value, identifier attr, expr_context ctx)
     - Starred(expr value, expr_context ctx)
 """
 
@@ -356,6 +354,19 @@ def infer_func_call(node, context):
     return result_type
 
 
+def get_instnace(node, context):
+    instance_type = infer(node.value, context)
+    if not isinstance(instance_type, Instance):
+        # TODO Z3 constraints on instances
+        raise AttributeError("{} object has no attribute {}".format(instance_type, node.attr))
+    return instance_type
+
+
+def infer_attribute(node, context):
+    instance_type = get_instnace(node, context)
+    return instance_type.get_attribute_type(node.attr)
+
+
 def infer(node, context):
     """Infer the type of a given AST node"""
     if isinstance(node, ast.Num):
@@ -403,4 +414,6 @@ def infer(node, context):
         return infer_dict_comprehension(node, context)
     elif isinstance(node, ast.Call):
         return infer_func_call(node, context)
+    elif isinstance(node, ast.Attribute):
+        return infer_attribute(node, context)
     raise NotImplementedError("Inference for expression {} is not implemented yet.".format(type(node).__name__))

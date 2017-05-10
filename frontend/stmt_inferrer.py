@@ -12,6 +12,8 @@ Infers the types for the following expressions:
     - With(withitem* items, stmt* body)
     - AsyncWith(withitem* items, stmt* body)
     - Try(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)
+    - FunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns)
+    - ClassDef(identifier name, expr* bases, keyword* keywords, stmt* body, expr* decorator_list)
 
     TODO:
     - Import(alias* names)
@@ -50,8 +52,6 @@ def _infer_assignment_target(target, context, value):
         For example, the following is not supported yet:
         x = (1, "string")
         a, b = x
-        
-    TODO: Attributes assignment
     """
     value_type = value
     if isinstance(target, ast.Name):
@@ -96,6 +96,11 @@ def _infer_assignment_target(target, context, value):
             if target.slice.step:
                 step_type = expr.infer(target.slice.step, context)
             z3_types.solver.add(axioms.slice_assignment(lower_type, upper_type, step_type, indexed_type, value_type))
+    elif isinstance(target, ast.Attribute):
+        if isinstance(value_type, ast.AST):
+            value_type = expr.infer(value_type, context)
+        instance = expr.get_instnace(target, context)
+        instance.assign_attr(target.attr, value_type)
     else:
         raise TypeError("The inference for {} assignment is not supported.".format(type(target).__name__))
 
