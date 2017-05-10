@@ -27,6 +27,7 @@ import frontend.z3_types as z3_types
 import sys
 
 from frontend.context import Context
+from frontend.class_infr import Class, Instance
 
 
 def _infer_assignment_target(target, context, value):
@@ -277,10 +278,18 @@ def _init_func_context(args, context):
     # TODO starred args
 
     args_types = ()
+    first_arg = True
     for arg in args:
-        arg_type = z3_types.new_z3_const("func_arg")
+        if first_arg and isinstance(context, Class):
+            # First arg for a class method should be an instance of this class.
+            arg_type = Instance(context)
+            first_arg = False
+        else:
+            # Normal function argument.
+            arg_type = z3_types.new_z3_const("func_arg")
+            args_types = args_types + (arg_type,)
+
         local_context.set_type(arg.arg, arg_type)
-        args_types = args_types + (arg_type,)
 
     return local_context, args_types
 
@@ -291,10 +300,26 @@ def _infer_func_def(node, context):
     return_type = _infer_body(node.body, func_context)
 
     func_type = getattr(z3_types, "Func{}".format(len(args_types)))(args_types + (return_type,))
+
     result_type = z3_types.new_z3_const("func")
     z3_types.solver.add(result_type == func_type)
 
     context.set_type(node.name, result_type)
+    return z3_types.zNone
+
+
+def _infer_class_def(node, context):
+    # TODO handle bases
+    class_context = Class(node.name, parent_context=context)
+    for stmt in node.body:
+        infer(stmt, class_context)
+
+    if not class_context.has_variable("__init__"):
+        init_func = z3_types.new_z3_const("func")
+        z3_types.solver.add(init_func == z3_types.Func0(z3_types.zNone))
+        class_context.set_type("__init__", init_func)
+    context.set_type(node.name, class_context)
+    return z3_types.zNone
 
 
 def infer(node, context):
@@ -322,4 +347,6 @@ def infer(node, context):
         return _infer_try(node, context)
     elif isinstance(node, ast.FunctionDef):
         return _infer_func_def(node, context)
+    elif isinstance(node, ast.ClassDef):
+        return _infer_class_def(node, context)
     return z3_types.zNone

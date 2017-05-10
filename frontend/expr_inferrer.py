@@ -28,7 +28,7 @@ TODO:
     - GeneratorExp(expr elt, comprehension* generators)
     - YieldFrom(expr value)
     - Call(expr func, expr* args, keyword* keywords)
-    - Attribute(expr value, identifier attr, expr_co0ontext ctx)
+    - Attribute(expr value, identifier attr, expr_context ctx)
     - Starred(expr value, expr_context ctx)
 """
 
