@@ -8,6 +8,18 @@ class Class(Context):
         super().__init__(parent_context)
         self.name = name
 
+    def get_attr_type(self, attr):
+        if attr in self.types_map:
+            return self.types_map[attr]
+        else:
+            raise NameError("Name {} is not defined.".format(attr))
+
+    def delete_type(self, var_name):
+        if var_name in self.types_map:
+            del self.types_map[var_name]
+        else:
+            raise NameError("Name {} is not defined.".format(var_name))
+
 
 class Instance:
     def __init__(self, cls):
@@ -15,7 +27,7 @@ class Instance:
 
     def get_attribute_type(self, attr):
         try:
-            return self.cls.get_type(attr)
+            return self.cls.get_attr_type(attr)
         except NameError:
             raise AttributeError("{} object has no attribute {}".format(self.cls.name, attr))
 
@@ -32,3 +44,9 @@ class Instance:
                 self.cls.set_type(attr, attr_type)
             else:
                 self.cls.set_type(attr, t)
+
+    def delete_attr(self, attr):
+        try:
+            self.cls.delete_type(attr)
+        except NameError:
+            raise AttributeError("{} object has no attribute {}".format(self.cls.name, attr))

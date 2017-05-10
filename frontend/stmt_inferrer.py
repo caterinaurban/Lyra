@@ -120,14 +120,12 @@ def _infer_augmented_assign(node, context):
     Examples:
         a += 5
         b[2] &= x
-
-    TODO: Attribute augmented assignment
     """
     target_type = expr.infer(node.target, context)
     value_type = expr.infer(node.value, context)
     result_type = expr.binary_operation_type(target_type, node.op, value_type)
 
-    if isinstance(node.target, ast.Name):
+    if isinstance(node.target, (ast.Name, ast.Attribute)):
         z3_types.solver.add(axioms.assignment(target_type, result_type))
     elif isinstance(node.target, ast.Subscript):
         indexed_type = expr.infer(node.target.value, context)
@@ -144,9 +142,6 @@ def _infer_augmented_assign(node, context):
                 step_type = expr.infer(node.target.slice.step, context)
             z3_types.solver.add(axioms.slice_assignment(lower_type, upper_type, step_type, indexed_type, result_type))
 
-    elif isinstance(node.target, ast.Attribute):
-        # TODO: Implement after classes inference
-        pass
     return z3_types.zNone
 
 
@@ -158,7 +153,6 @@ def _delete_element(target, context):
         - del subscript:
                     * Tuple/String --> Immutable. Raise exception.
                     * List/Dict --> Do nothing to the context.
-    TODO: Attribute deletion
     """
     if isinstance(target, (ast.Tuple, ast.List)):  # Multiple deletions
         for elem in target.elts:
@@ -169,6 +163,9 @@ def _delete_element(target, context):
         expr.infer(target, context)
         indexed_type = expr.infer(target.value, context)
         z3_types.solver.add(axioms.delete_subscript(indexed_type))
+    elif isinstance(target, ast.Attribute):
+        instance = expr.get_instnace(target, context)
+        instance.delete_attr(target.attr)
 
 
 def _infer_delete(node, context):
