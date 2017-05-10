@@ -12,6 +12,8 @@ Infers the types for the following expressions:
     - With(withitem* items, stmt* body)
     - AsyncWith(withitem* items, stmt* body)
     - Try(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)
+    - FunctionDef(identifier name, arguments args, stmt* body, expr* decorator_list, expr? returns)
+    - ClassDef(identifier name, expr* bases, keyword* keywords, stmt* body, expr* decorator_list)
 
     TODO:
     - Import(alias* names)
@@ -22,19 +24,22 @@ Infers the types for the following expressions:
 
 import ast
 import frontend.expr_inferrer as expr
-import frontend.predicates as pred
+import frontend.z3_axioms as axioms
+import frontend.z3_types as z3_types
 import sys
 
-from frontend.i_types import *
+from frontend.context import Context
+from frontend.class_infr import Class, Instance
+from copy import copy
 
 
-def _infer_assignment_target(target, context, value_type):
+def _infer_assignment_target(target, context, value):
     """Infer the type of a target in an assignment
 
     Attributes:
         target: the target whose type is to be inferred
         context: the current context level
-        value_type: the type of the value assigned to the target
+        value: the value assigned to the target
 
     Target cases:
         - Variable name. Ex: x = 1
@@ -44,72 +49,70 @@ def _infer_assignment_target(target, context, value_type):
         - Compound: Ex: a, b[0], [c, d], e["key"] = 1, 2.0, [True, False], "value"
 
     Limitation:
-        - In case of tuple/list assignments, there are no guarantees for correct number of unpacked values.
-            Because the length of the list/tuple may not be resolved statically.
-    TODO: Attributes assignment, UnionTypes assignment
+        - In case of tuple/list assignments, the value should be tuple/list too (not a variable name)
+        For example, the following is not supported yet:
+        x = (1, "string")
+        a, b = x
     """
+    value_type = value
     if isinstance(target, ast.Name):
-        if context.has_variable(target.id):  # Check if variable is already inferred before
-            var_type = context.get_type(target.id)
-            if var_type.is_subtype(value_type):
-                context.set_type(target.id, value_type)
-            elif not value_type.is_subtype(var_type):
-                raise TypeError("The type of {} is {}. Cannot assign it to {}.".format(target.id, var_type, value_type))
-        else:
+        if isinstance(value_type, ast.AST):
+            value_type = expr.infer(value_type, context)
+        if isinstance(value_type, (Instance, Class)):
             context.set_type(target.id, value_type)
-    elif isinstance(target, ast.Tuple) or isinstance(target, ast.List):  # Tuple/List assignment
-        if not pred.is_sequence(value_type):
-            raise ValueError("Cannot unpack a non sequence.")
-        for i in range(len(target.elts)):
-            seq_elem = target.elts[i]
-            if isinstance(value_type, TString):
-                _infer_assignment_target(seq_elem, context, value_type)
-            elif isinstance(value_type, TList):
-                _infer_assignment_target(seq_elem, context, value_type.type)
-            elif isinstance(value_type, TTuple):
-                _infer_assignment_target(seq_elem, context, value_type.types[i])
-    elif isinstance(target, ast.Subscript):  # Subscript assignment
-        expr.infer(target, context)
-        indexed_type = expr.infer(target.value, context)
-        if isinstance(indexed_type, TString):
-            raise TypeError("String objects don't support item assignment.")
-        elif isinstance(indexed_type, TTuple):
-            raise TypeError("Tuple objects don't support item assignment.")
-        elif isinstance(indexed_type, TList):
-            if isinstance(target.slice, ast.Index):
-                if indexed_type.type.is_subtype(value_type):  # Update the type of the list with the more generic type
-                    if isinstance(target.value, ast.Name):
-                        context.set_type(target.value.id, TList(value_type))
-                elif not value_type.is_subtype(indexed_type.type):
-                    raise TypeError("Cannot assign {} to {}.".format(value_type, indexed_type.type))
-            else:  # Slice subscription
-                if indexed_type.is_subtype(value_type):
-                    if isinstance(target.value, ast.Name):  # Update the type of the list with the more generic type
-                        context.set_type(target.value.id, value_type)
-                elif not (isinstance(value_type, TList) and value_type.type.is_subtype(indexed_type.type)):
-                    raise TypeError("Cannot assign {} to {}.".format(value_type, indexed_type))
-        elif isinstance(indexed_type, TDictionary):
-            if indexed_type.value_type.is_subtype(value_type):
-                if isinstance(target.value,
-                              ast.Name):  # Update the type of the dictionary values with the more generic type
-                    context.get_type(target.value.id).value_type = value_type
-            elif not value_type.is_subtype(indexed_type.value_type):
-                raise TypeError(
-                    "Cannot assign {} to a dictionary item of type {}.".format(value_type, indexed_type.value_type))
+            return
+        if context.has_variable(target.id):
+            z3_types.solver.add(axioms.assignment(context.get_type(target.id), value_type))
         else:
-            raise NotImplementedError("The inference for {} subscripting is not supported.".format(indexed_type))
+            assignment_target_type = z3_types.new_z3_const("assign")
+            z3_types.solver.add(axioms.assignment(assignment_target_type, value_type))
+            context.set_type(target.id, assignment_target_type)
+    elif isinstance(target, (ast.Tuple, ast.List)):
+        if isinstance(value, ast.AST):
+            if not isinstance(value, (ast.Tuple, ast.List)):
+                raise TypeError("Cannot unpack a non-sequence")
+            if len(target.elts) != len(value.elts):
+                raise ValueError("Cannot unpack {} values into {} targets".format(len(value.elts), len(target.elts)))
+            for i in range(len(value.elts)):
+                _infer_assignment_target(target.elts[i], context, value.elts[i])
+        else:
+            for i in range(len(target.elts)):
+                target_type = z3_types.new_z3_const("elt_type")
+                z3_types.solver.add(axioms.assignment_target(target_type, value, i + 1))
+                _infer_assignment_target(target.elts[i], context, target_type)
+
+    elif isinstance(target, ast.Subscript):
+        if isinstance(value_type, ast.AST):
+            value_type = expr.infer(value_type, context)
+        indexed_type = expr.infer(target.value, context)
+        if isinstance(target.slice, ast.Index):
+            index_type = expr.infer(target.slice.value, context)
+            z3_types.solver.add(axioms.index_assignment(indexed_type, index_type, value_type))
+        else:  # Slice assignment
+            lower_type = upper_type = step_type = z3_types.Int
+            if target.slice.lower:
+                lower_type = expr.infer(target.slice.lower, context)
+            if target.slice.upper:
+                upper_type = expr.infer(target.slice.upper, context)
+            if target.slice.step:
+                step_type = expr.infer(target.slice.step, context)
+            z3_types.solver.add(axioms.slice_assignment(lower_type, upper_type, step_type, indexed_type, value_type))
+    elif isinstance(target, ast.Attribute):
+        if isinstance(value_type, ast.AST):
+            value_type = expr.infer(value_type, context)
+        instance = expr.get_instnace(target, context)
+        instance.assign_attr(target.attr, value_type)
     else:
-        raise NotImplementedError("The inference for {} assignment is not supported.".format(type(target).__name__))
+        raise TypeError("The inference for {} assignment is not supported.".format(type(target).__name__))
 
 
 def _infer_assign(node, context):
     """Infer the types of target variables in an assignment node."""
-    value_type = expr.infer(node.value,
-                            context)  # The type of the value assigned to the targets in the assignment statement.
-    for target in node.targets:
-        _infer_assignment_target(target, context, value_type)
 
-    return TNone()
+    for target in node.targets:
+        _infer_assignment_target(target, context, node.value)
+
+    return z3_types.zNone
 
 
 def _infer_augmented_assign(node, context):
@@ -118,36 +121,29 @@ def _infer_augmented_assign(node, context):
     Examples:
         a += 5
         b[2] &= x
-
-    TODO: Attribute augmented assignment
     """
     target_type = expr.infer(node.target, context)
     value_type = expr.infer(node.value, context)
     result_type = expr.binary_operation_type(target_type, node.op, value_type)
-    if isinstance(node.target, ast.Name):
-        # If result_type was a supertype of target_type, replace it in the context
-        context.set_type(node.target.id, result_type)
+
+    if isinstance(node.target, (ast.Name, ast.Attribute)):
+        z3_types.solver.add(axioms.assignment(target_type, result_type))
     elif isinstance(node.target, ast.Subscript):
         indexed_type = expr.infer(node.target.value, context)
-        if isinstance(indexed_type, TString):
-            raise TypeError("String objects don't support item assignment.")
-        elif isinstance(indexed_type, TTuple):
-            raise TypeError("Tuple objects don't support item assignment.")
-        elif isinstance(indexed_type, TDictionary):
-            if not isinstance(result_type, type(indexed_type.value_type)):
-                raise TypeError("Cannot convert the dictionary value from {} to {}.".format(indexed_type.value_type,
-                                                                                            result_type))
-        elif isinstance(indexed_type, TList):
-            if not isinstance(result_type, type(indexed_type.type)):
-                raise TypeError("Cannot convert the list values from {} to {}.".format(indexed_type.type,
-                                                                                       result_type))
+        if isinstance(node.target.slice, ast.Index):
+            index_type = expr.infer(node.target.slice.value, context)
+            z3_types.solver.add(axioms.index_assignment(indexed_type, index_type, result_type))
         else:
-            # This block should never be executed.
-            raise TypeError("Unknown subscript type.")
-    elif isinstance(node.target, ast.Attribute):
-        # TODO: Implement after classes inference
-        pass
-    return TNone()
+            lower_type = upper_type = step_type = z3_types.Int
+            if node.target.slice.lower:
+                lower_type = expr.infer(node.target.slice.lower, context)
+            if node.target.slice.upper:
+                upper_type = expr.infer(node.target.slice.upper, context)
+            if node.target.slice.step:
+                step_type = expr.infer(node.target.slice.step, context)
+            z3_types.solver.add(axioms.slice_assignment(lower_type, upper_type, step_type, indexed_type, result_type))
+
+    return z3_types.zNone
 
 
 def _delete_element(target, context):
@@ -158,7 +154,6 @@ def _delete_element(target, context):
         - del subscript:
                     * Tuple/String --> Immutable. Raise exception.
                     * List/Dict --> Do nothing to the context.
-    TODO: Attribute deletion
     """
     if isinstance(target, (ast.Tuple, ast.List)):  # Multiple deletions
         for elem in target.elts:
@@ -166,11 +161,12 @@ def _delete_element(target, context):
     elif isinstance(target, ast.Name):
         context.delete_type(target.id)
     elif isinstance(target, ast.Subscript):
+        expr.infer(target, context)
         indexed_type = expr.infer(target.value, context)
-        if isinstance(indexed_type, TString):
-            raise TypeError("String objects don't support item deletion.")
-        elif isinstance(indexed_type, TTuple):
-            raise TypeError("Tuple objects don't support item deletion.")
+        z3_types.solver.add(axioms.delete_subscript(indexed_type))
+    elif isinstance(target, ast.Attribute):
+        instance = expr.get_instnace(target, context)
+        instance.delete_attr(target.attr)
 
 
 def _infer_delete(node, context):
@@ -178,25 +174,25 @@ def _infer_delete(node, context):
     for target in node.targets:
         _delete_element(target, context)
 
-    return TNone()
+    return z3_types.zNone
 
 
 def _infer_body(body, context):
     """Infer the type of a code block containing multiple statements"""
-    body_type = TNone()
+    body_type = z3_types.new_z3_const("body")
+    if len(body) == 0:
+        z3_types.solver.add(body_type == z3_types.zNone)
+        return body_type
+    stmts_types = []
     for stmt in body:
         stmt_type = infer(stmt, context)
-        if body_type.is_subtype(stmt_type) or isinstance(body_type, TNone):
-            body_type = stmt_type
-        elif not stmt_type.is_subtype(body_type):
-            if isinstance(body_type, UnionTypes):
-                body_type.union(stmt_type)
-            elif isinstance(stmt_type, UnionTypes):
-                stmt_type.union(body_type)
-                body_type = stmt_type
-            else:
-                union = {body_type, stmt_type}
-                body_type = UnionTypes(union)
+        stmts_types.append(stmt_type)
+        z3_types.solver.add(axioms.body(body_type, stmt_type))
+
+    # The body type should be none if all statements have none type.
+    z3_types.solver.add(z3_types.Implies(z3_types.And([x == z3_types.zNone for x in stmts_types]),
+                                         body_type == z3_types.zNone))
+
     return body_type
 
 
@@ -218,19 +214,11 @@ def _infer_control_flow(node, context):
     """
     body_type = _infer_body(node.body, context)
     else_type = _infer_body(node.orelse, context)
+    result_type = z3_types.new_z3_const("control_flow")
 
-    if body_type.is_subtype(else_type) or isinstance(body_type, TNone):
-        return else_type
-    elif else_type.is_subtype(body_type) or isinstance(else_type, TNone):
-        return body_type
+    z3_types.solver.add(axioms.control_flow(body_type, else_type, result_type))
 
-    if isinstance(body_type, UnionTypes):
-        body_type.union(else_type)
-        return body_type
-    elif isinstance(else_type, UnionTypes):
-        else_type.union(body_type)
-        return else_type
-    return UnionTypes({body_type, else_type})
+    return result_type
 
 
 def _infer_for(node, context):
@@ -243,20 +231,16 @@ def _infer_for(node, context):
                     ....
     """
     iter_type = expr.infer(node.iter, context)
-    if not isinstance(iter_type, (TList, TSet, TIterator, TBytesString, TDictionary, TString)):
-        raise TypeError("{} is not iterable.".format(iter_type))
 
     # Infer the target in the loop, inside the global context
     # Cases:
     # - Var name. Ex: for i in range(5)..
     # - Tuple. Ex: for (a,b) in [(1,"st"), (3,"st2")]..
     # - List. Ex: for [a,b] in [(1, "st"), (3, "st2")]..
-    value_type = iter_type
-    if isinstance(iter_type, (TList, TSet, TIterator)):
-        value_type = value_type.type
-    elif isinstance(iter_type, TDictionary):
-        value_type = value_type.key_type
-    _infer_assignment_target(node.target, context, value_type)
+    target_type = z3_types.new_z3_const("for_target")
+    z3_types.solver.add(axioms.for_loop(iter_type, target_type))
+
+    _infer_assignment_target(node.target, context, target_type)
 
     return _infer_control_flow(node, context)
 
@@ -273,29 +257,89 @@ def _infer_with(node, context):
 
 def _infer_try(node, context):
     """Infer the types for a try/except/else block"""
-    try_type = UnionTypes()
+    result_type = z3_types.new_z3_const("try")
 
     body_type = _infer_body(node.body, context)
     else_type = _infer_body(node.orelse, context)
     final_type = _infer_body(node.finalbody, context)
-    if not isinstance(body_type, TNone):
-        try_type.union(body_type)
-    if not isinstance(else_type, TNone):
-        try_type.union(else_type)
-    if not isinstance(final_type, TNone):
-        try_type.union(final_type)
+
+    z3_types.solver.add(axioms.try_except(body_type, else_type, final_type, result_type))
+
     # TODO: Infer exception handlers as classes
 
     for handler in node.handlers:
         handler_body_type = _infer_body(handler.body, context)
-        if not isinstance(handler_body_type, TNone):
-            try_type.union(handler_body_type)
+        z3_types.solver.add(z3_types.subtype(handler_body_type, result_type))
 
-    if len(try_type.types) == 0:
-        return TNone()
-    elif len(try_type.types) == 1:
-        return list(try_type.types)[0]
-    return try_type
+    return result_type
+
+
+def _init_func_context(args, context):
+    """Initialize the local function scope, and the arguments types"""
+    local_context = Context(parent_context=context)
+
+    if len(args) > 5:
+        raise NotImplementedError("Functions with more than 5 arguments are not yet supported.")
+
+    # TODO starred args
+
+    args_types = ()
+    first_arg = True
+    for arg in args:
+        if first_arg and isinstance(context, Class):
+            # First arg for a class method should be an instance of this class.
+            arg_type = Instance(context)
+            first_arg = False
+        else:
+            # Normal function argument.
+            arg_type = z3_types.new_z3_const("func_arg")
+            args_types = args_types + (arg_type,)
+
+        local_context.set_type(arg.arg, arg_type)
+
+    return local_context, args_types
+
+
+def _infer_func_def(node, context):
+    """Infer the type for a function definition"""
+    func_context, args_types = _init_func_context(node.args.args, context)
+    return_type = _infer_body(node.body, func_context)
+
+    func_type = getattr(z3_types, "Func{}".format(len(args_types)))(args_types + (return_type,))
+
+    result_type = z3_types.new_z3_const("func")
+    z3_types.solver.add(result_type == func_type)
+
+    context.set_type(node.name, result_type)
+    return z3_types.zNone
+
+
+def _inherit_from_bases(node, context):
+    # TODO MRO, single inheritance for now
+    bases = node.bases
+    if len(bases) == 0:
+        return Class(node.name, parent_context=context)
+    elif len(bases) > 1:
+        raise TypeError("The type inference doesn't support multiple inheritance")
+
+    base_type = expr.infer(bases[0], context)
+    if not isinstance(base_type, Class):
+        raise TypeError("Cannot extend a non class")
+    return Class(node.name, copy(base_type.types_map), parent_context=context)
+
+
+def _infer_class_def(node, context):
+    # TODO handle bases
+    class_context = _inherit_from_bases(node, context)
+    for stmt in node.body:
+        infer(stmt, class_context)
+
+    if not class_context.has_variable("__init__"):
+        init_func = z3_types.new_z3_const("func")
+        z3_types.solver.add(init_func == z3_types.Func0(z3_types.zNone))
+        class_context.set_type("__init__", init_func)
+    context.set_type(node.name, class_context)
+    return z3_types.zNone
 
 
 def infer(node, context):
@@ -321,4 +365,8 @@ def infer(node, context):
         return _infer_with(node, context)
     elif isinstance(node, ast.Try):
         return _infer_try(node, context)
-    return TNone()
+    elif isinstance(node, ast.FunctionDef):
+        return _infer_func_def(node, context)
+    elif isinstance(node, ast.ClassDef):
+        return _infer_class_def(node, context)
+    return z3_types.zNone
