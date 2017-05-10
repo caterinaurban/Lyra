@@ -57,6 +57,9 @@ def _infer_assignment_target(target, context, value):
     if isinstance(target, ast.Name):
         if isinstance(value_type, ast.AST):
             value_type = expr.infer(value_type, context)
+        if isinstance(value_type, (Instance, Class)):
+            context.set_type(target.id, value_type)
+            return
         if context.has_variable(target.id):
             z3_types.solver.add(axioms.assignment(context.get_type(target.id), value_type))
         else:

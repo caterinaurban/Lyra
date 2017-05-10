@@ -38,6 +38,7 @@ import frontend.z3_axioms as axioms
 import sys
 
 from frontend.context import Context
+from frontend.class_infr import Class, Instance
 
 
 def infer_numeric(node):
@@ -338,13 +339,20 @@ def _get_args_types(args, context):
 
 def infer_func_call(node, context):
     """Infer the type of a function call, and unify the call types with the function parameters"""
-    func_type = infer(node.func, context)
+    called_type = infer(node.func, context)
+
     args_types = _get_args_types(node.args, context)
 
-    result_type = z3_types.new_z3_const("call")
+    if isinstance(called_type, Class):
+        result_type = Instance(called_type)
+        expected_return = z3_types.zNone
+        called_type = called_type.types_map["__init__"]
+    else:
+        result_type = expected_return = z3_types.new_z3_const("call")
 
     # TODO covariant and invariant subtyping
-    z3_types.solver.add(func_type == getattr(z3_types, "Func{}".format(len(args_types)))(args_types + (result_type,)))
+    z3_types.solver.add(called_type == getattr(z3_types, "Func{}".format(len(args_types)))(args_types +
+                                                                                           (expected_return,)))
     return result_type
 
 
