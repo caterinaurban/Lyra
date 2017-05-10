@@ -30,6 +30,7 @@ import sys
 
 from frontend.context import Context
 from frontend.class_infr import Class, Instance
+from copy import copy
 
 
 def _infer_assignment_target(target, context, value):
@@ -313,9 +314,23 @@ def _infer_func_def(node, context):
     return z3_types.zNone
 
 
+def _inherit_from_bases(node, context):
+    # TODO MRO, single inheritance for now
+    bases = node.bases
+    if len(bases) == 0:
+        return Class(node.name, parent_context=context)
+    elif len(bases) > 1:
+        raise TypeError("The type inference doesn't support multiple inheritance")
+
+    base_type = expr.infer(bases[0], context)
+    if not isinstance(base_type, Class):
+        raise TypeError("Cannot extend a non class")
+    return Class(node.name, copy(base_type.types_map), parent_context=context)
+
+
 def _infer_class_def(node, context):
     # TODO handle bases
-    class_context = Class(node.name, parent_context=context)
+    class_context = _inherit_from_bases(node, context)
     for stmt in node.body:
         infer(stmt, class_context)
 

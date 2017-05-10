@@ -4,8 +4,10 @@ from frontend.context import Context
 
 
 class Class(Context):
-    def __init__(self, name, parent_context=None):
+    def __init__(self, name, init_context=None, parent_context=None):
         super().__init__(parent_context)
+        if init_context:
+            self.types_map = init_context
         self.name = name
 
     def get_attr_type(self, attr):
