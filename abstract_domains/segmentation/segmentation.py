@@ -191,7 +191,7 @@ class Segmentation:
         for i in reversed(remove_indices):
             self.remove_limit(i)
 
-    def unify(self, other: 'Segmentation', neutral_predicate_generator):
+    def unify(self, other: 'Segmentation', left_neutral_predicate_generator, right_neutral_predicate_generator=None):
         """Unifies this segmentation **and** the other segmentation to let them coincide.
         
         **NOTE**: This potentially also modifies the actual parameter ``other``.
@@ -201,11 +201,15 @@ class Segmentation:
         """
         assert self.limits[0] == other.limits[0], "The lower limits should be equal for unification."
 
-        self._unify(other, neutral_predicate_generator, 0, 0)
+        if not right_neutral_predicate_generator:
+            right_neutral_predicate_generator = left_neutral_predicate_generator
 
-    def _unify(self, other: 'Segmentation', neutral_predicate_generator, self_index: int, other_index: int):
+        self._unify(other, left_neutral_predicate_generator, right_neutral_predicate_generator, 0, 0)
+
+    def _unify(self, other: 'Segmentation', left_neutral_predicate_generator, right_neutral_predicate_generator,
+               self_index: int, other_index: int):
         # TODO check if this subset_case can be merged into incomparable_case
-        def handle_subset_case(seg1, seg2, i, j):
+        def handle_subset_case(seg1, seg2, i, j, seg1_neutral_predicate_generator, seg2_neutral_predicate_generator):
             """Handle the case where ``b1 > b2``, i.e. bounds ``b2`` is a subset of bounds ``b1``.
             
             Where ``b1`` are bounds of ``seg1`` at current index of ``seg1`` and ``b2`` are bounds of ``seg2`` at 
@@ -213,10 +217,12 @@ class Segmentation:
             
             This method recursively calls :meth:`unify`.
             
+            :param seg1: segmentation 1
+            :param seg2: segmentation 2
             :param i: index of the starting limit of first segmentation
             :param j: index of the starting limit of second segmentation
-            :param b1: bounds of the starting limit of first segmentation
-            :param b2: bounds of the starting limit of second segmentation
+            :param seg1_neutral_predicate_generator: the neutral predicate generator for segmentation ``seg1``
+            :param seg2_neutral_predicate_generator: the neutral predicate generator for segmentation ``seg2``
             """
             b1 = seg1.limits[self_index].bounds
             b2 = seg2.limits[other_index].bounds
@@ -231,11 +237,11 @@ class Segmentation:
             if not b1_appearing_later_in_seg2:  # if b1_exclusive bounds do not appear later in segmentation ``seg2``
                 # just forget about b1_exclusive bounds
                 seg1.limits[i].bounds -= b1_exclusive
-                seg1._unify(seg2, neutral_predicate_generator, i,
+                seg1._unify(seg2, seg1_neutral_predicate_generator, seg2_neutral_predicate_generator, i,
                             j)  # TODO ★ check if switch of receiver, other-argument is OK
             else:
                 # add new segment to seg1 with neutral element
-                seg1.add_limit(i, Limit(deepcopy(b1_exclusive)), predicate_before=neutral_predicate_generator(),
+                seg1.add_limit(i, Limit(deepcopy(b1_exclusive)), predicate_before=seg1_neutral_predicate_generator(),
                                possibly_empty_before=True, possibly_empty_after=seg1.possibly_empty[i])
 
         def handle_incomparable_case(seg1, seg2, i, j):
@@ -246,10 +252,10 @@ class Segmentation:
 
             This method recursively calls :meth:`unify`.
 
+            :param seg1: segmentation 1
+            :param seg2: segmentation 2
             :param i: index of the starting limit of first segmentation
             :param j: index of the starting limit of second segmentation
-            :param b1: bounds of the starting limit of first segmentation
-            :param b2: bounds of the starting limit of second segmentation
             """
             b1 = seg1.limits[self_index].bounds
             b2 = seg2.limits[other_index].bounds
@@ -272,13 +278,13 @@ class Segmentation:
             seg2.limits[j].bounds -= b2_exclusive
             if b2_appearing_later_in_seg1:
                 seg2.add_limit(j, Limit(deepcopy(b2_appearing_later_in_seg1)),
-                               predicate_before=neutral_predicate_generator(),
+                               predicate_before=right_neutral_predicate_generator(),
                                possibly_empty_before=True, possibly_empty_after=seg2.possibly_empty[j])
             if b1_appearing_later_in_seg2:
                 seg1.add_limit(i, Limit(deepcopy(b1_appearing_later_in_seg2)),
-                               predicate_before=neutral_predicate_generator(),
+                               predicate_before=left_neutral_predicate_generator(),
                                possibly_empty_before=True, possibly_empty_after=seg1.possibly_empty[i])
-            seg1._unify(seg2, neutral_predicate_generator, i, j)
+            seg1._unify(seg2, left_neutral_predicate_generator, right_neutral_predicate_generator, i, j)
 
         self_bounds = self.limits[self_index].bounds
         other_bounds = other.limits[other_index].bounds
@@ -299,14 +305,17 @@ class Segmentation:
 
         if self_bounds == other_bounds:
             # same lower bounds -> keep both current lower segments as they are
-            self._unify(other, neutral_predicate_generator, self_index + 1, other_index + 1)
+            self._unify(other, left_neutral_predicate_generator, right_neutral_predicate_generator, self_index + 1,
+                        other_index + 1)
         elif self_bounds & other_bounds:  # at least one bound in common
             if self_bounds > other_bounds:
-                handle_subset_case(self, other, self_index, other_index)
+                handle_subset_case(self, other, self_index, other_index, left_neutral_predicate_generator,
+                                   right_neutral_predicate_generator)
             elif self_bounds < other_bounds:
                 # this call switches the roles of self and other, potentially continues recursion with switched roles
                 # TODO check if this is a problem (see other TODO ★)
-                handle_subset_case(other, self, other_index, self_index)
+                handle_subset_case(other, self, other_index, self_index, right_neutral_predicate_generator,
+                                   left_neutral_predicate_generator)
             else:  # incomparable (remember that set inclusion is no total order!)
                 handle_incomparable_case(self, other, self_index, other_index)
         else:  # no bound in common
