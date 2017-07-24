@@ -136,27 +136,27 @@ class OctagonLattice(BottomMixin, NumericalMixin):
                 lower = - self[PLUS, var, MINUS, var] // 2
                 upper = self[MINUS, var, PLUS, var] // 2
                 if lower < inf and upper < inf:
-                    res.append(f"{lower}≤{var.name}≤{upper}")
+                    res.append(f"{lower:.0f}≤{var.name}≤{upper:.0f}")
                 elif lower < inf:
-                    res.append(f"{lower}≤{var.name}")
+                    res.append(f"{lower:.0f}≤{var.name}")
                 elif upper < inf:
-                    res.append(f"{var.name}≤{upper}")
+                    res.append(f"{var.name}≤{upper:.0f}")
             # represent binary constraints second, do not repeat identical inequalities
             for i, var1 in enumerate(self.variables):
                 for j, var2 in enumerate(self.variables):
                     if i > j:
                         c = self[MINUS, var1, PLUS, var2]
                         if c < inf:
-                            res.append(f"{var1.name}+{var2.name}≤{c}")
+                            res.append(f"{var1.name}+{var2.name}≤{c:.0f}")
                         c = self[MINUS, var1, MINUS, var2]
                         if c < inf:
-                            res.append(f"{var1.name}-{var2.name}≤{c}")
+                            res.append(f"{var1.name}-{var2.name}≤{c:.0f}")
                         c = self[PLUS, var1, PLUS, var2]
                         if c < inf:
-                            res.append(f"-{var1.name}+{var2.name}≤{c}")
+                            res.append(f"-{var1.name}+{var2.name}≤{c:.0f}")
                         c = self[PLUS, var1, MINUS, var2]
                         if c < inf:
-                            res.append(f"-{var1.name}-{var2.name}≤{c}")
+                            res.append(f"-{var1.name}-{var2.name}≤{c:.0f}")
             return ", ".join(res)
 
     def close(self):
@@ -254,12 +254,18 @@ class OctagonLattice(BottomMixin, NumericalMixin):
     def set_octagonal_constraint(self, sign1: Sign, var1: VariableIdentifier,
                                  sign2: Sign,
                                  var2: VariableIdentifier, constant):
-        self[Sign(sign1 * MINUS), var1, sign2, var2] = constant
+        self[-sign1, var1, sign2, var2] = constant
+
+    def get_octagonal_constraint(self, sign1: Sign, var1: VariableIdentifier,
+                                 sign2: Sign,
+                                 var2: VariableIdentifier):
+        self.close()
+        return self[-sign1, var1, sign2, var2]
 
     def lower_octagonal_constraint(self, sign1: Sign, var1: VariableIdentifier,
                                    sign2: Sign,
                                    var2: VariableIdentifier, constant):
-        self[Sign(sign1 * MINUS), var1, sign2, var2] = min(self[Sign(sign1 * MINUS), var1, sign2, var2], constant)
+        self[-sign1, var1, sign2, var2] = min(self[Sign(sign1 * MINUS), var1, sign2, var2], constant)
 
     def switch_constraints(self, index1, index2):
         temp = self[index1]

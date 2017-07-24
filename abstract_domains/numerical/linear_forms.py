@@ -1,12 +1,8 @@
 from abstract_domains.numerical.interval_domain import IntervalLattice
 from core.expressions import *
 
-from core.expressions_tools import ExpressionVisitor
+from core.expressions_tools import ExpressionVisitor, PLUS, MINUS
 from core.special_expressions import VariadicArithmeticOperation
-
-Sign = UnaryArithmeticOperation.Operator
-PLUS = Sign.Add
-MINUS = Sign.Sub
 
 
 class InvalidFormError(ValueError):
@@ -23,7 +19,8 @@ class LinearForm:
         construct this form, this raises a InvalidFormError.
         """
         self._var_summands = {}  # dictionary holding {var: sign}
-        self._interval = None
+        self._interval = IntervalLattice(0, 0)
+        self._interval_set = False
 
         LinearForm._visitor.visit(expr, self)
 
@@ -31,7 +28,7 @@ class LinearForm:
     def var_summands(self):
         return self._var_summands
 
-    def _encounter_new_var(self, var, sign=PLUS):
+    def encounter_new_var(self, var, sign=PLUS):
         if var in self.var_summands:
             raise InvalidFormError(f"VariableIdentifier {var} appears twice!")
         self.var_summands[var] = sign
@@ -42,9 +39,12 @@ class LinearForm:
 
     @interval.setter
     def interval(self, value):
-        if self._interval:
-            raise InvalidFormError("interval set twice (is immutable)!")
         self._interval = value
+
+    def encounter_interval(self, interval):
+        if self._interval_set:
+            raise InvalidFormError("interval set twice (is immutable)!")
+        self.interval = interval
 
     def __eq__(self, other: 'LinearForm'):
         return isinstance(other, self.__class__) \
@@ -86,26 +86,35 @@ class LinearForm:
         return hash(repr(self))
 
     def __str__(self):
-        vars_string = ' '.join([f"{str(sign)} {var}" for var, sign in self.var_summands.items()])
-        return vars_string + (f" + {self._interval}" if self._interval else "")
+        vars_string = ' '.join([f"{str(sign)}{var}" for var, sign in self.var_summands.items()])
+        interval_string = f"{self._interval}" if self._interval != LinearForm.zero_interval or not vars_string else ""
+        if vars_string and interval_string:
+            return f"{vars_string} + {interval_string}"
+        else:
+            return vars_string or interval_string
+
+    zero_interval = IntervalLattice(0, 0)
 
     class Visitor(ExpressionVisitor):
         """A visitor to generate a single variable linear form."""
+
+        def __init__(self):
+            self._interval_set = False
 
         # the visit methods should either set parts of the linear form or call visit method on children, propagating if
         # the sub-expressions is negated. They can also fallback on other visitors like the interval visitor via
         # IntervalLattice.evaluate(expr)
 
         def visit_Literal(self, expr: Literal, linear_form, invert=False):
-            linear_form.interval = IntervalLattice.evaluate(expr)
+            linear_form.encounter_interval(IntervalLattice.evaluate(expr))
             if invert:
                 linear_form.interval.negate()
 
         def visit_VariableIdentifier(self, expr: VariableIdentifier, linear_form, invert=False):
-            linear_form._encounter_new_var(expr, sign=MINUS if invert else PLUS)
+            linear_form.encounter_new_var(expr, sign=MINUS if invert else PLUS)
 
         def visit_Input(self, _: Input, linear_form, invert=False):
-            linear_form.interval = IntervalLattice().top()
+            linear_form.encounter_interval(IntervalLattice().top())
             if invert:
                 linear_form.interval.negate()
 
@@ -117,7 +126,7 @@ class LinearForm:
 
             try:
                 # just try if interval lattice is capable of reducing to single interval (if no vars inside expr)
-                linear_form.interval = IntervalLattice.evaluate(expr.left)
+                linear_form.encounter_interval(IntervalLattice.evaluate(expr.left))
                 if invert:
                     linear_form.interval.negate()
             except ValueError:
@@ -128,7 +137,7 @@ class LinearForm:
 
             try:
                 # just try if interval lattice is capable of reducing to single interval (if no vars inside expr)
-                linear_form.interval = IntervalLattice.evaluate(expr.right)
+                linear_form.encounter_interval(IntervalLattice.evaluate(expr.right))
                 if (expr.operator == BinaryArithmeticOperation.Operator.Sub) != invert:
                     linear_form.interval.negate()
             except ValueError:
@@ -159,7 +168,7 @@ class LinearForm:
 
 
 class SingleVarLinearForm(LinearForm):
-    """Holds an expression in linear form with a single variable: `+/- var + interval`."""
+    """Holds an expression in linear form with a single variable: ``+/- var + interval``."""
 
     def __init__(self, expr: Expression):
         """Initializes this instance with the single variable form of an expression.

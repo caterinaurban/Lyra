@@ -367,6 +367,12 @@ class UnaryArithmeticOperation(UnaryOperation):
         Add = 1
         Sub = -1
 
+        def __neg__(self):
+            return UnaryArithmeticOperation.Operator(-self.value)
+
+        def __pos__(self):
+            return UnaryArithmeticOperation.Operator(self.value)
+
         def __str__(self):
             if self.value == 1:
                 return "+"

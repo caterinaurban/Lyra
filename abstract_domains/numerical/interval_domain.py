@@ -1,14 +1,45 @@
 from copy import deepcopy
+from numbers import Number
 
 from abstract_domains.store import Store
 from abstract_domains.lattice import BottomMixin
 from abstract_domains.numerical.numerical import NumericalMixin
 from abstract_domains.state import State
 from core.expressions import *
-from typing import List, Set
+from typing import List, Set, Union
 from math import inf
 
 from core.expressions_tools import ExpressionVisitor
+
+
+def _auto_convert_numbers(func):
+    def func_wrapper(self, other: Union[Number, 'Interval']):
+        if isinstance(other, Number):
+            other = Interval(other, other)
+
+        return func(self, other)
+
+    return func_wrapper
+
+
+def _check_types(func):
+    def func_wrapper(self, other: 'Interval'):
+        if not issubclass(self.__class__, Interval) or not issubclass(other.__class__, Interval):
+            return NotImplemented
+
+        return func(self, other)
+
+    return func_wrapper
+
+
+def _check_non_empty(func):
+    def func_wrapper(self, other: 'Interval'):
+        if self.empty() or other.empty():
+            raise ValueError("Empty intervals are not comparable!")
+
+        return func(self, other)
+
+    return func_wrapper
 
 
 class Interval:
@@ -61,38 +92,36 @@ class Interval:
         self.interval = (1, 0)
         return self
 
+    @_check_types
     def __eq__(self, other: 'Interval'):
-        return isinstance(other, self.__class__) and repr(self) == repr(other)
+        return repr(self) == repr(other)
 
+    @_check_types
     def __ne__(self, other: 'Interval'):
         return not (self == other)
 
+    @_auto_convert_numbers
+    @_check_types
+    @_check_non_empty
     def __lt__(self, other):
-        if not isinstance(other, self.__class__):
-            raise NotImplementedError("Incomparable types!")
-        if self.empty() or other.empty():
-            raise NotImplementedError("Empty intervals are not comparable!")
         return self.upper < other.lower
 
+    @_auto_convert_numbers
+    @_check_types
+    @_check_non_empty
     def __le__(self, other):
-        if not isinstance(other, self.__class__):
-            raise NotImplementedError("Incomparable types!")
-        if self.empty() or other.empty():
-            raise NotImplementedError("Empty intervals are not comparable!")
         return self.upper <= other.lower
 
+    @_auto_convert_numbers
+    @_check_types
+    @_check_non_empty
     def __gt__(self, other):
-        if not isinstance(other, self.__class__):
-            raise NotImplementedError("Incomparable types!")
-        if self.empty() or other.empty():
-            raise NotImplementedError("Empty intervals are not comparable!")
         return self.lower > other.upper
 
+    @_auto_convert_numbers
+    @_check_types
+    @_check_non_empty
     def __ge__(self, other):
-        if not isinstance(other, self.__class__):
-            raise NotImplementedError("Incomparable types!")
-        if self.empty() or other.empty():
-            raise NotImplementedError("Empty intervals are not comparable!")
         return self.lower >= other.upper
 
     def __hash__(self):
@@ -104,21 +133,29 @@ class Interval:
         else:
             return f"[{self.lower},{self.upper}]"
 
-    def add(self, other) -> 'Interval':
+    # operators (they mutate self, no copy is made!!)
+
+    @_check_types
+    @_auto_convert_numbers
+    def add(self, other: Union['Interval', int]) -> 'Interval':
         if self.empty() or other.empty():
             return self.set_empty()
         else:
             self.interval = (self.lower + other.lower, self.upper + other.upper)
             return self
 
-    def sub(self, other) -> 'Interval':
+    @_check_types
+    @_auto_convert_numbers
+    def sub(self, other: Union['Interval', int]) -> 'Interval':
         if self.empty() or other.empty():
             return self.set_empty()
         else:
             self.interval = (self.lower - other.upper, self.upper - other.lower)
             return self
 
-    def mult(self, other) -> 'Interval':
+    @_check_types
+    @_auto_convert_numbers
+    def mult(self, other: Union['Interval', int]) -> 'Interval':
         if self.empty() or other.empty():
             return self.set_empty()
         else:
@@ -133,6 +170,28 @@ class Interval:
         else:
             self.interval = (-self.upper, -self.lower)
             return self
+
+    # overload operators (do not mutate self, return a modified copy)
+
+    def __pos__(self):
+        copy = deepcopy(self)
+        return copy
+
+    def __neg__(self):
+        copy = deepcopy(self)
+        return copy.negate()
+
+    def __add__(self, other):
+        copy = deepcopy(self)
+        return copy.add(other)
+
+    def __sub__(self, other):
+        copy = deepcopy(self)
+        return copy.sub(other)
+
+    def __mul__(self, other):
+        copy = deepcopy(self)
+        return copy.mult(other)
 
 
 class IntervalLattice(Interval, BottomMixin):
@@ -182,7 +241,8 @@ class IntervalLattice(Interval, BottomMixin):
     def evaluate(cls, expr: Expression):
         """Evaluates an expression without variables, interpreting constants in the interval domain.
         
-        If this method encounters any variables, it raises a ``ValueError``."""
+        If this method encounters any variables, it raises a ``ValueError``.
+        """
         return cls._visitor.visit(expr)
 
     class Visitor(ExpressionVisitor):
@@ -296,7 +356,7 @@ class IntervalDomain(Store, NumericalMixin, State):
     class Visitor(IntervalLattice.Visitor):
         """A visitor to abstractly evaluate an expression (with variables) in the interval domain."""
 
-        # noinspection PyMethodMayBeStatic
+        # noinspection PyMethodMayBeStatic, PyUnusedLocal
         def visit_VariableIdentifier(self, expr: VariableIdentifier, interval_store, *args, **kwargs):
             if expr.typ == int:
                 # copy the lattice element, since evaluation should not modify elements
