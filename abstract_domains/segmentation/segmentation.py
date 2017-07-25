@@ -336,10 +336,11 @@ class Segmentation(BottomMixin):
             assert self.limits[self_index] == other.limits[other_index] == self.limits[
                 self_index + 1], "All three remaining limits should be equal for " \
                                  "unification. "
-            upper_bounds = self.limits[self_index + 1].bounds | self.limits[self_index] | other.limits[other_index]
+            upper_bounds = self.limits[self_index + 1].bounds | self.limits[self_index].bounds | other.limits[
+                other_index].bounds
             self.remove_limit(self_index)
-            self.limits[len(self)] = deepcopy(upper_bounds)
-            other.limits[len(other)] = deepcopy(upper_bounds)
+            self.limits[len(self)] = Limit(deepcopy(upper_bounds))
+            other.limits[len(other)] = Limit(deepcopy(upper_bounds))
 
         if self_bounds == other_bounds:
             # same lower bounds -> keep both current lower segments as they are
