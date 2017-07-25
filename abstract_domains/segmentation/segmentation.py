@@ -1,7 +1,7 @@
 from copy import deepcopy
 from typing import Type
 
-from abstract_domains.lattice import Lattice
+from abstract_domains.lattice import Lattice, BottomMixin
 
 from abstract_domains.segmentation.bounds import SingleVarLinearFormWithOctagonalComparison as Form
 from core.expressions import Literal, VariableIdentifier
@@ -74,8 +74,9 @@ class Limit:
             del self._bounds[i]
 
 
-class Segmentation:
+class Segmentation(BottomMixin):
     def __init__(self, len_var, predicate_lattice: Type[Lattice], octagon):
+        super().__init__()
         self._octagon = octagon
         self._len_var = len_var
         self._predicate_lattice = predicate_lattice
@@ -117,7 +118,7 @@ class Segmentation:
     def __len__(self):
         return len(self.predicates)
 
-    def __str__(self):
+    def __repr__(self):
         s = ""
         for i in range(len(self)):
             s += str(self._limits[i])
@@ -190,6 +191,43 @@ class Segmentation:
 
         for i in reversed(remove_indices):
             self.remove_limit(i)
+
+    def _join(self, other: 'Segmentation') -> 'Segmentation':
+        other_copy = deepcopy(other)
+        self.unify(other_copy, lambda: self._predicate_lattice().bottom())
+        for i in range(len(self)):
+            self.predicates[i].join(other_copy.predicates[i])
+            self.possibly_empty[i] = max(self.possibly_empty[i], other_copy.possibly_empty[i])
+        return self
+
+    def _less_equal(self, other: 'Segmentation') -> bool:
+        other_copy = deepcopy(other)
+        # different left/right neutral predicates!
+        self.unify(other_copy, lambda: self._predicate_lattice().bottom(), lambda: self._predicate_lattice().top())
+        return all(p1.less_equal(p2) for p1, p2 in zip(self.predicates, other_copy.predicates))
+
+    def _widening(self, other: 'Segmentation'):
+        other_copy = deepcopy(other)
+        self.unify(other_copy, lambda: self._predicate_lattice().bottom())
+        for p1, p2 in zip(self.predicates, other_copy.predicates):
+            p1.widening(p2)
+        return self
+
+    def _meet(self, other: 'Segmentation'):
+        other_copy = deepcopy(other)
+        self.unify(other_copy, lambda: self._predicate_lattice().top())
+        for i in range(len(self)):
+            self.predicates[i].meet(other_copy.predicates[i])
+            self.possibly_empty[i] = min(self.possibly_empty[i], other_copy.possibly_empty[i])
+        return self
+
+    def top(self):
+        for p in self.predicates:
+            p.top()
+        return self
+
+    def is_top(self) -> bool:
+        return all([p.is_top() for p in self.predicates])
 
     def unify(self, other: 'Segmentation', left_neutral_predicate_generator, right_neutral_predicate_generator=None):
         """Unifies this segmentation **and** the other segmentation to let them coincide.

@@ -28,12 +28,18 @@ class TestSegmentationUnification(unittest.TestCase):
         s2.add_limit(0, Limit({Form(c1, octagon), Form(i, octagon)}), predicate_before=UsedLattice(Used.S))
         s2.possibly_empty[0] = False
 
+        print("Original:")
         print(s1)
         print(s2)
 
         s1.unify(s2, lambda: UsedLattice().top())
+        print("\nUnified:")
         print(s1)
         print(s2)
+
+        print("\nJoined:")
+        s1.join(s2)
+        print(s1)
 
 
 def suite():
