@@ -4,6 +4,8 @@ from copy import deepcopy
 from core.expressions import Expression, VariableIdentifier
 from typing import Set
 
+from core.statements import ProgramPoint
+
 
 class State(Lattice, metaclass=ABCMeta):
     def __init__(self):
@@ -173,3 +175,10 @@ class State(Lattice, metaclass=ABCMeta):
         self.big_join([deepcopy(self)._substitute_variable(lhs, rhs) for lhs in left for rhs in right])
         self.result = set()  # assignments have no result, only side-effects
         return self
+
+    def before(self, pp: ProgramPoint):
+        """Called by the engine before the statement at a program point gets interpreted.
+        
+        :param pp: the program point of the statement interpreted next
+        """
+        pass

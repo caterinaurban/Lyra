@@ -61,6 +61,7 @@ class BackwardInterpreter(Interpreter):
                         successor = successor.enter_loop()
                     # handle conditional edges
                     if isinstance(edge, Conditional):
+                        successor.before(edge.condition.pp)
                         successor = self.semantics.semantics(edge.condition, successor).filter()
                     entry = entry.join(successor)
                 # widening
@@ -73,7 +74,9 @@ class BackwardInterpreter(Interpreter):
                 if isinstance(current, Basic):
                     successor = entry
                     for stmt in reversed(current.stmts):
-                        successor = self.semantics.semantics(stmt, deepcopy(successor))
+                        successor = deepcopy(successor)
+                        successor.before(stmt.pp)
+                        successor = self.semantics.semantics(stmt, successor)
                         states.appendleft(successor)
                 elif isinstance(current, Loop):
                     # nothing to be done
