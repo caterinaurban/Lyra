@@ -6,7 +6,7 @@ from core.expressions_tools import MINUS
 
 class SingleVarLinearFormWithOctagonalComparison(SingleVarLinearForm):
     """Holds a syntactically and semantically comparable expression in linear form with a single variable: ``+/- var 
-    + interval``.
+    + constant``.
     
     For semantic comparision octagonal constraints are used.
     """
@@ -27,6 +27,16 @@ class SingleVarLinearFormWithOctagonalComparison(SingleVarLinearForm):
     @octagon.setter
     def octagon(self, value):
         self._octagon = value
+
+    @property
+    def interval(self):
+        assert self._interval.constant(), "The interval part of this linear form must be constant."
+        return super().interval
+
+    @interval.setter
+    def interval(self, value):
+        assert value.constant(), "The interval part of this linear form must be constant."
+        super(SingleVarLinearFormWithOctagonalComparison, self.__class__).interval.fset(self, value)
 
     @property
     def var_interval(self):

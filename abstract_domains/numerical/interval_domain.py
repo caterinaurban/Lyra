@@ -86,11 +86,21 @@ class Interval:
         self.upper = upper
 
     def empty(self) -> bool:
+        """Return `True` if this interval is empty."""
         return self._lower > self._upper
 
     def set_empty(self) -> 'Interval':
+        """Set this interval to be empty."""
         self.interval = (1, 0)
         return self
+
+    def finite(self) -> bool:
+        """Return `True` if this interval is finite."""
+        return not ({self.lower, self.upper} & {-inf, inf})
+
+    def constant(self) -> bool:
+        """Return `True` if this interval is equal to a single constant (different from infinity)."""
+        return self.finite() and self.lower == self.upper
 
     @_check_types
     def __eq__(self, other: 'Interval'):
