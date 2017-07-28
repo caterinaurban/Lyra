@@ -46,6 +46,10 @@ class Expression(metaclass=ABCMeta):
         :return: string representing the expression
         """
 
+    # TODO maybe this is a bad idea, but for debbuging so much easier (otherwise the memory address is displayed)
+    def __repr__(self):
+        return self.__str__()
+
     def ids(self) -> Set['Expression']:
         """Identifiers that appear in the expression.
         

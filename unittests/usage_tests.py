@@ -1,5 +1,5 @@
 import glob
-from abstract_domains.usage.stack import UsedStack
+from abstract_domains.usage.usage_domains import UsedDomain
 from core.expressions import VariableIdentifier
 from engine.backward import BackwardInterpreter
 from semantics.usage.usage_semantics import UsageSemantics
@@ -32,7 +32,7 @@ class UsageTestCase(ResultCommentsFileTestCase):
 
         # Run Usage Analysis
         backward_interpreter = BackwardInterpreter(self.cfg, UsageSemantics(), 3)
-        result = backward_interpreter.analyze(UsedStack(variables))
+        result = backward_interpreter.analyze(UsedDomain(variables))
         self.render_result_cfg(result)
         self.check_result_comments(result)
 

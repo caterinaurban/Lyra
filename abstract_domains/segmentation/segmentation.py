@@ -1,10 +1,26 @@
 from copy import deepcopy
-from typing import Type
+from typing import Type, List, Union
 
 from abstract_domains.lattice import Lattice, BottomMixin
+from abstract_domains.numerical.interval_domain import IntervalLattice
+from abstract_domains.numerical.linear_forms import InvalidFormError
+from abstract_domains.numerical.octagon_domain import OctagonDomain, OctagonLattice
+from abstract_domains.segmentation.bounds import SingleVarLinearFormWithOctagonalComparison
+from abstract_domains.state import State
+from core.expressions import Literal, VariableIdentifier, Expression
+from core.expressions_tools import PLUS, MINUS
+from core.statements import ProgramPoint
+from engine.result import AnalysisResult
 
-from abstract_domains.segmentation.bounds import SingleVarLinearFormWithOctagonalComparison as Form
-from core.expressions import Literal, VariableIdentifier
+
+def _auto_convert_to_limit(func):
+    def func_wrapper(self, other, *args, **kwargs):
+        if not isinstance(other, Limit):
+            other = Limit({other})
+
+        return func(self, other, *args, **kwargs)
+
+    return func_wrapper
 
 
 class Limit:
@@ -22,41 +38,47 @@ class Limit:
     def __len__(self):
         return len(self.bounds)
 
-    def __eq__(self, other):
+    @_auto_convert_to_limit
+    def eq_octagonal(self, other, octagon: OctagonLattice):
         for b1 in self.bounds:
             for b2 in other.bounds:
-                if b1 == b2:
+                if b1.eq_octagonal(b2, octagon):
                     return True
         return False
 
-    def __ne__(self, other):
-        return not (self == other)
+    @_auto_convert_to_limit
+    def ne_octagonal(self, other, octagon: OctagonLattice):
+        return not self.eq_octagonal(other, octagon)
 
-    def __lt__(self, other):
+    @_auto_convert_to_limit
+    def lt_octagonal(self, other, octagon: OctagonLattice):
         for b1 in self.bounds:
             for b2 in other.bounds:
-                if b1 < b2:
+                if b1.lt_octagonal(b2, octagon):
                     return True
         return False
 
-    def __le__(self, other):
+    @_auto_convert_to_limit
+    def le_octagonal(self, other, octagon: OctagonLattice):
         for b1 in self.bounds:
             for b2 in other.bounds:
-                if b1 <= b2:
+                if b1.le_octagonal(b2, octagon):
                     return True
         return False
 
-    def __gt__(self, other):
+    @_auto_convert_to_limit
+    def gt_octagonal(self, other, octagon: OctagonLattice):
         for b1 in self.bounds:
             for b2 in other.bounds:
-                if b1 > b2:
+                if b1.gt_octagonal(b2, octagon):
                     return True
         return False
 
-    def __ge__(self, other):
+    @_auto_convert_to_limit
+    def ge_octagonal(self, other, octagon: OctagonLattice):
         for b1 in self.bounds:
             for b2 in other.bounds:
-                if b1 >= b2:
+                if b1.ge_octagonal(b2, octagon):
                     return True
         return False
 
@@ -74,20 +96,38 @@ class Limit:
             del self._bounds[i]
 
 
-class Segmentation(BottomMixin):
-    def __init__(self, len_var, predicate_lattice: Type[Lattice], octagon):
+class SegmentedListLattice(BottomMixin):
+    def __init__(self, len_var, predicate_lattice: Type[Lattice], octagon: OctagonLattice):
         super().__init__()
-        self._octagon = octagon
+        self._octagon = octagon  # TODO should we make copy? maybe yes since we add pseudo constraints var < len_var
         self._len_var = len_var
         self._predicate_lattice = predicate_lattice
-        self._limits = [Limit({Form(Literal(int, '0'), self._octagon)}), Limit({Form(len_var, self._octagon)})]
-        self._predicates = [self._predicate_lattice().top()]
+        self._limits = [
+            Limit({SingleVarLinearFormWithOctagonalComparison.from_expression(Literal(int, '0'))}),
+            Limit({SingleVarLinearFormWithOctagonalComparison.from_expression(len_var)})]
+        self._predicates = [self._predicate_lattice()]
         self._possibly_empty = [True]
 
     @property
     def limits(self):
         """All limits of this segmentation (in increasing order)."""
         return self._limits
+
+    @property
+    def lower_limit(self):
+        return self.limits[0]
+
+    @lower_limit.setter
+    def lower_limit(self, value):
+        self.limits[0] = value
+
+    @property
+    def upper_limit(self):
+        return self.limits[len(self)]
+
+    @upper_limit.setter
+    def upper_limit(self, value):
+        self.limits[len(self)] = value
 
     def all_bounds(self, start_limit=0):
         """Generate all bounds of all limits."""
@@ -111,10 +151,6 @@ class Segmentation(BottomMixin):
     def octagon(self, value):
         self._octagon = value
 
-        # also update octagon in all bounds!
-        for b in self.all_bounds():
-            b.octagon = value
-
     def __len__(self):
         return len(self.predicates)
 
@@ -136,10 +172,11 @@ class Segmentation(BottomMixin):
     def check_limits(self):
         for i in range(len(self)):
             if self.possibly_empty[i]:
-                assert self.limits[i] <= self.limits[
-                    i + 1], f"Limits not ordered: {self.limits[i]} !<= {self.limits[i+1]}"
+                assert self.limits[i].le_octagonal(self.limits[
+                                                       i + 1],
+                                                   self.octagon), f"Limits not ordered: {self.limits[i]} !<= {self.limits[i+1]}"
             else:
-                assert self.limits[i] < self.limits[i + 1]
+                assert self.limits[i].lt_octagonal(self.limits[i + 1], self.octagon)
 
     def add_limit(self, segment_index, limit: Limit, predicate_before=None, predicate_after=None,
                   possibly_empty_before=True,
@@ -192,7 +229,143 @@ class Segmentation(BottomMixin):
         for i in reversed(remove_indices):
             self.remove_limit(i)
 
-    def _join(self, other: 'Segmentation') -> 'Segmentation':
+    def greatest_lower_limit(self, index_form):
+        greatest_lower_limit = 0
+        if index_form.interval.finite():
+            while greatest_lower_limit < len(self) and self.limits[greatest_lower_limit + 1].le_octagonal(index_form,
+                                                                                                          self.octagon):
+                greatest_lower_limit += 1
+        assert greatest_lower_limit < len(
+            self), f"The target index {index_form} is greater than the length!"
+        return greatest_lower_limit
+
+    def least_upper_limit(self, index_form):
+        """Finds least upper limit that is greater **or equals** to the index."""
+        least_upper_limit = len(self)
+        if index_form.interval.finite():
+            while 0 < least_upper_limit and self.limits[least_upper_limit - 1].ge_octagonal(index_form, self.octagon):
+                least_upper_limit -= 1
+        assert least_upper_limit > 0, f"The target index {index_form} is smaller equals the lower limit!"
+        return least_upper_limit
+
+    def _set_predicate_at_form_index(self, form: SingleVarLinearFormWithOctagonalComparison, predicate):
+        lower_index_form = form
+        upper_index_form = deepcopy(form)
+        upper_index_form.interval.add(1)
+
+        self._set_predicate_in_form_range(lower_index_form, upper_index_form, predicate)
+
+    def _set_predicate_at_index(self, index: int, predicate):
+        form_index = SingleVarLinearFormWithOctagonalComparison(interval=IntervalLattice.from_constant(index))
+        self._set_predicate_at_form_index(form_index, predicate)
+
+    def _set_predicate_in_interval(self, interval, predicate):
+        lower_form = SingleVarLinearFormWithOctagonalComparison(interval=IntervalLattice.from_constant(
+            interval.lower))
+        upper_form = SingleVarLinearFormWithOctagonalComparison(interval=IntervalLattice.from_constant(
+            interval.upper))
+        self._set_predicate_in_form_range(lower_form, upper_form, predicate)
+
+    def _add_constraints_that_ensure_within_extremal_limits(self, form: SingleVarLinearFormWithOctagonalComparison):
+        # since we presume out-of-bounds checks have been done before, we add octagonal constraints for:
+        # -> index_forms are greater equals 0
+        # -> index_forms are smaller than len_var
+        # TODO or better add a synctatical 'rule' that knows that all variables are 0 <= var < n ?
+        if form.var and form.var != self._len_var:
+            self.octagon.set_lb(form.var, 0 - form.constant)
+            self.octagon.set_octagonal_constraint(PLUS, form.var, MINUS, self._len_var, -1 - form.constant)
+
+    def _set_predicate_in_form_range(self, lower_index_form: SingleVarLinearFormWithOctagonalComparison,
+                                     upper_index_form: SingleVarLinearFormWithOctagonalComparison, predicate):
+        """Main helper method. Set a predicate within a range given by bounds in linear form.
+        
+        :param predicate: the predicate to set in the range or None to set the element to the least upper bound of the predicate domain
+        """
+        # self._add_constraints_that_ensure_within_extremal_limits(lower_index_form)
+        # self._add_constraints_that_ensure_within_extremal_limits(upper_index_form)
+
+        greatest_lower_limit = self.greatest_lower_limit(lower_index_form)
+        least_upper_limit = self.least_upper_limit(upper_index_form)
+
+        assert greatest_lower_limit < least_upper_limit, "Implementation Error: inconsistent greatest_lower_limit, " \
+                                                         "least_upper_limit indices!"
+
+        # remove all limits between the least_upper_limit and greatest_lower_limit
+        ##########################################################################
+        # preserve the predicates before and after the deleted limits
+        pred_before = deepcopy(self._predicates[greatest_lower_limit])
+        pred_after = deepcopy(self._predicates[least_upper_limit - 1])
+        # store the least upper bound of removed limits on the fly
+        lub_of_removed_predicates = deepcopy(self._predicates[greatest_lower_limit])
+        for i in reversed(list(range(greatest_lower_limit + 1, least_upper_limit))):
+            lub_of_removed_predicates.join(self.predicates[i])
+            self.remove_limit(i)
+            least_upper_limit -= 1
+
+        # add the target lower bound/limit
+        if self.limits[greatest_lower_limit].eq_octagonal(lower_index_form, self.octagon):
+            # add target lower bound to existing limit
+            self.limits[greatest_lower_limit].bounds.add(lower_index_form)
+
+            new_predicate_index = greatest_lower_limit
+        else:
+            # add new limit for target lower bound, DO NOT set the new predicate here
+            # (do this later when also existence of target upper bound is guaranteed)
+            self.add_limit(greatest_lower_limit, Limit({lower_index_form}),
+                           possibly_empty_before=True, possibly_empty_after=False)
+            least_upper_limit += 1  # index correction since limit was added
+
+            # restore the predicate before the inserted segment, since this got joined with removed segment predicate
+            self._predicates[greatest_lower_limit] = pred_before
+
+            new_predicate_index = greatest_lower_limit + 1
+
+        # add the target upper bound/limit, setting predicate in (possibly newly inserted) segment
+        if self.limits[least_upper_limit].eq_octagonal(upper_index_form, self.octagon):
+            # add target upper bound to existing limit
+            self.limits[least_upper_limit].bounds.add(upper_index_form)
+        else:
+            # add new limit for target lower bound, set the new predicate here, DO NOT set the new predicate here
+            # (do this later in separate step)
+            self.add_limit(least_upper_limit - 1, Limit({upper_index_form}),
+                           possibly_empty_before=False, possibly_empty_after=True)
+            least_upper_limit += 1  # index correction since limit was added
+
+            # restore the predicate before the inserted segment, since this got joined with removed segment predicate
+            self._predicates[least_upper_limit - 1] = pred_after
+
+        # set the target predicate to segment that is now guaranteed to be properly bounded
+        self.predicates[new_predicate_index] = predicate or lub_of_removed_predicates
+
+    def set_predicate(self, index: Union[Expression, IntervalLattice, int], predicate):
+        # convert index to interval lattice
+        if isinstance(index, Expression):
+            # first try to represent the index as linear form
+            try:
+                form = SingleVarLinearFormWithOctagonalComparison.from_expression(index)
+                self._set_predicate_at_form_index(form, predicate)
+            except InvalidFormError:
+                # Fallback: evaluate in octagon
+                index_interval = self.octagon.evaluate(index)
+                self._set_predicate_in_interval(index_interval, predicate)
+        elif isinstance(index, int):
+            self._set_predicate_at_index(index, predicate)
+        elif isinstance(index, IntervalLattice):
+            self._set_predicate_in_interval(index, predicate)
+        else:
+            raise TypeError(f"Invalid argument type {type(index)} for 'expr'!")
+
+    # TODO add type tolerant function like set_predicate
+    def get_predicate_at_form_index(self, form: SingleVarLinearFormWithOctagonalComparison):
+        lower_index_form = form
+        upper_index_form = deepcopy(form)
+        upper_index_form.interval.add(1)
+
+        gl = self.greatest_lower_limit(lower_index_form)
+        lu = self.least_upper_limit(upper_index_form)
+        return self._predicate_lattice().bottom().big_join(self.predicates[gl:lu])
+
+    def _join(self, other: 'SegmentedListLattice') -> 'SegmentedListLattice':
         other_copy = deepcopy(other)
         self.unify(other_copy, lambda: self._predicate_lattice().bottom())
         for i in range(len(self)):
@@ -200,20 +373,20 @@ class Segmentation(BottomMixin):
             self.possibly_empty[i] = max(self.possibly_empty[i], other_copy.possibly_empty[i])
         return self
 
-    def _less_equal(self, other: 'Segmentation') -> bool:
+    def _less_equal(self, other: 'SegmentedListLattice') -> bool:
         other_copy = deepcopy(other)
         # different left/right neutral predicates!
         self.unify(other_copy, lambda: self._predicate_lattice().bottom(), lambda: self._predicate_lattice().top())
         return all(p1.less_equal(p2) for p1, p2 in zip(self.predicates, other_copy.predicates))
 
-    def _widening(self, other: 'Segmentation'):
+    def _widening(self, other: 'SegmentedListLattice'):
         other_copy = deepcopy(other)
         self.unify(other_copy, lambda: self._predicate_lattice().bottom())
         for p1, p2 in zip(self.predicates, other_copy.predicates):
             p1.widening(p2)
         return self
 
-    def _meet(self, other: 'Segmentation'):
+    def _meet(self, other: 'SegmentedListLattice'):
         other_copy = deepcopy(other)
         self.unify(other_copy, lambda: self._predicate_lattice().top())
         for i in range(len(self)):
@@ -229,7 +402,8 @@ class Segmentation(BottomMixin):
     def is_top(self) -> bool:
         return all([p.is_top() for p in self.predicates])
 
-    def unify(self, other: 'Segmentation', left_neutral_predicate_generator, right_neutral_predicate_generator=None):
+    def unify(self, other: 'SegmentedListLattice', left_neutral_predicate_generator,
+              right_neutral_predicate_generator=None):
         """Unifies this segmentation **and** the other segmentation to let them coincide.
         
         **NOTE**: This potentially also modifies the actual parameter ``other``.
@@ -237,14 +411,15 @@ class Segmentation(BottomMixin):
         Requires compatible extremal limits, i.e. at least one common bound in the lower limits, one common bound in 
         the upper limits (of ``self`` and ``other``).
         """
-        assert self.limits[0] == other.limits[0], "The lower limits should be equal for unification."
+        assert self.limits[0].eq_octagonal(other.limits[0],
+                                           self.octagon), "The lower limits should be equal for unification."
 
         if not right_neutral_predicate_generator:
             right_neutral_predicate_generator = left_neutral_predicate_generator
 
         self._unify(other, left_neutral_predicate_generator, right_neutral_predicate_generator, 0, 0)
 
-    def _unify(self, other: 'Segmentation', left_neutral_predicate_generator, right_neutral_predicate_generator,
+    def _unify(self, other: 'SegmentedListLattice', left_neutral_predicate_generator, right_neutral_predicate_generator,
                self_index: int, other_index: int):
         # TODO check if this subset_case can be merged into incomparable_case
         def handle_subset_case(seg1, seg2, i, j, seg1_neutral_predicate_generator, seg2_neutral_predicate_generator):
@@ -329,18 +504,20 @@ class Segmentation(BottomMixin):
 
         # recursion ending criteria
         if self_index == len(self) and other_index == len(other):
-            assert self.limits[self_index] == other.limits[other_index], "The upper limits should be equal for " \
-                                                                         "unification. "
+            assert self.limits[self_index].eq_octagonal(other.limits[other_index],
+                                                        self.octagon), "The upper limits should be equal for " \
+                                                                       "unification. "
             return
         elif self_index == len(self) - 1 and other_index == len(other):
-            assert self.limits[self_index] == other.limits[other_index] == self.limits[
-                self_index + 1], "All three remaining limits should be equal for " \
-                                 "unification. "
+            assert self.limits[self_index].eq_octagonal(other.limits[other_index], self.octagon) and self.limits[
+                self_index].eq_octagonal(self.limits[self_index + 1],
+                                         self.octagon), "All three remaining limits should be equal for " \
+                                                        "unification. "
             upper_bounds = self.limits[self_index + 1].bounds | self.limits[self_index].bounds | other.limits[
                 other_index].bounds
             self.remove_limit(self_index)
-            self.limits[len(self)] = Limit(deepcopy(upper_bounds))
-            other.limits[len(other)] = Limit(deepcopy(upper_bounds))
+            self.upper_limit = Limit(deepcopy(upper_bounds))
+            other.lower_limit = Limit(deepcopy(upper_bounds))
 
         if self_bounds == other_bounds:
             # same lower bounds -> keep both current lower segments as they are
@@ -362,3 +539,62 @@ class Segmentation(BottomMixin):
             # merge consecutive segments in both segmentations (removing both limits b1 and b2 with no bound in common)
             self.remove_limit(self_index + 1)
             other.remove_limit(other_index + 1)
+
+
+class SegmentedList(SegmentedListLattice):
+    def __init__(self, variables: List[VariableIdentifier], len_var, predicate_lattice: Type[Lattice],
+                 octagon_analysis_result: AnalysisResult):
+        super().__init__(len_var, predicate_lattice, octagon=OctagonDomain(variables).top())
+        self._variables = variables
+        self._octagon_analysis_result = octagon_analysis_result
+        self._next_pp = None
+
+    @property
+    def variables(self):
+        return self._variables
+
+    @property
+    def octagon_analysis_result(self):
+        return self._octagon_analysis_result
+
+    @property
+    def next_pp(self):
+        return self._next_pp
+
+    @next_pp.setter
+    def next_pp(self, value):
+        self._next_pp = value
+
+    def substitute_variable(self, left: Expression, right: Expression) -> 'State':
+        if isinstance(left, VariableIdentifier):
+            if left.typ == int:
+                try:
+                    form = SingleVarLinearFormWithOctagonalComparison.from_expression(right)
+                    for bound in self.all_bounds():
+                        bound.substitute_variable(left, form)
+                        # TODO check if limit order is preserved or cleanup necessary
+                except InvalidFormError:
+                    # right is not in single variable linear form, use fallback: evaluate right side of
+                    # assignment in current octagon (transformed to interval) and use upper/lower of resulting
+                    # interval to update segmentation
+                    interval = self.octagon.evaluate(right)
+
+                    while True:
+                        seen = False
+                        for b in self.all_bounds():
+                            if b.var and b.var == left:  # substitution necessary
+                                seen = True
+                                self.set_predicate(interval + b.interval, self._predicate_lattice().top())
+                        if not seen:
+                            break
+            else:
+                # nothing to be done
+                pass
+        else:
+            raise NotImplementedError()
+
+        return self
+
+    def next(self, pp: ProgramPoint):
+        self.next_pp = pp
+        self.octagon = self.octagon_analysis_result.get_result_after(self.next_pp)

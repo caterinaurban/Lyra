@@ -176,8 +176,12 @@ class State(Lattice, metaclass=ABCMeta):
         self.result = set()  # assignments have no result, only side-effects
         return self
 
-    def before(self, pp: ProgramPoint):
-        """Called by the engine before the statement at a program point gets interpreted.
+    def next(self, pp: ProgramPoint):
+        """Called by the engine *before* **(time-wise)** the statement at a program point gets interpreted.
+        
+        If the engine runs a forward analysis, this state is considered to be *before* **(in situ)** the program 
+        point ``pp`` interpreted next. Otherwise in a backwards analysis, this state is considered to be *after*
+        **(in situ)** the program point ``pp`` interpreted next. 
         
         :param pp: the program point of the statement interpreted next
         """

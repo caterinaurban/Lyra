@@ -12,17 +12,21 @@ class InvalidFormError(ValueError):
 class LinearForm:
     """Holds an expression in linear form with one or several variables: `+/- var1 +/- var2 + ... + interval`."""
 
-    def __init__(self, expr: Expression):
+    def __init__(self, var_summands=None, interval=None):
         """Initializes this instance with the linear form of an expression.
 
         If possible, this instance holds the parts of the linear form separately. If not possible to 
         construct this form, this raises a InvalidFormError.
         """
-        self._var_summands = {}  # dictionary holding {var: sign}
-        self._interval = IntervalLattice(0, 0)
+        self._var_summands = var_summands or {}  # dictionary holding {var: sign}
+        self._interval = interval or IntervalLattice(0, 0)
         self._interval_set = False
 
-        LinearForm._visitor.visit(expr, self)
+    @staticmethod
+    def from_expression(expr: Expression):
+        form = LinearForm()
+        LinearForm._visitor.visit(expr, form)
+        return form
 
     @property
     def var_summands(self):
@@ -49,6 +53,7 @@ class LinearForm:
     def __eq__(self, other: 'LinearForm'):
         return isinstance(other, self.__class__) \
                and set(self.var_summands.keys()) == set(other.var_summands.keys()) \
+               and set(self.var_summands.values()) == set(other.var_summands.values()) \
                and self.interval == other.interval
 
     def __ne__(self, other: 'LinearForm'):
@@ -57,28 +62,28 @@ class LinearForm:
     def __lt__(self, other):
         """Syntactic comparision of this linear form."""
         if not isinstance(other, self.__class__):
-            raise NotImplementedError("Incomparable types!")
+            return NotImplemented
         return self.var_summands == other.var_summands \
                and self.interval < other.interval
 
     def __le__(self, other):
         """Syntactic comparision of this linear form."""
         if not isinstance(other, self.__class__):
-            raise NotImplementedError("Incomparable types!")
+            return NotImplemented
         return self.var_summands == other.var_summands \
                and self.interval <= other.interval
 
     def __gt__(self, other):
         """Syntactic comparision of this linear form."""
         if not isinstance(other, self.__class__):
-            raise NotImplementedError("Incomparable types!")
+            return NotImplemented
         return self.var_summands == other.var_summands \
                and self.interval > other.interval
 
     def __ge__(self, other):
         """Syntactic comparision of this linear form."""
         if not isinstance(other, self.__class__):
-            raise NotImplementedError("Incomparable types!")
+            return NotImplemented
         return self.var_summands == other.var_summands \
                and self.interval >= other.interval
 
@@ -170,26 +175,32 @@ class LinearForm:
 class SingleVarLinearForm(LinearForm):
     """Holds an expression in linear form with a single variable: ``+/- var + interval``."""
 
-    def __init__(self, expr: Expression):
+    def __init__(self, var_sign=None, var=None, interval=None):
         """Initializes this instance with the single variable form of an expression.
 
         If possible, this instance holds the parts of the single variable linear form separately. If not possible to 
         construct this form, this raises a InvalidFormError.
         """
+        super().__init__({var: var_sign} if var_sign and var else None, interval)
 
-        super().__init__(expr)
+    @staticmethod
+    def from_expression(expr: Expression):
+        form = SingleVarLinearForm()
+        LinearForm._visitor.visit(expr, form)
 
-        if len(self.var_summands) > 1:
+        if len(form.var_summands) > 1:
             raise InvalidFormError("More than a single variable detected!")
 
-        # extract single var information from inherited, more complex data-structure
-        self._var_sign = list(self.var_summands.values())[0] if self.var_summands else PLUS
-        self._var = list(self.var_summands.keys())[0] if self.var_summands else None
+        return form
 
     @property
     def var_sign(self):
-        return self._var_sign
+        return list(self.var_summands.values())[0] if self.var_summands else PLUS
 
     @property
     def var(self):
-        return self._var
+        return list(self.var_summands.keys())[0] if self.var_summands else None
+
+    @var.setter
+    def var(self, value):
+        self._var_summands[value] = PLUS

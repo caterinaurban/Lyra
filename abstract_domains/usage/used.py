@@ -1,6 +1,8 @@
 from abstract_domains.lattice import BottomMixin
 from enum import Flag
 
+from abstract_domains.stack import ScopeDescendCombineMixin
+
 
 class Used(Flag):
     """Used state of a program variable."""
@@ -17,7 +19,7 @@ O = Used.O
 N = Used.N
 
 
-class UsedLattice(BottomMixin):
+class UsedLattice(ScopeDescendCombineMixin, BottomMixin):
     """Used variable analysis core abstract domain representation."""
 
     DESCEND = {

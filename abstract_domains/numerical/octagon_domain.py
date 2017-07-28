@@ -298,6 +298,155 @@ class OctagonDomain(OctagonLattice, State):
     """Octagon domain. Extends the octagon lattice with state interface.
     """
 
+    def __init__(self, variables: List[VariableIdentifier]):
+        """Create an Octagon state for given variables.
+    
+        :param variables: list of program variables
+        """
+        super().__init__(variables)
+
+    def _substitute_variable(self, left: Expression, right: Expression) -> 'OctagonDomain':
+        raise NotImplementedError("Octagon domain does not yet support variable substitution.")
+
+    def _assume(self, condition: Expression) -> 'OctagonDomain':
+        not_free_condition = make_condition_not_free(condition)
+
+        res = OctagonDomain.AssumeVisitor().visit(not_free_condition, self)
+        self.replace(res)
+
+        return self
+
+    def exit_if(self) -> 'OctagonDomain':
+        return self
+
+    def exit_loop(self) -> 'OctagonDomain':
+        return self
+
+    def _output(self, output: Expression) -> 'OctagonDomain':
+        return self
+
+    def _evaluate_literal(self, literal: Expression) -> Set[Expression]:
+        return {literal}
+
+    def enter_if(self) -> 'OctagonDomain':
+        return self
+
+    def enter_loop(self) -> 'OctagonDomain':
+        return self
+
+    def _access_variable(self, variable: VariableIdentifier) -> Set[Expression]:
+        return {variable}
+
+    def _assign_constant(self, x: VariableIdentifier, interval: IntervalLattice):
+        """x = [a,b]"""
+        self.forget(x)
+        self.set_interval(x, interval)
+
+    def _assign_same_var_plus_constant(self, x: VariableIdentifier, interval: IntervalLattice):
+        """x = x + [a,b]"""
+
+        # update binary constraints
+        for index in self.binary_constraints_indices(sign1=PLUS, var1=x):
+            self[index] -= interval.lower
+        for index in self.binary_constraints_indices(sign1=MINUS, var1=x):
+            self[index] += interval.lower
+
+        # update unary constraints
+        self.set_interval(x,
+                          IntervalLattice(self.get_lb(x) + interval.lower,
+                                          self.get_ub(x) + interval.upper))
+
+    def _assign_other_var(self, x: VariableIdentifier, y: VariableIdentifier):
+        """x = y"""
+        self.forget(x)
+        self.set_octagonal_constraint(PLUS, x, MINUS, y, 0)
+        self.set_octagonal_constraint(MINUS, x, PLUS, y, 0)
+
+    def _assign_other_var_plus_constant(self, x: VariableIdentifier, y: VariableIdentifier, interval: IntervalLattice):
+        """x = y + [a,b]"""
+        self.forget(x)
+        self.set_octagonal_constraint(PLUS, x, MINUS, y, interval.lower)
+        self.set_octagonal_constraint(MINUS, x, PLUS, y, -interval.upper)
+
+    def _assign_negated_same_var(self, x: VariableIdentifier):
+        """x = - x"""
+        # update binary constraints
+        # loop through row of x
+        for _, _, sign2, var2 in self.binary_constraints_indices(sign1=PLUS, var1=x):
+            self.switch_constraints((PLUS, x, sign2, var2), (MINUS, x, sign2, var2))
+        # loop through column of x
+        for sign1, var1, _, _ in self.binary_constraints_indices(sign2=PLUS, var2=x):
+            self.switch_constraints((sign1, var1, PLUS, x), (sign1, var1, MINUS, x))
+
+        # update unary constraints
+        # switch bounds via temp variable
+        self.switch_constraints((PLUS, x, MINUS, x),
+                                (MINUS, x, PLUS, x))
+
+    def _assign_negated_other_var(self, x: VariableIdentifier, y: VariableIdentifier):
+        """x = - y"""
+        self._assign_other_var(x, y)
+        self._assign_negated_same_var(x)
+
+    def _assign_negated_same_var_plus_constant(self, x: VariableIdentifier,
+                                               interval: IntervalLattice):
+        """x = - x + [a,b]"""
+        self._assign_negated_same_var(x)
+        self._assign_same_var_plus_constant(x, interval)
+
+    def _assign_negated_other_var_plus_constant(self, x: VariableIdentifier, y: VariableIdentifier,
+                                                interval: IntervalLattice):
+        """x = - y + [a,b]"""
+        self._assign_negated_other_var(x, y)
+        self._assign_same_var_plus_constant(x, interval)
+
+    def _assign_variable(self, left: Expression, right: Expression) -> 'OctagonDomain':
+        # Octagonal Assignments
+        if isinstance(left, VariableIdentifier):
+            if left.typ == int:
+                try:
+                    form = SingleVarLinearForm.from_expression(right)
+                    if not form.var and form.interval:
+                        # x = [a,b]
+                        self._assign_constant(left, form.interval)
+                    elif form.var and form.interval:
+                        # x = +/- y + [a, b]
+                        if form.var == left:
+                            if form.var_sign == PLUS:
+                                # x = x + [a,b]
+                                self._assign_same_var_plus_constant(form.var, form.interval)
+                            elif form.var_sign == MINUS:
+                                # x = - x + [a,b]
+                                self._assign_negated_same_var_plus_constant(form.var, form.interval)
+                            else:
+                                raise ValueError("Unknown variable sign")
+                        else:
+                            if form.var_sign == PLUS:
+                                # x = y + [a,b]
+                                self._assign_other_var_plus_constant(left, form.var, form.interval)
+                    elif form.var:
+                        # x = +/- x/y
+                        if form.var == left:
+                            if form.var_sign == PLUS:
+                                pass  # nothing to change
+                            elif form.var_sign == MINUS:
+                                # x = - x
+                                self._assign_negated_same_var(form.var)
+                            else:
+                                raise ValueError("Unknown variable sign")
+                        else:
+                            # x = - y
+                            self._assign_negated_other_var(left, form.var)
+                    else:
+                        raise ValueError("Invalid case: Implementation bug!")
+                except InvalidFormError:
+                    # right is not in single variable linear form, use interval abstraction fallback
+                    interval_domain = self.to_interval_domain()
+                    interval = interval_domain.evaluate(right)
+                    self._assign_constant(left, interval)
+
+        return self
+
     class SmallerEqualConditionTransformer(ExpressionTransformer):
         """Transforms all conditions inside expression to format ``e <= 0``.
         """
@@ -425,7 +574,7 @@ class OctagonDomain(OctagonLattice, State):
                 state_copy = deepcopy(state)
                 left_side = cond.left
                 try:
-                    form = LinearForm(simplify(left_side))
+                    form = LinearForm.from_expression(simplify(left_side))
 
                     # simplify implementation by always having a valid interval part
                     interval = form.interval or IntervalLattice(0, 0)
@@ -475,152 +624,3 @@ class OctagonDomain(OctagonLattice, State):
             raise ValueError(
                 f"{type(self)} does not support generic visit of expressions! "
                 f"Define handling for expression {type(expr)} explicitly!")
-
-    def __init__(self, variables: List[VariableIdentifier]):
-        """Create an Octagon Lattice for given variables.
-    
-        :param variables: list of program variables
-        """
-        super().__init__(variables)
-
-    def _substitute_variable(self, left: Expression, right: Expression) -> 'OctagonDomain':
-        raise NotImplementedError("Octagon domain does not yet support variable substitution.")
-
-    def _assume(self, condition: Expression) -> 'OctagonDomain':
-        not_free_condition = make_condition_not_free(condition)
-
-        res = OctagonDomain.AssumeVisitor().visit(not_free_condition, self)
-        self.replace(res)
-
-        return self
-
-    def exit_if(self) -> 'OctagonDomain':
-        return self
-
-    def exit_loop(self) -> 'OctagonDomain':
-        return self
-
-    def _output(self, output: Expression) -> 'OctagonDomain':
-        return self
-
-    def _evaluate_literal(self, literal: Expression) -> Set[Expression]:
-        return {literal}
-
-    def enter_if(self) -> 'OctagonDomain':
-        return self
-
-    def enter_loop(self) -> 'OctagonDomain':
-        return self
-
-    def _access_variable(self, variable: VariableIdentifier) -> Set[Expression]:
-        return {variable}
-
-    def _assign_constant(self, x: VariableIdentifier, interval: IntervalLattice):
-        """x = [a,b]"""
-        self.forget(x)
-        self.set_interval(x, interval)
-
-    def _assign_same_var_plus_constant(self, x: VariableIdentifier, interval: IntervalLattice):
-        """x = x + [a,b]"""
-
-        # update binary constraints
-        for index in self.binary_constraints_indices(sign1=PLUS, var1=x):
-            self[index] -= interval.lower
-        for index in self.binary_constraints_indices(sign1=MINUS, var1=x):
-            self[index] += interval.lower
-
-        # update unary constraints
-        self.set_interval(x,
-                          IntervalLattice(self.get_lb(x) + interval.lower,
-                                          self.get_ub(x) + interval.upper))
-
-    def _assign_other_var(self, x: VariableIdentifier, y: VariableIdentifier):
-        """x = y"""
-        self.forget(x)
-        self.set_octagonal_constraint(PLUS, x, MINUS, y, 0)
-        self.set_octagonal_constraint(MINUS, x, PLUS, y, 0)
-
-    def _assign_other_var_plus_constant(self, x: VariableIdentifier, y: VariableIdentifier, interval: IntervalLattice):
-        """x = y + [a,b]"""
-        self.forget(x)
-        self.set_octagonal_constraint(PLUS, x, MINUS, y, interval.lower)
-        self.set_octagonal_constraint(MINUS, x, PLUS, y, -interval.upper)
-
-    def _assign_negated_same_var(self, x: VariableIdentifier):
-        """x = - x"""
-        # update binary constraints
-        # loop through row of x
-        for _, _, sign2, var2 in self.binary_constraints_indices(sign1=PLUS, var1=x):
-            self.switch_constraints((PLUS, x, sign2, var2), (MINUS, x, sign2, var2))
-        # loop through column of x
-        for sign1, var1, _, _ in self.binary_constraints_indices(sign2=PLUS, var2=x):
-            self.switch_constraints((sign1, var1, PLUS, x), (sign1, var1, MINUS, x))
-
-        # update unary constraints
-        # switch bounds via temp variable
-        self.switch_constraints((PLUS, x, MINUS, x),
-                                (MINUS, x, PLUS, x))
-
-    def _assign_negated_other_var(self, x: VariableIdentifier, y: VariableIdentifier):
-        """x = - y"""
-        self._assign_other_var(x, y)
-        self._assign_negated_same_var(x)
-
-    def _assign_negated_same_var_plus_constant(self, x: VariableIdentifier,
-                                               interval: IntervalLattice):
-        """x = - x + [a,b]"""
-        self._assign_negated_same_var(x)
-        self._assign_same_var_plus_constant(x, interval)
-
-    def _assign_negated_other_var_plus_constant(self, x: VariableIdentifier, y: VariableIdentifier,
-                                                interval: IntervalLattice):
-        """x = - y + [a,b]"""
-        self._assign_negated_other_var(x, y)
-        self._assign_same_var_plus_constant(x, interval)
-
-    def _assign_variable(self, left: Expression, right: Expression) -> 'OctagonDomain':
-        # Octagonal Assignments
-        if isinstance(left, VariableIdentifier):
-            if left.typ == int:
-                try:
-                    form = SingleVarLinearForm(right)
-                    if not form.var and form.interval:
-                        # x = [a,b]
-                        self._assign_constant(left, form.interval)
-                    elif form.var and form.interval:
-                        # x = +/- y + [a, b]
-                        if form.var == left:
-                            if form.var_sign == PLUS:
-                                # x = x + [a,b]
-                                self._assign_same_var_plus_constant(form.var, form.interval)
-                            elif form.var_sign == MINUS:
-                                # x = - x + [a,b]
-                                self._assign_negated_same_var_plus_constant(form.var, form.interval)
-                            else:
-                                raise ValueError("Unknown variable sign")
-                        else:
-                            if form.var_sign == PLUS:
-                                # x = y + [a,b]
-                                self._assign_other_var_plus_constant(left, form.var, form.interval)
-                    elif form.var:
-                        # x = +/- x/y
-                        if form.var == left:
-                            if form.var_sign == PLUS:
-                                pass  # nothing to change
-                            elif form.var_sign == MINUS:
-                                # x = - x
-                                self._assign_negated_same_var(form.var)
-                            else:
-                                raise ValueError("Unknown variable sign")
-                        else:
-                            # x = - y
-                            self._assign_negated_other_var(left, form.var)
-                    else:
-                        raise ValueError("Invalid case: Implementation bug!")
-                except InvalidFormError:
-                    # right is not in single variable linear form, use interval abstraction fallback
-                    interval_domain = self.to_interval_domain()
-                    interval = interval_domain.evaluate(right)
-                    self._assign_constant(left, interval)
-
-        return self

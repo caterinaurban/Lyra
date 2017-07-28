@@ -50,6 +50,11 @@ class Interval:
         self._lower = lower
         self._upper = upper
 
+    @staticmethod
+    def from_constant(constant):
+        interval = Interval(constant, constant)
+        return interval
+
     @property
     def lower(self):
         if self.empty():
@@ -98,9 +103,9 @@ class Interval:
         """Return `True` if this interval is finite."""
         return not ({self.lower, self.upper} & {-inf, inf})
 
-    def constant(self) -> bool:
+    def is_constant(self) -> bool:
         """Return `True` if this interval is equal to a single constant (different from infinity)."""
-        return self.finite() and self.lower == self.upper
+        return self.lower == self.upper
 
     @_check_types
     def __eq__(self, other: 'Interval'):
@@ -145,8 +150,8 @@ class Interval:
 
     # operators (they mutate self, no copy is made!!)
 
-    @_check_types
     @_auto_convert_numbers
+    @_check_types
     def add(self, other: Union['Interval', int]) -> 'Interval':
         if self.empty() or other.empty():
             return self.set_empty()
@@ -154,8 +159,8 @@ class Interval:
             self.interval = (self.lower + other.lower, self.upper + other.upper)
             return self
 
-    @_check_types
     @_auto_convert_numbers
+    @_check_types
     def sub(self, other: Union['Interval', int]) -> 'Interval':
         if self.empty() or other.empty():
             return self.set_empty()
@@ -163,8 +168,8 @@ class Interval:
             self.interval = (self.lower - other.upper, self.upper - other.lower)
             return self
 
-    @_check_types
     @_auto_convert_numbers
+    @_check_types
     def mult(self, other: Union['Interval', int]) -> 'Interval':
         if self.empty() or other.empty():
             return self.set_empty()
@@ -205,6 +210,11 @@ class Interval:
 
 
 class IntervalLattice(Interval, BottomMixin):
+    @staticmethod
+    def from_constant(constant):
+        interval_lattice = IntervalLattice(constant, constant)
+        return interval_lattice
+
     def __repr__(self):
         if self.is_bottom():
             return "⊥"
@@ -265,6 +275,10 @@ class IntervalLattice(Interval, BottomMixin):
 
         # noinspection PyMethodMayBeStatic, PyUnusedLocal
         def visit_Input(self, _: Input, *args, **kwargs):
+            return IntervalLattice().top()
+
+        # noinspection PyMethodMayBeStatic, PyUnusedLocal
+        def visit_Index(self, _: Index, *args, **kwargs):
             return IntervalLattice().top()
 
         def visit_BinaryArithmeticOperation(self, expr: BinaryArithmeticOperation, *args, **kwargs):
@@ -372,6 +386,6 @@ class IntervalDomain(Store, NumericalMixin, State):
                 # copy the lattice element, since evaluation should not modify elements
                 return deepcopy(interval_store.store[expr])
             else:
-                raise ValueError(f"Variable type {expr.typ} is not supported!")
+                return IntervalLattice().top()
 
     _visitor = Visitor()  # static class member shared between all instances

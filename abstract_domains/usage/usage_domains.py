@@ -1,17 +1,20 @@
 from copy import deepcopy
 from numbers import Number
 from typing import List, Set, Sequence
+
+from abstract_domains.stack import ScopeDescendCombineMixin, ScopeStack
 from abstract_domains.state import State
 from abstract_domains.usage.used import UsedLattice, Used
 from abstract_domains.store import Store
 from abstract_domains.usage.used_liststart import UsedListStartLattice
+from abstract_domains.usage.used_segmentation import UsedSegmentationMixStore
 from core.expressions import Expression, VariableIdentifier, ListDisplay, Literal, Index
 from math import inf
 
 from core.expressions_tools import walk
 
 
-class UsedStore(Store, State):
+class UsedStore(ScopeDescendCombineMixin, Store, State):
     def __init__(self, variables: List[VariableIdentifier]):
         super().__init__(variables, {int: UsedLattice, list: UsedListStartLattice})
 
@@ -74,7 +77,7 @@ class UsedStore(Store, State):
         return {variable}
 
     def _assign_variable(self, left: Expression, right: Expression) -> 'UsedStore':
-        raise NotImplementedError("Variable assignment is not implemented!")
+        raise NotImplementedError("Variable assignment is not supported!")
 
     def _assume(self, condition: Expression) -> 'UsedStore':
         used_vars = len(
@@ -134,3 +137,21 @@ class UsedStore(Store, State):
         else:
             raise NotImplementedError("Variable substitution for {} is not implemented!".format(left))
         return self
+
+
+class UsedDomain(ScopeStack):
+    def __init__(self, variables: List[VariableIdentifier]):
+        """Usage-analysis state representation.
+
+        :param variables: list of program variables
+        """
+        super().__init__(UsedStore(variables))
+
+
+class UsedSegmentationDomain(ScopeStack):
+    def __init__(self, *args, **kwargs):
+        """Usage-analysis state representation.
+
+        :param variables: list of program variables
+        """
+        super().__init__(UsedSegmentationMixStore(*args, **kwargs))

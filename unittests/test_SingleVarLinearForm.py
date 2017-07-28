@@ -16,7 +16,7 @@ class TestSingleVarLinearForm(ExpressionTreeTestCase):
         right_expr = result_store.store[self.variables['a']]
 
         try:
-            form = SingleVarLinearForm(right_expr)
+            form = SingleVarLinearForm.from_expression(right_expr)
         except ValueError:
             form = "INVALID FORM"
 

@@ -20,31 +20,31 @@ class TestSingleVarLinearFormWithOctagonalComparison(unittest.TestCase):
         octagon = OctagonLattice([a, b])
 
         # check with no relational constraints
-        f1 = SingleVarLinearFormWithOctagonalComparison(a_plus_5, octagon)
-        f2 = SingleVarLinearFormWithOctagonalComparison(a_plus_7, octagon)
-        self.assertTrue(f1 < f2)
+        f1 = SingleVarLinearFormWithOctagonalComparison.from_expression(a_plus_5)
+        f2 = SingleVarLinearFormWithOctagonalComparison.from_expression(a_plus_7)
+        self.assertTrue(f1.lt_octagonal(f2, octagon))
 
         # check interval constraints
         octagon.set_bounds(a, -10, -5)
-        f_constant = SingleVarLinearFormWithOctagonalComparison(c1, octagon)
-        self.assertTrue(f1 < f_constant)
+        f_constant = SingleVarLinearFormWithOctagonalComparison.from_expression(c1)
+        self.assertTrue(f1.lt_octagonal(f_constant,octagon))
 
         # check relational constraints
         octagon.set_octagonal_constraint(PLUS, a, MINUS, b, -2)  # a - b <= -2 ("a is at least 2 smaller than b")
-        f1 = SingleVarLinearFormWithOctagonalComparison(a, octagon)
-        f2 = SingleVarLinearFormWithOctagonalComparison(b_minus_1, octagon)
-        self.assertTrue(f1 < f2)
+        f1 = SingleVarLinearFormWithOctagonalComparison.from_expression(a)
+        f2 = SingleVarLinearFormWithOctagonalComparison.from_expression(b_minus_1)
+        self.assertTrue(f1.lt_octagonal(f2, octagon))
 
         # check relational constraints (corner case)
         octagon.set_octagonal_constraint(PLUS, a, MINUS, b, -2)  # a - b <= -2 ("a is at least 2 smaller than b")
-        f1 = SingleVarLinearFormWithOctagonalComparison(a, octagon)
-        f2 = SingleVarLinearFormWithOctagonalComparison(b_minus_2, octagon)
-        self.assertTrue(f1 <= f2)
-        self.assertFalse(f1 < f2)
+        f1 = SingleVarLinearFormWithOctagonalComparison.from_expression(a)
+        f2 = SingleVarLinearFormWithOctagonalComparison.from_expression(b_minus_2)
+        self.assertTrue(f1.le_octagonal(f2, octagon))
+        self.assertFalse(f1.lt_octagonal(f2, octagon))
 
         # forget relational constraint again and see if cannot not infer property f1 <= f2 anymore
         octagon.forget(a)
-        self.assertFalse(f1 <= f2)
+        self.assertFalse(f1.le_octagonal(f2, octagon))
 
 
 def suite():
