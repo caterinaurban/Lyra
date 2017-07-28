@@ -33,7 +33,8 @@ class OctagonTestCase(ResultCommentsFileTestCase):
         result = forward_interpreter.analyze(OctagonDomain(variables))
 
         # ensure all results are closed for displaying
-        for node_result_list in result.result.values():
+        for node in result.nodes:
+            node_result_list = result.get_node_result(node)
             for oct in node_result_list:
                 oct.close()
 

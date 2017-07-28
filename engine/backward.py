@@ -34,7 +34,7 @@ class BackwardInterpreter(Interpreter):
             iteration = iterations[current.identifier]
 
             # retrieve the previous exit state of the node
-            if current in self.result.result:
+            if current in self.result.nodes:
                 previous = deepcopy(self.result.get_node_result(current)[-1])
             else:
                 previous = None
@@ -46,7 +46,7 @@ class BackwardInterpreter(Interpreter):
                 # join incoming states
                 edges = self.cfg.out_edges(current)
                 for edge in edges:
-                    if edge.target in self.result.result:
+                    if edge.target in self.result.nodes:
                         successor = deepcopy(self.result.get_node_result(edge.target)[0])
                     else:
                         successor = deepcopy(initial).bottom()

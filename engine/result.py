@@ -3,6 +3,8 @@ from core.cfg import Node, ControlFlowGraph, Edge
 from itertools import zip_longest
 from typing import List
 
+from core.statements import ProgramPoint
+
 
 class AnalysisResult:
     def __init__(self, cfg: ControlFlowGraph):
@@ -11,15 +13,21 @@ class AnalysisResult:
         :param cfg: analyzed control flow graph
         """
         self._cfg = cfg
-        self._result = dict()
+
+        # primary data structure holding {Node: List[State]}
+        self._node_result = dict()
+
+        # index data structures
+        self._result_before_pp = dict()
+        self._result_after_pp = dict()
 
     @property
     def cfg(self):
         return self._cfg
 
     @property
-    def result(self):
-        return self._result
+    def nodes(self):
+        return self._node_result.keys()
 
     def get_node_result(self, node: Node) -> List[State]:
         """Get the analysis result for a node.
@@ -27,7 +35,7 @@ class AnalysisResult:
         :param node: analyzed node
         :return: list of states representing the result of the analysis for the block
         """
-        return self.result[node]
+        return self._node_result[node]
 
     def set_node_result(self, node: Node, states: List[State]) -> None:
         """Set the analysis result for a node.
@@ -35,7 +43,21 @@ class AnalysisResult:
         :param node: analyzed node
         :param states: list of states representing the result of the analysis for the block
         """
-        self.result[node] = states
+        self._node_result[node] = states
+        # update index data structures
+        if node.stmts:
+            for stmt, state in zip(node.stmts[:-1], states):
+                self._result_before_pp[stmt.pp] = state
+            for stmt, state in zip(node.stmts[1:], states):
+                self._result_after_pp[stmt.pp] = state
+
+    def get_result_before(self, pp: ProgramPoint) -> State:
+        """Get the analysis result before a program point."""
+        return self._result_before_pp[pp]
+
+    def get_result_after(self, pp: ProgramPoint) -> State:
+        """Get the analysis result after a program point."""
+        return self._result_after_pp[pp]
 
     def __str__(self):
         """Analysis result string representation.
@@ -46,9 +68,9 @@ class AnalysisResult:
         pending.append(self.cfg.in_node)
         result = []
         while pending:
-            current = pending.pop()    # retrieve the current pending item
+            current = pending.pop()  # retrieve the current pending item
             if current not in visited:
-                if isinstance(current, Node):   # print a node
+                if isinstance(current, Node):  # print a node
                     result.append("********* {} *********".format(current))
                     states = self.get_node_result(current)
                     node = [item for items in zip_longest(states, current.stmts) for item in items if item is not None]
