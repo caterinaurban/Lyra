@@ -4,6 +4,7 @@ from typing import Type, Dict, Any, List, Set
 from abstract_domains.lattice import BoundedLattice, Lattice
 from abstract_domains.state import State
 from core.expressions import VariableIdentifier, Expression
+from core.statements import ProgramPoint
 
 
 class Stack(BoundedLattice, metaclass=ABCMeta):
@@ -148,3 +149,6 @@ class ScopeStack(Stack, State):
         else:
             raise NotImplementedError("Variable substitution for {} is not implemented!".format(left))
         return self
+
+    def next(self, pp: ProgramPoint):
+        self.stack[-1].next(pp)

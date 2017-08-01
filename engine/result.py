@@ -46,9 +46,9 @@ class AnalysisResult:
         self._node_result[node] = states
         # update index data structures
         if node.stmts:
-            for stmt, state in zip(node.stmts[:-1], states):
+            for stmt, state in zip(node.stmts, states[:-1]):
                 self._result_before_pp[stmt.pp] = state
-            for stmt, state in zip(node.stmts[1:], states):
+            for stmt, state in zip(node.stmts, states[1:]):
                 self._result_after_pp[stmt.pp] = state
 
     def get_result_before(self, pp: ProgramPoint) -> State:
