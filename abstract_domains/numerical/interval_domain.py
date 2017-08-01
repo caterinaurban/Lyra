@@ -1,14 +1,13 @@
 from copy import deepcopy
+from math import inf
 from numbers import Number
+from typing import List, Union
 
-from abstract_domains.store import Store
 from abstract_domains.lattice import BottomMixin
 from abstract_domains.numerical.numerical import NumericalMixin
 from abstract_domains.state import State
+from abstract_domains.store import Store
 from core.expressions import *
-from typing import List, Set, Union
-from math import inf
-
 from core.expressions_tools import ExpressionVisitor
 
 
@@ -274,10 +273,6 @@ class IntervalLattice(Interval, BottomMixin):
                 f"Define handling for expression {type(expr)} explicitly!")
 
         # noinspection PyMethodMayBeStatic, PyUnusedLocal
-        def visit_Input(self, _: Input, *args, **kwargs):
-            return IntervalLattice().top()
-
-        # noinspection PyMethodMayBeStatic, PyUnusedLocal
         def visit_Index(self, _: Index, *args, **kwargs):
             return IntervalLattice().top()
 
@@ -310,12 +305,21 @@ class IntervalLattice(Interval, BottomMixin):
             else:
                 raise ValueError(f"Literal type {expr.typ} is not supported!")
 
+        # noinspection PyMethodMayBeStatic, PyUnusedLocal
+        def visit_Input(self, _: Input, *args, **kwargs):
+            return IntervalLattice().top()
+
+        def visit_ListDisplay(self, expr: ListDisplay, *args, **kwargs):
+            # find the big join of the intervals of all items of the list display expression
+            intervals = map(lambda item: self.visit(item, *args, **kwargs), expr.items)
+            return IntervalLattice().bottom().big_join(intervals)
+
     _visitor = Visitor()  # static class member shared between all instances
 
 
 class IntervalDomain(Store, NumericalMixin, State):
     def __init__(self, variables: List[VariableIdentifier]):
-        super().__init__(variables, {int: IntervalLattice})
+        super().__init__(variables, {int: IntervalLattice, list: IntervalLattice})
 
     def forget(self, var: VariableIdentifier):
         self.store[var].top()

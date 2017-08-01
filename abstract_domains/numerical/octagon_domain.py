@@ -1,18 +1,16 @@
 from copy import deepcopy
 from enum import Enum
 from functools import reduce
+from math import inf, isinf
+from typing import List, Tuple, Union
 
 from abstract_domains.lattice import BottomMixin
 from abstract_domains.numerical.dbm import IntegerCDBM
 from abstract_domains.numerical.interval_domain import IntervalLattice, IntervalDomain
+from abstract_domains.numerical.linear_forms import VarForm, LinearForm, InvalidFormError
 from abstract_domains.numerical.numerical import NumericalMixin
 from abstract_domains.state import State
 from core.expressions import *
-from typing import List, Set, Tuple, Union
-from math import inf, isinf
-
-from abstract_domains.numerical.linear_forms import VarForm, LinearForm, InvalidFormError
-
 from core.expressions_tools import ExpressionVisitor, ExpressionTransformer, \
     make_condition_not_free, simplify
 
@@ -440,11 +438,19 @@ class OctagonDomain(OctagonLattice, State):
                     else:
                         raise ValueError("Invalid case: Implementation bug!")
                 except InvalidFormError:
-                    # right is not in single variable linear form, use interval abstraction fallback
-                    interval_domain = self.to_interval_domain()
-                    interval = interval_domain.evaluate(right)
+                    # right is not in single variable linear form, use interval evaluation fallback
+                    interval = self.evaluate(right)
                     self._assign_constant(left, interval)
-
+            elif left.typ == list:
+                interval = self.evaluate(right)
+                self._assign_constant(left, interval)
+        elif isinstance(left, Index):
+            list_var = left.target
+            interval = self.evaluate(right)
+            # weak update to single interval that represents whole list in the abstract
+            self.set_interval(list_var, interval.join(self.get_interval(list_var)))
+        else:
+            raise NotImplementedError(f"Left side of assignment of type {type(left)} is not supported!")
         return self
 
     class SmallerEqualConditionTransformer(ExpressionTransformer):

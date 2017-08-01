@@ -1,13 +1,13 @@
 import glob
+import logging
+import os
+import unittest
 
 from abstract_domains.numerical.octagon_domain import OctagonDomain
 from core.expressions import VariableIdentifier
 from engine.forward import ForwardInterpreter
 from semantics.forward import DefaultForwardSemantics
 from unittests.generic_tests import ResultCommentsFileTestCase
-import unittest
-import os
-import logging
 
 logging.basicConfig(level=logging.INFO, filename='unittests.log', filemode='w')
 
@@ -21,16 +21,26 @@ class OctagonTestCase(ResultCommentsFileTestCase):
         logging.info(self)
         self.render_cfg()
 
+        # find all variables
         variable_names = self.find_variable_names()
-        variables = []
+        int_vars = []
+        list_vars = []
         for name in variable_names:
-            variables.append(VariableIdentifier(int, name))
+            # TODO remove this name hack when type inferences work
+            if name.startswith("list"):
+                typ = list
+                var = VariableIdentifier(typ, name)
+                list_vars.append(var)
+            else:
+                typ = int
+                var = VariableIdentifier(typ, name)
+                int_vars.append(var)
 
         # print(list(map(str,variables)))
 
         # Run Octagon numerical Analysis
         forward_interpreter = ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
-        result = forward_interpreter.analyze(OctagonDomain(variables))
+        result = forward_interpreter.analyze(OctagonDomain(int_vars + list_vars))
 
         # ensure all results are closed for displaying
         for node in result.nodes:
