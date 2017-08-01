@@ -292,8 +292,6 @@ class SegmentedListLattice(BottomMixin):
 
         # remove all limits between the least_upper_limit and greatest_lower_limit
         ##########################################################################
-        # store the least upper bound of smashed predicates
-        lub = self._predicate_lattice().bottom().big_join(self.predicates[greatest_lower_limit:least_upper_limit])
         for i in reversed(list(range(greatest_lower_limit + 1, least_upper_limit))):
             self.remove_limit(i)
             least_upper_limit -= 1
@@ -311,10 +309,6 @@ class SegmentedListLattice(BottomMixin):
                            possibly_empty_before=True, possibly_empty_after=False)
             least_upper_limit += 1  # index correction since limit was added
 
-            # set the predicate before the inserted lower limit to the lub of all smashed segments (inclusive those
-            # at 'borders')
-            self._predicates[greatest_lower_limit] = deepcopy(lub)
-
             new_predicate_index = greatest_lower_limit + 1
 
         # add the target upper bound/limit, setting predicate in (possibly newly inserted) segment
@@ -328,12 +322,11 @@ class SegmentedListLattice(BottomMixin):
                            possibly_empty_before=False, possibly_empty_after=True)
             least_upper_limit += 1  # index correction since limit was added
 
-            # set the predicate before the inserted upper limit to the lub of all smashed segments (inclusive those
-            # at 'borders')
-            self._predicates[least_upper_limit - 1] = deepcopy(lub)
-
         # set the target predicate to segment that is now guaranteed to be properly bounded
-        self.predicates[new_predicate_index] = predicate or lub
+        if predicate:
+            self.predicates[new_predicate_index] = predicate
+        else:
+            pass  # the predicate of inserted segment is left to the join of smashed segments
 
     def set_predicate(self, index: Union[Expression, IntervalLattice, int], predicate):
         # convert index to interval lattice
