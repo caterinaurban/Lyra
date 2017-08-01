@@ -292,9 +292,6 @@ class SegmentedListLattice(BottomMixin):
 
         # remove all limits between the least_upper_limit and greatest_lower_limit
         ##########################################################################
-        # preserve the predicates before and after the deleted limits
-        pred_before = deepcopy(self._predicates[greatest_lower_limit])
-        pred_after = deepcopy(self._predicates[least_upper_limit - 1])
         # store the least upper bound of smashed predicates
         lub = self._predicate_lattice().bottom().big_join(self.predicates[greatest_lower_limit:least_upper_limit])
         for i in reversed(list(range(greatest_lower_limit + 1, least_upper_limit))):
@@ -314,8 +311,9 @@ class SegmentedListLattice(BottomMixin):
                            possibly_empty_before=True, possibly_empty_after=False)
             least_upper_limit += 1  # index correction since limit was added
 
-            # restore the predicate before the inserted segment, since this got joined with removed segment predicate
-            self._predicates[greatest_lower_limit] = pred_before
+            # set the predicate before the inserted lower limit to the lub of all smashed segments (inclusive those
+            # at 'borders')
+            self._predicates[greatest_lower_limit] = deepcopy(lub)
 
             new_predicate_index = greatest_lower_limit + 1
 
@@ -330,8 +328,9 @@ class SegmentedListLattice(BottomMixin):
                            possibly_empty_before=False, possibly_empty_after=True)
             least_upper_limit += 1  # index correction since limit was added
 
-            # restore the predicate before the inserted segment, since this got joined with removed segment predicate
-            self._predicates[least_upper_limit - 1] = pred_after
+            # set the predicate before the inserted upper limit to the lub of all smashed segments (inclusive those
+            # at 'borders')
+            self._predicates[least_upper_limit - 1] = deepcopy(lub)
 
         # set the target predicate to segment that is now guaranteed to be properly bounded
         self.predicates[new_predicate_index] = predicate or lub
