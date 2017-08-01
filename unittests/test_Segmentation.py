@@ -4,7 +4,7 @@ from abstract_domains.numerical.octagon_domain import OctagonLattice
 from abstract_domains.segmentation.segmentation import SegmentedListLattice, Limit
 from abstract_domains.usage.used import UsedLattice, Used
 from core.expressions import *
-from abstract_domains.segmentation.bounds import SingleVarLinearFormWithOctagonalComparison
+from abstract_domains.segmentation.bounds import VarFormOct
 from core.expressions_tools import PLUS, MINUS
 
 
@@ -20,14 +20,14 @@ class TestSegmentationUnification(unittest.TestCase):
         octagon = OctagonLattice([i, n, x, y])
 
         s1 = SegmentedListLattice(n, UsedLattice, octagon)
-        s1.limits[0].bounds.add(SingleVarLinearFormWithOctagonalComparison.from_expression(i))
+        s1.limits[0].bounds.add(VarFormOct.from_expression(i))
         s1.possibly_empty[0] = False
 
         s2 = SegmentedListLattice(n, UsedLattice, octagon)
         i_minus_1 = BinaryArithmeticOperation(int, i, BinaryArithmeticOperation.Operator.Sub, c1)
-        s2.limits[0].bounds.add(SingleVarLinearFormWithOctagonalComparison.from_expression(i_minus_1))
-        s2.add_limit(0, Limit({SingleVarLinearFormWithOctagonalComparison.from_expression(c1),
-                               SingleVarLinearFormWithOctagonalComparison.from_expression(i)}),
+        s2.limits[0].bounds.add(VarFormOct.from_expression(i_minus_1))
+        s2.add_limit(0, Limit({VarFormOct.from_expression(c1),
+                               VarFormOct.from_expression(i)}),
                      predicate_before=UsedLattice(Used.S))
         s2.possibly_empty[0] = False
 
@@ -50,8 +50,8 @@ class TestSegmentationUnification(unittest.TestCase):
 
         print("\nSet scoped at from start of list to (i+1) exclusive:")
         i_plus_1 = BinaryArithmeticOperation(int, i, BinaryArithmeticOperation.Operator.Add, c1)
-        s1._set_predicate_in_form_range(SingleVarLinearFormWithOctagonalComparison.from_expression(c0),
-                                        SingleVarLinearFormWithOctagonalComparison.from_expression(i_plus_1),
+        s1._set_predicate_in_form_range(VarFormOct.from_expression(c0),
+                                        VarFormOct.from_expression(i_plus_1),
                                         UsedLattice(Used.S))
         print(s1)
 

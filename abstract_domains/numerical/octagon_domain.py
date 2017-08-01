@@ -11,7 +11,7 @@ from core.expressions import *
 from typing import List, Set, Tuple, Union
 from math import inf, isinf
 
-from abstract_domains.numerical.linear_forms import SingleVarLinearForm, LinearForm, InvalidFormError
+from abstract_domains.numerical.linear_forms import VarForm, LinearForm, InvalidFormError
 
 from core.expressions_tools import ExpressionVisitor, ExpressionTransformer, \
     make_condition_not_free, simplify
@@ -405,7 +405,7 @@ class OctagonDomain(OctagonLattice, State):
         if isinstance(left, VariableIdentifier):
             if left.typ == int:
                 try:
-                    form = SingleVarLinearForm.from_expression(right)
+                    form = VarForm.from_expression(right)
                     if not form.var and form.interval:
                         # x = [a,b]
                         self._assign_constant(left, form.interval)

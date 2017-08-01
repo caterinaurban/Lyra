@@ -1,11 +1,11 @@
 from abstract_domains.numerical.interval_domain import IntervalLattice
-from abstract_domains.numerical.linear_forms import SingleVarLinearForm, LinearForm, InvalidFormError
+from abstract_domains.numerical.linear_forms import VarForm, LinearForm, InvalidFormError
 from abstract_domains.numerical.octagon_domain import OctagonLattice
 from core.expressions import Expression, VariableIdentifier
 from core.expressions_tools import MINUS, PLUS
 
 
-class SingleVarLinearFormWithOctagonalComparison(SingleVarLinearForm):
+class VarFormOct(VarForm):
     """Holds a syntactically and semantically comparable expression in linear form with a single variable: ``+/- var 
     + constant``.
     
@@ -17,7 +17,7 @@ class SingleVarLinearFormWithOctagonalComparison(SingleVarLinearForm):
 
     @staticmethod
     def from_expression(expr: Expression):
-        form = SingleVarLinearFormWithOctagonalComparison()
+        form = VarFormOct()
         LinearForm._visitor.visit(expr, form)
 
         if len(form.var_summands) > 1:
@@ -39,7 +39,7 @@ class SingleVarLinearFormWithOctagonalComparison(SingleVarLinearForm):
     @interval.setter
     def interval(self, value):
         # set property of superclass
-        super(SingleVarLinearFormWithOctagonalComparison, self.__class__).interval.fset(self, value)
+        super(VarFormOct, self.__class__).interval.fset(self, value)
         if not value.is_constant():
             raise InvalidFormError("The interval part of this linear form must be constant.")
 
@@ -130,7 +130,7 @@ class SingleVarLinearFormWithOctagonalComparison(SingleVarLinearForm):
 
         return left <= self.interval - other.interval
 
-    def substitute_variable(self, var: VariableIdentifier, form: 'SingleVarLinearFormWithOctagonalComparison'):
+    def substitute_variable(self, var: VariableIdentifier, form: 'VarFormOct'):
         if self.var and self.var == var:
             self.var = form.var
             self.interval = self.interval + form.interval

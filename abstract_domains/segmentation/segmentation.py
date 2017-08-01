@@ -5,7 +5,7 @@ from abstract_domains.lattice import Lattice, BottomMixin
 from abstract_domains.numerical.interval_domain import IntervalLattice
 from abstract_domains.numerical.linear_forms import InvalidFormError
 from abstract_domains.numerical.octagon_domain import OctagonDomain, OctagonLattice
-from abstract_domains.segmentation.bounds import SingleVarLinearFormWithOctagonalComparison
+from abstract_domains.segmentation.bounds import VarFormOct
 from abstract_domains.state import State
 from core.expressions import Literal, VariableIdentifier, Expression
 from core.expressions_tools import PLUS, MINUS
@@ -103,8 +103,8 @@ class SegmentedListLattice(BottomMixin):
         self._len_var = len_var
         self._predicate_lattice = predicate_lattice
         self._limits = [
-            Limit({SingleVarLinearFormWithOctagonalComparison.from_expression(Literal(int, '0'))}),
-            Limit({SingleVarLinearFormWithOctagonalComparison.from_expression(len_var)})]
+            Limit({VarFormOct.from_expression(Literal(int, '0'))}),
+            Limit({VarFormOct.from_expression(len_var)})]
         self._predicates = [self._predicate_lattice()]
         self._possibly_empty = [True]
 
@@ -248,7 +248,7 @@ class SegmentedListLattice(BottomMixin):
         assert least_upper_limit > 0, f"The target index {index_form} is smaller equals the lower limit!"
         return least_upper_limit
 
-    def _set_predicate_at_form_index(self, form: SingleVarLinearFormWithOctagonalComparison, predicate):
+    def _set_predicate_at_form_index(self, form: VarFormOct, predicate):
         lower_index_form = form
         upper_index_form = deepcopy(form)
         upper_index_form.interval.add(1)
@@ -256,17 +256,17 @@ class SegmentedListLattice(BottomMixin):
         self._set_predicate_in_form_range(lower_index_form, upper_index_form, predicate)
 
     def _set_predicate_at_index(self, index: int, predicate):
-        form_index = SingleVarLinearFormWithOctagonalComparison(interval=IntervalLattice.from_constant(index))
+        form_index = VarFormOct(interval=IntervalLattice.from_constant(index))
         self._set_predicate_at_form_index(form_index, predicate)
 
     def _set_predicate_in_interval(self, interval, predicate):
-        lower_form = SingleVarLinearFormWithOctagonalComparison(interval=IntervalLattice.from_constant(
+        lower_form = VarFormOct(interval=IntervalLattice.from_constant(
             interval.lower))
-        upper_form = SingleVarLinearFormWithOctagonalComparison(interval=IntervalLattice.from_constant(
+        upper_form = VarFormOct(interval=IntervalLattice.from_constant(
             interval.upper))
         self._set_predicate_in_form_range(lower_form, upper_form, predicate)
 
-    def _add_constraints_that_ensure_within_extremal_limits(self, form: SingleVarLinearFormWithOctagonalComparison):
+    def _add_constraints_that_ensure_within_extremal_limits(self, form: VarFormOct):
         # since we presume out-of-bounds checks have been done before, we add octagonal constraints for:
         # -> index_forms are greater equals 0
         # -> index_forms are smaller than len_var
@@ -275,8 +275,8 @@ class SegmentedListLattice(BottomMixin):
             self.octagon.set_lb(form.var, 0 - form.constant)
             self.octagon.set_octagonal_constraint(PLUS, form.var, MINUS, self._len_var, -1 - form.constant)
 
-    def _set_predicate_in_form_range(self, lower_index_form: SingleVarLinearFormWithOctagonalComparison,
-                                     upper_index_form: SingleVarLinearFormWithOctagonalComparison, predicate):
+    def _set_predicate_in_form_range(self, lower_index_form: VarFormOct,
+                                     upper_index_form: VarFormOct, predicate):
         """Main helper method. Set a predicate within a range given by bounds in linear form.
         
         :param predicate: the predicate to set in the range or None to set the element to the least upper bound of the predicate domain
@@ -342,7 +342,7 @@ class SegmentedListLattice(BottomMixin):
         if isinstance(index, Expression):
             # first try to represent the index as linear form
             try:
-                form = SingleVarLinearFormWithOctagonalComparison.from_expression(index)
+                form = VarFormOct.from_expression(index)
                 self._set_predicate_at_form_index(form, predicate)
             except InvalidFormError:
                 # Fallback: evaluate in octagon
@@ -356,7 +356,7 @@ class SegmentedListLattice(BottomMixin):
             raise TypeError(f"Invalid argument type {type(index)} for 'expr'!")
 
     # TODO add type tolerant function like set_predicate
-    def get_predicate_at_form_index(self, form: SingleVarLinearFormWithOctagonalComparison):
+    def get_predicate_at_form_index(self, form: VarFormOct):
         lower_index_form = form
         upper_index_form = deepcopy(form)
         upper_index_form.interval.add(1)
@@ -569,7 +569,7 @@ class SegmentedList(SegmentedListLattice):
         if isinstance(left, VariableIdentifier):
             if left.typ == int:
                 try:
-                    form = SingleVarLinearFormWithOctagonalComparison.from_expression(right)
+                    form = VarFormOct.from_expression(right)
                     for bound in self.all_bounds():
                         bound.substitute_variable(left, form)
                         # TODO check if limit order is preserved or cleanup necessary

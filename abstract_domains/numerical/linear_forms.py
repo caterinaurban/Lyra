@@ -172,7 +172,7 @@ class LinearForm:
     _visitor = Visitor()  # static class member shared between all instances
 
 
-class SingleVarLinearForm(LinearForm):
+class VarForm(LinearForm):
     """Holds an expression in linear form with a single variable: ``+/- var + interval``."""
 
     def __init__(self, var_sign=None, var=None, interval=None):
@@ -185,7 +185,7 @@ class SingleVarLinearForm(LinearForm):
 
     @staticmethod
     def from_expression(expr: Expression):
-        form = SingleVarLinearForm()
+        form = VarForm()
         LinearForm._visitor.visit(expr, form)
 
         if len(form.var_summands) > 1:

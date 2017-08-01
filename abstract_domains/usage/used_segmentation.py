@@ -3,7 +3,7 @@ from numbers import Number
 from typing import Set, List, Sequence
 
 from abstract_domains.numerical.interval_domain import IntervalLattice
-from abstract_domains.segmentation.bounds import SingleVarLinearFormWithOctagonalComparison
+from abstract_domains.segmentation.bounds import VarFormOct
 from abstract_domains.segmentation.segmentation import SegmentedList
 from abstract_domains.stack import ScopeDescendCombineMixin
 from abstract_domains.state import State
@@ -78,7 +78,7 @@ class UsedSegmentationMixStore(ScopeDescendCombineMixin, Store, State):
                 list_display = right
 
                 for index, e in enumerate(list_display.items):
-                    if segmentation.get_predicate_at_form_index(SingleVarLinearFormWithOctagonalComparison(
+                    if segmentation.get_predicate_at_form_index(VarFormOct(
                             interval=IntervalLattice.from_constant(index))).used in [Used.U, Used.S]:
                         for identifier in e.ids():
                             self.store[identifier].used = U
