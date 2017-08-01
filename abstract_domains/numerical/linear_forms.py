@@ -203,4 +203,6 @@ class VarForm(LinearForm):
 
     @var.setter
     def var(self, value):
-        self._var_summands[value] = PLUS
+        self._var_summands.clear()
+        if value:  # do only set if not None
+            self._var_summands[value] = PLUS

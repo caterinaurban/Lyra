@@ -295,10 +295,9 @@ class SegmentedListLattice(BottomMixin):
         # preserve the predicates before and after the deleted limits
         pred_before = deepcopy(self._predicates[greatest_lower_limit])
         pred_after = deepcopy(self._predicates[least_upper_limit - 1])
-        # store the least upper bound of removed limits on the fly
-        lub_of_removed_predicates = deepcopy(self._predicates[greatest_lower_limit])
+        # store the least upper bound of smashed predicates
+        lub = self._predicate_lattice().bottom().big_join(self.predicates[greatest_lower_limit:least_upper_limit])
         for i in reversed(list(range(greatest_lower_limit + 1, least_upper_limit))):
-            lub_of_removed_predicates.join(self.predicates[i])
             self.remove_limit(i)
             least_upper_limit -= 1
 
@@ -335,7 +334,7 @@ class SegmentedListLattice(BottomMixin):
             self._predicates[least_upper_limit - 1] = pred_after
 
         # set the target predicate to segment that is now guaranteed to be properly bounded
-        self.predicates[new_predicate_index] = predicate or lub_of_removed_predicates
+        self.predicates[new_predicate_index] = predicate or lub
 
     def set_predicate(self, index: Union[Expression, IntervalLattice, int], predicate):
         # convert index to interval lattice
