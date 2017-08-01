@@ -54,12 +54,14 @@ class SegmentationTestCase(ResultCommentsFileTestCase):
             for oct in node_result_list:
                 oct.close()
 
+        self.render_result_cfg(result, "Oct")
+
         # Run Usage Segmentation Analysis (backwards)
         backward_interpreter = BackwardInterpreter(self.cfg, UsageSemantics(), 3)
         result = backward_interpreter.analyze(
             UsedSegmentationDomain(int_vars, list_vars, list_len_vars, list_to_len_var, result))
 
-        self.render_result_cfg(result)
+        self.render_result_cfg(result, "Seg")
         self.check_result_comments(result)
 
 
