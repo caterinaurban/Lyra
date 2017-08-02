@@ -109,10 +109,8 @@ class PreAnalyzer:
         class_to_class_attributes = OrderedDict()
         class_to_base = OrderedDict()
         class_to_funcs = OrderedDict()
-        class_to_init_count = OrderedDict()
 
         for cls in class_defs:
-            init_args_count = 1
             if len(cls.bases) > 1:
                 raise NotImplementedError("Multiple inheritance is not supported yet.")
             elif cls.bases:
@@ -135,16 +133,18 @@ class PreAnalyzer:
             class_attributes = set()
             class_to_instance_attributes[cls.name] = instance_attributes
             class_to_class_attributes[cls.name] = class_attributes
-            class_funcs = []
+
+            class_funcs = {}
             class_to_funcs[cls.name] = class_funcs
 
             # Inspect all class-level statements
             for cls_stmt in cls.body:
                 if isinstance(cls_stmt, ast.FunctionDef):
+                    class_funcs[cls_stmt.name] = (len(cls_stmt.args.args), [d.id for d in cls_stmt.decorator_list],
+                                                  len(cls_stmt.args.defaults))
                     # Add function to class attributes and get attributes defined by self.some_attribute = value
                     instance_attributes.add(cls_stmt.name)
                     class_attributes.add(cls_stmt.name)
-                    class_funcs.append((cls_stmt.name, len(cls_stmt.args.args)))
                     if not cls_stmt.args.args:
                         continue
                     first_arg = cls_stmt.args.args[0].arg  # In most cases it will be 'self'
@@ -159,18 +159,13 @@ class PreAnalyzer:
                                     target.value.id == first_arg):
                                 instance_attributes.add(target.attr)
 
-                    if cls_stmt.name == "__init__":
-                        init_args_count = len(cls_stmt.args.args)
                 elif isinstance(cls_stmt, ast.Assign):
                     # Get attributes defined as class-level assignment
                     for target in cls_stmt.targets:
                         if isinstance(target, ast.Name):
                             class_attributes.add(target.id)
                             instance_attributes.add(target.id)
-            class_to_init_count[cls.name] = init_args_count
-
-        return (class_to_instance_attributes, class_to_class_attributes,
-                class_to_base, class_to_funcs, class_to_init_count)
+        return class_to_instance_attributes, class_to_class_attributes, class_to_base, class_to_funcs
 
     def get_all_configurations(self):
         config = Configuration()
@@ -183,7 +178,6 @@ class PreAnalyzer:
         config.classes_to_class_attrs = class_analysis[1]
         config.class_to_base = class_analysis[2]
         config.class_to_funcs = class_analysis[3]
-        config.class_to_init_count = class_analysis[4]
 
         config.used_names = self.get_all_used_names()
         config.max_default_args = self.max_default_args()
@@ -200,6 +194,7 @@ class Configuration:
         self.max_function_args = 1
         self.classes_to_attrs = OrderedDict()
         self.class_to_base = OrderedDict()
+        self.class_to_funcs = OrderedDict()
         self.base_folder = ""
         self.used_names = []
         self.max_default_args = 0
@@ -304,6 +299,8 @@ def get_inheritance_forest(class_defs):
     for cls in class_defs:
         bases = cls.bases
         for base in bases:
+            if base.id not in tree:
+                raise TypeError("Undefined name {}".format(base.id))
             tree[base.id].append(cls.name)
     return tree
 
@@ -315,7 +312,7 @@ def add_init_if_not_existing(class_node):
             return
     class_node.body.append(ast.FunctionDef(
         name="__init__",
-        args=ast.arguments(args=[ast.arg(arg="self", annotation=None)]),
+        args=ast.arguments(args=[ast.arg(arg="self", annotation=None)], defaults=[]),
         body=[ast.Pass()],
         decorator_list=[],
         returns=None,

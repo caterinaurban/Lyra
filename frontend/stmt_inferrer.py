@@ -34,8 +34,8 @@ from frontend.import_handler import ImportHandler
 def _infer_one_target(target, context, solver):
     """
     Get the type of the left hand side of an assignment
-    
-    :param target: The target on the left hand side 
+
+    :param target: The target on the left hand side
     :param context: The current context level
     :param solver: The SMT solver
     :return: the type of the target
@@ -321,13 +321,13 @@ def _init_func_context(name, args, context, solver):
 
 def _infer_args_defaults(args_types, defaults, context, solver):
     """Infer the default values of function arguments (if any)
-    
+
     :param args_types: Z3 constants for arguments types
     :param defaults: AST nodes for default values of arguments
     :param context: The parent of the function context
     :param solver: The inference Z3 solver
-    
-    
+
+
     A default array of length `n` represents the default values of the last `n` arguments
     """
     for i, default in enumerate(defaults):
@@ -350,7 +350,7 @@ def is_annotated(node):
 
 def is_stub(node):
     """Check if the function is a stub definition:
-    
+
     For the function to be a stub, it should be fully annotated and should have no body.
     The body should be a single `Pass` statement with optional docstring.
     """
@@ -363,7 +363,7 @@ def is_stub(node):
 
 def has_type_var(node, solver):
     """Check if the function definition has a generic type variable annotation
-    
+
     Inspect all the nodes of the type annotations and look for relevant generic type vars
     """
     found_type_var = False
@@ -436,14 +436,18 @@ def _infer_func_def(node, context, solver):
         solver.add(body_type == return_type,
                    fail_message="Return type annotation in line {}".format(node.lineno))
     else:
-        body_type = _infer_body(node.body, func_context, node.lineno, solver)
 
-    func_type = solver.z3_types.funcs[len(args_types)]((defaults_len,) + args_types + (body_type,))
+        body_type = _infer_body(node.body, func_context, node.lineno, solver)
+    return_type = solver.new_z3_const("return")
+    solver.add(solver.z3_types.subtype(body_type, return_type),
+               fail_message="Return type in line {}".format(node.lineno))
+    func_type = solver.z3_types.funcs[len(args_types)]((defaults_len,) + args_types + (return_type,))
     solver.add(result_type == func_type,
                fail_message="Function definition in line {}".format(node.lineno))
 
 
 def _infer_class_def(node, context, solver):
+    """Infer the types in a class definition"""
     class_context = Context(name=node.name, parent_context=context)
     result_type = solver.new_z3_const("class_type")
     solver.z3_types.all_types[node.name] = result_type
@@ -453,18 +457,64 @@ def _infer_class_def(node, context, solver):
 
     class_attrs = solver.z3_types.instance_attributes[node.name]
     instance_type = solver.z3_types.classes[node.name]
+    class_to_funcs = solver.z3_types.class_to_funcs[node.name]
+    base_class_to_funcs = {}
+    base_attrs = {}
+    if node.bases and isinstance(node.bases[0], ast.Name):
+        base_class_to_funcs = solver.z3_types.class_to_funcs[node.bases[0].id]
+        base_attrs = solver.z3_types.instance_attributes[node.bases[0].id]
 
     for attr in class_context.types_map:
         solver.add(class_attrs[attr] == class_context.types_map[attr],
                    fail_message="Class attribute in {}".format(node.lineno))
 
-    # Set the type of the first arg in the class methods to be instance of this class
-    # TODO check staticmethod decorator
-    for func_name, args_count in solver.config.class_to_funcs[node.name]:
-        func_type = class_context.get_type(func_name)
-        arg_accessor = getattr(solver.z3_types.type_sort, "func_{}_arg_1".format(args_count))
-        solver.add(arg_accessor(func_type) == instance_type,
-                   fail_message="First arg in class methods has class instance type")
+        if attr in class_to_funcs and "staticmethod" not in class_to_funcs[attr][1]:
+            # If the attribute is a non static method, set the type of the first arg to be an instance of this class
+            args_len = class_to_funcs[attr][0]
+            arg_accessor = getattr(solver.z3_types.type_sort, "func_{}_arg_1".format(args_len))
+            solver.add(arg_accessor(class_attrs[attr]) == instance_type,
+                       fail_message="First arg in instance methods has class instance type")
+
+        if attr != "__init__" and attr in base_class_to_funcs:
+            # attr is an overridden method
+            # class_to_funcs[attr] is a tuple of two elements.
+            # The first is the args length, the second is the decorators list, the third is default args length
+            base_args_len = base_class_to_funcs[attr][0]
+            base_defaults_len = base_class_to_funcs[attr][2]
+            base_non_defaults_len = base_args_len - base_defaults_len
+            sub_args_len = class_to_funcs[attr][0]
+            sub_defaults_len = class_to_funcs[attr][2]
+            sub_non_defaults_len = sub_args_len - sub_defaults_len
+            decorators = base_class_to_funcs[attr][1] + class_to_funcs[attr][1]
+
+            if "staticmethod" in decorators:
+                if "staticmethod" not in base_class_to_funcs[attr][1]:
+                    raise TypeError("Static method {} in class {} cannot override non-static method.".format(attr,
+                                                                                                             node.name))
+                if "staticmethod" not in class_to_funcs[attr][1]:
+                    raise TypeError("Non-static method {} in class {} cannot override static method.".format(attr,
+                                                                                                             node.name))
+            else:
+                if not base_args_len:
+                    raise TypeError("Instance methods should have at least one argument (the receiver)."
+                                    "If you wish to create a static method, please add the appropriate decorator.")
+                if base_args_len > sub_args_len:
+                    raise TypeError("Method {} in subclass {} should have total arguments length more than or equal "
+                                    "that in superclass.".format(attr, node.name))
+                if base_non_defaults_len > sub_non_defaults_len:
+                    raise TypeError("Method {} in subclass {} should have non-default arguments length less than"
+                                    "or equal that in superclass".format(attr, node.name))
+
+                # handle arguments and return contravariance/covariance
+                for i in range(1, base_args_len):
+                    arg_accessor = getattr(solver.z3_types.type_sort, "func_{}_arg_{}".format(base_args_len, i + 1))
+                    solver.add(solver.z3_types.subtype(arg_accessor(base_attrs[attr]),
+                                                       arg_accessor(class_attrs[attr])),
+                               fail_message="Arguments contravariance in line {}".format(node.lineno))
+                return_accessor = getattr(solver.z3_types.type_sort, "func_{}_return".format(base_args_len))
+                solver.add(solver.z3_types.subtype(return_accessor(class_attrs[attr]),
+                                                   return_accessor(base_attrs[attr])),
+                           fail_message="Return covariance in line {}".format(node.lineno))
 
     class_type = solver.z3_types.type(instance_type)
     solver.add(result_type == class_type, fail_message="Class definition in line {}".format(node.lineno))
@@ -474,28 +524,28 @@ def _infer_class_def(node, context, solver):
 
 def _infer_import(node, context, solver):
     """Infer the imported module in normal import statement
-    
+
     The imported modules can be used with direct module access only.
     Which means, re-assigning the module to a variable or passing it as a function arg is not supported.
-    
+
     For example, the following is not possible:
         - import X
           x = X
-          
+
         - import X
           f(X)
-          
+
     The importing supports deep module access. For example, the following is supported.
-    
+
     >> A.py
     x = 1
-    
+
     >> B.py
     import A
-    
+
     >> C.py
     import B
-    
+
     print(B.A.x)
     """
     for name in node.names:
