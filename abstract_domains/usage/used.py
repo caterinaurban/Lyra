@@ -75,7 +75,7 @@ class UsedLattice(ScopeDescendCombineMixin, BottomMixin):
         return self
 
     def is_top(self) -> bool:
-        return self.used == U
+        return not self.is_bottom() and self.used == U
 
     def _less_equal(self, other: 'UsedLattice') -> bool:
         if self.used == other.used or self.used == N:

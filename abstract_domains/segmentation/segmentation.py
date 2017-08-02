@@ -391,7 +391,7 @@ class SegmentedListLattice(BottomMixin):
         return self
 
     def is_top(self) -> bool:
-        return all([p.is_top() for p in self.predicates])
+        return not self.is_bottom() and all([p.is_top() for p in self.predicates])
 
     def unify(self, other: 'SegmentedListLattice', left_neutral_predicate_generator,
               right_neutral_predicate_generator=None):

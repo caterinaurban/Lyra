@@ -1,8 +1,8 @@
-from abstract_domains.lattice import BottomMixin
-
-from abstract_domains.usage.used import U, S, O, N, UsedLattice, Used
 from collections import OrderedDict
 from math import inf
+
+from abstract_domains.lattice import BottomMixin
+from abstract_domains.usage.used import U, S, O, N, UsedLattice, Used
 
 
 class UsedListStartLattice(BottomMixin):
@@ -70,7 +70,7 @@ class UsedListStartLattice(BottomMixin):
         return self
 
     def is_top(self) -> bool:
-        return all(upper == inf for upper in self.suo.values())
+        return not self.is_bottom() and all(upper == inf for upper in self.suo.values())
 
     def _less_equal(self, other: 'UsedListStartLattice') -> bool:
         return all(s1 <= s2 for s1, s2 in zip(self.suo.values(), other.suo.values()))

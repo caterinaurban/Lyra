@@ -174,7 +174,8 @@ class OctagonLattice(BottomMixin, NumericalMixin):
         return self
 
     def is_top(self) -> bool:
-        return all([isinf(b) for k, b in self.dbm.items() if k[0] != k[1]])  # check all inf, ignore diagonal for check
+        return not self.is_bottom() and all(
+            [isinf(b) for k, b in self.dbm.items() if k[0] != k[1]])  # check all inf, ignore diagonal for check
 
     def _less_equal(self, other: 'OctagonLattice') -> bool:
         if self.dbm.size != other.dbm.size:
