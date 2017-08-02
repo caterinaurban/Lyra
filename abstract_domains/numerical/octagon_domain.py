@@ -2,7 +2,7 @@ from copy import deepcopy
 from enum import Enum
 from functools import reduce
 from math import inf, isinf
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 from abstract_domains.lattice import BottomMixin
 from abstract_domains.numerical.dbm import IntegerCDBM
@@ -221,13 +221,11 @@ class OctagonLattice(BottomMixin, NumericalMixin):
     def get_bounds(self, var: VariableIdentifier):
         return self.get_lb(var), self.get_ub(var)
 
-    def set_interval(self, var: VariableIdentifier, interval: Union[int, IntervalLattice]):
+    def set_interval(self, var: VariableIdentifier, interval: IntervalLattice):
+        assert not interval.is_bottom(), "We can not use interval that is bottom to determine variable bounds!"
         if isinstance(interval, IntervalLattice):
             self.set_lb(var, interval.lower)
             self.set_ub(var, interval.upper)
-        else:
-            self.set_lb(var, interval)
-            self.set_ub(var, interval)
 
     def get_interval(self, var: VariableIdentifier):
         return IntervalLattice(self.get_lb(var), self.get_ub(var))
@@ -444,6 +442,10 @@ class OctagonDomain(OctagonLattice, State):
                     self._assign_constant(left, interval)
             elif left.typ == list:
                 interval = self.evaluate(right)
+                if interval.is_bottom():
+                    # this can happen if right is a empty ListDisplay
+                    interval = IntervalLattice().top()
+                    # TODO should we instead add a special 'empty' element to IntervalLattice?
                 self._assign_constant(left, interval)
         elif isinstance(left, Index):
             list_var = left.target
