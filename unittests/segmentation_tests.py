@@ -1,4 +1,7 @@
 import glob
+import logging
+import os
+import unittest
 
 from abstract_domains.numerical.octagon_domain import OctagonDomain
 from abstract_domains.usage.usage_domains import UsedSegmentationDomain
@@ -8,9 +11,6 @@ from engine.forward import ForwardInterpreter
 from semantics.forward import DefaultForwardSemantics
 from semantics.usage.usage_semantics import UsageSemantics
 from unittests.generic_tests import ResultCommentsFileTestCase
-import unittest
-import os
-import logging
 
 logging.basicConfig(level=logging.INFO, filename='unittests.log', filemode='w')
 
@@ -46,7 +46,7 @@ class SegmentationTestCase(ResultCommentsFileTestCase):
 
         # Run Octagonal Analysis (forward)
         forward_interpreter = ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
-        result = forward_interpreter.analyze(OctagonDomain(int_vars + list_len_vars))
+        result = forward_interpreter.analyze(OctagonDomain(int_vars + list_vars + list_len_vars))
 
         # ensure all results are closed for displaying
         for node in result.nodes:

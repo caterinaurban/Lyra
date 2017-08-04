@@ -1,9 +1,10 @@
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
-from typing import Type, Dict, Any, List, Set
+from typing import Set
+
 from abstract_domains.lattice import BoundedLattice, Lattice
 from abstract_domains.state import State
-from core.expressions import VariableIdentifier, Expression
+from core.expressions import VariableIdentifier, Expression, Index
 from core.statements import ProgramPoint
 
 
@@ -144,7 +145,7 @@ class ScopeStack(Stack, State):
         return self
 
     def _substitute_variable(self, left: Expression, right: Expression) -> 'DescendCombineStackDomain':
-        if isinstance(left, VariableIdentifier):
+        if isinstance(left, (VariableIdentifier, Index)):
             self.stack[-1].substitute_variable({left}, {right})
         else:
             raise NotImplementedError("Variable substitution for {} is not implemented!".format(left))

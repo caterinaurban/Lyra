@@ -245,82 +245,74 @@ class SegmentedListLattice(BottomMixin):
         if index_form.interval.finite():
             while 0 < least_upper_limit and self.limits[least_upper_limit - 1].ge_octagonal(index_form, self.octagon):
                 least_upper_limit -= 1
-        assert least_upper_limit > 0, f"The target index {index_form} is smaller equals the lower limit!"
+        assert least_upper_limit >= 0, f"The target index {index_form} is smaller equals the lower limit!"
         return least_upper_limit
 
     def _set_predicate_at_form_index(self, form: VarFormOct, predicate):
-        lower_index_form = form
-        upper_index_form = deepcopy(form)
-        upper_index_form.interval.add(1)
-
-        self._set_predicate_in_form_range(lower_index_form, upper_index_form, predicate)
+        """Sets the segments *potentially* covered by index (specified in canonical form) to ``predicate``."""
+        self._set_predicate_in_form_range(form, form, True, predicate)
 
     def _set_predicate_at_index(self, index: int, predicate):
+        """Sets the segments *potentially* covered at ``index`` to ``predicate``."""
         form_index = VarFormOct(interval=IntervalLattice.from_constant(index))
         self._set_predicate_at_form_index(form_index, predicate)
 
     def _set_predicate_in_interval(self, interval, predicate):
-        lower_form = VarFormOct(interval=IntervalLattice.from_constant(
+        """Sets the segments *potentially* covered by ``interval`` (**both** bounds inclusive) to ``predicate``."""
+        lower_index_form = VarFormOct(interval=IntervalLattice.from_constant(
             interval.lower))
-        upper_form = VarFormOct(interval=IntervalLattice.from_constant(
+        upper_index_form = VarFormOct(interval=IntervalLattice.from_constant(
             interval.upper))
-        self._set_predicate_in_form_range(lower_form, upper_form, predicate)
-
-    def _add_constraints_that_ensure_within_extremal_limits(self, form: VarFormOct):
-        # since we presume out-of-bounds checks have been done before, we add octagonal constraints for:
-        # -> index_forms are greater equals 0
-        # -> index_forms are smaller than len_var
-        # TODO or better add a synctatical 'rule' that knows that all variables are 0 <= var < n ?
-        if form.var and form.var != self._len_var:
-            self.octagon.set_lb(form.var, 0 - form.constant)
-            self.octagon.set_octagonal_constraint(PLUS, form.var, MINUS, self._len_var, -1 - form.constant)
+        self._set_predicate_in_form_range(lower_index_form, upper_index_form, True, predicate)
 
     def _set_predicate_in_form_range(self, lower_index_form: VarFormOct,
-                                     upper_index_form: VarFormOct, predicate):
-        """Main helper method. Set a predicate within a range given by bounds in linear form.
+                                     upper_index_form: VarFormOct, upper_inclusive, predicate):
+        """Set a predicate within a range specified by bounds in canonical form.
         
+        NOTE: This is the main helper method for ``set_predicate`` variants.
+        
+        :param lower_index_form: the range lower index in canonical form
+        :param upper_index_form: the range upper index in canonical form (inclusive/exclusive can be specified)
+        :param upper_inclusive: if the upper index should be included in the range where predicate is set
         :param predicate: the predicate to set in the range or None to set the element to the least upper bound of the predicate domain
         """
-        # self._add_constraints_that_ensure_within_extremal_limits(lower_index_form)
-        # self._add_constraints_that_ensure_within_extremal_limits(upper_index_form)
+        if upper_inclusive:
+            upper_index_form = deepcopy(upper_index_form)
+            upper_index_form.interval.add(1)
 
-        greatest_lower_limit = self.greatest_lower_limit(lower_index_form)
-        least_upper_limit = self.least_upper_limit(upper_index_form)
-
-        assert greatest_lower_limit < least_upper_limit, "Implementation Error: inconsistent greatest_lower_limit, " \
-                                                         "least_upper_limit indices!"
+        gl, lu, lu_inclusive = self.get_gl_lu(lower_index_form, upper_index_form)
 
         # remove all limits between the least_upper_limit and greatest_lower_limit
         ##########################################################################
-        for i in reversed(list(range(greatest_lower_limit + 1, least_upper_limit))):
+        for i in reversed(list(range(gl + 1, lu))):
             self.remove_limit(i)
-            least_upper_limit -= 1
+            lu -= 1
 
         # add the target lower bound/limit
-        if self.limits[greatest_lower_limit].eq_octagonal(lower_index_form, self.octagon):
+        if self.limits[gl].eq_octagonal(lower_index_form, self.octagon):
             # add target lower bound to existing limit
-            self.limits[greatest_lower_limit].bounds.add(lower_index_form)
+            self.limits[gl].bounds.add(lower_index_form)
 
-            new_predicate_index = greatest_lower_limit
+            new_predicate_index = gl
         else:
             # add new limit for target lower bound, DO NOT set the new predicate here
             # (do this later when also existence of target upper bound is guaranteed)
-            self.add_limit(greatest_lower_limit, Limit({lower_index_form}),
+            self.add_limit(gl, Limit({lower_index_form}),
                            possibly_empty_before=True, possibly_empty_after=False)
-            least_upper_limit += 1  # index correction since limit was added
+            lu += 1  # index correction since limit was added
 
-            new_predicate_index = greatest_lower_limit + 1
+            new_predicate_index = gl + 1
 
         # add the target upper bound/limit, setting predicate in (possibly newly inserted) segment
-        if self.limits[least_upper_limit].eq_octagonal(upper_index_form, self.octagon):
+        if self.limits[lu].eq_octagonal(upper_index_form, self.octagon):
             # add target upper bound to existing limit
-            self.limits[least_upper_limit].bounds.add(upper_index_form)
+            self.limits[lu].bounds.add(upper_index_form)
         else:
             # add new limit for target lower bound, set the new predicate here, DO NOT set the new predicate here
             # (do this later in separate step)
-            self.add_limit(least_upper_limit - 1, Limit({upper_index_form}),
+            self.add_limit(lu - 1, Limit({upper_index_form}),
                            possibly_empty_before=False, possibly_empty_after=True)
-            least_upper_limit += 1  # index correction since limit was added
+            lu += 1  # index correction since limit was added
 
         # set the target predicate to segment that is now guaranteed to be properly bounded
         if predicate:
@@ -329,6 +321,13 @@ class SegmentedListLattice(BottomMixin):
             pass  # the predicate of inserted segment is left to the join of smashed segments
 
     def set_predicate(self, index: Union[Expression, IntervalLattice, int], predicate):
+        """Set a predicate at an index specifiable with various types.
+        
+        NOTE: this method forwards command to appropriate helper methods.
+        
+        :param index: the index where to set the predicate as integer value, interval or expression
+        :param predicate: the predicate to set at the index/indices
+        """
         # convert index to interval lattice
         if isinstance(index, Expression):
             # first try to represent the index as linear form
@@ -346,15 +345,44 @@ class SegmentedListLattice(BottomMixin):
         else:
             raise TypeError(f"Invalid argument type {type(index)} for 'expr'!")
 
+    def get_gl_lu(self, lower_index_form: VarFormOct, upper_index_form: VarFormOct):
+        gl = self.greatest_lower_limit(lower_index_form)
+        lu = self.least_upper_limit(upper_index_form)
+        lu_inclusive = not self.limits[lu].lt_octagonal(upper_index_form, self.octagon)
+        if lu_inclusive:
+            assert gl <= lu, "Implementation Error: inconsistent greatest_lower_limit, " \
+                             "least_upper_limit indices!"
+        else:
+            assert gl < lu, "Implementation Error: inconsistent greatest_lower_limit, " \
+                            "least_upper_limit indices!"
+        return gl, lu, lu_inclusive
+
+    def get_gl_lu_at_expr(self, index: Expression):
+        try:
+            form = VarFormOct.from_expression(index)
+            lower_index_form = form
+            upper_index_form = deepcopy(form)
+        except InvalidFormError:
+            # index is not in single variable linear form, use fallback: evaluate index
+            interval = self.octagon.evaluate(index)
+            lower_index_form = IntervalLattice.from_constant(interval.lower),
+            upper_index_form = IntervalLattice.from_constant(interval.upper)
+        return self.get_gl_lu(lower_index_form, upper_index_form)
+
+    def get_predicate_in_form_range(self, lower_index_form: VarFormOct, upper_index_form: VarFormOct, upper_inclusive):
+        if not upper_inclusive:
+            upper_index_form = deepcopy(upper_index_form)
+            upper_index_form.interval.sub(1)
+        gl, lu, lu_inclusive = self.get_gl_lu(lower_index_form, upper_index_form)
+        # check if we have to include the predicate at the least upper bound (lu)
+        pred = self.predicates[gl:lu + 1 if lu_inclusive else lu]
+        return self._predicate_lattice().bottom().big_join(pred)
+
     # TODO add type tolerant function like set_predicate
     def get_predicate_at_form_index(self, form: VarFormOct):
         lower_index_form = form
-        upper_index_form = deepcopy(form)
-        upper_index_form.interval.add(1)
 
-        gl = self.greatest_lower_limit(lower_index_form)
-        lu = self.least_upper_limit(upper_index_form)
-        return self._predicate_lattice().bottom().big_join(self.predicates[gl:lu])
+        return self.get_predicate_in_form_range(lower_index_form, lower_index_form, True)
 
     def _join(self, other: 'SegmentedListLattice') -> 'SegmentedListLattice':
         other_copy = deepcopy(other)

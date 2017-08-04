@@ -1,5 +1,5 @@
 from abstract_domains.state import State
-from core.statements import VariableAccess, Assignment, Call
+from core.statements import VariableAccess, Assignment, Call, IndexStmt
 from semantics.semantics import Semantics, DefaultSemantics
 
 
@@ -31,12 +31,12 @@ class AssignmentSemantics(BackwardSemantics):
         :param state: state before executing the assignment
         :return: state modified by the assignment
         """
-        lhs = self.semantics(stmt.left, state).result    # lhs evaluation
-        rhs = self.semantics(stmt.right, state).result   # rhs evaluation
-        if isinstance(stmt.left, VariableAccess):
+        lhs = self.semantics(stmt.left, state).result  # lhs evaluation
+        rhs = self.semantics(stmt.right, state).result  # rhs evaluation
+        if isinstance(stmt.left, (VariableAccess, IndexStmt)):
             return state.substitute_variable(lhs, rhs)
         else:
-            raise NotImplementedError("Backward semantics for assignment {0!s} not yet implemented!".format(self))
+            raise NotImplementedError(f"Backward semantics for assignment to {type(stmt.left)} not yet implemented!")
 
 
 # noinspection PyAbstractClass

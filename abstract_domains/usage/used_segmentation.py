@@ -3,6 +3,7 @@ from numbers import Number
 from typing import Set, List, Sequence
 
 from abstract_domains.numerical.interval_domain import IntervalLattice
+from abstract_domains.numerical.linear_forms import InvalidFormError
 from abstract_domains.segmentation.bounds import VarFormOct
 from abstract_domains.segmentation.segmentation import SegmentedList
 from abstract_domains.stack import ScopeDescendCombineMixin
@@ -21,16 +22,22 @@ class UsedSegmentedList(SegmentedList):
         super().__init__(variables, len_var, lambda: UsedLattice().bottom(), octagon_analysis_result)
 
     # noinspection PyPep8Naming
-    def change_S_to_U(self):
-        """Change previously S-annotated (used in outer scope) to U-annotated (definitely used)"""
-        for i, p in enumerate(self.predicates):
+    def change_S_to_U(self, predicate_indices=None):
+        """Change previously S-annotated (used in outer scope) to U-annotated (definitely used).
+         
+        :param predicate_indices: limit the change to this indices
+        """
+        for i in predicate_indices if predicate_indices is not None else range(len(self.predicates)):
             if self.predicates[i] == S:
                 self.predicates[i].used = U
 
     # noinspection PyPep8Naming
-    def change_SU_to_O(self):
-        """Change previously U/S-annotated to O-annotated"""
-        for i, p in enumerate(self.predicates):
+    def change_SU_to_O(self, predicate_indices=None):
+        """Change previously U/S-annotated to O-annotated.
+        
+        :param predicate_indices: limit the change to this indices
+        """
+        for i in predicate_indices if predicate_indices is not None else range(len(self.predicates)):
             if self.predicates[i].used in [S, U]:
                 self.predicates[i].used = O
 
@@ -53,57 +60,99 @@ class UsedSegmentationMixStore(ScopeDescendCombineMixin, Store, State):
             used.combine(other.store[var])
         return self
 
-    def _use(self, left: VariableIdentifier, right: Expression):
-        if issubclass(left.typ, Number):
-            if self.store[left].used in [Used.U, Used.S]:
-                for e in walk(right):
-                    if isinstance(e, VariableIdentifier) and issubclass(e.typ, Number):
-                        self.store[e].used = U
-                    elif isinstance(e, Index):
-                        if e.target.typ == list:
-                            self.store[e.target].set_predicate(e.index, UsedLattice(U))
-                        else:
-                            raise NotImplementedError(
-                                f"Indexed variable is not of any Sequence type, but {e.target.typ}!")
+    def _set_expr_used(self, expr: Expression):
+        for e in walk(expr):
+            if isinstance(e, VariableIdentifier) and issubclass(e.typ, Number):
+                self.store[e].used = U
+            elif isinstance(e, Index):
+                if e.target.typ == list:
+                    self.store[e.target].set_predicate(e.index, UsedLattice(U))
+                else:
+                    raise NotImplementedError(
+                        f"Indexed variable is not of any Sequence type, but {e.target.typ}!")
 
-        elif issubclass(left.typ, Sequence):
-            # list1 = ...
-            segmentation = self.store[left]
-            if isinstance(right, VariableIdentifier):
-                # list1 = list2
-                self.store[right].replace(deepcopy(segmentation))
-                self.store[right].change_S_to_U()
-            elif isinstance(right, ListDisplay):
-                # list1 = [x, y, 5, x+y]
-                list_display = right
+    def _use(self, left: Expression, right: Expression):
+        if isinstance(left, VariableIdentifier):
+            if issubclass(left.typ, Number):
+                if self.store[left].used in [Used.U, Used.S]:
+                    self._set_expr_used(right)
+            elif issubclass(left.typ, Sequence):
+                # list1 = ...
+                segmentation = self.store[left]
+                if isinstance(right, VariableIdentifier):
+                    # list1 = list2
+                    self.store[right].replace(deepcopy(segmentation))
+                    self.store[right].change_S_to_U()
+                elif isinstance(right, ListDisplay):
+                    # list1 = [x, y, 5, x+y]
+                    list_display = right
 
-                for index, e in enumerate(list_display.items):
-                    if segmentation.get_predicate_at_form_index(VarFormOct(
-                            interval=IntervalLattice.from_constant(index))).used in [Used.U, Used.S]:
-                        for identifier in e.ids():
-                            self.store[identifier].used = U
+                    for index, e in enumerate(list_display.items):
+                        if segmentation.get_predicate_at_form_index(VarFormOct(
+                                interval=IntervalLattice.from_constant(index))).used in [Used.U, Used.S]:
+                            for identifier in e.ids():
+                                self.store[identifier].used = U
+            else:
+                raise NotImplementedError(f"Method _use not implemented for left side variable of type {left.typ}!")
+        elif isinstance(left, Index):
+            segmentation = self.store[left.target]
+            try:
+                form = VarFormOct.from_expression(left.index)
+                if segmentation.get_predicate_at_form_index(form).used in [Used.U, Used.S]:
+                    self._set_expr_used(right)
+            except InvalidFormError:
+                # index is not in single variable linear form, use fallback: evaluate index
+                interval = segmentation.octagon.evaluate(left.index)
+                if segmentation.get_predicate_in_form_range(
+                        VarFormOct(interval=IntervalLattice.from_constant(interval.lower)),
+                        VarFormOct(interval=IntervalLattice.from_constant(interval.upper)), True).used in [Used.U,
+                                                                                                           Used.S]:
+                    self._set_expr_used(right)
         else:
-            raise NotImplementedError(f"Method _use not implemented for {self.store[left].typ}!")
+            raise NotImplementedError(f"Method _use not implemented for left side type {type(left)}!")
         return self
 
     def _kill(self, left: VariableIdentifier, right: Expression):
-        if issubclass(left.typ, Number):
-            if self.store[left].used in [Used.U, Used.S]:
-                if left in [v for v, u in self.store.items() if v in right.ids()]:
-                    self.store[left].used = U  # x is still used since it is used in assigned expression
-                else:
-                    self.store[left].used = O  # x is overwritten
-        elif issubclass(left.typ, Sequence):
-            # TODO this whole if is no longer correct when lists of lists are allowed, e.g. l = [a,2,l]
-            if isinstance(right, VariableIdentifier):
-                if right != left:  # if no self-assignemnt
+        if isinstance(left, VariableIdentifier):
+            if issubclass(left.typ, Number):
+                if self.store[left].used in [Used.U, Used.S]:
+                    if left in [v for v, u in self.store.items() if v in right.ids()]:
+                        self.store[left].used = U  # x is still used since it is used in assigned expression
+                    else:
+                        self.store[left].used = O  # x is overwritten
+            elif issubclass(left.typ, Sequence):
+                # TODO this whole if is no longer correct when lists of lists are allowed, e.g. l = [a,2,l]
+                if isinstance(right, VariableIdentifier):
+                    if right != left:  # if no self-assignemnt
+                        self.store[left].change_SU_to_O()
+                elif isinstance(right, ListDisplay):
                     self.store[left].change_SU_to_O()
-            elif isinstance(right, ListDisplay):
-                self.store[left].change_SU_to_O()
+                else:
+                    raise NotImplementedError(f"Method _kill not implemented for right side of type {right.typ}!")
             else:
-                raise NotImplementedError(f"Method _kill not implemented for right side {right.typ}!")
+                raise NotImplementedError(f"Method _kill not implemented for left side of type {self.store[left].typ}!")
+        elif isinstance(left, Index):
+            segmentation = self.store[left.target]
+            # we have to 'kill' (change S,U to O) all indices where we are sure that this indices do not appear in right
+            # find all indices that appear in right
+            pred_indices_used_right = set()
+            for e in walk(right):
+                if isinstance(e, Index):
+                    if e.target.typ == list:
+                        if e.target == left.target:
+                            gl, lu, lu_inclusive = segmentation.get_gl_lu_at_expr(e.index)
+                            pred_indices_used_right |= set(range(gl, lu + 1 if lu_inclusive else lu))
+                    else:
+                        raise NotImplementedError(
+                            f"Indexed variable is not of any Sequence type, but {e.target.typ}!")
+
+            # find possible indices updates in the list on the left
+            gl, lu, lu_inclusive = segmentation.get_gl_lu_at_expr(left.index)
+            pred_indices_written_left = set(range(gl, lu + 1 if lu_inclusive else lu))
+            pred_indices_overwritten = pred_indices_written_left - pred_indices_used_right
+            segmentation.change_SU_to_O(pred_indices_overwritten)
         else:
-            raise NotImplementedError(f"Method _kill not implemented for {self.store[left].typ}!")
+            raise NotImplementedError(f"Method _kill not implemented for left side type {type(left)}!")
         return self
 
     def _access_variable(self, variable: VariableIdentifier) -> Set[Expression]:
@@ -154,25 +203,16 @@ class UsedSegmentationMixStore(ScopeDescendCombineMixin, Store, State):
         raise NotImplementedError("UsedSegmentationMixStore does not support exit_if")
 
     def _output(self, output: Expression) -> 'UsedSegmentationMixStore':
-        for variable in output.ids():
-            if issubclass(variable.typ, Number):
-                self.store[variable].used = U
-            elif issubclass(variable.typ, Sequence):
-                segmented_list_state = self.store[variable]
-                # remove all but extremal limits
-                for i in range(1, len(segmented_list_state.limits) - 1):
-                    segmented_list_state.remove_limit(1)
-                # set single remaining segment as used
-                segmented_list_state.predicates[0].used = U
-            else:
-                raise NotImplementedError(f"Type {variable.typ} not yet supported!")
-        return self  # nothing to be done
+        self._set_expr_used(output)
+        return self
 
     def _substitute_variable(self, left: Expression, right: Expression) -> 'UsedSegmentationMixStore':
         if isinstance(left, VariableIdentifier):
             self._use(left, right)._kill(left, right)
             for var in self._list_vars:
                 self.store[var].substitute_variable(left, right)
+        elif isinstance(left, Index):
+            self._use(left, right)._kill(left, right)
         else:
             raise NotImplementedError("Variable substitution for {} is not implemented!".format(left))
         return self

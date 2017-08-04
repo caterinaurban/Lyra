@@ -52,6 +52,7 @@ class TestSegmentationUnification(unittest.TestCase):
         i_plus_1 = BinaryArithmeticOperation(int, i, BinaryArithmeticOperation.Operator.Add, c1)
         s1._set_predicate_in_form_range(VarFormOct.from_expression(c0),
                                         VarFormOct.from_expression(i_plus_1),
+                                        False,
                                         UsedLattice(Used.S))
         print(s1)
 
