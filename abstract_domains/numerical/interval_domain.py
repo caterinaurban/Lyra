@@ -319,7 +319,7 @@ class IntervalLattice(Interval, BottomMixin):
 
 class IntervalDomain(Store, NumericalMixin, State):
     def __init__(self, variables: List[VariableIdentifier]):
-        super().__init__(variables, {int: IntervalLattice, list: IntervalLattice})
+        super().__init__(variables, {int: lambda _: IntervalLattice(), list: lambda _: IntervalLattice()})
 
     def forget(self, var: VariableIdentifier):
         self.store[var].top()

@@ -1,8 +1,9 @@
 from enum import IntEnum
 from typing import List, Set
-from abstract_domains.store import Store
+
 from abstract_domains.lattice import Lattice
 from abstract_domains.state import State
+from abstract_domains.store import Store
 from core.expressions import Expression, VariableIdentifier
 
 
@@ -58,7 +59,7 @@ class LivenessState(Store, State):
         
         :param variables: list of program variables
         """
-        super().__init__(variables, {int: LivenessLattice})
+        super().__init__(variables, {int: lambda _: LivenessLattice()})
 
     def _access_variable(self, variable: VariableIdentifier) -> Set[Expression]:
         return {variable}

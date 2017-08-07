@@ -16,7 +16,7 @@ from core.expressions_tools import walk
 
 class UsedStore(ScopeDescendCombineMixin, Store, State):
     def __init__(self, variables: List[VariableIdentifier]):
-        super().__init__(variables, {int: UsedLattice, list: UsedListStartLattice})
+        super().__init__(variables, {int: lambda _: UsedLattice(), list: lambda _: UsedListStartLattice()})
 
     def descend(self) -> 'UsedStore':
         for var in self.store.values():

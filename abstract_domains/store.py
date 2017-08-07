@@ -1,5 +1,5 @@
-from typing import List, Type, Dict, Any, Callable, Union
-from collections import defaultdict
+from typing import List, Type, Dict, Callable
+
 from abstract_domains.lattice import Lattice
 from core.expressions import VariableIdentifier
 
@@ -8,7 +8,7 @@ class Store(Lattice):
     """Lifting Var -> L of a lattice L to a set of program variables Var."""
 
     def __init__(self, variables: List[VariableIdentifier],
-                 lattices: Dict[Type, Union[Type[Lattice], Callable[[], Lattice]]]):
+                 lattices: Dict[Type, Callable[[VariableIdentifier], Lattice]]):
         """Create a mapping Var -> L from each variable in Var to the corresponding lattice element in L.
 
         :param variables: list of program variables
@@ -19,9 +19,7 @@ class Store(Lattice):
         super().__init__()
         self._variables = variables
         self._lattices = lattices
-        # nice trick to handle both allowed types for lattices: just call (it is either the constructor,
-        # with no parameters or the generator called)
-        self._store = {var: self._lattices[var.typ]() for var in self._variables}
+        self._store = {var: self._lattices[var.typ](var) for var in self._variables}
 
     @property
     def variables(self):

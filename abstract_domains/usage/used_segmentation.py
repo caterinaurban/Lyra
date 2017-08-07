@@ -45,10 +45,10 @@ class UsedSegmentedList(SegmentedList):
 class UsedSegmentationMixStore(ScopeDescendCombineMixin, Store, State):
     def __init__(self, int_vars, list_vars, list_len_vars, list_to_len_var, octagon_analysis_result):
         self._list_vars = list_vars
-        super().__init__(int_vars + list_vars + list_len_vars, {int: UsedLattice, list: lambda: None})
-        for var in list_vars:
-            self.store[var] = UsedSegmentedList(int_vars + list_len_vars, list_to_len_var[var],
-                                                octagon_analysis_result)
+        lattices = {int: lambda _: UsedLattice(),
+                    list: lambda var: UsedSegmentedList(int_vars + list_len_vars, list_to_len_var[var],
+                                                        octagon_analysis_result)}
+        super().__init__(int_vars + list_vars + list_len_vars, lattices)
 
     def descend(self) -> 'UsedSegmentationMixStore':
         for var in self.store.values():
