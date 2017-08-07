@@ -7,7 +7,7 @@ from abstract_domains.state import State
 from abstract_domains.usage.used import UsedLattice, Used
 from abstract_domains.store import Store
 from abstract_domains.usage.used_liststart import UsedListStartLattice
-from abstract_domains.usage.used_segmentation import UsedSegmentationMixStore
+from abstract_domains.usage.used_segmentation import UsedSegmentationStore
 from core.expressions import Expression, VariableIdentifier, ListDisplay, Literal, Index
 from math import inf
 
@@ -154,4 +154,4 @@ class UsedSegmentationDomain(ScopeStack):
 
         :param variables: list of program variables
         """
-        super().__init__(UsedSegmentationMixStore(*args, **kwargs))
+        super().__init__(UsedSegmentationStore(*args, **kwargs))

@@ -42,7 +42,7 @@ class UsedSegmentedList(SegmentedList):
                 self.predicates[i].used = O
 
 
-class UsedSegmentationMixStore(ScopeDescendCombineMixin, Store, State):
+class UsedSegmentationStore(ScopeDescendCombineMixin, Store, State):
     def __init__(self, int_vars, list_vars, list_len_vars, list_to_len_var, octagon_analysis_result):
         self._list_vars = list_vars
         lattices = {int: lambda _: UsedLattice(),
@@ -50,12 +50,12 @@ class UsedSegmentationMixStore(ScopeDescendCombineMixin, Store, State):
                                                         octagon_analysis_result)}
         super().__init__(int_vars + list_vars + list_len_vars, lattices)
 
-    def descend(self) -> 'UsedSegmentationMixStore':
+    def descend(self) -> 'UsedSegmentationStore':
         for var in self.store.values():
             var.descend()
         return self
 
-    def combine(self, other: 'UsedSegmentationMixStore') -> 'UsedSegmentationMixStore':
+    def combine(self, other: 'UsedSegmentationStore') -> 'UsedSegmentationStore':
         for var, used in self.store.items():
             used.combine(other.store[var])
         return self
@@ -158,10 +158,10 @@ class UsedSegmentationMixStore(ScopeDescendCombineMixin, Store, State):
     def _access_variable(self, variable: VariableIdentifier) -> Set[Expression]:
         return {variable}
 
-    def _assign_variable(self, left: Expression, right: Expression) -> 'UsedSegmentationMixStore':
+    def _assign_variable(self, left: Expression, right: Expression) -> 'UsedSegmentationStore':
         raise NotImplementedError("Variable assignment is not supported!")
 
-    def _assume(self, condition: Expression) -> 'UsedSegmentationMixStore':
+    def _assume(self, condition: Expression) -> 'UsedSegmentationStore':
         used_vars = len(
             set([lat.used for lat in self.store.values() if isinstance(lat, UsedLattice)]).intersection(
                 [Used.U, Used.O])
@@ -202,11 +202,11 @@ class UsedSegmentationMixStore(ScopeDescendCombineMixin, Store, State):
     def exit_if(self):
         raise NotImplementedError("UsedSegmentationMixStore does not support exit_if")
 
-    def _output(self, output: Expression) -> 'UsedSegmentationMixStore':
+    def _output(self, output: Expression) -> 'UsedSegmentationStore':
         self._set_expr_used(output)
         return self
 
-    def _substitute_variable(self, left: Expression, right: Expression) -> 'UsedSegmentationMixStore':
+    def _substitute_variable(self, left: Expression, right: Expression) -> 'UsedSegmentationStore':
         if isinstance(left, VariableIdentifier):
             self._use(left, right)._kill(left, right)
             for var in self._list_vars:
