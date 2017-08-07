@@ -48,7 +48,7 @@ class ForwardInterpreter(Interpreter):
                         predecessor = deepcopy(initial).bottom()
                     # handle conditional edges
                     if isinstance(edge, Conditional):
-                        predecessor.next(edge.condition.pp)
+                        predecessor.next(edge.condition.pp, edge.kind)
                         predecessor = self.semantics.semantics(edge.condition, predecessor).filter()
                     # handle non-default edges
                     if edge.kind == Edge.Kind.IF_IN:

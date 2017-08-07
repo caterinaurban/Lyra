@@ -10,16 +10,29 @@ from abstract_domains.stack import ScopeDescendCombineMixin
 from abstract_domains.state import State
 from abstract_domains.store import Store
 from abstract_domains.usage.used import U, S, O, UsedLattice, Used
-from core.expressions import Literal, VariableIdentifier, Expression, Index, ListDisplay
+from core.cfg import Edge
+from core.expressions import VariableIdentifier, Expression, Index, ListDisplay
 from core.expressions_tools import walk
 from core.statements import ProgramPoint
 from engine.result import AnalysisResult
 
 
-class UsedSegmentedList(SegmentedList):
+class UsedSegmentedList(ScopeDescendCombineMixin, SegmentedList):
     def __init__(self, variables: List[VariableIdentifier], len_var,
                  octagon_analysis_result: AnalysisResult):
         super().__init__(variables, len_var, lambda: UsedLattice().bottom(), octagon_analysis_result)
+
+    def descend(self) -> 'UsedSegmentedList':
+        for i in range(len(self.predicates)):
+            self.predicates[i].used = UsedLattice.DESCEND[self.predicates[i].used]
+        return self
+
+    def combine(self, other: 'UsedSegmentedList') -> 'UsedSegmentedList':
+        self.unify(other, lambda: self._predicate_lattice().bottom())
+        self.join(other)
+        for i in range(len(self.predicates)):
+            self.predicates[i].used = UsedLattice.COMBINE[(self.predicates[i].used, other.predicates[i].used)]
+        return self
 
     # noinspection PyPep8Naming
     def change_S_to_U(self, predicate_indices=None):
@@ -28,7 +41,7 @@ class UsedSegmentedList(SegmentedList):
         :param predicate_indices: limit the change to this indices
         """
         for i in predicate_indices if predicate_indices is not None else range(len(self.predicates)):
-            if self.predicates[i] == S:
+            if self.predicates[i].used == S:
                 self.predicates[i].used = U
 
     # noinspection PyPep8Naming
@@ -51,13 +64,13 @@ class UsedSegmentationStore(ScopeDescendCombineMixin, Store, State):
         super().__init__(int_vars + list_vars + list_len_vars, lattices)
 
     def descend(self) -> 'UsedSegmentationStore':
-        for var in self.store.values():
-            var.descend()
+        for lat in self.store.values():
+            lat.descend()
         return self
 
     def combine(self, other: 'UsedSegmentationStore') -> 'UsedSegmentationStore':
-        for var, used in self.store.items():
-            used.combine(other.store[var])
+        for var, lat in self.store.items():
+            lat.combine(other.store[var])
         return self
 
     def _set_expr_used(self, expr: Expression):
@@ -162,14 +175,9 @@ class UsedSegmentationStore(ScopeDescendCombineMixin, Store, State):
         raise NotImplementedError("Variable assignment is not supported!")
 
     def _assume(self, condition: Expression) -> 'UsedSegmentationStore':
-        used_vars = len(
-            set([lat.used for lat in self.store.values() if isinstance(lat, UsedLattice)]).intersection(
-                [Used.U, Used.O])
-        ) > 0
-        used_lists = any(
-            [lat.suo[Used.U] > 0 or lat.suo[Used.O] > 0 for lat in self.store.values() if
-             isinstance(lat, UsedListStartLattice)]
-        )
+        used_vars = any([lat.used in [Used.U, Used.O] for lat in self.store.values() if isinstance(lat, UsedLattice)])
+        used_lists = any([len(set(lat.predicates).intersection([Used.U, Used.O])) for lat in self.store.values() if
+                          isinstance(lat, UsedSegmentedList)])
         store_has_effect = used_vars or used_lists
 
         for e in walk(condition):
@@ -179,12 +187,7 @@ class UsedSegmentationStore(ScopeDescendCombineMixin, Store, State):
                 if store_has_effect:
                     self.store[e].used = Used.U
             elif isinstance(e, Index):
-                if isinstance(e.index, Literal):
-                    if store_has_effect:
-                        self.store[e.target].set_used_at(e.index.val)
-                else:
-                    raise NotImplementedError()
-
+                self.store[e.target].set_predicate(e.index, UsedLattice(Used.U))
         return self
 
     def _evaluate_literal(self, literal: Expression) -> Set[Expression]:
@@ -217,6 +220,6 @@ class UsedSegmentationStore(ScopeDescendCombineMixin, Store, State):
             raise NotImplementedError("Variable substitution for {} is not implemented!".format(left))
         return self
 
-    def next(self, pp: ProgramPoint):
+    def next(self, pp: ProgramPoint, edge_kind: Edge.Kind = None):
         for var in self._list_vars:
-            self.store[var].next(pp)
+            self.store[var].next(pp, edge_kind)

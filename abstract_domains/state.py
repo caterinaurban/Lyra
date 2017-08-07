@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from abstract_domains.lattice import Lattice
 from copy import deepcopy
+
+from core.cfg import Edge
 from core.expressions import Expression, VariableIdentifier
 from typing import Set
 
@@ -176,7 +178,7 @@ class State(Lattice, metaclass=ABCMeta):
         self.result = set()  # assignments have no result, only side-effects
         return self
 
-    def next(self, pp: ProgramPoint):
+    def next(self, pp: ProgramPoint, edge_kind: Edge.Kind = None):
         """Called by the engine *before* **(time-wise)** the statement at a program point gets interpreted.
         
         If the engine runs a forward analysis, this state is considered to be *before* **(in situ)** the program 
@@ -184,5 +186,6 @@ class State(Lattice, metaclass=ABCMeta):
         **(in situ)** the program point ``pp`` interpreted next. 
         
         :param pp: the program point of the statement interpreted next
+        :param edge_kind: the kind of edge just passed in case the next statement is a conditional, otherwise ``None``
         """
         pass

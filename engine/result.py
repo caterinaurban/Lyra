@@ -1,8 +1,8 @@
-from abstract_domains.state import State
-from core.cfg import Node, ControlFlowGraph, Edge
 from itertools import zip_longest
 from typing import List
 
+from abstract_domains.state import State
+from core.cfg import Node, ControlFlowGraph, Edge, Conditional
 from core.statements import ProgramPoint
 
 
@@ -20,6 +20,8 @@ class AnalysisResult:
         # index data structures
         self._result_before_pp = dict()
         self._result_after_pp = dict()
+        self._result_before_conditional_edge = dict()
+        self._result_after_conditional_edge = dict()
 
     @property
     def cfg(self):
@@ -44,20 +46,37 @@ class AnalysisResult:
         :param states: list of states representing the result of the analysis for the block
         """
         self._node_result[node] = states
+
         # update index data structures
+        # -> index the state before and after each statement
         if node.stmts:
             for stmt, state in zip(node.stmts, states[:-1]):
                 self._result_before_pp[stmt.pp] = state
             for stmt, state in zip(node.stmts, states[1:]):
                 self._result_after_pp[stmt.pp] = state
+        # -> index the state before and after each edge
+        for e in self.cfg.in_edges(node):
+            if isinstance(e, Conditional):
+                # we have to index with pair (program point, kind) since they are multiple edges for a single condition)
+                self._result_after_conditional_edge[(e.condition.pp, e.kind)] = states[0]
+        for e in self.cfg.out_edges(node):
+            if isinstance(e, Conditional):
+                # we have to index with pair (program point, kind) since they are multiple edges for a single condition)
+                self._result_before_conditional_edge[(e.condition.pp, e.kind)] = states[-1]
 
-    def get_result_before(self, pp: ProgramPoint) -> State:
+    def get_result_before(self, pp: ProgramPoint, edge_kind: Edge.Kind = None) -> State:
         """Get the analysis result before a program point."""
-        return self._result_before_pp[pp]
+        if edge_kind:
+            return self._result_before_conditional_edge[(pp, edge_kind)]
+        else:
+            return self._result_before_pp[pp]
 
-    def get_result_after(self, pp: ProgramPoint) -> State:
+    def get_result_after(self, pp: ProgramPoint, edge_kind: Edge.Kind = None) -> State:
         """Get the analysis result after a program point."""
-        return self._result_after_pp[pp]
+        if edge_kind:
+            return self._result_after_conditional_edge[(pp, edge_kind)]
+        else:
+            return self._result_after_pp[pp]
 
     def __str__(self):
         """Analysis result string representation.

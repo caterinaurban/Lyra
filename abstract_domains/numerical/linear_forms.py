@@ -53,7 +53,7 @@ class LinearForm:
     def __eq__(self, other: 'LinearForm'):
         return isinstance(other, self.__class__) \
                and set(self.var_summands.keys()) == set(other.var_summands.keys()) \
-               and set(self.var_summands.values()) == set(other.var_summands.values()) \
+               and all([self.var_summands[key] == other.var_summands[key] for key in self.var_summands.keys()]) \
                and self.interval == other.interval
 
     def __ne__(self, other: 'LinearForm'):
