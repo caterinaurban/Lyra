@@ -29,7 +29,6 @@ class UsedSegmentedList(ScopeDescendCombineMixin, SegmentedList):
 
     def combine(self, other: 'UsedSegmentedList') -> 'UsedSegmentedList':
         self.unify(other, lambda: self._predicate_lattice().bottom())
-        self.join(other)
         for i in range(len(self.predicates)):
             self.predicates[i].used = UsedLattice.COMBINE[(self.predicates[i].used, other.predicates[i].used)]
         return self
@@ -161,7 +160,7 @@ class UsedSegmentationStore(ScopeDescendCombineMixin, Store, State):
 
             # find possible indices updates in the list on the left
             gl, lu, lu_inclusive = segmentation.get_gl_lu_at_expr(left.index)
-            pred_indices_written_left = set(range(gl, lu + 1 if lu_inclusive else lu))
+            pred_indices_written_left = set(range(gl, min(len(segmentation), lu + 1 if lu_inclusive else lu)))
             pred_indices_overwritten = pred_indices_written_left - pred_indices_used_right
             segmentation.change_SU_to_O(pred_indices_overwritten)
         else:

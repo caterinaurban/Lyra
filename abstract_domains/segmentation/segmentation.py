@@ -131,7 +131,7 @@ class SegmentedListLattice(BottomMixin):
 
     def all_bounds(self, start_limit=0):
         """Generate all bounds of all limits."""
-        for i in range(start_limit, len(self._limits)):
+        for i in range(start_limit, len(self.limits)):
             for b in self.limits[i].bounds:
                 yield b
 
@@ -187,15 +187,15 @@ class SegmentedListLattice(BottomMixin):
         self.limits.insert(limit_after, limit)
         limit_after += 1  # update index of limit after inserted limit
 
-        self.predicates.insert(segment_index + 1, self.predicates[segment_index])
+        self.predicates.insert(segment_index + 1, deepcopy(self.predicates[segment_index]))
         segment_index_before = segment_index
         segment_index_after = segment_index + 1
         del segment_index
 
         if predicate_before:
-            self.predicates[segment_index_before] = predicate_before
+            self.predicates[segment_index_before] = deepcopy(predicate_before)
         if predicate_after:
-            self.predicates[segment_index_after] = predicate_after
+            self.predicates[segment_index_after] = deepcopy(predicate_after)
         self.possibly_empty[segment_index_before] = possibly_empty_before
         self.possibly_empty.insert(segment_index_after, possibly_empty_after)
 
@@ -208,8 +208,8 @@ class SegmentedListLattice(BottomMixin):
         """
         assert 0 < index < len(self._limits) - 1, "Invalid index. Cannot remove lower or upper limit of segmentation!"
 
-        p_left = self._predicates[index - 1]
-        p_right = self._predicates[index]
+        p_left = deepcopy(self._predicates[index - 1])
+        p_right = deepcopy(self._predicates[index])
         self._predicates[index - 1] = p_left.join(p_right)
         self._possibly_empty[index - 1] = self._possibly_empty[index - 1] and self._possibly_empty[index]
         del self._predicates[index]
@@ -431,15 +431,21 @@ class SegmentedListLattice(BottomMixin):
         """
         assert self.limits[0].eq_octagonal(other.limits[0],
                                            self.octagon), "The lower limits should be equal for unification."
-        assert self.limits[0].bounds == other.limits[0].bounds, "The lower limits should be equal for unification."
+        assert self.limits[-1].eq_octagonal(other.limits[-1],
+                                            self.octagon), "The upper limits should be equal for unification."
 
         if not right_neutral_predicate_generator:
             right_neutral_predicate_generator = left_neutral_predicate_generator
 
-        self._unify(other, left_neutral_predicate_generator, right_neutral_predicate_generator, 0, 0)
+        # prepare the joined octagon used for unification
+        # TODO this is ugly because the joined octagon was already calculated in octagon analysis
+        # TODO (but is difficult to access from here)
+        octagon = deepcopy(self.octagon).join(other.octagon)
+
+        self._unify(other, left_neutral_predicate_generator, right_neutral_predicate_generator, 0, 0, octagon)
 
     def _unify(self, other: 'SegmentedListLattice', left_neutral_predicate_generator, right_neutral_predicate_generator,
-               self_index: int, other_index: int):
+               self_index: int, other_index: int, octagon: OctagonLattice):
         # TODO check if this subset_case can be merged into incomparable_case
         def handle_subset_case(seg1, seg2, i, j, seg1_neutral_predicate_generator, seg2_neutral_predicate_generator):
             """Handle the case where ``b1 > b2``, i.e. bounds ``b2`` is a subset of bounds ``b1``.
@@ -470,12 +476,12 @@ class SegmentedListLattice(BottomMixin):
                 # just forget about b1_exclusive bounds
                 seg1.limits[i].bounds -= b1_exclusive
                 # TODO ★ check if switch of receiver, other-argument is OK
-                seg1._unify(seg2, seg1_neutral_predicate_generator, seg2_neutral_predicate_generator, i, j)
+                seg1._unify(seg2, seg1_neutral_predicate_generator, seg2_neutral_predicate_generator, i, j, octagon)
             else:
                 # add new segment to seg1 with neutral element
                 seg1.add_limit(i, Limit(deepcopy(b1_exclusive)), predicate_before=seg1_neutral_predicate_generator(),
                                possibly_empty_before=True, possibly_empty_after=seg1.possibly_empty[i])
-                seg1._unify(seg2, seg1_neutral_predicate_generator, seg2_neutral_predicate_generator, i, j)
+                seg1._unify(seg2, seg1_neutral_predicate_generator, seg2_neutral_predicate_generator, i, j, octagon)
 
         def handle_incomparable_case(seg1, seg2, i, j):
             """Handle the case where neither ``b1 < b2`` nor ``b1 > b2``.
@@ -517,7 +523,7 @@ class SegmentedListLattice(BottomMixin):
                 seg1.add_limit(i, Limit(deepcopy(b1_appearing_later_in_seg2)),
                                predicate_before=left_neutral_predicate_generator(),
                                possibly_empty_before=True, possibly_empty_after=seg1.possibly_empty[i])
-            seg1._unify(seg2, left_neutral_predicate_generator, right_neutral_predicate_generator, i, j)
+            seg1._unify(seg2, left_neutral_predicate_generator, right_neutral_predicate_generator, i, j, octagon)
 
         self_limit = self.limits[self_index]
         other_limit = other.limits[other_index]
@@ -527,26 +533,26 @@ class SegmentedListLattice(BottomMixin):
         # recursion ending criteria
         if self_index == len(self) and other_index == len(other):
             assert self.limits[self_index].eq_octagonal(other.limits[other_index],
-                                                        self.octagon), "The upper limits should be equal for " \
+                                                        octagon), "The upper limits should be equal for " \
                                                                        "unification. "
             return
-        elif self_index == len(self) - 1 and other_index == len(other):
-            assert self.limits[self_index].eq_octagonal(other.limits[other_index], self.octagon) and self.limits[
-                self_index].eq_octagonal(self.limits[self_index + 1],
-                                         self.octagon), "All three remaining limits should be equal for " \
-                                                        "unification. "
-            upper_bounds = self.limits[self_index + 1].bounds | self.limits[self_index].bounds | other.limits[
-                other_index].bounds
-            self.remove_limit(self_index)
-            self.upper_limit = Limit(deepcopy(upper_bounds))
-            other.upper_limit = Limit(deepcopy(upper_bounds))
-            return
+        # elif self_index == len(self) - 1 and other_index == len(other):
+        #     assert self.limits[self_index].eq_octagonal(other.limits[other_index], octagon) and self.limits[
+        #         self_index].eq_octagonal(self.limits[self_index + 1],
+        #                                  octagon), "All three remaining limits should be equal for " \
+        #                                                 "unification. "
+        #     upper_bounds = self.limits[self_index + 1].bounds | self.limits[self_index].bounds | other.limits[
+        #         other_index].bounds
+        #     self.remove_limit(self_index)
+        #     self.upper_limit = Limit(deepcopy(upper_bounds))
+        #     other.upper_limit = Limit(deepcopy(upper_bounds))
+        #     return
 
         # continue recursion
         if self_bounds == other_bounds:
             # same lower bounds -> keep both current lower segments as they are
             self._unify(other, left_neutral_predicate_generator, right_neutral_predicate_generator, self_index + 1,
-                        other_index + 1)
+                        other_index + 1, octagon)
         elif self_bounds & other_bounds:  # at least one bound in common
             if self_bounds > other_bounds:
                 handle_subset_case(self, other, self_index, other_index, left_neutral_predicate_generator,
@@ -560,16 +566,27 @@ class SegmentedListLattice(BottomMixin):
                 handle_incomparable_case(self, other, self_index, other_index)
         else:  # no bound in common
             # we know that we are not at the lower limit of the segmentations (since this have a common bound always)
-            # merge consecutive segments in both segmentations (removing both limits b1 and b2 with no bound in common)
-            # TODO check if this if conditions are correct (the are missing in reference paper?)
-            if self_index != len(self):
-                self.remove_limit(self_index)
-            if other_index != len(other):
-                other.remove_limit(other_index)
-            self_index -= 1
-            other_index -= 1
+
+            # check if b1 and b2 are orderable, either by octagonal comparision or syntactical check
+            # NOTE: the syntactical check is necessary because octagon does NOT know that list__len >= every bound
+            if self_limit.le_octagonal(other_limit, octagon) or other_index == len(other):
+                other.add_limit(other_index - 1, deepcopy(self_limit),
+                                possibly_empty_before=self.possibly_empty[self_index - 1], possibly_empty_after=False)
+            elif other_limit.le_octagonal(self_limit, octagon) or self_index == len(self):
+                self.add_limit(self_index - 1, deepcopy(other_limit),
+                               possibly_empty_before=other.possibly_empty[other_index - 1], possibly_empty_after=False)
+            else:
+                # merge consecutive segments in both segmentations
+                # (removing both limits b1 and b2 with no bound in common and not orderable)
+                # TODO check if this if conditions are correct (are they missing in reference paper?)
+                if self_index != len(self):
+                    self.remove_limit(self_index)
+                if other_index != len(other):
+                    other.remove_limit(other_index)
+                self_index -= 1
+                other_index -= 1
             self._unify(other, left_neutral_predicate_generator,
-                        right_neutral_predicate_generator, self_index, other_index)
+                        right_neutral_predicate_generator, self_index, other_index, octagon)
 
 
 class SegmentedList(SegmentedListLattice):
@@ -587,7 +604,7 @@ class SegmentedList(SegmentedListLattice):
     def octagon_analysis_result(self):
         return self._octagon_analysis_result
 
-    def substitute_variable(self, left: Expression, right: Expression) -> 'State':
+    def substitute_variable(self, left: Expression, right: Expression) -> 'SegmentedList':
         if isinstance(left, VariableIdentifier):
             if left.typ == int:
                 try:
@@ -607,6 +624,7 @@ class SegmentedList(SegmentedListLattice):
                             if b.var and b.var == left:  # substitution necessary
                                 seen = True
                                 self.set_predicate(interval + b.interval, self._predicate_lattice().top())
+                                break  # break because bounds may have changed and all_bounds generator is disrupted
                         if not seen:
                             break
             else:
