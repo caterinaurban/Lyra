@@ -58,7 +58,7 @@ class UsedListStartLattice(BottomMixin):
         non_zero_uppers = []
         for el in [U, S, O]:
             if self.suo[el]:
-                non_zero_uppers.append(f"{el.name}@0:{self.suo[el]}")
+                non_zero_uppers.append(f"{repr(el)}@0:{self.suo[el]}")
         return f"({', '.join(non_zero_uppers)})"
 
     def top(self):

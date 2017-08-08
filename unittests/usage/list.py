@@ -1,6 +1,6 @@
 x = int(input())
 y = int(input())
-# RESULT: list1 -> (O@0:4), sum -> O, x -> U, y -> N
+# RESULT: list1 -> (⫱@0:4), sum -> ⫱, x -> ⚫, y -> ⟂
 list1 = [1, x, 2, 3, 5, 8, y]
 sum = 0
 # some random accesses to list

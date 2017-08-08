@@ -1,6 +1,6 @@
 b = bool(input())
 q = bool(input())
-# RESULT: b -> U, q -> U, z -> O
+# RESULT: b -> ⚫, q -> ⚫, z -> ⫱
 z = 1
 if b and q:
     z = 1

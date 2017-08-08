@@ -1,5 +1,5 @@
 x = int(input())
 
-# RESULT: x -> U
+# RESULT: x -> ⚫
 
 print(x)

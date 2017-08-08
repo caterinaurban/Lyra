@@ -1,6 +1,6 @@
 x = int(input())
 y = int(input())
-# RESULT: x -> U, y -> U, z -> O
+# RESULT: x -> ⚫, y -> ⚫, z -> ⫱
 z = 1
 if y > x:
     z = y

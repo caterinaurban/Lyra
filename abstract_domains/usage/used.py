@@ -12,11 +12,29 @@ class Used(Flag):
     O = 1  # used in an outer scope and overridden in this scope
     N = 0  # not used
 
+    def __repr__(self):
+        return self.SYMBOLS[self]
+
 
 U = Used.U
 S = Used.S
 O = Used.O
 N = Used.N
+
+Used.SYMBOLS = {
+    U: "⚫",
+    S: "⫰",
+    O: "⫱",
+    N: "⟂"
+}
+
+
+# Used.SYMBOLS = {
+#     U: "⦿",
+#     S: "⦾",
+#     O: "⦵",
+#     N: "⦹"
+# }
 
 
 class UsedLattice(ScopeDescendCombineMixin, Lattice):
@@ -68,7 +86,7 @@ class UsedLattice(ScopeDescendCombineMixin, Lattice):
         self._used = used
 
     def __repr__(self):
-        return self.used.name
+        return repr(self.used)
 
     def bottom(self):
         self.used = N
