@@ -1,22 +1,31 @@
 from copy import deepcopy
+from math import inf
 from numbers import Number
 from typing import List, Set, Sequence
 
 from abstract_domains.stack import ScopeDescendCombineMixin, ScopeStack
 from abstract_domains.state import State
-from abstract_domains.usage.used import UsedLattice, Used
 from abstract_domains.store import Store
+from abstract_domains.usage.used import UsedLattice, Used
 from abstract_domains.usage.used_liststart import UsedListStartLattice
 from abstract_domains.usage.used_segmentation import UsedSegmentationStore
 from core.expressions import Expression, VariableIdentifier, ListDisplay, Literal, Index
-from math import inf
-
 from core.expressions_tools import walk
 
 
 class UsedStore(ScopeDescendCombineMixin, Store, State):
     def __init__(self, variables: List[VariableIdentifier]):
         super().__init__(variables, {int: lambda _: UsedLattice(), list: lambda _: UsedListStartLattice()})
+
+    def is_bottom(self) -> bool:
+        """Test whether the usage store is bottom, i.e. if *all* values in the store are bottom.
+        
+        **NOTE**: this is deviating definition of bottom from a usual mathematical store
+        (where one value equals bottom is sufficient to let store be bottom)
+
+        :return: whether the usage store is bottom
+        """
+        return all(element.is_bottom() for element in self.store.values())
 
     def descend(self) -> 'UsedStore':
         for var in self.store.values():

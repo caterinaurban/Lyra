@@ -47,6 +47,10 @@ class Store(Lattice):
         return self
 
     def is_bottom(self) -> bool:
+        """Test whether the store element is bottom, i.e. if *any* value in the store is bottom.
+
+        :return: whether the store is bottom
+        """
         return any(element.is_bottom() for element in self.store.values())
 
     def is_top(self) -> bool:

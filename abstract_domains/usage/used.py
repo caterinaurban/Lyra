@@ -1,6 +1,6 @@
 from enum import Flag
 
-from abstract_domains.lattice import BottomMixin, KindMixin
+from abstract_domains.lattice import Lattice
 from abstract_domains.stack import ScopeDescendCombineMixin
 
 
@@ -19,7 +19,7 @@ O = Used.O
 N = Used.N
 
 
-class UsedLattice(ScopeDescendCombineMixin, BottomMixin):
+class UsedLattice(ScopeDescendCombineMixin, Lattice):
     """Used variable analysis core abstract domain representation."""
 
     DESCEND = {
@@ -66,17 +66,23 @@ class UsedLattice(ScopeDescendCombineMixin, BottomMixin):
     @used.setter
     def used(self, used: Used):
         self._used = used
-        self.kind = KindMixin.Kind.DEFAULT
 
     def __repr__(self):
         return self.used.name
 
-    def top(self):
-        self._used = U
+    def bottom(self):
+        self.used = N
         return self
 
+    def top(self):
+        self.used = U
+        return self
+
+    def is_bottom(self) -> bool:
+        return self.used == N
+
     def is_top(self) -> bool:
-        return not self.is_bottom() and self.used == U
+        return self.used == U
 
     def _less_equal(self, other: 'UsedLattice') -> bool:
         if self.used == other.used or self.used == N:
