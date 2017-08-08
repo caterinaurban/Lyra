@@ -1,6 +1,6 @@
-from abstract_domains.lattice import BottomMixin
 from enum import Flag
 
+from abstract_domains.lattice import BottomMixin, KindMixin
 from abstract_domains.stack import ScopeDescendCombineMixin
 
 
@@ -66,6 +66,7 @@ class UsedLattice(ScopeDescendCombineMixin, BottomMixin):
     @used.setter
     def used(self, used: Used):
         self._used = used
+        self.kind = KindMixin.Kind.DEFAULT
 
     def __repr__(self):
         return self.used.name
