@@ -89,6 +89,7 @@ class UsedStore(ScopeDescendCombineMixin, Store, State):
         raise NotImplementedError("Variable assignment is not supported!")
 
     def _assume(self, condition: Expression) -> 'UsedStore':
+        # update to U if exists a variable y in state that is either U or O (note that S is not enough)
         used_vars = len(
             set([lat.used for lat in self.store.values() if isinstance(lat, UsedLattice)]).intersection(
                 [Used.U, Used.O])
@@ -97,20 +98,15 @@ class UsedStore(ScopeDescendCombineMixin, Store, State):
             [lat.suo[Used.U] > 0 or lat.suo[Used.O] > 0 for lat in self.store.values() if
              isinstance(lat, UsedListStartLattice)]
         )
-        store_has_effect = used_vars or used_lists
-
-        for e in walk(condition):
-            if isinstance(e, VariableIdentifier):
-                # update to U if exists a variable y in state that is either U or O (note that S is not enough)
-                # or is set intersection, if checks if resulting list is empty
-                if store_has_effect:
+        if used_vars or used_lists:
+            for e in walk(condition):
+                if isinstance(e, VariableIdentifier):
                     self.store[e].used = Used.U
-            elif isinstance(e, Index):
-                if isinstance(e.index, Literal):
-                    if store_has_effect:
+                elif isinstance(e, Index):
+                    if isinstance(e.index, Literal):
                         self.store[e.target].set_used_at(e.index.val)
-                else:
-                    raise NotImplementedError()
+                    else:
+                        raise NotImplementedError()
 
         return self
 

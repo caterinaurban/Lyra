@@ -184,19 +184,16 @@ class UsedSegmentationStore(ScopeDescendCombineMixin, Store, State):
         raise NotImplementedError("Variable assignment is not supported!")
 
     def _assume(self, condition: Expression) -> 'UsedSegmentationStore':
+        # update to U if exists a variable y in state that is either U or O (note that S is not enough)
         used_vars = any([lat.used in [Used.U, Used.O] for lat in self.store.values() if isinstance(lat, UsedLattice)])
         used_lists = any([len(set(lat.predicates).intersection([Used.U, Used.O])) for lat in self.store.values() if
                           isinstance(lat, UsedSegmentedList)])
-        store_has_effect = used_vars or used_lists
-
-        for e in walk(condition):
-            if isinstance(e, VariableIdentifier):
-                # update to U if exists a variable y in state that is either U or O (note that S is not enough)
-                # or is set intersection, if checks if resulting list is empty
-                if store_has_effect:
+        if used_vars or used_lists:
+            for e in walk(condition):
+                if isinstance(e, VariableIdentifier):
                     self.store[e].used = Used.U
-            elif isinstance(e, Index):
-                self.store[e.target].set_predicate(e.index, UsedLattice(Used.U))
+                elif isinstance(e, Index):
+                    self.store[e.target].set_predicate(e.index, UsedLattice(Used.U))
         return self
 
     def _evaluate_literal(self, literal: Expression) -> Set[Expression]:

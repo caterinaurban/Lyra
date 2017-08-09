@@ -83,7 +83,8 @@ class Limit:
         return False
 
     def __str__(self):
-        return f"{{{','.join(map(lambda b: f'【{str(b)}】',self.bounds))}}}"
+        # NOTE the sorted() to make output order of bounds deterministic
+        return f"{{{','.join(sorted(map(lambda b: f'【{str(b)}】',self.bounds)))}}}"
 
     def forget(self, var: VariableIdentifier):
         forget_indices = []
