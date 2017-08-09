@@ -219,6 +219,22 @@ class SegmentedListLattice(Lattice):
 
         # self.check_limits()
 
+    def remove_segment(self, index):
+        """Remove the segment at ``index`` and join the neighboring limits.
+        
+        The predicate at the segment removed gets lost through this operation.
+
+        **NOTE**: This modifies the underlying data structures. Ensure you handle possible index shifts.
+        """
+
+        self.limits[index].bounds |= self.limits[index + 1].bounds
+
+        del self._predicates[index]
+        del self._limits[index + 1]
+        del self._possibly_empty[index]
+
+        # self.check_limits()
+
     def forget(self, var: VariableIdentifier):
         remove_indices = []
         for i, l in enumerate(self._limits):
@@ -390,6 +406,11 @@ class SegmentedListLattice(Lattice):
 
         return self.get_predicate_in_form_range(lower_index_form, lower_index_form, True)
 
+    def merge_equal_limits(self):
+        for i in reversed(range(0, len(self.limits) - 1)):
+            if self.limits[i].eq_octagonal(self.limits[i + 1], self.octagon):
+                self.remove_segment(i)
+
     def _join(self, other: 'SegmentedListLattice') -> 'SegmentedListLattice':
         other_copy = deepcopy(other)
         self.unify(other_copy, lambda: self._predicate_lattice().bottom())
@@ -458,6 +479,10 @@ class SegmentedListLattice(Lattice):
         octagon = deepcopy(self.octagon).join(other.octagon)
 
         self._unify(other, left_neutral_predicate_generator, right_neutral_predicate_generator, 0, 0, octagon)
+
+        # TODO check if really not needed (should not if unify does always merge equal limits on the fly
+        # self.merge_equal_limits()
+        # other.merge_equal_limits()
 
     def _unify(self, other: 'SegmentedListLattice', left_neutral_predicate_generator, right_neutral_predicate_generator,
                self_index: int, other_index: int, octagon: OctagonLattice):
@@ -634,7 +659,7 @@ class SegmentedList(SegmentedListLattice):
                     form = VarFormOct.from_expression(right)
                     for bound in self.all_bounds():
                         bound.substitute_variable(left, form)
-                        # TODO check if limit order is preserved or cleanup necessary
+                    self.merge_equal_limits()
                 except InvalidFormError:
                     # right is not in single variable linear form, use fallback: evaluate right side of
                     # assignment in current octagon (transformed to interval) and use upper/lower of resulting
