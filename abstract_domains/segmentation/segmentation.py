@@ -1,12 +1,12 @@
 from copy import deepcopy
+from math import inf
 from typing import Type, List, Union
 
-from abstract_domains.lattice import Lattice, BottomMixin
+from abstract_domains.lattice import Lattice
 from abstract_domains.numerical.interval_domain import IntervalLattice
 from abstract_domains.numerical.linear_forms import InvalidFormError
 from abstract_domains.numerical.octagon_domain import OctagonDomain, OctagonLattice
 from abstract_domains.segmentation.bounds import VarFormOct
-from abstract_domains.state import State
 from core.cfg import Edge
 from core.expressions import Literal, VariableIdentifier, Expression
 from core.statements import ProgramPoint
@@ -96,10 +96,10 @@ class Limit:
             del self._bounds[i]
 
 
-class SegmentedListLattice(BottomMixin):
+class SegmentedListLattice(Lattice):
     def __init__(self, len_var, predicate_lattice: Type[Lattice], octagon: OctagonLattice):
         super().__init__()
-        self._octagon = octagon  # TODO should we make copy? maybe yes since we add pseudo constraints var < len_var
+        self._octagon = octagon
         self._len_var = len_var
         self._predicate_lattice = predicate_lattice
         self._limits = [
@@ -279,6 +279,11 @@ class SegmentedListLattice(BottomMixin):
             upper_index_form = deepcopy(upper_index_form)
             upper_index_form.interval.add(1)
 
+        if lower_index_form.interval.lower == -inf:
+            lower_index_form = VarFormOct(interval=IntervalLattice.from_constant(0))
+        if upper_index_form.interval.upper == inf:
+            upper_index_form = VarFormOct(var=self._len_var)
+
         gl, lu, lu_inclusive = self.get_gl_lu(lower_index_form, upper_index_form)
 
         # remove all limits between the least_upper_limit and greatest_lower_limit
@@ -338,6 +343,7 @@ class SegmentedListLattice(BottomMixin):
                 index_interval = self.octagon.evaluate(index)
                 self._set_predicate_in_interval(index_interval, predicate)
         elif isinstance(index, int):
+            assert 0 <= index < inf, "The index should not be smaller 0 nor infinity!"
             self._set_predicate_at_index(index, predicate)
         elif isinstance(index, IntervalLattice):
             self._set_predicate_in_interval(index, predicate)
@@ -417,8 +423,16 @@ class SegmentedListLattice(BottomMixin):
             p.top()
         return self
 
+    def bottom(self):
+        for p in self.predicates:
+            p.bottom()
+        return self
+
     def is_top(self) -> bool:
-        return not self.is_bottom() and all([p.is_top() for p in self.predicates])
+        return all([p.is_top() for p in self.predicates])
+
+    def is_bottom(self) -> bool:
+        return all([p.is_bottom() for p in self.predicates])
 
     def unify(self, other: 'SegmentedListLattice', left_neutral_predicate_generator,
               right_neutral_predicate_generator=None):
@@ -534,7 +548,7 @@ class SegmentedListLattice(BottomMixin):
         if self_index == len(self) and other_index == len(other):
             assert self.limits[self_index].eq_octagonal(other.limits[other_index],
                                                         octagon), "The upper limits should be equal for " \
-                                                                       "unification. "
+                                                                  "unification. "
             return
         # elif self_index == len(self) - 1 and other_index == len(other):
         #     assert self.limits[self_index].eq_octagonal(other.limits[other_index], octagon) and self.limits[
@@ -569,12 +583,20 @@ class SegmentedListLattice(BottomMixin):
 
             # check if b1 and b2 are orderable, either by octagonal comparision or syntactical check
             # NOTE: the syntactical check is necessary because octagon does NOT know that list__len >= every bound
-            if self_limit.le_octagonal(other_limit, octagon) or other_index == len(other):
+            self_le = self_limit.le_octagonal(other_limit, octagon) or other_index == len(other)
+            other_le = other_limit.le_octagonal(self_limit, octagon) or self_index == len(self)
+            if self_le and other_le:
+                # they are even equal -> merge to one limit
+                self_limit.bounds |= deepcopy(other_limit.bounds)
+                other_limit.bounds |= deepcopy(self_limit.bounds)
+            elif self_le:
                 other.add_limit(other_index - 1, deepcopy(self_limit),
-                                possibly_empty_before=self.possibly_empty[self_index - 1], possibly_empty_after=False)
-            elif other_limit.le_octagonal(self_limit, octagon) or self_index == len(self):
+                                possibly_empty_before=self.possibly_empty[self_index - 1],
+                                possibly_empty_after=self.possibly_empty[self_index])
+            elif other_le:
                 self.add_limit(self_index - 1, deepcopy(other_limit),
-                               possibly_empty_before=other.possibly_empty[other_index - 1], possibly_empty_after=False)
+                               possibly_empty_before=other.possibly_empty[other_index - 1],
+                               possibly_empty_after=other.possibly_empty[other_index])
             else:
                 # merge consecutive segments in both segmentations
                 # (removing both limits b1 and b2 with no bound in common and not orderable)

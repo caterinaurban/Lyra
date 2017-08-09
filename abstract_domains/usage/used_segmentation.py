@@ -62,6 +62,16 @@ class UsedSegmentationStore(ScopeDescendCombineMixin, Store, State):
                                                         octagon_analysis_result)}
         super().__init__(int_vars + list_vars + list_len_vars, lattices)
 
+    def is_bottom(self) -> bool:
+        """Test whether the used segmentation store is bottom, i.e. if *all* values in the store are bottom.
+
+        **NOTE**: this is deviating definition of bottom from a usual mathematical store
+        (where one value equals bottom is sufficient to let store be bottom)
+
+        :return: whether the used segmentation store is bottom
+        """
+        return all(element.is_bottom() for element in self.store.values())
+
     def descend(self) -> 'UsedSegmentationStore':
         for lat in self.store.values():
             lat.descend()
@@ -208,13 +218,16 @@ class UsedSegmentationStore(ScopeDescendCombineMixin, Store, State):
         self._set_expr_used(output)
         return self
 
-    def _substitute_variable(self, left: Expression, right: Expression) -> 'UsedSegmentationStore':
+    def _substitute_variable(self, left: Expression, right: Expression,
+                             only_substitute=False) -> 'UsedSegmentationStore':
         if isinstance(left, VariableIdentifier):
-            self._use(left, right)._kill(left, right)
+            if not only_substitute:
+                self._use(left, right)._kill(left, right)
             for var in self._list_vars:
                 self.store[var].substitute_variable(left, right)
         elif isinstance(left, Index):
-            self._use(left, right)._kill(left, right)
+            if not only_substitute:
+                self._use(left, right)._kill(left, right)
         else:
             raise NotImplementedError("Variable substitution for {} is not implemented!".format(left))
         return self

@@ -164,3 +164,14 @@ class UsedSegmentationDomain(ScopeStack):
         :param variables: list of program variables
         """
         super().__init__(UsedSegmentationStore(*args, **kwargs))
+
+    def _substitute_variable(self, left: Expression, right: Expression) -> 'DescendCombineStackDomain':
+        """In segmentation for usage abstract domain, we need special handling of stacks. We fully update top frame 
+        as in the scope stack, but we also substitute variables in all lower frames."""
+        if isinstance(left, (VariableIdentifier, Index)):
+            for i in range(len(self.stack)):
+                # in all frame except the last one we only subsitute integer variables (no usage updates!)
+                self.stack[i].substitute_variable({left}, {right}, only_substitute=i < len(self.stack) - 1)
+        else:
+            raise NotImplementedError("Variable substitution for {} is not implemented!".format(left))
+        return self

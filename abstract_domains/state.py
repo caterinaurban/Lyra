@@ -1,11 +1,10 @@
 from abc import ABCMeta, abstractmethod
-from abstract_domains.lattice import Lattice
 from copy import deepcopy
-
-from core.cfg import Edge
-from core.expressions import Expression, VariableIdentifier
 from typing import Set
 
+from abstract_domains.lattice import Lattice
+from core.cfg import Edge
+from core.expressions import Expression, VariableIdentifier
 from core.statements import ProgramPoint
 
 
@@ -159,7 +158,7 @@ class State(Lattice, metaclass=ABCMeta):
         return self
 
     @abstractmethod
-    def _substitute_variable(self, left: Expression, right: Expression) -> 'State':
+    def _substitute_variable(self, left: Expression, right: Expression, *args, **kwargs) -> 'State':
         """Substitute an expression to a variable.
 
         :param left: expression representing the variable to be substituted
@@ -167,14 +166,14 @@ class State(Lattice, metaclass=ABCMeta):
         :return: current state modified by the variable substitution
         """
 
-    def substitute_variable(self, left: Set[Expression], right: Set[Expression]) -> 'State':
+    def substitute_variable(self, left: Set[Expression], right: Set[Expression], *args, **kwargs) -> 'State':
         """Substitute an expression to a variable.
         
         :param left: set of expressions representing the variable to be substituted
         :param right: set of expressions representing the expression to substitute
         :return: current state modified by the variable substitution
         """
-        self.big_join([deepcopy(self)._substitute_variable(lhs, rhs) for lhs in left for rhs in right])
+        self.big_join([deepcopy(self)._substitute_variable(lhs, rhs, *args, **kwargs) for lhs in left for rhs in right])
         self.result = set()  # assignments have no result, only side-effects
         return self
 
