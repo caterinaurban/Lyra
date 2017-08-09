@@ -79,6 +79,10 @@ class ScopeStack(Stack, State):
         super().__init__(initial_element)
         self._postponed_pushpop = []  # postponed stack pushs/pops that are later executed in ``_assume()``
 
+    def __repr__(self):
+        # change default stack representation to only show top level frame
+        return ("... | " if len(self.stack) > 1 else "") + repr(self.stack[-1])
+
     def push(self):
         if self.is_bottom():
             return self

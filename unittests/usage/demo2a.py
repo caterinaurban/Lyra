@@ -1,7 +1,7 @@
 x = int(input())
 a = 0
 
-# RESULT: a -> ⚫, x -> ⚫
+# RESULT: a→⚫, x→⚫
 
 if 3 > x:
     a = x

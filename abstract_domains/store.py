@@ -34,7 +34,7 @@ class Store(Lattice):
         return self._store
 
     def __repr__(self):
-        return ", ".join("{} -> {}".format(variable, value) for variable, value in self.store.items())
+        return ", ".join("{}→{}".format(variable, value) for variable, value in self.store.items())
 
     def bottom(self) -> 'Store':
         for var in self.store:
