@@ -518,6 +518,7 @@ class SegmentedListLattice(Lattice):
                 # TODO ★ check if switch of receiver, other-argument is OK
                 seg1._unify(seg2, seg1_neutral_predicate_generator, seg2_neutral_predicate_generator, i, j, octagon)
             else:
+                seg1.limits[i].bounds -= b1_exclusive
                 # add new segment to seg1 with neutral element
                 seg1.add_limit(i, Limit(deepcopy(b1_exclusive)), predicate_before=seg1_neutral_predicate_generator(),
                                possibly_empty_before=True, possibly_empty_after=seg1.possibly_empty[i])
@@ -565,28 +566,42 @@ class SegmentedListLattice(Lattice):
                                possibly_empty_before=True, possibly_empty_after=seg1.possibly_empty[i])
             seg1._unify(seg2, left_neutral_predicate_generator, right_neutral_predicate_generator, i, j, octagon)
 
-        self_limit = self.limits[self_index]
-        other_limit = other.limits[other_index]
-        self_bounds = self.limits[self_index].bounds
-        other_bounds = other.limits[other_index].bounds
+        assert self_index <= len(self) and other_index <= len(other)
 
         # recursion ending criteria
         if self_index == len(self) and other_index == len(other):
             assert self.limits[self_index].eq_octagonal(other.limits[other_index],
                                                         octagon), "The upper limits should be equal for " \
                                                                   "unification. "
+            # make syntactically equivalent too
+            self.limits[self_index].bounds &= other.limits[other_index].bounds
+            other.limits[other_index].bounds &= self.limits[self_index].bounds
             return
-        # elif self_index == len(self) - 1 and other_index == len(other):
-        #     assert self.limits[self_index].eq_octagonal(other.limits[other_index], octagon) and self.limits[
-        #         self_index].eq_octagonal(self.limits[self_index + 1],
-        #                                  octagon), "All three remaining limits should be equal for " \
-        #                                                 "unification. "
-        #     upper_bounds = self.limits[self_index + 1].bounds | self.limits[self_index].bounds | other.limits[
-        #         other_index].bounds
-        #     self.remove_limit(self_index)
-        #     self.upper_limit = Limit(deepcopy(upper_bounds))
-        #     other.upper_limit = Limit(deepcopy(upper_bounds))
-        #     return
+        elif self_index == len(self):
+            # remove not visited limits from other
+            for j in reversed(range(other_index, len(other))):
+                other.remove_limit(j)
+            # now other_index points to last limit of other
+            assert other_index == len(other)
+            # make syntactically equivalent too
+            self.limits[self_index].bounds &= other.limits[other_index].bounds
+            other.limits[other_index].bounds &= self.limits[self_index].bounds
+            return
+        elif other_index == len(other):
+            # remove not visited limits from self
+            for i in reversed(range(self_index, len(self))):
+                self.remove_limit(i)
+            # now self_index points to last limit of self
+            assert self_index == len(self)
+            # make syntactically equivalent too
+            self.limits[self_index].bounds &= other.limits[other_index].bounds
+            other.limits[other_index].bounds &= self.limits[self_index].bounds
+            return
+
+        self_limit = self.limits[self_index]
+        other_limit = other.limits[other_index]
+        self_bounds = self.limits[self_index].bounds
+        other_bounds = other.limits[other_index].bounds
 
         # continue recursion
         if self_bounds == other_bounds:
