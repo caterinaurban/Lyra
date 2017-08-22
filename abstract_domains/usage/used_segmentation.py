@@ -11,7 +11,7 @@ from abstract_domains.state import State
 from abstract_domains.store import Store
 from abstract_domains.usage.used import U, S, O, UsedLattice, Used
 from core.cfg import Edge
-from core.expressions import VariableIdentifier, Expression, Index, ListDisplay
+from core.expressions import VariableIdentifier, Expression, Index, ListDisplay, ListInput
 from core.expressions_tools import walk
 from core.statements import ProgramPoint
 from engine.result import AnalysisResult
@@ -114,6 +114,10 @@ class UsedSegmentationStore(ScopeDescendCombineMixin, Store, State):
                                 interval=IntervalLattice.from_constant(index))).used in [Used.U, Used.S]:
                             for identifier in e.ids():
                                 self.store[identifier].used = U
+                elif isinstance(right, ListInput):
+                    pass
+                else:
+                    raise NotImplementedError(f"Method _use not implemented for right side of type {right.typ}!")
             else:
                 raise NotImplementedError(f"Method _use not implemented for left side variable of type {left.typ}!")
         elif isinstance(left, Index):
@@ -148,6 +152,8 @@ class UsedSegmentationStore(ScopeDescendCombineMixin, Store, State):
                     if right != left:  # if no self-assignemnt
                         self.store[left].change_SU_to_O()
                 elif isinstance(right, ListDisplay):
+                    self.store[left].change_SU_to_O()
+                elif isinstance(right, ListInput):
                     self.store[left].change_SU_to_O()
                 else:
                     raise NotImplementedError(f"Method _kill not implemented for right side of type {right.typ}!")

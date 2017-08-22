@@ -285,6 +285,8 @@ class IntervalLattice(Interval, BottomMixin):
                 return l.sub(r)
             elif expr.operator == BinaryArithmeticOperation.Operator.Mult:
                 return l.mult(r)
+            elif expr.operator == BinaryArithmeticOperation.Operator.Div:
+                return l.top()
             else:
                 raise ValueError(f"Binary operator '{str(expr.operator)}' is not supported!")
 
@@ -307,6 +309,10 @@ class IntervalLattice(Interval, BottomMixin):
 
         # noinspection PyMethodMayBeStatic, PyUnusedLocal
         def visit_Input(self, _: Input, *args, **kwargs):
+            return IntervalLattice().top()
+
+        # noinspection PyMethodMayBeStatic, PyUnusedLocal
+        def visit_ListInput(self, _: ListInput, *args, **kwargs):
             return IntervalLattice().top()
 
         def visit_ListDisplay(self, expr: ListDisplay, *args, **kwargs):

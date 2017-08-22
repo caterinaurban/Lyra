@@ -9,7 +9,7 @@ from core.expressions import VariableIdentifier
 from engine.backward import BackwardInterpreter
 from engine.forward import ForwardInterpreter
 from semantics.forward import DefaultForwardSemantics
-from semantics.usage.usage_semantics import UsageSemantics
+from semantics.usage.usage_semantics import UsageSemantics, UsageOctagonSemantics
 from unittests.generic_tests import ResultCommentsFileTestCase
 
 logging.basicConfig(level=logging.INFO, filename='unittests.log', filemode='w')
@@ -45,7 +45,7 @@ class SegmentationTestCase(ResultCommentsFileTestCase):
         # print(list(map(str,variables)))
 
         # Run Octagonal Analysis (forward)
-        forward_interpreter = ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
+        forward_interpreter = ForwardInterpreter(self.cfg, UsageOctagonSemantics(), 3)
         result = forward_interpreter.analyze(OctagonDomain(int_vars + list_vars + list_len_vars))
 
         # ensure all results are closed for displaying
