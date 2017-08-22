@@ -342,6 +342,18 @@ class CfgVisitor(ast.NodeVisitor):
         return start_cfg.append(body_cfg).append(end_cfg)
 
     def visit_If(self, node):
+        def extend_special_edges(cfg):
+            """extend special edges with IF_OUT edges and additional necessary dummy nodes"""
+            for special_edge, edge_type in cfg.special_edges:
+                dummy = _dummy(self._id_gen)
+                cfg.add_node(dummy)
+
+                # add a new IF_OUT edge where the special edge is at the moment, ending in new dummy node
+                cfg.add_edge(Unconditional(special_edge.source, dummy, Edge.Kind.IF_OUT))
+
+                # change position of special edge to be AFTER the new dummy
+                special_edge._source = dummy
+
         body_cfg = self._translate_body(node.body)
 
         pp_test = ProgramPoint(node.test.lineno, node.test.col_offset)
@@ -356,20 +368,12 @@ class CfgVisitor(ast.NodeVisitor):
             orelse_cfg.add_edge(Conditional(None, neg_test, orelse_cfg.in_node, Edge.Kind.IF_IN))
             if orelse_cfg.out_node:  # if control flow can exit the else at all, add an unconditional IF_OUT edge
                 orelse_cfg.add_edge(Unconditional(orelse_cfg.out_node, None, Edge.Kind.IF_OUT))
+            extend_special_edges(orelse_cfg)
         else:
             orelse_cfg = LooseControlFlowGraph()
             orelse_cfg.add_edge(Conditional(None, neg_test, None, Edge.Kind.DEFAULT))
 
-        # extend special edges with IF_OUT edges and additional necessary dummy nodes
-        for special_edge, edge_type in body_cfg.special_edges:
-            dummy = _dummy(self._id_gen)
-            body_cfg.add_node(dummy)
-
-            # add a new IF_OUT edge where the special edge is at the moment, ending in new dummy node
-            body_cfg.add_edge(Unconditional(special_edge.source, dummy, Edge.Kind.IF_OUT))
-
-            # change position of special edge to be AFTER the new dummy
-            special_edge._source = dummy
+        extend_special_edges(body_cfg)
 
         cfg = body_cfg.combine(orelse_cfg)
         return cfg
