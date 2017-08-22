@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
-from core.expressions import Literal, VariableIdentifier
 from typing import List, Sequence
+
+from core.expressions import Literal, VariableIdentifier
 
 
 class ProgramPoint:
@@ -140,6 +141,36 @@ class Call(Statement):
 
     def __str__(self):
         return "{}({})".format(self.name, ", ".join("{}".format(argument) for argument in self.arguments))
+
+
+class AttributeAccess(Statement):
+    def __init__(self, pp: ProgramPoint, receiver: Statement, name: str, typ):
+        """Attribute access statement representation.
+
+        :param pp: program point associated with the call
+        :param receiver: the receiver of the attribute access
+        :param name: name of the function/method being called
+        :param typ: return type of the call
+        """
+        super().__init__(pp)
+        self._receiver = receiver
+        self._name = name
+        self._typ = typ
+
+    @property
+    def receiver(self):
+        return self._receiver
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def typ(self):
+        return self._typ
+
+    def __str__(self):
+        return "{}.{}".format(self.receiver, self.name)
 
 
 class Assignment(Statement):

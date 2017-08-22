@@ -1,12 +1,12 @@
+import ast
 import optparse
 import sys
 import typing
 
-from visualization.graph_renderer import CfgRenderer
-import ast
 from core.cfg import *
-from core.statements import *
 from core.expressions import *
+from core.statements import *
+from visualization.graph_renderer import CfgRenderer
 
 
 def main(args):
@@ -470,14 +470,32 @@ class CfgVisitor(ast.NodeVisitor):
     def visit_Call(self, node):
         pp = ProgramPoint(node.lineno, node.col_offset)
 
-        if node.func.id == 'int':
-            typ = int
-        elif node.func.id == 'bool':
-            typ = bool
-        else:
-            typ = typing.Any
+        if isinstance(node.func, ast.Name):
+            if node.func.id == 'int':
+                typ = int
+            elif node.func.id == 'bool':
+                typ = bool
+            else:
+                typ = typing.Any
 
-        return Call(pp, node.func.id, [self.visit(arg) for arg in node.args], typ)
+            return Call(pp, node.func.id, [self.visit(arg) for arg in node.args], typ)
+        elif isinstance(node.func, ast.Attribute):
+            # visit the attribute access
+            attribute_access = self.visit(node.func)
+            # pass the receiver as the first argument
+            # NOTE: since this is a call, we do not use the attribute_access
+            # object since a method call in Python comes as an attribute access in the AST
+            return Call(pp, attribute_access.name, [attribute_access.receiver] + [self.visit(arg) for arg in node.args],
+                        typing.Any)
+        else:
+            raise NotImplementedError(
+                f"The call statement receiver of type {str(type(node.func))} is not yet translatable to CFG!")
+
+    def visit_Attribute(self, node):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+
+        receiver = self.visit(node.value)
+        return AttributeAccess(pp, receiver, node.attr, typing.Any)
 
     def visit_List(self, node):
         pp = ProgramPoint(node.lineno, node.col_offset)
