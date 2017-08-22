@@ -46,6 +46,7 @@ class Interval:
         """Create an interval lattice for a single variable.
         """
         super().__init__()
+        assert lower is not None and upper is not None
         self._lower = lower
         self._upper = upper
 
@@ -63,6 +64,7 @@ class Interval:
 
     @lower.setter
     def lower(self, b):
+        assert b is not None
         self._lower = b
 
     @property
@@ -74,6 +76,7 @@ class Interval:
 
     @upper.setter
     def upper(self, b):
+        assert b is not None
         self._upper = b
 
     @property
