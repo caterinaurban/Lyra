@@ -23,6 +23,8 @@ while i < len(list_grades):
     i += 1
 
 if points >= 0:
-    print(1)  # passed
+    result = 1  # passed
 else:
-    print(0)  # failed
+    result = -1  # failed
+
+print(result)
