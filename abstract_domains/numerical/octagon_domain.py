@@ -273,7 +273,11 @@ class OctagonLattice(BottomMixin, NumericalMixin):
         """Translate this octagonal store into an interval store."""
         interval_store = IntervalDomain(self.variables)
         for var in self.variables:
-            interval_store.set_interval(var, self.get_interval(var))
+            interval = self.get_interval(var)
+            if interval.empty():
+                interval_store.bottom()
+                return interval_store
+            interval_store.set_interval(var, interval)
         return interval_store
 
     def from_interval_domain(self, interval_domain: IntervalDomain):
