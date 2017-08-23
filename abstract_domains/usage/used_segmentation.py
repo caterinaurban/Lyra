@@ -22,6 +22,14 @@ class UsedSegmentedList(ScopeDescendCombineMixin, SegmentedList):
                  octagon_analysis_result: AnalysisResult):
         super().__init__(variables, len_var, lambda: UsedLattice().bottom(), octagon_analysis_result)
 
+    def __deepcopy__(self, memodict={}):
+        result = type(self)(self._variables, self._len_var, self._octagon_analysis_result)
+        memodict[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k != "_octagon_analysis_result":
+                setattr(result, k, deepcopy(v, memodict))
+        return result
+
     def descend(self) -> 'UsedSegmentedList':
         for i in range(len(self.predicates)):
             self.predicates[i].used = UsedLattice.DESCEND[self.predicates[i].used]
