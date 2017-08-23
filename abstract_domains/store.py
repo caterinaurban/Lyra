@@ -70,4 +70,6 @@ class Store(Lattice):
         return self
 
     def _widening(self, other: 'Store'):
-        return self._join(other)
+        for var in self.store:
+            self.store[var].widening(other.store[var])
+        return self

@@ -57,7 +57,11 @@ class Stack(BoundedLattice, metaclass=ABCMeta):
         return self
 
     def _widening(self, other: 'Stack'):
-        return self._join(other)
+        if len(self.stack) != len(other.stack):
+            raise Exception("Stacks must be equally long")
+        for i, item in enumerate(self.stack):
+            item.widening(other.stack[i])
+        return self
 
 
 class ScopeDescendCombineMixin:
