@@ -426,7 +426,37 @@ class SegmentedListLattice(Lattice):
         return all(p1.less_equal(p2) for p1, p2 in zip(self.predicates, other_copy.predicates))
 
     def _widening(self, other: 'SegmentedListLattice'):
+        # print(f"WIDEN {self} \tAND\t {other}")
         other_copy = deepcopy(other)
+        del other
+
+        j = 1  # exclude first limit
+        while j < len(other_copy):  # exclude last limit
+            other_limit = other_copy.limits[j]
+            found = False
+            for self_limit in self.limits:
+                if other_limit.bounds == self_limit.bounds:
+                    found = True
+                    break
+
+            if not found:
+                other_copy.remove_limit(j)
+                j -= 1  # correction
+
+                # interval = self.octagon.evaluate(right)
+                #
+                # while True:
+                #     seen = False
+                #     for b in self.all_bounds():
+                #         if b.var and b.var == left:  # substitution necessary
+                #             seen = True
+                #             self.set_predicate(interval + b.interval, self._predicate_lattice().top())
+                #             break  # break because bounds may have changed and all_bounds generator is disrupted
+                #     if not seen:
+                #         break
+            j += 1
+
+        # no unify (necessary since new limits may have changed during limit widening) and widen segment-wise
         self.unify(other_copy, lambda: self._predicate_lattice().bottom())
         for p1, p2 in zip(self.predicates, other_copy.predicates):
             p1.widening(p2)
@@ -567,7 +597,7 @@ class SegmentedListLattice(Lattice):
             seg1._unify(seg2, left_neutral_predicate_generator, right_neutral_predicate_generator, i, j, octagon)
 
         assert self_index <= len(self) and other_index <= len(other)
-
+        # print(f"unify {self} \tAND\t {other}")
         # recursion ending criteria
         if self_index == len(self) and other_index == len(other):
             assert self.limits[self_index].eq_octagonal(other.limits[other_index],
@@ -578,24 +608,24 @@ class SegmentedListLattice(Lattice):
             other.limits[other_index].bounds &= self.limits[self_index].bounds
             return
         elif self_index == len(self):
-            # remove not visited limits from other
-            for j in reversed(range(other_index, len(other))):
-                other.remove_limit(j)
-            # now other_index points to last limit of other
-            assert other_index == len(other)
-            # make syntactically equivalent too
-            self.limits[self_index].bounds &= other.limits[other_index].bounds
-            other.limits[other_index].bounds &= self.limits[self_index].bounds
+            while other_index < len(other):
+                self.add_limit(len(self) - 1, deepcopy(other.limits[other_index]),
+                               possibly_empty_before=other.possibly_empty[other_index - 1],
+                               possibly_empty_after=other.possibly_empty[other_index])
+                self_index += 1  # correction
+                other_index += 1
+            self._unify(other, left_neutral_predicate_generator, right_neutral_predicate_generator, self_index,
+                        other_index, octagon)
             return
         elif other_index == len(other):
-            # remove not visited limits from self
-            for i in reversed(range(self_index, len(self))):
-                self.remove_limit(i)
-            # now self_index points to last limit of self
-            assert self_index == len(self)
-            # make syntactically equivalent too
-            self.limits[self_index].bounds &= other.limits[other_index].bounds
-            other.limits[other_index].bounds &= self.limits[self_index].bounds
+            while self_index < len(self):
+                other.add_limit(len(other) - 1, deepcopy(self.limits[self_index]),
+                                possibly_empty_before=self.possibly_empty[self_index - 1],
+                                possibly_empty_after=self.possibly_empty[self_index])
+                other_index += 1  # correction
+                self_index += 1
+            self._unify(other, left_neutral_predicate_generator, right_neutral_predicate_generator, self_index,
+                        other_index, octagon)
             return
 
         self_limit = self.limits[self_index]
