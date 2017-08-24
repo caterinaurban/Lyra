@@ -26,8 +26,7 @@ class VarFormOct(VarForm):
         return form
 
     def __hash__(self):
-        # TODO is this really what we want? syntactical check for set operations in Limits enough?
-        # TODO if sometimes the __eq__ is called by set operation, this leads to semantic checks -> inconsistencies?
+        # ensure that two instances with same variable name but different VariableIdentifier instances have same hash
         return hash(str(self))
 
     @property

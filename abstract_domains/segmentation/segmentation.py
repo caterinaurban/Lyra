@@ -400,7 +400,6 @@ class SegmentedListLattice(Lattice):
         pred = self.predicates[gl:lu + 1 if lu_inclusive else lu]
         return self._predicate_lattice().bottom().big_join(pred)
 
-    # TODO add type tolerant function like set_predicate
     def get_predicate_at_form_index(self, form: VarFormOct):
         lower_index_form = form
 
@@ -545,7 +544,7 @@ class SegmentedListLattice(Lattice):
             if not b1_appearing_later_in_seg2:  # if b1_exclusive bounds do not appear later in segmentation ``seg2``
                 # just forget about b1_exclusive bounds
                 seg1.limits[i].bounds -= b1_exclusive
-                # TODO ★ check if switch of receiver, other-argument is OK
+                # Note switch of receiver, other-argument
                 seg1._unify(seg2, seg1_neutral_predicate_generator, seg2_neutral_predicate_generator, i, j, octagon)
             else:
                 seg1.limits[i].bounds -= b1_exclusive
@@ -644,7 +643,7 @@ class SegmentedListLattice(Lattice):
                                    right_neutral_predicate_generator)
             elif self_bounds < other_bounds:
                 # this call switches the roles of self and other, potentially continues recursion with switched roles
-                # TODO check if this is a problem (see other TODO ★)
+                # Note: we switch receiver/self
                 handle_subset_case(other, self, other_index, self_index, right_neutral_predicate_generator,
                                    left_neutral_predicate_generator)
             else:  # incomparable (remember that set inclusion is no total order!)
@@ -671,7 +670,6 @@ class SegmentedListLattice(Lattice):
             else:
                 # merge consecutive segments in both segmentations
                 # (removing both limits b1 and b2 with no bound in common and not orderable)
-                # TODO check if this if conditions are correct (are they missing in reference paper?)
                 if self_index != len(self):
                     self.remove_limit(self_index)
                 if other_index != len(other):

@@ -39,16 +39,15 @@ class Expression(metaclass=ABCMeta):
     def __ne__(self, other: 'Expression'):
         return not (self == other)
 
+    def __repr__(self):
+        return self.__str__()
+
     @abstractmethod
     def __str__(self):
         """Expression string representation.
         
         :return: string representing the expression
         """
-
-    # TODO maybe this is a bad idea, but for debbuging so much easier (otherwise the memory address is displayed)
-    def __repr__(self):
-        return self.__str__()
 
     def ids(self) -> Set['Expression']:
         """Identifiers that appear in the expression.

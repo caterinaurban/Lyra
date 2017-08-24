@@ -72,7 +72,6 @@ class UsedStore(ScopeDescendCombineMixin, Store, State):
                 else:
                     self.store[left].used = Used.O  # x is overwritten
         elif issubclass(left.typ, Sequence):
-            # TODO this whole if is no longer correct when lists of lists are allowed, e.g. l = [a,2,l]
             if isinstance(right, VariableIdentifier):
                 if right != left:  # if no self-assignemnt
                     self.store[left].change_SU_to_O()

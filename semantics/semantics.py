@@ -79,8 +79,7 @@ class ListSemantics(Semantics):
         """
         item_sets = [list(self.semantics(item, state).result) for item in stmt.items]
         products = itertools.product(*item_sets)
-        # TODO infer type??
-        result = {ListDisplay(None, list(p)) for p in products}
+        result = {ListDisplay(list, list(p)) for p in products}
 
         state.result = result
         return state
