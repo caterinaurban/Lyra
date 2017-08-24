@@ -274,7 +274,7 @@ class OctagonLattice(BottomMixin, NumericalMixin):
         interval_store = IntervalDomain(self.variables)
         for var in self.variables:
             interval = self.get_interval(var)
-            if interval.empty():
+            if interval.is_bottom():
                 interval_store.bottom()
                 return interval_store
             interval_store.set_interval(var, interval)
@@ -340,11 +340,17 @@ class OctagonDomain(OctagonLattice, State):
 
     def _assign_constant(self, x: VariableIdentifier, interval: IntervalLattice):
         """x = [a,b]"""
+        if interval.is_bottom():
+            self.bottom()
+            return
         self.forget(x)
         self.set_interval(x, interval)
 
     def _assign_same_var_plus_constant(self, x: VariableIdentifier, interval: IntervalLattice):
         """x = x + [a,b]"""
+        if interval.is_bottom():
+            self.bottom()
+            return
 
         # update binary constraints
         for index in self.binary_constraints_indices(sign1=PLUS, var1=x):
@@ -353,9 +359,12 @@ class OctagonDomain(OctagonLattice, State):
             self[index] += interval.lower
 
         # update unary constraints
-        self.set_interval(x,
-                          IntervalLattice(self.get_lb(x) + interval.lower,
-                                          self.get_ub(x) + interval.upper))
+        interval = IntervalLattice(self.get_lb(x) + interval.lower,
+                                   self.get_ub(x) + interval.upper)
+        if interval.is_bottom():
+            self.bottom()
+            return
+        self.set_interval(x, interval)
 
     def _assign_other_var(self, x: VariableIdentifier, y: VariableIdentifier):
         """x = y"""
@@ -365,6 +374,10 @@ class OctagonDomain(OctagonLattice, State):
 
     def _assign_other_var_plus_constant(self, x: VariableIdentifier, y: VariableIdentifier, interval: IntervalLattice):
         """x = y + [a,b]"""
+        if interval.is_bottom():
+            self.bottom()
+            return
+
         self.forget(x)
         self.set_octagonal_constraint(PLUS, x, MINUS, y, interval.lower)
         self.set_octagonal_constraint(MINUS, x, PLUS, y, -interval.upper)
@@ -392,12 +405,20 @@ class OctagonDomain(OctagonLattice, State):
     def _assign_negated_same_var_plus_constant(self, x: VariableIdentifier,
                                                interval: IntervalLattice):
         """x = - x + [a,b]"""
+        if interval.is_bottom():
+            self.bottom()
+            return
+
         self._assign_negated_same_var(x)
         self._assign_same_var_plus_constant(x, interval)
 
     def _assign_negated_other_var_plus_constant(self, x: VariableIdentifier, y: VariableIdentifier,
                                                 interval: IntervalLattice):
         """x = - y + [a,b]"""
+        if interval.is_bottom():
+            self.bottom()
+            return
+
         self._assign_negated_other_var(x, y)
         self._assign_same_var_plus_constant(x, interval)
 
