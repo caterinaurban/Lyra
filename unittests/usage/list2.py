@@ -1,7 +1,7 @@
 b = bool(input())
 x = int(input())
 y = int(input())
-# RESULT: b→⚫, list1→(⫱@0:4), list2→(⫱@0:2), sum→⫱, x→⚫, y→⟂
+# RESULT: b→⚫, list1→(⫱@0:5), list2→(⫱@0:3), sum→⫱, x→⚫, y→⟂
 list1 = [1, x, 2, 3, 5, 8, y]
 sum = 0
 if b:

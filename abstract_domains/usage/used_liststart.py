@@ -51,7 +51,7 @@ class UsedListStartLattice(BottomMixin):
         """Set usage at specified index.
         """
         assert self.closed
-        self.suo[u] = max(self.suo[u], index)
+        self.suo[u] = max(self.suo[u], index+1)
         self.closure()
 
     def __repr__(self):
