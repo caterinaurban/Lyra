@@ -1,13 +1,14 @@
 list_grades = list(map(int, input().split()))
 
-sum = 0
+count = 0
 
-i = 1  # BUG: should be i = 0
+i = 1  # Bug A: should be 'i = 0'
+# RESULT: count→⚫, g→⟂, i→⟂, list_grades→[{【[0,0]】} ⟂ ?{【+list_grades__len】}], list_grades__len→⟂
 while i < len(list_grades):
     g = list_grades[i]
     if g >= 4:
-        i += 1  # BUG: should be sum += 1
+        g += 1  # Bug B: should be 'count += 1'
 
     i += 1
 
-print(sum)
+print(count)
