@@ -181,7 +181,7 @@ class State(Lattice, metaclass=ABCMeta):
         return self
 
     @abstractmethod
-    def _substitute_variable(self, left: Expression, right: Expression, *args, **kwargs) -> 'State':
+    def _substitute_variable(self, left: Expression, right: Expression) -> 'State':
         """Substitute an expression to a variable.
 
         :param left: expression representing the variable to be substituted
