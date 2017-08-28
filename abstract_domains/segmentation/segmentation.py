@@ -545,12 +545,14 @@ class SegmentedListLattice(Lattice):
                 # just forget about b1_exclusive bounds
                 seg1.limits[i].bounds -= b1_exclusive
                 # Note switch of receiver, other-argument
+                # noinspection PyProtectedMember
                 seg1._unify(seg2, seg1_neutral_predicate_generator, seg2_neutral_predicate_generator, i, j, octagon)
             else:
                 seg1.limits[i].bounds -= b1_exclusive
                 # add new segment to seg1 with neutral element
                 seg1.add_limit(i, Limit(deepcopy(b1_exclusive)), predicate_before=seg1_neutral_predicate_generator(),
                                possibly_empty_before=True, possibly_empty_after=seg1.possibly_empty[i])
+                # noinspection PyProtectedMember
                 seg1._unify(seg2, seg1_neutral_predicate_generator, seg2_neutral_predicate_generator, i, j, octagon)
 
         def handle_incomparable_case(seg1, seg2, i, j):
@@ -593,6 +595,7 @@ class SegmentedListLattice(Lattice):
                 seg1.add_limit(i, Limit(deepcopy(b1_appearing_later_in_seg2)),
                                predicate_before=left_neutral_predicate_generator(),
                                possibly_empty_before=True, possibly_empty_after=seg1.possibly_empty[i])
+            # noinspection PyProtectedMember
             seg1._unify(seg2, left_neutral_predicate_generator, right_neutral_predicate_generator, i, j, octagon)
 
         assert self_index <= len(self) and other_index <= len(other)

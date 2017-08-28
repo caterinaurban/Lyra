@@ -127,10 +127,10 @@ class ScopeStack(Stack, State):
         self.stack[-1].access_variable(variable)
         return {variable}
 
-    def _assign_variable(self, left: Expression, right: Expression) -> 'DescendCombineStackDomain':
+    def _assign_variable(self, left: Expression, right: Expression) -> 'ScopeStack':
         raise NotImplementedError("Variable assignment is not supported!")
 
-    def _assume(self, condition: Expression) -> 'DescendCombineStackDomain':
+    def _assume(self, condition: Expression) -> 'ScopeStack':
         # only update used variable in conditional edge via assume call to store
         # if we are on a loop/if exit edge!!
         if self._postponed_pushpop:
@@ -170,13 +170,13 @@ class ScopeStack(Stack, State):
         self._postponed_pushpop.append(self._postponed_exit_if)
         return self
 
-    def _output(self, output: Expression) -> 'DescendCombineStackDomain':
+    def _output(self, output: Expression) -> 'ScopeStack':
         if self.is_bottom():
             return self
         self.stack[-1].output({output})
         return self
 
-    def _substitute_variable(self, left: Expression, right: Expression) -> 'DescendCombineStackDomain':
+    def _substitute_variable(self, left: Expression, right: Expression) -> 'ScopeStack':
         if isinstance(left, (VariableIdentifier, Index)):
             self.stack[-1].substitute_variable({left}, {right})
         else:

@@ -1,6 +1,6 @@
 from copy import deepcopy
 from numbers import Number
-from typing import Set, List, Sequence
+from typing import Set, List, Sequence, Union
 
 from abstract_domains.numerical.interval_domain import IntervalLattice
 from abstract_domains.numerical.linear_forms import InvalidFormError
@@ -22,12 +22,14 @@ class UsedSegmentedList(ScopeDescendCombineMixin, SegmentedList):
                  octagon_analysis_result: AnalysisResult):
         super().__init__(variables, len_var, lambda: UsedLattice().bottom(), octagon_analysis_result)
 
-    def __deepcopy__(self, memodict={}):
+    def __deepcopy__(self, memo):
+        memo = memo if memo is not None else {}
+
         result = type(self)(self._variables, self._len_var, self._octagon_analysis_result)
-        memodict[id(self)] = result
+        memo[id(self)] = result
         for k, v in self.__dict__.items():
             if k != "_octagon_analysis_result":
-                setattr(result, k, deepcopy(v, memodict))
+                setattr(result, k, deepcopy(v, memo))
         return result
 
     def descend(self) -> 'UsedSegmentedList':
@@ -146,7 +148,7 @@ class UsedSegmentationStore(ScopeDescendCombineMixin, Store, State):
             raise NotImplementedError(f"Method _use not implemented for left side type {type(left)}!")
         return self
 
-    def _kill(self, left: VariableIdentifier, right: Expression):
+    def _kill(self, left: Union[VariableIdentifier, Index], right: Expression):
         if isinstance(left, VariableIdentifier):
             if issubclass(left.typ, Number):
                 if self.store[left].used in [Used.U, Used.S]:

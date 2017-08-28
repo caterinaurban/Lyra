@@ -9,6 +9,7 @@ from core.expressions_tools import PLUS, MINUS
 
 
 class TestSegmentationUnification(unittest.TestCase):
+    # noinspection PyMethodMayBeStatic
     def runTest(self):
         i = VariableIdentifier(int, 'i')  # i is an index variable
         n = VariableIdentifier(int, 'n')  # n is used as the length of the list
