@@ -29,6 +29,7 @@ class UsedSegmentedList(ScopeDescendCombineMixin, SegmentedList):
         memo[id(self)] = result
         for k, v in self.__dict__.items():
             if k != "_octagon_analysis_result":
+                # noinspection PyArgumentList
                 setattr(result, k, deepcopy(v, memo))
         return result
 
@@ -230,6 +231,7 @@ class UsedSegmentationStore(ScopeDescendCombineMixin, Store, State):
         self._set_expr_used(output)
         return self
 
+    # noinspection PyMethodOverriding
     def _substitute_variable(self, left: Expression, right: Expression,
                              only_substitute=False) -> 'UsedSegmentationStore':
         if isinstance(left, VariableIdentifier):

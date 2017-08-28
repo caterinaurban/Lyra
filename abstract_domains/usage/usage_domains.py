@@ -160,7 +160,7 @@ class UsedSegmentationDomain(ScopeStack):
         """
         super().__init__(UsedSegmentationStore(*args, **kwargs))
 
-    def _substitute_variable(self, left: Expression, right: Expression) -> 'DescendCombineStackDomain':
+    def _substitute_variable(self, left: Expression, right: Expression) -> 'UsedSegmentationDomain':
         """In segmentation for usage abstract domain, we need special handling of stacks. We fully update top frame 
         as in the scope stack, but we also substitute variables in all lower frames."""
         if isinstance(left, (VariableIdentifier, Index)):

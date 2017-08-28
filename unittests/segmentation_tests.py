@@ -8,7 +8,6 @@ from abstract_domains.usage.usage_domains import UsedSegmentationDomain
 from core.expressions import VariableIdentifier
 from engine.backward import BackwardInterpreter
 from engine.forward import ForwardInterpreter
-from semantics.forward import DefaultForwardSemantics
 from semantics.usage.usage_semantics import UsageSemantics, UsageOctagonSemantics
 from unittests.generic_tests import ResultCommentsFileTestCase
 
