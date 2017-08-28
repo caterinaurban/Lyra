@@ -45,8 +45,8 @@ class OctagonTestCase(ResultCommentsFileTestCase):
         # ensure all results are closed for displaying
         for node in result.nodes:
             node_result_list = result.get_node_result(node)
-            for oct in node_result_list:
-                oct.close()
+            for octagon in node_result_list:
+                octagon.close()
 
         self.render_result_cfg(result)
         self.check_result_comments(result)

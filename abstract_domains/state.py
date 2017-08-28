@@ -1,3 +1,12 @@
+"""
+Abstract Domain
+===============
+
+Interface of an abstract domain.
+Abstract domain elements support lattice operations and program statements.
+"""
+
+
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from typing import Set
@@ -9,15 +18,18 @@ from core.statements import ProgramPoint
 
 
 class State(Lattice, metaclass=ABCMeta):
+    """Analysis state. A mutable element of an abstract domain.
+
+    .. warning::
+        Lattice operations and statements modify the current state.
+    """
     def __init__(self):
-        """Analysis state representation. 
-        Account for lattice operations and statement effects by modifying the current state.
-        """
         super().__init__()
-        self._result = set()  # set of expressions representing the result of the previously analyzed statement
+        self._result = set()
 
     @property
     def result(self):
+        """Result of the previously analyzed statement."""
         return self._result
 
     @result.setter
@@ -25,10 +37,6 @@ class State(Lattice, metaclass=ABCMeta):
         self._result = result
 
     def __repr__(self):
-        """Unambiguous string representing the current state.
-
-        :return: unambiguous representation string
-        """
         return ", ".join("{}".format(expression) for expression in self.result)
 
     @abstractmethod
@@ -37,6 +45,7 @@ class State(Lattice, metaclass=ABCMeta):
         
         :param variable: variable to retrieve the value of
         :return: set of expressions representing the variable value
+
         """
 
     def access_variable(self, variable: VariableIdentifier) -> 'State':
@@ -44,6 +53,7 @@ class State(Lattice, metaclass=ABCMeta):
         
         :param variable: variable to be accesses
         :return: current state modified by the variable access
+
         """
         self.result = self._access_variable(variable)
         return self
@@ -55,6 +65,7 @@ class State(Lattice, metaclass=ABCMeta):
         :param left: expression representing the variable to be assigned to 
         :param right: expression to assign
         :return: current state modified by the variable assignment
+
         """
 
     def assign_variable(self, left: Set[Expression], right: Set[Expression]) -> 'State':
@@ -63,6 +74,7 @@ class State(Lattice, metaclass=ABCMeta):
         :param left: set of expressions representing the variable to be assigned to
         :param right: set of expressions representing the expression to assign
         :return: current state modified by the variable assignment
+
         """
         self.big_join([deepcopy(self)._assign_variable(lhs, rhs) for lhs in left for rhs in right])
         self.result = set()  # assignments have no result, only side-effects
@@ -74,6 +86,7 @@ class State(Lattice, metaclass=ABCMeta):
         
         :param condition: expression representing the assumed condition
         :return: current state modified to satisfy the assumption
+
         """
 
     def assume(self, condition: Set[Expression]) -> 'State':
@@ -81,6 +94,7 @@ class State(Lattice, metaclass=ABCMeta):
         
         :param condition: set of expressions representing the assumed condition
         :return: current state modified to satisfy the assumption
+
         """
         self.big_join([deepcopy(self)._assume(expr) for expr in condition])
         return self
@@ -91,6 +105,7 @@ class State(Lattice, metaclass=ABCMeta):
 
         :param literal: literal to retrieve the value of
         :return: set of expressions representing the literal value
+
         """
 
     def evaluate_literal(self, literal: Expression) -> 'State':
@@ -98,6 +113,7 @@ class State(Lattice, metaclass=ABCMeta):
 
         :param literal: expression to be evaluated
         :return: current state modified by the literal evaluation
+
         """
         self.result = self._evaluate_literal(literal)
         return self
@@ -107,6 +123,7 @@ class State(Lattice, metaclass=ABCMeta):
         """Enter a conditional if statement.
 
         :return: current state modified to enter a conditional if statement
+
         """
 
     @abstractmethod
@@ -114,6 +131,7 @@ class State(Lattice, metaclass=ABCMeta):
         """Exit a conditional if statement.
 
         :return: current state modified to enter a conditional if statement
+
         """
 
     @abstractmethod
@@ -121,6 +139,7 @@ class State(Lattice, metaclass=ABCMeta):
         """Enter a loop.
 
         :return: current state modified to enter a loop
+
         """
 
     @abstractmethod
@@ -128,12 +147,14 @@ class State(Lattice, metaclass=ABCMeta):
         """Exit a loop.
 
         :return: current state modified to exit a loop
+
         """
 
     def filter(self) -> 'State':
         """Assume that the current result holds in the current state.
 
         :return: current state modified to satisfy the current result
+
         """
         self.assume(self.result)
         self.result = set()  # filtering has no result, only side-effects
@@ -145,6 +166,7 @@ class State(Lattice, metaclass=ABCMeta):
 
         :param output: expression representing the output
         :return: current state modified by the output
+
         """
 
     def output(self, output: Set[Expression]) -> 'State':
@@ -152,6 +174,7 @@ class State(Lattice, metaclass=ABCMeta):
 
         :param output: set of expressions representing the output
         :return: current state modified by the output
+
         """
         self.big_join([deepcopy(self)._output(expr) for expr in output])
         self.result = set()  # outputs have no result, only side-effects
@@ -164,6 +187,7 @@ class State(Lattice, metaclass=ABCMeta):
         :param left: expression representing the variable to be substituted
         :param right: expression to substitute
         :return: current state modified by the variable substitution
+
         """
 
     def substitute_variable(self, left: Set[Expression], right: Set[Expression], *args, **kwargs) -> 'State':
@@ -172,6 +196,7 @@ class State(Lattice, metaclass=ABCMeta):
         :param left: set of expressions representing the variable to be substituted
         :param right: set of expressions representing the expression to substitute
         :return: current state modified by the variable substitution
+
         """
         self.big_join([deepcopy(self)._substitute_variable(lhs, rhs, *args, **kwargs) for lhs in left for rhs in right])
         self.result = set()  # assignments have no result, only side-effects

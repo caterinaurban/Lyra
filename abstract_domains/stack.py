@@ -1,3 +1,10 @@
+"""
+Stack
+=====
+
+Stack of lattices.
+"""
+
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from typing import Set
@@ -7,15 +14,22 @@ from abstract_domains.state import State
 from core.cfg import Edge
 from core.expressions import VariableIdentifier, Expression, Index
 from core.statements import ProgramPoint
+from core.utils import copy_docstring
 
 
 class Stack(BoundedLattice, metaclass=ABCMeta):
-    """A stack of elements of a lattice L."""
+    """Mutable stack of elements of a lattice.
 
+    .. warning::
+        Lattice operations modify the current stack.
+
+    .. document private methods
+    .. automethod:: Stack._less_equal
+    .. automethod:: Stack._meet
+    .. automethod:: Stack._join
+    """
     def __init__(self, initial_element: Lattice):
-        """Create a stack of lattice elements.
-        
-        Initially there is only the ``initial_element`` on the stack.
+        """Create a stack of elements of a lattice.
 
         :param initial_element: the initial element on the stack
         """
@@ -24,6 +38,7 @@ class Stack(BoundedLattice, metaclass=ABCMeta):
 
     @property
     def stack(self):
+        """Current stack of lattice elements."""
         return self._stack
 
     def __repr__(self):
@@ -31,32 +46,40 @@ class Stack(BoundedLattice, metaclass=ABCMeta):
 
     @abstractmethod
     def push(self):
-        """Push an element on the stack."""
+        """Push an element on the current stack."""
 
     @abstractmethod
     def pop(self):
-        """Pop an element from the stack."""
+        """Pop an element from the current stack."""
 
+    @copy_docstring(BoundedLattice._less_equal)
     def _less_equal(self, other: 'Stack') -> bool:
+        """The comparison is performed point-wise for each stack element."""
         if len(self.stack) != len(other.stack):
             raise Exception("Stacks must be equally long")
         return all(l.less_equal(r) for l, r in zip(self.stack, other.stack))
 
-    def _join(self, other: 'Stack') -> 'Stack':
-        if len(self.stack) != len(other.stack):
-            raise Exception("Stacks must be equally long")
-        for i, item in enumerate(self.stack):
-            item.join(other.stack[i])
-        return self
-
+    @copy_docstring(BoundedLattice._meet)
     def _meet(self, other: 'Stack'):
+        """The meet is performed point-wise for each stack element."""
         if len(self.stack) != len(other.stack):
             raise Exception("Stacks must be equally long")
         for i, item in enumerate(self.stack):
             item.meet(other.stack[i])
         return self
 
+    @copy_docstring(BoundedLattice._join)
+    def _join(self, other: 'Stack') -> 'Stack':
+        """The join is performed point-wise for each stack element."""
+        if len(self.stack) != len(other.stack):
+            raise Exception("Stacks must be equally long")
+        for i, item in enumerate(self.stack):
+            item.join(other.stack[i])
+        return self
+
+    @copy_docstring(BoundedLattice._widening)
     def _widening(self, other: 'Stack'):
+        """The widening is performed point-wise for each stack element."""
         if len(self.stack) != len(other.stack):
             raise Exception("Stacks must be equally long")
         for i, item in enumerate(self.stack):

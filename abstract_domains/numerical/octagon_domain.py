@@ -481,6 +481,7 @@ class OctagonDomain(OctagonLattice, State):
             raise NotImplementedError(f"Left side of assignment of type {type(left)} is not supported!")
         return self
 
+    # noinspection PyPep8Naming
     class SmallerEqualConditionTransformer(ExpressionTransformer):
         """Transforms all conditions inside expression to format ``e <= 0``.
         """
@@ -584,6 +585,7 @@ class OctagonDomain(OctagonLattice, State):
                     BinaryComparisonOperation(expr.typ, expr.left, BinaryComparisonOperation.Operator.Gt, expr.right))
                 return ConditionSet([cs1.conditions[0], cs2.conditions[0]], ConditionSet.Operator.JOIN)
 
+    # noinspection PyPep8Naming
     class AssumeVisitor(ExpressionVisitor):
         """Visits an expression and recursively 'assumes' the condition tree."""
 

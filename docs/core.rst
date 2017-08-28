@@ -1,7 +1,7 @@
-abstract\_domains\.usage package
-================================
+core package
+============
 
-.. automodule:: abstract_domains.usage
+.. automodule:: core
     :members:
     :undoc-members:
     :show-inheritance:
@@ -9,27 +9,32 @@ abstract\_domains\.usage package
 Submodules
 ----------
 
-.. automodule:: abstract_domains.usage.stack
+.. automodule:: core.cfg
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: abstract_domains.usage.store
+.. automodule:: core.expressions
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: abstract_domains.usage.test_usedListStartLattice
+.. automodule:: core.expressions_tools
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: abstract_domains.usage.used
+.. automodule:: core.special_expressions
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: abstract_domains.usage.used_liststart
+.. automodule:: core.statements
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: core.utils
     :members:
     :undoc-members:
     :show-inheritance:

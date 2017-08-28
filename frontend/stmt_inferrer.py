@@ -67,7 +67,6 @@ def _infer_one_target(target, context, solver):
     return target_type
 
 
-# noinspection PyUnresolvedReferences
 def _infer_assignment_target(target, context, value_type, solver):
     """Infer the type of a target in an assignment
 
@@ -302,9 +301,9 @@ def _infer_try(node, context, solver):
     return result_type
 
 
-def _init_func_context(args, context, solver):
+def _init_func_context(name, args, context, solver):
     """Initialize the local function scope, and the arguments types"""
-    local_context = Context(parent_context=context)
+    local_context = Context(name=name, parent_context=context)
 
     # TODO starred args
 
@@ -416,8 +415,9 @@ def _infer_func_def(node, context, solver):
             context.set_type(node.name, AnnotatedFunction(args_annotations, return_annotation, defaults_count))
         return
 
-    func_context, args_types = _init_func_context(node.args.args, context, solver)
+    func_context, args_types = _init_func_context(node.name, node.args.args, context, solver)
     result_type = solver.new_z3_const("func")
+    result_type.args_count = len(node.args.args)
     context.set_type(node.name, result_type)
 
     if hasattr(node.args, "defaults"):
@@ -444,7 +444,7 @@ def _infer_func_def(node, context, solver):
 
 
 def _infer_class_def(node, context, solver):
-    class_context = Context(parent_context=context)
+    class_context = Context(name=node.name, parent_context=context)
     result_type = solver.new_z3_const("class_type")
     solver.z3_types.all_types[node.name] = result_type
 
@@ -457,8 +457,18 @@ def _infer_class_def(node, context, solver):
     for attr in class_context.types_map:
         solver.add(class_attrs[attr] == class_context.types_map[attr],
                    fail_message="Class attribute in {}".format(node.lineno))
+
+    # Set the type of the first arg in the class methods to be instance of this class
+    # TODO check staticmethod decorator
+    for func_name, args_count in solver.config.class_to_funcs[node.name]:
+        func_type = class_context.get_type(func_name)
+        arg_accessor = getattr(solver.z3_types.type_sort, "func_{}_arg_1".format(args_count))
+        solver.add(arg_accessor(func_type) == instance_type,
+                   fail_message="First arg in class methods has class instance type")
+
     class_type = solver.z3_types.type(instance_type)
     solver.add(result_type == class_type, fail_message="Class definition in line {}".format(node.lineno))
+    result_type.is_class = True
     context.set_type(node.name, result_type)
 
 

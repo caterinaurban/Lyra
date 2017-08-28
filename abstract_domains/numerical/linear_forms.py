@@ -62,30 +62,34 @@ class LinearForm:
     def __lt__(self, other):
         """Syntactic comparision of this linear form."""
         if not isinstance(other, self.__class__):
+            # return special constant to indicate that the operation is not implemented with respect to the other type
+            # see https://docs.python.org/3/library/constants.html#NotImplemented
             return NotImplemented
-        return self.var_summands == other.var_summands \
-               and self.interval < other.interval
+        return self.var_summands == other.var_summands and self.interval < other.interval
 
     def __le__(self, other):
         """Syntactic comparision of this linear form."""
         if not isinstance(other, self.__class__):
+            # return special constant to indicate that the operation is not implemented with respect to the other type
+            # see https://docs.python.org/3/library/constants.html#NotImplemented
             return NotImplemented
-        return self.var_summands == other.var_summands \
-               and self.interval <= other.interval
+        return self.var_summands == other.var_summands and self.interval <= other.interval
 
     def __gt__(self, other):
         """Syntactic comparision of this linear form."""
         if not isinstance(other, self.__class__):
+            # return special constant to indicate that the operation is not implemented with respect to the other type
+            # see https://docs.python.org/3/library/constants.html#NotImplemented
             return NotImplemented
-        return self.var_summands == other.var_summands \
-               and self.interval > other.interval
+        return self.var_summands == other.var_summands and self.interval > other.interval
 
     def __ge__(self, other):
         """Syntactic comparision of this linear form."""
         if not isinstance(other, self.__class__):
+            # return special constant to indicate that the operation is not implemented with respect to the other type
+            # see https://docs.python.org/3/library/constants.html#NotImplemented
             return NotImplemented
-        return self.var_summands == other.var_summands \
-               and self.interval >= other.interval
+        return self.var_summands == other.var_summands and self.interval >= other.interval
 
     def __hash__(self):
         return hash(repr(self))
@@ -100,6 +104,7 @@ class LinearForm:
 
     zero_interval = IntervalLattice(0, 0)
 
+    # noinspection PyPep8Naming
     class Visitor(ExpressionVisitor):
         """A visitor to generate a single variable linear form."""
 
@@ -110,14 +115,17 @@ class LinearForm:
         # the sub-expressions is negated. They can also fallback on other visitors like the interval visitor via
         # IntervalLattice.evaluate(expr)
 
+        # noinspection PyMethodMayBeStatic
         def visit_Literal(self, expr: Literal, linear_form, invert=False):
             linear_form.encounter_interval(IntervalLattice.evaluate(expr))
             if invert:
                 linear_form.interval.negate()
 
+        # noinspection PyMethodMayBeStatic
         def visit_VariableIdentifier(self, expr: VariableIdentifier, linear_form, invert=False):
             linear_form.encounter_new_var(expr, sign=MINUS if invert else PLUS)
 
+        # noinspection PyMethodMayBeStatic
         def visit_Input(self, _: Input, linear_form, invert=False):
             linear_form.encounter_interval(IntervalLattice().top())
             if invert:

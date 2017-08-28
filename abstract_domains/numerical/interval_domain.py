@@ -267,6 +267,7 @@ class IntervalLattice(Interval, BottomMixin):
         """
         return cls._visitor.visit(expr)
 
+    # noinspection PyPep8Naming
     class Visitor(ExpressionVisitor):
         """A visitor to abstractly evaluate an expression (without variables) in the interval domain."""
 
@@ -390,6 +391,7 @@ class IntervalDomain(Store, NumericalMixin, State):
     def _substitute_variable(self, left: Expression, right: Expression):
         raise NotImplementedError("Interval domain does not yet support variable substitution.")
 
+    # noinspection PyPep8Naming
     class Visitor(IntervalLattice.Visitor):
         """A visitor to abstractly evaluate an expression (with variables) in the interval domain."""
 

@@ -31,9 +31,7 @@ sys.path.insert(0, os.path.abspath('../'))
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.imgmath',
-    'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.imgmath', 'sphinx.ext.viewcode']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -49,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Lyra'
-copyright = '2017, Caterina Urban, Simon Wehrli, Mostafa Hassan'
+copyright = '2017, Caterina Urban'
 author = 'Caterina Urban, Simon Wehrli, Mostafa Hassan'
 
 # The version info for the project you're documenting, acts as replacement for
