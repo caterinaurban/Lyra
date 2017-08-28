@@ -86,16 +86,6 @@ class Limit:
         # NOTE the sorted() to make output order of bounds deterministic
         return f"{{{','.join(sorted(map(lambda b: f'【{str(b)}】',self.bounds)))}}}"
 
-    def forget(self, var: VariableIdentifier):
-        forget_indices = []
-        for i, b in enumerate(self.bounds):
-            if b.var == var:
-                # var appears in this bound -> mark for removal
-                forget_indices.append(i)
-
-        for i in reversed(forget_indices):
-            del self._bounds[i]
-
 
 class SegmentedListLattice(Lattice):
     def __init__(self, len_var, predicate_lattice: Type[Lattice], octagon: OctagonLattice):
@@ -234,16 +224,6 @@ class SegmentedListLattice(Lattice):
         del self._possibly_empty[index]
 
         # self.check_limits()
-
-    def forget(self, var: VariableIdentifier):
-        remove_indices = []
-        for i, l in enumerate(self._limits):
-            l.forget(var)
-            if len(l) == 0:  # empty limit -> mark for removal
-                remove_indices.append(i)
-
-        for i in reversed(remove_indices):
-            self.remove_limit(i)
 
     def greatest_lower_limit(self, index_form):
         greatest_lower_limit = 0
