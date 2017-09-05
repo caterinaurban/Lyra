@@ -1,5 +1,7 @@
-from abstract_domains.lattice import BottomMixin
 from enum import Flag
+
+from abstract_domains.lattice import Lattice
+from abstract_domains.stack import ScopeDescendCombineMixin
 
 
 class Used(Flag):
@@ -10,14 +12,32 @@ class Used(Flag):
     O = 1  # used in an outer scope and overridden in this scope
     N = 0  # not used
 
+    def __repr__(self):
+        return self.SYMBOLS[self]
+
 
 U = Used.U
 S = Used.S
 O = Used.O
 N = Used.N
 
+Used.SYMBOLS = {
+    U: "⚫",
+    S: "⫰",
+    O: "⫱",
+    N: "⟂"
+}
 
-class UsedLattice(BottomMixin):
+
+# Used.SYMBOLS = {
+#     U: "⦿",
+#     S: "⦾",
+#     O: "⦵",
+#     N: "⦹"
+# }
+
+
+class UsedLattice(ScopeDescendCombineMixin, Lattice):
     """Used variable analysis core abstract domain representation."""
 
     DESCEND = {
@@ -66,11 +86,18 @@ class UsedLattice(BottomMixin):
         self._used = used
 
     def __repr__(self):
-        return self.used.name
+        return repr(self.used)
+
+    def bottom(self):
+        self.used = N
+        return self
 
     def top(self):
-        self._used = U
+        self.used = U
         return self
+
+    def is_bottom(self) -> bool:
+        return self.used == N
 
     def is_top(self) -> bool:
         return self.used == U

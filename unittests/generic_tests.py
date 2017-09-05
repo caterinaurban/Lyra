@@ -57,9 +57,9 @@ class SourceTestCase(unittest.TestCase):
                              directory=os.path.join(self.get_graphs_directory(), "graphs"),
                              view=False)
 
-    def render_result_cfg(self, result):
+    def render_result_cfg(self, result, name_prefix=""):
         AnalysisResultRenderer().render((self.cfg, result), label=f"CFG with Results for {self.name}",
-                                        filename=f"CFGR {self.name}",
+                                        filename=f"CFGR{' '+name_prefix if name_prefix else ''} {self.name}",
                                         directory=os.path.join(self.get_graphs_directory(), "graphs"), view=False)
 
     def find_variable_names(self):

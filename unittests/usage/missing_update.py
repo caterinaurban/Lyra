@@ -2,7 +2,7 @@ x1 = input()  # x1 unused
 x2 = input()
 x3 = input()
 
-# RESULT: asc -> O, temp -> O, x1 -> N, x2 -> U, x3 -> U
+# RESULT: asc→⫱, temp→⫱, x1→⟂, x2→⚫, x3→⚫
 
 asc = True
 if x1 <= x2:

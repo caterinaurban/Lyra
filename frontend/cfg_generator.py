@@ -1,12 +1,12 @@
+import ast
 import optparse
 import sys
 import typing
 
-from visualization.graph_renderer import CfgRenderer
-import ast
 from core.cfg import *
-from core.statements import *
 from core.expressions import *
+from core.statements import *
+from visualization.graph_renderer import CfgRenderer
 
 
 def main(args):
@@ -342,6 +342,18 @@ class CfgVisitor(ast.NodeVisitor):
         return start_cfg.append(body_cfg).append(end_cfg)
 
     def visit_If(self, node):
+        def extend_special_edges(cfg):
+            """extend special edges with IF_OUT edges and additional necessary dummy nodes"""
+            for special_edge, edge_type in cfg.special_edges:
+                dummy = _dummy(self._id_gen)
+                cfg.add_node(dummy)
+
+                # add a new IF_OUT edge where the special edge is at the moment, ending in new dummy node
+                cfg.add_edge(Unconditional(special_edge.source, dummy, Edge.Kind.IF_OUT))
+
+                # change position of special edge to be AFTER the new dummy
+                special_edge._source = dummy
+
         body_cfg = self._translate_body(node.body)
 
         pp_test = ProgramPoint(node.test.lineno, node.test.col_offset)
@@ -356,20 +368,12 @@ class CfgVisitor(ast.NodeVisitor):
             orelse_cfg.add_edge(Conditional(None, neg_test, orelse_cfg.in_node, Edge.Kind.IF_IN))
             if orelse_cfg.out_node:  # if control flow can exit the else at all, add an unconditional IF_OUT edge
                 orelse_cfg.add_edge(Unconditional(orelse_cfg.out_node, None, Edge.Kind.IF_OUT))
+            extend_special_edges(orelse_cfg)
         else:
             orelse_cfg = LooseControlFlowGraph()
             orelse_cfg.add_edge(Conditional(None, neg_test, None, Edge.Kind.DEFAULT))
 
-        # extend special edges with IF_OUT edges and additional necessary dummy nodes
-        for special_edge, edge_type in body_cfg.special_edges:
-            dummy = _dummy(self._id_gen)
-            body_cfg.add_node(dummy)
-
-            # add a new IF_OUT edge where the special edge is at the moment, ending in new dummy node
-            body_cfg.add_edge(Unconditional(special_edge.source, dummy, Edge.Kind.IF_OUT))
-
-            # change position of special edge to be AFTER the new dummy
-            special_edge._source = dummy
+        extend_special_edges(body_cfg)
 
         cfg = body_cfg.combine(orelse_cfg)
         return cfg
@@ -471,14 +475,32 @@ class CfgVisitor(ast.NodeVisitor):
     def visit_Call(self, node):
         pp = ProgramPoint(node.lineno, node.col_offset)
 
-        if node.func.id == 'int':
-            typ = int
-        elif node.func.id == 'bool':
-            typ = bool
-        else:
-            typ = typing.Any
+        if isinstance(node.func, ast.Name):
+            if node.func.id == 'int':
+                typ = int
+            elif node.func.id == 'bool':
+                typ = bool
+            else:
+                typ = typing.Any
 
-        return Call(pp, node.func.id, [self.visit(arg) for arg in node.args], typ)
+            return Call(pp, node.func.id, [self.visit(arg) for arg in node.args], typ)
+        elif isinstance(node.func, ast.Attribute):
+            # visit the attribute access
+            attribute_access = self.visit(node.func)
+            # pass the receiver as the first argument
+            # NOTE: since this is a call, we do not use the attribute_access
+            # object since a method call in Python comes as an attribute access in the AST
+            return Call(pp, attribute_access.name, [attribute_access.receiver] + [self.visit(arg) for arg in node.args],
+                        typing.Any)
+        else:
+            raise NotImplementedError(
+                f"The call statement receiver of type {str(type(node.func))} is not yet translatable to CFG!")
+
+    def visit_Attribute(self, node):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+
+        receiver = self.visit(node.value)
+        return AttributeAccess(pp, receiver, node.attr, typing.Any)
 
     def visit_List(self, node):
         pp = ProgramPoint(node.lineno, node.col_offset)

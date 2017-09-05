@@ -1,6 +1,6 @@
 x = int(input())
 y = int(input())
-# RESULT: a -> O, b -> N, x -> U, y -> N
+# RESULT: a→⫱, b→⟂, x→⚫, y→⟂
 if 3 > x:  # x decision
     # inside nested if only b is modified!
     if 2 > y:  # y decision

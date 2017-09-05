@@ -1,19 +1,31 @@
 from copy import deepcopy
+from math import inf
 from numbers import Number
 from typing import List, Set, Sequence
-from abstract_domains.state import State
-from abstract_domains.usage.used import UsedLattice, Used
-from abstract_domains.store import Store
-from abstract_domains.usage.used_liststart import UsedListStartLattice
-from core.expressions import Expression, VariableIdentifier, ListDisplay, Literal, Index
-from math import inf
 
+from abstract_domains.stack import ScopeDescendCombineMixin, ScopeStack
+from abstract_domains.state import State
+from abstract_domains.store import Store
+from abstract_domains.usage.used import UsedLattice, Used
+from abstract_domains.usage.used_liststart import UsedListStartLattice
+from abstract_domains.usage.used_segmentation import UsedSegmentationStore
+from core.expressions import Expression, VariableIdentifier, ListDisplay, Literal, Index
 from core.expressions_tools import walk
 
 
-class UsedStore(Store, State):
+class UsedStore(ScopeDescendCombineMixin, Store, State):
     def __init__(self, variables: List[VariableIdentifier]):
-        super().__init__(variables, {int: UsedLattice, list: UsedListStartLattice})
+        super().__init__(variables, {int: lambda _: UsedLattice(), list: lambda _: UsedListStartLattice()})
+
+    def is_bottom(self) -> bool:
+        """Test whether the usage store is bottom, i.e. if *all* values in the store are bottom.
+        
+        **NOTE**: this is deviating definition of bottom from a usual mathematical store
+        (where one value equals bottom is sufficient to let store be bottom)
+
+        :return: whether the usage store is bottom
+        """
+        return all(element.is_bottom() for element in self.store.values())
 
     def descend(self) -> 'UsedStore':
         for var in self.store.values():
@@ -60,7 +72,6 @@ class UsedStore(Store, State):
                 else:
                     self.store[left].used = Used.O  # x is overwritten
         elif issubclass(left.typ, Sequence):
-            # TODO this whole if is no longer correct when lists of lists are allowed, e.g. l = [a,2,l]
             if isinstance(right, VariableIdentifier):
                 if right != left:  # if no self-assignemnt
                     self.store[left].change_SU_to_O()
@@ -74,9 +85,10 @@ class UsedStore(Store, State):
         return {variable}
 
     def _assign_variable(self, left: Expression, right: Expression) -> 'UsedStore':
-        raise NotImplementedError("Variable assignment is not implemented!")
+        raise NotImplementedError("Variable assignment is not supported!")
 
     def _assume(self, condition: Expression) -> 'UsedStore':
+        # update to U if exists a variable y in state that is either U or O (note that S is not enough)
         used_vars = len(
             set([lat.used for lat in self.store.values() if isinstance(lat, UsedLattice)]).intersection(
                 [Used.U, Used.O])
@@ -85,20 +97,15 @@ class UsedStore(Store, State):
             [lat.suo[Used.U] > 0 or lat.suo[Used.O] > 0 for lat in self.store.values() if
              isinstance(lat, UsedListStartLattice)]
         )
-        store_has_effect = used_vars or used_lists
-
-        for e in walk(condition):
-            if isinstance(e, VariableIdentifier):
-                # update to U if exists a variable y in state that is either U or O (note that S is not enough)
-                # or is set intersection, if checks if resulting list is empty
-                if store_has_effect:
+        if used_vars or used_lists:
+            for e in walk(condition):
+                if isinstance(e, VariableIdentifier):
                     self.store[e].used = Used.U
-            elif isinstance(e, Index):
-                if isinstance(e.index, Literal):
-                    if store_has_effect:
+                elif isinstance(e, Index):
+                    if isinstance(e.index, Literal):
                         self.store[e.target].set_used_at(e.index.val)
-                else:
-                    raise NotImplementedError()
+                    else:
+                        raise NotImplementedError()
 
         return self
 
@@ -131,6 +138,35 @@ class UsedStore(Store, State):
     def _substitute_variable(self, left: Expression, right: Expression) -> 'UsedStore':
         if isinstance(left, VariableIdentifier):
             self._use(left, right)._kill(left, right)
+        else:
+            raise NotImplementedError("Variable substitution for {} is not implemented!".format(left))
+        return self
+
+
+class UsedDomain(ScopeStack):
+    def __init__(self, variables: List[VariableIdentifier]):
+        """Usage-analysis state representation.
+
+        :param variables: list of program variables
+        """
+        super().__init__(UsedStore(variables))
+
+
+class UsedSegmentationDomain(ScopeStack):
+    def __init__(self, *args, **kwargs):
+        """Usage-analysis state representation.
+
+        :param variables: list of program variables
+        """
+        super().__init__(UsedSegmentationStore(*args, **kwargs))
+
+    def _substitute_variable(self, left: Expression, right: Expression) -> 'UsedSegmentationDomain':
+        """In segmentation for usage abstract domain, we need special handling of stacks. We fully update top frame 
+        as in the scope stack, but we also substitute variables in all lower frames."""
+        if isinstance(left, (VariableIdentifier, Index)):
+            for i in range(len(self.stack)):
+                # in all frame except the last one we only subsitute integer variables (no usage updates!)
+                self.stack[i].substitute_variable({left}, {right}, only_substitute=i < len(self.stack) - 1)
         else:
             raise NotImplementedError("Variable substitution for {} is not implemented!".format(left))
         return self

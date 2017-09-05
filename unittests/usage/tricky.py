@@ -1,5 +1,5 @@
 x = bool(input())
-# RESULT: x -> U, y -> O
+# RESULT: x→⚫, y→⫱
 y = bool(input())
 if x:
     x = x and y

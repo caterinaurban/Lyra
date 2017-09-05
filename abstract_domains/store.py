@@ -6,8 +6,8 @@ Lifting of a lattice to a set of program variables.
 """
 
 
-from typing import List, Type, Dict, Any
-from collections import defaultdict
+from typing import List, Type, Dict, Callable
+
 from abstract_domains.lattice import Lattice
 from core.expressions import VariableIdentifier
 from core.utils import copy_docstring
@@ -24,19 +24,16 @@ class Store(Lattice):
     .. automethod:: Store._meet
     .. automethod:: Store._join
     """
-    def __init__(self, variables: List[VariableIdentifier], lattices: Dict[Type, Type[Lattice]],
-                 arguments: Dict[Type, Dict[str, Any]] = defaultdict(lambda: dict())):
+    def __init__(self, variables: List[VariableIdentifier], lattices: Dict[Type, Callable[[VariableIdentifier], Lattice]]):
         """Create a mapping Var -> L from each variable in Var to the corresponding lattice element in L.
 
         :param variables: list of program variables
-        :param lattices: dictionary mapping each variable type to the corresponding lattice type
-        :param arguments: dictionary mapping each variable type to the arguments of the corresponding lattice type
+        :param lattices: dictionary mapping each variable type to the corresponding lattice type or a callable that generates a lattice
         """
         super().__init__()
         self._variables = variables
         self._lattices = lattices
-        self._arguments = arguments
-        self._store = {var: self._lattices[var.typ](**self._arguments[var.typ]) for var in self._variables}
+        self._store = {var: self._lattices[var.typ](var) for var in self._variables}
 
     @property
     def variables(self):
@@ -44,12 +41,16 @@ class Store(Lattice):
         return self._variables
 
     @property
+    def lattices(self):
+        return self._lattices
+
+    @property
     def store(self):
         """Current mapping from variables to their corresponding lattice element."""
         return self._store
 
     def __repr__(self):
-        return ", ".join("{} -> {}".format(variable, value) for variable, value in self.store.items())
+        return ", ".join("{}→{}".format(variable, value) for variable, value in self.store.items())
 
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'Store':
@@ -94,4 +95,6 @@ class Store(Lattice):
 
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'Store'):
-        return self._join(other)
+        for var in self.store:
+            self.store[var].widening(other.store[var])
+        return self

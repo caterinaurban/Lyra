@@ -1,6 +1,6 @@
 x = bool(input())
 y = bool(input())
-# RESULT: t -> N, x -> N, y -> U
+# RESULT: t→⟂, x→⟂, y→⚫
 if x:
     t = True
 else:

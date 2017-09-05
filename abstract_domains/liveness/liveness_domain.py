@@ -102,7 +102,7 @@ class LivenessState(Store, State):
 
         :param variables: list of program variables
         """
-        super().__init__(variables, {int: LivenessLattice})
+        super().__init__(variables, {int: lambda _: LivenessLattice()})
 
     @copy_docstring(State._access_variable)
     def _access_variable(self, variable: VariableIdentifier) -> Set[Expression]:

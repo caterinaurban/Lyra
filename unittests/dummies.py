@@ -33,7 +33,7 @@ class ExpressionStore(Store, State):
     """A store that saves the current untouched expression for each variable (if possible)."""
 
     def __init__(self, variables: List[VariableIdentifier]):
-        super().__init__(variables, {int: ExpressionLattice})
+        super().__init__(variables, {int: lambda _: ExpressionLattice()})
 
     def _access_variable(self, variable: VariableIdentifier) -> Set[Expression]:
         return {variable}

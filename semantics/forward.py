@@ -1,5 +1,5 @@
 from abstract_domains.state import State
-from core.statements import VariableAccess, Assignment, Call
+from core.statements import VariableAccess, Assignment, Call, IndexStmt
 from semantics.semantics import Semantics, DefaultSemantics
 
 
@@ -33,10 +33,10 @@ class AssignmentSemantics(ForwardSemantics):
         """
         lhs = self.semantics(stmt.left, state).result    # lhs evaluation
         rhs = self.semantics(stmt.right, state).result   # rhs evaluation
-        if isinstance(stmt.left, VariableAccess):
+        if isinstance(stmt.left, (VariableAccess, IndexStmt)):
             return state.assign_variable(lhs, rhs)
         else:
-            raise NotImplementedError("Forward semantics for assignment {0!s} not yet implemented!".format(self))
+            raise NotImplementedError(f"Forward semantics for assignment to {type(stmt.left)} not yet implemented!")
 
 
 # noinspection PyAbstractClass

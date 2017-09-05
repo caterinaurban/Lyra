@@ -9,7 +9,7 @@ class TestInterval(unittest.TestCase):
         self.assertTrue(Interval(0, 2) < Interval(3, 4))
         self.assertTrue(Interval(0, 2) <= Interval(2, 5))
         self.assertTrue(Interval(0, 2) > Interval(-1, -1))
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(ValueError):
             b = Interval(0, -1) < Interval(3, 4)
         self.assertTrue(Interval(0, -1), Interval(0, -3))
 

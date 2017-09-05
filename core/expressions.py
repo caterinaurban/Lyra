@@ -39,6 +39,9 @@ class Expression(metaclass=ABCMeta):
     def __ne__(self, other: 'Expression'):
         return not (self == other)
 
+    def __repr__(self):
+        return self.__str__()
+
     @abstractmethod
     def __str__(self):
         """Expression string representation.
@@ -109,6 +112,24 @@ class Input(Expression):
 
     def __str__(self):
         return "input()"
+
+
+class ListInput(Expression):
+    def __init__(self, typ):
+        """List input expression representation.
+
+        :param typ: type of the input
+        """
+        super().__init__(typ)
+
+    def __eq__(self, other):
+        return self.typ == other.typ
+
+    def __hash__(self):
+        return hash(self.typ)
+
+    def __str__(self):
+        return "listinput()"
 
 
 class Identifier(Expression):
@@ -366,6 +387,12 @@ class UnaryArithmeticOperation(UnaryOperation):
         """Unary arithmetic operator representation."""
         Add = 1
         Sub = -1
+
+        def __neg__(self):
+            return UnaryArithmeticOperation.Operator(-self.value)
+
+        def __pos__(self):
+            return UnaryArithmeticOperation.Operator(self.value)
 
         def __str__(self):
             if self.value == 1:

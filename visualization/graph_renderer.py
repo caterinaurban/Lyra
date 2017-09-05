@@ -12,7 +12,7 @@ class GraphRenderer(metaclass=ABCMeta):
     graph_attr = {
         'labelloc': 't',
         'fontcolor': 'black',
-        'fontname': 'roboto',
+        'fontname': 'DejaVu Sans Mono',
         'bgcolor': '#ffffff',
         'margin': '0',
     }   # graph attributes
@@ -20,7 +20,7 @@ class GraphRenderer(metaclass=ABCMeta):
     node_attr = {
         'color': 'black',
         'fontcolor': 'black',
-        'fontname': 'roboto',
+        'fontname': 'DejaVu Sans Mono',
         'style': 'filled',
         'fillcolor': '#70a6ff',
         'forcelabels': 'true'
@@ -29,7 +29,7 @@ class GraphRenderer(metaclass=ABCMeta):
     edge_attr = {
         'color': '#565656',
         'fontcolor': '#565656',
-        'fontname': 'roboto',
+        'fontname': 'DejaVu Sans Mono',
         'fontsize': '12'
     }   # edge attributes
 
@@ -168,7 +168,7 @@ class CfgRenderer(GraphRenderer):
         for node in cfg.nodes.values():
             fillcolor = self._node_color(node, cfg)
             if isinstance(node, (Basic, Loop)):
-                stmt = '<font color="#ffffff" point-size="11">{} </font>'
+                stmt = '<font face="DejaVu Sans Mono" color="#ffffff" point-size="11">{} </font>'
                 stmts = map(lambda x: stmt.format(html.escape(str(x))), node.stmts)
                 label = self._list2table(list(stmts), escape=False)
             else:
@@ -181,9 +181,9 @@ class AnalysisResultRenderer(CfgRenderer):
     """Graphviz rendering of an analysis result on the analyzed control flow graph."""
 
     def _basic_node_label(self, node, result):
-        state = '<font point-size="9">{} </font>'
+        state = '<font face="DejaVu Sans Mono" point-size="9">{} </font>'
         states = map(lambda x: state.format(html.escape(str(x)).replace('\n', '<br />')), result.get_node_result(node))
-        stmt = '<font color="#ffffff" point-size="11">{}</font>'
+        stmt = '<font face="DejaVu Sans Mono" color="#ffffff" point-size="11">{}</font>'
         stmts = map(lambda x: stmt.format(html.escape(str(x))), node.stmts)
         node_result = [item for items in zip_longest(states, stmts) for item in items if item is not None]
         return self._list2table(node_result, escape=False)

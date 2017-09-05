@@ -8,10 +8,13 @@ Abstract domain elements support lattice operations and program statements.
 
 
 from abc import ABCMeta, abstractmethod
-from abstract_domains.lattice import Lattice
 from copy import deepcopy
-from core.expressions import Expression, VariableIdentifier
 from typing import Set
+
+from abstract_domains.lattice import Lattice
+from core.cfg import Edge
+from core.expressions import Expression, VariableIdentifier
+from core.statements import ProgramPoint
 
 
 class State(Lattice, metaclass=ABCMeta):
@@ -187,7 +190,7 @@ class State(Lattice, metaclass=ABCMeta):
 
         """
 
-    def substitute_variable(self, left: Set[Expression], right: Set[Expression]) -> 'State':
+    def substitute_variable(self, left: Set[Expression], right: Set[Expression], *args, **kwargs) -> 'State':
         """Substitute an expression to a variable.
         
         :param left: set of expressions representing the variable to be substituted
@@ -195,6 +198,18 @@ class State(Lattice, metaclass=ABCMeta):
         :return: current state modified by the variable substitution
 
         """
-        self.big_join([deepcopy(self)._substitute_variable(lhs, rhs) for lhs in left for rhs in right])
+        self.big_join([deepcopy(self)._substitute_variable(lhs, rhs, *args, **kwargs) for lhs in left for rhs in right])
         self.result = set()  # assignments have no result, only side-effects
         return self
+
+    def next(self, pp: ProgramPoint, edge_kind: Edge.Kind = None):
+        """Called by the engine *before* **(time-wise)** the statement at a program point gets interpreted.
+        
+        If the engine runs a forward analysis, this state is considered to be *before* **(in situ)** the program 
+        point ``pp`` interpreted next. Otherwise in a backwards analysis, this state is considered to be *after*
+        **(in situ)** the program point ``pp`` interpreted next. 
+        
+        :param pp: the program point of the statement interpreted next
+        :param edge_kind: the kind of edge just passed in case the next statement is a conditional, otherwise ``None``
+        """
+        pass

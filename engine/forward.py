@@ -30,7 +30,7 @@ class ForwardInterpreter(Interpreter):
             iteration = iterations[current.identifier]
 
             # retrieve the previous entry state of the node
-            if current in self.result.result:
+            if current in self.result.nodes:
                 previous = deepcopy(self.result.get_node_result(current)[0])
             else:
                 previous = None
@@ -42,13 +42,13 @@ class ForwardInterpreter(Interpreter):
                 # join incoming states
                 edges = self.cfg.in_edges(current)
                 for edge in edges:
-                    if edge.source in self.result.result:
+                    if edge.source in self.result.nodes:
                         predecessor = deepcopy(self.result.get_node_result(edge.source)[-1])
                     else:
                         predecessor = deepcopy(initial).bottom()
                     # handle conditional edges
                     if isinstance(edge, Conditional):
-                        # TODO somewhere here call before(pp: ProgramPoint) after deepcopy, before semantics
+                        predecessor.next(edge.condition.pp, edge.kind)
                         predecessor = self.semantics.semantics(edge.condition, predecessor).filter()
                     # handle non-default edges
                     if edge.kind == Edge.Kind.IF_IN:
@@ -70,8 +70,9 @@ class ForwardInterpreter(Interpreter):
                 if isinstance(current, Basic):
                     successor = entry
                     for stmt in current.stmts:
-                        # TODO somewhere here call before(pp: ProgramPoint) after deepcopy, before semantics
-                        successor = self.semantics.semantics(stmt, deepcopy(successor))
+                        successor = deepcopy(successor)
+                        successor.next(stmt.pp)
+                        successor = self.semantics.semantics(stmt, successor)
                         states.append(successor)
                 elif isinstance(current, Loop):
                     # nothing to be done
