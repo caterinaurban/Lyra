@@ -83,7 +83,7 @@ class Interval:
 
     def __gt__(self, other):
         if not isinstance(other, self.__class__):
-            raise NotImplementedError("Incomparable types!")
+            raise NotImplementedError(f"Incomparable types: {type(other)} and {type(self.__class__)}")
         if self.empty() or other.empty():
             raise NotImplementedError("Empty intervals are not comparable!")
         return self.lower > other.upper
@@ -127,6 +127,51 @@ class Interval:
             self.interval = (min(comb), max(comb))
             return self
 
+    def div(self, other) -> 'Interval':
+        if self.empty() or other.empty():
+            return self.set_empty()
+        elif other.lower == other.upper == 0:
+            return self.bottom()
+        elif other.lower >= 0:
+            comb = [self.safe_div(self.lower, other.lower), self.safe_div(self.lower, other.upper),
+                    self.safe_div(self.upper, other.lower), self.safe_div(self.upper, other.upper)]
+            self.interval = (min(comb), max(comb))
+        elif other.upper <= 0:
+            self.interval = Interval(-self.upper, -self.lower).div_rec(Interval(-other.upper, -other.lower)).interval
+        else:
+            val1 = self.div_rec(Interval(other.lower, 0))
+            val2 = self.div_rec(Interval(0, other.upper))
+            self.interval = IntervalLattice(val1.lower, val1.upper).join(IntervalLattice(val2.lower, val2.upper)).interval
+        return self
+
+    def div_rec(self, other) -> 'Interval':
+        if self.empty() or other.empty():
+            return self.set_empty()
+        elif other.lower == other.upper == 0:
+            return IntervalDomain().bottom()
+        elif other.lower >= 0:
+            comb = [self.safe_div(self.lower, other.lower), self.safe_div(self.lower, other.upper),
+                    self.safe_div(self.upper, other.lower), self.safe_div(self.upper, other.upper)]
+            return Interval(min(comb), max(comb))
+        elif other.upper <= 0:
+            return Interval(-self.upper, -self.lower).div_rec(Interval(-other.upper, -other.lower))
+        else:
+            val1 = self.div_rec(Interval(other.lower, 0))
+            val2 = self.div_rec(Interval(0, other.upper))
+            return IntervalLattice(val1.lower, val1.upper).join(IntervalLattice(val2.lower, val2.upper)).interval
+
+    def safe_div(self, left, right):
+        if left == right == 0:
+            return 0
+        if right == inf or right == -inf:
+            return 0
+        if right == 0:
+            if left > 0:
+                return inf
+            else:
+                return -inf
+        return left // right
+
     def negate(self) -> 'Interval':
         if self.empty():
             return self
@@ -145,6 +190,12 @@ class IntervalLattice(Interval, BottomMixin):
     def top(self) -> 'IntervalLattice':
         self.lower = -inf
         self.upper = inf
+        return self
+
+    def bottom(self) -> 'IntervalLattice':
+        super().bottom()
+        self.lower = inf
+        self.upper = -inf
         return self
 
     def is_top(self) -> bool:
@@ -207,8 +258,94 @@ class IntervalLattice(Interval, BottomMixin):
                 return l.sub(r)
             elif expr.operator == BinaryArithmeticOperation.Operator.Mult:
                 return l.mult(r)
+            elif expr.operator == BinaryArithmeticOperation.Operator.Div:
+                return l.div(r)
             else:
                 raise ValueError(f"Binary operator '{str(expr.operator)}' is not supported!")
+
+        def visit_inverse_BinaryArithmeticOperation(self, expr: BinaryArithmeticOperation, interval_store, result_value, var_to_substitute, *args, **kwargs):
+            l = self.visit(expr.left, interval_store, result_value, var_to_substitute, *args, **kwargs)
+            r = self.visit(expr.right, interval_store, result_value, var_to_substitute, *args, **kwargs)
+            # Addition
+            if expr.operator == BinaryArithmeticOperation.Operator.Add:
+                if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
+                    if l.is_bottom():
+                        return result_value.sub(r)
+                    else:
+                        return deepcopy(l).meet(result_value.sub(r))
+                elif isinstance(expr.left, VariableIdentifier) and expr.right == var_to_substitute:
+                    if r.is_bottom():
+                        return result_value.sub(l)
+                    else:
+                        return deepcopy(r).meet(result_value.sub(l))
+                elif isinstance(expr.left, Operation):
+                    left_result_value = result_value.sub(r)
+                    return self.visit_inverse(expr.left, interval_store, left_result_value, var_to_substitute, *args, **kwargs)
+                elif isinstance(expr.right, Operation):
+                    right_result_value = result_value.sub(l)
+                    return self.visit_inverse(expr.right, interval_store, right_result_value, var_to_substitute, *args, **kwargs)
+            # Substraction
+            elif expr.operator == BinaryArithmeticOperation.Operator.Sub:
+                if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
+                    if l.is_bottom():
+                        return result_value.add(r)
+                    else:
+                        return deepcopy(l).meet(result_value.add(r))
+                elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
+                    if r.is_bottom():
+                        return l.sub(result_value)
+                    else:
+                        return deepcopy(r).meet(l.sub(result_value))
+                elif isinstance(expr.left, Operation):
+                    left_result_value = result_value.add(r)
+                    return self.visit_inverse(expr.left, interval_store, left_result_value, var_to_substitute, *args, **kwargs)
+                elif isinstance(expr.right, Operation):
+                    right_result_value = l.sub(result_value)
+                    return self.visit_inverse(expr.right, interval_store, right_result_value, var_to_substitute, *args, **kwargs)
+            # Multiplication
+            elif expr.operator == BinaryArithmeticOperation.Operator.Mult:
+                if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
+                    if l.is_bottom():
+                        return result_value.div(r)
+                    else:
+                        return deepcopy(l).meet(result_value.div(r))
+                elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
+                    if r.is_bottom():
+                        return result_value.div(l)
+                    else:
+                        return deepcopy(r).meet(result_value.div(l))
+                elif isinstance(expr.left, Operation):
+                    left_result_value = result_value.div(r)
+                    return self.visit_inverse(expr.left, interval_store, left_result_value, var_to_substitute, *args, **kwargs)
+                elif isinstance(expr.right, Operation):
+                    right_result_value = result_value.div(l)
+                    return self.visit_inverse(expr.right, interval_store, right_result_value, var_to_substitute, *args, **kwargs)
+            # Division
+            elif expr.operator == BinaryArithmeticOperation.Operator.Div:
+                if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
+                    if l.is_bottom():
+                        return result_value.mult(r)
+                    else:
+                        return deepcopy(l).meet(result_value.mult(r))
+                elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
+                    return IntervalLattice(0,0)  # Assumption: ZeroDivionError
+                elif isinstance(expr.left, Operation):
+                    left_result_value = result_value.mult(r)
+                    return self.visit_inverse(expr.left, interval_store, left_result_value, var_to_substitute, *args, **kwargs)
+                elif isinstance(expr.right, Operation):
+                    right_result_value = result_value.mult(l)
+                    return self.visit_inverse(expr.right, interval_store, right_result_value, var_to_substitute, *args, **kwargs)
+
+            else:
+                raise ValueError(f"Binary operator '{str(expr.operator)}' is not supported!")
+
+        '''def visit_inverse_BinaryComparisonOperation(self, expr: BinaryComparisonOperation, inverval_store, *args, **kwargs):
+            l = self.visit(expr.left, inverval_store, *args, **kwargs)
+            r = self.visit(expr.right, inverval_store, *args, **kwargs)
+            if expr.operator == BinaryComparisonOperation.Operator.Eq:
+                return l.meet(r)
+            else:
+                raise NotImplementedError(f"Binary operator '{str(expr.operator)}' is not supported!")'''
 
         def visit_UnaryArithmeticOperation(self, expr: UnaryArithmeticOperation, *args, **kwargs):
             r = self.visit(expr.expression, *args, **kwargs)
@@ -270,7 +407,35 @@ class IntervalDomain(Store, NumericalMixin, State):
         return self
 
     def _assume(self, condition: Expression) -> 'IntervalDomain':
-        # TODO implement this
+        if isinstance(condition, BinaryComparisonOperation):
+            IntervalDomain._visitor.visit(condition.right, self)
+            l = IntervalDomain._visitor.visit(condition.left, self)
+            r = IntervalDomain._visitor.visit(condition.right, self)
+            if condition.operator == BinaryComparisonOperation.Operator.Eq:
+                if l.is_bottom():
+                    result = r
+                elif r.is_bottom():
+                    result = l
+                else:
+                    result = l.meet(r)
+                if isinstance(condition.left, VariableIdentifier):
+                    self.store[condition.left] = result
+                if isinstance(condition.right, VariableIdentifier):
+                    self.store[condition.right] = result
+            elif condition.operator == BinaryComparisonOperation.Operator.NotEq:
+                meet_value = deepcopy(l).meet(r)
+                if not meet_value.is_bottom():
+                    if isinstance(condition.left, VariableIdentifier):
+                        self.store[condition.left] = l.bottom()
+                    if isinstance(condition.right, VariableIdentifier):
+                        self.store[condition.right] = r.bottom()
+            else:
+                raise NotImplementedError(f"Binary operator '{str(condition.operator)}' is not supported!")
+        elif isinstance(condition, UnaryBooleanOperation) and condition.operator == UnaryBooleanOperation.Operator.Neg:
+            if condition.expression.operator == BinaryComparisonOperation.Operator.Eq:
+                return self.bottom()
+        else:
+            raise NotImplementedError(f"Condition operator '{str(condition.operator)}' is not supported!")
         return self
 
     def _evaluate_literal(self, literal: Expression) -> Set[Expression]:
@@ -292,7 +457,25 @@ class IntervalDomain(Store, NumericalMixin, State):
         return self  # nothing to be done
 
     def _substitute_variable(self, left: Expression, right: Expression):
-        raise NotImplementedError("Interval domain does not yet support variable substitution.")
+        if isinstance(left, VariableIdentifier) and left.typ == int:
+            left_value_before = self.store[left]
+            right_variables = right.ids()
+            if isinstance(right, VariableIdentifier):
+                    self.store[right] = self.store[left]
+            else:
+                self.store[left] = IntervalLattice().top()  # TODO: instead of top use information from forward analysis
+                for variable in right_variables:  # substitute values on the right side
+                    value_before = deepcopy(self.store[variable])
+                    right_value = IntervalDomain._visitor.visit_inverse(right, self, left_value_before, variable)
+                    if not value_before.is_bottom():
+                        self.store[variable] = deepcopy(value_before).meet(right_value)
+                    else:
+                        self.store[variable] = right_value
+            if left not in right_variables:
+                self.store[left] = IntervalLattice().bottom()
+        else:
+            raise NotImplementedError("Interval domain does only support assignments to variables (type integer).")
+        return self
 
     # noinspection PyPep8Naming
     class Visitor(IntervalLattice.Visitor):

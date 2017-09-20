@@ -71,6 +71,15 @@ class ExpressionVisitor:
         visitor = getattr(self, method, self.generic_visit)
         return visitor(expr, *args, **kwargs)
 
+    def visit_inverse(self, expr, *args, **kwargs):
+        """Visit an expression."""
+        inverse = ''
+        if type(expr) in [BinaryArithmeticOperation, BinaryComparisonOperation]:
+            inverse = 'inverse_'
+        method = 'visit_' + inverse + expr.__class__.__name__
+        visitor = getattr(self, method, self.generic_visit)
+        return visitor(expr, *args, **kwargs)
+
     def generic_visit(self, expr, *args, **kwargs):
         """Called if no explicit visitor function exists for an expression."""
         last_result = None
