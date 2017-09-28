@@ -32,8 +32,6 @@ class IntervalBackwardTestCase(ResultCommentsFileTestCase):
 
         # init all variables to bottom
         domain = IntervalDomain(variables)
-        for varname, value in domain.store.items():
-            domain.store[varname] = IntervalLattice().bottom();
 
         # Run Interval numerical Analysis
         backward_interpreter = BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)

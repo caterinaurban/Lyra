@@ -74,7 +74,7 @@ class ExpressionVisitor:
     def visit_inverse(self, expr, *args, **kwargs):
         """Visit an expression."""
         inverse = ''
-        if type(expr) in [BinaryArithmeticOperation, BinaryComparisonOperation]:
+        if type(expr) in [BinaryArithmeticOperation, BinaryComparisonOperation, UnaryArithmeticOperation]:
             inverse = 'inverse_'
         method = 'visit_' + inverse + expr.__class__.__name__
         visitor = getattr(self, method, self.generic_visit)

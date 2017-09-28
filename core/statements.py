@@ -171,6 +171,29 @@ class Assignment(Statement):
         return "{0.left} = {0.right}".format(self)
 
 
+class Assertion(Statement):
+    """Assertion Statements.
+
+    https://docs.python.org/3.4/reference/simple_stmts.html#assertion-statements
+    """
+
+    def __init__(self, pp: ProgramPoint, test: Statement):
+        """Assertion statement representation.
+
+        :param pp: program point associated with the statement
+        :param test: expr that is asserted
+        """
+        super().__init__(pp)
+        self._test = test
+
+    @property
+    def test(self):
+        return self._test
+
+    def __str__(self):
+        return "assert {0.test}".format(self)
+
+
 class ListDisplayStmt(Statement):
     """List display statement representation.
     

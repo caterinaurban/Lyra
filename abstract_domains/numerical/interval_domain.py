@@ -170,6 +170,9 @@ class Interval:
                 return inf
             else:
                 return -inf
+        result = left / right
+        if result == inf or result == -inf:
+            return left / right
         return left // right
 
     def negate(self) -> 'Interval':
@@ -213,8 +216,10 @@ class IntervalLattice(Interval, BottomMixin):
         return other.lower <= self.lower and self.upper <= other.upper
 
     def _meet(self, other: 'IntervalLattice'):
-        self.lower = max(self.lower, other.lower)
-        self.upper = min(self.upper, other.upper)
+        lower = max(self.lower, other.lower)
+        upper = min(self.upper, other.upper)
+        self.lower = lower
+        self.upper = upper
         return self
 
     def _join(self, other: 'IntervalLattice') -> 'IntervalLattice':
@@ -266,86 +271,67 @@ class IntervalLattice(Interval, BottomMixin):
         def visit_inverse_BinaryArithmeticOperation(self, expr: BinaryArithmeticOperation, interval_store, result_value, var_to_substitute, *args, **kwargs):
             l = self.visit(expr.left, interval_store, result_value, var_to_substitute, *args, **kwargs)
             r = self.visit(expr.right, interval_store, result_value, var_to_substitute, *args, **kwargs)
+            result_left = None
+            result_right = None
             # Addition
             if expr.operator == BinaryArithmeticOperation.Operator.Add:
                 if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
-                    if l.is_bottom():
-                        return result_value.sub(r)
-                    else:
-                        return deepcopy(l).meet(result_value.sub(r))
-                elif isinstance(expr.left, VariableIdentifier) and expr.right == var_to_substitute:
-                    if r.is_bottom():
-                        return result_value.sub(l)
-                    else:
-                        return deepcopy(r).meet(result_value.sub(l))
-                elif isinstance(expr.left, Operation):
-                    left_result_value = result_value.sub(r)
-                    return self.visit_inverse(expr.left, interval_store, left_result_value, var_to_substitute, *args, **kwargs)
-                elif isinstance(expr.right, Operation):
-                    right_result_value = result_value.sub(l)
-                    return self.visit_inverse(expr.right, interval_store, right_result_value, var_to_substitute, *args, **kwargs)
+                    return deepcopy(l).meet(result_value.sub(r))
+                elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
+                    return deepcopy(r).meet(result_value.sub(l))
+                if isinstance(expr.left, Operation):
+                    left_result_value = deepcopy(result_value).sub(r)
+                    result_left = self.visit_inverse(expr.left, interval_store, left_result_value, var_to_substitute, *args, **kwargs)
+                if isinstance(expr.right, Operation):
+                    right_result_value = deepcopy(result_value).sub(l)
+                    result_right = self.visit_inverse(expr.right, interval_store, right_result_value, var_to_substitute, *args, **kwargs)
             # Substraction
             elif expr.operator == BinaryArithmeticOperation.Operator.Sub:
                 if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
-                    if l.is_bottom():
-                        return result_value.add(r)
-                    else:
-                        return deepcopy(l).meet(result_value.add(r))
+                    return deepcopy(l).meet(result_value.add(r))
                 elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
-                    if r.is_bottom():
-                        return l.sub(result_value)
-                    else:
-                        return deepcopy(r).meet(l.sub(result_value))
-                elif isinstance(expr.left, Operation):
-                    left_result_value = result_value.add(r)
-                    return self.visit_inverse(expr.left, interval_store, left_result_value, var_to_substitute, *args, **kwargs)
-                elif isinstance(expr.right, Operation):
+                    return deepcopy(r).meet(l.sub(result_value))
+                if isinstance(expr.left, Operation):
+                    left_result_value = deepcopy(result_value).add(r)
+                    result_left = self.visit_inverse(expr.left, interval_store, left_result_value, var_to_substitute, *args, **kwargs)
+                if isinstance(expr.right, Operation):
                     right_result_value = l.sub(result_value)
-                    return self.visit_inverse(expr.right, interval_store, right_result_value, var_to_substitute, *args, **kwargs)
+                    result_right = self.visit_inverse(expr.right, interval_store, right_result_value, var_to_substitute, *args, **kwargs)
             # Multiplication
             elif expr.operator == BinaryArithmeticOperation.Operator.Mult:
                 if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
-                    if l.is_bottom():
-                        return result_value.div(r)
-                    else:
-                        return deepcopy(l).meet(result_value.div(r))
+                    return deepcopy(l).meet(result_value.div(r))
                 elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
-                    if r.is_bottom():
-                        return result_value.div(l)
-                    else:
-                        return deepcopy(r).meet(result_value.div(l))
-                elif isinstance(expr.left, Operation):
-                    left_result_value = result_value.div(r)
-                    return self.visit_inverse(expr.left, interval_store, left_result_value, var_to_substitute, *args, **kwargs)
-                elif isinstance(expr.right, Operation):
+                    return deepcopy(r).meet(result_value.div(l))
+                if isinstance(expr.left, Operation):
+                    left_result_value = deepcopy(result_value).div(r)
+                    result_left = self.visit_inverse(expr.left, interval_store, left_result_value, var_to_substitute, *args, **kwargs)
+                if isinstance(expr.right, Operation):
                     right_result_value = result_value.div(l)
-                    return self.visit_inverse(expr.right, interval_store, right_result_value, var_to_substitute, *args, **kwargs)
+                    result_right = self.visit_inverse(expr.right, interval_store, right_result_value, var_to_substitute, *args, **kwargs)
             # Division
             elif expr.operator == BinaryArithmeticOperation.Operator.Div:
                 if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
-                    if l.is_bottom():
-                        return result_value.mult(r)
-                    else:
-                        return deepcopy(l).meet(result_value.mult(r))
+                    return deepcopy(l).meet(result_value.mult(r))
                 elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
-                    return IntervalLattice(0,0)  # Assumption: ZeroDivionError
-                elif isinstance(expr.left, Operation):
-                    left_result_value = result_value.mult(r)
-                    return self.visit_inverse(expr.left, interval_store, left_result_value, var_to_substitute, *args, **kwargs)
-                elif isinstance(expr.right, Operation):
-                    right_result_value = result_value.mult(l)
-                    return self.visit_inverse(expr.right, interval_store, right_result_value, var_to_substitute, *args, **kwargs)
-
+                    if result_value.lower == 0 and result_value.upper == 0:
+                        return deepcopy(r).bottom()
+                    return deepcopy(r).meet(l.div(result_value))
+                if isinstance(expr.left, Operation):
+                    left_result_value = deepcopy(result_value).mult(r)
+                    result_left = self.visit_inverse(expr.left, interval_store, left_result_value, var_to_substitute, *args, **kwargs)
+                if isinstance(expr.right, Operation):
+                    right_result_value = deepcopy(l).div(result_value)
+                    result_right = self.visit_inverse(expr.right, interval_store, right_result_value, var_to_substitute, *args, **kwargs)
             else:
                 raise ValueError(f"Binary operator '{str(expr.operator)}' is not supported!")
-
-        '''def visit_inverse_BinaryComparisonOperation(self, expr: BinaryComparisonOperation, inverval_store, *args, **kwargs):
-            l = self.visit(expr.left, inverval_store, *args, **kwargs)
-            r = self.visit(expr.right, inverval_store, *args, **kwargs)
-            if expr.operator == BinaryComparisonOperation.Operator.Eq:
-                return l.meet(r)
-            else:
-                raise NotImplementedError(f"Binary operator '{str(expr.operator)}' is not supported!")'''
+            if result_left is not None:
+                if result_right is not None:
+                    return result_left.meet(result_right)
+                else:
+                    return result_left
+            elif result_right is not None:
+                return result_right
 
         def visit_UnaryArithmeticOperation(self, expr: UnaryArithmeticOperation, *args, **kwargs):
             r = self.visit(expr.expression, *args, **kwargs)
@@ -356,6 +342,61 @@ class IntervalLattice(Interval, BottomMixin):
             else:
                 raise ValueError(f"Unary Operator {expr.operator} is not supported!")
 
+        def visit_inverse_UnaryArithmeticOperation(self, expr: UnaryArithmeticOperation, interval_store, result_value, var_to_substitute, *args, **kwargs):
+            if isinstance(expr.expression, VariableIdentifier) and expr.expression == var_to_substitute:
+                if expr.operator == UnaryArithmeticOperation.Operator.Add:
+                    return result_value
+                elif expr.operator == UnaryArithmeticOperation.Operator.Sub:
+                    return result_value.negate()
+                else:
+                    raise ValueError(f"Unary Operator {expr.operator} is not supported!")
+            if isinstance(expr.expression, Operation):
+                if expr.operator == UnaryArithmeticOperation.Operator.Sub:
+                    result_value.negate()
+                return self.visit_inverse(expr.expression,  interval_store, result_value, var_to_substitute, *args, **kwargs)
+
+        def visit_BinaryComparisonOperation(self, expr: BinaryComparisonOperation, interval_store, var_to_substitute, *args, **kwargs):
+            l = self.visit(expr.left, interval_store, *args, **kwargs)
+            r = self.visit(expr.right, interval_store, *args, **kwargs)
+            if expr.operator == BinaryComparisonOperation.Operator.Eq:
+                result = l.meet(r)
+                if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
+                    return result
+                elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
+                    return result
+                else:
+                    raise NotImplementedError(f"Binary operator '{str(expr.operator)}' only supports comparison to a Variable!")
+            elif expr.operator == BinaryComparisonOperation.Operator.LtE:
+                if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
+                    return deepcopy(l).meet(IntervalLattice(-inf, r.upper))
+                elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
+                    return r.meet(IntervalLattice(l.lower, inf))
+                else:
+                    raise NotImplementedError(f"Binary operator '{str(expr.operator)}' only supports comparison to a Variable!")
+            elif expr.operator == BinaryComparisonOperation.Operator.GtE:
+                if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
+                    return l.meet(IntervalLattice(r.lower, inf))
+                elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
+                    return deepcopy(r).meet(IntervalLattice(-inf, l.upper))
+                else:
+                    raise NotImplementedError(f"Binary operator '{str(expr.operator)}' only supports comparison to a Variable!")
+            elif expr.operator == BinaryComparisonOperation.Operator.Lt:
+                if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
+                    return deepcopy(l).meet(IntervalLattice(-inf, r.upper-1))
+                elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
+                    return r.meet(IntervalLattice(l.lower+1, inf))
+                else:
+                    raise NotImplementedError(f"Binary operator '{str(expr.operator)}' only supports comparison to a Variable!")
+            elif expr.operator == BinaryComparisonOperation.Operator.Gt:
+                if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
+                    return l.meet(IntervalLattice(r.lower+1, inf))
+                elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
+                    return deepcopy(r).meet(IntervalLattice(-inf, l.upper-1))
+                else:
+                    raise NotImplementedError(f"Binary operator '{str(expr.operator)}' only supports comparison to a Variable!")
+            else:
+                raise NotImplementedError(f"Binary operator '{str(expr.operator)}' is not supported!")
+
         # noinspection PyMethodMayBeStatic, PyUnusedLocal
         def visit_Literal(self, expr: Literal, *args, **kwargs):
             if expr.typ == int:
@@ -363,6 +404,11 @@ class IntervalLattice(Interval, BottomMixin):
                 return IntervalLattice(c, c)
             else:
                 raise ValueError(f"Literal type {expr.typ} is not supported!")
+
+        # TODO implement
+        # noinspection PyMethodMayBeStatic, PyUnusedLocal
+        def visit_Index(self, expr: Index, *args, **kwargs):
+            raise ValueError(f"Index is not supported!")
 
     _visitor = Visitor()  # static class member shared between all instances
 
@@ -408,34 +454,16 @@ class IntervalDomain(Store, NumericalMixin, State):
 
     def _assume(self, condition: Expression) -> 'IntervalDomain':
         if isinstance(condition, BinaryComparisonOperation):
-            IntervalDomain._visitor.visit(condition.right, self)
-            l = IntervalDomain._visitor.visit(condition.left, self)
-            r = IntervalDomain._visitor.visit(condition.right, self)
-            if condition.operator == BinaryComparisonOperation.Operator.Eq:
-                if l.is_bottom():
-                    result = r
-                elif r.is_bottom():
-                    result = l
-                else:
-                    result = l.meet(r)
-                if isinstance(condition.left, VariableIdentifier):
-                    self.store[condition.left] = result
-                if isinstance(condition.right, VariableIdentifier):
-                    self.store[condition.right] = result
-            elif condition.operator == BinaryComparisonOperation.Operator.NotEq:
-                meet_value = deepcopy(l).meet(r)
-                if not meet_value.is_bottom():
-                    if isinstance(condition.left, VariableIdentifier):
-                        self.store[condition.left] = l.bottom()
-                    if isinstance(condition.right, VariableIdentifier):
-                        self.store[condition.right] = r.bottom()
-            else:
-                raise NotImplementedError(f"Binary operator '{str(condition.operator)}' is not supported!")
-        elif isinstance(condition, UnaryBooleanOperation) and condition.operator == UnaryBooleanOperation.Operator.Neg:
-            if condition.expression.operator == BinaryComparisonOperation.Operator.Eq:
-                return self.bottom()
-        else:
-            raise NotImplementedError(f"Condition operator '{str(condition.operator)}' is not supported!")
+            for variable in condition.left.ids():  # substitute values on the left side
+                value_before = deepcopy(self.store[variable])
+                result = IntervalDomain._visitor.visit(condition, self, variable)
+                self.store[variable] = value_before.meet(result)
+            for variable in condition.right.ids():  # substitute values on the right side
+                value_before = deepcopy(self.store[variable])
+                result = IntervalDomain._visitor.visit(condition, self, variable)
+                self.store[variable] = value_before.meet(result)
+        #else:
+           # raise NotImplementedError(f"Condition operator '{str(condition.operator)}' is not supported!")
         return self
 
     def _evaluate_literal(self, literal: Expression) -> Set[Expression]:
@@ -461,18 +489,18 @@ class IntervalDomain(Store, NumericalMixin, State):
             left_value_before = self.store[left]
             right_variables = right.ids()
             if isinstance(right, VariableIdentifier):
-                    self.store[right] = self.store[left]
+                self.store[right] = self.store[left]
+                if left not in right_variables:
+                    self.store[left] = IntervalLattice().top()
             else:
-                self.store[left] = IntervalLattice().top()  # TODO: instead of top use information from forward analysis
+                self.store[left] = IntervalLattice().top()
                 for variable in right_variables:  # substitute values on the right side
                     value_before = deepcopy(self.store[variable])
-                    right_value = IntervalDomain._visitor.visit_inverse(right, self, left_value_before, variable)
+                    right_value = IntervalDomain._visitor.visit_inverse(right, self, deepcopy(left_value_before), variable)
                     if not value_before.is_bottom():
-                        self.store[variable] = deepcopy(value_before).meet(right_value)
+                        self.store[variable] = value_before.meet(right_value)
                     else:
                         self.store[variable] = right_value
-            if left not in right_variables:
-                self.store[left] = IntervalLattice().bottom()
         else:
             raise NotImplementedError("Interval domain does only support assignments to variables (type integer).")
         return self

@@ -326,6 +326,12 @@ class CfgVisitor(ast.NodeVisitor):
                  target in node.targets]
         return stmts
 
+    def visit_Assert(self, node):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        value = self._ensure_stmt_visit(node.test)
+        stmt = Assertion(pp, value)
+        return stmt
+
     def visit_AugAssign(self, node):
         pp = ProgramPoint(node.lineno, node.col_offset)
         value = self._ensure_stmt_visit(node.value)
@@ -504,7 +510,7 @@ class CfgVisitor(ast.NodeVisitor):
         cfg_factory = CfgFactory(self._id_gen)
 
         for child in body:
-            if isinstance(child, (ast.Assign, ast.AugAssign, ast.Expr)):
+            if isinstance(child, (ast.Assign, ast.AugAssign, ast.Expr, ast.Assert)):
                 cfg_factory.add_stmts(self.visit(child))
             elif isinstance(child, ast.If):
                 cfg_factory.complete_basic_block()

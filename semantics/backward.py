@@ -1,5 +1,5 @@
 from abstract_domains.state import State
-from core.statements import VariableAccess, Assignment, Call
+from core.statements import VariableAccess, Assignment, Call, Assertion
 from semantics.semantics import Semantics, DefaultSemantics
 
 
@@ -39,7 +39,21 @@ class AssignmentSemantics(BackwardSemantics):
             raise NotImplementedError("Backward semantics for assignment {0!s} not yet implemented!".format(self))
 
 
+class AssertionSemantics(BackwardSemantics):
+    """Backward semantics of assertions."""
+
+    def assertion_semantics(self, stmt: Assertion, state: State) -> State:
+        """Backward semantics of an assertion.
+
+        :param stmt: assertion statement to be executed
+        :param state: state before executing the assertion
+        :return: state modified by the assertion
+        """
+        test = self.semantics(stmt.test, state).result
+        return state.filter()
+
+
 # noinspection PyAbstractClass
-class DefaultBackwardSemantics(DefaultSemantics, UserDefinedCallSemantics, AssignmentSemantics):
+class DefaultBackwardSemantics(DefaultSemantics, UserDefinedCallSemantics, AssignmentSemantics, AssertionSemantics):
     """Default backward semantics of statements."""
     pass

@@ -11,6 +11,6 @@ from abstract_domains.numerical.interval_domain import IntervalLattice
 
 #UsageAnalysis().main("usage/example.py")
 
-IntervalAnalysis().main("numerical/example.py")
+#IntervalAnalysis().main("numerical/example.py")
 
-#BackwardIntervalAnalysis().main("numerical/example.py")
+BackwardIntervalAnalysis().main("numerical/example_backwards.py")
