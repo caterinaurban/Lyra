@@ -1,0 +1,1 @@
+cat input_file.txt | python script.py > output_file.txt
