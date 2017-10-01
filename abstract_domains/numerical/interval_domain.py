@@ -127,6 +127,20 @@ class Interval:
             self.interval = (min(comb), max(comb))
             return self
 
+    def safe_div(self, left, right):
+        if right == 0:
+            if left == 0:
+                return 0
+            if left > 0:
+                return inf
+            return -inf
+        if right == inf or right == -inf:
+            return 0
+        result = left / right
+        if result == inf or result == -inf:
+            return result
+        return left // right
+
     def div(self, other) -> 'Interval':
         if self.empty() or other.empty():
             return self.set_empty()
@@ -137,43 +151,12 @@ class Interval:
                     self.safe_div(self.upper, other.lower), self.safe_div(self.upper, other.upper)]
             self.interval = (min(comb), max(comb))
         elif other.upper <= 0:
-            self.interval = Interval(-self.upper, -self.lower).div_rec(Interval(-other.upper, -other.lower)).interval
+            self.interval = Interval(-self.upper, -self.lower).div(Interval(-other.upper, -other.lower)).interval
         else:
-            val1 = self.div_rec(Interval(other.lower, 0))
-            val2 = self.div_rec(Interval(0, other.upper))
+            val1 = deepcopy(self).div(Interval(other.lower, 0))
+            val2 = deepcopy(self).div(Interval(0, other.upper))
             self.interval = IntervalLattice(val1.lower, val1.upper).join(IntervalLattice(val2.lower, val2.upper)).interval
         return self
-
-    def div_rec(self, other) -> 'Interval':
-        if self.empty() or other.empty():
-            return self.set_empty()
-        elif other.lower == other.upper == 0:
-            return IntervalDomain().bottom()
-        elif other.lower >= 0:
-            comb = [self.safe_div(self.lower, other.lower), self.safe_div(self.lower, other.upper),
-                    self.safe_div(self.upper, other.lower), self.safe_div(self.upper, other.upper)]
-            return Interval(min(comb), max(comb))
-        elif other.upper <= 0:
-            return Interval(-self.upper, -self.lower).div_rec(Interval(-other.upper, -other.lower))
-        else:
-            val1 = self.div_rec(Interval(other.lower, 0))
-            val2 = self.div_rec(Interval(0, other.upper))
-            return IntervalLattice(val1.lower, val1.upper).join(IntervalLattice(val2.lower, val2.upper)).interval
-
-    def safe_div(self, left, right):
-        if left == right == 0:
-            return 0
-        if right == inf or right == -inf:
-            return 0
-        if right == 0:
-            if left > 0:
-                return inf
-            else:
-                return -inf
-        result = left / right
-        if result == inf or result == -inf:
-            return left / right
-        return left // right
 
     def negate(self) -> 'Interval':
         if self.empty():
@@ -350,25 +333,26 @@ class IntervalLattice(Interval, BottomMixin):
                     return result_value.negate()
                 else:
                     raise ValueError(f"Unary Operator {expr.operator} is not supported!")
-            if isinstance(expr.expression, Operation):
+            elif isinstance(expr.expression, Operation):
                 if expr.operator == UnaryArithmeticOperation.Operator.Sub:
                     result_value.negate()
                 return self.visit_inverse(expr.expression,  interval_store, result_value, var_to_substitute, *args, **kwargs)
+            elif not isinstance(expr.expression, Literal): # for literal nothing gets substituted
+                raise ValueError(f"Unary Arithmetic for type {type(expr.expression)} is not supported!")
 
         def visit_BinaryComparisonOperation(self, expr: BinaryComparisonOperation, interval_store, var_to_substitute, *args, **kwargs):
             l = self.visit(expr.left, interval_store, *args, **kwargs)
             r = self.visit(expr.right, interval_store, *args, **kwargs)
             if expr.operator == BinaryComparisonOperation.Operator.Eq:
-                result = l.meet(r)
                 if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
-                    return result
+                    return l.meet(r)
                 elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
-                    return result
+                    return l.meet(r)
                 else:
                     raise NotImplementedError(f"Binary operator '{str(expr.operator)}' only supports comparison to a Variable!")
             elif expr.operator == BinaryComparisonOperation.Operator.LtE:
                 if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
-                    return deepcopy(l).meet(IntervalLattice(-inf, r.upper))
+                    return l.meet(IntervalLattice(-inf, r.upper))
                 elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
                     return r.meet(IntervalLattice(l.lower, inf))
                 else:
@@ -377,12 +361,12 @@ class IntervalLattice(Interval, BottomMixin):
                 if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
                     return l.meet(IntervalLattice(r.lower, inf))
                 elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
-                    return deepcopy(r).meet(IntervalLattice(-inf, l.upper))
+                    return r.meet(IntervalLattice(-inf, l.upper))
                 else:
                     raise NotImplementedError(f"Binary operator '{str(expr.operator)}' only supports comparison to a Variable!")
             elif expr.operator == BinaryComparisonOperation.Operator.Lt:
                 if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
-                    return deepcopy(l).meet(IntervalLattice(-inf, r.upper-1))
+                    return l.meet(IntervalLattice(-inf, r.upper-1))
                 elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
                     return r.meet(IntervalLattice(l.lower+1, inf))
                 else:
@@ -391,7 +375,7 @@ class IntervalLattice(Interval, BottomMixin):
                 if isinstance(expr.left, VariableIdentifier) and expr.left == var_to_substitute:
                     return l.meet(IntervalLattice(r.lower+1, inf))
                 elif isinstance(expr.right, VariableIdentifier) and expr.right == var_to_substitute:
-                    return deepcopy(r).meet(IntervalLattice(-inf, l.upper-1))
+                    return r.meet(IntervalLattice(-inf, l.upper-1))
                 else:
                     raise NotImplementedError(f"Binary operator '{str(expr.operator)}' only supports comparison to a Variable!")
             else:
@@ -454,16 +438,10 @@ class IntervalDomain(Store, NumericalMixin, State):
 
     def _assume(self, condition: Expression) -> 'IntervalDomain':
         if isinstance(condition, BinaryComparisonOperation):
-            for variable in condition.left.ids():  # substitute values on the left side
+            for variable in condition.left.ids().union(condition.left.ids()):
                 value_before = deepcopy(self.store[variable])
                 result = IntervalDomain._visitor.visit(condition, self, variable)
                 self.store[variable] = value_before.meet(result)
-            for variable in condition.right.ids():  # substitute values on the right side
-                value_before = deepcopy(self.store[variable])
-                result = IntervalDomain._visitor.visit(condition, self, variable)
-                self.store[variable] = value_before.meet(result)
-        #else:
-           # raise NotImplementedError(f"Condition operator '{str(condition.operator)}' is not supported!")
         return self
 
     def _evaluate_literal(self, literal: Expression) -> Set[Expression]:
