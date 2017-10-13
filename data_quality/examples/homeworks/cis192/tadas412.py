@@ -120,7 +120,7 @@ def main():
     import doctest
     options = (doctest.IGNORE_EXCEPTION_DETAIL |
                doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS)
-    print "Running doctests..."
+    print("Running doctests...")
     doctest.testmod(optionflags=options)
 
 
