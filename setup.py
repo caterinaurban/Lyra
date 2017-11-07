@@ -1,7 +1,4 @@
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup, find_packages
 
 config = {
     'name': 'Lyra',
@@ -11,7 +8,7 @@ config = {
     'description': 'Static Program Analyzer for Python Data Science Applications',
     'url': 'http://www.pm.inf.ethz.ch/research/lyra.html',
     'license': 'MPL-2.0',
-    'packages': ['abstract_domains', 'core', 'engine', 'frontend', 'semantics', 'tests', 'z3'],
+    'packages': find_packages(),
     'install_requires': [
         'graphviz==0.7.1',
         'z3',
