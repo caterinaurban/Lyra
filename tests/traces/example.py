@@ -1,7 +1,7 @@
 x = input()  # USED
 y = input()  # USED
 if x:
-    z = not y
+    z = y
 else:
     z = y
 print(z)

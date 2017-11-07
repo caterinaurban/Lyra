@@ -545,10 +545,26 @@ class BinaryComparisonOperation(BinaryOperation):
 
         def reverse_operator(self):
             """Returns the reverse operator of this operator."""
-            try:
-                return BinaryComparisonOperation.Operator.REVERSE_OPERATOR[self]
-            except KeyError:
-                return None
+            if self.value == 1:
+                return BinaryComparisonOperation.Operator.NotEq
+            elif self.value == 2:
+                return BinaryComparisonOperation.Operator.Eq
+            elif self.value == 3:
+                return BinaryComparisonOperation.Operator.GtE
+            elif self.value == 4:
+                return BinaryComparisonOperation.Operator.Gt
+            elif self.value == 5:
+                return BinaryComparisonOperation.Operator.LtE
+            elif self.value == 6:
+                return BinaryComparisonOperation.Operator.Lt
+            elif self.value == 7:
+                return BinaryComparisonOperation.Operator.IsNot
+            elif self.value == 8:
+                return BinaryComparisonOperation.Operator.Is
+            elif self.value == 9:
+                return BinaryComparisonOperation.Operator.NotIn
+            elif self.value == 10:
+                return BinaryComparisonOperation.Operator.In
 
         def __str__(self):
             if self.value == 1:
@@ -571,19 +587,6 @@ class BinaryComparisonOperation(BinaryOperation):
                 return "in"
             elif self.value == 10:
                 return "not in"
-
-    Operator.REVERSE_OPERATOR = {
-        Operator.Eq: Operator.NotEq,
-        Operator.NotEq: Operator.Eq,
-        Operator.Lt: Operator.GtE,
-        Operator.LtE: Operator.Gt,
-        Operator.Gt: Operator.LtE,
-        Operator.GtE: Operator.Lt,
-        Operator.Is: Operator.IsNot,
-        Operator.IsNot: Operator.Is,
-        Operator.In: Operator.NotIn,
-        Operator.NotIn: Operator.In
-    }
 
     def __init__(self, typ, left: Expression, operator: Operator, right: Expression):
         """Binary comparison operation expression representation.

@@ -7,6 +7,6 @@ from engine.usage.usage_analysis import UsageAnalysis
 
 #BoolTracesAnalysis().main("traces/example.py")
 
-#UsageAnalysis().main("usage/example.py")
+UsageAnalysis().main("usage/example.py")
 
-IntervalAnalysis().main("numerical/example.py")
+#IntervalAnalysis().main("numerical/example.py")
