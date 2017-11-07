@@ -12,6 +12,7 @@ Subpackages
 .. toctree::
 
     engine.liveness
+    engine.numerical
     engine.traces
     engine.usage
 
