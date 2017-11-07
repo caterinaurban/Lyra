@@ -17,11 +17,11 @@ def main():
         default='usage')
     args = parser.parse_args()
 
-    if args.analysis is 'intervals':
+    if args.analysis == 'intervals':
         IntervalAnalysis().main(args.python_file)
-    if args.analysis is 'liveness':
+    if args.analysis == 'liveness':
         LivenessAnalysis().main(args.python_file)
-    if args.analysis is 'usage':
+    if args.analysis == 'usage':
         UsageAnalysis().main(args.python_file)
 
 
