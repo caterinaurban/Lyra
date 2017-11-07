@@ -10,6 +10,11 @@ config = {
     'license': 'MPL-2.0',
     'packages': find_packages('src'),
     'package_dir': {'': 'src'},
+    'entry_points': {
+             'console_scripts': [
+                 'lyra = lyra.main:main',
+                 ]
+             },
     'install_requires': [
         'graphviz==0.7.1',
         'z3',
