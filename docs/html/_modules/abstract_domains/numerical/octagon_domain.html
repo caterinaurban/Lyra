@@ -1,0 +1,816 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>abstract_domains.numerical.octagon_domain &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Lyra</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>abstract_domains.numerical.octagon_domain</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for abstract_domains.numerical.octagon_domain</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
+
+<span class="kn">from</span> <span class="nn">abstract_domains.lattice</span> <span class="k">import</span> <span class="n">BottomMixin</span>
+<span class="kn">from</span> <span class="nn">abstract_domains.numerical.dbm</span> <span class="k">import</span> <span class="n">IntegerCDBM</span>
+<span class="kn">from</span> <span class="nn">abstract_domains.numerical.interval_domain</span> <span class="k">import</span> <span class="n">IntervalLattice</span><span class="p">,</span> <span class="n">IntervalDomain</span>
+<span class="kn">from</span> <span class="nn">abstract_domains.numerical.numerical</span> <span class="k">import</span> <span class="n">NumericalMixin</span>
+<span class="kn">from</span> <span class="nn">abstract_domains.state</span> <span class="k">import</span> <span class="n">State</span>
+<span class="kn">from</span> <span class="nn">core.expressions</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">inf</span><span class="p">,</span> <span class="n">isinf</span>
+
+<span class="kn">from</span> <span class="nn">abstract_domains.numerical.linear_forms</span> <span class="k">import</span> <span class="n">SingleVarLinearForm</span><span class="p">,</span> <span class="n">LinearForm</span><span class="p">,</span> <span class="n">InvalidFormError</span>
+
+<span class="kn">from</span> <span class="nn">core.expressions_tools</span> <span class="k">import</span> <span class="n">ExpressionVisitor</span><span class="p">,</span> <span class="n">ExpressionTransformer</span><span class="p">,</span> \
+    <span class="n">make_condition_not_free</span><span class="p">,</span> <span class="n">simplify</span>
+
+<span class="c1"># Shorthands</span>
+<span class="n">Sign</span> <span class="o">=</span> <span class="n">UnaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span>
+<span class="n">PLUS</span> <span class="o">=</span> <span class="n">Sign</span><span class="o">.</span><span class="n">Add</span>
+<span class="n">MINUS</span> <span class="o">=</span> <span class="n">Sign</span><span class="o">.</span><span class="n">Sub</span>
+
+
+<span class="k">def</span> <span class="nf">_index_shift</span><span class="p">(</span><span class="n">sign</span><span class="p">:</span> <span class="n">Sign</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">sign</span> <span class="o">==</span> <span class="n">MINUS</span> <span class="k">else</span> <span class="mi">0</span>
+
+
+<span class="c1"># TODO more documentation</span>
+<div class="viewcode-block" id="OctagonLattice"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice">[docs]</a><span class="k">class</span> <span class="nc">OctagonLattice</span><span class="p">(</span><span class="n">BottomMixin</span><span class="p">,</span> <span class="n">NumericalMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Octagon lattice.</span>
+
+<span class="sd">    One lattice element is represented by a DBM-matrix internally. This matrix has a special index structure. We show </span>
+<span class="sd">    an example for 3 variables `v1`, `v2` and `v3`. Every variable contributes two indices, one for the positive and </span>
+<span class="sd">    one for the negative variant of a variable.</span>
+
+<span class="sd">    ::</span>
+<span class="sd">    </span>
+<span class="sd">            v1+  v1-  v2+  v2-  v3+  v3-</span>
+<span class="sd">        v1+  D    B</span>
+<span class="sd">        v1-  A    D </span>
+<span class="sd">        v2+  s    A    D    B</span>
+<span class="sd">        v2-  s    s    A    D</span>
+<span class="sd">        v3+  s    s    s    A    D    B</span>
+<span class="sd">        v3-  s    s    s    s    A    D</span>
+<span class="sd">        </span>
+<span class="sd">    NOTE: Since the matrix is a special kind of symmetric, we only show lower left diagonal matrix. See </span>
+<span class="sd">    :class:`abstract_domains.numerical.dbm.DBM`.</span>
+<span class="sd">    </span>
+<span class="sd">    The actual constraint, e.g. at matrix entry (``v1+``, v2+``) is: ``- v1 + v2 &lt;= c`` (**Note the minus before </span>
+<span class="sd">    first term**). </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Create an Octagon Lattice for the given variables.</span>
+<span class="sd">        </span>
+<span class="sd">        :param variables: list of program variables</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span> <span class="o">=</span> <span class="n">variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_var_to_index</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_to_var</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_var_to_index</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_index_to_var</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_index_to_var</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
+            <span class="n">index</span> <span class="o">+=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dbm</span> <span class="o">=</span> <span class="n">IntegerCDBM</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dbm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dbm</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_tuple</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Sign</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">Sign</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Retrieve the bound `c` at an index given as the quadruple ``(sign1, var1, sign2, var2)``.</span>
+<span class="sd">        </span>
+<span class="sd">        The actual octagonal constraint of this index is ``(-1) * sign1 * var1 + sign2 * var2 &lt;= c``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">index_tuple</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">sign1</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">sign2</span><span class="p">,</span> <span class="n">var2</span> <span class="o">=</span> <span class="n">index_tuple</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbm</span><span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_var_to_index</span><span class="p">[</span><span class="n">var1</span><span class="p">]</span> <span class="o">+</span> <span class="n">_index_shift</span><span class="p">(</span><span class="n">sign1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var_to_index</span><span class="p">[</span><span class="n">var2</span><span class="p">]</span> <span class="o">+</span> <span class="n">_index_shift</span><span class="p">(</span><span class="n">sign2</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Index into octagon has invalid format.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_tuple</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Sign</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">Sign</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">],</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the bound `c` at an index given as the quadruple ``(sign1, var1, sign2, var2)``.</span>
+<span class="sd">        </span>
+<span class="sd">        The actual octagonal constraint of this index is ``(-1) * sign1 * var1 + sign2 * var2 &lt;= c``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">index_tuple</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">sign1</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">sign2</span><span class="p">,</span> <span class="n">var2</span> <span class="o">=</span> <span class="n">index_tuple</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var_to_index</span><span class="p">[</span><span class="n">var1</span><span class="p">]</span> <span class="o">+</span> <span class="n">_index_shift</span><span class="p">(</span><span class="n">sign1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_var_to_index</span><span class="p">[</span><span class="n">var2</span><span class="p">]</span> <span class="o">+</span> <span class="n">_index_shift</span><span class="p">(</span><span class="n">sign2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dbm</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Index into octagon has invalid format.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="OctagonLattice.binary_constraints_indices"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.binary_constraints_indices">[docs]</a>    <span class="k">def</span> <span class="nf">binary_constraints_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sign1</span><span class="p">:</span> <span class="n">Sign</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">var1</span><span class="p">:</span> <span class="n">VariableIdentifier</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">sign2</span><span class="p">:</span> <span class="n">Sign</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">var2</span><span class="p">:</span> <span class="n">VariableIdentifier</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate the indices of all binary octagonal constraints (of distinct variables ``var1``, ``var2``).</span>
+<span class="sd">        </span>
+<span class="sd">        :param sign1: positive/negative variant of ``var1`` or ``None`` to generate indices for both</span>
+<span class="sd">        :param var1: first variable or ``None`` to generate indices for whole row</span>
+<span class="sd">        :param sign2: positive/negative variant of ``var2`` or ``None`` to generate indices both</span>
+<span class="sd">        :param var2: second variable or ``None`` to generate indices for whole column</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">signs1</span> <span class="o">=</span> <span class="p">[</span><span class="n">sign1</span><span class="p">]</span> <span class="k">if</span> <span class="n">sign1</span> <span class="k">else</span> <span class="p">[</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">MINUS</span><span class="p">]</span>
+        <span class="n">signs2</span> <span class="o">=</span> <span class="p">[</span><span class="n">sign2</span><span class="p">]</span> <span class="k">if</span> <span class="n">sign2</span> <span class="k">else</span> <span class="p">[</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">MINUS</span><span class="p">]</span>
+        <span class="n">vars1</span> <span class="o">=</span> <span class="p">[</span><span class="n">var1</span><span class="p">]</span> <span class="k">if</span> <span class="n">var1</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span>
+        <span class="n">vars2</span> <span class="o">=</span> <span class="p">[</span><span class="n">var2</span><span class="p">]</span> <span class="k">if</span> <span class="n">var2</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span>
+        <span class="k">for</span> <span class="n">var1</span> <span class="ow">in</span> <span class="n">vars1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">var2</span> <span class="ow">in</span> <span class="n">vars2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">var1</span> <span class="o">==</span> <span class="n">var2</span><span class="p">:</span>
+                    <span class="c1"># do not yield diagonal and upper right triangular matrix</span>
+                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">sign1</span> <span class="ow">in</span> <span class="n">signs1</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">sign2</span> <span class="ow">in</span> <span class="n">signs2</span><span class="p">:</span>
+                        <span class="k">yield</span> <span class="p">(</span><span class="n">sign1</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">sign2</span><span class="p">,</span> <span class="n">var2</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;⊥&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;⊤&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c1"># represent unary constraints first</span>
+            <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                <span class="n">lower</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="p">[</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">MINUS</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+                <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">MINUS</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">PLUS</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+                <span class="k">if</span> <span class="n">lower</span> <span class="o">&lt;</span> <span class="n">inf</span> <span class="ow">and</span> <span class="n">upper</span> <span class="o">&lt;</span> <span class="n">inf</span><span class="p">:</span>
+                    <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{lower}</span><span class="s2">≤</span><span class="si">{var.name}</span><span class="s2">≤</span><span class="si">{upper}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">lower</span> <span class="o">&lt;</span> <span class="n">inf</span><span class="p">:</span>
+                    <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{lower}</span><span class="s2">≤</span><span class="si">{var.name}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">upper</span> <span class="o">&lt;</span> <span class="n">inf</span><span class="p">:</span>
+                    <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{var.name}</span><span class="s2">≤</span><span class="si">{upper}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># represent binary constraints second, do not repeat identical inequalities</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">var1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">var2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">j</span><span class="p">:</span>
+                        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">MINUS</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">PLUS</span><span class="p">,</span> <span class="n">var2</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="n">inf</span><span class="p">:</span>
+                            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{var1.name}</span><span class="s2">+</span><span class="si">{var2.name}</span><span class="s2">≤</span><span class="si">{c}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">MINUS</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">MINUS</span><span class="p">,</span> <span class="n">var2</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="n">inf</span><span class="p">:</span>
+                            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{var1.name}</span><span class="s2">-</span><span class="si">{var2.name}</span><span class="s2">≤</span><span class="si">{c}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">PLUS</span><span class="p">,</span> <span class="n">var2</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="n">inf</span><span class="p">:</span>
+                            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;-</span><span class="si">{var1.name}</span><span class="s2">+</span><span class="si">{var2.name}</span><span class="s2">≤</span><span class="si">{c}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">MINUS</span><span class="p">,</span> <span class="n">var2</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="n">inf</span><span class="p">:</span>
+                            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;-</span><span class="si">{var1.name}</span><span class="s2">-</span><span class="si">{var2.name}</span><span class="s2">≤</span><span class="si">{c}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+<div class="viewcode-block" id="OctagonLattice.close"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Closes this octagon.</span>
+<span class="sd">        </span>
+<span class="sd">        Closes the underlying CDBM, if possible, otherwise sets this octagon to bottom.</span>
+<span class="sd">        :return: True, if this octagon is consistent &lt;=&gt; this octagon is not bottom.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">consistent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">consistent</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">consistent</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.top"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.top">[docs]</a>    <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dbm</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">inf</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.is_top"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.is_top">[docs]</a>    <span class="k">def</span> <span class="nf">is_top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="n">isinf</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>  <span class="c1"># check all inf, ignore diagonal for check</span></div>
+
+    <span class="k">def</span> <span class="nf">_less_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;OctagonLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot compare octagons with unequal sizes!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">other</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">values</span><span class="p">())])</span>
+
+    <span class="k">def</span> <span class="nf">_meet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;OctagonLattice&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot meet octagons with unequal sizes!&quot;</span><span class="p">)</span>
+        <span class="c1"># closure is not required for meet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">dbm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;OctagonLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;OctagonLattice&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot join octagons with unequal sizes!&quot;</span><span class="p">)</span>
+        <span class="c1"># closure is required to get best abstraction of join</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">other</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">dbm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_widening</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;OctagonLattice&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbm</span><span class="o">.</span><span class="n">zip</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">dbm</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="k">if</span> <span class="n">a</span> <span class="o">&gt;=</span> <span class="n">b</span> <span class="k">else</span> <span class="n">inf</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="OctagonLattice.forget"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.forget">[docs]</a>    <span class="k">def</span> <span class="nf">forget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+        <span class="c1"># close first to not lose implicit constraints about other variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># forget binary constraints</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_constraints_indices</span><span class="p">(</span><span class="n">sign1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var1</span><span class="o">=</span><span class="n">var</span><span class="p">):</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">inf</span>
+
+        <span class="c1"># forget unary constraints</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">MINUS</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">inf</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">MINUS</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">PLUS</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">inf</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.set_bounds"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.set_bounds">[docs]</a>    <span class="k">def</span> <span class="nf">set_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">lower</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">upper</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_lb</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">lower</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_ub</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.get_bounds"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.get_bounds">[docs]</a>    <span class="k">def</span> <span class="nf">get_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_lb</span><span class="p">(</span><span class="n">var</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ub</span><span class="p">(</span><span class="n">var</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.set_interval"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.set_interval">[docs]</a>    <span class="k">def</span> <span class="nf">set_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">IntervalLattice</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">IntervalLattice</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_lb</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_ub</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_lb</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">interval</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_ub</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">interval</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.get_interval"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.get_interval">[docs]</a>    <span class="k">def</span> <span class="nf">get_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">IntervalLattice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_lb</span><span class="p">(</span><span class="n">var</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ub</span><span class="p">(</span><span class="n">var</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.set_lb"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.set_lb">[docs]</a>    <span class="k">def</span> <span class="nf">set_lb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">constant</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">MINUS</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">constant</span>  <span class="c1"># encodes -2*var &lt;= -2*constant &lt;=&gt; var &gt;= constant</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.raise_lb"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.raise_lb">[docs]</a>    <span class="k">def</span> <span class="nf">raise_lb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">constant</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_lb</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_lb</span><span class="p">(</span><span class="n">var</span><span class="p">),</span> <span class="n">constant</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.get_lb"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.get_lb">[docs]</a>    <span class="k">def</span> <span class="nf">get_lb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="p">[</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">MINUS</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.set_ub"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.set_ub">[docs]</a>    <span class="k">def</span> <span class="nf">set_ub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">constant</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">MINUS</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">PLUS</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">constant</span>  <span class="c1"># encodes 2*var &lt;= 2*constant &lt;=&gt; var &lt;= constant</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.lower_ub"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.lower_ub">[docs]</a>    <span class="k">def</span> <span class="nf">lower_ub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">constant</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_ub</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_ub</span><span class="p">(</span><span class="n">var</span><span class="p">),</span> <span class="n">constant</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.get_ub"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.get_ub">[docs]</a>    <span class="k">def</span> <span class="nf">get_ub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">MINUS</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">PLUS</span><span class="p">,</span> <span class="n">var</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.set_octagonal_constraint"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.set_octagonal_constraint">[docs]</a>    <span class="k">def</span> <span class="nf">set_octagonal_constraint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sign1</span><span class="p">:</span> <span class="n">Sign</span><span class="p">,</span> <span class="n">var1</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span>
+                                 <span class="n">sign2</span><span class="p">:</span> <span class="n">Sign</span><span class="p">,</span>
+                                 <span class="n">var2</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">constant</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">Sign</span><span class="p">(</span><span class="n">sign1</span> <span class="o">*</span> <span class="n">MINUS</span><span class="p">),</span> <span class="n">var1</span><span class="p">,</span> <span class="n">sign2</span><span class="p">,</span> <span class="n">var2</span><span class="p">]</span> <span class="o">=</span> <span class="n">constant</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.lower_octagonal_constraint"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.lower_octagonal_constraint">[docs]</a>    <span class="k">def</span> <span class="nf">lower_octagonal_constraint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sign1</span><span class="p">:</span> <span class="n">Sign</span><span class="p">,</span> <span class="n">var1</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span>
+                                   <span class="n">sign2</span><span class="p">:</span> <span class="n">Sign</span><span class="p">,</span>
+                                   <span class="n">var2</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">constant</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">Sign</span><span class="p">(</span><span class="n">sign1</span> <span class="o">*</span> <span class="n">MINUS</span><span class="p">),</span> <span class="n">var1</span><span class="p">,</span> <span class="n">sign2</span><span class="p">,</span> <span class="n">var2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">Sign</span><span class="p">(</span><span class="n">sign1</span> <span class="o">*</span> <span class="n">MINUS</span><span class="p">),</span> <span class="n">var1</span><span class="p">,</span> <span class="n">sign2</span><span class="p">,</span> <span class="n">var2</span><span class="p">],</span> <span class="n">constant</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.switch_constraints"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.switch_constraints">[docs]</a>    <span class="k">def</span> <span class="nf">switch_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index1</span><span class="p">,</span> <span class="n">index2</span><span class="p">):</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">index1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">index1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">index2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">index2</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.to_interval_domain"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.to_interval_domain">[docs]</a>    <span class="k">def</span> <span class="nf">to_interval_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Translate this octagonal store into an interval store.&quot;&quot;&quot;</span>
+        <span class="n">interval_store</span> <span class="o">=</span> <span class="n">IntervalDomain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="n">interval_store</span><span class="o">.</span><span class="n">set_interval</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_interval</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">interval_store</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.from_interval_domain"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.from_interval_domain">[docs]</a>    <span class="k">def</span> <span class="nf">from_interval_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval_domain</span><span class="p">:</span> <span class="n">IntervalDomain</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Translate the interval constraints from interval domain to this octagonal store.</span>
+<span class="sd">        </span>
+<span class="sd">        **NOTE**: This does not reset relational constraints in this octagon!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">interval_domain</span><span class="o">.</span><span class="n">variables</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span>
+
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_interval</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">interval_domain</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="OctagonLattice.evaluate"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonLattice.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_interval_domain</span><span class="p">()</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># TODO more documentation</span>
+<div class="viewcode-block" id="OctagonDomain"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain">[docs]</a><span class="k">class</span> <span class="nc">OctagonDomain</span><span class="p">(</span><span class="n">OctagonLattice</span><span class="p">,</span> <span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Octagon domain. Extends the octagon lattice with state interface.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># noinspection PyPep8Naming</span>
+<div class="viewcode-block" id="OctagonDomain.SmallerEqualConditionTransformer"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer">[docs]</a>    <span class="k">class</span> <span class="nc">SmallerEqualConditionTransformer</span><span class="p">(</span><span class="n">ExpressionTransformer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Transforms all conditions inside expression to format ``e &lt;= 0``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="OctagonDomain.SmallerEqualConditionTransformer.ConditionSet"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet">[docs]</a>        <span class="k">class</span> <span class="nc">ConditionSet</span><span class="p">:</span>
+<div class="viewcode-block" id="OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator">[docs]</a>            <span class="k">class</span> <span class="nc">Operator</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+                <span class="n">MEET</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">JOIN</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conditions</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_conditions</span> <span class="o">=</span> <span class="n">conditions</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_conditions</span> <span class="o">=</span> <span class="p">[</span><span class="n">conditions</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cond_to_octagon</span> <span class="o">=</span> <span class="p">{</span><span class="n">cond</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">cond</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditions</span><span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="o">=</span> <span class="n">operator</span>
+
+            <span class="nd">@property</span>
+            <span class="k">def</span> <span class="nf">condition_to_octagon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cond_to_octagon</span>
+
+            <span class="nd">@property</span>
+            <span class="k">def</span> <span class="nf">conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditions</span>
+
+            <span class="nd">@conditions</span><span class="o">.</span><span class="n">setter</span>
+            <span class="k">def</span> <span class="nf">conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_conditions</span> <span class="o">=</span> <span class="n">conditions</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cond_to_octagon</span> <span class="o">=</span> <span class="p">{</span><span class="n">cond</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">conditions</span><span class="p">}</span>
+
+            <span class="nd">@property</span>
+            <span class="k">def</span> <span class="nf">octagons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cond_to_octagon</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+<div class="viewcode-block" id="OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.combine_conditions"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.combine_conditions">[docs]</a>            <span class="k">def</span> <span class="nf">combine_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conditions</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+
+                <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">OctagonDomain</span><span class="o">.</span><span class="n">SmallerEqualConditionTransformer</span><span class="o">.</span><span class="n">ConditionSet</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">MEET</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">reduce</span><span class="p">(</span><span class="n">apply</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">octagons</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="OctagonDomain.SmallerEqualConditionTransformer.visit_BinaryComparisonOperation"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.visit_BinaryComparisonOperation">[docs]</a>        <span class="k">def</span> <span class="nf">visit_BinaryComparisonOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cond</span><span class="p">:</span> <span class="n">BinaryComparisonOperation</span><span class="p">):</span>
+            <span class="n">condition_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_LtE_operator</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span>
+
+            <span class="c1"># transform conditions</span>
+            <span class="n">updated_conditions</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">condition_set</span><span class="o">.</span><span class="n">conditions</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cond</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">Literal</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">cond</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s1">&#39;0&#39;</span><span class="p">:</span>
+                    <span class="c1"># move right side to left</span>
+                    <span class="n">updated_conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">BinaryComparisonOperation</span><span class="p">(</span><span class="n">cond</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span>
+                                                  <span class="n">BinaryArithmeticOperation</span><span class="p">(</span><span class="n">cond</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">cond</span><span class="o">.</span><span class="n">left</span><span class="p">,</span>
+                                                                            <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Sub</span><span class="p">,</span>
+                                                                            <span class="n">cond</span><span class="o">.</span><span class="n">right</span><span class="p">),</span> <span class="n">cond</span><span class="o">.</span><span class="n">operator</span><span class="p">,</span>
+                                                  <span class="n">Literal</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">)))</span>
+            <span class="n">condition_set</span><span class="o">.</span><span class="n">conditions</span> <span class="o">=</span> <span class="n">updated_conditions</span>
+
+            <span class="k">return</span> <span class="n">condition_set</span></div>
+
+<div class="viewcode-block" id="OctagonDomain.SmallerEqualConditionTransformer.generic_visit"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.generic_visit">[docs]</a>        <span class="k">def</span> <span class="nf">generic_visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="n">f</span><span class="s2">&quot;{type(self)} does not support generic visit of expressions! &quot;</span>
+                <span class="n">f</span><span class="s2">&quot;Define handling for expression {type(expr)} explicitly!&quot;</span><span class="p">)</span></div>
+
+        <span class="k">def</span> <span class="nf">_to_LtE_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">BinaryComparisonOperation</span><span class="p">):</span>
+            <span class="c1"># noinspection PyPep8Naming</span>
+            <span class="n">ConditionSet</span> <span class="o">=</span> <span class="n">OctagonDomain</span><span class="o">.</span><span class="n">SmallerEqualConditionTransformer</span><span class="o">.</span><span class="n">ConditionSet</span>
+
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">LtE</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ConditionSet</span><span class="p">(</span>
+                    <span class="n">expr</span><span class="p">)</span>  <span class="c1"># desired operator already there</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">GtE</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ConditionSet</span><span class="p">(</span>
+                    <span class="n">BinaryComparisonOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">LtE</span><span class="p">,</span>
+                                              <span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Lt</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ConditionSet</span><span class="p">(</span>
+                    <span class="n">BinaryComparisonOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span>
+                                              <span class="n">BinaryArithmeticOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span>
+                                                                        <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Add</span><span class="p">,</span>
+                                                                        <span class="n">Literal</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">)),</span>
+                                              <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">LtE</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Gt</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_LtE_operator</span><span class="p">(</span>
+                    <span class="n">BinaryComparisonOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Lt</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Eq</span><span class="p">:</span>
+                <span class="n">cs1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_LtE_operator</span><span class="p">(</span>
+                    <span class="n">BinaryComparisonOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">LtE</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">))</span>
+                <span class="n">cs2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_LtE_operator</span><span class="p">(</span>
+                    <span class="n">BinaryComparisonOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">GtE</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">ConditionSet</span><span class="p">([</span><span class="n">cs1</span><span class="o">.</span><span class="n">conditions</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cs2</span><span class="o">.</span><span class="n">conditions</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">ConditionSet</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">MEET</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">NotEq</span><span class="p">:</span>
+                <span class="n">cs1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_LtE_operator</span><span class="p">(</span>
+                    <span class="n">BinaryComparisonOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Lt</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">))</span>
+                <span class="n">cs2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_LtE_operator</span><span class="p">(</span>
+                    <span class="n">BinaryComparisonOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Gt</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">ConditionSet</span><span class="p">([</span><span class="n">cs1</span><span class="o">.</span><span class="n">conditions</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cs2</span><span class="o">.</span><span class="n">conditions</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">ConditionSet</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">JOIN</span><span class="p">)</span></div>
+
+    <span class="c1"># noinspection PyPep8Naming</span>
+<div class="viewcode-block" id="OctagonDomain.AssumeVisitor"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor">[docs]</a>    <span class="k">class</span> <span class="nc">AssumeVisitor</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Visits an expression and recursively &#39;assumes&#39; the condition tree.&quot;&quot;&quot;</span>
+
+        <span class="c1"># noinspection PyMethodMayBeStatic</span>
+<div class="viewcode-block" id="OctagonDomain.AssumeVisitor.visit_UnaryBooleanOperation"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_UnaryBooleanOperation">[docs]</a>        <span class="k">def</span> <span class="nf">visit_UnaryBooleanOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">UnaryBooleanOperation</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The expression should not contain any unary boolean operations like negation (Neg)!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OctagonDomain.AssumeVisitor.visit_BinaryBooleanOperation"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_BinaryBooleanOperation">[docs]</a>        <span class="k">def</span> <span class="nf">visit_BinaryBooleanOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">BinaryBooleanOperation</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">And</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">state</span><span class="p">))</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">state</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Or</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">state</span><span class="p">))</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">state</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">()</span></div>
+
+        <span class="c1"># noinspection PyMethodMayBeStatic</span>
+<div class="viewcode-block" id="OctagonDomain.AssumeVisitor.visit_BinaryComparisonOperation"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_BinaryComparisonOperation">[docs]</a>        <span class="k">def</span> <span class="nf">visit_BinaryComparisonOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">BinaryComparisonOperation</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+            <span class="c1"># we want the following format: e &lt;= 0</span>
+            <span class="c1"># if not in that format, bring it to this and use a correcting +/-1 and join/meet of multiple inequalities</span>
+            <span class="n">condition_set</span> <span class="o">=</span> <span class="n">OctagonDomain</span><span class="o">.</span><span class="n">SmallerEqualConditionTransformer</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">condition_set</span><span class="o">.</span><span class="n">conditions</span><span class="p">:</span>
+                <span class="n">state_copy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+                <span class="n">left_side</span> <span class="o">=</span> <span class="n">cond</span><span class="o">.</span><span class="n">left</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">form</span> <span class="o">=</span> <span class="n">LinearForm</span><span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="n">left_side</span><span class="p">))</span>
+
+                    <span class="c1"># simplify implementation by always having a valid interval part</span>
+                    <span class="n">interval</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">interval</span> <span class="ow">or</span> <span class="n">IntervalLattice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">form</span><span class="o">.</span><span class="n">var_summands</span><span class="p">:</span>  <span class="c1"># IMPROVEMENT: this check is not handled in paper mine-HOSC06</span>
+                        <span class="c1"># [a,b] &lt;= 0</span>
+                        <span class="k">if</span> <span class="n">interval</span><span class="o">.</span><span class="n">lower</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">state_copy</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+                    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">var_summands</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="c1"># +/- x + [a, b] &lt;= 0</span>
+                        <span class="n">var</span><span class="p">,</span> <span class="n">sign</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">var_summands</span><span class="o">.</span><span class="n">items</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+
+                        <span class="k">if</span> <span class="n">sign</span> <span class="o">==</span> <span class="n">PLUS</span><span class="p">:</span>
+                            <span class="c1"># +x + [a, b] &lt;= 0</span>
+                            <span class="n">state_copy</span><span class="o">.</span><span class="n">lower_ub</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="o">-</span><span class="n">interval</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="n">sign</span> <span class="o">==</span> <span class="n">MINUS</span><span class="p">:</span>
+                            <span class="c1"># -x + [a, b] &lt;= 0</span>
+                            <span class="n">state_copy</span><span class="o">.</span><span class="n">raise_lb</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unknown sign&quot;</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">var_summands</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="c1"># +/- x +/- y + [a, b] &lt;= 0</span>
+                        <span class="n">items</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">var_summands</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+                        <span class="n">var1</span><span class="p">,</span> <span class="n">sign1</span> <span class="o">=</span> <span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">var2</span><span class="p">,</span> <span class="n">sign2</span> <span class="o">=</span> <span class="n">items</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+                        <span class="n">state_copy</span><span class="o">.</span><span class="n">lower_octagonal_constraint</span><span class="p">(</span><span class="n">sign1</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">sign2</span><span class="p">,</span> <span class="n">var2</span><span class="p">,</span> <span class="o">-</span><span class="n">interval</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">InvalidFormError</span><span class="p">(</span>
+                            <span class="s2">&quot;Condition with more than two variables cannot be represented as octagonal constraints&quot;</span><span class="p">)</span>
+
+                <span class="k">except</span> <span class="n">InvalidFormError</span><span class="p">:</span>
+                    <span class="c1"># Non-octagonal constraint</span>
+                    <span class="n">interval_domain</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">to_interval_domain</span><span class="p">()</span>
+                    <span class="n">interval_domain</span><span class="o">.</span><span class="n">assume</span><span class="p">({</span><span class="n">expr</span><span class="p">})</span>
+                    <span class="n">new_oct</span> <span class="o">=</span> <span class="n">OctagonDomain</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+                    <span class="n">new_oct</span><span class="o">.</span><span class="n">from_interval_domain</span><span class="p">(</span><span class="n">interval_domain</span><span class="p">)</span>
+                    <span class="n">state</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">new_oct</span><span class="p">)</span>
+
+                <span class="c1"># finally store modified octagon copy for later combination</span>
+                <span class="n">condition_set</span><span class="o">.</span><span class="n">condition_to_octagon</span><span class="p">[</span><span class="n">cond</span><span class="p">]</span> <span class="o">=</span> <span class="n">state_copy</span>
+
+            <span class="k">return</span> <span class="n">condition_set</span><span class="o">.</span><span class="n">combine_conditions</span><span class="p">()</span></div>
+
+        <span class="c1"># noinspection PyMethodOverriding</span>
+<div class="viewcode-block" id="OctagonDomain.AssumeVisitor.generic_visit"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.generic_visit">[docs]</a>        <span class="k">def</span> <span class="nf">generic_visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="n">f</span><span class="s2">&quot;{type(self)} does not support generic visit of expressions! &quot;</span>
+                <span class="n">f</span><span class="s2">&quot;Define handling for expression {type(expr)} explicitly!&quot;</span><span class="p">)</span></div></div>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Create an Octagon Lattice for given variables.</span>
+<span class="sd">    </span>
+<span class="sd">        :param variables: list of program variables</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_substitute_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;OctagonDomain&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Octagon domain does not yet support variable substitution.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_assume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;OctagonDomain&#39;</span><span class="p">:</span>
+        <span class="n">not_free_condition</span> <span class="o">=</span> <span class="n">make_condition_not_free</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">OctagonDomain</span><span class="o">.</span><span class="n">AssumeVisitor</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">not_free_condition</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="OctagonDomain.exit_if"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.exit_if">[docs]</a>    <span class="k">def</span> <span class="nf">exit_if</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;OctagonDomain&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="OctagonDomain.exit_loop"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.exit_loop">[docs]</a>    <span class="k">def</span> <span class="nf">exit_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;OctagonDomain&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="k">def</span> <span class="nf">_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;OctagonDomain&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_evaluate_literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">literal</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">literal</span><span class="p">}</span>
+
+<div class="viewcode-block" id="OctagonDomain.enter_if"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.enter_if">[docs]</a>    <span class="k">def</span> <span class="nf">enter_if</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;OctagonDomain&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="OctagonDomain.enter_loop"><a class="viewcode-back" href="../../../abstract_domains.numerical.html#abstract_domains.numerical.octagon_domain.OctagonDomain.enter_loop">[docs]</a>    <span class="k">def</span> <span class="nf">enter_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;OctagonDomain&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="k">def</span> <span class="nf">_access_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">variable</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_assign_constant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="n">IntervalLattice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;x = [a,b]&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forget</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_interval</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">interval</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_assign_same_var_plus_constant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="n">IntervalLattice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;x = x + [a,b]&quot;&quot;&quot;</span>
+
+        <span class="c1"># update binary constraints</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_constraints_indices</span><span class="p">(</span><span class="n">sign1</span><span class="o">=</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">var1</span><span class="o">=</span><span class="n">x</span><span class="p">):</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">-=</span> <span class="n">interval</span><span class="o">.</span><span class="n">lower</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_constraints_indices</span><span class="p">(</span><span class="n">sign1</span><span class="o">=</span><span class="n">MINUS</span><span class="p">,</span> <span class="n">var1</span><span class="o">=</span><span class="n">x</span><span class="p">):</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">+=</span> <span class="n">interval</span><span class="o">.</span><span class="n">lower</span>
+
+        <span class="c1"># update unary constraints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_interval</span><span class="p">(</span><span class="n">x</span><span class="p">,</span>
+                          <span class="n">IntervalLattice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_lb</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">interval</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">get_ub</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">interval</span><span class="o">.</span><span class="n">upper</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_assign_other_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;x = y&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forget</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_octagonal_constraint</span><span class="p">(</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">MINUS</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_octagonal_constraint</span><span class="p">(</span><span class="n">MINUS</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">PLUS</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_assign_other_var_plus_constant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="n">IntervalLattice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;x = y + [a,b]&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forget</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_octagonal_constraint</span><span class="p">(</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">MINUS</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_octagonal_constraint</span><span class="p">(</span><span class="n">MINUS</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">PLUS</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="n">interval</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_assign_negated_same_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;x = - x&quot;&quot;&quot;</span>
+        <span class="c1"># update binary constraints</span>
+        <span class="c1"># loop through row of x</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">sign2</span><span class="p">,</span> <span class="n">var2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_constraints_indices</span><span class="p">(</span><span class="n">sign1</span><span class="o">=</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">var1</span><span class="o">=</span><span class="n">x</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">switch_constraints</span><span class="p">((</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">sign2</span><span class="p">,</span> <span class="n">var2</span><span class="p">),</span> <span class="p">(</span><span class="n">MINUS</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">sign2</span><span class="p">,</span> <span class="n">var2</span><span class="p">))</span>
+        <span class="c1"># loop through column of x</span>
+        <span class="k">for</span> <span class="n">sign1</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_constraints_indices</span><span class="p">(</span><span class="n">sign2</span><span class="o">=</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">var2</span><span class="o">=</span><span class="n">x</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">switch_constraints</span><span class="p">((</span><span class="n">sign1</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">PLUS</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">sign1</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">MINUS</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+
+        <span class="c1"># update unary constraints</span>
+        <span class="c1"># switch bounds via temp variable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">switch_constraints</span><span class="p">((</span><span class="n">PLUS</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">MINUS</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span>
+                                <span class="p">(</span><span class="n">MINUS</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">PLUS</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_assign_negated_other_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;x = - y&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assign_other_var</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assign_negated_same_var</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_assign_negated_same_var_plus_constant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span>
+                                               <span class="n">interval</span><span class="p">:</span> <span class="n">IntervalLattice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;x = - x + [a,b]&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assign_negated_same_var</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assign_same_var_plus_constant</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">interval</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_assign_negated_other_var_plus_constant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span>
+                                                <span class="n">interval</span><span class="p">:</span> <span class="n">IntervalLattice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;x = - y + [a,b]&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assign_negated_other_var</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assign_same_var_plus_constant</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">interval</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_assign_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;OctagonDomain&#39;</span><span class="p">:</span>
+        <span class="c1"># Octagonal Assignments</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">left</span><span class="o">.</span><span class="n">typ</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">form</span> <span class="o">=</span> <span class="n">SingleVarLinearForm</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">form</span><span class="o">.</span><span class="n">var</span> <span class="ow">and</span> <span class="n">form</span><span class="o">.</span><span class="n">interval</span><span class="p">:</span>
+                        <span class="c1"># x = [a,b]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_assign_constant</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">form</span><span class="o">.</span><span class="n">interval</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">var</span> <span class="ow">and</span> <span class="n">form</span><span class="o">.</span><span class="n">interval</span><span class="p">:</span>
+                        <span class="c1"># x = +/- y + [a, b]</span>
+                        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">var</span> <span class="o">==</span> <span class="n">left</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">var_sign</span> <span class="o">==</span> <span class="n">PLUS</span><span class="p">:</span>
+                                <span class="c1"># x = x + [a,b]</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_assign_same_var_plus_constant</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">var</span><span class="p">,</span> <span class="n">form</span><span class="o">.</span><span class="n">interval</span><span class="p">)</span>
+                            <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">var_sign</span> <span class="o">==</span> <span class="n">MINUS</span><span class="p">:</span>
+                                <span class="c1"># x = - x + [a,b]</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_assign_negated_same_var_plus_constant</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">var</span><span class="p">,</span> <span class="n">form</span><span class="o">.</span><span class="n">interval</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown variable sign&quot;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">var_sign</span> <span class="o">==</span> <span class="n">PLUS</span><span class="p">:</span>
+                                <span class="c1"># x = y + [a,b]</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_assign_other_var_plus_constant</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">form</span><span class="o">.</span><span class="n">var</span><span class="p">,</span> <span class="n">form</span><span class="o">.</span><span class="n">interval</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">var</span><span class="p">:</span>
+                        <span class="c1"># x = +/- x/y</span>
+                        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">var</span> <span class="o">==</span> <span class="n">left</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">var_sign</span> <span class="o">==</span> <span class="n">PLUS</span><span class="p">:</span>
+                                <span class="k">pass</span>  <span class="c1"># nothing to change</span>
+                            <span class="k">elif</span> <span class="n">form</span><span class="o">.</span><span class="n">var_sign</span> <span class="o">==</span> <span class="n">MINUS</span><span class="p">:</span>
+                                <span class="c1"># x = - x</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_assign_negated_same_var</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">var</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown variable sign&quot;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="c1"># x = - y</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_assign_negated_other_var</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">form</span><span class="o">.</span><span class="n">var</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid case: Implementation bug!&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">InvalidFormError</span><span class="p">:</span>
+                    <span class="c1"># right is not in single variable linear form, use interval abstraction fallback</span>
+                    <span class="n">interval_domain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_interval_domain</span><span class="p">()</span>
+                    <span class="n">interval</span> <span class="o">=</span> <span class="n">interval_domain</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_assign_constant</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">interval</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

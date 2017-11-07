@@ -1,0 +1,384 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>abstract_domains.traces package &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
+        <link rel="up" title="abstract_domains package" href="abstract_domains.html"/>
+        <link rel="next" title="abstract_domains.usage package" href="abstract_domains.usage.html"/>
+        <link rel="prev" title="abstract_domains.numerical package" href="abstract_domains.numerical.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Lyra</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="abstract_domains.html">abstract_domains package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="abstract_domains.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="abstract_domains.liveness.html">abstract_domains.liveness package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="abstract_domains.numerical.html">abstract_domains.numerical package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">abstract_domains.traces package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="abstract_domains.usage.html">abstract_domains.usage package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="abstract_domains.html#module-abstract_domains.lattice">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="core.html">core package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engine.html">engine package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="semantics.html">semantics package</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="modules.html">Lyra</a> &raquo;</li>
+      
+          <li><a href="abstract_domains.html">abstract_domains package</a> &raquo;</li>
+      
+    <li>abstract_domains.traces package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/abstract_domains.traces.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-abstract_domains.traces">
+<span id="abstract-domains-traces-package"></span><h1>abstract_domains.traces package<a class="headerlink" href="#module-abstract_domains.traces" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-abstract_domains.traces.traces_domain">
+<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-abstract_domains.traces.traces_domain" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState">
+<em class="property">class </em><code class="descclassname">abstract_domains.traces.traces_domain.</code><code class="descname">BoolTracesState</code><span class="sig-paren">(</span><em>variables: typing.List[core.expressions.VariableIdentifier], hyper: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#BoolTracesState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="abstract_domains.html#abstract_domains.lattice.BoundedLattice" title="abstract_domains.lattice.BoundedLattice"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.lattice.BoundedLattice</span></code></a>, <a class="reference internal" href="abstract_domains.html#abstract_domains.state.State" title="abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.state.State</span></code></a></p>
+<dl class="class">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace">
+<em class="property">class </em><code class="descname">BoolTrace</code><span class="sig-paren">(</span><em>values: typing.Tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#BoolTracesState.BoolTrace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>variables: typing.List[core.expressions.VariableIdentifier], exp: core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#BoolTracesState.BoolTrace.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.replace">
+<code class="descname">replace</code><span class="sig-paren">(</span><em>idx: int</em>, <em>value: str</em><span class="sig-paren">)</span> &#x2192; abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace<a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#BoolTracesState.BoolTrace.replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.replace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.test">
+<code class="descname">test</code><span class="sig-paren">(</span><em>idx: int</em>, <em>value: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#BoolTracesState.BoolTrace.test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.trace">
+<code class="descname">trace</code><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.trace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.variety">
+<code class="descname">variety</code><span class="sig-paren">(</span><em>variables: typing.List[core.expressions.VariableIdentifier], inputs: typing.List[core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span> &#x2192; typing.List[str]<a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#BoolTracesState.BoolTrace.variety"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.variety" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.enter_if">
+<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#BoolTracesState.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.enter_if" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.enter_loop">
+<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#BoolTracesState.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.enter_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.exit_if">
+<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#BoolTracesState.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.exit_if" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.exit_loop">
+<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#BoolTracesState.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.exit_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.hyper">
+<code class="descname">hyper</code><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.hyper" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.sets">
+<code class="descname">sets</code><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.sets" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.traces">
+<code class="descname">traces</code><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.traces" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.traces.traces_domain.BoolTracesState.variables">
+<code class="descname">variables</code><a class="headerlink" href="#abstract_domains.traces.traces_domain.BoolTracesState.variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState">
+<em class="property">class </em><code class="descclassname">abstract_domains.traces.traces_domain.</code><code class="descname">TvlTracesState</code><span class="sig-paren">(</span><em>variables: typing.List[core.expressions.VariableIdentifier], hyper: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#TvlTracesState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="abstract_domains.html#abstract_domains.lattice.BoundedLattice" title="abstract_domains.lattice.BoundedLattice"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.lattice.BoundedLattice</span></code></a>, <a class="reference internal" href="abstract_domains.html#abstract_domains.state.State" title="abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.state.State</span></code></a></p>
+<dl class="class">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace">
+<em class="property">class </em><code class="descname">TvlTrace</code><span class="sig-paren">(</span><em>values: typing.Tuple</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#TvlTracesState.TvlTrace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>variables: typing.List[core.expressions.VariableIdentifier], exp: core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#TvlTracesState.TvlTrace.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.replace">
+<code class="descname">replace</code><span class="sig-paren">(</span><em>idx: int</em>, <em>value: str</em><span class="sig-paren">)</span> &#x2192; abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace<a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#TvlTracesState.TvlTrace.replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.replace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.test">
+<code class="descname">test</code><span class="sig-paren">(</span><em>idx: int</em>, <em>value: str</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#TvlTracesState.TvlTrace.test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.trace">
+<code class="descname">trace</code><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.trace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.variety">
+<code class="descname">variety</code><span class="sig-paren">(</span><em>variables: typing.List[core.expressions.VariableIdentifier], inputs: typing.List[core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span> &#x2192; typing.List[str]<a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#TvlTracesState.TvlTrace.variety"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.variety" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.enter_if">
+<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#TvlTracesState.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.enter_if" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.enter_loop">
+<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#TvlTracesState.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.enter_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.exit_if">
+<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#TvlTracesState.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.exit_if" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.exit_loop">
+<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/traces/traces_domain.html#TvlTracesState.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.exit_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.hyper">
+<code class="descname">hyper</code><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.hyper" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.sets">
+<code class="descname">sets</code><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.sets" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.traces">
+<code class="descname">traces</code><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.traces" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.traces.traces_domain.TvlTracesState.variables">
+<code class="descname">variables</code><a class="headerlink" href="#abstract_domains.traces.traces_domain.TvlTracesState.variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="abstract_domains.usage.html" class="btn btn-neutral float-right" title="abstract_domains.usage package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="abstract_domains.numerical.html" class="btn btn-neutral" title="abstract_domains.numerical package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

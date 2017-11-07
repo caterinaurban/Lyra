@@ -1,0 +1,931 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>abstract_domains.numerical package &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
+        <link rel="up" title="abstract_domains package" href="abstract_domains.html"/>
+        <link rel="next" title="abstract_domains.traces package" href="abstract_domains.traces.html"/>
+        <link rel="prev" title="abstract_domains.liveness package" href="abstract_domains.liveness.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Lyra</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="abstract_domains.html">abstract_domains package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="abstract_domains.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="abstract_domains.liveness.html">abstract_domains.liveness package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">abstract_domains.numerical package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="abstract_domains.traces.html">abstract_domains.traces package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="abstract_domains.usage.html">abstract_domains.usage package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="abstract_domains.html#module-abstract_domains.lattice">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="core.html">core package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engine.html">engine package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="semantics.html">semantics package</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="modules.html">Lyra</a> &raquo;</li>
+      
+          <li><a href="abstract_domains.html">abstract_domains package</a> &raquo;</li>
+      
+    <li>abstract_domains.numerical package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/abstract_domains.numerical.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-abstract_domains.numerical">
+<span id="abstract-domains-numerical-package"></span><h1>abstract_domains.numerical package<a class="headerlink" href="#module-abstract_domains.numerical" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-abstract_domains.numerical.dbm">
+<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-abstract_domains.numerical.dbm" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="abstract_domains.numerical.dbm.CDBM">
+<em class="property">class </em><code class="descclassname">abstract_domains.numerical.dbm.</code><code class="descname">CDBM</code><span class="sig-paren">(</span><em>size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/dbm.html#CDBM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.dbm.CDBM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Coherent Difference Bound Matrix.</p>
+<p>A DBM-matrix <cite>m</cite> is <em>coherent</em> if matrix entries that represent the same condition do agree on the bound.</p>
+<img alt="_images/coherence.png" src="_images/coherence.png" />
+<p><strong>NOTE:</strong> we use 0-based indices instead.</p>
+<p>This implies that the matrix as a special kind of symmetric. It is enough to store the lower left diagonal matrix 
+(<code class="docutils literal"><span class="pre">s</span></code> plus <code class="docutils literal"><span class="pre">A</span></code>), the diagonal (<code class="docutils literal"><span class="pre">D</span></code>) <strong>plus</strong> parts of one more adjacent diagonal <code class="docutils literal"><span class="pre">B</span></code> to the right, 
+which contains unary conditions that may be different from the already included diagonal <code class="docutils literal"><span class="pre">A</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">D</span> <span class="n">B</span>
+<span class="n">A</span> <span class="n">D</span>
+<span class="n">s</span> <span class="n">A</span> <span class="n">D</span> <span class="n">B</span>
+<span class="n">s</span> <span class="n">s</span> <span class="n">A</span> <span class="n">D</span>
+<span class="n">s</span> <span class="n">s</span> <span class="n">s</span> <span class="n">A</span> <span class="n">D</span> <span class="n">B</span>
+<span class="n">s</span> <span class="n">s</span> <span class="n">s</span> <span class="n">s</span> <span class="n">A</span> <span class="n">D</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="abstract_domains.numerical.dbm.CDBM.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/dbm.html#CDBM.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.dbm.CDBM.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates closure and sets internal representation matrix to closed canonical form if possible.</p>
+<p>If no canonical form is existent, the internal representation may stay in a unclosed form and this method 
+returns <cite>False</cite>.</p>
+<p>Depending on the exact type of this CDBM, this may implement a strong (e.g. for floats) or a tight (e.g. for 
+Integers) closure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><cite>True</cite>, iff closure successful, i.e. iff constraint system satisfiable and closed canonical form exists</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.dbm.CDBM.intersection">
+<code class="descname">intersection</code><span class="sig-paren">(</span><em>other: abstract_domains.numerical.dbm.CDBM</em><span class="sig-paren">)</span> &#x2192; abstract_domains.numerical.dbm.CDBM<a class="reference internal" href="_modules/abstract_domains/numerical/dbm.html#CDBM.intersection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.dbm.CDBM.intersection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.dbm.CDBM.items">
+<code class="descname">items</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/dbm.html#CDBM.items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.dbm.CDBM.items" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.dbm.CDBM.keys">
+<code class="descname">keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/dbm.html#CDBM.keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.dbm.CDBM.keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.dbm.CDBM.replace">
+<code class="descname">replace</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/dbm.html#CDBM.replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.dbm.CDBM.replace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.dbm.CDBM.size">
+<code class="descname">size</code><a class="headerlink" href="#abstract_domains.numerical.dbm.CDBM.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.dbm.CDBM.strongly_closed">
+<code class="descname">strongly_closed</code><a class="headerlink" href="#abstract_domains.numerical.dbm.CDBM.strongly_closed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.dbm.CDBM.tightly_closed">
+<code class="descname">tightly_closed</code><a class="headerlink" href="#abstract_domains.numerical.dbm.CDBM.tightly_closed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.dbm.CDBM.union">
+<code class="descname">union</code><span class="sig-paren">(</span><em>other: abstract_domains.numerical.dbm.CDBM</em><span class="sig-paren">)</span> &#x2192; abstract_domains.numerical.dbm.CDBM<a class="reference internal" href="_modules/abstract_domains/numerical/dbm.html#CDBM.union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.dbm.CDBM.union" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.dbm.CDBM.values">
+<code class="descname">values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/dbm.html#CDBM.values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.dbm.CDBM.values" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.dbm.CDBM.zip">
+<code class="descname">zip</code><span class="sig-paren">(</span><em>other: abstract_domains.numerical.dbm.CDBM</em>, <em>f</em><span class="sig-paren">)</span> &#x2192; abstract_domains.numerical.dbm.CDBM<a class="reference internal" href="_modules/abstract_domains/numerical/dbm.html#CDBM.zip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.dbm.CDBM.zip" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="abstract_domains.numerical.dbm.IntegerCDBM">
+<em class="property">class </em><code class="descclassname">abstract_domains.numerical.dbm.</code><code class="descname">IntegerCDBM</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/dbm.html#IntegerCDBM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.dbm.IntegerCDBM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#abstract_domains.numerical.dbm.CDBM" title="abstract_domains.numerical.dbm.CDBM"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.numerical.dbm.CDBM</span></code></a></p>
+<dl class="method">
+<dt id="abstract_domains.numerical.dbm.IntegerCDBM.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/dbm.html#IntegerCDBM.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.dbm.IntegerCDBM.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates closure and sets internal representation matrix to closed canonical form if possible.</p>
+<p>Algorithm from paper: An Improved Tight Closure Algorithm for Integer Octagonal Constraints - Roberto 
+Bagnara, Patricia M. Hill, Enea Zaffanella</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="abstract_domains.numerical.dbm.nan2inf">
+<code class="descclassname">abstract_domains.numerical.dbm.</code><code class="descname">nan2inf</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/dbm.html#nan2inf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.dbm.nan2inf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<span class="target" id="module-abstract_domains.numerical.interval_domain"></span><dl class="class">
+<dt id="abstract_domains.numerical.interval_domain.Interval">
+<em class="property">class </em><code class="descclassname">abstract_domains.numerical.interval_domain.</code><code class="descname">Interval</code><span class="sig-paren">(</span><em>lower=-inf</em>, <em>upper=inf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#Interval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.Interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.Interval.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span> &#x2192; abstract_domains.numerical.interval_domain.Interval<a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#Interval.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.Interval.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.Interval.empty">
+<code class="descname">empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#Interval.empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.Interval.empty" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.interval_domain.Interval.interval">
+<code class="descname">interval</code><a class="headerlink" href="#abstract_domains.numerical.interval_domain.Interval.interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.interval_domain.Interval.lower">
+<code class="descname">lower</code><a class="headerlink" href="#abstract_domains.numerical.interval_domain.Interval.lower" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.Interval.mult">
+<code class="descname">mult</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span> &#x2192; abstract_domains.numerical.interval_domain.Interval<a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#Interval.mult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.Interval.mult" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.Interval.negate">
+<code class="descname">negate</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; abstract_domains.numerical.interval_domain.Interval<a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#Interval.negate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.Interval.negate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.Interval.set_empty">
+<code class="descname">set_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; abstract_domains.numerical.interval_domain.Interval<a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#Interval.set_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.Interval.set_empty" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.Interval.sub">
+<code class="descname">sub</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span> &#x2192; abstract_domains.numerical.interval_domain.Interval<a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#Interval.sub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.Interval.sub" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.interval_domain.Interval.upper">
+<code class="descname">upper</code><a class="headerlink" href="#abstract_domains.numerical.interval_domain.Interval.upper" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain">
+<em class="property">class </em><code class="descclassname">abstract_domains.numerical.interval_domain.</code><code class="descname">IntervalDomain</code><span class="sig-paren">(</span><em>variables: typing.List[core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="abstract_domains.html#abstract_domains.store.Store" title="abstract_domains.store.Store"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.store.Store</span></code></a>, <a class="reference internal" href="#abstract_domains.numerical.numerical.NumericalMixin" title="abstract_domains.numerical.numerical.NumericalMixin"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.numerical.numerical.NumericalMixin</span></code></a>, <a class="reference internal" href="abstract_domains.html#abstract_domains.state.State" title="abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.state.State</span></code></a></p>
+<dl class="class">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain.Visitor">
+<em class="property">class </em><code class="descname">Visitor</code><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain.Visitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain.Visitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">abstract_domains.numerical.interval_domain.Visitor</span></code></p>
+<p>A visitor to abstractly evaluate an expression (with variables) in the interval domain.</p>
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain.Visitor.visit_VariableIdentifier">
+<code class="descname">visit_VariableIdentifier</code><span class="sig-paren">(</span><em>expr: core.expressions.VariableIdentifier</em>, <em>interval_store</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain.Visitor.visit_VariableIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain.Visitor.visit_VariableIdentifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain.enter_if">
+<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain.enter_if" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain.enter_loop">
+<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain.enter_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>expr: core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain.exit_if">
+<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain.exit_if" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain.exit_loop">
+<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain.exit_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain.forget">
+<code class="descname">forget</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain.forget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain.forget" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain.get_bounds">
+<code class="descname">get_bounds</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain.get_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain.get_bounds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain.set_bounds">
+<code class="descname">set_bounds</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em>, <em>lower: int</em>, <em>upper: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain.set_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain.set_bounds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain.set_interval">
+<code class="descname">set_interval</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em>, <em>interval: abstract_domains.numerical.interval_domain.IntervalLattice</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain.set_interval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain.set_interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain.set_lb">
+<code class="descname">set_lb</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain.set_lb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain.set_lb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalDomain.set_ub">
+<code class="descname">set_ub</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalDomain.set_ub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalDomain.set_ub" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="abstract_domains.numerical.interval_domain.IntervalLattice">
+<em class="property">class </em><code class="descclassname">abstract_domains.numerical.interval_domain.</code><code class="descname">IntervalLattice</code><span class="sig-paren">(</span><em>lower=-inf</em>, <em>upper=inf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalLattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#abstract_domains.numerical.interval_domain.Interval" title="abstract_domains.numerical.interval_domain.Interval"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.numerical.interval_domain.Interval</span></code></a>, <a class="reference internal" href="abstract_domains.html#abstract_domains.lattice.BottomMixin" title="abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.lattice.BottomMixin</span></code></a></p>
+<dl class="class">
+<dt id="abstract_domains.numerical.interval_domain.IntervalLattice.Visitor">
+<em class="property">class </em><code class="descname">Visitor</code><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalLattice.Visitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalLattice.Visitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.html#core.expressions_tools.ExpressionVisitor" title="core.expressions_tools.ExpressionVisitor"><code class="xref py py-class docutils literal"><span class="pre">core.expressions_tools.ExpressionVisitor</span></code></a></p>
+<p>A visitor to abstractly evaluate an expression (without variables) in the interval domain.</p>
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.generic_visit">
+<code class="descname">generic_visit</code><span class="sig-paren">(</span><em>expr</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalLattice.Visitor.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.generic_visit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_BinaryArithmeticOperation">
+<code class="descname">visit_BinaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr: core.expressions.BinaryArithmeticOperation</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalLattice.Visitor.visit_BinaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_BinaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_Input">
+<code class="descname">visit_Input</code><span class="sig-paren">(</span><em>_: core.expressions.Input</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalLattice.Visitor.visit_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_Input" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_Literal">
+<code class="descname">visit_Literal</code><span class="sig-paren">(</span><em>expr: core.expressions.Literal</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalLattice.Visitor.visit_Literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_Literal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_UnaryArithmeticOperation">
+<code class="descname">visit_UnaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr: core.expressions.UnaryArithmeticOperation</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalLattice.Visitor.visit_UnaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_UnaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="abstract_domains.numerical.interval_domain.IntervalLattice.evaluate">
+<em class="property">classmethod </em><code class="descname">evaluate</code><span class="sig-paren">(</span><em>expr: core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalLattice.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalLattice.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates an expression without variables, interpreting constants in the interval domain.</p>
+<p>If this method encounters any variables, it raises a <code class="docutils literal"><span class="pre">ValueError</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalLattice.is_bottom">
+<code class="descname">is_bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalLattice.is_bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalLattice.is_bottom" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalLattice.is_top">
+<code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalLattice.is_top" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.interval_domain.IntervalLattice.top">
+<code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/abstract_domains/numerical/interval_domain.html#IntervalLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.interval_domain.IntervalLattice.top" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-abstract_domains.numerical.linear_forms"></span><dl class="exception">
+<dt id="abstract_domains.numerical.linear_forms.InvalidFormError">
+<em class="property">exception </em><code class="descclassname">abstract_domains.numerical.linear_forms.</code><code class="descname">InvalidFormError</code><a class="reference internal" href="_modules/abstract_domains/numerical/linear_forms.html#InvalidFormError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.linear_forms.InvalidFormError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="abstract_domains.numerical.linear_forms.LinearForm">
+<em class="property">class </em><code class="descclassname">abstract_domains.numerical.linear_forms.</code><code class="descname">LinearForm</code><span class="sig-paren">(</span><em>expr: core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/linear_forms.html#LinearForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.linear_forms.LinearForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Holds an expression in linear form with one or several variables: <cite>+/- var1 +/- var2 + … + interval</cite>.</p>
+<dl class="class">
+<dt id="abstract_domains.numerical.linear_forms.LinearForm.Visitor">
+<em class="property">class </em><code class="descname">Visitor</code><a class="reference internal" href="_modules/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.linear_forms.LinearForm.Visitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.html#core.expressions_tools.ExpressionVisitor" title="core.expressions_tools.ExpressionVisitor"><code class="xref py py-class docutils literal"><span class="pre">core.expressions_tools.ExpressionVisitor</span></code></a></p>
+<p>A visitor to generate a single variable linear form.</p>
+<dl class="method">
+<dt id="abstract_domains.numerical.linear_forms.LinearForm.Visitor.generic_visit">
+<code class="descname">generic_visit</code><span class="sig-paren">(</span><em>expr</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.linear_forms.LinearForm.Visitor.generic_visit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_BinaryArithmeticOperation">
+<code class="descname">visit_BinaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr: core.expressions.BinaryArithmeticOperation</em>, <em>linear_form</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.visit_BinaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_BinaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_Input">
+<code class="descname">visit_Input</code><span class="sig-paren">(</span><em>_: core.expressions.Input</em>, <em>linear_form</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.visit_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_Input" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_Literal">
+<code class="descname">visit_Literal</code><span class="sig-paren">(</span><em>expr: core.expressions.Literal</em>, <em>linear_form</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.visit_Literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_Literal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_UnaryArithmeticOperation">
+<code class="descname">visit_UnaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr: core.expressions.UnaryArithmeticOperation</em>, <em>linear_form</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.visit_UnaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_UnaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_VariableIdentifier">
+<code class="descname">visit_VariableIdentifier</code><span class="sig-paren">(</span><em>expr: core.expressions.VariableIdentifier</em>, <em>linear_form</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.visit_VariableIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_VariableIdentifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_VariadicArithmeticOperation">
+<code class="descname">visit_VariadicArithmeticOperation</code><span class="sig-paren">(</span><em>expr: core.special_expressions.VariadicArithmeticOperation</em>, <em>linear_form</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.visit_VariadicArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_VariadicArithmeticOperation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.linear_forms.LinearForm.interval">
+<code class="descname">interval</code><a class="headerlink" href="#abstract_domains.numerical.linear_forms.LinearForm.interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.linear_forms.LinearForm.var_summands">
+<code class="descname">var_summands</code><a class="headerlink" href="#abstract_domains.numerical.linear_forms.LinearForm.var_summands" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="abstract_domains.numerical.linear_forms.SingleVarLinearForm">
+<em class="property">class </em><code class="descclassname">abstract_domains.numerical.linear_forms.</code><code class="descname">SingleVarLinearForm</code><span class="sig-paren">(</span><em>expr: core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/linear_forms.html#SingleVarLinearForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.linear_forms.SingleVarLinearForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#abstract_domains.numerical.linear_forms.LinearForm" title="abstract_domains.numerical.linear_forms.LinearForm"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.numerical.linear_forms.LinearForm</span></code></a></p>
+<p>Holds an expression in linear form with a single variable: <cite>+/- var + interval</cite>.</p>
+<dl class="attribute">
+<dt id="abstract_domains.numerical.linear_forms.SingleVarLinearForm.var">
+<code class="descname">var</code><a class="headerlink" href="#abstract_domains.numerical.linear_forms.SingleVarLinearForm.var" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.linear_forms.SingleVarLinearForm.var_sign">
+<code class="descname">var_sign</code><a class="headerlink" href="#abstract_domains.numerical.linear_forms.SingleVarLinearForm.var_sign" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-abstract_domains.numerical.numerical"></span><dl class="class">
+<dt id="abstract_domains.numerical.numerical.NumericalMixin">
+<em class="property">class </em><code class="descclassname">abstract_domains.numerical.numerical.</code><code class="descname">NumericalMixin</code><a class="reference internal" href="_modules/abstract_domains/numerical/numerical.html#NumericalMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.numerical.NumericalMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A mixin to add a numeric interface to abstract domains.</p>
+<dl class="method">
+<dt id="abstract_domains.numerical.numerical.NumericalMixin.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>expr: core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/numerical.html#NumericalMixin.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.numerical.NumericalMixin.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the expression within this numerical domain.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.numerical.NumericalMixin.forget">
+<code class="descname">forget</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/numerical.html#NumericalMixin.forget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.numerical.NumericalMixin.forget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forget all information about a variable.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.numerical.NumericalMixin.get_bounds">
+<code class="descname">get_bounds</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/numerical.html#NumericalMixin.get_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.numerical.NumericalMixin.get_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the upper and lower bound of a variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>var</strong> – the variable of interest</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A tuple (lower, upper) of the bounds of <code class="docutils literal"><span class="pre">var</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.numerical.NumericalMixin.set_bounds">
+<code class="descname">set_bounds</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em>, <em>lower: int</em>, <em>upper: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/numerical.html#NumericalMixin.set_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.numerical.NumericalMixin.set_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the upper and lower bound of a variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>var</strong> – the variable of interest</li>
+<li><strong>lower</strong> – the upper bound of <code class="docutils literal"><span class="pre">var</span></code></li>
+<li><strong>upper</strong> – the lower bound of <code class="docutils literal"><span class="pre">var</span></code></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-abstract_domains.numerical.octagon_domain"></span><dl class="class">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain">
+<em class="property">class </em><code class="descclassname">abstract_domains.numerical.octagon_domain.</code><code class="descname">OctagonDomain</code><span class="sig-paren">(</span><em>variables: typing.List[core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#abstract_domains.numerical.octagon_domain.OctagonLattice" title="abstract_domains.numerical.octagon_domain.OctagonLattice"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.numerical.octagon_domain.OctagonLattice</span></code></a>, <a class="reference internal" href="abstract_domains.html#abstract_domains.state.State" title="abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.state.State</span></code></a></p>
+<p>Octagon domain. Extends the octagon lattice with state interface.</p>
+<dl class="class">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor">
+<em class="property">class </em><code class="descname">AssumeVisitor</code><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.AssumeVisitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.html#core.expressions_tools.ExpressionVisitor" title="core.expressions_tools.ExpressionVisitor"><code class="xref py py-class docutils literal"><span class="pre">core.expressions_tools.ExpressionVisitor</span></code></a></p>
+<p>Visits an expression and recursively ‘assumes’ the condition tree.</p>
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.generic_visit">
+<code class="descname">generic_visit</code><span class="sig-paren">(</span><em>expr</em>, <em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.AssumeVisitor.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.generic_visit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_BinaryBooleanOperation">
+<code class="descname">visit_BinaryBooleanOperation</code><span class="sig-paren">(</span><em>expr: core.expressions.BinaryBooleanOperation</em>, <em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.AssumeVisitor.visit_BinaryBooleanOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_BinaryBooleanOperation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_BinaryComparisonOperation">
+<code class="descname">visit_BinaryComparisonOperation</code><span class="sig-paren">(</span><em>expr: core.expressions.BinaryComparisonOperation</em>, <em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.AssumeVisitor.visit_BinaryComparisonOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_BinaryComparisonOperation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_UnaryBooleanOperation">
+<code class="descname">visit_UnaryBooleanOperation</code><span class="sig-paren">(</span><em>expr: core.expressions.UnaryBooleanOperation</em>, <em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.AssumeVisitor.visit_UnaryBooleanOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_UnaryBooleanOperation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer">
+<em class="property">class </em><code class="descname">SmallerEqualConditionTransformer</code><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.SmallerEqualConditionTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.html#core.expressions_tools.ExpressionTransformer" title="core.expressions_tools.ExpressionTransformer"><code class="xref py py-class docutils literal"><span class="pre">core.expressions_tools.ExpressionTransformer</span></code></a></p>
+<p>Transforms all conditions inside expression to format <code class="docutils literal"><span class="pre">e</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code>.</p>
+<dl class="class">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet">
+<em class="property">class </em><code class="descname">ConditionSet</code><span class="sig-paren">(</span><em>conditions</em>, <em>operator: abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.SmallerEqualConditionTransformer.ConditionSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="class">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator">
+<em class="property">class </em><code class="descname">Operator</code><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">enum.Enum</span></code></p>
+<p>An enumeration.</p>
+<dl class="attribute">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator.JOIN">
+<code class="descname">JOIN</code><em class="property"> = 1</em><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator.JOIN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator.MEET">
+<code class="descname">MEET</code><em class="property"> = 0</em><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator.MEET" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.combine_conditions">
+<code class="descname">combine_conditions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.combine_conditions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.combine_conditions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.condition_to_octagon">
+<code class="descname">condition_to_octagon</code><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.condition_to_octagon" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.conditions">
+<code class="descname">conditions</code><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.conditions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.octagons">
+<code class="descname">octagons</code><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.octagons" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.generic_visit">
+<code class="descname">generic_visit</code><span class="sig-paren">(</span><em>expr</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.SmallerEqualConditionTransformer.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.generic_visit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.visit_BinaryComparisonOperation">
+<code class="descname">visit_BinaryComparisonOperation</code><span class="sig-paren">(</span><em>cond: core.expressions.BinaryComparisonOperation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.SmallerEqualConditionTransformer.visit_BinaryComparisonOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.visit_BinaryComparisonOperation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.enter_if">
+<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; abstract_domains.numerical.octagon_domain.OctagonDomain<a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.enter_if" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.enter_loop">
+<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; abstract_domains.numerical.octagon_domain.OctagonDomain<a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.enter_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.exit_if">
+<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; abstract_domains.numerical.octagon_domain.OctagonDomain<a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.exit_if" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonDomain.exit_loop">
+<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; abstract_domains.numerical.octagon_domain.OctagonDomain<a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonDomain.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonDomain.exit_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice">
+<em class="property">class </em><code class="descclassname">abstract_domains.numerical.octagon_domain.</code><code class="descname">OctagonLattice</code><span class="sig-paren">(</span><em>variables: typing.List[core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="abstract_domains.html#abstract_domains.lattice.BottomMixin" title="abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.lattice.BottomMixin</span></code></a>, <a class="reference internal" href="#abstract_domains.numerical.numerical.NumericalMixin" title="abstract_domains.numerical.numerical.NumericalMixin"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.numerical.numerical.NumericalMixin</span></code></a></p>
+<p>Octagon lattice.</p>
+<p>One lattice element is represented by a DBM-matrix internally. This matrix has a special index structure. We show 
+an example for 3 variables <cite>v1</cite>, <cite>v2</cite> and <cite>v3</cite>. Every variable contributes two indices, one for the positive and 
+one for the negative variant of a variable.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>    <span class="n">v1</span><span class="o">+</span>  <span class="n">v1</span><span class="o">-</span>  <span class="n">v2</span><span class="o">+</span>  <span class="n">v2</span><span class="o">-</span>  <span class="n">v3</span><span class="o">+</span>  <span class="n">v3</span><span class="o">-</span>
+<span class="n">v1</span><span class="o">+</span>  <span class="n">D</span>    <span class="n">B</span>
+<span class="n">v1</span><span class="o">-</span>  <span class="n">A</span>    <span class="n">D</span> 
+<span class="n">v2</span><span class="o">+</span>  <span class="n">s</span>    <span class="n">A</span>    <span class="n">D</span>    <span class="n">B</span>
+<span class="n">v2</span><span class="o">-</span>  <span class="n">s</span>    <span class="n">s</span>    <span class="n">A</span>    <span class="n">D</span>
+<span class="n">v3</span><span class="o">+</span>  <span class="n">s</span>    <span class="n">s</span>    <span class="n">s</span>    <span class="n">A</span>    <span class="n">D</span>    <span class="n">B</span>
+<span class="n">v3</span><span class="o">-</span>  <span class="n">s</span>    <span class="n">s</span>    <span class="n">s</span>    <span class="n">s</span>    <span class="n">A</span>    <span class="n">D</span>
+</pre></div>
+</div>
+<p>NOTE: Since the matrix is a special kind of symmetric, we only show lower left diagonal matrix. See 
+<code class="xref py py-class docutils literal"><span class="pre">abstract_domains.numerical.dbm.DBM</span></code>.</p>
+<p>The actual constraint, e.g. at matrix entry (<code class="docutils literal"><span class="pre">v1+</span></code>, v2+“) is: <code class="docutils literal"><span class="pre">-</span> <span class="pre">v1</span> <span class="pre">+</span> <span class="pre">v2</span> <span class="pre">&lt;=</span> <span class="pre">c</span></code> (<strong>Note the minus before 
+first term</strong>).</p>
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.binary_constraints_indices">
+<code class="descname">binary_constraints_indices</code><span class="sig-paren">(</span><em>sign1: core.expressions.UnaryArithmeticOperation.Operator = None</em>, <em>var1: core.expressions.VariableIdentifier = None</em>, <em>sign2: core.expressions.UnaryArithmeticOperation.Operator = None</em>, <em>var2: core.expressions.VariableIdentifier = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.binary_constraints_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.binary_constraints_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the indices of all binary octagonal constraints (of distinct variables <code class="docutils literal"><span class="pre">var1</span></code>, <code class="docutils literal"><span class="pre">var2</span></code>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sign1</strong> – positive/negative variant of <code class="docutils literal"><span class="pre">var1</span></code> or <code class="docutils literal"><span class="pre">None</span></code> to generate indices for both</li>
+<li><strong>var1</strong> – first variable or <code class="docutils literal"><span class="pre">None</span></code> to generate indices for whole row</li>
+<li><strong>sign2</strong> – positive/negative variant of <code class="docutils literal"><span class="pre">var2</span></code> or <code class="docutils literal"><span class="pre">None</span></code> to generate indices both</li>
+<li><strong>var2</strong> – second variable or <code class="docutils literal"><span class="pre">None</span></code> to generate indices for whole column</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes this octagon.</p>
+<p>Closes the underlying CDBM, if possible, otherwise sets this octagon to bottom.
+:return: True, if this octagon is consistent &lt;=&gt; this octagon is not bottom.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.dbm">
+<code class="descname">dbm</code><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.dbm" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>expr: core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.forget">
+<code class="descname">forget</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.forget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.forget" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.from_interval_domain">
+<code class="descname">from_interval_domain</code><span class="sig-paren">(</span><em>interval_domain: abstract_domains.numerical.interval_domain.IntervalDomain</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.from_interval_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.from_interval_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translate the interval constraints from interval domain to this octagonal store.</p>
+<p><strong>NOTE</strong>: This does not reset relational constraints in this octagon!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.get_bounds">
+<code class="descname">get_bounds</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.get_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.get_bounds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.get_interval">
+<code class="descname">get_interval</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.get_interval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.get_interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.get_lb">
+<code class="descname">get_lb</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.get_lb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.get_lb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.get_ub">
+<code class="descname">get_ub</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.get_ub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.get_ub" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.is_top">
+<code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.is_top" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.lower_octagonal_constraint">
+<code class="descname">lower_octagonal_constraint</code><span class="sig-paren">(</span><em>sign1: core.expressions.UnaryArithmeticOperation.Operator</em>, <em>var1: core.expressions.VariableIdentifier</em>, <em>sign2: core.expressions.UnaryArithmeticOperation.Operator</em>, <em>var2: core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.lower_octagonal_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.lower_octagonal_constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.lower_ub">
+<code class="descname">lower_ub</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.lower_ub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.lower_ub" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.raise_lb">
+<code class="descname">raise_lb</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.raise_lb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.raise_lb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.set_bounds">
+<code class="descname">set_bounds</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em>, <em>lower: int</em>, <em>upper: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.set_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.set_bounds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.set_interval">
+<code class="descname">set_interval</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier, interval: typing.Union[int, abstract_domains.numerical.interval_domain.IntervalLattice]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.set_interval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.set_interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.set_lb">
+<code class="descname">set_lb</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.set_lb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.set_lb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.set_octagonal_constraint">
+<code class="descname">set_octagonal_constraint</code><span class="sig-paren">(</span><em>sign1: core.expressions.UnaryArithmeticOperation.Operator</em>, <em>var1: core.expressions.VariableIdentifier</em>, <em>sign2: core.expressions.UnaryArithmeticOperation.Operator</em>, <em>var2: core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.set_octagonal_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.set_octagonal_constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.set_ub">
+<code class="descname">set_ub</code><span class="sig-paren">(</span><em>var: core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.set_ub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.set_ub" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.switch_constraints">
+<code class="descname">switch_constraints</code><span class="sig-paren">(</span><em>index1</em>, <em>index2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.switch_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.switch_constraints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.to_interval_domain">
+<code class="descname">to_interval_domain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.to_interval_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.to_interval_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translate this octagonal store into an interval store.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.top">
+<code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/numerical/octagon_domain.html#OctagonLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.top" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.numerical.octagon_domain.OctagonLattice.variables">
+<code class="descname">variables</code><a class="headerlink" href="#abstract_domains.numerical.octagon_domain.OctagonLattice.variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="abstract_domains.traces.html" class="btn btn-neutral float-right" title="abstract_domains.traces package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="abstract_domains.liveness.html" class="btn btn-neutral" title="abstract_domains.liveness package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

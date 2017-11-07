@@ -1,0 +1,531 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>abstract_domains.liveness package &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
+        <link rel="up" title="abstract_domains package" href="abstract_domains.html"/>
+        <link rel="next" title="abstract_domains.numerical package" href="abstract_domains.numerical.html"/>
+        <link rel="prev" title="abstract_domains package" href="abstract_domains.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Lyra</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="abstract_domains.html">abstract_domains package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="abstract_domains.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">abstract_domains.liveness package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="abstract_domains.numerical.html">abstract_domains.numerical package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="abstract_domains.traces.html">abstract_domains.traces package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="abstract_domains.usage.html">abstract_domains.usage package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="abstract_domains.html#module-abstract_domains.lattice">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="core.html">core package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engine.html">engine package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="semantics.html">semantics package</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="modules.html">Lyra</a> &raquo;</li>
+      
+          <li><a href="abstract_domains.html">abstract_domains package</a> &raquo;</li>
+      
+    <li>abstract_domains.liveness package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/abstract_domains.liveness.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-abstract_domains.liveness">
+<span id="abstract-domains-liveness-package"></span><h1>abstract_domains.liveness package<a class="headerlink" href="#module-abstract_domains.liveness" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-abstract_domains.liveness.liveness_domain">
+<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-abstract_domains.liveness.liveness_domain" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="live-variable-abstract-domain">
+<h3>Live Variable Abstract Domain<a class="headerlink" href="#live-variable-abstract-domain" title="Permalink to this headline">¶</a></h3>
+<p>Abstract domain to be used for <strong>live variable analysis</strong>.
+A program variable is <em>live</em> in a state if its value may be used before the variable is redefined.</p>
+<dl class="class">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessLattice">
+<em class="property">class </em><code class="descclassname">abstract_domains.liveness.liveness_domain.</code><code class="descname">LivenessLattice</code><span class="sig-paren">(</span><em>liveness: abstract_domains.liveness.liveness_domain.LivenessLattice.Status = &lt;Status.Dead: 0&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessLattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="abstract_domains.html#abstract_domains.lattice.Lattice" title="abstract_domains.lattice.Lattice"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.lattice.Lattice</span></code></a></p>
+<p>Liveness lattice:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Live</span>
+  <span class="o">|</span>
+<span class="n">Dead</span>
+</pre></div>
+</div>
+<p>The default lattice element is <code class="docutils literal"><span class="pre">Dead</span></code>.</p>
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessLattice._less_equal">
+<code class="descname">_less_equal</code><span class="sig-paren">(</span><em>other: abstract_domains.liveness.liveness_domain.LivenessLattice</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessLattice._less_equal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessLattice._less_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partial order between lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other lattice element</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessLattice._meet">
+<code class="descname">_meet</code><span class="sig-paren">(</span><em>other: abstract_domains.liveness.liveness_domain.LivenessLattice</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessLattice._meet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessLattice._meet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Greatest lower bound between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound of the two lattice elements</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessLattice._join">
+<code class="descname">_join</code><span class="sig-paren">(</span><em>other: abstract_domains.liveness.liveness_domain.LivenessLattice</em><span class="sig-paren">)</span> &#x2192; abstract_domains.liveness.liveness_domain.LivenessLattice<a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessLattice._join"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessLattice._join" title="Permalink to this definition">¶</a></dt>
+<dd><p>Least upper bound between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound of the two lattice elements</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessLattice._widening">
+<code class="descname">_widening</code><span class="sig-paren">(</span><em>other: abstract_domains.liveness.liveness_domain.LivenessLattice</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessLattice._widening"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessLattice._widening" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widening between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the widening of the two lattice elements</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessLattice.Status">
+<em class="property">class </em><code class="descname">Status</code><a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessLattice.Status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessLattice.Status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">enum.IntEnum</span></code></p>
+<p>Liveness status. The current lattice element is ether <code class="docutils literal"><span class="pre">Live</span></code> or <code class="docutils literal"><span class="pre">Dead</span></code>.</p>
+<dl class="attribute">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessLattice.Status.Dead">
+<code class="descname">Dead</code><em class="property"> = 0</em><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessLattice.Status.Dead" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessLattice.Status.Live">
+<code class="descname">Live</code><em class="property"> = 1</em><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessLattice.Status.Live" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessLattice.bottom">
+<code class="descname">bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessLattice.bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessLattice.bottom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bottom lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the bottom lattice element</td>
+</tr>
+</tbody>
+</table>
+<p>The bottom lattice element is <code class="docutils literal"><span class="pre">Dead</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessLattice.element">
+<code class="descname">element</code><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessLattice.element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current lattice element.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessLattice.is_bottom">
+<code class="descname">is_bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessLattice.is_bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessLattice.is_bottom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is bottom.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is bottom</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessLattice.is_top">
+<code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessLattice.is_top" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is top.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is top</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessLattice.top">
+<code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessLattice.top" title="Permalink to this definition">¶</a></dt>
+<dd><p>Top lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the top lattice element</td>
+</tr>
+</tbody>
+</table>
+<p>The top lattice element is <code class="docutils literal"><span class="pre">Live</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessState">
+<em class="property">class </em><code class="descclassname">abstract_domains.liveness.liveness_domain.</code><code class="descname">LivenessState</code><span class="sig-paren">(</span><em>variables: typing.List[core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="abstract_domains.html#abstract_domains.store.Store" title="abstract_domains.store.Store"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.store.Store</span></code></a>, <a class="reference internal" href="abstract_domains.html#abstract_domains.state.State" title="abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">abstract_domains.state.State</span></code></a></p>
+<p>Live variable analysis state. An element of the live variable abstract domain.</p>
+<p>Map from each program variable to its liveness status. All program variables are <em>dead</em> by default.</p>
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessState._assign_variable">
+<code class="descname">_assign_variable</code><span class="sig-paren">(</span><em>left: core.expressions.Expression</em>, <em>right: core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessState._assign_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessState._assign_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign an expression to a variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>left</strong> – expression representing the variable to be assigned to</li>
+<li><strong>right</strong> – expression to assign</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable assignment</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessState._assume">
+<code class="descname">_assume</code><span class="sig-paren">(</span><em>condition: core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessState._assume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessState._assume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assume that some condition holds in the current state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>condition</strong> – expression representing the assumed condition</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified to satisfy the assumption</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessState._output">
+<code class="descname">_output</code><span class="sig-paren">(</span><em>output: core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessState._output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessState._output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outputs something in the current state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output</strong> – expression representing the output</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified by the output</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessState._substitute_variable">
+<code class="descname">_substitute_variable</code><span class="sig-paren">(</span><em>left: core.expressions.Expression</em>, <em>right: core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessState._substitute_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessState._substitute_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substitute an expression to a variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>left</strong> – expression representing the variable to be substituted</li>
+<li><strong>right</strong> – expression to substitute</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable substitution</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessState.enter_if">
+<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessState.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessState.enter_if" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enter a conditional if statement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a conditional if statement</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessState.enter_loop">
+<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessState.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessState.enter_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enter a loop.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a loop</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessState.exit_if">
+<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessState.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessState.exit_if" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exit a conditional if statement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a conditional if statement</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="abstract_domains.liveness.liveness_domain.LivenessState.exit_loop">
+<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/abstract_domains/liveness/liveness_domain.html#LivenessState.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#abstract_domains.liveness.liveness_domain.LivenessState.exit_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exit a loop.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to exit a loop</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="abstract_domains.numerical.html" class="btn btn-neutral float-right" title="abstract_domains.numerical package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="abstract_domains.html" class="btn btn-neutral" title="abstract_domains package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

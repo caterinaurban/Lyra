@@ -1,0 +1,350 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>abstract_domains.usage.used_liststart &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Lyra</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>abstract_domains.usage.used_liststart</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for abstract_domains.usage.used_liststart</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">abstract_domains.lattice</span> <span class="k">import</span> <span class="n">BottomMixin</span>
+
+<span class="kn">from</span> <span class="nn">abstract_domains.usage.used</span> <span class="k">import</span> <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">O</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">UsedLattice</span><span class="p">,</span> <span class="n">Used</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">inf</span>
+
+
+<div class="viewcode-block" id="UsedListStartLattice"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.used_liststart.UsedListStartLattice">[docs]</a><span class="k">class</span> <span class="nc">UsedListStartLattice</span><span class="p">(</span><span class="n">BottomMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Used list start analysis abstract domain representation.</span>
+<span class="sd">    </span>
+<span class="sd">    This uses the Used lattice as base and uses it to store the usage of the start of list, each Used element covers </span>
+<span class="sd">    a possibly empty sequence ``0:q``. Some additional consistency conditions hold for any element of this lattice </span>
+<span class="sd">    that was previously closed by ``closure()``. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">o</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Used list start analysis abstract domain representation.</span>
+<span class="sd">        </span>
+<span class="sd">        :param s: initial end of S-elements in list: should be a float in ``[0,1,2,..., inf]``</span>
+<span class="sd">        :param u: initial end of U-elements in list: should be a float in ``[0,1,2,..., inf]``</span>
+<span class="sd">        :param o: initial end of O-elements in list: should be a float in ``[0,1,2,..., inf]``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_suo</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">([</span>
+            <span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">s</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">u</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span>
+        <span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">suo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_suo</span>
+
+<div class="viewcode-block" id="UsedListStartLattice.used_at"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.used_liststart.UsedListStartLattice.used_at">[docs]</a>    <span class="k">def</span> <span class="nf">used_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Finds usage at specified index.</span>
+<span class="sd">        </span>
+<span class="sd">        Does a linear search through the 3-entry suo dict</span>
+<span class="sd">        to find the entry that is determining the element usage at index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">U</span>
+        <span class="k">elif</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">S</span>
+        <span class="k">elif</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">O</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">O</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">N</span></div>
+
+<div class="viewcode-block" id="UsedListStartLattice.set_used_at"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.used_liststart.UsedListStartLattice.set_used_at">[docs]</a>    <span class="k">def</span> <span class="nf">set_used_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">Used</span> <span class="o">=</span> <span class="n">U</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set usage at specified index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">index</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">closure</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">non_zero_uppers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="p">[</span><span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">O</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">el</span><span class="p">]:</span>
+                <span class="n">non_zero_uppers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{el.name}</span><span class="s2">@0:</span><span class="si">{self.suo[el]}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;({&#39;, &#39;.join(non_zero_uppers)})&quot;</span>
+
+<div class="viewcode-block" id="UsedListStartLattice.top"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.used_liststart.UsedListStartLattice.top">[docs]</a>    <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_suo</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">([</span>
+            <span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsedListStartLattice.is_top"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.used_liststart.UsedListStartLattice.is_top">[docs]</a>    <span class="k">def</span> <span class="nf">is_top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">upper</span> <span class="o">==</span> <span class="n">inf</span> <span class="k">for</span> <span class="n">upper</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+    <span class="k">def</span> <span class="nf">_less_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;UsedListStartLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">s1</span> <span class="o">&lt;=</span> <span class="n">s2</span> <span class="k">for</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">other</span><span class="o">.</span><span class="n">suo</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+
+    <span class="k">def</span> <span class="nf">_meet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;UsedListStartLattice&#39;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="p">[</span><span class="n">S</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">O</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">u</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;UsedListStartLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsedListStartLattice&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="p">[</span><span class="n">S</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">O</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">u</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_widening</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;UsedListStartLattice&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_join</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">closed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">O</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> \
+               <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> \
+               <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">O</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">O</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UsedListStartLattice.closure"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.used_liststart.UsedListStartLattice.closure">[docs]</a>    <span class="k">def</span> <span class="nf">closure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">suo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span>
+        <span class="c1"># check for each index individually if it has to be adjusted</span>
+        <span class="k">if</span> <span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">suo</span><span class="p">[</span><span class="n">O</span><span class="p">]</span> <span class="ow">or</span> <span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">]:</span>
+            <span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">suo</span><span class="p">[</span><span class="n">O</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">],</span> <span class="n">suo</span><span class="p">[</span><span class="n">O</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">suo</span><span class="p">[</span><span class="n">O</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">]</span> <span class="ow">or</span> <span class="n">suo</span><span class="p">[</span><span class="n">O</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">]:</span>
+            <span class="n">suo</span><span class="p">[</span><span class="n">O</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="c1"># noinspection PyPep8Naming</span>
+<div class="viewcode-block" id="UsedListStartLattice.change_S_to_U"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.used_liststart.UsedListStartLattice.change_S_to_U">[docs]</a>    <span class="k">def</span> <span class="nf">change_S_to_U</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Change previously S-annotated (used in outer scope) to U-annotated (definitely used)&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+    <span class="c1"># noinspection PyPep8Naming</span>
+<div class="viewcode-block" id="UsedListStartLattice.change_SU_to_O"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.used_liststart.UsedListStartLattice.change_SU_to_O">[docs]</a>    <span class="k">def</span> <span class="nf">change_SU_to_O</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Change previously U/S-annotated to O-annotated&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">O</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="UsedListStartLattice.descend"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.used_liststart.UsedListStartLattice.descend">[docs]</a>    <span class="k">def</span> <span class="nf">descend</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsedListStartLattice&#39;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">O</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsedListStartLattice.combine"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.used_liststart.UsedListStartLattice.combine">[docs]</a>    <span class="k">def</span> <span class="nf">combine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;UsedListStartLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsedListStartLattice&#39;</span><span class="p">:</span>
+        <span class="c1"># This method is generically implemented using the COMBINE dict</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">closed</span>
+
+        <span class="n">all_uppers</span> <span class="o">=</span> <span class="p">[(</span><span class="n">index</span><span class="p">,</span> <span class="n">used</span><span class="p">)</span> <span class="k">for</span> <span class="n">used</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">suo</span><span class="o">.</span><span class="n">items</span><span class="p">())]</span>
+        <span class="n">all_uppers</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">seq</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">S</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">U</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">O</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">upper</span><span class="p">,</span> <span class="n">used</span> <span class="ow">in</span> <span class="n">all_uppers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">upper</span> <span class="o">-</span> <span class="n">lower</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># ignore zero-length subsequences</span>
+                <span class="n">seq</span><span class="p">[</span><span class="n">UsedLattice</span><span class="o">.</span><span class="n">COMBINE</span><span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">used_at</span><span class="p">(</span><span class="n">lower</span><span class="p">),</span> <span class="n">other</span><span class="o">.</span><span class="n">used_at</span><span class="p">(</span><span class="n">lower</span><span class="p">))]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">upper</span><span class="p">)</span>
+                <span class="n">lower</span> <span class="o">=</span> <span class="n">upper</span>
+
+        <span class="c1"># take maximal upper for every used element (over-approximation)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">S</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">seq</span><span class="p">[</span><span class="n">S</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">seq</span><span class="p">[</span><span class="n">U</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">O</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">seq</span><span class="p">[</span><span class="n">O</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">closure</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

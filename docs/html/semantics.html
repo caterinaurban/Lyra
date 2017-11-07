@@ -1,0 +1,1042 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>semantics package &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
+        <link rel="up" title="Lyra" href="modules.html"/>
+        <link rel="next" title="semantics.usage package" href="semantics.usage.html"/>
+        <link rel="prev" title="engine.usage package" href="engine.usage.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Lyra</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="abstract_domains.html">abstract_domains package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html">core package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engine.html">engine package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">semantics package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="semantics.usage.html">semantics.usage package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-semantics.backward">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="modules.html">Lyra</a> &raquo;</li>
+      
+    <li>semantics package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/semantics.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-semantics">
+<span id="semantics-package"></span><h1>semantics package<a class="headerlink" href="#module-semantics" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="semantics.usage.html">semantics.usage package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="semantics.usage.html#module-semantics.usage.usage_semantics">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="module-semantics.backward">
+<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-semantics.backward" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="semantics.backward.AssignmentSemantics">
+<em class="property">class </em><code class="descclassname">semantics.backward.</code><code class="descname">AssignmentSemantics</code><a class="reference internal" href="_modules/semantics/backward.html#AssignmentSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.backward.AssignmentSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.backward.BackwardSemantics" title="semantics.backward.BackwardSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.backward.BackwardSemantics</span></code></a></p>
+<p>Backward semantics of assignments.</p>
+<dl class="method">
+<dt id="semantics.backward.AssignmentSemantics.assignment_semantics">
+<code class="descname">assignment_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Assignment</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/backward.html#AssignmentSemantics.assignment_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.backward.AssignmentSemantics.assignment_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Backward semantics of an assignment.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – assignment statement to be executed</li>
+<li><strong>state</strong> – state before executing the assignment</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the assignment</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="semantics.backward.BackwardSemantics">
+<em class="property">class </em><code class="descclassname">semantics.backward.</code><code class="descname">BackwardSemantics</code><a class="reference internal" href="_modules/semantics/backward.html#BackwardSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.backward.BackwardSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.semantics.Semantics" title="semantics.semantics.Semantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.semantics.Semantics</span></code></a></p>
+<p>Backward semantics of statements.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="semantics.backward.DefaultBackwardSemantics">
+<em class="property">class </em><code class="descclassname">semantics.backward.</code><code class="descname">DefaultBackwardSemantics</code><a class="reference internal" href="_modules/semantics/backward.html#DefaultBackwardSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.backward.DefaultBackwardSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.semantics.DefaultSemantics" title="semantics.semantics.DefaultSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.semantics.DefaultSemantics</span></code></a>, <a class="reference internal" href="#semantics.backward.UserDefinedCallSemantics" title="semantics.backward.UserDefinedCallSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.backward.UserDefinedCallSemantics</span></code></a>, <a class="reference internal" href="#semantics.backward.AssignmentSemantics" title="semantics.backward.AssignmentSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.backward.AssignmentSemantics</span></code></a></p>
+<p>Default backward semantics of statements.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="semantics.backward.UserDefinedCallSemantics">
+<em class="property">class </em><code class="descclassname">semantics.backward.</code><code class="descname">UserDefinedCallSemantics</code><a class="reference internal" href="_modules/semantics/backward.html#UserDefinedCallSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.backward.UserDefinedCallSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.backward.BackwardSemantics" title="semantics.backward.BackwardSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.backward.BackwardSemantics</span></code></a></p>
+<p>Backward semantics of user-defined function/method calls.</p>
+<dl class="method">
+<dt id="semantics.backward.UserDefinedCallSemantics.user_defined_call_semantics">
+<code class="descname">user_defined_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/backward.html#UserDefinedCallSemantics.user_defined_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.backward.UserDefinedCallSemantics.user_defined_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Backward semantics of a user-defined function/method call.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call statement to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-semantics.forward"></span><dl class="class">
+<dt id="semantics.forward.AssignmentSemantics">
+<em class="property">class </em><code class="descclassname">semantics.forward.</code><code class="descname">AssignmentSemantics</code><a class="reference internal" href="_modules/semantics/forward.html#AssignmentSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.forward.AssignmentSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.forward.ForwardSemantics" title="semantics.forward.ForwardSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.forward.ForwardSemantics</span></code></a></p>
+<p>Forward semantics of assignments.</p>
+<dl class="method">
+<dt id="semantics.forward.AssignmentSemantics.assignment_semantics">
+<code class="descname">assignment_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Assignment</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/forward.html#AssignmentSemantics.assignment_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.forward.AssignmentSemantics.assignment_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forward semantics of an assignment.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – assignment statement to be executed</li>
+<li><strong>state</strong> – state before executing the assignment</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the assignment</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="semantics.forward.DefaultForwardSemantics">
+<em class="property">class </em><code class="descclassname">semantics.forward.</code><code class="descname">DefaultForwardSemantics</code><a class="reference internal" href="_modules/semantics/forward.html#DefaultForwardSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.forward.DefaultForwardSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.semantics.DefaultSemantics" title="semantics.semantics.DefaultSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.semantics.DefaultSemantics</span></code></a>, <a class="reference internal" href="#semantics.forward.UserDefinedCallSemantics" title="semantics.forward.UserDefinedCallSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.forward.UserDefinedCallSemantics</span></code></a>, <a class="reference internal" href="#semantics.forward.AssignmentSemantics" title="semantics.forward.AssignmentSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.forward.AssignmentSemantics</span></code></a></p>
+<p>Default forward semantics of statements.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="semantics.forward.ForwardSemantics">
+<em class="property">class </em><code class="descclassname">semantics.forward.</code><code class="descname">ForwardSemantics</code><a class="reference internal" href="_modules/semantics/forward.html#ForwardSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.forward.ForwardSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.semantics.Semantics" title="semantics.semantics.Semantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.semantics.Semantics</span></code></a></p>
+<p>Forward semantics of statements.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="semantics.forward.UserDefinedCallSemantics">
+<em class="property">class </em><code class="descclassname">semantics.forward.</code><code class="descname">UserDefinedCallSemantics</code><a class="reference internal" href="_modules/semantics/forward.html#UserDefinedCallSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.forward.UserDefinedCallSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.forward.ForwardSemantics" title="semantics.forward.ForwardSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.forward.ForwardSemantics</span></code></a></p>
+<p>Forward semantics of user-defined function/method calls.</p>
+<dl class="method">
+<dt id="semantics.forward.UserDefinedCallSemantics.user_defined_call_semantics">
+<code class="descname">user_defined_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/forward.html#UserDefinedCallSemantics.user_defined_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.forward.UserDefinedCallSemantics.user_defined_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forward semantics of a user-defined function/method call.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call statement to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-semantics.semantics"></span><dl class="class">
+<dt id="semantics.semantics.BuiltInCallSemantics">
+<em class="property">class </em><code class="descclassname">semantics.semantics.</code><code class="descname">BuiltInCallSemantics</code><a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.semantics.CallSemantics" title="semantics.semantics.CallSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.semantics.CallSemantics</span></code></a></p>
+<p>Semantics of built-in function/method calls.</p>
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.add_call_semantics">
+<code class="descname">add_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.add_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.add_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘+’ (addition, not concatenation).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘+’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.and_call_semantics">
+<code class="descname">and_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.and_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.and_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘and’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘add’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.binary_operation">
+<code class="descname">binary_operation</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>operator: core.expressions.BinaryOperation.Operator</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.binary_operation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.binary_operation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.bool_call_semantics">
+<code class="descname">bool_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.bool_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.bool_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.div_call_semantics">
+<code class="descname">div_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.div_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.div_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘/’ (division).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘/’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.eq_call_semantics">
+<code class="descname">eq_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.eq_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.eq_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘==’ (equality).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘==’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.gt_call_semantics">
+<code class="descname">gt_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.gt_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.gt_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘&gt;’ (greater than).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘&gt;’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.gte_call_semantics">
+<code class="descname">gte_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.gte_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.gte_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘&gt;=’ (greater than or equal to).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘&gt;=’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.in_call_semantics">
+<code class="descname">in_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.in_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.in_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘in’ (membership).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘is’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.input_call_semantics">
+<code class="descname">input_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.input_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.input_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.int_call_semantics">
+<code class="descname">int_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.int_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.int_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.is_call_semantics">
+<code class="descname">is_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.is_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.is_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘is’ (identity).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘is’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.isnot_call_semantics">
+<code class="descname">isnot_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.isnot_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.isnot_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘is not’ (mismatch).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘is not’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.lt_call_semantics">
+<code class="descname">lt_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.lt_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.lt_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘&lt;’ (less than).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘&lt;’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.lte_call_semantics">
+<code class="descname">lte_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.lte_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.lte_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘&lt;=’ (less than or equal to).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘&lt;=’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.mult_call_semantics">
+<code class="descname">mult_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.mult_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.mult_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘*’ (multiplication, not repetition).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘*’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.not_call_semantics">
+<code class="descname">not_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.not_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.not_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘!’ (negation).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘!’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.noteq_call_semantics">
+<code class="descname">noteq_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.noteq_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.noteq_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘!=’ (inequality).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘!=’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.notin_call_semantics">
+<code class="descname">notin_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.notin_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.notin_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘not in’ (non-membership).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘not in’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.or_call_semantics">
+<code class="descname">or_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.or_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.or_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘or’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘or’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.print_call_semantics">
+<code class="descname">print_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.print_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.print_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘print’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘print’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.sub_call_semantics">
+<code class="descname">sub_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.sub_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.sub_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘-‘ (subtraction).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘-‘ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.uadd_call_semantics">
+<code class="descname">uadd_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.uadd_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.uadd_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘+X’ (unary plus).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘+’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.unary_operation">
+<code class="descname">unary_operation</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>operator: core.expressions.UnaryOperation.Operator</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.unary_operation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.unary_operation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.usub_call_semantics">
+<code class="descname">usub_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.usub_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.usub_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘-X’ (unary minus).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘-‘ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.BuiltInCallSemantics.xor_call_semantics">
+<code class="descname">xor_call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#BuiltInCallSemantics.xor_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.BuiltInCallSemantics.xor_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘xor’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘xor’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="semantics.semantics.CallSemantics">
+<em class="property">class </em><code class="descclassname">semantics.semantics.</code><code class="descname">CallSemantics</code><a class="reference internal" href="_modules/semantics/semantics.html#CallSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.CallSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.semantics.Semantics" title="semantics.semantics.Semantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.semantics.Semantics</span></code></a></p>
+<p>Semantics of function/method calls.</p>
+<dl class="method">
+<dt id="semantics.semantics.CallSemantics.call_semantics">
+<code class="descname">call_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Call</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#CallSemantics.call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.CallSemantics.call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a function/method call.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call statement to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="semantics.semantics.DefaultSemantics">
+<em class="property">class </em><code class="descclassname">semantics.semantics.</code><code class="descname">DefaultSemantics</code><a class="reference internal" href="_modules/semantics/semantics.html#DefaultSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.DefaultSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.semantics.LiteralEvaluationSemantics" title="semantics.semantics.LiteralEvaluationSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.semantics.LiteralEvaluationSemantics</span></code></a>, <a class="reference internal" href="#semantics.semantics.VariableAccessSemantics" title="semantics.semantics.VariableAccessSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.semantics.VariableAccessSemantics</span></code></a>, <a class="reference internal" href="#semantics.semantics.ListSemantics" title="semantics.semantics.ListSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.semantics.ListSemantics</span></code></a>, <a class="reference internal" href="#semantics.semantics.BuiltInCallSemantics" title="semantics.semantics.BuiltInCallSemantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.semantics.BuiltInCallSemantics</span></code></a></p>
+<p>Default semantics of statements. Independently of the direction (forward/backward) of the semantics.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="semantics.semantics.ListSemantics">
+<em class="property">class </em><code class="descclassname">semantics.semantics.</code><code class="descname">ListSemantics</code><a class="reference internal" href="_modules/semantics/semantics.html#ListSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.ListSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.semantics.Semantics" title="semantics.semantics.Semantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.semantics.Semantics</span></code></a></p>
+<p>Semantics of list accesses.</p>
+<dl class="method">
+<dt id="semantics.semantics.ListSemantics.index_stmt_semantics">
+<code class="descname">index_stmt_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.IndexStmt</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#ListSemantics.index_stmt_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.ListSemantics.index_stmt_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a index statement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – index statement to be executed</li>
+<li><strong>state</strong> – state before executing the variable access</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the variable access</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.ListSemantics.list_display_stmt_semantics">
+<code class="descname">list_display_stmt_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.ListDisplayStmt</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#ListSemantics.list_display_stmt_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.ListSemantics.list_display_stmt_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a list display statement.</p>
+<p>:param stmt :list display statement to be executed
+:param state: state before executing the variable access
+:return: state modified by the variable access</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="semantics.semantics.ListSemantics.slice_stmt_semantics">
+<code class="descname">slice_stmt_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.SliceStmt</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#ListSemantics.slice_stmt_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.ListSemantics.slice_stmt_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a slice statement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – slice statement to be executed</li>
+<li><strong>state</strong> – state before executing the variable access</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the variable access</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="semantics.semantics.LiteralEvaluationSemantics">
+<em class="property">class </em><code class="descclassname">semantics.semantics.</code><code class="descname">LiteralEvaluationSemantics</code><a class="reference internal" href="_modules/semantics/semantics.html#LiteralEvaluationSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.LiteralEvaluationSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.semantics.Semantics" title="semantics.semantics.Semantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.semantics.Semantics</span></code></a></p>
+<p>Semantics of literal evaluations.</p>
+<dl class="method">
+<dt id="semantics.semantics.LiteralEvaluationSemantics.literal_evaluation_semantics">
+<code class="descname">literal_evaluation_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.LiteralEvaluation</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#LiteralEvaluationSemantics.literal_evaluation_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.LiteralEvaluationSemantics.literal_evaluation_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a literal evaluation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – literal evaluation statement to be executed</li>
+<li><strong>state</strong> – state before executing the literal evaluation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">stated modified by the literal evaluation</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="semantics.semantics.Semantics">
+<em class="property">class </em><code class="descclassname">semantics.semantics.</code><code class="descname">Semantics</code><a class="reference internal" href="_modules/semantics/semantics.html#Semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.Semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Semantics of statements. Independently of the direction (forward/backward) of the analysis.</p>
+<dl class="method">
+<dt id="semantics.semantics.Semantics.semantics">
+<code class="descname">semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.Statement</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#Semantics.semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.Semantics.semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a statement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – statement to be executed</li>
+<li><strong>state</strong> – state before executing the statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the statement execution</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="semantics.semantics.VariableAccessSemantics">
+<em class="property">class </em><code class="descclassname">semantics.semantics.</code><code class="descname">VariableAccessSemantics</code><a class="reference internal" href="_modules/semantics/semantics.html#VariableAccessSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.VariableAccessSemantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#semantics.semantics.Semantics" title="semantics.semantics.Semantics"><code class="xref py py-class docutils literal"><span class="pre">semantics.semantics.Semantics</span></code></a></p>
+<p>Semantics of variable accesses.</p>
+<dl class="method">
+<dt id="semantics.semantics.VariableAccessSemantics.variable_access_semantics">
+<code class="descname">variable_access_semantics</code><span class="sig-paren">(</span><em>stmt: core.statements.VariableAccess</em>, <em>state: abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; abstract_domains.state.State<a class="reference internal" href="_modules/semantics/semantics.html#VariableAccessSemantics.variable_access_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.VariableAccessSemantics.variable_access_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a variable access.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – variable access statement to be executed</li>
+<li><strong>state</strong> – state before executing the variable access</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the variable access</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="semantics.semantics.camel_to_snake">
+<code class="descclassname">semantics.semantics.</code><code class="descname">camel_to_snake</code><span class="sig-paren">(</span><em>name: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/semantics/semantics.html#camel_to_snake"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#semantics.semantics.camel_to_snake" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert CamelCase to snake_case</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> – name in CamelCase</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">name in snake_case</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="semantics.usage.html" class="btn btn-neutral float-right" title="semantics.usage package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="engine.usage.html" class="btn btn-neutral" title="engine.usage package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

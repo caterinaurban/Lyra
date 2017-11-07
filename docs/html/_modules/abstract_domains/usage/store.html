@@ -1,0 +1,330 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>abstract_domains.usage.store &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Lyra</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>abstract_domains.usage.store</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for abstract_domains.usage.store</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="k">import</span> <span class="n">Number</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span> <span class="nn">abstract_domains.state</span> <span class="k">import</span> <span class="n">State</span>
+<span class="kn">from</span> <span class="nn">abstract_domains.usage.used</span> <span class="k">import</span> <span class="n">UsedLattice</span><span class="p">,</span> <span class="n">Used</span>
+<span class="kn">from</span> <span class="nn">abstract_domains.store</span> <span class="k">import</span> <span class="n">Store</span>
+<span class="kn">from</span> <span class="nn">abstract_domains.usage.used_liststart</span> <span class="k">import</span> <span class="n">UsedListStartLattice</span>
+<span class="kn">from</span> <span class="nn">core.expressions</span> <span class="k">import</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">ListDisplay</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Index</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">inf</span>
+
+<span class="kn">from</span> <span class="nn">core.expressions_tools</span> <span class="k">import</span> <span class="n">walk</span>
+
+
+<div class="viewcode-block" id="UsedStore"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.store.UsedStore">[docs]</a><span class="k">class</span> <span class="nc">UsedStore</span><span class="p">(</span><span class="n">Store</span><span class="p">,</span> <span class="n">State</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">]):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="p">{</span><span class="nb">int</span><span class="p">:</span> <span class="n">UsedLattice</span><span class="p">,</span> <span class="nb">list</span><span class="p">:</span> <span class="n">UsedListStartLattice</span><span class="p">})</span>
+
+<div class="viewcode-block" id="UsedStore.descend"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.store.UsedStore.descend">[docs]</a>    <span class="k">def</span> <span class="nf">descend</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsedStore&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">var</span><span class="o">.</span><span class="n">descend</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsedStore.combine"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.store.UsedStore.combine">[docs]</a>    <span class="k">def</span> <span class="nf">combine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;UsedStore&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsedStore&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">used</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">used</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="k">def</span> <span class="nf">_derive_list_display_usage_from_used_liststart</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">liststart</span><span class="p">,</span> <span class="n">list_display</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">list_display</span><span class="o">.</span><span class="n">items</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">liststart</span><span class="o">.</span><span class="n">used_at</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Used</span><span class="o">.</span><span class="n">U</span><span class="p">,</span> <span class="n">Used</span><span class="o">.</span><span class="n">S</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">ids</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span><span class="o">.</span><span class="n">used</span> <span class="o">=</span> <span class="n">Used</span><span class="o">.</span><span class="n">U</span>
+
+    <span class="k">def</span> <span class="nf">_use</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">used</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Used</span><span class="o">.</span><span class="n">U</span><span class="p">,</span> <span class="n">Used</span><span class="o">.</span><span class="n">S</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">walk</span><span class="p">(</span><span class="n">right</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">e</span><span class="p">]</span><span class="o">.</span><span class="n">used</span> <span class="o">=</span> <span class="n">Used</span><span class="o">.</span><span class="n">U</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Index</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">Literal</span><span class="p">):</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">set_used_at</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">right</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">right</span><span class="p">]</span><span class="o">.</span><span class="n">change_S_to_U</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">ListDisplay</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_derive_list_display_usage_from_used_liststart</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">],</span> <span class="n">right</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Method _use not implemented for </span><span class="si">{self.store[left].typ}</span><span class="s2">!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_kill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">used</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Used</span><span class="o">.</span><span class="n">U</span><span class="p">,</span> <span class="n">Used</span><span class="o">.</span><span class="n">S</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">left</span> <span class="ow">in</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">right</span><span class="o">.</span><span class="n">ids</span><span class="p">()]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">used</span> <span class="o">=</span> <span class="n">Used</span><span class="o">.</span><span class="n">U</span>  <span class="c1"># x is still used since it is used in assigned expression</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">used</span> <span class="o">=</span> <span class="n">Used</span><span class="o">.</span><span class="n">O</span>  <span class="c1"># x is overwritten</span>
+        <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">):</span>
+            <span class="c1"># TODO this whole if is no longer correct when lists of lists are allowed, e.g. l = [a,2,l]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">right</span> <span class="o">!=</span> <span class="n">left</span><span class="p">:</span>  <span class="c1"># if no self-assignemnt</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">change_SU_to_O</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">ListDisplay</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">change_SU_to_O</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Method _kill not implemented for </span><span class="si">{self.store[left].typ}</span><span class="s2">!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_access_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">variable</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_assign_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsedStore&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Variable assignment is not implemented!&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_assume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsedStore&#39;</span><span class="p">:</span>
+        <span class="n">used_vars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span>
+            <span class="nb">set</span><span class="p">([</span><span class="n">lat</span><span class="o">.</span><span class="n">used</span> <span class="k">for</span> <span class="n">lat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">UsedLattice</span><span class="p">)])</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">Used</span><span class="o">.</span><span class="n">U</span><span class="p">,</span> <span class="n">Used</span><span class="o">.</span><span class="n">O</span><span class="p">])</span>
+        <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="n">used_lists</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">lat</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">Used</span><span class="o">.</span><span class="n">U</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">lat</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">Used</span><span class="o">.</span><span class="n">O</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">lat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span>
+             <span class="nb">isinstance</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">UsedListStartLattice</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="n">store_has_effect</span> <span class="o">=</span> <span class="n">used_vars</span> <span class="ow">or</span> <span class="n">used_lists</span>
+
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">walk</span><span class="p">(</span><span class="n">condition</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                <span class="c1"># update to U if exists a variable y in state that is either U or O (note that S is not enough)</span>
+                <span class="c1"># or is set intersection, if checks if resulting list is empty</span>
+                <span class="k">if</span> <span class="n">store_has_effect</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">e</span><span class="p">]</span><span class="o">.</span><span class="n">used</span> <span class="o">=</span> <span class="n">Used</span><span class="o">.</span><span class="n">U</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Index</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">Literal</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">store_has_effect</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">set_used_at</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_evaluate_literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">literal</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">literal</span><span class="p">}</span>
+
+<div class="viewcode-block" id="UsedStore.enter_loop"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.store.UsedStore.enter_loop">[docs]</a>    <span class="k">def</span> <span class="nf">enter_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;UsedStore does not support enter_loop&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="UsedStore.exit_loop"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.store.UsedStore.exit_loop">[docs]</a>    <span class="k">def</span> <span class="nf">exit_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;UsedStore does not support exit_loop&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="UsedStore.enter_if"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.store.UsedStore.enter_if">[docs]</a>    <span class="k">def</span> <span class="nf">enter_if</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;UsedStore does not support enter_if&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="UsedStore.exit_if"><a class="viewcode-back" href="../../../abstract_domains.usage.html#abstract_domains.usage.store.UsedStore.exit_if">[docs]</a>    <span class="k">def</span> <span class="nf">exit_if</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;UsedStore does not support exit_if&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsedStore&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">ids</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">used</span> <span class="o">=</span> <span class="n">Used</span><span class="o">.</span><span class="n">U</span>
+            <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">Used</span><span class="o">.</span><span class="n">U</span><span class="p">]</span> <span class="o">=</span> <span class="n">inf</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">closure</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Type </span><span class="si">{variable.typ}</span><span class="s2"> not yet supported!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span>
+
+    <span class="k">def</span> <span class="nf">_substitute_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsedStore&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_use</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span><span class="o">.</span><span class="n">_kill</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Variable substitution for </span><span class="si">{}</span><span class="s2"> is not implemented!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">left</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
