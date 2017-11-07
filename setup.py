@@ -9,6 +9,7 @@ config = {
     'url': 'http://www.pm.inf.ethz.ch/research/lyra.html',
     'license': 'MPL-2.0',
     'packages': find_packages(),
+    'package_dir': {'': 'src'},
     'install_requires': [
         'graphviz==0.7.1',
         'z3',

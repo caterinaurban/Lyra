@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>lyra.semantics.backward &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lyra</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>lyra.semantics.backward</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for lyra.semantics.backward</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">lyra.semantics.semantics</span> <span class="k">import</span> <span class="n">Semantics</span><span class="p">,</span> <span class="n">DefaultSemantics</span>
+
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.state</span> <span class="k">import</span> <span class="n">State</span>
+<span class="kn">from</span> <span class="nn">lyra.core.statements</span> <span class="k">import</span> <span class="n">VariableAccess</span><span class="p">,</span> <span class="n">Assignment</span><span class="p">,</span> <span class="n">Call</span>
+
+
+<div class="viewcode-block" id="BackwardSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.backward.BackwardSemantics">[docs]</a><span class="k">class</span> <span class="nc">BackwardSemantics</span><span class="p">(</span><span class="n">Semantics</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Backward semantics of statements.&quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="UserDefinedCallSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.backward.UserDefinedCallSemantics">[docs]</a><span class="k">class</span> <span class="nc">UserDefinedCallSemantics</span><span class="p">(</span><span class="n">BackwardSemantics</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Backward semantics of user-defined function/method calls.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="UserDefinedCallSemantics.user_defined_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.backward.UserDefinedCallSemantics.user_defined_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">user_defined_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Backward semantics of a user-defined function/method call.</span>
+<span class="sd">        </span>
+<span class="sd">        :param stmt: call statement to be executed</span>
+<span class="sd">        :param state: state before executing the call statement</span>
+<span class="sd">        :return: state modified by the call statement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Backward semantics for call statement </span><span class="si">{}</span><span class="s2"> not yet implemented!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stmt</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="AssignmentSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.backward.AssignmentSemantics">[docs]</a><span class="k">class</span> <span class="nc">AssignmentSemantics</span><span class="p">(</span><span class="n">BackwardSemantics</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Backward semantics of assignments.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AssignmentSemantics.assignment_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.backward.AssignmentSemantics.assignment_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">assignment_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Assignment</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Backward semantics of an assignment. </span>
+
+<span class="sd">        :param stmt: assignment statement to be executed</span>
+<span class="sd">        :param state: state before executing the assignment</span>
+<span class="sd">        :return: state modified by the assignment</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>    <span class="c1"># lhs evaluation</span>
+        <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>   <span class="c1"># rhs evaluation</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">VariableAccess</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">substitute_variable</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Backward semantics for assignment </span><span class="si">{0!s}</span><span class="s2"> not yet implemented!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+
+
+<span class="c1"># noinspection PyAbstractClass</span>
+<div class="viewcode-block" id="DefaultBackwardSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.backward.DefaultBackwardSemantics">[docs]</a><span class="k">class</span> <span class="nc">DefaultBackwardSemantics</span><span class="p">(</span><span class="n">DefaultSemantics</span><span class="p">,</span> <span class="n">UserDefinedCallSemantics</span><span class="p">,</span> <span class="n">AssignmentSemantics</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Default backward semantics of statements.&quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

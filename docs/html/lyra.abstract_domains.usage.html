@@ -1,0 +1,451 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>lyra.abstract_domains.usage package &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
+        <link rel="up" title="lyra.abstract_domains package" href="lyra.abstract_domains.html"/>
+        <link rel="next" title="lyra.core package" href="lyra.core.html"/>
+        <link rel="prev" title="lyra.abstract_domains.traces package" href="lyra.abstract_domains.traces.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.core.html">lyra.core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.engine.html">lyra.engine package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.semantics.html">lyra.semantics package</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="modules.html">lyra</a> &raquo;</li>
+      
+          <li><a href="lyra.html">lyra package</a> &raquo;</li>
+      
+          <li><a href="lyra.abstract_domains.html">lyra.abstract_domains package</a> &raquo;</li>
+      
+    <li>lyra.abstract_domains.usage package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/lyra.abstract_domains.usage.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-lyra.abstract_domains.usage">
+<span id="lyra-abstract-domains-usage-package"></span><h1>lyra.abstract_domains.usage package<a class="headerlink" href="#module-lyra.abstract_domains.usage" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-lyra.abstract_domains.usage.stack">
+<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.abstract_domains.usage.stack" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lyra.abstract_domains.usage.stack.UsedStack">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.stack.</code><code class="descname">UsedStack</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.stack.Stack" title="lyra.abstract_domains.stack.Stack"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.stack.Stack</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.state.State" title="lyra.abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.state.State</span></code></a></p>
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.stack.UsedStack.enter_if">
+<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack.enter_if" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.stack.UsedStack.enter_loop">
+<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack.enter_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.stack.UsedStack.exit_if">
+<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack.exit_if" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.stack.UsedStack.exit_loop">
+<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack.exit_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.stack.UsedStack.pop">
+<code class="descname">pop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack.pop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack.pop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.stack.UsedStack.push">
+<code class="descname">push</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack.push"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack.push" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-lyra.abstract_domains.usage.store"></span><dl class="class">
+<dt id="lyra.abstract_domains.usage.store.UsedStore">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.store.</code><code class="descname">UsedStore</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.store.Store" title="lyra.abstract_domains.store.Store"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.store.Store</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.state.State" title="lyra.abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.state.State</span></code></a></p>
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.store.UsedStore.combine">
+<code class="descname">combine</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.usage.store.UsedStore</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.store.UsedStore<a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore.combine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore.combine" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.store.UsedStore.descend">
+<code class="descname">descend</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.store.UsedStore<a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore.descend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore.descend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.store.UsedStore.enter_if">
+<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore.enter_if" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.store.UsedStore.enter_loop">
+<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore.enter_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.store.UsedStore.exit_if">
+<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore.exit_if" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.store.UsedStore.exit_loop">
+<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore.exit_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-lyra.abstract_domains.usage.test_usedListStartLattice"></span><dl class="class">
+<dt id="lyra.abstract_domains.usage.test_usedListStartLattice.TestUsedListStartLattice">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.test_usedListStartLattice.</code><code class="descname">TestUsedListStartLattice</code><span class="sig-paren">(</span><em>methodName=’runTest’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/test_usedListStartLattice.html#TestUsedListStartLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.test_usedListStartLattice.TestUsedListStartLattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></code></p>
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.test_usedListStartLattice.TestUsedListStartLattice.test_combine">
+<code class="descname">test_combine</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/test_usedListStartLattice.html#TestUsedListStartLattice.test_combine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.test_usedListStartLattice.TestUsedListStartLattice.test_combine" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-lyra.abstract_domains.usage.used"></span><dl class="class">
+<dt id="lyra.abstract_domains.usage.used.Used">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.used.</code><code class="descname">Used</code><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used.html#Used"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used.Used" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">enum.Flag</span></code></p>
+<p>Used state of a program variable.</p>
+<dl class="attribute">
+<dt id="lyra.abstract_domains.usage.used.Used.N">
+<code class="descname">N</code><em class="property"> = 0</em><a class="headerlink" href="#lyra.abstract_domains.usage.used.Used.N" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.usage.used.Used.O">
+<code class="descname">O</code><em class="property"> = 1</em><a class="headerlink" href="#lyra.abstract_domains.usage.used.Used.O" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.usage.used.Used.S">
+<code class="descname">S</code><em class="property"> = 2</em><a class="headerlink" href="#lyra.abstract_domains.usage.used.Used.S" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.usage.used.Used.U">
+<code class="descname">U</code><em class="property"> = 3</em><a class="headerlink" href="#lyra.abstract_domains.usage.used.Used.U" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.abstract_domains.usage.used.UsedLattice">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.used.</code><code class="descname">UsedLattice</code><span class="sig-paren">(</span><em>used: lyra.abstract_domains.usage.used.Used = &lt;Used.N: 0&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used.html#UsedLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin" title="lyra.abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BottomMixin</span></code></a></p>
+<p>Used variable analysis core abstract domain representation.</p>
+<dl class="attribute">
+<dt id="lyra.abstract_domains.usage.used.UsedLattice.COMBINE">
+<code class="descname">COMBINE</code><em class="property"> = {(&lt;Used.N: 0&gt;, &lt;Used.N: 0&gt;): &lt;Used.N: 0&gt;, (&lt;Used.N: 0&gt;, &lt;Used.S: 2&gt;): &lt;Used.S: 2&gt;, (&lt;Used.N: 0&gt;, &lt;Used.O: 1&gt;): &lt;Used.O: 1&gt;, (&lt;Used.N: 0&gt;, &lt;Used.U: 3&gt;): &lt;Used.U: 3&gt;, (&lt;Used.S: 2&gt;, &lt;Used.N: 0&gt;): &lt;Used.S: 2&gt;, (&lt;Used.S: 2&gt;, &lt;Used.S: 2&gt;): &lt;Used.S: 2&gt;, (&lt;Used.S: 2&gt;, &lt;Used.O: 1&gt;): &lt;Used.O: 1&gt;, (&lt;Used.S: 2&gt;, &lt;Used.U: 3&gt;): &lt;Used.U: 3&gt;, (&lt;Used.O: 1&gt;, &lt;Used.N: 0&gt;): &lt;Used.O: 1&gt;, (&lt;Used.O: 1&gt;, &lt;Used.S: 2&gt;): &lt;Used.S: 2&gt;, (&lt;Used.O: 1&gt;, &lt;Used.O: 1&gt;): &lt;Used.O: 1&gt;, (&lt;Used.O: 1&gt;, &lt;Used.U: 3&gt;): &lt;Used.U: 3&gt;, (&lt;Used.U: 3&gt;, &lt;Used.N: 0&gt;): &lt;Used.U: 3&gt;, (&lt;Used.U: 3&gt;, &lt;Used.S: 2&gt;): &lt;Used.U: 3&gt;, (&lt;Used.U: 3&gt;, &lt;Used.O: 1&gt;): &lt;Used.O: 1&gt;, (&lt;Used.U: 3&gt;, &lt;Used.U: 3&gt;): &lt;Used.U: 3&gt;}</em><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.COMBINE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.usage.used.UsedLattice.DESCEND">
+<code class="descname">DESCEND</code><em class="property"> = {&lt;Used.U: 3&gt;: &lt;Used.S: 2&gt;, &lt;Used.S: 2&gt;: &lt;Used.S: 2&gt;, &lt;Used.O: 1&gt;: &lt;Used.N: 0&gt;, &lt;Used.N: 0&gt;: &lt;Used.N: 0&gt;}</em><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.DESCEND" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.used.UsedLattice.combine">
+<code class="descname">combine</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.usage.used.UsedLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.used.UsedLattice<a class="reference internal" href="_modules/lyra/abstract_domains/usage/used.html#UsedLattice.combine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.combine" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.used.UsedLattice.descend">
+<code class="descname">descend</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.used.UsedLattice<a class="reference internal" href="_modules/lyra/abstract_domains/usage/used.html#UsedLattice.descend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.descend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.used.UsedLattice.is_top">
+<code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/usage/used.html#UsedLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.is_top" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.used.UsedLattice.top">
+<code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used.html#UsedLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.top" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.usage.used.UsedLattice.used">
+<code class="descname">used</code><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.used" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-lyra.abstract_domains.usage.used_liststart"></span><dl class="class">
+<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.used_liststart.</code><code class="descname">UsedListStartLattice</code><span class="sig-paren">(</span><em>s: float = 0</em>, <em>u: float = 0</em>, <em>o: float = 0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin" title="lyra.abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BottomMixin</span></code></a></p>
+<p>Used list start analysis abstract domain representation.</p>
+<p>This uses the Used lattice as base and uses it to store the usage of the start of list, each Used element covers 
+a possibly empty sequence <code class="docutils literal"><span class="pre">0:q</span></code>. Some additional consistency conditions hold for any element of this lattice 
+that was previously closed by <code class="docutils literal"><span class="pre">closure()</span></code>.</p>
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.change_SU_to_O">
+<code class="descname">change_SU_to_O</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.change_SU_to_O"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.change_SU_to_O" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change previously U/S-annotated to O-annotated</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.change_S_to_U">
+<code class="descname">change_S_to_U</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.change_S_to_U"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.change_S_to_U" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change previously S-annotated (used in outer scope) to U-annotated (definitely used)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.closed">
+<code class="descname">closed</code><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.closed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.closure">
+<code class="descname">closure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.closure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.closure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.combine">
+<code class="descname">combine</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.usage.used_liststart.UsedListStartLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.used_liststart.UsedListStartLattice<a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.combine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.combine" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.descend">
+<code class="descname">descend</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.used_liststart.UsedListStartLattice<a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.descend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.descend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.is_top">
+<code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.is_top" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.set_used_at">
+<code class="descname">set_used_at</code><span class="sig-paren">(</span><em>index</em>, <em>u: lyra.abstract_domains.usage.used.Used = &lt;Used.U: 3&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.set_used_at"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.set_used_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set usage at specified index.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.suo">
+<code class="descname">suo</code><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.suo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.top">
+<code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.top" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.used_at">
+<code class="descname">used_at</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.used_at"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.used_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds usage at specified index.</p>
+<p>Does a linear search through the 3-entry suo dict
+to find the entry that is determining the element usage at index.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="lyra.core.html" class="btn btn-neutral float-right" title="lyra.core package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="lyra.abstract_domains.traces.html" class="btn btn-neutral" title="lyra.abstract_domains.traces package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
