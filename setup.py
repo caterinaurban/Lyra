@@ -8,7 +8,7 @@ config = {
     'description': 'Static Program Analyzer for Python Data Science Applications',
     'url': 'http://www.pm.inf.ethz.ch/research/lyra.html',
     'license': 'MPL-2.0',
-    'packages': find_packages(),
+    'packages': find_packages('src'),
     'package_dir': {'': 'src'},
     'install_requires': [
         'graphviz==0.7.1',
