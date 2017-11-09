@@ -135,7 +135,7 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">VariableIdentifier</span>
-
+<span class="kn">from</span> <span class="nn">lyra.core.types</span> <span class="k">import</span> <span class="n">LyraType</span>
 
 <div class="viewcode-block" id="ProgramPoint"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.ProgramPoint">[docs]</a><span class="k">class</span> <span class="nc">ProgramPoint</span><span class="p">:</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
@@ -247,7 +247,7 @@
 
 
 <div class="viewcode-block" id="Call"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.Call">[docs]</a><span class="k">class</span> <span class="nc">Call</span><span class="p">(</span><span class="n">Statement</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Statement</span><span class="p">],</span> <span class="n">typ</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Statement</span><span class="p">],</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Call statement representation.</span>
 <span class="sd">        </span>
 <span class="sd">        :param pp: program point associated with the call</span>

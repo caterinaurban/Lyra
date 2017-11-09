@@ -7,11 +7,13 @@ Lifting of a lattice to a set of program variables.
 
 
 from collections import defaultdict
-from typing import List, Type, Dict, Any
+
+from typing import List, Dict, Any, Type
 
 from lyra.core.expressions import VariableIdentifier
 
 from lyra.abstract_domains.lattice import Lattice
+from lyra.core.types import LyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -38,7 +40,7 @@ class Store(Lattice):
         self._variables = variables
         self._lattices = lattices
         self._arguments = arguments
-        self._store = {var: self._lattices[var.typ](**self._arguments[var.typ]) for var in self._variables}
+        self._store = {var: self._lattices[type(var.typ)](**self._arguments[type(var.typ)]) for var in self._variables}
 
     @property
     def variables(self):
@@ -96,4 +98,7 @@ class Store(Lattice):
 
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'Store'):
-        return self._join(other)
+        """The widening is performed point-wise for each variable."""
+        for var in self.store:
+            self.store[var].widening(other.store[var])
+        return self

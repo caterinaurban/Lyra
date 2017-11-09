@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from enum import IntEnum
 from typing import Set, Sequence
+from lyra.core.types import LyraType, StringLyraType, IntegerLyraType
+from lyra.core.utils import copy_docstring
 
 """
 Expressions.
@@ -9,7 +11,7 @@ https://docs.python.org/3.4/reference/expressions.html
 
 
 class Expression(metaclass=ABCMeta):
-    def __init__(self, typ):
+    def __init__(self, typ: LyraType):
         """Expression representation.
         https://docs.python.org/3.4/reference/expressions.html
         
@@ -59,6 +61,195 @@ class Expression(metaclass=ABCMeta):
         return ids
 
 
+# noinspection PyPep8Naming
+class ExpressionVisitor(metaclass=ABCMeta):
+    """
+    An expression visitor base class that walks the expression tree and calls a
+    visitor function for every expression found.  This function may return a value
+    which is forwarded by the `visit` method.
+
+    Subclasses are meant to implement the visitor functions.
+    The visitor function for an expression is ``'visit_'`` +
+    class name of the expression.  So a `Literal` expression visit function would
+    be `visit_Literal`.  If no visitor function exists for an expression
+    a `NotImplementedError` is raised.
+
+    Adapted from `ast.py`.
+    """
+    def visit(self, expr, *args, **kwargs):
+        """Visit of an expression."""
+        method = 'visit_' + expr.__class__.__name__
+        if hasattr(self, method):
+            return getattr(self, method)(expr, *args, **kwargs)
+        raise NotImplementedError(f"Missing visitor for {expr.__class__.__name__} in {self.__class__.__qualname__}!")
+
+    @abstractmethod
+    def visit_Literal(self, expr: 'Literal'):
+        """Visit of a literal expression."""
+
+    @abstractmethod
+    def visit_Input(self, expr: 'Input'):
+        """Visit of an input expression."""
+
+    @abstractmethod
+    def visit_VariableIdentifier(self, expr: 'VariableIdentifier'):
+        """Visit of a variable identifier."""
+
+    @abstractmethod
+    def visit_ListDisplay(self, expr: 'ListDisplay'):
+        """Visit of a list display."""
+
+    @abstractmethod
+    def visit_AttributeReference(self, expr: 'AttributeReference'):
+        """Visit of an attribute reference."""
+
+    @abstractmethod
+    def visit_Slice(self, expr: 'Slice'):
+        """Visit of a slice expression."""
+
+    @abstractmethod
+    def visit_Index(self, expr: 'Index'):
+        """Visit of an index expression."""
+
+    @abstractmethod
+    def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation'):
+        """Visit of a unary arithmetic operation."""
+
+    @abstractmethod
+    def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation'):
+        """Visit of a unary boolean operation."""
+
+    @abstractmethod
+    def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation'):
+        """Visit of a binary arithmetic operation."""
+
+    @abstractmethod
+    def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation'):
+        """Visit of a binary boolean operation."""
+
+    @abstractmethod
+    def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation'):
+        """Visit of a binary comparison operation."""
+
+    def generic_visit(self, expr, *args, **kwargs):
+        raise ValueError(
+            f"{self.__class__.__qualname__} does not support generic visit of expressions! "
+            f"Define handling for a {expr.__class__.__name__} expression explicitly!")
+
+
+class NegationFreeNormalExpression(ExpressionVisitor):
+    """
+    An expression visitor that:
+
+    (1) removes negations using De Morgan's law, and
+
+    (2) puts all boolean comparison operations in the normal form ``expr <= 0``.
+
+    .. note:: The only supported boolean comparison operators are ``=``, ``!=``, ``<``, ``<=``, ``>``, and ``>=``.
+    """
+
+    @copy_docstring(ExpressionVisitor.visit_Literal)
+    def visit_Literal(self, expr: 'Literal', invert=False):
+        return expr    # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Input)
+    def visit_Input(self, expr: 'Input', invert=False):
+        return expr
+
+    @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+    def visit_VariableIdentifier(self, expr: 'VariableIdentifier', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+    def visit_ListDisplay(self, expr: 'ListDisplay', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_AttributeReference)
+    def visit_AttributeReference(self, expr: 'AttributeReference', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Slice)
+    def visit_Slice(self, expr: 'Slice', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Index)
+    def visit_Index(self, expr: 'Index', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
+    def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
+    def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', invert=False):
+        if expr.operator == UnaryBooleanOperation.Operator.Neg:
+            return self.visit(expr.expression, invert=not invert)
+        raise ValueError(f"Unary boolean operator {expr} is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
+    def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
+    def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation', invert=False):
+        left = self.visit(expr.left, invert)
+        operator = expr.operator.reverse_operator() if invert else expr.operator
+        right = self.visit(expr.right, invert)
+        return BinaryBooleanOperation(expr.typ, left, operator, right)
+
+    @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
+    def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation', invert=False):
+        left = self.visit(expr.left)
+        operator = expr.operator.reverse_operator() if invert else expr.operator
+        right = self.visit(expr.right)
+        zero = Literal(IntegerLyraType(), "0")
+        if operator == BinaryBooleanOperation.Operator.Eq:  # left = right -> left - right <= 0 && right - left <= 0
+            minus = BinaryArithmeticOperation.Operator.Sub
+            operator = BinaryBooleanOperation.Operator.LtE
+            expr1 = BinaryArithmeticOperation(left.typ, left, minus, right)
+            expr1 = BinaryComparisonOperation(expr.typ, expr1, operator, zero)
+            expr2 = BinaryArithmeticOperation(right.typ, right, minus, left)
+            expr2 = BinaryComparisonOperation(expr.typ, expr2, operator, zero)
+            return BinaryBooleanOperation(expr.typ, expr1, BinaryBooleanOperation.Operator.And, expr2)
+        elif operator == BinaryBooleanOperation.Operator.Neq:
+            # left != right -> left - (right - 1) <= 0 || right - (left - 1) <= 0
+            one = Literal(IntegerLyraType(), "1")
+            minus = BinaryArithmeticOperation.Operator.Sub
+            operator = BinaryBooleanOperation.Operator.LtE
+            expr1 = BinaryArithmeticOperation(right.typ, right, minus, one)
+            expr1 = BinaryArithmeticOperation(left.typ, left, minus, expr1)
+            expr1 = BinaryComparisonOperation(expr.typ, expr1, operator, zero)
+            expr2 = BinaryArithmeticOperation(left.typ, left, minus, one)
+            expr2 = BinaryArithmeticOperation(right.typ, right, minus, expr2)
+            expr2 = BinaryComparisonOperation(expr.typ, expr2, operator, zero)
+            return BinaryBooleanOperation(expr.typ, expr1, BinaryBooleanOperation.Operator.Or, expr2)
+        elif operator == BinaryBooleanOperation.Operator.Lt:    # left < right -> left - (right - 1) <= 0
+            one = Literal(IntegerLyraType(), "1")
+            minus = BinaryArithmeticOperation.Operator.Sub
+            right = BinaryArithmeticOperation(right.typ, right, minus, one)
+            left = BinaryArithmeticOperation(left.typ, left, minus, right)
+            operator = BinaryBooleanOperation.Operator.LtE
+            return BinaryComparisonOperation(expr.typ, left, operator, zero)
+        elif operator == BinaryBooleanOperation.Operator.LtE:   # left <= right -> left - right <= 0
+            minus = BinaryArithmeticOperation.Operator.Sub
+            left = BinaryArithmeticOperation(left.typ, left, minus, right)
+            operator = BinaryBooleanOperation.Operator.LtE
+            return BinaryComparisonOperation(expr.typ, left, operator, zero)
+        elif operator == BinaryBooleanOperation.Operator.Gt:    # left > right -> right - (left - 1) <= 0
+            one = Literal(IntegerLyraType(), "1")
+            minus = BinaryArithmeticOperation.Operator.Sub
+            left = BinaryArithmeticOperation(left.typ, left, minus, one)
+            right = BinaryArithmeticOperation(right.typ, right, minus, left)
+            operator = BinaryBooleanOperation.Operator.LtE
+            return BinaryComparisonOperation(expr.typ, right, operator, zero)
+        elif operator == BinaryBooleanOperation.Operator.GtE:   # left >= right -> right - left <= 0
+            minus = BinaryArithmeticOperation.Operator.Sub
+            right = BinaryArithmeticOperation(right.typ, right, minus, left)
+            operator = BinaryBooleanOperation.Operator.LtE
+            return BinaryComparisonOperation(expr.typ, right, operator, zero)
+        raise ValueError(f"Boolean comparison operator {expr} is unsupported!")
+
+
 """
 Atomic Expressions
 https://docs.python.org/3.4/reference/expressions.html#atoms
@@ -66,7 +257,7 @@ https://docs.python.org/3.4/reference/expressions.html#atoms
 
 
 class Literal(Expression):
-    def __init__(self, typ, val: str):
+    def __init__(self, typ: LyraType, val: str):
         """Literal expression representation.
         https://docs.python.org/3.4/reference/expressions.html#literals
         
@@ -87,14 +278,14 @@ class Literal(Expression):
         return hash((self.typ, self.val))
 
     def __str__(self):
-        if issubclass(self.typ, str):
+        if isinstance(self.typ, StringLyraType):
             return f'"{self.val}"'
         else:
             return f"{self.val}"
 
 
 class Input(Expression):
-    def __init__(self, typ):
+    def __init__(self, typ: LyraType):
         """Input expression representation.
 
         :param typ: type of the input
@@ -112,7 +303,7 @@ class Input(Expression):
 
 
 class Identifier(Expression):
-    def __init__(self, typ, name: str):
+    def __init__(self, typ: LyraType, name: str):
         """Identifier expression representation.
         https://docs.python.org/3.4/reference/expressions.html#atom-identifiers
         
@@ -137,7 +328,7 @@ class Identifier(Expression):
 
 
 class VariableIdentifier(Identifier):
-    def __init__(self, typ, name: str):
+    def __init__(self, typ: LyraType, name: str):
         """Variable identifier expression representation.
         
         :param typ: type of the identifier
@@ -152,7 +343,7 @@ class ListDisplay(Expression):
     https://docs.python.org/3/reference/expressions.html#list-displays
     """
 
-    def __init__(self, typ=type(list), items: Sequence = None):
+    def __init__(self, typ: LyraType, items: Sequence[Expression] = None):
         """List display representation
         
         :param typ: type of the list display
@@ -187,7 +378,7 @@ class AttributeReference(Expression):
     https://docs.python.org/3.4/reference/expressions.html#attribute-references
     """
 
-    def __init__(self, typ, primary: Expression, attribute: Identifier):
+    def __init__(self, typ: LyraType, primary: Expression, attribute: Identifier):
         """Attribute reference expression representation.
         
         :param typ: type of the attribute
@@ -220,7 +411,7 @@ class Slice(Expression):
     """Slice (list/dictionary access) representation.
     """
 
-    def __init__(self, typ, target: Expression, lower: Expression, step: Expression, upper: Expression):
+    def __init__(self, typ: LyraType, target: Expression, lower: Expression, step: Expression, upper: Expression):
         """Slice (list/dictionary access) representation.
 
         :param typ: type of the slice
@@ -269,7 +460,7 @@ class Index(Expression):
     """Index (list/dictionary access) representation.
     """
 
-    def __init__(self, typ, target: Expression, index: Expression):
+    def __init__(self, typ: LyraType, target: Expression, index: Expression):
         """Index  (list/dictionary access) representation.
 
         :param typ: type of the attribute
@@ -324,7 +515,7 @@ class UnaryOperation(Operation):
             :return: string representing the operator
             """
 
-    def __init__(self, typ, operator: Operator, expression: Expression):
+    def __init__(self, typ: LyraType, operator: Operator, expression: Expression):
         """Unary operation expression representation.
         
         :param typ: type of the operation
@@ -373,7 +564,7 @@ class UnaryArithmeticOperation(UnaryOperation):
             elif self.value == -1:
                 return "-"
 
-    def __init__(self, typ, operator: Operator, expression: Expression):
+    def __init__(self, typ: LyraType, operator: Operator, expression: Expression):
         """Unary arithmetic operation expression representation.
         
         :param typ: type of the operation
@@ -397,7 +588,7 @@ class UnaryBooleanOperation(UnaryOperation):
             if self.value == 1:
                 return "not"
 
-    def __init__(self, typ, operator: Operator, expression: Expression):
+    def __init__(self, typ: LyraType, operator: Operator, expression: Expression):
         """Unary boolean operation expression representation.
         
         :param typ: type of the operation
@@ -423,7 +614,7 @@ class BinaryOperation(Operation):
             :return: string representing the operator
             """
 
-    def __init__(self, typ, left: Expression, operator: Operator, right: Expression):
+    def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
         """Binary operation expression representation.
         
         :param typ: type of the operation
@@ -487,7 +678,7 @@ class BinaryArithmeticOperation(BinaryOperation):
             elif self.value == 4:
                 return "/"
 
-    def __init__(self, typ, left: Expression, operator: Operator, right: Expression):
+    def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
         """Binary arithmetic operation expression representation.
         
         :param typ: type of the operation
@@ -508,12 +699,18 @@ class BinaryBooleanOperation(BinaryOperation):
         """Binary arithmetic operator representation."""
         And = 1
         Or = 2
-        Xor = 3
+
+        def reverse_operator(self):
+            """Returns the reverse operator of this operator."""
+            if self.value == 1:
+                return BinaryBooleanOperation.Operator.Or
+            elif self.value == 2:
+                return BinaryBooleanOperation.Operator.And
 
         def __str__(self):
             return self.name.lower()
 
-    def __init__(self, typ, left: Expression, operator: Operator, right: Expression):
+    def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
         """Binary boolean operation expression representation.
 
         :param typ: type of the operation
@@ -588,7 +785,7 @@ class BinaryComparisonOperation(BinaryOperation):
             elif self.value == 10:
                 return "not in"
 
-    def __init__(self, typ, left: Expression, operator: Operator, right: Expression):
+    def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
         """Binary comparison operation expression representation.
 
         :param typ: type of the operation

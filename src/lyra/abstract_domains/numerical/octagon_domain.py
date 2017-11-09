@@ -9,10 +9,10 @@ from lyra.abstract_domains.state import State
 from lyra.core.expressions import *
 
 from lyra.abstract_domains.numerical.dbm import IntegerCDBM
-from lyra.abstract_domains.numerical.interval_domain import IntervalLattice, IntervalDomain
+from lyra.abstract_domains.numerical.interval_domain import IntervalLattice, IntervalState
 from lyra.abstract_domains.numerical.numerical import NumericalMixin
 from lyra.abstract_domains.numerical.linear_forms import SingleVarLinearForm, LinearForm, InvalidFormError
-from lyra.core.expressions_tools import ExpressionVisitor, ExpressionTransformer, \
+from lyra.core.expressions_tools import OldExpressionVisitor, ExpressionTransformer, \
     make_condition_not_free, simplify
 
 # Shorthands
@@ -267,12 +267,12 @@ class OctagonLattice(BottomMixin, NumericalMixin):
 
     def to_interval_domain(self):
         """Translate this octagonal store into an interval store."""
-        interval_store = IntervalDomain(self.variables)
+        interval_store = IntervalState(self.variables)
         for var in self.variables:
             interval_store.set_interval(var, self.get_interval(var))
         return interval_store
 
-    def from_interval_domain(self, interval_domain: IntervalDomain):
+    def from_interval_domain(self, interval_domain: IntervalState):
         """Translate the interval constraints from interval domain to this octagonal store.
         
         **NOTE**: This does not reset relational constraints in this octagon!

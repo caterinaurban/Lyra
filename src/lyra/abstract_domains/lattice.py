@@ -177,6 +177,8 @@ class Lattice(metaclass=ABCMeta):
         """
         if self.is_bottom() or other.is_top():
             return self.replace(other)
+        elif other.is_bottom() or self.is_top():
+            return self
         else:
             return self._widening(other)
 

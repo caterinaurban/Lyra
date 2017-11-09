@@ -1,6 +1,6 @@
 import unittest
 
-from lyra.abstract_domains.numerical.interval_domain import IntervalDomain
+from lyra.abstract_domains.numerical.interval_domain import IntervalState
 from lyra.unittests.generic_tests import ExpressionTreeTestCase
 
 
@@ -16,7 +16,7 @@ class TestIntervalDomain(ExpressionTreeTestCase):
         right_expr = result_store.store[self.variables['a']]
         # print(right_expr)
 
-        store = IntervalDomain(list(self.variables.values()))
+        store = IntervalState(list(self.variables.values()))
         interval = store.evaluate(right_expr)
         # print(interval)
 

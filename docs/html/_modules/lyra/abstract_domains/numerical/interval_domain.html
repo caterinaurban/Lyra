@@ -131,315 +131,322 @@
            <div itemprop="articleBody">
             
   <h1>Source code for lyra.abstract_domains.numerical.interval_domain</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Interval Abstract Domain</span>
+<span class="sd">========================</span>
+
+<span class="sd">Non-relational abstract domain to be used for **interval analysis**.</span>
+<span class="sd">The set of possible values of a program variable in a state is represented as an interval.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">inf</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Set</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span>
 
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.lattice</span> <span class="k">import</span> <span class="n">BottomMixin</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.numerical.arithmetic</span> <span class="k">import</span> <span class="n">ArithmeticMixin</span>
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.state</span> <span class="k">import</span> <span class="n">State</span>
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.store</span> <span class="k">import</span> <span class="n">Store</span>
 <span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="o">*</span>
 
-<span class="kn">from</span> <span class="nn">lyra.abstract_domains.numerical.numerical</span> <span class="k">import</span> <span class="n">NumericalMixin</span>
-<span class="kn">from</span> <span class="nn">lyra.core.expressions_tools</span> <span class="k">import</span> <span class="n">ExpressionVisitor</span>
+<span class="kn">from</span> <span class="nn">lyra.core.utils</span> <span class="k">import</span> <span class="n">copy_docstring</span>
+<span class="kn">from</span> <span class="nn">lyra.core.types</span> <span class="k">import</span> <span class="n">BooleanLyraType</span><span class="p">,</span> <span class="n">IntegerLyraType</span>
 
 
-<div class="viewcode-block" id="Interval"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.Interval">[docs]</a><span class="k">class</span> <span class="nc">Interval</span><span class="p">:</span>
+<div class="viewcode-block" id="IntervalLattice"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice">[docs]</a><span class="k">class</span> <span class="nc">IntervalLattice</span><span class="p">(</span><span class="n">BottomMixin</span><span class="p">,</span> <span class="n">ArithmeticMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Interval lattice. The bottom interval represents an empty set.</span>
+
+<span class="sd">    .. image:: _static/interval.jpg</span>
+
+<span class="sd">    The default abstraction is the unbounded interval [-oo, +oo].</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: IntervalLattice._less_equal</span>
+<span class="sd">    .. automethod:: IntervalLattice._meet</span>
+<span class="sd">    .. automethod:: IntervalLattice._join</span>
+<span class="sd">    .. automethod:: IntervalLattice._widening</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lower</span><span class="o">=-</span><span class="n">inf</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="n">inf</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create an interval lattice for a single variable.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span> <span class="o">=</span> <span class="n">lower</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_upper</span> <span class="o">=</span> <span class="n">upper</span>
+        <span class="k">if</span> <span class="n">lower</span> <span class="o">&lt;=</span> <span class="n">upper</span><span class="p">:</span>      <span class="c1"># the interval is not empty</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span> <span class="o">=</span> <span class="n">lower</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_upper</span> <span class="o">=</span> <span class="n">upper</span>
+        <span class="k">else</span><span class="p">:</span>                   <span class="c1"># the interval is empty</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">lower</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Current lower bound.</span>
+
+<span class="sd">        :return: the current lower bound if the interval is not empty, ``None`` otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span>
 
-    <span class="nd">@lower</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">lower</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span> <span class="o">=</span> <span class="n">b</span>
-
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">upper</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Current upper bound.</span>
+
+<span class="sd">        :return: the current upper bound if the interval is not empty, ``None`` otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upper</span>
 
-    <span class="nd">@upper</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">upper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_upper</span> <span class="o">=</span> <span class="n">b</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span>
-
-    <span class="nd">@interval</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
-        <span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span> <span class="o">=</span> <span class="n">bounds</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">=</span> <span class="n">lower</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">=</span> <span class="n">upper</span>
-
-<div class="viewcode-block" id="Interval.empty"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.Interval.empty">[docs]</a>    <span class="k">def</span> <span class="nf">empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upper</span></div>
-
-<div class="viewcode-block" id="Interval.set_empty"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.Interval.set_empty">[docs]</a>    <span class="k">def</span> <span class="nf">set_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Interval&#39;</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">interval</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span></div>
-
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;Interval&#39;</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;Interval&#39;</span><span class="p">):</span>
-        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Incomparable types!&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Empty intervals are not comparable!&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">&lt;</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span>
-
-    <span class="k">def</span> <span class="nf">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Incomparable types!&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Empty intervals are not comparable!&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span>
-
-    <span class="k">def</span> <span class="nf">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Incomparable types!&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Empty intervals are not comparable!&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">&gt;</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span>
-
-    <span class="k">def</span> <span class="nf">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Incomparable types!&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Empty intervals are not comparable!&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">&gt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span>
-
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
-
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-            <span class="k">return</span> <span class="s2">&quot;∅&quot;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;[</span><span class="si">{self.lower}</span><span class="s2">,</span><span class="si">{self.upper}</span><span class="s2">]&quot;</span>
-
-<div class="viewcode-block" id="Interval.add"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.Interval.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Interval&#39;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_empty</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">interval</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span></div>
-
-<div class="viewcode-block" id="Interval.sub"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.Interval.sub">[docs]</a>    <span class="k">def</span> <span class="nf">sub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Interval&#39;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_empty</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">interval</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span></div>
-
-<div class="viewcode-block" id="Interval.mult"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.Interval.mult">[docs]</a>    <span class="k">def</span> <span class="nf">mult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Interval&#39;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_empty</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">comb</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">interval</span> <span class="o">=</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">comb</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">comb</span><span class="p">))</span>
-            <span class="k">return</span> <span class="bp">self</span></div>
-
-<div class="viewcode-block" id="Interval.negate"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.Interval.negate">[docs]</a>    <span class="k">def</span> <span class="nf">negate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Interval&#39;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-            <span class="k">return</span> <span class="bp">self</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">interval</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span></div></div>
-
-
-<div class="viewcode-block" id="IntervalLattice"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice">[docs]</a><span class="k">class</span> <span class="nc">IntervalLattice</span><span class="p">(</span><span class="n">Interval</span><span class="p">,</span> <span class="n">BottomMixin</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
             <span class="k">return</span> <span class="s2">&quot;⊥&quot;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;[</span><span class="si">{self.lower}</span><span class="s2">, </span><span class="si">{self.upper}</span><span class="s2">]&quot;</span>
 
-<div class="viewcode-block" id="IntervalLattice.top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.top">[docs]</a>    <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">=</span> <span class="o">-</span><span class="n">inf</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">=</span> <span class="n">inf</span>
+<div class="viewcode-block" id="IntervalLattice.top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The top lattice element is ``[-oo,+oo]``.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">IntervalLattice</span><span class="p">())</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="IntervalLattice.is_top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.is_top">[docs]</a>    <span class="k">def</span> <span class="nf">is_top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span> <span class="o">==</span> <span class="o">-</span><span class="n">inf</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upper</span> <span class="o">==</span> <span class="n">inf</span></div>
+<div class="viewcode-block" id="IntervalLattice.is_top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.is_top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">is_top</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">==</span> <span class="o">-</span><span class="n">inf</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">==</span> <span class="n">inf</span></div>
 
-<div class="viewcode-block" id="IntervalLattice.is_bottom"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.is_bottom">[docs]</a>    <span class="k">def</span> <span class="nf">is_bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="c1"># we have to check if interval is empty, or got empty by an operation on this interval</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span></div>
-
+<div class="viewcode-block" id="IntervalLattice._less_equal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice._less_equal">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_less_equal</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">_less_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="c1"># NOTE: do not use less equal operator of plain interval since that has different semantics (every value in</span>
-        <span class="c1"># interval is less equal than any value in other interval)</span>
-        <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span>
+        <span class="sd">&quot;&quot;&quot;``[a, b] &lt;= [c, d]`` if and only if ``c &lt;= a`` and ``b &lt;= d``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span></div>
 
-    <span class="k">def</span> <span class="nf">_meet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span>
-
+<div class="viewcode-block" id="IntervalLattice._join"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice._join">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_join</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span>
+        <span class="sd">&quot;&quot;&quot;``[a, b] \/ [c, d] = [min(a,c), max(b,d)]``.&quot;&quot;&quot;</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">IntervalLattice</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">_widening</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="IntervalLattice._meet"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice._meet">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_meet</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_meet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;``[a, b] /\ [c, d] = [max(a,c), min(b,d)]``.&quot;&quot;&quot;</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lower</span> <span class="o">&lt;=</span> <span class="n">upper</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">IntervalLattice</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="IntervalLattice._widening"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice._widening">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_widening</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_widening</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;``[a, b] ▽ [c, d] = [(c &lt; a? -oo : a), (b &lt; d? +oo : b)]``.&quot;&quot;&quot;</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span>
         <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">=</span> <span class="n">inf</span>
-        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">=</span> <span class="n">inf</span>
-        <span class="k">return</span> <span class="bp">self</span>
+            <span class="n">lower</span> <span class="o">=</span> <span class="o">-</span><span class="n">inf</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">&lt;</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span><span class="p">:</span>
+            <span class="n">upper</span> <span class="o">=</span> <span class="n">inf</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">IntervalLattice</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="IntervalLattice.evaluate"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.evaluate">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Evaluates an expression without variables, interpreting constants in the interval domain.</span>
-<span class="sd">        </span>
-<span class="sd">        If this method encounters any variables, it raises a ``ValueError``.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_visitor</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span></div>
+    <span class="c1"># arithmetic operations</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_neg</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_neg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;``- [a, b] = [-b, -a]``.&quot;&quot;&quot;</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">IntervalLattice</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">))</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_add</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;``[a, b] + [c, d] = [a + c, b + d]``.&quot;&quot;&quot;</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">IntervalLattice</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">))</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_sub</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_sub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;``[a, b] - [c, d] = [a - d, b - c]``.&quot;&quot;&quot;</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">IntervalLattice</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">))</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_mult</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_mult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;``[a, b] * [c, d] = [min(a*c, a*d, b*c, b*d), max(a*c, a*d, b*c, b*d)]``.&quot;&quot;&quot;</span>
+        <span class="n">ac</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span>
+        <span class="n">ad</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span>
+        <span class="n">bc</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span>
+        <span class="n">bd</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ac</span><span class="p">,</span> <span class="n">ad</span><span class="p">,</span> <span class="n">bc</span><span class="p">,</span> <span class="n">bd</span><span class="p">)</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">ac</span><span class="p">,</span> <span class="n">ad</span><span class="p">,</span> <span class="n">bc</span><span class="p">,</span> <span class="n">bd</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">IntervalLattice</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="IntervalState"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState">[docs]</a><span class="k">class</span> <span class="nc">IntervalState</span><span class="p">(</span><span class="n">Store</span><span class="p">,</span> <span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Interval analysis state. An element of the interval abstract domain.</span>
+
+<span class="sd">    Map from each program variable to the interval representing its value.</span>
+<span class="sd">    The value of all program variables is represented by the unbounded interval by default.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: IntervalState._assign_variable</span>
+<span class="sd">    .. automethod:: IntervalState._assume</span>
+<span class="sd">    .. automethod:: IntervalState._output</span>
+<span class="sd">    .. automethod:: IntervalState._substitute_variable</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Map each program variable to the interval representing its value.</span>
+
+<span class="sd">        :param variables: list of program variables</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="p">{</span><span class="n">BooleanLyraType</span><span class="p">:</span> <span class="n">IntervalLattice</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">:</span> <span class="n">IntervalLattice</span><span class="p">})</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_access_variable</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_access_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">variable</span><span class="p">}</span>
+
+<div class="viewcode-block" id="IntervalState._assign_variable"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState._assign_variable">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_assign_variable</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_assign_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalState&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">BooleanLyraType</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Variable type </span><span class="si">{left.typ}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Assignment to </span><span class="si">{left.__class__.__name__}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="IntervalState._assume"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState._assume">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_assume</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_assume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalState&#39;</span><span class="p">:</span>
+        <span class="c1"># TODO implement this</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_evaluate_literal</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_evaluate_literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">literal</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">literal</span><span class="p">}</span>
+
+<div class="viewcode-block" id="IntervalState.enter_if"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.enter_if">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">enter_if</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">enter_if</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span></div>
+
+<div class="viewcode-block" id="IntervalState.exit_if"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.exit_if">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">exit_if</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">exit_if</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span></div>
+
+<div class="viewcode-block" id="IntervalState.enter_loop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.enter_loop">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">enter_loop</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">enter_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span></div>
+
+<div class="viewcode-block" id="IntervalState.exit_loop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.exit_loop">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">exit_loop</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">exit_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span></div>
+
+<div class="viewcode-block" id="IntervalState._output"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState._output">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_output</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalState&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span></div>
+
+<div class="viewcode-block" id="IntervalState._substitute_variable"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState._substitute_variable">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_substitute_variable</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_substitute_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Interval domain does not yet support variable substitution.&quot;</span><span class="p">)</span></div>
+
+    <span class="c1"># expression evaluation</span>
+
+<div class="viewcode-block" id="IntervalState.eval"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.eval">[docs]</a>    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Evaluation of an expression in the current interval state.</span>
+
+<span class="sd">        :param expr: expression to be evaluated</span>
+<span class="sd">        :return: interval representing the value of the expression in the current state</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visitor</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
 
     <span class="c1"># noinspection PyPep8Naming</span>
-<div class="viewcode-block" id="IntervalLattice.Visitor"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor">[docs]</a>    <span class="k">class</span> <span class="nc">Visitor</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A visitor to abstractly evaluate an expression (without variables) in the interval domain.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="IntervalState.ExpressionEvaluation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation">[docs]</a>    <span class="k">class</span> <span class="nc">ExpressionEvaluation</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Visitor that performs the evaluation of an expression in the interval lattice.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="IntervalLattice.Visitor.generic_visit"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.generic_visit">[docs]</a>        <span class="k">def</span> <span class="nf">generic_visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="n">f</span><span class="s2">&quot;{type(self)} does not support generic visit of expressions! &quot;</span>
-                <span class="n">f</span><span class="s2">&quot;Define handling for expression {type(expr)} explicitly!&quot;</span><span class="p">)</span></div>
-
-        <span class="c1"># noinspection PyMethodMayBeStatic, PyUnusedLocal</span>
-<div class="viewcode-block" id="IntervalLattice.Visitor.visit_Input"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_Input">[docs]</a>        <span class="k">def</span> <span class="nf">visit_Input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">:</span> <span class="n">Input</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">IntervalLattice</span><span class="p">()</span><span class="o">.</span><span class="n">top</span><span class="p">()</span></div>
-
-<div class="viewcode-block" id="IntervalLattice.Visitor.visit_BinaryArithmeticOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_BinaryArithmeticOperation">[docs]</a>        <span class="k">def</span> <span class="nf">visit_BinaryArithmeticOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">BinaryArithmeticOperation</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="n">l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Add</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">l</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Sub</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">l</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Mult</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">l</span><span class="o">.</span><span class="n">mult</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="c1"># noinspection PyMethodMayBeStatic</span>
+<div class="viewcode-block" id="IntervalState.ExpressionEvaluation.visit_Literal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Literal">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Literal</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">BooleanLyraType</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">IntervalLattice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># expr.val == &quot;False&quot;:</span>
+                    <span class="k">return</span> <span class="n">IntervalLattice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">):</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">IntervalLattice</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Binary operator &#39;{str(expr.operator)}&#39; is not supported!&quot;</span><span class="p">)</span></div>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Literal type </span><span class="si">{expr.typ}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="IntervalLattice.Visitor.visit_UnaryArithmeticOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_UnaryArithmeticOperation">[docs]</a>        <span class="k">def</span> <span class="nf">visit_UnaryArithmeticOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">UnaryArithmeticOperation</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expression</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># noinspection PyMethodMayBeStatic</span>
+<div class="viewcode-block" id="IntervalState.ExpressionEvaluation.visit_Input"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Input">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Input</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Input</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">BooleanLyraType</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">IntervalLattice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">IntervalLattice</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Input type </span><span class="si">{expr.typ}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span></div>
+
+        <span class="c1"># noinspection PyMethodMayBeStatic</span>
+<div class="viewcode-block" id="IntervalState.ExpressionEvaluation.visit_VariableIdentifier"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_VariableIdentifier">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_VariableIdentifier</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_VariableIdentifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">BooleanLyraType</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">expr</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Variable type </span><span class="si">{expr.typ}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="IntervalState.ExpressionEvaluation.visit_ListDisplay"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_ListDisplay">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_ListDisplay</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_ListDisplay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;ListDisplay&#39;</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="IntervalState.ExpressionEvaluation.visit_AttributeReference"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_AttributeReference">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_AttributeReference</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_AttributeReference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;AttributeReference&#39;</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="IntervalState.ExpressionEvaluation.visit_Slice"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Slice">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Slice</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;Slice&#39;</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="IntervalState.ExpressionEvaluation.visit_Index"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Index">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Index</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;Index&#39;</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="IntervalState.ExpressionEvaluation.visit_UnaryArithmeticOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryArithmeticOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_UnaryArithmeticOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_UnaryArithmeticOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">UnaryArithmeticOperation</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expression</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">UnaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Add</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">r</span>
             <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">UnaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Sub</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">negate</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Unary Operator </span><span class="si">{expr.operator}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span></div>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Unary Operator &#39;</span><span class="si">{expr.operator}</span><span class="s2">&#39; is not supported!&quot;</span><span class="p">)</span></div>
 
-        <span class="c1"># noinspection PyMethodMayBeStatic, PyUnusedLocal</span>
-<div class="viewcode-block" id="IntervalLattice.Visitor.visit_Literal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_Literal">[docs]</a>        <span class="k">def</span> <span class="nf">visit_Literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Literal</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">typ</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
-                <span class="n">c</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">IntervalLattice</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<div class="viewcode-block" id="IntervalState.ExpressionEvaluation.visit_UnaryBooleanOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryBooleanOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_UnaryBooleanOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_UnaryBooleanOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;UnaryBooleanOperation&#39;</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="IntervalState.ExpressionEvaluation.visit_BinaryArithmeticOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryArithmeticOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinaryArithmeticOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_BinaryArithmeticOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">BinaryArithmeticOperation</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Add</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">left</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Sub</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">left</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Mult</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">left</span><span class="o">.</span><span class="n">mult</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Literal type </span><span class="si">{expr.typ}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span></div></div>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Binary operator &#39;{str(expr.operator)}&#39; is not supported!&quot;</span><span class="p">)</span></div>
 
-    <span class="n">_visitor</span> <span class="o">=</span> <span class="n">Visitor</span><span class="p">()</span>  <span class="c1"># static class member shared between all instances</span></div>
+<div class="viewcode-block" id="IntervalState.ExpressionEvaluation.visit_BinaryBooleanOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryBooleanOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinaryBooleanOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_BinaryBooleanOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;BinaryBooleanOperation&#39;</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span><span class="p">)</span></div>
 
+<div class="viewcode-block" id="IntervalState.ExpressionEvaluation.visit_BinaryComparisonOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryComparisonOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinaryComparisonOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_BinaryComparisonOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;BinaryComparisonOperation&#39;</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span><span class="p">)</span></div></div>
 
-<div class="viewcode-block" id="IntervalDomain"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain">[docs]</a><span class="k">class</span> <span class="nc">IntervalDomain</span><span class="p">(</span><span class="n">Store</span><span class="p">,</span> <span class="n">NumericalMixin</span><span class="p">,</span> <span class="n">State</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">]):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="p">{</span><span class="nb">int</span><span class="p">:</span> <span class="n">IntervalLattice</span><span class="p">})</span>
-
-<div class="viewcode-block" id="IntervalDomain.forget"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.forget">[docs]</a>    <span class="k">def</span> <span class="nf">forget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">top</span><span class="p">()</span></div>
-
-<div class="viewcode-block" id="IntervalDomain.set_bounds"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.set_bounds">[docs]</a>    <span class="k">def</span> <span class="nf">set_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">lower</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">upper</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span> <span class="o">=</span> <span class="n">lower</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span> <span class="o">=</span> <span class="n">upper</span></div>
-
-<div class="viewcode-block" id="IntervalDomain.get_bounds"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.get_bounds">[docs]</a>    <span class="k">def</span> <span class="nf">get_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span></div>
-
-<div class="viewcode-block" id="IntervalDomain.set_interval"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.set_interval">[docs]</a>    <span class="k">def</span> <span class="nf">set_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="n">IntervalLattice</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">lower</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">upper</span></div>
-
-<div class="viewcode-block" id="IntervalDomain.set_lb"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.set_lb">[docs]</a>    <span class="k">def</span> <span class="nf">set_lb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">constant</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span> <span class="o">=</span> <span class="n">constant</span></div>
-
-<div class="viewcode-block" id="IntervalDomain.set_ub"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.set_ub">[docs]</a>    <span class="k">def</span> <span class="nf">set_ub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">constant</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span> <span class="o">=</span> <span class="n">constant</span></div>
-
-<div class="viewcode-block" id="IntervalDomain.evaluate"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
-        <span class="n">interval</span> <span class="o">=</span> <span class="n">IntervalDomain</span><span class="o">.</span><span class="n">_visitor</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">interval</span></div>
-
-    <span class="k">def</span> <span class="nf">_access_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">{</span><span class="n">variable</span><span class="p">}</span>
-
-    <span class="k">def</span> <span class="nf">_assign_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalDomain&#39;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">left</span><span class="o">.</span><span class="n">typ</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span> <span class="o">=</span> <span class="n">IntervalDomain</span><span class="o">.</span><span class="n">_visitor</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Interval domain does only support assignments to variables so far.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span>
-
-    <span class="k">def</span> <span class="nf">_assume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalDomain&#39;</span><span class="p">:</span>
-        <span class="c1"># TODO implement this</span>
-        <span class="k">return</span> <span class="bp">self</span>
-
-    <span class="k">def</span> <span class="nf">_evaluate_literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">literal</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">{</span><span class="n">literal</span><span class="p">}</span>
-
-<div class="viewcode-block" id="IntervalDomain.enter_loop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.enter_loop">[docs]</a>    <span class="k">def</span> <span class="nf">enter_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span></div>
-
-<div class="viewcode-block" id="IntervalDomain.exit_loop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.exit_loop">[docs]</a>    <span class="k">def</span> <span class="nf">exit_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span></div>
-
-<div class="viewcode-block" id="IntervalDomain.enter_if"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.enter_if">[docs]</a>    <span class="k">def</span> <span class="nf">enter_if</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span></div>
-
-<div class="viewcode-block" id="IntervalDomain.exit_if"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.exit_if">[docs]</a>    <span class="k">def</span> <span class="nf">exit_if</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span></div>
-
-    <span class="k">def</span> <span class="nf">_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;IntervalDomain&#39;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span>
-
-    <span class="k">def</span> <span class="nf">_substitute_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Interval domain does not yet support variable substitution.&quot;</span><span class="p">)</span>
-
-    <span class="c1"># noinspection PyPep8Naming</span>
-<div class="viewcode-block" id="IntervalDomain.Visitor"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.Visitor">[docs]</a>    <span class="k">class</span> <span class="nc">Visitor</span><span class="p">(</span><span class="n">IntervalLattice</span><span class="o">.</span><span class="n">Visitor</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A visitor to abstractly evaluate an expression (with variables) in the interval domain.&quot;&quot;&quot;</span>
-
-        <span class="c1"># noinspection PyMethodMayBeStatic, PyUnusedLocal</span>
-<div class="viewcode-block" id="IntervalDomain.Visitor.visit_VariableIdentifier"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.Visitor.visit_VariableIdentifier">[docs]</a>        <span class="k">def</span> <span class="nf">visit_VariableIdentifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">interval_store</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">typ</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
-                <span class="c1"># copy the lattice element, since evaluation should not modify elements</span>
-                <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">interval_store</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">expr</span><span class="p">])</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Variable type </span><span class="si">{expr.typ}</span><span class="s2"> is not supported!&quot;</span><span class="p">)</span></div></div>
-
-    <span class="n">_visitor</span> <span class="o">=</span> <span class="n">Visitor</span><span class="p">()</span>  <span class="c1"># static class member shared between all instances</span></div>
+    <span class="n">_visitor</span> <span class="o">=</span> <span class="n">ExpressionEvaluation</span><span class="p">()</span>    <span class="c1"># static class member shared between all instances</span></div>
 </pre></div>
 
            </div>

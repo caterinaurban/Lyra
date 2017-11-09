@@ -14,6 +14,7 @@ from lyra.abstract_domains.state import State
 from lyra.core.expressions import Expression, VariableIdentifier
 
 from lyra.abstract_domains.store import Store
+from lyra.core.types import IntegerLyraType, BooleanLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -104,7 +105,7 @@ class LivenessState(Store, State):
 
         :param variables: list of program variables
         """
-        super().__init__(variables, {int: LivenessLattice})
+        super().__init__(variables, {BooleanLyraType: LivenessLattice, IntegerLyraType: LivenessLattice})
 
     @copy_docstring(State._access_variable)
     def _access_variable(self, variable: VariableIdentifier) -> Set[Expression]:
@@ -135,7 +136,7 @@ class LivenessState(Store, State):
 
     @copy_docstring(State.enter_loop)
     def enter_loop(self):
-        return self  # nothing to be done
+        return self  # nothing to be donle
 
     @copy_docstring(State.exit_loop)
     def exit_loop(self):

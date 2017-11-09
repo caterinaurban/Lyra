@@ -7,7 +7,7 @@ import unittest
 from lyra.engine.forward import ForwardInterpreter
 from lyra.semantics.forward import DefaultForwardSemantics
 
-from lyra.abstract_domains.numerical.interval_domain import IntervalDomain
+from lyra.abstract_domains.numerical.interval_domain import IntervalState
 from lyra.core.expressions import VariableIdentifier
 from lyra.unittests.generic_tests import ResultCommentsFileTestCase
 
@@ -35,7 +35,7 @@ class IntervalTestCase(ResultCommentsFileTestCase):
 
         # Run Interval numerical Analysis
         forward_interpreter = ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
-        result = forward_interpreter.analyze(IntervalDomain(variables))
+        result = forward_interpreter.analyze(IntervalState(variables))
         self.render_result_cfg(result)
         self.check_result_comments(result)
 

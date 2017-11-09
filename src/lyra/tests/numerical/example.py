@@ -1,4 +1,4 @@
 
-a = 3
-b = a + 1
-c = 15
+a: int = 3
+b: int = a + 1
+#c: bool = True or False

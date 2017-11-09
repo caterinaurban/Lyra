@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from typing import List, Sequence
 
 from lyra.core.expressions import Literal, VariableIdentifier
-
+from lyra.core.types import LyraType
 
 class ProgramPoint:
     def __init__(self, line: int, column: int):
@@ -114,7 +114,7 @@ class VariableAccess(Statement):
 
 
 class Call(Statement):
-    def __init__(self, pp: ProgramPoint, name: str, arguments: List[Statement], typ):
+    def __init__(self, pp: ProgramPoint, name: str, arguments: List[Statement], typ: LyraType):
         """Call statement representation.
         
         :param pp: program point associated with the call

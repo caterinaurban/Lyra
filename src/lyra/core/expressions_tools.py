@@ -5,7 +5,7 @@ from lyra.core.special_expressions import VariadicArithmeticOperation
 
 from lyra.core.expressions import Expression, UnaryBooleanOperation, BinaryBooleanOperation, \
     BinaryComparisonOperation, \
-    BinaryArithmeticOperation, Literal, UnaryArithmeticOperation
+    BinaryArithmeticOperation, Literal, UnaryArithmeticOperation, NegationFreeNormalExpression
 
 
 def iter_fields(expr: Expression):
@@ -45,7 +45,7 @@ def walk(expr: Expression):
         yield expr
 
 
-class ExpressionVisitor:
+class OldExpressionVisitor:
     """
     An expression visitor base class that walks the expression tree and calls a
     visitor function for every expression found.  This function may return a value
@@ -100,7 +100,7 @@ class ExpressionVisitor:
         return result
 
 
-class ExpressionTransformer(ExpressionVisitor):
+class ExpressionTransformer(OldExpressionVisitor):
     """
     A :class:`ExpressionVisitor` subclass that walks the abstract syntax tree and
     allows modification of expressions.
@@ -166,7 +166,7 @@ MINUS = Sign.Sub
 
 
 # noinspection PyPep8Naming
-class Simplifier(ExpressionVisitor):
+class Simplifier(OldExpressionVisitor):
     @staticmethod
     def _ensure_expr(constant):
         if isinstance(constant, int):
@@ -266,71 +266,12 @@ def simplify(expr: Expression):
     return expr
 
 
-# noinspection PyPep8Naming
-class NotFreeConditionTransformer(ExpressionTransformer):
-    """Transforms an expression by pushing ``not``-operators down the expression tree and reversing binary operations
-
-    Uses De-Morgans law to push down ``not``-operators. Finally gets rid of all ``not``-operators, by reversing 
-    binary comparison operators that are negated. 
-    """
-
-    def visit_UnaryBooleanOperation(self, expr: UnaryBooleanOperation, invert=False):
-        if expr.operator == UnaryBooleanOperation.Operator.Neg:
-            return self.visit(expr.expression, invert=not invert)  # double inversion cancels itself
-        else:
-            raise NotImplementedError()
-
-    def visit_BinaryBooleanOperation(self, expr: BinaryBooleanOperation, invert=False):
-        if invert:
-            if expr.operator == BinaryBooleanOperation.Operator.And:
-                return BinaryBooleanOperation(expr.typ, self.visit(expr.left, invert=True),
-                                              BinaryBooleanOperation.Operator.Or,
-                                              self.visit(expr.right, invert=True))
-            elif expr.operator == BinaryBooleanOperation.Operator.Or:
-                return BinaryBooleanOperation(expr.typ, self.visit(expr.left, invert=True),
-                                              BinaryBooleanOperation.Operator.And,
-                                              self.visit(expr.right, invert=True))
-            elif expr.operator == BinaryBooleanOperation.Operator.Xor:
-                # use not(a xor b) == (a and b) or (not(a) and not(b))
-                cond_both = BinaryBooleanOperation(expr.typ, self.visit(deepcopy(expr.left), invert=False),
-                                                   BinaryBooleanOperation.Operator.And,
-                                                   self.visit(deepcopy(expr.right), invert=False))
-                cond_none = BinaryBooleanOperation(expr.typ, self.visit(deepcopy(expr.left), invert=True),
-                                                   BinaryBooleanOperation.Operator.And,
-                                                   self.visit(deepcopy(expr.right), invert=True))
-                return BinaryBooleanOperation(expr.typ, cond_both,
-                                              BinaryBooleanOperation.Operator.Or,
-                                              cond_none)
-        else:
-            # get rid of xor also if not inverted!
-            if expr.operator == BinaryBooleanOperation.Operator.Xor:
-                # use a xor b == (a or b) and not(a and b) == (a or b) and (not(a) or not(b))
-                cond_one = BinaryBooleanOperation(expr.typ, self.visit(deepcopy(expr.left), invert=False),
-                                                  BinaryBooleanOperation.Operator.Or,
-                                                  self.visit(deepcopy(expr.right), invert=False))
-                cond_not_both = BinaryBooleanOperation(expr.typ,
-                                                       self.visit(deepcopy(expr.left), invert=True),
-                                                       BinaryBooleanOperation.Operator.Or,
-                                                       self.visit(deepcopy(expr.right), invert=True))
-                return BinaryBooleanOperation(expr.typ, cond_one, BinaryBooleanOperation.Operator.And,
-                                              cond_not_both)
-            else:
-                return BinaryBooleanOperation(expr.typ, self.visit(expr.left),
-                                              expr.operator,
-                                              self.visit(expr.right))
-
-    def visit_BinaryComparisonOperation(self, expr: BinaryComparisonOperation, invert=False):
-        return BinaryComparisonOperation(expr.typ, self.visit(expr.left),
-                                         expr.operator.reverse_operator() if invert else expr.operator,
-                                         self.visit(expr.right))
-
-
 def make_condition_not_free(expr: Expression):
-    return NotFreeConditionTransformer().visit(expr)
+    return NegationFreeNormalExpression().visit(expr)
 
 
 # noinspection PyPep8Naming
-class Expander(ExpressionVisitor):
+class Expander(OldExpressionVisitor):
     """Expands an expression into a variadic arithmetic operation with outermost operator equals ``Add``.
      
      Also known as **multiply out** an expression.

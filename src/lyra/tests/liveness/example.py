@@ -1,8 +1,8 @@
-x = 2
-y = 4
-x = 1
+x: int = 2
+y: int = 4
+x: int = 1
 if y > x:
-    z = y
+    z: int = y
 else:
-    z = y * y
-x = z
+    z: int = y * y
+x: int = z
