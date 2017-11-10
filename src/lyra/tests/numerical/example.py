@@ -1,4 +1,6 @@
 
-a: int = 3
-b: int = a + 1
-#c: bool = True or False
+a: int = input()
+if 1 <= a and a <= 9:
+    b: int = 1
+else:
+    b: int = 2

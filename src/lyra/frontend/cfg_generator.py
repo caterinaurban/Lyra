@@ -237,7 +237,7 @@ class NodeIdentifierGenerator:
         return self._next
 
 
-class CfgFactory:
+class CFGFactory:
     """
     A helper class that encapsulates a partial CFG and possibly some statements not yet attached to CFG.
 
@@ -293,7 +293,7 @@ class CfgFactory:
 
 
 # noinspection PyPep8Naming
-class CfgVisitor(ast.NodeVisitor):
+class CFGVisitor(ast.NodeVisitor):
     """
     This AST visitor generates a CFG recursively.
 
@@ -304,46 +304,52 @@ class CfgVisitor(ast.NodeVisitor):
         super().__init__()
         self._id_gen = NodeIdentifierGenerator()
 
-    def visit_Num(self, node, typ):
+    def visit_Num(self, node, typing=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        expr = Literal(typ, node.n)
-        return LiteralEvaluation(pp, expr)
+        if isinstance(node.n, int):
+            expr = Literal(IntegerLyraType(), str(node.n))
+            return LiteralEvaluation(pp, expr)
+        raise NotImplementedError(f"Num {node.n.__class__.__name__} is not yet supported!")
 
-    def visit_Str(self, node, typ):
+    def visit_Str(self, node, typing=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         expr = Literal(typ, node.s)
         return LiteralEvaluation(pp, expr)
 
-    def visit_Name(self, node, typ):
+    def visit_Name(self, node, typing=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        expr = VariableIdentifier(typ, node.id)
+        if node.id in typing:
+            expr = VariableIdentifier(typing[node.id], node.id)
+        else:
+            typing[node.id] = typ
+            expr = VariableIdentifier(typ, node.id)
         return VariableAccess(pp, expr)
 
-    def visit_AnnAssign(self, node, *args, **kwargs):
+    def visit_AnnAssign(self, node, typing=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        typ = resolve_type_annotation(node.annotation)
-        value = self.visit(node.value, typ=typ, *args, **kwargs)
-        target = self.visit(node.target, typ=typ, *args, **kwargs)
+        annotated = resolve_type_annotation(node.annotation)
+        value = self.visit(node.value, typing, annotated)
+        target = self.visit(node.target, typing, annotated)
         return Assignment(pp, target, value)
 
-    def visit_Module(self, node, *args, **kwargs):
+    def visit_Module(self, node, typing=None, typ=None):
         start_cfg = _dummy_cfg(self._id_gen)
-        body_cfg = self._translate_body(node.body, allow_loose_in_edges=True, allow_loose_out_edges=True)
+        body_cfg = self._translate_body(node.body, typing, allow_loose_in_edges=True, allow_loose_out_edges=True)
         end_cfg = _dummy_cfg(self._id_gen)
         return start_cfg.append(body_cfg).append(end_cfg)
 
-    def visit_If(self, node, *args, **kwargs):
-        body_cfg = self._translate_body(node.body)
+    def visit_If(self, node, typing=None, typ=None):
+        body_cfg = self._translate_body(node.body, typing)
 
-        pp_test = ProgramPoint(node.test.lineno, node.test.col_offset)
-        test = self.visit(node.test)
-        neg_test = Call(pp_test, "not", [test], bool)
+        pp = ProgramPoint(node.test.lineno, node.test.col_offset)
+        test = self.visit(node.test, typing, BooleanLyraType())
+        neg_test = Call(pp, "not", [test], BooleanLyraType())
 
         body_cfg.add_edge(Conditional(None, test, body_cfg.in_node, Edge.Kind.IF_IN))
         if body_cfg.out_node:  # if control flow can exit the body at all, add an unconditional IF_OUT edge
             body_cfg.add_edge(Unconditional(body_cfg.out_node, None, Edge.Kind.IF_OUT))
         if node.orelse:  # if there is else branch
-            orelse_cfg = self._translate_body(node.orelse)
+            orelse_cfg = self._translate_body(node.orelse, typing)
             orelse_cfg.add_edge(Conditional(None, neg_test, orelse_cfg.in_node, Edge.Kind.IF_IN))
             if orelse_cfg.out_node:  # if control flow can exit the else at all, add an unconditional IF_OUT edge
                 orelse_cfg.add_edge(Unconditional(orelse_cfg.out_node, None, Edge.Kind.IF_OUT))
@@ -365,7 +371,7 @@ class CfgVisitor(ast.NodeVisitor):
         cfg = body_cfg.combine(orelse_cfg)
         return cfg
 
-    def visit_While(self, node, *args, **kwargs):
+    def visit_While(self, node, typing=None, typ=None):
         header_node = Loop(self._id_gen.next)
 
         cfg = self._translate_body(node.body)
@@ -399,7 +405,7 @@ class CfgVisitor(ast.NodeVisitor):
 
         return cfg
 
-    def visit_Break(self, _, *args, **kwargs):
+    def visit_Break(self, _, typing=None, typ=None):
         dummy = _dummy(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
         # the type of the special edge is not yet known, may be also an IF_OUT first, before LOOP_OUT
@@ -409,7 +415,7 @@ class CfgVisitor(ast.NodeVisitor):
         )
         return cfg
 
-    def visit_Continue(self, _, *args, **kwargs):
+    def visit_Continue(self, _, typing=None, typ=None):
         dummy = _dummy(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
         # the type of the special edge is not yet known, may be also an IF_OUT first, before LOOP_OUT
@@ -419,67 +425,64 @@ class CfgVisitor(ast.NodeVisitor):
         )
         return cfg
 
-    def visit_UnaryOp(self, node, typ, *args, **kwargs):
+    def visit_UnaryOp(self, node, typing=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         name = type(node.op).__name__.lower()
-        argument = self.visit(node.operand, typ=typ, *args, **kwargs)
+        argument = self.visit(node.operand, typing, typ)
         return Call(pp, name, [argument], typ)
 
-    def visit_BinOp(self, node, typ, *args, **kwargs):
+    def visit_BinOp(self, node, typing=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         name = type(node.op).__name__.lower()
-        left = self.visit(node.left, typ=typ, *args, **kwargs)
-        right = self.visit(node.right, typ=typ, *args, **kwargs)
+        left = self.visit(node.left, typing, typ)
+        right = self.visit(node.right, typing, typ)
         return Call(pp, name, [left, right], typ)
 
-    def visit_BoolOp(self, node, typ, *args, **kwargs):
+    def visit_BoolOp(self, node, typing=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         name = type(node.op).__name__.lower()
-        arguments = [self.visit(val, *args, **kwargs) for val in node.values]
+        arguments = [self.visit(val, typing, typ) for val in node.values]
         return Call(pp, name, arguments, typ)
 
-    def visit_Compare(self, node, *args, **kwargs):
+    def visit_Compare(self, node, typing=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        last_comp = self._ensure_stmt_visit(node.comparators[0], *args, **kwargs)
+
+
+        last_comp = self.visit(node.comparators[0], typing, typ)
         result = Call(pp, type(node.ops[0]).__name__.lower(),
-                      [self._ensure_stmt_visit(node.left, *args, **kwargs),
-                       last_comp],
-                      bool)
+                      [self.visit(node.left, typing, typ), last_comp],
+                      BooleanLyraType())
         for op, comp in list(zip(node.ops, node.comparators))[1:]:
             cur_call = Call(pp, type(op).__name__.lower(),
                             [last_comp,
-                             self._ensure_stmt_visit(comp, *args, **kwargs)],
-                            bool)
+                             self.visit(comp, typing, typ)],
+                            BooleanLyraType())
             result = Call(pp, 'and',
                           [result,
                            cur_call],
-                          bool)
+                          BooleanLyraType())
         return result
 
     # noinspection PyMethodMayBeStatic
-    def visit_NameConstant(self, node, typ):
-        return Literal(typ, str(node.value))
+    def visit_NameConstant(self, node, typing=None, typ=None):
+        if isinstance(node.value, bool):
+            pp = ProgramPoint(node.lineno, node.col_offset)
+            expr = Literal(BooleanLyraType(), str(node.value))
+            return LiteralEvaluation(pp, expr)
+        raise NotImplementedError(f"Name constant {node.value.__class__.__name__} is not yet supported!")
 
-    def visit_Expr(self, node, *args, **kwargs):
-        return self.visit(node.value, *args, **kwargs)
+    def visit_Expr(self, node, typ=None):
+            return self.visit(node.value, typing, typ)
 
-    def visit_Call(self, node, *args, **kwargs):
+    def visit_Call(self, node, typing=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
+        return Call(pp, node.func.id, [self.visit(arg, typing, typ) for arg in node.args], typ)
 
-        if node.func.id == 'int':
-            typ = int
-        elif node.func.id == 'bool':
-            typ = bool
-        else:
-            typ = typing.Any
-
-        return Call(pp, node.func.id, [self.visit(arg) for arg in node.args], typ)
-
-    def visit_List(self, node, *args, **kwargs):
+    def visit_List(self, node, typing=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        return ListDisplayStmt(pp, [self.visit(e) for e in node.elts])
+        return ListDisplayStmt(pp, [self.visit(e, typing, typ) for e in node.elts])
 
-    def visit_Subscript(self, node, *args, **kwargs):
+    def visit_Subscript(self, node, typing=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.slice, ast.Index):
             return IndexStmt(pp, self._ensure_stmt_visit(node.value, pp, *args, **kwargs), self._ensure_stmt_visit(node.slice.value, pp))
@@ -501,27 +504,27 @@ class CfgVisitor(ast.NodeVisitor):
         print(type(node).__name__)
         super().generic_visit(node)
 
-    def _translate_body(self, body, allow_loose_in_edges=False, allow_loose_out_edges=False):
-        cfg_factory = CfgFactory(self._id_gen)
+    def _translate_body(self, body, typing, allow_loose_in_edges=False, allow_loose_out_edges=False):
+        cfg_factory = CFGFactory(self._id_gen)
 
         for child in body:
-            if isinstance(child, (ast.AnnAssign, ast.Expr)):
-                cfg_factory.add_stmts(self.visit(child))
+            if isinstance(child, ast.AnnAssign):
+                cfg_factory.add_stmts(self.visit(child, typing))
             elif isinstance(child, ast.If):
                 cfg_factory.complete_basic_block()
-                if_cfg = self.visit(child)
+                if_cfg = self.visit(child, typing)
                 cfg_factory.append_cfg(if_cfg)
             elif isinstance(child, ast.While):
                 cfg_factory.complete_basic_block()
-                while_cfg = self.visit(child)
+                while_cfg = self.visit(child, typing)
                 cfg_factory.append_cfg(while_cfg)
             elif isinstance(child, ast.Break):
                 cfg_factory.complete_basic_block()
-                break_cfg = self.visit(child)
+                break_cfg = self.visit(child, typing)
                 cfg_factory.append_cfg(break_cfg)
             elif isinstance(child, ast.Continue):
                 cfg_factory.complete_basic_block()
-                cont_cfg = self.visit(child)
+                cont_cfg = self.visit(child, typing)
                 cfg_factory.append_cfg(cont_cfg)
             elif isinstance(child, ast.Pass):
                 if cfg_factory.incomplete_block():
@@ -562,7 +565,7 @@ def ast_to_cfg(root_node):
     :param root_node: the root node of the AST to be translated to CFG
     :return: the CFG of the passed AST.
     """
-    loose_cfg = CfgVisitor().visit(root_node)
+    loose_cfg = CFGVisitor().visit(root_node, dict())
     return loose_cfg.eject()
 
 

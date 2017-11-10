@@ -9,7 +9,7 @@ The set of possible values of a program variable in a state is represented as an
 
 from copy import deepcopy
 from math import inf
-from typing import List
+from typing import List, Dict
 
 from lyra.abstract_domains.lattice import BottomMixin
 from lyra.abstract_domains.numerical.arithmetic import ArithmeticMixin
@@ -176,7 +176,8 @@ class IntervalState(Store, State):
     def _assign_variable(self, left: Expression, right: Expression) -> 'IntervalState':
         if isinstance(left, VariableIdentifier):
             if isinstance(left.typ, BooleanLyraType) or isinstance(left.typ, IntegerLyraType):
-                self.store[left] = self.eval(right)
+                evaluation: Dict[Expression, IntervalLattice] = self._evaluation.visit(right, self, dict())
+                self.store[left] = evaluation[right]
             else:
                 raise ValueError(f"Variable type {left.typ} is not supported!")
         else:
@@ -185,8 +186,18 @@ class IntervalState(Store, State):
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'IntervalState':
-        # TODO implement this
-        return self
+        normal = NegationFreeNormalExpression().visit(condition)
+        if isinstance(normal, BinaryBooleanOperation):
+            if normal.operator == BinaryBooleanOperation.Operator.And:
+                right = deepcopy(self)._assume(normal.right)
+                return self._assume(normal.left).meet(right)
+            if normal.operator == BinaryBooleanOperation.Operator.Or:
+                right = deepcopy(self)._assume(normal.right)
+                return self._assume(normal.left).join(right)
+        elif isinstance(normal, BinaryComparisonOperation):
+            evaluation = self._evaluation.visit(normal.left, self, dict())
+            return self._refinement.visit(normal.left, evaluation, IntervalLattice(upper=0), self)
+        raise ValueError(f"Assumption of a {normal.__class__.__name__} expression is not supported!")
 
     @copy_docstring(State._evaluate_literal)
     def _evaluate_literal(self, literal: Expression) -> Set[Expression]:
@@ -218,199 +229,184 @@ class IntervalState(Store, State):
 
     # expression evaluation
 
-    def eval(self, expr: Expression) -> 'IntervalLattice':
-        """Evaluation of an expression in the current interval state.
-
-        :param expr: expression to be evaluated
-        :return: interval representing the value of the expression in the current state
-        """
-        evaluated = self._evaluation.visit(expr, self)
-        return evaluated.val
-
-    class EvaluatedExpression:
-        """Wrapper that adds a value to an expression."""
-
-        def __init__(self, expr: Expression, val: 'IntervalLattice'):
-            """Create value wrapper for an expression.
-
-            :param expr: evaluated expression
-            :param val: value of the expression
-            """
-            self._expr = expr
-            self._val = val
-
-        @property
-        def expr(self):
-            return self._expr
-
-        @property
-        def val(self):
-            return self._val
-
-    # noinspection PyPep8Naming
     class ExpressionEvaluation(ExpressionVisitor):
         """Visitor that performs the evaluation of an expression in the interval lattice."""
 
-        # noinspection PyMethodMayBeStatic
         @copy_docstring(ExpressionVisitor.visit_Literal)
-        def visit_Literal(self, expr: Literal, state=None):
+        def visit_Literal(self, expr: Literal, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation    # nothing to be done
             if isinstance(expr.typ, BooleanLyraType):
                 if expr.val == "True":
-                    return IntervalState.EvaluatedExpression(expr, IntervalLattice(1, 1))
+                    evaluation[expr] = IntervalLattice(1, 1)
                 else:  # expr.val == "False":
-                    return IntervalState.EvaluatedExpression(expr, IntervalLattice(0, 0))
+                    evaluation[expr] = IntervalLattice(0, 0)
+                return evaluation
             elif isinstance(expr.typ, IntegerLyraType):
                 val = int(expr.val)
-                return IntervalState.EvaluatedExpression(expr, IntervalLattice(val, val))
-            else:
-                raise ValueError(f"Literal type {expr.typ} is not supported!")
+                evaluation[expr] = IntervalLattice(val, val)
+                return evaluation
+            raise ValueError(f"Literal type {expr.typ} is not supported!")
 
-        # noinspection PyMethodMayBeStatic
         @copy_docstring(ExpressionVisitor.visit_Input)
-        def visit_Input(self, expr: Input, state=None):
+        def visit_Input(self, expr: Input, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
             if isinstance(expr.typ, BooleanLyraType):
-                return IntervalState.EvaluatedExpression(expr, IntervalLattice(0, 1))
+                evaluation[expr] = IntervalLattice(0, 1)
+                return evaluation
             elif isinstance(expr.typ, IntegerLyraType):
-                return IntervalState.EvaluatedExpression(expr, IntervalLattice())
-            else:
-                raise ValueError(f"Input type {expr.typ} is not supported!")
+                evaluation[expr] = IntervalLattice()
+                return evaluation
+            raise ValueError(f"Input type {expr.typ} is not supported!")
 
-        # noinspection PyMethodMayBeStatic
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
-        def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None):
+        def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
             if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType):
-                return IntervalState.EvaluatedExpression(expr, deepcopy(state.store[expr]))
-            else:
-                raise ValueError(f"Variable type {expr.typ} is not supported!")
+                evaluation[expr] = deepcopy(state.store[expr])
+                return evaluation
+            raise ValueError(f"Variable type {expr.typ} is not supported!")
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
-        def visit_ListDisplay(self, expr: 'ListDisplay', state=None):
+        def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
             raise ValueError(f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!")
 
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
-        def visit_AttributeReference(self, expr: 'AttributeReference', state=None):
+        def visit_AttributeReference(self, expr: AttributeReference, state=None, evaluation=None):
             raise ValueError(f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!")
 
         @copy_docstring(ExpressionVisitor.visit_Slice)
-        def visit_Slice(self, expr: 'Slice', state=None):
+        def visit_Slice(self, expr: Slice, state=None, evaluation=None):
             raise ValueError(f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!")
 
         @copy_docstring(ExpressionVisitor.visit_Index)
-        def visit_Index(self, expr: 'Index', state=None):
+        def visit_Index(self, expr: Index, state=None, evaluation=None):
             raise ValueError(f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!")
 
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
-        def visit_UnaryArithmeticOperation(self, expr: UnaryArithmeticOperation, state=None):
-            evaluated = self.visit(expr.expression, state)
+        def visit_UnaryArithmeticOperation(self, expr: UnaryArithmeticOperation, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.expression, state, evaluation)
             if expr.operator == UnaryArithmeticOperation.Operator.Add:
                 return evaluated
             elif expr.operator == UnaryArithmeticOperation.Operator.Sub:
-                return IntervalState.EvaluatedExpression(expr, deepcopy(evaluated.val).negate())
+                evaluated[expr] = deepcopy(evaluated[expr.expression]).negate()
+                return evaluated
             else:
                 raise ValueError(f"Unary operator '{expr.operator}' is not supported!")
 
         @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
-        def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', state=None):
+        def visit_UnaryBooleanOperation(self, expr: UnaryBooleanOperation, state=None, evaluation=None):
             raise ValueError(f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
-        def visit_BinaryArithmeticOperation(self, expr: BinaryArithmeticOperation, state=None):
-            left = self.visit(expr.left, state)
-            right = self.visit(expr.right, state)
+        def visit_BinaryArithmeticOperation(self, expr: BinaryArithmeticOperation, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated1 = self.visit(expr.left, state, evaluation)
+            evaluated2 = self.visit(expr.right, state, evaluated1)
             if expr.operator == BinaryArithmeticOperation.Operator.Add:
-                return IntervalState.EvaluatedExpression(expr, deepcopy(left.val).add(right.val))
+                evaluated2[expr] = deepcopy(evaluated2[expr.left]).add(evaluated2[expr.right])
+                return evaluated2
             elif expr.operator == BinaryArithmeticOperation.Operator.Sub:
-                return IntervalState.EvaluatedExpression(expr, deepcopy(left.val).sub(right.val))
+                evaluated2[expr] = deepcopy(evaluated2[expr.left]).sub(evaluated2[expr.right])
+                return evaluated2
             elif expr.operator == BinaryArithmeticOperation.Operator.Mult:
-                return IntervalState.EvaluatedExpression(expr, deepcopy(left.val).mult(right.val))
-            else:
-                raise ValueError(f"Binary operator '{str(expr.operator)}' is not supported!")
+                evaluated2[expr] = deepcopy(evaluated2[expr.left]).mult(evaluated2[expr.right])
+                return evaluated2
+            raise ValueError(f"Binary operator '{str(expr.operator)}' is not supported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
-        def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation', state=None):
+        def visit_BinaryBooleanOperation(self, expr: BinaryBooleanOperation, state=None, evaluation=None):
             raise ValueError(f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
-        def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation', state=None):
+        def visit_BinaryComparisonOperation(self, expr: BinaryComparisonOperation, state=None, evaluation=None):
             raise ValueError(f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!")
 
     _evaluation = ExpressionEvaluation()    # static class member shared between all instances
 
-    class ArithmeticExpressionRefinement:
+    class ArithmeticExpressionRefinement(ExpressionVisitor):
         """Visitor that:
 
         (1) refines the value of an evaluated arithmetic expression based on a given interval value; and
         (2) modifies the current interval state based on the refined value of the arithmetic expression.
         """
-        def visit(self, evaluated, *args, **kwargs):
+        def visit(self, expr: Expression, *args, **kwargs):
             """Visit of an evaluated expression."""
-            method = 'visit_' + evaluated.expr.__class__.__name__
+            method = 'visit_' + expr.__class__.__name__
             if hasattr(self, method):
-                return getattr(self, method)(evaluated, *args, **kwargs)
+                return getattr(self, method)(expr, *args, **kwargs)
             raise NotImplementedError(
-                f"Missing visitor for {evaluated.expr.__class__.__name__} in {self.__class__.__qualname__}!")
+                f"Missing visitor for {expr.__class__.__name__} in {self.__class__.__qualname__}!")
 
-        # noinspection PyMethodMayBeStatic
-        def visit_Literal(self, evaluated, state=None, value=None):
-            """Visit of a literal expression."""
+        @copy_docstring(ExpressionVisitor.visit_Literal)
+        def visit_Literal(self, expr: Literal, evaluation=None, value=None, state=None):
             return state    # nothing to be done
 
-        # noinspection PyMethodMayBeStatic
-        def visit_Input(self, evaluated, state=None, value=None):
-            """Visit of an input expression."""
+        @copy_docstring(ExpressionVisitor.visit_Input)
+        def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
             return state    # nothing to be done
 
-        # noinspection PyMethodMayBeStatic
-        def visit_VariableIdentifier(self, evaluated, state=None, value=None):
-            """Visit of a variable identifier."""
-            if isinstance(evaluated.expr.typ, BooleanLyraType) or isinstance(evaluated.expr.typ, IntegerLyraType):
-                state.store[evaluated.expr] = evaluated.val.meet(value)
+        @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+        def visit_VariableIdentifier(self, expr: VariableIdentifier, evaluation=None, value=None, state=None):
+            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType):
+                state.store[expr] = evaluation[expr].meet(value)
                 return state
-            else:
-                raise ValueError(f"Variable type {evaluated.expr.typ} is not supported!")
+            raise ValueError(f"Variable type {expr.typ} is not supported!")
 
-        def visit_ListDisplay(self, evaluated, state=None, value=None):
-            """Visit of a list display."""
-            raise ValueError(f"Refinement for a {evaluated.expr.__class__.__name__} expression is not yet supported!")
+        @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+        def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
+            raise ValueError(f"Refinement for a {expr.__class__.__name__} expression is not yet supported!")
 
-        def visit_AttributeReference(self, evaluated, state=None, value=None):
-            """Visit of an attribute reference."""
-            raise ValueError(f"Refinement for a {evaluated.expr.__class__.__name__} expression is not yet supported!")
+        @copy_docstring(ExpressionVisitor.visit_AttributeReference)
+        def visit_AttributeReference(self, expr: AttributeReference, evaluation=None, value=None, state=None):
+            raise ValueError(f"Refinement for a {expr.__class__.__name__} expression is not yet supported!")
 
-        def visit_Slice(self, evaluated, state=None, value=None):
-            """Visit of a slice expression."""
-            raise ValueError(f"Refinement for a {evaluated.expr.__class__.__name__} expression is not yet supported!")
+        @copy_docstring(ExpressionVisitor.visit_Slice)
+        def visit_Slice(self, expr: Slice, evaluation=None, value=None, state=None):
+            raise ValueError(f"Refinement for a {expr.__class__.__name__} expression is not yet supported!")
 
-        def visit_Index(self, evaluated, state=None, value=None):
-            """Visit of an index expression."""
-            raise ValueError(f"Refinement for a {evaluated.expr.__class__.__name__} expression is not yet supported!")
+        @copy_docstring(ExpressionVisitor.visit_Index)
+        def visit_Index(self, expr: Index, evaluation=None, value=None, state=None):
+            raise ValueError(f"Refinement for a {expr.__class__.__name__} expression is not yet supported!")
 
-        def visit_UnaryArithmeticOperation(self, evaluated, state=None, value=None):
-            """Visit of a unary arithmetic operation."""
-
-            evaluated = self.visit(expr.expression, state)
+        @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
+        def visit_UnaryArithmeticOperation(self, expr, evaluation=None, value=None, state=None):
             if expr.operator == UnaryArithmeticOperation.Operator.Add:
-                return evaluated
+                return self.visit(expr.expression, evaluation, value, state)
             elif expr.operator == UnaryArithmeticOperation.Operator.Sub:
-                return IntervalState.EvaluatedExpression(expr, deepcopy(evaluated.val).negate())
-            else:
-                raise ValueError(f"Unary operator '{evaluated.expr.operator}' is not supported!")
+                refined = evaluation[expr].meet(value)
+                return self.visit(expr.expression, evaluation, IntervalLattice(0, 0).sub(refined), state)
+            raise ValueError(f"Unary operator '{expr.operator}' is not supported!")
+
+        @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
+        def visit_UnaryBooleanOperation(self, expr, evaluation=None, value=None, state=None):
+            raise ValueError(f"Refinement for a {expr.__class__.__name__} expression is not expected!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
-        def visit_BinaryArithmeticOperation(self, evaluated, state=None, value=None):
-            """Visit of a binary arithmetic operation."""
-            if evaluated.expr.operator == BinaryArithmeticOperation.Operator.Add:
-                left = self.visit(evaluated.expr.left, state, deepcopy(evaluated.val).sub(evaluated.expr.val)
-            
-            left = self.visit(expr.left, state)
-            right = self.visit(expr.right, state)
+        def visit_BinaryArithmeticOperation(self, expr, evaluation=None, value=None, state=None):
             if expr.operator == BinaryArithmeticOperation.Operator.Add:
-                return IntervalState.EvaluatedExpression(expr, deepcopy(left.val).add(right.val))
+                refined = evaluation[expr].meet(value)
+                left = self.visit(expr.left, evaluation, deepcopy(refined).sub(evaluation[expr.right]), state)
+                right = self.visit(expr.right, evaluation, deepcopy(refined).sub(evaluation[expr.left]), left)
+                return right
             elif expr.operator == BinaryArithmeticOperation.Operator.Sub:
-                return IntervalState.EvaluatedExpression(expr, deepcopy(left.val).sub(right.val))
-            elif expr.operator == BinaryArithmeticOperation.Operator.Mult:
-                return IntervalState.EvaluatedExpression(expr, deepcopy(left.val).mult(right.val))
-            else:
-                raise ValueError(f"Binary operator '{str(evaluated.expr.operator)}' is not supported!")
+                refined = evaluation[expr].meet(value)
+                left = self.visit(expr.left, evaluation, deepcopy(refined).add(evaluation[expr.right]), state)
+                right = self.visit(expr.right, evaluation, deepcopy(evaluation[expr.left]).sub(refined), left)
+                return right
+            raise ValueError(f"Binary operator '{str(expr.operator)}' is not supported!")
+
+        @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
+        def visit_BinaryBooleanOperation(self, expr, evaluation=None, value=None, state=None):
+            raise ValueError(f"Refinement for a {expr.__class__.__name__} expression is not expected!")
+
+        @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
+        def visit_BinaryComparisonOperation(self, expr, evaluation=None, value=None, state=None):
+            raise ValueError(f"Refinement for a {expr.__class__.__name__} expression is not expected!")
 
     _refinement = ArithmeticExpressionRefinement()  # static class member shared between all instances
