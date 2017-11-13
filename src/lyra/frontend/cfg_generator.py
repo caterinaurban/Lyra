@@ -374,13 +374,13 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_While(self, node, typing=None, typ=None):
         header_node = Loop(self._id_gen.next)
 
-        cfg = self._translate_body(node.body)
+        cfg = self._translate_body(node.body, typing, typ)
         body_in_node = cfg.in_node
         body_out_node = cfg.out_node
 
-        pp_test = ProgramPoint(node.test.lineno, node.test.col_offset)
-        test = self.visit(node.test)
-        neg_test = Call(pp_test, "not", [test], bool)
+        pp = ProgramPoint(node.test.lineno, node.test.col_offset)
+        test = self.visit(node.test, typing, BooleanLyraType())
+        neg_test = Call(pp, "not", [test], BooleanLyraType())
 
         cfg.add_node(header_node)
         cfg.in_node = header_node
