@@ -96,6 +96,7 @@
 <li class="toctree-l4"><a class="reference internal" href="lyra.semantics.html">lyra.semantics package</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.html#module-lyra.main">Submodules</a></li>
 </ul>
 </li>
 </ul>
@@ -579,12 +580,10 @@
 <p>An expression visitor base class that walks the expression tree and calls a
 visitor function for every expression found.  This function may return a value
 which is forwarded by the <cite>visit</cite> method.</p>
-<p>This class is meant to be subclassed, with the subclass adding visitor
-methods.</p>
-<p>Per default the visitor functions for the expressions are <code class="docutils literal"><span class="pre">'visit_'</span></code> +
+<p>Subclasses are meant to implement the visitor functions.
+The visitor function for an expression is <code class="docutils literal"><span class="pre">'visit_'</span></code> +
 class name of the expression.  So a <cite>Literal</cite> expression visit function would
-be <cite>visit_Literal</cite>.  This behavior can be changed by overriding
-the <cite>visit</cite> method.  If no visitor function exists for an expression
+be <cite>visit_Literal</cite>.  If no visitor function exists for an expression
 a <cite>NotImplementedError</cite> is raised.</p>
 <p>Adapted from <cite>ast.py</cite>.</p>
 <dl class="method">
@@ -1279,6 +1278,52 @@ only want to modify expressions in place and don’t care about the context.</p>
 <code class="descname">var</code><a class="headerlink" href="#lyra.core.statements.VariableAccess.var" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<span class="target" id="module-lyra.core.types"></span><dl class="class">
+<dt id="lyra.core.types.BooleanLyraType">
+<em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">BooleanLyraType</code><a class="reference internal" href="_modules/lyra/core/types.html#BooleanLyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.BooleanLyraType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.LyraType" title="lyra.core.types.LyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.LyraType</span></code></a></p>
+<p>Boolean type representation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.types.IntegerLyraType">
+<em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">IntegerLyraType</code><a class="reference internal" href="_modules/lyra/core/types.html#IntegerLyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.IntegerLyraType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.LyraType" title="lyra.core.types.LyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.LyraType</span></code></a></p>
+<p>Integer type representation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.types.ListLyraType">
+<em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">ListLyraType</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/types.html#ListLyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.ListLyraType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.LyraType" title="lyra.core.types.LyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.LyraType</span></code></a></p>
+<p>List type representation.</p>
+<dl class="attribute">
+<dt id="lyra.core.types.ListLyraType.typ">
+<code class="descname">typ</code><a class="headerlink" href="#lyra.core.types.ListLyraType.typ" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.types.LyraType">
+<em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">LyraType</code><a class="reference internal" href="_modules/lyra/core/types.html#LyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.LyraType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Type representation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.types.StringLyraType">
+<em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">StringLyraType</code><a class="reference internal" href="_modules/lyra/core/types.html#StringLyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.StringLyraType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.LyraType" title="lyra.core.types.LyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.LyraType</span></code></a></p>
+<p>String type representation.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lyra.core.types.resolve_type_annotation">
+<code class="descclassname">lyra.core.types.</code><code class="descname">resolve_type_annotation</code><span class="sig-paren">(</span><em>annotation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/types.html#resolve_type_annotation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.resolve_type_annotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type annotation resolution.</p>
 </dd></dl>
 
 <span class="target" id="module-lyra.core.utils"></span><dl class="function">

@@ -140,7 +140,6 @@
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
- | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#J"><strong>J</strong></a>
  | <a href="#K"><strong>K</strong></a>
@@ -238,6 +237,8 @@
         <li><a href="lyra.core.html#lyra.core.expressions.UnaryArithmeticOperation.Operator.Add">(lyra.core.expressions.UnaryArithmeticOperation.Operator attribute)</a>
 </li>
       </ul></li>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin.add">add() (lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin method)</a>
+</li>
       <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.add_call_semantics">add_call_semantics() (lyra.semantics.semantics.BuiltInCallSemantics method)</a>
 </li>
       <li><a href="lyra.engine.html#lyra.engine.result.AnalysisResult">AnalysisResult (class in lyra.engine.result)</a>
@@ -257,6 +258,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.core.html#lyra.core.statements.Call.arguments">arguments (lyra.core.statements.Call attribute)</a>
+</li>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin">ArithmeticMixin (class in lyra.abstract_domains.numerical.arithmetic)</a>
 </li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State.assign_variable">assign_variable() (lyra.abstract_domains.state.State method)</a>
 </li>
@@ -310,19 +313,15 @@
 </li>
       <li><a href="lyra.core.html#lyra.core.expressions.BinaryComparisonOperation.Operator">BinaryComparisonOperation.Operator (class in lyra.core.expressions)</a>
 </li>
-      <li><a href="lyra.core.html#lyra.core.expressions.BinaryOperation">BinaryOperation (class in lyra.core.expressions)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="lyra.core.html#lyra.core.expressions.BinaryOperation">BinaryOperation (class in lyra.core.expressions)</a>
+</li>
       <li><a href="lyra.core.html#lyra.core.expressions.BinaryOperation.Operator">BinaryOperation.Operator (class in lyra.core.expressions)</a>
 </li>
       <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.bool_call_semantics">bool_call_semantics() (lyra.semantics.semantics.BuiltInCallSemantics method)</a>
 </li>
-      <li><a href="lyra.engine.traces.html#lyra.engine.traces.traces_analysis.BoolTracesAnalysis">BoolTracesAnalysis (class in lyra.engine.traces.traces_analysis)</a>
-</li>
-      <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState">BoolTracesState (class in lyra.abstract_domains.traces.traces_domain)</a>
-</li>
-      <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace">BoolTracesState.BoolTrace (class in lyra.abstract_domains.traces.traces_domain)</a>
+      <li><a href="lyra.core.html#lyra.core.types.BooleanLyraType">BooleanLyraType (class in lyra.core.types)</a>
 </li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.KindMixin.Kind.BOTTOM">BOTTOM (lyra.abstract_domains.lattice.KindMixin.Kind attribute)</a>
 </li>
@@ -461,10 +460,6 @@
 </li>
         <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State.enter_if">(lyra.abstract_domains.state.State method)</a>
 </li>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.enter_if">(lyra.abstract_domains.traces.traces_domain.BoolTracesState method)</a>
-</li>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.enter_if">(lyra.abstract_domains.traces.traces_domain.TvlTracesState method)</a>
-</li>
         <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.stack.UsedStack.enter_if">(lyra.abstract_domains.usage.stack.UsedStack method)</a>
 </li>
         <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.store.UsedStore.enter_if">(lyra.abstract_domains.usage.store.UsedStore method)</a>
@@ -477,10 +472,6 @@
 </li>
         <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State.enter_loop">(lyra.abstract_domains.state.State method)</a>
 </li>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.enter_loop">(lyra.abstract_domains.traces.traces_domain.BoolTracesState method)</a>
-</li>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.enter_loop">(lyra.abstract_domains.traces.traces_domain.TvlTracesState method)</a>
-</li>
         <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.stack.UsedStack.enter_loop">(lyra.abstract_domains.usage.stack.UsedStack method)</a>
 </li>
         <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.store.UsedStore.enter_loop">(lyra.abstract_domains.usage.store.UsedStore method)</a>
@@ -490,28 +481,16 @@
 </li>
       <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.eq_call_semantics">eq_call_semantics() (lyra.semantics.semantics.BuiltInCallSemantics method)</a>
 </li>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.eval">eval() (lyra.abstract_domains.numerical.interval_domain.IntervalState method)</a>
-</li>
-      <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.evaluate">evaluate() (lyra.abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace method)</a>
-
-      <ul>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.evaluate">(lyra.abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace method)</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State.evaluate_literal">evaluate_literal() (lyra.abstract_domains.state.State method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.abstract_domains.liveness.html#lyra.abstract_domains.liveness.liveness_domain.LivenessState.exit_if">exit_if() (lyra.abstract_domains.liveness.liveness_domain.LivenessState method)</a>
 
       <ul>
         <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.exit_if">(lyra.abstract_domains.numerical.interval_domain.IntervalState method)</a>
 </li>
         <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State.exit_if">(lyra.abstract_domains.state.State method)</a>
-</li>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.exit_if">(lyra.abstract_domains.traces.traces_domain.BoolTracesState method)</a>
-</li>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.exit_if">(lyra.abstract_domains.traces.traces_domain.TvlTracesState method)</a>
 </li>
         <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.stack.UsedStack.exit_if">(lyra.abstract_domains.usage.stack.UsedStack method)</a>
 </li>
@@ -524,10 +503,6 @@
         <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.exit_loop">(lyra.abstract_domains.numerical.interval_domain.IntervalState method)</a>
 </li>
         <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State.exit_loop">(lyra.abstract_domains.state.State method)</a>
-</li>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.exit_loop">(lyra.abstract_domains.traces.traces_domain.BoolTracesState method)</a>
-</li>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.exit_loop">(lyra.abstract_domains.traces.traces_domain.TvlTracesState method)</a>
 </li>
         <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.stack.UsedStack.exit_loop">(lyra.abstract_domains.usage.stack.UsedStack method)</a>
 </li>
@@ -601,18 +576,6 @@
   </ul></td>
 </tr></table>
 
-<h2 id="H">H</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.hyper">hyper (lyra.abstract_domains.traces.traces_domain.BoolTracesState attribute)</a>
-
-      <ul>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.hyper">(lyra.abstract_domains.traces.traces_domain.TvlTracesState attribute)</a>
-</li>
-      </ul></li>
-  </ul></td>
-</tr></table>
-
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -654,6 +617,8 @@
 </li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.dbm.IntegerCDBM">IntegerCDBM (class in lyra.abstract_domains.numerical.dbm)</a>
 </li>
+      <li><a href="lyra.core.html#lyra.core.types.IntegerLyraType">IntegerLyraType (class in lyra.core.types)</a>
+</li>
       <li><a href="lyra.engine.html#lyra.engine.interpreter.Interpreter">Interpreter (class in lyra.engine.interpreter)</a>
 </li>
       <li><a href="lyra.engine.liveness.html#lyra.engine.liveness.liveness_analysis.LivenessAnalysis.interpreter">interpreter() (lyra.engine.liveness.liveness_analysis.LivenessAnalysis method)</a>
@@ -663,22 +628,20 @@
 </li>
         <li><a href="lyra.engine.html#lyra.engine.runner.Runner.interpreter">(lyra.engine.runner.Runner method)</a>
 </li>
-        <li><a href="lyra.engine.traces.html#lyra.engine.traces.traces_analysis.BoolTracesAnalysis.interpreter">(lyra.engine.traces.traces_analysis.BoolTracesAnalysis method)</a>
-</li>
-        <li><a href="lyra.engine.traces.html#lyra.engine.traces.traces_analysis.TvlTracesAnalysis.interpreter">(lyra.engine.traces.traces_analysis.TvlTracesAnalysis method)</a>
-</li>
         <li><a href="lyra.engine.usage.html#lyra.engine.usage.usage_analysis.UsageAnalysis.interpreter">(lyra.engine.usage.usage_analysis.UsageAnalysis method)</a>
 </li>
       </ul></li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.dbm.CDBM.intersection">intersection() (lyra.abstract_domains.numerical.dbm.CDBM method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.engine.numerical.html#lyra.engine.numerical.interval_analysis.IntervalAnalysis">IntervalAnalysis (class in lyra.engine.numerical.interval_analysis)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice">IntervalLattice (class in lyra.abstract_domains.numerical.interval_domain)</a>
 </li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState">IntervalState (class in lyra.abstract_domains.numerical.interval_domain)</a>
+</li>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement">IntervalState.ArithmeticExpressionRefinement (class in lyra.abstract_domains.numerical.interval_domain)</a>
 </li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation">IntervalState.ExpressionEvaluation (class in lyra.abstract_domains.numerical.interval_domain)</a>
 </li>
@@ -784,6 +747,8 @@
 </li>
       <li><a href="lyra.core.html#lyra.core.statements.ListDisplayStmt">ListDisplayStmt (class in lyra.core.statements)</a>
 </li>
+      <li><a href="lyra.core.html#lyra.core.types.ListLyraType">ListLyraType (class in lyra.core.types)</a>
+</li>
       <li><a href="lyra.semantics.html#lyra.semantics.semantics.ListSemantics">ListSemantics (class in lyra.semantics.semantics)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.expressions.Literal">Literal (class in lyra.core.expressions)</a>
@@ -840,21 +805,19 @@
 </li>
       <li><a href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical">lyra.abstract_domains.numerical (module)</a>
 </li>
-      <li><a href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical.dbm">lyra.abstract_domains.numerical.dbm (module)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical.arithmetic">lyra.abstract_domains.numerical.arithmetic (module)</a>
 </li>
-      <li><a href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical.interval_domain">lyra.abstract_domains.numerical.interval_domain (module)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical.dbm">lyra.abstract_domains.numerical.dbm (module)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical.interval_domain">lyra.abstract_domains.numerical.interval_domain (module)</a>
+</li>
       <li><a href="lyra.abstract_domains.html#module-lyra.abstract_domains.stack">lyra.abstract_domains.stack (module)</a>
 </li>
       <li><a href="lyra.abstract_domains.html#module-lyra.abstract_domains.state">lyra.abstract_domains.state (module)</a>
 </li>
       <li><a href="lyra.abstract_domains.html#module-lyra.abstract_domains.store">lyra.abstract_domains.store (module)</a>
-</li>
-      <li><a href="lyra.abstract_domains.traces.html#module-lyra.abstract_domains.traces">lyra.abstract_domains.traces (module)</a>
-</li>
-      <li><a href="lyra.abstract_domains.traces.html#module-lyra.abstract_domains.traces.traces_domain">lyra.abstract_domains.traces.traces_domain (module)</a>
 </li>
       <li><a href="lyra.abstract_domains.usage.html#module-lyra.abstract_domains.usage">lyra.abstract_domains.usage (module)</a>
 </li>
@@ -880,6 +843,8 @@
 </li>
       <li><a href="lyra.core.html#module-lyra.core.statements">lyra.core.statements (module)</a>
 </li>
+      <li><a href="lyra.core.html#module-lyra.core.types">lyra.core.types (module)</a>
+</li>
       <li><a href="lyra.core.html#module-lyra.core.utils">lyra.core.utils (module)</a>
 </li>
       <li><a href="lyra.engine.html#module-lyra.engine">lyra.engine (module)</a>
@@ -902,13 +867,11 @@
 </li>
       <li><a href="lyra.engine.html#module-lyra.engine.runner">lyra.engine.runner (module)</a>
 </li>
-      <li><a href="lyra.engine.traces.html#module-lyra.engine.traces">lyra.engine.traces (module)</a>
-</li>
-      <li><a href="lyra.engine.traces.html#module-lyra.engine.traces.traces_analysis">lyra.engine.traces.traces_analysis (module)</a>
-</li>
       <li><a href="lyra.engine.usage.html#module-lyra.engine.usage">lyra.engine.usage (module)</a>
 </li>
       <li><a href="lyra.engine.usage.html#module-lyra.engine.usage.usage_analysis">lyra.engine.usage.usage_analysis (module)</a>
+</li>
+      <li><a href="lyra.html#module-lyra.main">lyra.main (module)</a>
 </li>
       <li><a href="lyra.semantics.html#module-lyra.semantics">lyra.semantics (module)</a>
 </li>
@@ -922,14 +885,20 @@
 </li>
       <li><a href="lyra.semantics.usage.html#module-lyra.semantics.usage.usage_semantics">lyra.semantics.usage.usage_semantics (module)</a>
 </li>
+      <li><a href="lyra.core.html#lyra.core.types.LyraType">LyraType (class in lyra.core.types)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lyra.engine.html#lyra.engine.runner.Runner.main">main() (lyra.engine.runner.Runner method)</a>
+      <li><a href="lyra.html#lyra.main.main">main() (in module lyra.main)</a>
+
+      <ul>
+        <li><a href="lyra.engine.html#lyra.engine.runner.Runner.main">(lyra.engine.runner.Runner method)</a>
 </li>
+      </ul></li>
       <li><a href="lyra.core.html#lyra.core.expressions_tools.make_condition_not_free">make_condition_not_free() (in module lyra.core.expressions_tools)</a>
 </li>
   </ul></td>
@@ -937,6 +906,8 @@
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.Lattice.meet">meet() (lyra.abstract_domains.lattice.Lattice method)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.expressions.BinaryArithmeticOperation.Operator.Mult">Mult (lyra.core.expressions.BinaryArithmeticOperation.Operator attribute)</a>
+</li>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin.mult">mult() (lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin method)</a>
 </li>
       <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.mult_call_semantics">mult_call_semantics() (lyra.semantics.semantics.BuiltInCallSemantics method)</a>
 </li>
@@ -957,6 +928,8 @@
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.dbm.nan2inf">nan2inf() (in module lyra.abstract_domains.numerical.dbm)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.expressions.UnaryBooleanOperation.Operator.Neg">Neg (lyra.core.expressions.UnaryBooleanOperation.Operator attribute)</a>
+</li>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin.neg">neg() (lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin method)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression">NegationFreeNormalExpression (class in lyra.core.expressions)</a>
 </li>
@@ -1059,11 +1032,9 @@
       <ul>
         <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.dbm.CDBM.replace">(lyra.abstract_domains.numerical.dbm.CDBM method)</a>
 </li>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.replace">(lyra.abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace method)</a>
-</li>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.replace">(lyra.abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace method)</a>
-</li>
       </ul></li>
+      <li><a href="lyra.core.html#lyra.core.types.resolve_type_annotation">resolve_type_annotation() (in module lyra.core.types)</a>
+</li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State.result">result (lyra.abstract_domains.state.State attribute)</a>
 
       <ul>
@@ -1116,12 +1087,6 @@
 </li>
       <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.set_used_at">set_used_at() (lyra.abstract_domains.usage.used_liststart.UsedListStartLattice method)</a>
 </li>
-      <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.sets">sets (lyra.abstract_domains.traces.traces_domain.BoolTracesState attribute)</a>
-
-      <ul>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.sets">(lyra.abstract_domains.traces.traces_domain.TvlTracesState attribute)</a>
-</li>
-      </ul></li>
       <li><a href="lyra.core.html#lyra.core.expressions_tools.Simplifier">Simplifier (class in lyra.core.expressions_tools)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.expressions_tools.simplify">simplify() (in module lyra.core.expressions_tools)</a>
@@ -1142,20 +1107,16 @@
 </li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.stack.Stack.stack">stack (lyra.abstract_domains.stack.Stack attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State">State (class in lyra.abstract_domains.state)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.engine.liveness.html#lyra.engine.liveness.liveness_analysis.LivenessAnalysis.state">state() (lyra.engine.liveness.liveness_analysis.LivenessAnalysis method)</a>
 
       <ul>
         <li><a href="lyra.engine.numerical.html#lyra.engine.numerical.interval_analysis.IntervalAnalysis.state">(lyra.engine.numerical.interval_analysis.IntervalAnalysis method)</a>
 </li>
         <li><a href="lyra.engine.html#lyra.engine.runner.Runner.state">(lyra.engine.runner.Runner method)</a>
-</li>
-        <li><a href="lyra.engine.traces.html#lyra.engine.traces.traces_analysis.BoolTracesAnalysis.state">(lyra.engine.traces.traces_analysis.BoolTracesAnalysis method)</a>
-</li>
-        <li><a href="lyra.engine.traces.html#lyra.engine.traces.traces_analysis.TvlTracesAnalysis.state">(lyra.engine.traces.traces_analysis.TvlTracesAnalysis method)</a>
 </li>
         <li><a href="lyra.engine.usage.html#lyra.engine.usage.usage_analysis.UsageAnalysis.state">(lyra.engine.usage.usage_analysis.UsageAnalysis method)</a>
 </li>
@@ -1174,6 +1135,8 @@
 </li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.store.Store.store">store (lyra.abstract_domains.store.Store attribute)</a>
 </li>
+      <li><a href="lyra.core.html#lyra.core.types.StringLyraType">StringLyraType (class in lyra.core.types)</a>
+</li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.dbm.CDBM.strongly_closed">strongly_closed (lyra.abstract_domains.numerical.dbm.CDBM attribute)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.expressions.BinaryArithmeticOperation.Operator.Sub">Sub (lyra.core.expressions.BinaryArithmeticOperation.Operator attribute)</a>
@@ -1182,6 +1145,8 @@
         <li><a href="lyra.core.html#lyra.core.expressions.UnaryArithmeticOperation.Operator.Sub">(lyra.core.expressions.UnaryArithmeticOperation.Operator attribute)</a>
 </li>
       </ul></li>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin.sub">sub() (lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin method)</a>
+</li>
       <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.sub_call_semantics">sub_call_semantics() (lyra.semantics.semantics.BuiltInCallSemantics method)</a>
 </li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State.substitute_variable">substitute_variable() (lyra.abstract_domains.state.State method)</a>
@@ -1206,12 +1171,6 @@
         <li><a href="lyra.core.html#lyra.core.statements.IndexStmt.target">(lyra.core.statements.IndexStmt attribute)</a>
 </li>
         <li><a href="lyra.core.html#lyra.core.statements.SliceStmt.target">(lyra.core.statements.SliceStmt attribute)</a>
-</li>
-      </ul></li>
-      <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.test">test() (lyra.abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace method)</a>
-
-      <ul>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.test">(lyra.abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace method)</a>
 </li>
       </ul></li>
       <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.test_usedListStartLattice.TestUsedListStartLattice.test_combine">test_combine() (lyra.abstract_domains.usage.test_usedListStartLattice.TestUsedListStartLattice method)</a>
@@ -1244,30 +1203,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.TopMixin">TopMixin (class in lyra.abstract_domains.lattice)</a>
 </li>
-      <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.trace">trace (lyra.abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace attribute)</a>
-
-      <ul>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.trace">(lyra.abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace attribute)</a>
-</li>
-      </ul></li>
-      <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.traces">traces (lyra.abstract_domains.traces.traces_domain.BoolTracesState attribute)</a>
-
-      <ul>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.traces">(lyra.abstract_domains.traces.traces_domain.TvlTracesState attribute)</a>
-</li>
-      </ul></li>
       <li><a href="lyra.engine.html#lyra.engine.runner.Runner.tree">tree (lyra.engine.runner.Runner attribute)</a>
-</li>
-      <li><a href="lyra.engine.traces.html#lyra.engine.traces.traces_analysis.TvlTracesAnalysis">TvlTracesAnalysis (class in lyra.engine.traces.traces_analysis)</a>
-</li>
-      <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState">TvlTracesState (class in lyra.abstract_domains.traces.traces_domain)</a>
-</li>
-      <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace">TvlTracesState.TvlTrace (class in lyra.abstract_domains.traces.traces_domain)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.expressions.Expression.typ">typ (lyra.core.expressions.Expression attribute)</a>
 
       <ul>
         <li><a href="lyra.core.html#lyra.core.statements.Call.typ">(lyra.core.statements.Call attribute)</a>
+</li>
+        <li><a href="lyra.core.html#lyra.core.types.ListLyraType.typ">(lyra.core.types.ListLyraType attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1365,36 +1308,34 @@
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.store.Store.variables">variables (lyra.abstract_domains.store.Store attribute)</a>
 
       <ul>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.variables">(lyra.abstract_domains.traces.traces_domain.BoolTracesState attribute)</a>
-</li>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.variables">(lyra.abstract_domains.traces.traces_domain.TvlTracesState attribute)</a>
+        <li><a href="lyra.engine.html#lyra.engine.runner.Runner.variables">(lyra.engine.runner.Runner attribute)</a>
 </li>
       </ul></li>
       <li><a href="lyra.core.html#lyra.core.special_expressions.VariadicArithmeticOperation">VariadicArithmeticOperation (class in lyra.core.special_expressions)</a>
 </li>
-      <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace.variety">variety() (lyra.abstract_domains.traces.traces_domain.BoolTracesState.BoolTrace method)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit">visit() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
-        <li><a href="lyra.abstract_domains.traces.html#lyra.abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace.variety">(lyra.abstract_domains.traces.traces_domain.TvlTracesState.TvlTrace method)</a>
+        <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit">(lyra.core.expressions.ExpressionVisitor method)</a>
 </li>
-      </ul></li>
-      <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit">visit() (lyra.core.expressions.ExpressionVisitor method)</a>
-
-      <ul>
         <li><a href="lyra.core.html#lyra.core.expressions_tools.OldExpressionVisitor.visit">(lyra.core.expressions_tools.OldExpressionVisitor method)</a>
 </li>
       </ul></li>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_AttributeReference">visit_AttributeReference() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_AttributeReference">visit_AttributeReference() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
+        <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_AttributeReference">(lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+</li>
         <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_AttributeReference">(lyra.core.expressions.ExpressionVisitor method)</a>
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_AttributeReference">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
 </li>
       </ul></li>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryArithmeticOperation">visit_BinaryArithmeticOperation() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryArithmeticOperation">visit_BinaryArithmeticOperation() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
+        <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryArithmeticOperation">(lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+</li>
         <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_BinaryArithmeticOperation">(lyra.core.expressions.ExpressionVisitor method)</a>
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_BinaryArithmeticOperation">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
@@ -1404,51 +1345,63 @@
         <li><a href="lyra.core.html#lyra.core.expressions_tools.Simplifier.visit_BinaryArithmeticOperation">(lyra.core.expressions_tools.Simplifier method)</a>
 </li>
       </ul></li>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryBooleanOperation">visit_BinaryBooleanOperation() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryBooleanOperation">visit_BinaryBooleanOperation() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
+        <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryBooleanOperation">(lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+</li>
         <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_BinaryBooleanOperation">(lyra.core.expressions.ExpressionVisitor method)</a>
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_BinaryBooleanOperation">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
 </li>
       </ul></li>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryComparisonOperation">visit_BinaryComparisonOperation() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryComparisonOperation">visit_BinaryComparisonOperation() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
+        <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryComparisonOperation">(lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+</li>
         <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_BinaryComparisonOperation">(lyra.core.expressions.ExpressionVisitor method)</a>
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_BinaryComparisonOperation">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Index">visit_Index() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Index">visit_Index() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
+        <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Index">(lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+</li>
         <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_Index">(lyra.core.expressions.ExpressionVisitor method)</a>
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_Index">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
 </li>
       </ul></li>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Input">visit_Input() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Input">visit_Input() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
+        <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Input">(lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+</li>
         <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_Input">(lyra.core.expressions.ExpressionVisitor method)</a>
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_Input">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
 </li>
       </ul></li>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_ListDisplay">visit_ListDisplay() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_ListDisplay">visit_ListDisplay() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
+        <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_ListDisplay">(lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+</li>
         <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_ListDisplay">(lyra.core.expressions.ExpressionVisitor method)</a>
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_ListDisplay">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
 </li>
       </ul></li>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Literal">visit_Literal() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Literal">visit_Literal() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
+        <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Literal">(lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+</li>
         <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_Literal">(lyra.core.expressions.ExpressionVisitor method)</a>
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_Literal">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
@@ -1456,17 +1409,21 @@
         <li><a href="lyra.core.html#lyra.core.expressions_tools.Simplifier.visit_Literal">(lyra.core.expressions_tools.Simplifier method)</a>
 </li>
       </ul></li>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Slice">visit_Slice() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Slice">visit_Slice() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
+        <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Slice">(lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+</li>
         <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_Slice">(lyra.core.expressions.ExpressionVisitor method)</a>
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_Slice">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
 </li>
       </ul></li>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryArithmeticOperation">visit_UnaryArithmeticOperation() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_UnaryArithmeticOperation">visit_UnaryArithmeticOperation() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
+        <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryArithmeticOperation">(lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+</li>
         <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_UnaryArithmeticOperation">(lyra.core.expressions.ExpressionVisitor method)</a>
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_UnaryArithmeticOperation">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
@@ -1476,17 +1433,21 @@
         <li><a href="lyra.core.html#lyra.core.expressions_tools.Simplifier.visit_UnaryArithmeticOperation">(lyra.core.expressions_tools.Simplifier method)</a>
 </li>
       </ul></li>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryBooleanOperation">visit_UnaryBooleanOperation() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_UnaryBooleanOperation">visit_UnaryBooleanOperation() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
+        <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryBooleanOperation">(lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+</li>
         <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_UnaryBooleanOperation">(lyra.core.expressions.ExpressionVisitor method)</a>
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_UnaryBooleanOperation">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
 </li>
       </ul></li>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_VariableIdentifier">visit_VariableIdentifier() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_VariableIdentifier">visit_VariableIdentifier() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
+        <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_VariableIdentifier">(lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation method)</a>
+</li>
         <li><a href="lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_VariableIdentifier">(lyra.core.expressions.ExpressionVisitor method)</a>
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_VariableIdentifier">(lyra.core.expressions.NegationFreeNormalExpression method)</a>

@@ -14,6 +14,4 @@ class LivenessAnalysis(Runner):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        names = {nd.id for nd in ast.walk(self.tree) if isinstance(nd, ast.Name) and isinstance(nd.ctx, ast.Store)}
-        variables = [VariableIdentifier(int, name) for name in names]
-        return LivenessState(variables)
+        return LivenessState(self.variables)

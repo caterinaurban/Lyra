@@ -137,6 +137,8 @@
 
 <span class="sd">Abstract domain to be used for **live variable analysis**.</span>
 <span class="sd">A program variable is *live* in a state if its value may be used before the variable is redefined.</span>
+
+<span class="sd">:Author: Caterina Urban</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">IntEnum</span>
@@ -147,6 +149,7 @@
 <span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">VariableIdentifier</span>
 
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.store</span> <span class="k">import</span> <span class="n">Store</span>
+<span class="kn">from</span> <span class="nn">lyra.core.types</span> <span class="k">import</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">BooleanLyraType</span>
 <span class="kn">from</span> <span class="nn">lyra.core.utils</span> <span class="k">import</span> <span class="n">copy_docstring</span>
 
 
@@ -237,7 +240,7 @@
 
 <span class="sd">        :param variables: list of program variables</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="p">{</span><span class="nb">int</span><span class="p">:</span> <span class="n">LivenessLattice</span><span class="p">})</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="p">{</span><span class="n">BooleanLyraType</span><span class="p">:</span> <span class="n">LivenessLattice</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">:</span> <span class="n">LivenessLattice</span><span class="p">})</span>
 
     <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_access_variable</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">_access_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">]:</span>

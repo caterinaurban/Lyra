@@ -1,7 +1,11 @@
 import ast
 import os
 from abc import abstractmethod
+from queue import Queue
+from typing import Set, List
 
+from lyra.core.expressions import VariableIdentifier
+from lyra.core.statements import Assignment, VariableAccess
 from lyra.engine.result import AnalysisResult
 
 from lyra.frontend.cfg_generator import ast_to_cfg
@@ -13,6 +17,7 @@ class Runner:
 
     def __init__(self):
         self._path = None
+        self._source = None
         self._tree = None
         self._cfg = None
 
@@ -23,6 +28,14 @@ class Runner:
     @path.setter
     def path(self, path):
         self._path = path
+
+    @property
+    def source(self):
+        return self._source
+
+    @source.setter
+    def source(self, source):
+        self._source = source
 
     @property
     def tree(self):
@@ -48,10 +61,27 @@ class Runner:
     def state(self):
         """Initial analysis state."""
 
+    @property
+    def variables(self) -> List[VariableIdentifier]:
+        variables = list()
+        visited, worklist = set(), Queue()
+        worklist.put(self.cfg.in_node)
+        while not worklist.empty():
+            current = worklist.get()
+            if current.identifier not in visited:
+                visited.add(current.identifier)
+                for stmt in current.stmts:
+                    if isinstance(stmt, Assignment) and isinstance(stmt.left, VariableAccess):
+                        variables.append(stmt.left.var)
+                for node in self.cfg.successors(current):
+                    worklist.put(node)
+        return variables
+
     def main(self, path):
         self.path = path
         with open(self.path, 'r') as source:
-            self.tree = ast.parse(source.read())
+            self.source = source.read()
+            self.tree = ast.parse(self.source)
             self.cfg = ast_to_cfg(self.tree)
         self.run()
 

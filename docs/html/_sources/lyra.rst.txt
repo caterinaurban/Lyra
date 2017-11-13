@@ -16,3 +16,12 @@ Subpackages
     lyra.engine
     lyra.semantics
 
+Submodules
+----------
+
+.. automodule:: lyra.main
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

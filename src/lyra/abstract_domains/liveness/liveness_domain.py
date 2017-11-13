@@ -4,6 +4,8 @@ Live Variable Abstract Domain
 
 Abstract domain to be used for **live variable analysis**.
 A program variable is *live* in a state if its value may be used before the variable is redefined.
+
+:Author: Caterina Urban
 """
 
 from enum import IntEnum

@@ -93,9 +93,9 @@ class SourceTestCase(unittest.TestCase):
 
 
 class FileTestCase(SourceTestCase):
-    def __init__(self, source_path):
-        super().__init__(name=source_path_to_name(source_path))
-        self._source_path = source_path
+    def __init__(self, path):
+        super().__init__(name=source_path_to_name(path))
+        self._source_path = path
         self._source_directory = os.path.dirname(self._source_path)
 
     def setUp(self):
@@ -121,8 +121,8 @@ class FileTestCase(SourceTestCase):
 
 
 class ResultCommentsFileTestCase(FileTestCase):
-    def __init__(self, source_path):
-        super().__init__(source_path)
+    def __init__(self, path):
+        super().__init__(path)
 
     @abstractmethod
     def runTest(self):

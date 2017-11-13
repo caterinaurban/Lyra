@@ -14,9 +14,9 @@ logging.basicConfig(level=logging.INFO, filename='unittests.log', filemode='w')
 
 
 class OctagonTestCase(ResultCommentsFileTestCase):
-    def __init__(self, source_path):
-        super().__init__(source_path)
-        self._source_path = source_path
+    def __init__(self, path):
+        super().__init__(path)
+        self._source_path = path
 
     def runTest(self):
         logging.info(self)

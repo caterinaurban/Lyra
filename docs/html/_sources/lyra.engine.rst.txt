@@ -13,7 +13,6 @@ Subpackages
 
     lyra.engine.liveness
     lyra.engine.numerical
-    lyra.engine.traces
     lyra.engine.usage
 
 Submodules

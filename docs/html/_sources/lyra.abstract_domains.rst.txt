@@ -13,7 +13,6 @@ Subpackages
 
     lyra.abstract_domains.liveness
     lyra.abstract_domains.numerical
-    lyra.abstract_domains.traces
     lyra.abstract_domains.usage
 
 Submodules

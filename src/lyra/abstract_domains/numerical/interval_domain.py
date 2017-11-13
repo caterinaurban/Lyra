@@ -4,6 +4,8 @@ Interval Abstract Domain
 
 Non-relational abstract domain to be used for **interval analysis**.
 The set of possible values of a program variable in a state is represented as an interval.
+
+:Authors: Caterina Urban and Simon Wehrli
 """
 
 

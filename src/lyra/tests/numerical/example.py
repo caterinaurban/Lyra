@@ -1,6 +1,9 @@
+x: int = 3
+y: int = 5
 
-a: int = input()
-if 1 <= a and a <= 9:
-    b: int = 1
-else:
-    b: int = 2
+a: int = x + y
+
+if a > 0:
+    a: int = 2 * a
+
+print(a)

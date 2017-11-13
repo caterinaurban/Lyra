@@ -471,7 +471,7 @@ class CFGVisitor(ast.NodeVisitor):
             return LiteralEvaluation(pp, expr)
         raise NotImplementedError(f"Name constant {node.value.__class__.__name__} is not yet supported!")
 
-    def visit_Expr(self, node, typ=None):
+    def visit_Expr(self, node, typing=None, typ=None):
             return self.visit(node.value, typing, typ)
 
     def visit_Call(self, node, typing=None, typ=None):
@@ -508,7 +508,7 @@ class CFGVisitor(ast.NodeVisitor):
         cfg_factory = CFGFactory(self._id_gen)
 
         for child in body:
-            if isinstance(child, ast.AnnAssign):
+            if isinstance(child, (ast.AnnAssign, ast.Expr)):
                 cfg_factory.add_stmts(self.visit(child, typing))
             elif isinstance(child, ast.If):
                 cfg_factory.complete_basic_block()
@@ -541,22 +541,6 @@ class CFGVisitor(ast.NodeVisitor):
             cfg_factory.append_cfg(_dummy_cfg(self._id_gen))
 
         return cfg_factory.cfg
-
-    #@staticmethod
-    #def _ensure_stmt(pp, expr):
-    #    if isinstance(expr, Statement):
-    #        return expr
-    #    elif isinstance(expr, Literal):
-    #        return LiteralEvaluation(pp, expr)
-    #    elif isinstance(expr, VariableIdentifier):
-    #        return VariableAccess(pp, expr)
-    #    else:
-    #        raise NotImplementedError(f"The expression {str(type(expr))} is not yet translatable to CFG!")
-
-    #def _ensure_stmt_visit(self, node, pp=None, *args, **kwargs):
-    #    result = self.visit(node, *args, **kwargs)
-    #    pp = pp if pp else ProgramPoint(node.lineno, node.col_offset)
-    #    return CfgVisitor._ensure_stmt(pp, result)
 
 
 def ast_to_cfg(root_node):
