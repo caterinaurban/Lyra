@@ -2,7 +2,8 @@ import itertools
 import re
 from functools import reduce
 
-from lyra.core.expressions import BinaryArithmeticOperation, BinaryOperation, BinaryComparisonOperation, UnaryOperation, \
+from lyra.core.expressions import BinaryArithmeticOperation, BinaryOperation, BinaryComparisonOperation
+from lyra.core.expressions import UnaryOperation, \
     UnaryArithmeticOperation, UnaryBooleanOperation, BinaryBooleanOperation, Input, ListDisplay, Slice, Index, Literal
 
 from lyra.abstract_domains.state import State

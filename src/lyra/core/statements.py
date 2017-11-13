@@ -4,6 +4,7 @@ from typing import List, Sequence
 from lyra.core.expressions import Literal, VariableIdentifier
 from lyra.core.types import LyraType
 
+
 class ProgramPoint:
     def __init__(self, line: int, column: int):
         """Program point representation.

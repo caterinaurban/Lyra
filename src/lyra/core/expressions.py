@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from enum import IntEnum
 from typing import Set, Sequence
-from lyra.core.types import LyraType, StringLyraType, IntegerLyraType
+from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType
 from lyra.core.utils import copy_docstring
 
 """
@@ -158,6 +158,8 @@ class NegationFreeNormalExpression(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
     def visit_VariableIdentifier(self, expr: 'VariableIdentifier', invert=False):
+        if isinstance(expr.typ, BooleanLyraType) and invert:
+            return UnaryBooleanOperation(BooleanLyraType(), UnaryBooleanOperation.Operator.Neg, expr)
         return expr     # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_ListDisplay)
@@ -199,9 +201,9 @@ class NegationFreeNormalExpression(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
     def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation', invert=False):
-        left = self.visit(expr.left)
+        left = expr.left
         operator = expr.operator.reverse_operator() if invert else expr.operator
-        right = self.visit(expr.right)
+        right = expr.right
         zero = Literal(IntegerLyraType(), "0")
         if operator == BinaryComparisonOperation.Operator.Eq:  # left = right -> left - right <= 0 && right - left <= 0
             minus = BinaryArithmeticOperation.Operator.Sub

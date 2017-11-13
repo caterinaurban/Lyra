@@ -1,11 +1,8 @@
-import ast
-
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.runner import Runner
 from lyra.semantics.backward import DefaultBackwardSemantics
 
 from lyra.abstract_domains.liveness.liveness_domain import LivenessState
-from lyra.core.expressions import VariableIdentifier
 
 
 class LivenessAnalysis(Runner):

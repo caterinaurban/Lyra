@@ -1,6 +1,6 @@
-x = int(input())
+x: int = int(input())
 
 # RESULT: a -> O, x -> U
 
-a = x
+a: int = x
 print(a)

@@ -2,7 +2,7 @@ import ast
 import os
 from abc import abstractmethod
 from queue import Queue
-from typing import Set, List
+from typing import List
 
 from lyra.core.expressions import VariableIdentifier
 from lyra.core.statements import Assignment, VariableAccess

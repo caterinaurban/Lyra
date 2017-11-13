@@ -5,6 +5,7 @@ import unittest
 
 import io
 import os
+from abc import ABCMeta
 from math import inf
 
 from lyra.core.cfg import Conditional
@@ -13,7 +14,7 @@ from lyra.frontend.cfg_generator import ast_to_cfg
 from lyra.visualization.graph_renderer import AnalysisResultRenderer
 
 
-class TestRunner(unittest.TestCase, Runner):
+class TestRunner(unittest.TestCase, Runner, metaclass=ABCMeta):
     """Test analysis runner.
 
     Programs can be annotated with result comments::

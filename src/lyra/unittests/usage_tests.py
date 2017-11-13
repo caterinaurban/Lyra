@@ -1,44 +1,31 @@
 import glob
-import logging
 import os
 import unittest
 
-from lyra.core.expressions import VariableIdentifier
-from lyra.engine.backward import BackwardInterpreter
-
 from lyra.abstract_domains.usage.stack import UsedStack
-from lyra.engine.usage.usage_analysis import UsageAnalysis
+from lyra.engine.backward import BackwardInterpreter
 from lyra.semantics.usage.usage_semantics import UsageSemantics
-from lyra.unittests.generic_tests import ResultCommentsFileTestCase
-
-logging.basicConfig(level=logging.INFO, filename='unittests.log', filemode='w')
+from lyra.unittests.runner import TestRunner
 
 
-class UsageTestCase(ResultCommentsFileTestCase):
-    def __init__(self, path):
-        super().__init__(path)
-        self._source_path = path
+class UsageTest(TestRunner):
 
-    def runTest(self):
-        logging.info(self)
-        self.render_cfg()
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, UsageSemantics(), 3)
 
-        analysis = UsageAnalysis()
-        analysis.cfg = self.cfg
-        result = analysis.run()
-        self.render_result_cfg(result)
-        self.check_result_comments(result)
+    def state(self):
+        return UsedStack(self.variables)
 
 
-def suite():
-    s = unittest.TestSuite()
-    g = os.getcwd() + '/usage/**.py'
-    for path in glob.iglob(g):
+def test_suite():
+    suite = unittest.TestSuite()
+    name = os.getcwd() + '/usage/**.py'
+    for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
-            s.addTest(UsageTestCase(path))
-    runner = unittest.TextTestRunner()
-    runner.run(s)
+            suite.addTest(UsageTest(path))
+    return suite
 
 
 if __name__ == '__main__':
-    suite()
+    runner = unittest.TextTestRunner()
+    runner.run(test_suite())

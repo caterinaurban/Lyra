@@ -1,9 +1,9 @@
-x = int(input())
-y = int(input())
+x: int = int(input())
+y: int = int(input())
 # RESULT: x -> U, y -> U, z -> O
-z = 1
+z: int = 1
 if y > x:
-    z = y
+    z: int = y
 else:
-    z = y * y
+    z: int = y * y
 print(z)

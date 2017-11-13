@@ -1,6 +1,3 @@
-import ast
-
-from lyra.core.expressions import VariableIdentifier
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.runner import Runner
 

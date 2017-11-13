@@ -1,4 +1,4 @@
-x = int(input())
+x: int = int(input())
 
 # RESULT: x -> U
 

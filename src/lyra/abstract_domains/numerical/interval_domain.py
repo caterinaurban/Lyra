@@ -189,7 +189,15 @@ class IntervalState(Store, State):
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'IntervalState':
         normal = NegationFreeNormalExpression().visit(condition)
-        if isinstance(normal, BinaryBooleanOperation):
+        if isinstance(normal, VariableIdentifier) and isinstance(normal.typ, BooleanLyraType):
+            evaluation = self._evaluation.visit(normal, self, dict())
+            return self._refinement.visit(normal, evaluation, IntervalLattice(1, 1), self)
+        elif isinstance(normal, UnaryBooleanOperation) and normal.operator == UnaryBooleanOperation.Operator.Neg:
+            expression = normal.expression
+            if isinstance(expression, VariableIdentifier) and isinstance(expression.typ, BooleanLyraType):
+                evaluation = self._evaluation.visit(normal, self, dict())
+                return self._refinement.visit(normal, evaluation, IntervalLattice(0, 0), self)
+        elif isinstance(normal, BinaryBooleanOperation):
             if normal.operator == BinaryBooleanOperation.Operator.And:
                 right = deepcopy(self)._assume(normal.right)
                 return self._assume(normal.left).meet(right)
@@ -297,11 +305,24 @@ class IntervalState(Store, State):
             elif expr.operator == UnaryArithmeticOperation.Operator.Sub:
                 evaluated[expr] = deepcopy(evaluated[expr.expression]).negate()
                 return evaluated
-            else:
-                raise ValueError(f"Unary operator '{expr.operator}' is not supported!")
+            raise ValueError(f"Unary operator '{expr.operator}' is not supported!")
 
         @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
         def visit_UnaryBooleanOperation(self, expr: UnaryBooleanOperation, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation    # nothing to be done
+            evaluated = self.visit(expr.expression, state, evaluation)
+            if expr.operator == UnaryBooleanOperation.Operator.Neg and isinstance(expr.expression.typ, BooleanLyraType):
+                value = evaluated[expr.expression]
+                if value == IntervalLattice(0, 1):
+                    evaluated[expr] = IntervalLattice(0, 1)
+                    return evaluated
+                elif value == IntervalLattice(1, 1):
+                    evaluated[expr] = IntervalLattice(0, 0)
+                    return evaluated
+                elif value == IntervalLattice(0, 0):
+                    evaluated[expr] = IntervalLattice(1, 1)
+                    return evaluated
             raise ValueError(f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
@@ -387,6 +408,14 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
         def visit_UnaryBooleanOperation(self, expr, evaluation=None, value=None, state=None):
+            if expr.operator == UnaryBooleanOperation.Operator.Neg and isinstance(expr.expression.typ, BooleanLyraType):
+                refined = evaluation[expr].meet(value)
+                if refined == IntervalLattice(0, 1):
+                    return self.visit(expr.expression, evaluation, IntervalLattice(0, 1), state)
+                elif refined == IntervalLattice(1, 1):
+                    return self.visit(expr.expression, evaluation, IntervalLattice(0, 0), state)
+                elif refined == IntervalLattice(0, 0):
+                    return self.visit(expr.expression, evaluation, IntervalLattice(1, 1), state)
             raise ValueError(f"Refinement for a {expr.__class__.__name__} expression is not expected!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)

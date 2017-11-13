@@ -2,7 +2,7 @@
 # INITIAL: a -> [-inf, inf], b -> [-inf, inf]
 a: int = int(input())
 # STATE: a -> [-inf, inf], b -> [-inf, inf]
-if 1 <= a and a <= 9:
+if 1 <= a <= 9:
     # STATE: a -> [1, 9], b -> [-inf, inf]
     b: int = 1
     # STATE: a -> [1, 9], b -> [1, 1]

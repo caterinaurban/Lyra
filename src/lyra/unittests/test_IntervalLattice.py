@@ -123,5 +123,6 @@ class TestIntervalLattice(unittest.TestCase):
         self.assertEqual(IntervalLattice(2, 4).mult(IntervalLattice(1, 3)), IntervalLattice(2, 12))
         self.assertEqual(IntervalLattice(1, 2).mult(IntervalLattice(3, 4)), IntervalLattice(3, 8))
 
+
 if __name__ == '__main__':
     unittest.main()

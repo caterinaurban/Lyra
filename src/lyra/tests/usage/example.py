@@ -21,8 +21,11 @@ history = input()
 bonus = input()
 
 passing = True
-if not english: english = False         # error: *english* should be *passing*
-if not math: passing = False or bonus
-if not math: passing = False or bonus   # error: *math* should be *history*
+if not english:
+    english = False         # error: *english* should be *passing*
+if not math:
+    passing = False or bonus
+if not math:
+    passing = False or bonus   # error: *math* should be *history*
 
 print(passing)
