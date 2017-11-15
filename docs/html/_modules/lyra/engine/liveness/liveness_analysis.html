@@ -131,14 +131,11 @@
            <div itemprop="articleBody">
             
   <h1>Source code for lyra.engine.liveness.liveness_analysis</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">ast</span>
-
-<span class="kn">from</span> <span class="nn">lyra.engine.backward</span> <span class="k">import</span> <span class="n">BackwardInterpreter</span>
+<span></span><span class="kn">from</span> <span class="nn">lyra.engine.backward</span> <span class="k">import</span> <span class="n">BackwardInterpreter</span>
 <span class="kn">from</span> <span class="nn">lyra.engine.runner</span> <span class="k">import</span> <span class="n">Runner</span>
 <span class="kn">from</span> <span class="nn">lyra.semantics.backward</span> <span class="k">import</span> <span class="n">DefaultBackwardSemantics</span>
 
-<span class="kn">from</span> <span class="nn">lyra.abstract_domains.liveness.liveness_domain</span> <span class="k">import</span> <span class="n">LivenessState</span>
-<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">VariableIdentifier</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.liveness.liveness_domain</span> <span class="k">import</span> <span class="n">LivenessState</span><span class="p">,</span> <span class="n">StrongLivenessState</span>
 
 
 <div class="viewcode-block" id="LivenessAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.liveness.html#lyra.engine.liveness.liveness_analysis.LivenessAnalysis">[docs]</a><span class="k">class</span> <span class="nc">LivenessAnalysis</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
@@ -148,6 +145,12 @@
 
 <div class="viewcode-block" id="LivenessAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.liveness.html#lyra.engine.liveness.liveness_analysis.LivenessAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">LivenessState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="StrongLivenessAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.liveness.html#lyra.engine.liveness.liveness_analysis.StrongLivenessAnalysis">[docs]</a><span class="k">class</span> <span class="nc">StrongLivenessAnalysis</span><span class="p">(</span><span class="n">LivenessAnalysis</span><span class="p">):</span>
+
+<div class="viewcode-block" id="StrongLivenessAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.liveness.html#lyra.engine.liveness.liveness_analysis.StrongLivenessAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">StrongLivenessState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

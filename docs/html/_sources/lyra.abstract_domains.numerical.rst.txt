@@ -9,11 +9,6 @@ lyra\.abstract\_domains\.numerical package
 Submodules
 ----------
 
-.. automodule:: lyra.abstract_domains.numerical.arithmetic
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 .. automodule:: lyra.abstract_domains.numerical.dbm
     :members:
     :undoc-members:

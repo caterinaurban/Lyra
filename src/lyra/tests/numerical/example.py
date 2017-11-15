@@ -1,3 +1,4 @@
+
 x: int = 0
-while x < 9:
+for i in range(10):
     x: int = x + 1

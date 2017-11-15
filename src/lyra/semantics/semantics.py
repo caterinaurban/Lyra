@@ -2,13 +2,15 @@ import itertools
 import re
 from functools import reduce
 
-from lyra.core.expressions import BinaryArithmeticOperation, BinaryOperation, BinaryComparisonOperation
-from lyra.core.expressions import UnaryOperation, \
-    UnaryArithmeticOperation, UnaryBooleanOperation, BinaryBooleanOperation, Input, ListDisplay, Slice, Index, Literal
+from lyra.core.expressions import BinaryArithmeticOperation
+from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
+from lyra.core.expressions import UnaryOperation
+from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
+from lyra.core.expressions import BinaryBooleanOperation, Input, ListDisplay, Slice, Index, Literal
 
 from lyra.abstract_domains.state import State
-from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, ListDisplayStmt, SliceStmt, \
-    IndexStmt
+from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call
+from lyra.core.statements import ListDisplayStmt, SliceStmt, IndexStmt
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -25,7 +27,10 @@ def camel_to_snake(name: str) -> str:
 
 
 class Semantics:
-    """Semantics of statements. Independently of the direction (forward/backward) of the analysis."""
+    """Semantics of statements.
+
+    Independently of the direction (forward/backward) of the analysis.
+    """
 
     def semantics(self, stmt: Statement, state: State) -> State:
         """Semantics of a statement.
@@ -37,9 +42,8 @@ class Semantics:
         name = '{}_semantics'.format(camel_to_snake(stmt.__class__.__name__))
         if hasattr(self, name):
             return getattr(self, name)(stmt, state)
-        else:
-            raise NotImplementedError(f"Semantics for statement {stmt} of type {type(stmt)} not yet implemented! "
-                                      f"You must provide method {name}(...)")
+        error = f"Semantics for statement {stmt} of type {type(stmt)} not yet implemented! "
+        raise NotImplementedError(error + f"You must provide method {name}(...)")
 
 
 class LiteralEvaluationSemantics(Semantics):

@@ -19,7 +19,8 @@ class UserDefinedCallSemantics(ForwardSemantics):
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        raise NotImplementedError("Forward semantics for call statement {} not yet implemented!".format(stmt))
+        error = f"Forward semantics for call statement {stmt} not yet implemented!"
+        raise NotImplementedError(error)
 
 
 class AssignmentSemantics(ForwardSemantics):
@@ -36,8 +37,8 @@ class AssignmentSemantics(ForwardSemantics):
         rhs = self.semantics(stmt.right, state).result   # rhs evaluation
         if isinstance(stmt.left, VariableAccess):
             return state.assign_variable(lhs, rhs)
-        else:
-            raise NotImplementedError("Forward semantics for assignment {0!s} not yet implemented!".format(self))
+        error = "Forward semantics for assignment {stmt} not yet implemented!"
+        raise NotImplementedError(error)
 
 
 # noinspection PyAbstractClass

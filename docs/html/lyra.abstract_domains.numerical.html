@@ -153,78 +153,9 @@
             
   <div class="section" id="module-lyra.abstract_domains.numerical">
 <span id="lyra-abstract-domains-numerical-package"></span><h1>lyra.abstract_domains.numerical package<a class="headerlink" href="#module-lyra.abstract_domains.numerical" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="module-lyra.abstract_domains.numerical.arithmetic">
-<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.abstract_domains.numerical.arithmetic" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-lyra.abstract_domains.numerical.dbm">
+<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.abstract_domains.numerical.dbm" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.arithmetic.</code><code class="descname">ArithmeticMixin</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/arithmetic.html#ArithmeticMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.Lattice" title="lyra.abstract_domains.lattice.Lattice"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.Lattice</span></code></a></p>
-<p>Mixin that adds a arithmetic operations to a lattice.</p>
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin.add">
-<code class="descname">add</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/arithmetic.html#ArithmeticMixin.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin.add" title="Permalink to this definition">¶</a></dt>
-<dd><p>Addition between two lattice elements.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the sum of the two lattice elements</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin.mult">
-<code class="descname">mult</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/arithmetic.html#ArithmeticMixin.mult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin.mult" title="Permalink to this definition">¶</a></dt>
-<dd><p>Multiplication between two lattice elements.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the product of the two lattice elements</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin.neg">
-<code class="descname">neg</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/arithmetic.html#ArithmeticMixin.neg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin.neg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Negation of a lattice elements.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be its negation</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin.sub">
-<code class="descname">sub</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/arithmetic.html#ArithmeticMixin.sub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin.sub" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subtraction between two lattice elements.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the difference between the two lattice elements</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-<span class="target" id="module-lyra.abstract_domains.numerical.dbm"></span><dl class="class">
 <dt id="lyra.abstract_domains.numerical.dbm.CDBM">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.dbm.</code><code class="descname">CDBM</code><span class="sig-paren">(</span><em>size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#CDBM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.CDBM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
@@ -340,14 +271,14 @@ The set of possible values of a program variable in a state is represented as an
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Authors:</th><td class="field-body">Caterina Urban, Simon Wehrli</td>
+<tr class="field-odd field"><th class="field-name">Authors:</th><td class="field-body">Caterina Urban and Simon Wehrli</td>
 </tr>
 </tbody>
 </table>
 <dl class="class">
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.interval_domain.</code><code class="descname">IntervalLattice</code><span class="sig-paren">(</span><em>lower=-inf</em>, <em>upper=inf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin" title="lyra.abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BottomMixin</span></code></a>, <a class="reference internal" href="#lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin" title="lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.numerical.arithmetic.ArithmeticMixin</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin" title="lyra.abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BottomMixin</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin" title="lyra.abstract_domains.lattice.ArithmeticMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.ArithmeticMixin</span></code></a></p>
 <p>Interval lattice. The bottom interval represents an empty set.</p>
 <img alt="_images/interval.jpg" src="_images/interval.jpg" />
 <p>The default abstraction is the unbounded interval [-oo, +oo].</p>

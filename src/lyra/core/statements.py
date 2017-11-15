@@ -141,7 +141,8 @@ class Call(Statement):
         return self._typ
 
     def __str__(self):
-        return "{}({})".format(self.name, ", ".join("{}".format(argument) for argument in self.arguments))
+        arguments = ", ".join("{}".format(argument) for argument in self.arguments)
+        return "{}({})".format(self.name, arguments)
 
 
 class Assignment(Statement):

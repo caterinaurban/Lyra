@@ -131,23 +131,30 @@
            <div itemprop="articleBody">
             
   <h1>Source code for lyra.engine.numerical.interval_analysis</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">ast</span>
-
-<span class="kn">from</span> <span class="nn">lyra.core.types</span> <span class="k">import</span> <span class="n">IntegerLyraType</span>
+<span></span><span class="kn">from</span> <span class="nn">lyra.engine.backward</span> <span class="k">import</span> <span class="n">BackwardInterpreter</span>
 <span class="kn">from</span> <span class="nn">lyra.engine.forward</span> <span class="k">import</span> <span class="n">ForwardInterpreter</span>
 <span class="kn">from</span> <span class="nn">lyra.engine.runner</span> <span class="k">import</span> <span class="n">Runner</span>
+<span class="kn">from</span> <span class="nn">lyra.semantics.backward</span> <span class="k">import</span> <span class="n">DefaultBackwardSemantics</span>
 <span class="kn">from</span> <span class="nn">lyra.semantics.forward</span> <span class="k">import</span> <span class="n">DefaultForwardSemantics</span>
 
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.numerical.interval_domain</span> <span class="k">import</span> <span class="n">IntervalState</span>
-<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">VariableIdentifier</span>
 
 
-<div class="viewcode-block" id="IntervalAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.numerical.html#lyra.engine.numerical.interval_analysis.IntervalAnalysis">[docs]</a><span class="k">class</span> <span class="nc">IntervalAnalysis</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
+<div class="viewcode-block" id="ForwardIntervalAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.numerical.html#lyra.engine.numerical.interval_analysis.ForwardIntervalAnalysis">[docs]</a><span class="k">class</span> <span class="nc">ForwardIntervalAnalysis</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
 
-<div class="viewcode-block" id="IntervalAnalysis.interpreter"><a class="viewcode-back" href="../../../../lyra.engine.numerical.html#lyra.engine.numerical.interval_analysis.IntervalAnalysis.interpreter">[docs]</a>    <span class="k">def</span> <span class="nf">interpreter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ForwardIntervalAnalysis.interpreter"><a class="viewcode-back" href="../../../../lyra.engine.numerical.html#lyra.engine.numerical.interval_analysis.ForwardIntervalAnalysis.interpreter">[docs]</a>    <span class="k">def</span> <span class="nf">interpreter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ForwardInterpreter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="n">DefaultForwardSemantics</span><span class="p">(),</span> <span class="mi">3</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="IntervalAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.numerical.html#lyra.engine.numerical.interval_analysis.IntervalAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ForwardIntervalAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.numerical.html#lyra.engine.numerical.interval_analysis.ForwardIntervalAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">IntervalState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="BackwardIntervalAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.numerical.html#lyra.engine.numerical.interval_analysis.BackwardIntervalAnalysis">[docs]</a><span class="k">class</span> <span class="nc">BackwardIntervalAnalysis</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BackwardIntervalAnalysis.interpreter"><a class="viewcode-back" href="../../../../lyra.engine.numerical.html#lyra.engine.numerical.interval_analysis.BackwardIntervalAnalysis.interpreter">[docs]</a>    <span class="k">def</span> <span class="nf">interpreter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">BackwardInterpreter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="n">DefaultBackwardSemantics</span><span class="p">(),</span> <span class="mi">3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BackwardIntervalAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.numerical.html#lyra.engine.numerical.interval_analysis.BackwardIntervalAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">IntervalState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span></div></div>
 </pre></div>
 

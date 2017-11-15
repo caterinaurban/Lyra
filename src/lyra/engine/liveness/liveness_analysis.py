@@ -2,7 +2,7 @@ from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.runner import Runner
 from lyra.semantics.backward import DefaultBackwardSemantics
 
-from lyra.abstract_domains.liveness.liveness_domain import LivenessState
+from lyra.abstract_domains.liveness.liveness_domain import LivenessState, StrongLivenessState
 
 
 class LivenessAnalysis(Runner):
@@ -12,3 +12,9 @@ class LivenessAnalysis(Runner):
 
     def state(self):
         return LivenessState(self.variables)
+
+
+class StrongLivenessAnalysis(LivenessAnalysis):
+
+    def state(self):
+        return StrongLivenessState(self.variables)

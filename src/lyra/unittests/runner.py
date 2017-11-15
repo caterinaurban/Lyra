@@ -32,8 +32,6 @@ class TestRunner(unittest.TestCase, Runner, metaclass=ABCMeta):
         # FINAL: <result>
 
     These will be checked after the analysis.
-
-    .. note: STATE result comments are matched with the analysis results obtained at the closest lines to the comments.
     """
     def __init__(self, path):
         super().__init__()
@@ -49,10 +47,12 @@ class TestRunner(unittest.TestCase, Runner, metaclass=ABCMeta):
         self.check(result)
 
     def render(self, result):
+        renderer = AnalysisResultRenderer()
+        data = (self.cfg, result)
         name = os.path.splitext(os.path.basename(self.path))[0]
         label = f"CFG with Analysis Result for {name}"
         directory = os.path.join(os.path.dirname(self.path), "graphs")
-        AnalysisResultRenderer().render((self.cfg, result), filename=name, label=label, directory=directory, view=False)
+        renderer.render(data, filename=name, label=label, directory=directory, view=False)
 
     def _expected_result(self):
         initial = re.compile('INITIAL:?\s*(?P<state>.*)')
@@ -114,4 +114,5 @@ class TestRunner(unittest.TestCase, Runner, metaclass=ABCMeta):
         comments.sort(key=lambda el: el[0])
         for line, expected in comments:
             actual = str(self._actual_result(result, line))
-            self.assertEqual(expected, actual, f"expected != actual result at line {line} of {self.path}!")
+            error = f"expected != actual result at line {line} of {self.path}!"
+            self.assertEqual(expected, actual, error)

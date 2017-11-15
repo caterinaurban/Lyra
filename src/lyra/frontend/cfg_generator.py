@@ -316,6 +316,7 @@ class CFGVisitor(ast.NodeVisitor):
         expr = Literal(typ, node.s)
         return LiteralEvaluation(pp, expr)
 
+    # noinspection PyMethodMayBeStatic
     def visit_Name(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         if node.id in types:

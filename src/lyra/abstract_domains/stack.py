@@ -3,6 +3,8 @@ Stack
 =====
 
 Stack of lattices.
+
+:Authors: Caterina Urban and Simon Wehrli
 """
 
 from abc import ABCMeta, abstractmethod

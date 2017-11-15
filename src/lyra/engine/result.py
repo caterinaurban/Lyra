@@ -52,7 +52,8 @@ class AnalysisResult:
                 if isinstance(current, Node):   # print a node
                     result.append("********* {} *********".format(current))
                     states = self.get_node_result(current)
-                    node = [item for items in zip_longest(states, current.stmts) for item in items if item is not None]
+                    node = [item for items in zip_longest(states, current.stmts)
+                            for item in items if item is not None]
                     result.append("\n".join("{}".format(item) for item in node))
                     # retrieve out edges of the node and add them to the pending items
                     for edge in self.cfg.out_edges(current):

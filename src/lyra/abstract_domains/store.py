@@ -3,22 +3,21 @@ Store
 =====
 
 Lifting of a lattice to a set of program variables.
+
+:Authors: Caterina Urban and Simon Wehrli
 """
 
 
 from collections import defaultdict
-
 from typing import List, Dict, Any, Type
-
 from lyra.core.expressions import VariableIdentifier
-
 from lyra.abstract_domains.lattice import Lattice
-from lyra.core.types import LyraType
 from lyra.core.utils import copy_docstring
 
 
 class Store(Lattice):
-    """Mutable element of a store ``Var -> L``, lifting a lattice ``L`` to a set of program variables ``Var``.
+    """Mutable element of a store ``Var -> L``,
+    lifting a lattice ``L`` to a set of program variables ``Var``.
 
     .. warning::
         Lattice operations modify the current store.
@@ -30,17 +29,17 @@ class Store(Lattice):
     """
     def __init__(self, variables: List[VariableIdentifier], lattices: Dict[Type, Type[Lattice]],
                  arguments: Dict[Type, Dict[str, Any]] = defaultdict(lambda: dict())):
-        """Create a mapping Var -> L from each variable in Var to the corresponding lattice element in L.
+        """Create a mapping Var -> L from each variable in Var to the corresponding element in L.
 
         :param variables: list of program variables
-        :param lattices: dictionary mapping each variable type to the corresponding lattice type
-        :param arguments: dictionary mapping each variable type to the arguments of the corresponding lattice type
+        :param lattices: dictionary from variable types to the corresponding lattice types
+        :param arguments: dictionary from variable types to arguments of the corresponding lattices
         """
         super().__init__()
         self._variables = variables
         self._lattices = lattices
         self._arguments = arguments
-        self._store = {var: self._lattices[type(var.typ)](**self._arguments[type(var.typ)]) for var in self._variables}
+        self._store = {v: lattices[type(v.typ)](**arguments[type(v.typ)]) for v in variables}
 
     @property
     def variables(self):
@@ -53,7 +52,8 @@ class Store(Lattice):
         return self._store
 
     def __repr__(self):
-        return ", ".join("{} -> {}".format(variable, value) for variable, value in self.store.items())
+        items = self.store.items()
+        return ", ".join("{} -> {}".format(variable, value) for variable, value in items)
 
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'Store':

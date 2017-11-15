@@ -4,6 +4,8 @@ Abstract Domain
 
 Interface of an abstract domain.
 Abstract domain elements support lattice operations and program statements.
+
+:Author: Caterina Urban
 """
 
 
@@ -196,6 +198,6 @@ class State(Lattice, metaclass=ABCMeta):
         :return: current state modified by the variable substitution
 
         """
-        self.big_join([deepcopy(self)._substitute_variable(lhs, rhs) for lhs in left for rhs in right])
+        self.big_join([deepcopy(self)._substitute_variable(l, r) for l in left for r in right])
         self.result = set()  # assignments have no result, only side-effects
         return self

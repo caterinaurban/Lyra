@@ -12,7 +12,7 @@ Welcome to Lyra's documentation!
    
    modules
 
-Indices and tables
+Indices and Tables
 ==================
 
 * :ref:`genindex`

@@ -81,7 +81,8 @@ class ExpressionVisitor(metaclass=ABCMeta):
         method = 'visit_' + expr.__class__.__name__
         if hasattr(self, method):
             return getattr(self, method)(expr, *args, **kwargs)
-        raise NotImplementedError(f"Missing visitor for {expr.__class__.__name__} in {self.__class__.__qualname__}!")
+        error = f"Missing visitor for {expr.__class__.__name__} in {self.__class__.__qualname__}!"
+        raise NotImplementedError(error)
 
     @abstractmethod
     def visit_Literal(self, expr: 'Literal'):
@@ -143,9 +144,8 @@ class NegationFreeNormalExpression(ExpressionVisitor):
 
     (1) removes negations using De Morgan's law, and
 
-    (2) puts all boolean comparison operations in the normal form ``expr <= 0``.
-
-    .. note:: The only supported boolean comparison operators are ``=``, ``!=``, ``<``, ``<=``, ``>``, and ``>=``.
+    (2) puts in the normal form ``expr <= 0``
+    all boolean comparison operations with ``=``, ``!=``, ``<``, ``<=``, ``>``, and ``>=`` .
     """
 
     @copy_docstring(ExpressionVisitor.visit_Literal)
@@ -159,7 +159,8 @@ class NegationFreeNormalExpression(ExpressionVisitor):
     @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
     def visit_VariableIdentifier(self, expr: 'VariableIdentifier', invert=False):
         if isinstance(expr.typ, BooleanLyraType) and invert:
-            return UnaryBooleanOperation(BooleanLyraType(), UnaryBooleanOperation.Operator.Neg, expr)
+            operator = UnaryBooleanOperation.Operator.Neg
+            return UnaryBooleanOperation(BooleanLyraType(), operator, expr)
         return expr     # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_ListDisplay)
@@ -204,17 +205,20 @@ class NegationFreeNormalExpression(ExpressionVisitor):
         left = expr.left
         operator = expr.operator.reverse_operator() if invert else expr.operator
         right = expr.right
-        zero = Literal(IntegerLyraType(), "0")
-        if operator == BinaryComparisonOperation.Operator.Eq:  # left = right -> left - right <= 0 && right - left <= 0
+        if operator == BinaryComparisonOperation.Operator.Eq:
+            # left = right -> left - right <= 0 && right - left <= 0
+            zero = Literal(IntegerLyraType(), "0")
             minus = BinaryArithmeticOperation.Operator.Sub
             operator = BinaryComparisonOperation.Operator.LtE
             expr1 = BinaryArithmeticOperation(left.typ, left, minus, right)
             expr1 = BinaryComparisonOperation(expr.typ, expr1, operator, zero)
             expr2 = BinaryArithmeticOperation(right.typ, right, minus, left)
             expr2 = BinaryComparisonOperation(expr.typ, expr2, operator, zero)
-            return BinaryBooleanOperation(expr.typ, expr1, BinaryBooleanOperation.Operator.And, expr2)
+            conjunction = BinaryBooleanOperation.Operator.And
+            return BinaryBooleanOperation(expr.typ, expr1, conjunction, expr2)
         elif operator == BinaryComparisonOperation.Operator.NotEq:
             # left != right -> left - (right - 1) <= 0 || right - (left - 1) <= 0
+            zero = Literal(IntegerLyraType(), "0")
             one = Literal(IntegerLyraType(), "1")
             minus = BinaryArithmeticOperation.Operator.Sub
             operator = BinaryComparisonOperation.Operator.LtE
@@ -224,31 +228,44 @@ class NegationFreeNormalExpression(ExpressionVisitor):
             expr2 = BinaryArithmeticOperation(left.typ, left, minus, one)
             expr2 = BinaryArithmeticOperation(right.typ, right, minus, expr2)
             expr2 = BinaryComparisonOperation(expr.typ, expr2, operator, zero)
-            return BinaryBooleanOperation(expr.typ, expr1, BinaryBooleanOperation.Operator.Or, expr2)
-        elif operator == BinaryComparisonOperation.Operator.Lt:    # left < right -> left - (right - 1) <= 0
+            disjunction = BinaryBooleanOperation.Operator.Or
+            return BinaryBooleanOperation(expr.typ, expr1, disjunction, expr2)
+        elif operator == BinaryComparisonOperation.Operator.Lt:
+            # left < right -> left - (right - 1) <= 0
+            zero = Literal(IntegerLyraType(), "0")
             one = Literal(IntegerLyraType(), "1")
             minus = BinaryArithmeticOperation.Operator.Sub
             right = BinaryArithmeticOperation(right.typ, right, minus, one)
             left = BinaryArithmeticOperation(left.typ, left, minus, right)
             operator = BinaryComparisonOperation.Operator.LtE
             return BinaryComparisonOperation(expr.typ, left, operator, zero)
-        elif operator == BinaryComparisonOperation.Operator.LtE:   # left <= right -> left - right <= 0
+        elif operator == BinaryComparisonOperation.Operator.LtE:
+            # left <= right -> left - right <= 0
+            zero = Literal(IntegerLyraType(), "0")
             minus = BinaryArithmeticOperation.Operator.Sub
             left = BinaryArithmeticOperation(left.typ, left, minus, right)
             operator = BinaryComparisonOperation.Operator.LtE
             return BinaryComparisonOperation(expr.typ, left, operator, zero)
-        elif operator == BinaryComparisonOperation.Operator.Gt:    # left > right -> right - (left - 1) <= 0
+        elif operator == BinaryComparisonOperation.Operator.Gt:
+            # left > right -> right - (left - 1) <= 0
+            zero = Literal(IntegerLyraType(), "0")
             one = Literal(IntegerLyraType(), "1")
             minus = BinaryArithmeticOperation.Operator.Sub
             left = BinaryArithmeticOperation(left.typ, left, minus, one)
             right = BinaryArithmeticOperation(right.typ, right, minus, left)
             operator = BinaryComparisonOperation.Operator.LtE
             return BinaryComparisonOperation(expr.typ, right, operator, zero)
-        elif operator == BinaryComparisonOperation.Operator.GtE:   # left >= right -> right - left <= 0
+        elif operator == BinaryComparisonOperation.Operator.GtE:
+            # left >= right -> right - left <= 0
+            zero = Literal(IntegerLyraType(), "0")
             minus = BinaryArithmeticOperation.Operator.Sub
             right = BinaryArithmeticOperation(right.typ, right, minus, left)
             operator = BinaryComparisonOperation.Operator.LtE
             return BinaryComparisonOperation(expr.typ, right, operator, zero)
+        elif operator == BinaryComparisonOperation.Operator.In:
+            return BinaryComparisonOperation(expr.typ, left, operator, right)
+        elif operator == BinaryComparisonOperation.Operator.NotIn:
+            return BinaryComparisonOperation(expr.typ, left, operator, right)
         raise ValueError(f"Boolean comparison operator {expr} is unsupported!")
 
 
@@ -537,7 +554,10 @@ class UnaryOperation(Operation):
         return self._expression
 
     def __eq__(self, other):
-        return (self.typ, self.operator, self.expression) == (other.typ, other.operator, other.expression)
+        typ = self.typ == other.typ
+        operator = self.operator == other.operator
+        expression = self.expression == other.expression
+        return typ and operator and expression
 
     def __hash__(self):
         return hash((self.typ, self.operator, self.expression))
@@ -642,7 +662,11 @@ class BinaryOperation(Operation):
         return self._right
 
     def __eq__(self, other):
-        return (self.typ, self.left, self.operator, self.right) == (other.typ, other.left, other.operator, other.right)
+        typ = self.typ == other.typ
+        left = self.left == other.left
+        operator = self.operator == other.operator
+        right = self.right == other.right
+        return typ and left and operator and right
 
     def __hash__(self):
         return hash((self.typ, self.left, self.operator, self.right))

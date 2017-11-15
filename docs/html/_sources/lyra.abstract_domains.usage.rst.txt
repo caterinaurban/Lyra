@@ -24,6 +24,11 @@ Submodules
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: lyra.abstract_domains.usage.usage_domain
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: lyra.abstract_domains.usage.used
     :members:
     :undoc-members:

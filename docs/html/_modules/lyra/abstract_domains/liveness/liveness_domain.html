@@ -132,11 +132,13 @@
             
   <h1>Source code for lyra.abstract_domains.liveness.liveness_domain</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Live Variable Abstract Domain</span>
-<span class="sd">=============================</span>
+<span class="sd">Live Variable Abstract Domains</span>
+<span class="sd">==============================</span>
 
-<span class="sd">Abstract domain to be used for **live variable analysis**.</span>
+<span class="sd">Abstract domains to be used for **live variable analysis** and **strongly live variable analysis**.</span>
 <span class="sd">A program variable is *live* in a state if its value may be used before the variable is redefined.</span>
+<span class="sd">A program variable is *strongly live* if it is used in an assignment to another strongly live variable,</span>
+<span class="sd">or if is used in a statement other than an assignment.</span>
 
 <span class="sd">:Author: Caterina Urban</span>
 <span class="sd">&quot;&quot;&quot;</span>
@@ -242,13 +244,18 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="p">{</span><span class="n">BooleanLyraType</span><span class="p">:</span> <span class="n">LivenessLattice</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">:</span> <span class="n">LivenessLattice</span><span class="p">})</span>
 
+<div class="viewcode-block" id="LivenessState.is_bottom"><a class="viewcode-back" href="../../../../lyra.abstract_domains.liveness.html#lyra.abstract_domains.liveness.liveness_domain.LivenessState.is_bottom">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The current store is bottom if `all` of its variables map to a bottom element.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
     <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_access_variable</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">_access_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">variable</span><span class="p">}</span>
 
 <div class="viewcode-block" id="LivenessState._assign_variable"><a class="viewcode-back" href="../../../../lyra.abstract_domains.liveness.html#lyra.abstract_domains.liveness.liveness_domain.LivenessState._assign_variable">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_assign_variable</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">_assign_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;LivenessState&#39;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Variable assignment is not implemented!&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;A variable assignment is not expected in a backward analysis!&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="LivenessState._assume"><a class="viewcode-back" href="../../../../lyra.abstract_domains.liveness.html#lyra.abstract_domains.liveness.liveness_domain.LivenessState._assume">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_assume</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">_assume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;LivenessState&#39;</span><span class="p">:</span>
@@ -290,9 +297,41 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">LivenessLattice</span><span class="p">(</span><span class="n">LivenessLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Live</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Variable substitution with </span><span class="si">{right}</span><span class="s2"> is not implemented!&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Variable substitution for </span><span class="si">{left}</span><span class="s2"> is not implemented!&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span></div></div>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Variable substitution for </span><span class="si">{left}</span><span class="s2"> is not implemented!&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="StrongLivenessState"><a class="viewcode-back" href="../../../../lyra.abstract_domains.liveness.html#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState">[docs]</a><span class="k">class</span> <span class="nc">StrongLivenessState</span><span class="p">(</span><span class="n">LivenessState</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Strongly live variable analysis state. An element of the live variable abstract domain.</span>
+
+<span class="sd">    Map from each program variable to its liveness status. All program variables are *dead* by default.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: StrongLivenessState._assign_variable</span>
+<span class="sd">    .. automethod:: StrongLivenessState._assume</span>
+<span class="sd">    .. automethod:: StrongLivenessState._output</span>
+<span class="sd">    .. automethod:: StrongLivenessState._substitute_variable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="StrongLivenessState._output"><a class="viewcode-back" href="../../../../lyra.abstract_domains.liveness.html#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._output">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">LivenessState</span><span class="o">.</span><span class="n">_output</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;StrongLivenessState&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">ids</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">LivenessLattice</span><span class="p">(</span><span class="n">LivenessLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Live</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="StrongLivenessState._substitute_variable"><a class="viewcode-back" href="../../../../lyra.abstract_domains.liveness.html#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._substitute_variable">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">LivenessState</span><span class="o">.</span><span class="n">_substitute_variable</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_substitute_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;StrongLivenessState&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span> <span class="o">=</span> <span class="n">LivenessLattice</span><span class="p">(</span><span class="n">LivenessLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Dead</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">right</span><span class="o">.</span><span class="n">ids</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">LivenessLattice</span><span class="p">(</span><span class="n">LivenessLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Live</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Variable substitution with </span><span class="si">{right}</span><span class="s2"> is not implemented!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Variable substitution for </span><span class="si">{left}</span><span class="s2"> is not implemented!&quot;</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

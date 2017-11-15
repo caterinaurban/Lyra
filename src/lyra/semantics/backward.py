@@ -19,7 +19,8 @@ class UserDefinedCallSemantics(BackwardSemantics):
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        raise NotImplementedError("Backward semantics for call statement {} not yet implemented!".format(stmt))
+        error = f"Backward semantics for call statement {stmt} not yet implemented!"
+        raise NotImplementedError(error)
 
 
 class AssignmentSemantics(BackwardSemantics):
@@ -36,8 +37,8 @@ class AssignmentSemantics(BackwardSemantics):
         rhs = self.semantics(stmt.right, state).result   # rhs evaluation
         if isinstance(stmt.left, VariableAccess):
             return state.substitute_variable(lhs, rhs)
-        else:
-            raise NotImplementedError("Backward semantics for assignment {0!s} not yet implemented!".format(self))
+        error = f"Backward semantics for assignment {stmt} not yet implemented!"
+        raise NotImplementedError(error)
 
 
 # noinspection PyAbstractClass

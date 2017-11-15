@@ -155,10 +155,12 @@
 <span id="lyra-abstract-domains-liveness-package"></span><h1>lyra.abstract_domains.liveness package<a class="headerlink" href="#module-lyra.abstract_domains.liveness" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-lyra.abstract_domains.liveness.liveness_domain">
 <span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.abstract_domains.liveness.liveness_domain" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="live-variable-abstract-domain">
-<h3>Live Variable Abstract Domain<a class="headerlink" href="#live-variable-abstract-domain" title="Permalink to this headline">¶</a></h3>
-<p>Abstract domain to be used for <strong>live variable analysis</strong>.
-A program variable is <em>live</em> in a state if its value may be used before the variable is redefined.</p>
+<div class="section" id="live-variable-abstract-domains">
+<h3>Live Variable Abstract Domains<a class="headerlink" href="#live-variable-abstract-domains" title="Permalink to this headline">¶</a></h3>
+<p>Abstract domains to be used for <strong>live variable analysis</strong> and <strong>strongly live variable analysis</strong>.
+A program variable is <em>live</em> in a state if its value may be used before the variable is redefined.
+A program variable is <em>strongly live</em> if it is used in an assignment to another strongly live variable,
+or if is used in a statement other than an assignment.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -456,6 +458,103 @@ A program variable is <em>live</em> in a state if its value may be used before t
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to exit a loop</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState.is_bottom">
+<code class="descname">is_bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState.is_bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState.is_bottom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is bottom.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is bottom</td>
+</tr>
+</tbody>
+</table>
+<p>The current store is bottom if <cite>all</cite> of its variables map to a bottom element.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.liveness.liveness_domain.</code><code class="descname">StrongLivenessState</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#StrongLivenessState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState" title="lyra.abstract_domains.liveness.liveness_domain.LivenessState"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.liveness.liveness_domain.LivenessState</span></code></a></p>
+<p>Strongly live variable analysis state. An element of the live variable abstract domain.</p>
+<p>Map from each program variable to its liveness status. All program variables are <em>dead</em> by default.</p>
+<dl class="method">
+<dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assign_variable">
+<code class="descname">_assign_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assign_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign an expression to a variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>left</strong> – expression representing the variable to be assigned to</li>
+<li><strong>right</strong> – expression to assign</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable assignment</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assume">
+<code class="descname">_assume</code><span class="sig-paren">(</span><em>condition: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assume that some condition holds in the current state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>condition</strong> – expression representing the assumed condition</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified to satisfy the assumption</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._output">
+<code class="descname">_output</code><span class="sig-paren">(</span><em>output: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#StrongLivenessState._output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outputs something in the current state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output</strong> – expression representing the output</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified by the output</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._substitute_variable">
+<code class="descname">_substitute_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#StrongLivenessState._substitute_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._substitute_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substitute an expression to a variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>left</strong> – expression representing the variable to be substituted</li>
+<li><strong>right</strong> – expression to substitute</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable substitution</p>
+</td>
 </tr>
 </tbody>
 </table>
