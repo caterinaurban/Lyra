@@ -10,6 +10,9 @@ Lifting of a lattice to a set of program variables.
 
 from collections import defaultdict
 from typing import List, Dict, Any, Type
+
+import sys
+
 from lyra.core.expressions import VariableIdentifier
 from lyra.abstract_domains.lattice import Lattice
 from lyra.core.utils import copy_docstring
@@ -39,7 +42,11 @@ class Store(Lattice):
         self._variables = variables
         self._lattices = lattices
         self._arguments = arguments
-        self._store = {v: lattices[type(v.typ)](**arguments[type(v.typ)]) for v in variables}
+        try:
+            self._store = {v: lattices[type(v.typ)](**arguments[type(v.typ)]) for v in variables}
+        except KeyError as key:
+            error = f"Missing lattice for variable type {repr(key.args[0])}!"
+            raise ValueError(error)
 
     @property
     def variables(self):

@@ -4,6 +4,7 @@ Live Variable Abstract Domains
 
 Abstract domains to be used for **live variable analysis**
 and **strongly live variable analysis**.
+
 A program variable is *live* in a state if
 its value may be used before the variable is redefined.
 A program variable is *strongly live* if
@@ -97,7 +98,8 @@ class LivenessLattice(Lattice):
 
 
 class LivenessState(Store, State):
-    """Live variable analysis state. An element of the live variable abstract domain.
+    """Live variable analysis state.
+    An element of the live variable abstract domain.
 
     Map from each program variable to its liveness status.
     All program variables are *dead* by default.
@@ -116,7 +118,7 @@ class LivenessState(Store, State):
         lattices = {BooleanLyraType: LivenessLattice, IntegerLyraType: LivenessLattice}
         super().__init__(variables, lattices)
 
-    @copy_docstring(Lattice.is_bottom)
+    @copy_docstring(Store.is_bottom)
     def is_bottom(self) -> bool:
         """The current store is bottom if `all` of its variables map to a bottom element."""
         return all(element.is_bottom() for element in self.store.values())
@@ -134,7 +136,7 @@ class LivenessState(Store, State):
     def _assume(self, condition: Expression) -> 'LivenessState':
         for identifier in condition.ids():
             if isinstance(identifier, VariableIdentifier):
-                self.store[identifier] = LivenessLattice(LivenessLattice.Status.Live)
+                self.store[identifier].top()
         return self
 
     @copy_docstring(State._evaluate_literal)
@@ -164,10 +166,10 @@ class LivenessState(Store, State):
     @copy_docstring(State._substitute_variable)
     def _substitute_variable(self, left: Expression, right: Expression) -> 'LivenessState':
         if isinstance(left, VariableIdentifier):
-            self.store[left] = LivenessLattice(LivenessLattice.Status.Dead)
+            self.store[left].bottom()
             for identifier in right.ids():
                 if isinstance(identifier, VariableIdentifier):
-                    self.store[identifier] = LivenessLattice(LivenessLattice.Status.Live)
+                    self.store[identifier].top()
                 else:
                     error = f"Variable substitution with {right} is not implemented!"
                     raise NotImplementedError(error)
@@ -177,7 +179,8 @@ class LivenessState(Store, State):
 
 
 class StrongLivenessState(LivenessState):
-    """Strongly live variable analysis state. An element of the live variable abstract domain.
+    """Strongly live variable analysis state.
+    An element of the strongly live variable abstract domain.
 
     Map from each program variable to its liveness status.
     All program variables are *dead* by default.
@@ -199,12 +202,11 @@ class StrongLivenessState(LivenessState):
     @copy_docstring(LivenessState._substitute_variable)
     def _substitute_variable(self, left: Expression, right: Expression) -> 'StrongLivenessState':
         if isinstance(left, VariableIdentifier):
-            if self.store[left].is_top():
-                self.store[left] = LivenessLattice(LivenessLattice.Status.Dead)
+            if self.store[left].is_top():   # the assigned variable is strongly-live
+                self.store[left].bottom()
                 for identifier in right.ids():
                     if isinstance(identifier, VariableIdentifier):
-                        live = LivenessLattice(LivenessLattice.Status.Live)
-                        self.store[identifier] = live
+                        self.store[identifier].top()
                     else:
                         error = f"Variable substitution with {right} is not implemented!"
                         raise NotImplementedError(error)

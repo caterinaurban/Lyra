@@ -49,17 +49,30 @@ class ForwardInterpreter(Interpreter):
                     else:
                         predecessor = deepcopy(initial).bottom()
                     # handle conditional edges
-                    if isinstance(edge, Conditional):
-                        # TODO call before(pp: ProgramPoint) after deepcopy, before semantics
+                    if isinstance(edge, Conditional) and edge.kind == Edge.Kind.DEFAULT:
+                        neighbors = self.cfg.out_edges(edge.source)
+                        branch = any(edge.kind == Edge.Kind.IF_IN for edge in neighbors)
+                        loop = any(edge.kind == Edge.Kind.LOOP_IN for edge in neighbors)
+                        assert (branch or loop) and not (branch and loop)
+                        predecessor = predecessor.enter_if() if branch else predecessor
+                        predecessor = predecessor.enter_loop() if loop else predecessor
                         condition = edge.condition
                         predecessor = self.semantics.semantics(condition, predecessor).filter()
-                    # handle non-default edges
-                    if edge.kind == Edge.Kind.IF_IN:
+                        predecessor = predecessor.exit_if() if branch else predecessor
+                        predecessor = predecessor.exit_loop() if loop else predecessor
+                    elif edge.kind == Edge.Kind.IF_IN:
                         predecessor = predecessor.enter_if()
-                    elif edge.kind == Edge.Kind.IF_OUT:
-                        predecessor = predecessor.exit_if()
+                        assert isinstance(edge, Conditional)
+                        condition = edge.condition
+                        predecessor = self.semantics.semantics(condition, predecessor).filter()
                     elif edge.kind == Edge.Kind.LOOP_IN:
                         predecessor = predecessor.enter_loop()
+                        assert isinstance(edge, Conditional)
+                        condition = edge.condition
+                        predecessor = self.semantics.semantics(condition, predecessor).filter()
+                    # handle unconditional non-default edges
+                    if edge.kind == Edge.Kind.IF_OUT:
+                        predecessor = predecessor.exit_if()
                     elif edge.kind == Edge.Kind.LOOP_OUT:
                         predecessor = predecessor.exit_loop()
                     entry = entry.join(predecessor)

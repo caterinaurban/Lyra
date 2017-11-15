@@ -52,18 +52,29 @@ class BackwardInterpreter(Interpreter):
                         successor = deepcopy(self.result.get_node_result(edge.target)[0])
                     else:
                         successor = deepcopy(initial).bottom()
-                    # handle non-default edges
-                    if edge.kind == Edge.Kind.IF_IN:
-                        successor = successor.exit_if()
-                    elif edge.kind == Edge.Kind.IF_OUT:
+                    # handle unconditional non-default edges
+                    if edge.kind == Edge.Kind.IF_OUT:
                         successor = successor.enter_if()
-                    elif edge.kind == Edge.Kind.LOOP_IN:
-                        successor = successor.exit_loop()
                     elif edge.kind == Edge.Kind.LOOP_OUT:
                         successor = successor.enter_loop()
                     # handle conditional edges
-                    if isinstance(edge, Conditional):
+                    if isinstance(edge, Conditional) and edge.kind == Edge.Kind.DEFAULT:
+                        branch = any(edge.kind == Edge.Kind.IF_IN for edge in edges)
+                        loop = any(edge.kind == Edge.Kind.LOOP_IN for edge in edges)
+                        assert (branch or loop) and not (branch and loop)
+                        successor = successor.enter_if() if branch else successor
+                        successor = successor.enter_loop() if loop else successor
                         successor = self.semantics.semantics(edge.condition, successor).filter()
+                        successor = successor.exit_if() if branch else successor
+                        successor = successor.exit_loop() if loop else successor
+                    elif edge.kind == Edge.Kind.IF_IN:
+                        assert isinstance(edge, Conditional)
+                        successor = self.semantics.semantics(edge.condition, successor).filter()
+                        successor = successor.exit_if()
+                    elif edge.kind == Edge.Kind.LOOP_IN:
+                        assert isinstance(edge, Conditional)
+                        successor = self.semantics.semantics(edge.condition, successor).filter()
+                        successor = successor.exit_loop()
                     entry = entry.join(successor)
                 # widening
                 if isinstance(current, Loop) and self.widening < iteration:
