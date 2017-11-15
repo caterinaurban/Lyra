@@ -138,6 +138,8 @@
 
 <span class="kn">import</span> <span class="nn">argparse</span>
 
+<span class="kn">import</span> <span class="nn">sys</span>
+
 <span class="kn">from</span> <span class="nn">lyra.engine.liveness.liveness_analysis</span> <span class="k">import</span> <span class="n">StrongLivenessAnalysis</span>
 <span class="kn">from</span> <span class="nn">lyra.engine.numerical.interval_analysis</span> <span class="k">import</span> <span class="n">ForwardIntervalAnalysis</span>
 <span class="kn">from</span> <span class="nn">lyra.engine.usage.usage_analysis</span> <span class="k">import</span> <span class="n">UsageAnalysis</span>
@@ -151,15 +153,15 @@
         <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Python file to analyze&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s1">&#39;--analysis&#39;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;analysis to be used (interval, liveness, or usage)&#39;</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="s1">&#39;usage&#39;</span><span class="p">)</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;analysis to be used (interval, liveness, or usageOLD)&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s1">&#39;usageOLD&#39;</span><span class="p">)</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">analysis</span> <span class="o">==</span> <span class="s1">&#39;intervals&#39;</span><span class="p">:</span>
         <span class="n">ForwardIntervalAnalysis</span><span class="p">()</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">python_file</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">analysis</span> <span class="o">==</span> <span class="s1">&#39;liveness&#39;</span><span class="p">:</span>
         <span class="n">StrongLivenessAnalysis</span><span class="p">()</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">python_file</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">analysis</span> <span class="o">==</span> <span class="s1">&#39;usage&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">analysis</span> <span class="o">==</span> <span class="s1">&#39;usageOLD&#39;</span><span class="p">:</span>
         <span class="n">UsageAnalysis</span><span class="p">()</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">python_file</span><span class="p">)</span></div>
 
 

@@ -152,7 +152,8 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Forward semantics for call statement </span><span class="si">{}</span><span class="s2"> not yet implemented!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stmt</span><span class="p">))</span></div></div>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Forward semantics for call statement </span><span class="si">{stmt}</span><span class="s2"> not yet implemented!&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="AssignmentSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.forward.AssignmentSemantics">[docs]</a><span class="k">class</span> <span class="nc">AssignmentSemantics</span><span class="p">(</span><span class="n">ForwardSemantics</span><span class="p">):</span>
@@ -169,8 +170,8 @@
         <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>   <span class="c1"># rhs evaluation</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">VariableAccess</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">assign_variable</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Forward semantics for assignment </span><span class="si">{0!s}</span><span class="s2"> not yet implemented!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+        <span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;Forward semantics for assignment </span><span class="si">{stmt}</span><span class="s2"> not yet implemented!&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div></div>
 
 
 <span class="c1"># noinspection PyAbstractClass</span>

@@ -157,9 +157,12 @@
 <span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.abstract_domains.liveness.liveness_domain" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="live-variable-abstract-domains">
 <h3>Live Variable Abstract Domains<a class="headerlink" href="#live-variable-abstract-domains" title="Permalink to this headline">¶</a></h3>
-<p>Abstract domains to be used for <strong>live variable analysis</strong> and <strong>strongly live variable analysis</strong>.
-A program variable is <em>live</em> in a state if its value may be used before the variable is redefined.
-A program variable is <em>strongly live</em> if it is used in an assignment to another strongly live variable,
+<p>Abstract domains to be used for <strong>live variable analysis</strong>
+and <strong>strongly live variable analysis</strong>.</p>
+<p>A program variable is <em>live</em> in a state if
+its value may be used before the variable is redefined.
+A program variable is <em>strongly live</em> if
+it is used in an assignment to another strongly live variable,
 or if is used in a statement other than an assignment.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -190,7 +193,7 @@ or if is used in a statement other than an assignment.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other lattice element</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other element</td>
 </tr>
 </tbody>
 </table>
@@ -198,7 +201,7 @@ or if is used in a statement other than an assignment.</p>
 
 <dl class="method">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessLattice._meet">
-<code class="descname">_meet</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.liveness.liveness_domain.LivenessLattice</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessLattice._meet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice._meet" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_meet</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.liveness.liveness_domain.LivenessLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessLattice<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessLattice._meet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice._meet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Greatest lower bound between default lattice elements.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -206,7 +209,7 @@ or if is used in a statement other than an assignment.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound</td>
 </tr>
 </tbody>
 </table>
@@ -222,7 +225,7 @@ or if is used in a statement other than an assignment.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
 </tr>
 </tbody>
 </table>
@@ -230,7 +233,7 @@ or if is used in a statement other than an assignment.</p>
 
 <dl class="method">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessLattice._widening">
-<code class="descname">_widening</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.liveness.liveness_domain.LivenessLattice</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessLattice._widening"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice._widening" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_widening</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.liveness.liveness_domain.LivenessLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessLattice<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessLattice._widening"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice._widening" title="Permalink to this definition">¶</a></dt>
 <dd><p>Widening between default lattice elements.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -238,7 +241,7 @@ or if is used in a statement other than an assignment.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the widening of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the widening</td>
 </tr>
 </tbody>
 </table>
@@ -263,7 +266,7 @@ or if is used in a statement other than an assignment.</p>
 
 <dl class="method">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessLattice.bottom">
-<code class="descname">bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessLattice.bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice.bottom" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessLattice<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessLattice.bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice.bottom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bottom lattice element.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -284,7 +287,7 @@ or if is used in a statement other than an assignment.</p>
 
 <dl class="method">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessLattice.is_bottom">
-<code class="descname">is_bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessLattice.is_bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice.is_bottom" title="Permalink to this definition">¶</a></dt>
+<code class="descname">is_bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessLattice.is_bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice.is_bottom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test whether the lattice element is bottom.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -298,7 +301,7 @@ or if is used in a statement other than an assignment.</p>
 
 <dl class="method">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessLattice.is_top">
-<code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice.is_top" title="Permalink to this definition">¶</a></dt>
+<code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice.is_top" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test whether the lattice element is top.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -312,7 +315,7 @@ or if is used in a statement other than an assignment.</p>
 
 <dl class="method">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessLattice.top">
-<code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice.top" title="Permalink to this definition">¶</a></dt>
+<code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessLattice<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice.top" title="Permalink to this definition">¶</a></dt>
 <dd><p>Top lattice element.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -331,11 +334,13 @@ or if is used in a statement other than an assignment.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.liveness.liveness_domain.</code><code class="descname">LivenessState</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.store.Store" title="lyra.abstract_domains.store.Store"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.store.Store</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.state.State" title="lyra.abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.state.State</span></code></a></p>
-<p>Live variable analysis state. An element of the live variable abstract domain.</p>
-<p>Map from each program variable to its liveness status. All program variables are <em>dead</em> by default.</p>
+<p>Live variable analysis state.
+An element of the live variable abstract domain.</p>
+<p>Map from each program variable to its liveness status.
+All program variables are <em>dead</em> by default.</p>
 <dl class="method">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState._assign_variable">
-<code class="descname">_assign_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState._assign_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState._assign_variable" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_assign_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState._assign_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState._assign_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign an expression to a variable.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -409,7 +414,7 @@ or if is used in a statement other than an assignment.</p>
 
 <dl class="method">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState.enter_if">
-<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState.enter_if" title="Permalink to this definition">¶</a></dt>
+<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState.enter_if" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enter a conditional if statement.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -423,7 +428,7 @@ or if is used in a statement other than an assignment.</p>
 
 <dl class="method">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState.enter_loop">
-<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState.enter_loop" title="Permalink to this definition">¶</a></dt>
+<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState.enter_loop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enter a loop.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -437,7 +442,7 @@ or if is used in a statement other than an assignment.</p>
 
 <dl class="method">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState.exit_if">
-<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState.exit_if" title="Permalink to this definition">¶</a></dt>
+<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState.exit_if" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exit a conditional if statement.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -451,7 +456,7 @@ or if is used in a statement other than an assignment.</p>
 
 <dl class="method">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState.exit_loop">
-<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState.exit_loop" title="Permalink to this definition">¶</a></dt>
+<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState.exit_loop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exit a loop.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -475,7 +480,7 @@ or if is used in a statement other than an assignment.</p>
 </tr>
 </tbody>
 </table>
-<p>The current store is bottom if <cite>all</cite> of its variables map to a bottom element.</p>
+<p>The current store is bottom if <cite>any</cite> of its variables map to a bottom element.The current store is bottom if <cite>all</cite> of its variables map to a bottom element.</p>
 </dd></dl>
 
 </dd></dl>
@@ -484,11 +489,13 @@ or if is used in a statement other than an assignment.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.liveness.liveness_domain.</code><code class="descname">StrongLivenessState</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#StrongLivenessState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState" title="lyra.abstract_domains.liveness.liveness_domain.LivenessState"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.liveness.liveness_domain.LivenessState</span></code></a></p>
-<p>Strongly live variable analysis state. An element of the live variable abstract domain.</p>
-<p>Map from each program variable to its liveness status. All program variables are <em>dead</em> by default.</p>
+<p>Strongly live variable analysis state.
+An element of the strongly live variable abstract domain.</p>
+<p>Map from each program variable to its liveness status.
+All program variables are <em>dead</em> by default.</p>
 <dl class="method">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assign_variable">
-<code class="descname">_assign_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assign_variable" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_assign_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assign_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign an expression to a variable.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

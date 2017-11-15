@@ -21,7 +21,7 @@ def main():
     parser.add_argument(
         '--analysis',
         help='analysis to be used (interval, liveness, or usage)',
-        default='usage')
+        default='usageOLD')
     args = parser.parse_args()
 
     if args.analysis == 'intervals':

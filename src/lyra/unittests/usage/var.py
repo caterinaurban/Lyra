@@ -1,3 +1,3 @@
-x = 2
-y = 4
-z = 1
+x: int = 2
+y: int = 4
+z: int = 1

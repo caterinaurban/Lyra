@@ -196,7 +196,7 @@
 <dt id="lyra.abstract_domains.lattice.ArithmeticMixin">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.lattice.</code><code class="descname">ArithmeticMixin</code><a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#ArithmeticMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.ArithmeticMixin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.lattice.Lattice" title="lyra.abstract_domains.lattice.Lattice"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.Lattice</span></code></a></p>
-<p>Mixin that adds a arithmetic operations to a lattice.</p>
+<p>Mixin to add arithmetic operations to a lattice.</p>
 <dl class="method">
 <dt id="lyra.abstract_domains.lattice.ArithmeticMixin.add">
 <code class="descname">add</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.lattice.ArithmeticMixin</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.lattice.ArithmeticMixin<a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#ArithmeticMixin.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.ArithmeticMixin.add" title="Permalink to this definition">¶</a></dt>
@@ -207,7 +207,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the sum of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the sum</td>
 </tr>
 </tbody>
 </table>
@@ -223,7 +223,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the product of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the product</td>
 </tr>
 </tbody>
 </table>
@@ -253,7 +253,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the difference between the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the difference</td>
 </tr>
 </tbody>
 </table>
@@ -265,7 +265,7 @@
 <dt id="lyra.abstract_domains.lattice.BottomMixin">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.lattice.</code><code class="descname">BottomMixin</code><a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#BottomMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.BottomMixin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.lattice.KindMixin" title="lyra.abstract_domains.lattice.KindMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.KindMixin</span></code></a></p>
-<p>Mixin that adds a predefined bottom element to a lattice.</p>
+<p>Mixin to add a predefined bottom element to a lattice.</p>
 <dl class="method">
 <dt id="lyra.abstract_domains.lattice.BottomMixin.bottom">
 <code class="descname">bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#BottomMixin.bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.BottomMixin.bottom" title="Permalink to this definition">¶</a></dt>
@@ -367,7 +367,7 @@
 <dt id="lyra.abstract_domains.lattice.KindMixin">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.lattice.</code><code class="descname">KindMixin</code><a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#KindMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.KindMixin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.lattice.Lattice" title="lyra.abstract_domains.lattice.Lattice"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.Lattice</span></code></a></p>
-<p>Mixin that adds an explicit distinction between bottom, default, and top elements to a lattice.</p>
+<p>Mixin to add an explicit distinction between bottom, default, and top lattice elements.</p>
 <dl class="class">
 <dt id="lyra.abstract_domains.lattice.KindMixin.Kind">
 <em class="property">class </em><code class="descname">Kind</code><a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#KindMixin.Kind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.KindMixin.Kind" title="Permalink to this definition">¶</a></dt>
@@ -419,7 +419,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>elements</strong> – lattice elements to compute the least upper bound of</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound of the lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
 </tr>
 </tbody>
 </table>
@@ -435,7 +435,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>elements</strong> – lattice elements to compute the greatest lower bound of</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound of the lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
 </tr>
 </tbody>
 </table>
@@ -493,7 +493,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
 </tr>
 </tbody>
 </table>
@@ -509,7 +509,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other lattice element</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other element</td>
 </tr>
 </tbody>
 </table>
@@ -525,7 +525,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound</td>
 </tr>
 </tbody>
 </table>
@@ -571,7 +571,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the widening of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the widening</td>
 </tr>
 </tbody>
 </table>
@@ -583,7 +583,7 @@
 <dt id="lyra.abstract_domains.lattice.TopMixin">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.lattice.</code><code class="descname">TopMixin</code><a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#TopMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.TopMixin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.lattice.KindMixin" title="lyra.abstract_domains.lattice.KindMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.KindMixin</span></code></a></p>
-<p>Mixin that adds a predefined top element to another lattice.</p>
+<p>Mixin to add a predefined top element to another lattice.</p>
 <dl class="method">
 <dt id="lyra.abstract_domains.lattice.TopMixin.is_top">
 <code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#TopMixin.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.TopMixin.is_top" title="Permalink to this definition">¶</a></dt>
@@ -645,7 +645,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other lattice element</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other element</td>
 </tr>
 </tbody>
 </table>
@@ -662,7 +662,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound</td>
 </tr>
 </tbody>
 </table>
@@ -679,11 +679,17 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
 </tr>
 </tbody>
 </table>
 <p>The join is performed point-wise for each stack element.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.stack.Stack.lattice">
+<code class="descname">lattice</code><a class="headerlink" href="#lyra.abstract_domains.stack.Stack.lattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lattice element currently on top of the stack.</p>
 </dd></dl>
 
 <dl class="method">
@@ -928,7 +934,8 @@ Abstract domain elements support lattice operations and program statements.</p>
 <dt id="lyra.abstract_domains.store.Store">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.store.</code><code class="descname">Store</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier], lattices: typing.Dict[typing.Type, typing.Type[lyra.abstract_domains.lattice.Lattice]], arguments: typing.Dict[typing.Type, typing.Dict[str, typing.Any]] = defaultdict(&lt;function Store.&lt;lambda&gt;&gt;, {})</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/store.html#Store"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.store.Store" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.lattice.Lattice" title="lyra.abstract_domains.lattice.Lattice"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.Lattice</span></code></a></p>
-<p>Mutable element of a store <code class="docutils literal"><span class="pre">Var</span> <span class="pre">-&gt;</span> <span class="pre">L</span></code>, lifting a lattice <code class="docutils literal"><span class="pre">L</span></code> to a set of program variables <code class="docutils literal"><span class="pre">Var</span></code>.</p>
+<p>Mutable element of a store <code class="docutils literal"><span class="pre">Var</span> <span class="pre">-&gt;</span> <span class="pre">L</span></code>,
+lifting a lattice <code class="docutils literal"><span class="pre">L</span></code> to a set of program variables <code class="docutils literal"><span class="pre">Var</span></code>.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">Lattice operations modify the current store.</p>
@@ -943,7 +950,7 @@ Abstract domain elements support lattice operations and program statements.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other lattice element</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other element</td>
 </tr>
 </tbody>
 </table>
@@ -960,7 +967,7 @@ Abstract domain elements support lattice operations and program statements.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound</td>
 </tr>
 </tbody>
 </table>
@@ -977,7 +984,7 @@ Abstract domain elements support lattice operations and program statements.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
 </tr>
 </tbody>
 </table>

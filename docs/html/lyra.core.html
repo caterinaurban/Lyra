@@ -206,16 +206,6 @@
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="lyra.core.cfg.ControlFlowGraph.nodes_backward">
-<code class="descname">nodes_backward</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; typing.Generator[[lyra.core.cfg.Node, NoneType], NoneType]<a class="reference internal" href="_modules/lyra/core/cfg.html#ControlFlowGraph.nodes_backward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.cfg.ControlFlowGraph.nodes_backward" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.core.cfg.ControlFlowGraph.nodes_forward">
-<code class="descname">nodes_forward</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; typing.Generator[[lyra.core.cfg.Node, NoneType], NoneType]<a class="reference internal" href="_modules/lyra/core/cfg.html#ControlFlowGraph.nodes_forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.cfg.ControlFlowGraph.nodes_forward" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="lyra.core.cfg.ControlFlowGraph.out_edges">
 <code class="descname">out_edges</code><span class="sig-paren">(</span><em>node: lyra.core.cfg.Node</em><span class="sig-paren">)</span> &#x2192; typing.Set[lyra.core.cfg.Edge]<a class="reference internal" href="_modules/lyra/core/cfg.html#ControlFlowGraph.out_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.cfg.ControlFlowGraph.out_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Outgoing edges of a given node.</p>
@@ -736,12 +726,9 @@ a <cite>NotImplementedError</cite> is raised.</p>
 <p>An expression visitor that:</p>
 <ol class="arabic simple">
 <li>removes negations using De Morgan’s law, and</li>
-<li>puts all boolean comparison operations in the normal form <code class="docutils literal"><span class="pre">expr</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code>.</li>
 </ol>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The only supported boolean comparison operators are <code class="docutils literal"><span class="pre">=</span></code>, <code class="docutils literal"><span class="pre">!=</span></code>, <code class="docutils literal"><span class="pre">&lt;</span></code>, <code class="docutils literal"><span class="pre">&lt;=</span></code>, <code class="docutils literal"><span class="pre">&gt;</span></code>, and <code class="docutils literal"><span class="pre">&gt;=</span></code>.</p>
-</div>
+<p>(2) puts in the normal form <code class="docutils literal"><span class="pre">expr</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code>
+all boolean comparison operations with <code class="docutils literal"><span class="pre">=</span></code>, <code class="docutils literal"><span class="pre">!=</span></code>, <code class="docutils literal"><span class="pre">&lt;</span></code>, <code class="docutils literal"><span class="pre">&lt;=</span></code>, <code class="docutils literal"><span class="pre">&gt;</span></code>, and <code class="docutils literal"><span class="pre">&gt;=</span></code> .</p>
 <dl class="method">
 <dt id="lyra.core.expressions.NegationFreeNormalExpression.visit_AttributeReference">
 <code class="descname">visit_AttributeReference</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.AttributeReference</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#NegationFreeNormalExpression.visit_AttributeReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.NegationFreeNormalExpression.visit_AttributeReference" title="Permalink to this definition">¶</a></dt>

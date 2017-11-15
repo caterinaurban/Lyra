@@ -168,7 +168,7 @@ class UsageLattice(Lattice):
 
 
 class UsageStore(Store):
-    """An element of a store mapping each program variable to its usage status.
+    """An element of a store mapping each program variable to its usageOLD status.
 
     All program variables are *not used* by default.
 
@@ -178,7 +178,7 @@ class UsageStore(Store):
     .. automethod:: UsageStore._join
     """
     def __init__(self, variables: List[VariableIdentifier]):
-        """Map each program variable to its usage status.
+        """Map each program variable to its usageOLD status.
 
         :param variables: list of program variables
         """
@@ -215,10 +215,10 @@ class UsageStore(Store):
 
 
 class UsageState(Stack, State):
-    """Input data usage analysis state.
-    An element of the syntactic usage abstract domain.
+    """Input data usageOLD analysis state.
+    An element of the syntactic usageOLD abstract domain.
 
-    Stack of maps from each program variable to its usage status.
+    Stack of maps from each program variable to its usageOLD status.
     The stack contains a single map by default.
 
     .. document private methods

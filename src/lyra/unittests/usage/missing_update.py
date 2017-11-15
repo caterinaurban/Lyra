@@ -1,22 +1,22 @@
-x1 = input()  # x1 unused
-x2 = input()
-x3 = input()
+x1: int = input()  # x1 unused
+x2: int = input()
+x3: int = input()
 
 # RESULT: asc -> O, temp -> O, x1 -> N, x2 -> U, x3 -> U
 
-asc = True
+asc: bool = True
 if x1 <= x2:
-    temp = False
+    temp: bool = False
 else:
-    temp = True
+    temp: bool = True
 
 # BUG, missing update on asc
 
 if x2 <= x3:
-    temp = False
+    temp: bool = False
 else:
-    temp = True
+    temp: bool = True
 
-asc = asc and temp
+asc: bool = asc and temp
 
 print(asc)

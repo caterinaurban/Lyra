@@ -240,8 +240,8 @@
 
 <span class="target" id="module-lyra.abstract_domains.usage.usage_domain"></span><div class="section" id="syntactic-usage-abstract-domain">
 <h3>Syntactic Usage Abstract Domain<a class="headerlink" href="#syntactic-usage-abstract-domain" title="Permalink to this headline">¶</a></h3>
-<p>Abstract domain to be used for <strong>input data usage analysis</strong>.
-A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>O</em> (overwritten), and <em>N</em> (not used).</p>
+<p>Abstract domain to be used for <strong>input data usage analysis</strong> using syntactic variable dependencies.
+A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>W</em> (written), and <em>N</em> (not used).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -252,7 +252,7 @@ A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>O<
 </table>
 <dl class="class">
 <dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.usage_domain.</code><code class="descname">UsageLattice</code><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.usage_domain.</code><code class="descname">UsageLattice</code><span class="sig-paren">(</span><em>usage: lyra.abstract_domains.usage.usage_domain.UsageLattice.Status = &lt;Status.N: 0&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.Lattice" title="lyra.abstract_domains.lattice.Lattice"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.Lattice</span></code></a></p>
 <p>Usage lattice:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>    <span class="n">U</span>
@@ -265,15 +265,15 @@ A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>O<
 <p>The default lattice element is <code class="docutils literal"><span class="pre">N</span></code> (not used).</p>
 <dl class="method">
 <dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice._less_equal">
-<code class="descname">_less_equal</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.lattice.Lattice</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice._less_equal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Partial order between default lattice elements.</p>
+<code class="descname">_less_equal</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.usage.usage_domain.UsageLattice</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice._less_equal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice._less_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partial order between lattice elements.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other lattice element</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other element</td>
 </tr>
 </tbody>
 </table>
@@ -281,7 +281,7 @@ A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>O<
 
 <dl class="method">
 <dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice._meet">
-<code class="descname">_meet</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.lattice.Lattice</em><span class="sig-paren">)</span><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice._meet" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_meet</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.usage.usage_domain.UsageLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageLattice<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice._meet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice._meet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Greatest lower bound between default lattice elements.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -289,7 +289,7 @@ A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>O<
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound</td>
 </tr>
 </tbody>
 </table>
@@ -297,7 +297,7 @@ A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>O<
 
 <dl class="method">
 <dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice._join">
-<code class="descname">_join</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.lattice.Lattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.lattice.Lattice<a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice._join" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_join</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.usage.usage_domain.UsageLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageLattice<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice._join"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice._join" title="Permalink to this definition">¶</a></dt>
 <dd><p>Least upper bound between default lattice elements.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -305,7 +305,7 @@ A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>O<
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
 </tr>
 </tbody>
 </table>
@@ -313,7 +313,7 @@ A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>O<
 
 <dl class="method">
 <dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice._widening">
-<code class="descname">_widening</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.lattice.Lattice</em><span class="sig-paren">)</span><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice._widening" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_widening</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.usage.usage_domain.UsageLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageLattice<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice._widening"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice._widening" title="Permalink to this definition">¶</a></dt>
 <dd><p>Widening between default lattice elements.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -321,7 +321,7 @@ A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>O<
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the widening of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the widening</td>
 </tr>
 </tbody>
 </table>
@@ -336,17 +336,12 @@ A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>O<
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">U</span></code> (used): used at the current nesting level</li>
 <li><code class="docutils literal"><span class="pre">S</span></code> (scoped): used at a lower nesting level</li>
-<li><code class="docutils literal"><span class="pre">O</span></code> (overwritten): used at a lower nesting level and overwritten at the current nesting level</li>
+<li><code class="docutils literal"><span class="pre">W</span></code> (written): used at a lower nesting level and modified at the current nesting level</li>
 <li><code class="docutils literal"><span class="pre">N</span></code> (not used): unused</li>
 </ul>
 <dl class="attribute">
 <dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.Status.N">
 <code class="descname">N</code><em class="property"> = 0</em><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.Status.N" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.Status.O">
-<code class="descname">O</code><em class="property"> = 1</em><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.Status.O" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -359,6 +354,421 @@ A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>O<
 <code class="descname">U</code><em class="property"> = 3</em><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.Status.U" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="attribute">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.Status.W">
+<code class="descname">W</code><em class="property"> = 1</em><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.Status.W" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.bottom">
+<code class="descname">bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice.bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.bottom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bottom lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the bottom lattice element</td>
+</tr>
+</tbody>
+</table>
+<p>The bottom lattice element is <code class="docutils literal"><span class="pre">N</span></code> (not used).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.decrease">
+<code class="descname">decrease</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.usage.usage_domain.UsageLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageLattice<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice.decrease"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.decrease" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrease the nesting level by combining lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to reflect a decreased nesting level</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.element">
+<code class="descname">element</code><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current lattice element.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.increase">
+<code class="descname">increase</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageLattice<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice.increase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.increase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increase the nesting level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to reflect an increased nesting level</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.is_bottom">
+<code class="descname">is_bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice.is_bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.is_bottom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is bottom.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is bottom</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.is_scoped">
+<code class="descname">is_scoped</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice.is_scoped"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.is_scoped" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is <code class="docutils literal"><span class="pre">S</span></code> (scoped).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is <code class="docutils literal"><span class="pre">S</span></code> (scoped)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.is_top">
+<code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.is_top" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is top.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is top</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.is_written">
+<code class="descname">is_written</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice.is_written"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.is_written" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is <code class="docutils literal"><span class="pre">W</span></code> (written).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is <code class="docutils literal"><span class="pre">W</span></code> (written)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.scoped">
+<code class="descname">scoped</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice.scoped"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.scoped" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scoped lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the scoped lattice element</td>
+</tr>
+</tbody>
+</table>
+<p>The scoped lattice element is <code class="docutils literal"><span class="pre">S</span></code> (scoped).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.top">
+<code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.top" title="Permalink to this definition">¶</a></dt>
+<dd><p>Top lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the top lattice element</td>
+</tr>
+</tbody>
+</table>
+<p>The top lattice element is <code class="docutils literal"><span class="pre">U</span></code> (used).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageLattice.written">
+<code class="descname">written</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageLattice.written"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageLattice.written" title="Permalink to this definition">¶</a></dt>
+<dd><p>Written lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the written lattice element</td>
+</tr>
+</tbody>
+</table>
+<p>The written lattice element is <code class="docutils literal"><span class="pre">W</span></code> (written).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageState">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.usage_domain.</code><code class="descname">UsageState</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.stack.Stack" title="lyra.abstract_domains.stack.Stack"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.stack.Stack</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.state.State" title="lyra.abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.state.State</span></code></a></p>
+<p>Input data usageOLD analysis state.
+An element of the syntactic usageOLD abstract domain.</p>
+<p>Stack of maps from each program variable to its usageOLD status.
+The stack contains a single map by default.</p>
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageState._assign_variable">
+<code class="descname">_assign_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState._assign_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState._assign_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign an expression to a variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>left</strong> – expression representing the variable to be assigned to</li>
+<li><strong>right</strong> – expression to assign</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable assignment</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageState._assume">
+<code class="descname">_assume</code><span class="sig-paren">(</span><em>condition: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageState<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState._assume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState._assume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assume that some condition holds in the current state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>condition</strong> – expression representing the assumed condition</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified to satisfy the assumption</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageState._output">
+<code class="descname">_output</code><span class="sig-paren">(</span><em>output: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageState<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState._output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState._output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outputs something in the current state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output</strong> – expression representing the output</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified by the output</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageState._substitute_variable">
+<code class="descname">_substitute_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageState<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState._substitute_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState._substitute_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substitute an expression to a variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>left</strong> – expression representing the variable to be substituted</li>
+<li><strong>right</strong> – expression to substitute</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable substitution</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageState.enter_if">
+<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageState<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState.enter_if" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enter a conditional if statement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a conditional if statement</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageState.enter_loop">
+<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageState<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState.enter_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enter a loop.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a loop</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageState.exit_if">
+<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageState<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState.exit_if" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exit a conditional if statement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a conditional if statement</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageState.exit_loop">
+<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageState<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState.exit_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exit a loop.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to exit a loop</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageState.pop">
+<code class="descname">pop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState.pop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState.pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pop an element from the current stack.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageState.push">
+<code class="descname">push</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState.push"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState.push" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push an element on the current stack.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageStore">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.usage_domain.</code><code class="descname">UsageStore</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageStore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageStore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.store.Store" title="lyra.abstract_domains.store.Store"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.store.Store</span></code></a></p>
+<p>An element of a store mapping each program variable to its usageOLD status.</p>
+<p>All program variables are <em>not used</em> by default.</p>
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageStore._less_equal">
+<code class="descname">_less_equal</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.store.Store</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageStore._less_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partial order between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other element</td>
+</tr>
+</tbody>
+</table>
+<p>The comparison is performed point-wise for each variable.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageStore._meet">
+<code class="descname">_meet</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.store.Store</em><span class="sig-paren">)</span><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageStore._meet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Greatest lower bound between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound</td>
+</tr>
+</tbody>
+</table>
+<p>The meet is performed point-wise for each variable.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageStore._join">
+<code class="descname">_join</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.store.Store</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.store.Store<a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageStore._join" title="Permalink to this definition">¶</a></dt>
+<dd><p>Least upper bound between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
+</tr>
+</tbody>
+</table>
+<p>The join is performed point-wise for each variable.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageStore.decrease">
+<code class="descname">decrease</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.usage.usage_domain.UsageStore</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageStore<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageStore.decrease"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageStore.decrease" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrease the nesting level by combining lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to reflect a decreased nesting level</td>
+</tr>
+</tbody>
+</table>
+<p>The decrease is performed point-wise for each variable.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageStore.increase">
+<code class="descname">increase</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageStore<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageStore.increase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageStore.increase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increase the nesting level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to reflect an increased nesting level</td>
+</tr>
+</tbody>
+</table>
+<p>The increase is performed point-wise for each variable.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageStore.is_bottom">
+<code class="descname">is_bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageStore.is_bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageStore.is_bottom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is bottom.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is bottom</td>
+</tr>
+</tbody>
+</table>
+<p>The current store is bottom if <cite>any</cite> of its variables map to a bottom element.The current store is bottom if <cite>all</cite> of its variables map to a bottom element.</p>
 </dd></dl>
 
 </dd></dl>
@@ -438,7 +848,7 @@ A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>O<
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.used_liststart.</code><code class="descname">UsedListStartLattice</code><span class="sig-paren">(</span><em>s: float = 0</em>, <em>u: float = 0</em>, <em>o: float = 0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin" title="lyra.abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BottomMixin</span></code></a></p>
 <p>Used list start analysis abstract domain representation.</p>
-<p>This uses the Used lattice as base and uses it to store the usage of the start of list, each Used element covers 
+<p>This uses the Used lattice as base and uses it to store the usageOLD of the start of list, each Used element covers
 a possibly empty sequence <code class="docutils literal"><span class="pre">0:q</span></code>. Some additional consistency conditions hold for any element of this lattice 
 that was previously closed by <code class="docutils literal"><span class="pre">closure()</span></code>.</p>
 <dl class="method">
@@ -481,7 +891,7 @@ that was previously closed by <code class="docutils literal"><span class="pre">c
 <dl class="method">
 <dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.set_used_at">
 <code class="descname">set_used_at</code><span class="sig-paren">(</span><em>index</em>, <em>u: lyra.abstract_domains.usage.used.Used = &lt;Used.U: 3&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.set_used_at"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.set_used_at" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set usage at specified index.</p>
+<dd><p>Set usageOLD at specified index.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -497,9 +907,9 @@ that was previously closed by <code class="docutils literal"><span class="pre">c
 <dl class="method">
 <dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.used_at">
 <code class="descname">used_at</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.used_at"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.used_at" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds usage at specified index.</p>
+<dd><p>Finds usageOLD at specified index.</p>
 <p>Does a linear search through the 3-entry suo dict
-to find the entry that is determining the element usage at index.</p>
+to find the entry that is determining the element usageOLD at index.</p>
 </dd></dl>
 
 </dd></dl>
