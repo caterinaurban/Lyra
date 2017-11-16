@@ -1,0 +1,11 @@
+GC-content: 0.497000577295
+AT-content: 0.502999422705
+G count: 9818
+C count: 9983
+A count: 10077
+T count: 9963
+Sum of G+C+A+T counts: 39841
+Total count: 40000
+Length of nucleotides: 40000
+AT/GC Ratio: 1.01207009747
+GC Classification: moderate GC content

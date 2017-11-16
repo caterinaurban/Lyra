@@ -1,0 +1,48 @@
+Name: ...
+CSE 160
+Homework 2
+
+For each problem that requires a written answer, write (or copy-and-paste)
+your answers in this file.  When you are done, you should have replaced all
+the ellipses (the three dots) with your answers.
+
+At the end, you will turn in this file and your modified
+dna_analysis.py program.
+
+
+Problem 1:
+
+(No answers in this file.)
+
+Problem 2:
+
+...
+
+Problem 3:
+
+...
+
+Problem 4:
+
+...
+
+Problem 5:
+
+...
+
+Problem 6:
+
+...
+
+Problem 7:
+
+...
+
+Problem 8:
+
+...
+
+Collaboration:
+
+...
+
