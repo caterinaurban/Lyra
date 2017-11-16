@@ -1,0 +1,521 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, portrait, margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float}% If comment this, figure moves to Page 2
+% Fancy header package for version number
+\usepackage[font={small,it}]{caption}
+
+\usepackage{fancyhdr}
+%\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\newcommand{\bigcell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ 
+\lstdefinelanguage{Python2}{
+  language     = Python,
+  morekeywords = {assert},
+}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{white},   
+    commentstyle=\color{ForestGreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{black},
+    stringstyle=\color{red},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle, language=Python2}
+
+\begin{document}
+
+\title{Example to Show}
+
+\maketitle
+
+\pagenumbering{arabic}
+
+\section{Problem to solve}
+
+\begin{itemize}
+
+\item \textit{for i in range(N): y = a[i]} At what point should information about i ([0,N-1]) be incorporated into analysis?
+
+
+\item maybe it's better to have \verb|LINES = {0} ({0} int {1} int {2}) {len_LINES}| and if later there is another \verb|input()| we just add it in front: 
+
+\verb|LINES = {0} T {1} ({0} int {1} int {2}) {len_LINES}|
+
+instead of having \verb|LINES = {0} T {len_LINES-N} ({0} int {1} int {2}) {len_LINES}| 
+
+and then \verb|LINES = {0} T {len_LINES-N-1} T {len_LINES-N} ({0} int {1} int {2}) {len_LINES}| 
+
+and then \verb|LINES = {0} T {len_LINES-N} ({0} int {1} int {2}) {len_LINES}|
+
+
+\item How to substitute arrays using i when the $i \in [x,y]$ is known:
+
+\verb|a = {0} T {i} int {len_a}| should result in \verb|a = {0} T {x} int {len_a}|
+
+\verb|a = {0} T {i} int {i+1} T {len_a}| should result in \verb|a = {0} T {x} int {y+1} T {len_a}|
+
+\verb|a = {0} int {i+1} T {len_a}| should result in \verb|a = {0} int {y+1} T {len_a}|
+
+\verb|a = {0} T {i} int {i+1} T {i+4} int {i+5} T {len_a}| should result in 
+
+\verb|a = {0} T {x} int {x+1} int {x+2} int {x+3} int {x+4} int {x+5} int {x+6} int| 
+\verb|{x+7} int {x+8} int ... int {y+5} T {len_a}|
+
+simplest solution: just add for every element in [x,y]. more advanced: make case destinctions. Problem: If [x,y] are variables we dont know how many. simplest solution: just lose information in that case.
+
+
+\item \textit{for i in range(): y == int(a[i])} In first iteration we get \verb|a = {0} T {i}? int {i+1} T {len}?|. In second iteration do we we get \verb|a = {0} T {i}? int {i+1}? int {i+2} T {len}?| or \verb|a = {0} T {i}? int {i+1} int {i+2} T {len}?|. Because in the second loop we know that if we access element i the element i+1 must be strictly greater and exist. Or do we keep the ? on the element?
+
+\end{itemize}
+
+\section{Patterns to include in example}
+
+\begin{itemize}
+
+\item for line in data:
+
+\item splitting line by delimiter
+
+\item casting values to int with map(int, splittedelements) or n = int()
+
+\item accessing values in array by hardcoded number (most common is 0), depending on other line (because all lines should be same size as first line)
+
+\item slicing because of [0] is label and [1:] is data
+
+\item doing some analysis on values based on what condition they fullfil (example: if line starts with '$>$' do that)
+
+\item iterating using range() with size of first vector
+
+\end{itemize}
+
+
+\section{Example3}
+
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}
+data = [] (*@\label{Example3step12}@*) 
+for line in open('input3.txt', 'r'): (*@\label{Example3step11}@*) 
+    data.append(line.split(",")) (*@\label{Example3step10}@*) 
+
+grades = []
+
+for fields in data: (*@\label{Example3step9}@*) 
+    if fields[1] == 'midterms': (*@\label{Example3step8}@*) 
+        grade = (int(fields[2]) + 2 * int(fields[3])) / 3 (*@\label{Example3step7}@*) 
+        grades.append(grade) (*@\label{Example3step6}@*) 
+    else:
+        grades.append(int(fields[2])) (*@\label{Example3step5}@*) 
+
+for grade in grades: (*@\label{Example3step4}@*) 
+    if grade < 1 or grade > 6: (*@\label{Example3step3}@*) 
+        raise ValueError('Invalid grade!') (*@\label{Example3step2}@*) 
+
+print('class average:', sum(grades) / len(grades)) (*@\label{Example3step1}@*) 
+ (*@\label{Example3step0}@*) 
+\end{lstlisting}
+
+
+
+\section{Automation Example3}
+
+\begin{itemize}
+
+\item \textit{line \ref{Example3step0}:} Array are initialized with 
+
+\verb|grades = T| and \verb|fields = T| and \verb|data = T|
+
+\item \textit{line \ref{Example3step1}:} len(grades) $>$ 0 $==>$ grades cannot be empty:
+
+\verb|grades = {0} T {len_grades}|
+
+\item \textit{line \ref{Example3step2}:} Bad state: BOTTOM
+
+\item \textit{line \ref{Example3step3}:} In order not to reach bad state need to negate condition: $grade >= 1$ and $grade <= 6$
+
+\verb|grade == int and grade == [1,6]|
+
+\item \textit{line \ref{Example3step4}:} for-loop header reached, iteration limit not reached, no fixed point, no loop variable
+
+\item \textit{line \ref{Example3step2} (2nd round):} Bad state: BOTTOM
+
+\item \textit{line \ref{Example3step3} (2nd round):} In order not to reach bad state need to negate condition: $grade >= 1$ and $grade <= 6$
+
+\verb|grade == int and grade == [1,6]|
+
+\item \textit{line \ref{Example3step4} (2nd round):} for-loop header reached, fixed point reached. condition for grade has to hold for every element in grades:
+
+\verb|grades = {0} int, [1,6] {len_grades}|
+
+\item \textit{line \ref{Example3step5}:} array access: \verb|fields = {0} T {2} T {3} T {len_fields}?|
+
+int cast: \verb|fields = {0} T {2} int {3} T {len_fields}?|
+
+element of grades: \verb|fields = {0} T {2} int, [1,6] {3} T {len_fields}?|
+
+\item \textit{line \ref{Example3step6}:} element of grades: \verb|grade == int and grade == [1,6]|
+
+\item \textit{line \ref{Example3step7}:} array access at 2: \verb|fields = {0} T {2} T {3} T {len_fields}?|
+
+int cast: \verb|fields = {0} T {2} int {3} T {len_fields}?|
+
+array access at 3: \verb|fields = {0} T {2} int {3} T {4} T {len_fields}?|
+
+int cast: \verb|fields = {0} T {2} int {3} int {4} T {len_fields}?|
+
+more advanced: grade has to be in [1,6]: 
+
+\verb|fields[2] = [1,6] * 3 - 2 * fields[3] = [3,18] - 2 * fields[3]| and
+
+\verb|fields[3] = ([1,6] * 3 - fields[2]) / 2 = ([3,18] - fields[2]) / 2|
+
+\item \textit{line \ref{Example3step8}:} Merging if and else branch: 
+
+\verb|fields = {0} T {2} int, [1,6] {3} T {len_fields}?| and 
+
+\verb|fields = {0} T {2} int {3} int {4} T {len_fields}?| results in
+
+\verb|fields = {0} T {2} int {3} T {len_fields}?|
+
+Underapproximation: \verb|fields = {0} T {2} int, [1,6] {6} T {len_fields}?|
+
+Exact: \verb|IF fields[1] == 'midterms' THEN fields = {0} T {2} int, [1,6] {6} T {len_fields}?|
+
+\verb|ELSE fields = {0} T {2} int {3} int {4} T {len_fields}?|
+
+array access in condition: \verb|fields = {0} T {1} T {2} int {3} T {len_fields}?|
+
+\item \textit{line \ref{Example3step9}:} for-loop header reached, iteration limit not reached, no fixed point, no loop variable
+
+...
+
+\item \textit{line \ref{Example3step9}:} for-loop header reached, fixed point reached. condition for line has to hold for every element in data:
+
+\verb|data = {0} ({0} T {1} T {2} int {3} T {len_fields}?) {len_data}?|
+
+
+\item \textit{line \ref{Example3step11}:} Getting information about input: 
+
+\verb|line = {0} T {len_line}? with delimiter ','|
+
+element of data: \verb|line = {0} T {1} T {2} int {3} T {len_fields}? with delimiter ','|
+
+\item \textit{line \ref{Example3step11}:} input is from file 'input3.txt': \verb|FILE: input.txt|
+
+line holds for every element in input: 
+
+\verb|LINES = {0} ({0} T {1} T {2} int {3} T {len_fields}? with delimiter ',') {len_LINES}?|
+
+\item \textit{final json:} \verb|{"filename":"input2.txt",|
+
+\verb|"0":{"0":"[]", "1":"[]", "2":["int"], "3":"[]", "?":"", "del":","} "?":""}|
+
+
+
+\end{itemize}
+
+
+\section{Example2}
+
+
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}
+f = open('input2.txt', 'r') (*@\label{Example2step13}@*) 
+first_line = f.readline() (*@\label{Example2step12}@*) 
+lines = f.readlines() (*@\label{Example2step11}@*) 
+f.close()
+
+grades = []
+
+for line in lines: (*@\label{Example2step10}@*) 
+    fields = line.split(",") (*@\label{Example2step9}@*) 
+(*@\label{Example2step8}@*) 
+    if fields[1] == 'hw':
+        for grade in fields[2:6]: (*@\label{Example2step7}@*) 
+            grades.append(int(grade)) (*@\label{Example2step6}@*) 
+    else:
+        grades.append(int(fields[2])) (*@\label{Example2step5}@*) 
+
+for grade in grades: (*@\label{Example2step4}@*) 
+    if grade < 1 or grade > 6: (*@\label{Example2step3}@*) 
+        raise ValueError('Invalid grade!') (*@\label{Example2step2}@*) 
+
+print('class average:', sum(grades) / len(grades)) (*@\label{Example2step1}@*) 
+(*@\label{Example2step0}@*) 
+\end{lstlisting}
+
+\section{Automation Example2}
+
+\begin{itemize}
+
+\item \textit{line \ref{Example2step0}:} Array are initialized with 
+
+\verb|grades = T| and \verb|fields = T|
+
+\item \textit{line \ref{Example2step1}:} len(grades) $>$ 0 $==>$ grades cannot be empty:
+
+\verb|grades = {0} T {len_grades}|
+
+\item \textit{line \ref{Example2step2}:} Bad state: BOTTOM
+
+\item \textit{line \ref{Example2step3}:} In order not to reach bad state need to negate condition: $grade >= 1$ and $grade <= 6$
+
+\verb|grade == [1,6]|
+
+\item \textit{line \ref{Example2step4}:} for-loop header reached, iteration limit not reached, no fixed point, no loop variable
+
+\item \textit{line \ref{Example2step2} (2nd round):} Bad state: BOTTOM
+
+\item \textit{line \ref{Example2step3} (2nd round):} In order not to reach bad state need to negate condition: $grade >= 1$ and $grade <= 6$
+
+\verb|grade == [1,6]|
+
+\item \textit{line \ref{Example2step4} (2nd round):} for-loop header reached, fixed point reached. condition for grade has to hold for every element in grades:
+
+\verb|grades = {0} [1,6] {len_grades}|
+
+\item \textit{line \ref{Example2step5}:} array access: \verb|fields = {0} T {2} T {3} T {len_fields}?|
+
+int cast: \verb|fields = {0} T {2} int {3} T {len_fields}?|
+
+element of grades: \verb|fields = {0} T {2} int, [1,6] {3} T {len_fields}?|
+
+\item \textit{line \ref{Example2step6}:} \verb|grade == int|
+
+element of grades: \verb|grade == int AND grade == [1,6]|
+
+\item \textit{line \ref{Example2step7}:} for-loop header reached, iteration limit not reached, no fixed point, no loop variable
+
+\item \textit{line \ref{Example2step6}:} \verb|grade == int|
+
+element of grades: \verb|grade == int AND grade == [1,6]|
+
+\item \textit{line \ref{Example2step7}:} for-loop header reached, fixed point reached. condition for grade has to hold for $fields[2:6]$:
+
+\verb|fields = {0} T {2} int, [1,6] {6} T {len_fields}?|
+
+\item \textit{line \ref{Example2step8}:} Merging if and else branch: 
+
+\verb|fields = {0} T {2} int, [1,6] {3} T {len_fields}?| and 
+
+\verb|fields = {0} T {2} int, [1,6] {6} T {len_fields}?| results in
+
+\verb|fields = {0} T {2} int, [1,6] {3} T {len_fields}?|
+
+Underapproximation: \verb|fields = {0} T {2} int, [1,6] {6} T {len_fields}?|
+
+Exact: \verb|IF fields[1] == 'hw' THEN fields = {0} T {2} int, [1,6] {6} T {len_fields}?|
+
+\verb|ELSE fields = {0} T {2} int, [1,6] {3} T {len_fields}?|
+
+array access: \verb|fields = {0} T {1} T {2} int, [1,6] {3} T {len_fields}?|
+
+\item \textit{line \ref{Example2step9}:} Getting information about input: 
+
+\verb|line = {0} T {1} T {2} int, [1,6] {3} T {len_fields}? with delimiter ','|
+
+\item \textit{line \ref{Example2step10}:} for-loop header reached, iteration limit not reached, no fixed point, no loop variable
+
+...
+
+\item \textit{line \ref{Example2step10}:} for-loop header reached, fixed point reached. condition for line has to hold for every elemen in lines:
+
+\verb|lines = {0} ({0} T {1} T {2} int, [1,6] {3} T {len_fields}?) {len_lines}? with delimiter ','|
+
+\item \textit{line \ref{Example2step11}:} input is read as lines from file f:
+
+\verb|LINES = {0} ({0} T {1} T {2} int, [1,6] {3} T {len_fields}? with delimiter ',') {len_lines}?|
+
+\verb|FILE: f|
+
+\item \textit{line \ref{Example2step12}:} another input is read from file f:
+
+\verb|LINES = {0} T {1} ({0} T {1} T {2} int, [1,6] {3} T {len_fields}? with delimiter ',') {len_lines}?|
+
+\verb|FILE: f|
+
+\item \textit{line \ref{Example2step13}:} filename is input2.txt:
+
+\verb|FILE: input2.txt|
+
+\item \textit{final json:} \verb|{"filename":"input2.txt",|
+
+\verb|"0":"T", "1":{"0":"T", "2":["int", ">= 1", "<= 6"], "3":"T", "?":"", "del":","}}|
+
+
+
+\end{itemize}
+% 
+\section{Example}
+
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}
+f = open('input.txt', 'r')
+first_line = f.readline()
+lines = f.readlines()
+f.close()
+
+names = []
+grades = []
+
+for line in lines:
+    fields = line.split(",")
+    names.append(fields[0])
+    curr_grades = []
+    if len(fields) == 5:
+        for grade in fields[1:5]:
+            curr_grades.append(int(grade))
+    else:
+        for i in range(4):
+            curr_average = (int(fields[i+1]) + int(fields[i+5])) / 2
+            curr_grades.append(curr_average)
+    grades.append(curr_grades) (*@\label{step5}@*) 
+
+print()
+print('averages:')
+(*@\label{step4}@*) 
+for i in range(len(names)): (*@\label{step3}@*) 
+    average_grade = sum(grades[i]) / len(grades[i]) (*@\label{step2}@*) 
+    print(names[i], average_grade) (*@\label{step1}@*) 
+(*@\label{step0}@*) 
+\end{lstlisting}
+
+\section{Automation Example}
+
+\begin{itemize}
+
+\item \textit{line \ref{step0}} Array are initialized with 
+
+\verb|names = T| and \verb|grades = T| and \verb|curr_grades = T| and \verb|fields = T|
+
+\item \textit{line \ref{step1}} There is an array access so 
+
+\verb|names = {0} T {i}? T {i+1} T {len_names}?|
+
+\item \textit{line \ref{step2}} There is an array access so 
+
+\verb|grades = {0} T {i}? T {i+1} T {len_grades}?|. Furthermore sum() is used for array access, so 
+
+\verb|grades = {0} T {i}? int {i+1} T {len_grades}?|. Furthermore len() is used for array access, so 
+
+\verb|grades = {0} T {i}? int {i+1} T {len_grades}?|. 
+
+\item \textit{line \ref{step3}} for-loop with range() is encountered, so iteration variable i is now i+1: 
+
+\verb|names = {0} T {i+1}? T {i+2} T {len_names}?| and 
+
+\verb|grades = {0} T {i+1}? int {i+2} T {len_grades}?|
+
+\item \textit{line \ref{step1} (2nd time)} There is an array access so 
+
+\verb|names = {0} T {i}? T {i+1} T {i+2} T {len_names}?|. Joining this with last round we get 
+
+\verb|names = {0} T {i}? T {i+1} T {len_names}?|
+
+\item \textit{line \ref{step2} (2nd time)} There is an array access so 
+
+\verb|grades = {0} T {i} T {i+1} T {i+2} T {len_grades}?|. 
+
+Furthermore sum() is used for array access, so 
+
+\verb|grades = {0} T {i} int {i+1} int {i+2} T {len_grades}?|. 
+
+Furthermore len() is used for array access, so 
+
+\verb|grades = {0} T {i}? int {i+1} int {i+2} T {len_grades}?|.
+
+Joining this with last round we get \verb|grades = {0} T {i}? int {i+1} T {len_grades}?|.
+
+\item \textit{line \ref{step3} (2nd time)} for-loop with range() is encountered, we did not reach a fix point or the limit of loop iterations, so iteration variable i is now i+1: 
+
+\verb|names = {0} T {i+1}? T {i+2} T {len_names}?| and 
+
+\verb|grades = {0} T {i+1}? int {i+2} T {len_grades}?|
+
+\item \textit{line \ref{step1} (3rd time)} There is an array access so 
+
+\verb|names = {0} T {i}? T {i+1} T {i+2} T {len_names}?|. 
+
+Joining this with last round we get 
+
+\verb|names = {0} T {i}? T {i+1} T {len_names}?|
+
+\item \textit{line \ref{step2} (3rd time)} There is an array access so 
+
+\verb|grades = {0} T {i}? T {i+1} T {i+2} T {len_grades}?|. 
+
+Furthermore sum() is used for array access, so 
+
+\verb|grades = {0} T {i}? int {i+1} int {i+2} T {len_grades}?|. 
+
+Furthermore len() is used for array access, so 
+
+\verb|grades = {0} T {i}? int {i+1} int {i+2} T {len_grades}?|.  
+
+Joining this with last round we get \verb|grades = {0} T {i}? int {i+1} T {len_grades}?|.
+
+\item \textit{line \ref{step3} (3nd time)} for-loop with range() is encountered, we reached a fix point. We have know from range that $i \in [0, len(names)-1]$. Since names is an array we know that the len(names) $==$ len\_names. So $i \in [0, len\_names-1]$. We therefore check all our arrays to substitute i with [0, len\_names-1]: 
+
+\verb|names = {0} T {0}? T {len_names} T {len_names}?| and 
+
+\verb|grades = {0} T {0}? int {len_names} T {len_grades}?|
+
+\item \textit{line \ref{step4}} Loop simplification:
+
+\verb|names = {0} T {len_names} T {len_names}?| and 
+
+\verb|grades = {0} int {len_names} T {len_grades}?|
+
+Merging loop with else branch:
+\verb|grades = T| and \verb|grades = {0} int {len_names} T {len_grades}?| results in \verb|grades = {0} int {len_names}? T {len_grades}?|
+
+\verb|names = T| and \verb|names = {0} T {len_names} T {len_names}?| results in \verb|names = {0} T {len_names}?|
+
+\item \textit{line \ref{step5}} 
+
+\verb|grades = {0} int {len_names}? T {len_grades}?|
+
+\end{itemize}
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

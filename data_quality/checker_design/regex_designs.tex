@@ -1,0 +1,208 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, portrait, margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{listings}
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float}% If comment this, figure moves to Page 2
+% Fancy header package for version number
+\usepackage[font={small,it}]{caption}
+
+\usepackage{fancyhdr}
+%\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\newcommand{\bigcell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ 
+\lstdefinelanguage{Python2}{
+  language     = Python,
+  morekeywords = {assert},
+}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{white},   
+    commentstyle=\color{ForestGreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{black},
+    stringstyle=\color{red},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle, language=Python2}
+
+\begin{document}
+
+\pagenumbering{arabic}
+
+\section{Ideas}
+
+\begin{itemize}
+\item build one regex for each line
+\begin{itemize}
+\item (+) fast?
+\item (-) only gets information if whole line is as expected or not (no info about information)
+\end{itemize}
+
+\item run simple one regex first to get information if line correct or not and then use other means to find error
+\begin{itemize}
+\item (+) if the file contains many errors then it will first be slow but after every correction the user has to rerun the checker and then it's fast to have one line regex (and each time an input has to be checked there will be one iteration where there are no errors left)
+\item (-) have to combine different means, maye better to directly use other approach?
+\item (-) might need to store redundant information: one time for regex creation, one time for other means
+\end{itemize}
+
+\item regex is fast in getting the groups and evaluating if the values consists of digits, are in a certain range and have a certain structure
+
+\item store regex in parts (like \verb|{0} \d+ {2} ({0} [^;]* {3} T {end} ';') {3} T {end} ','| with final regex \verb|^\d+,\d+,[^;]*;[^;]*;[^;]*;.*$|) and equip with additional information to create error message. for example if \verb|\d+| doesn't match it's not a number or doesn't exist
+
+\item on the one hand there are the 1) assumption about the values itself and on the other hand we have the expected 2) structure where the values are
+\begin{itemize}
+\item regex is good for structure
+\item comparing each value separately is good for assumptions and error discovery/reporting
+\end{itemize}
+
+\item in the beginning informations like how many lines should follow or how many values should be on one line is related to the values in the input file. it is therefore not possible to include this information in the regex.
+\begin{itemize}
+\item one solution could be to add the information as soon as it is available, update the regex string and use that for further checking (question: what information could not be encoded in regex? example: number of lines that should be in the input)
+\item one could have a simple regex like 'a commaseparated list of numbers' and then count the number of elements differently (without regex)
+\item maybe there is a way to extract the values like \verb|\s*([^,]+)\s*|. 
+\end{itemize}
+
+\item usually string operations are faster than regex. regex is faster if there is a lot of information on one line. but as long as there are just many lines regex is not faster. it also depends on how sophisticated is the regex string. but regex is faster if you don't have any means to quickly find a quick way to compare value with assumption, so it might still make sense to have one regex per line to check if line correct (also when rechecking lines) to find lines that have errors. the lines with errors have to be handled separately
+
+\item if you read in values you have a list of some values you want to read in and some means on separating those values so list abstraction with means of separation should suffice: \verb|{0} int, > 0 {1} T {len}?|
+
+\item decision tree for values and list abstraction with regex for structure:
+
+\begin{lstlisting}[numbers=none]
+value = input()
+# => value is string
+items = input().split(',')
+# => items = {0} string {len}?
+v1, v2 = map(int, input().split())
+# v1 is int, v2 is int
+a = int(items[0])
+# a is int
+x = items[a] + v2
+# x is int
+x = x + items[v1]
+# x is int
+x = x + int(value)
+# x is int
+
+# input3 = {0} int {1}
+# input2 = {0} T {len}? with delimiter ','
+# input1[0] < len(input2)
+# 0 < len(input2)
+# input2 = {0} T {input1[0]}? int {input1[0] + 1} T {len}? with delimiter ','
+# input2 = {0} T {input2[0]}? int {input2[0] + 1} T {len}? with delimiter ','
+# input2 = {0} int {1} T {len}? with delimiter ','
+# input1 = {0} int {1} int {2} with delimiter ' '
+value = input()
+
+# input2 = {0} T {len}? with delimiter ','
+# input1[0] < len(input2)
+# 0 < len(input2)
+# input2 = {0} T {input1[0]}? int {input1[0] + 1} T {len}? with delimiter ','
+# input2 = {0} T {input2[0]}? int {input2[0] + 1} T {len}? with delimiter ','
+# input2 = {0} int {1} T {len}? with delimiter ','
+# input1 = {0} int {1} int {2} with delimiter ' ' 
+# value is int
+items = input().split(',')
+
+# input1 = {0} int {1} int {2} with delimiter ' ' 
+# input1[0] < len(items)
+# 0 < len(items)
+# items = {0} T {input1[0]}? int {input1[0] + 1} T {len}?
+# items = {0} T {items[0]}? int {items[0] + 1} T {len}?
+# items = {0} int {1} T {len}?
+# value is int
+v1, v2 = map(int, input().split())
+
+# 0 < len(items)
+# items = {0} T {items[0]}? int {items[0] + 1} T {len}?
+# items = {0} int {1} T {len}?
+# v1 < len(items)
+# items = {0} T {v1}? int {v1 + 1} T {len}?
+# value is int
+a = int(items[0])
+
+# a < len(items)
+# items = {0} T {a}? int {a + 1} T {len}?
+# v1 < len(items)
+# items = {0} T {v1}? int {v1 + 1} T {len}?
+# value is int
+x = items[a] + v2
+
+# v1 < len(items)
+# items = {0} T {v1}? int {v1 + 1} T {len}?
+# value is int
+x = x + items[v1]
+
+# value is int
+x = x + int(value)
+
+
+final:
+L1) {0} int {1}
+L2) {0} T {len}? with delimiter ',' 
+    AND {0} T {L3[0]}? int {L3[0] + 1} T {len}? with delimiter ',' 
+    AND {0} T {L2[0]}? int {L2[0] + 1} T {len}? with delimiter ',' 
+    AND {0} int {1} T {len}? with delimiter ',' 
+    AND L2[0] < len(L2)
+    AND L3[0] < len(L2)
+L3) {0} int {1} int {2} with delimiter ' '
+    AND L3[0] < len(L2)
+    
+example:
+1
+2,2,3,4,5,6
+4 5
+
+L1) {0} int {1}
+L2) {0} T {6}? with delimiter ',' 
+    AND {0} T {3}? int {4} T {6}? with delimiter ',' 
+    AND {0} T {2}? int {3} T {6}? with delimiter ',' 
+    AND {0} int {1} T {6}? with delimiter ',' 
+    AND 2 < len(6)
+    AND 4 < len(6)
+L3) {0} int {1} int {2} with delimiter ' '
+    AND 4 < len(6)
+
+
+\end{lstlisting}
+
+
+\end{itemize}
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

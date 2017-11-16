@@ -1,0 +1,269 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, portrait, margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{listings}
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float}% If comment this, figure moves to Page 2
+% Fancy header package for version number
+\usepackage[font={small,it}]{caption}
+
+\usepackage{fancyhdr}
+%\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\newcommand{\bigcell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ 
+\lstdefinelanguage{Python2}{
+  language     = Python,
+  morekeywords = {assert},
+}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{white},   
+    commentstyle=\color{ForestGreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{black},
+    stringstyle=\color{red},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle, language=Python2}
+
+\begin{document}
+
+\pagenumbering{arabic}
+
+\section{Error Checking Algorithm}
+
+\begin{enumerate}
+\item check for number of elements
+\begin{itemize}
+\item \verb|{0} T {len}? with delimiter ','| --$>$ number unknown, nothing to check
+\item \verb|{0} T {3} with delimiter ','| --$>$ exactly 3 elements
+\item \verb|{0} T {3} T {len}? with delimiter ','| --$>$ at least 3 elements
+\item \verb|{0} T {2} ({0} T {2} T {len}? with delimiter '>') {3} T {len}? with delimiter ','| --$>$ at least 3 elements and third element has to have at least 2 elements
+\end{itemize}
+\item check type and structure of elements
+\begin{itemize}
+\item \verb|{0} int {len}? with delimiter ','| --$>$ all have to be int
+\item \verb|{0} int {3} with delimiter ','| --$>$ all have to be int
+\item \verb|{0} int {3} T {len}? with delimiter ','| --$>$ elements [0:3] have to be int
+\item \verb;{0} T {1} (...13|...17) {2} T {len}? with delimiter ','; --$>$ element [1] has to look like regex
+\end{itemize}
+\item check additional constraints
+\begin{itemize}
+\item \verb|{0} int, >0 {len}? with delimiter ','| --$>$ all have to be $>$0
+\item \verb|{0} int, >0 {3} with delimiter ','| --$>$ all have to be $>$0
+\item \verb|{0} int, >0 {3} T {len}? with delimiter ','| --$>$ elements [0:3] have to be $>$0
+\end{itemize}
+\item TODO: need some means to fill relational constraints
+\item check additional relational constraints
+\begin{itemize}
+\item \verb|{0} int, >L1[0] {len}? with delimiter ','| --$>$ all have to be $>$(first element of line 1)
+\item \verb|{0} int {1} int, >L[0] {3} with delimiter ','| --$>$ elements [1:3] $>$(first element of this line)
+\item \verb|{0} int, >L[2] {1} int {3} T {len}? with delimiter ','| --$>$ element 0 has to be $>$(third element of this line)
+\end{itemize}
+\end{enumerate}
+
+\section{Kind of Messages}
+
+\begin{itemize}
+
+
+\item \textit{expected X elements separated by DELIMITER, instead found Y elements (EXAMPLE)}
+
+if number of elements is not correct
+
+list abstraction: \verb|line = {0} int {3} with delimiter ','|
+
+problems:
+\begin{itemize}
+\item empty (might be ok?): '' --$>$ line has wrong number of elements when splitted by ',' --$>$ expected 3 numbers separated by comma, instead found 1 element ('')
+\item wrong delimiter: '1 2 3' --$>$ line has wrong number of elements when splitted by ',' --$>$ expected 3 numbers separated by comma, instead found 1 element ('1 2 3')
+\item not a number: '1,2' --$>$ line has wrong number of elements when splitted by ',' --$>$ expected 3 numbers separated by comma, instead found 2 elements ('1', '2')
+\item not a number: '1,2,3,a,5,6' --$>$ line has wrong number of elements when splitted by ',' --$>$ expected 3 numbers separated by comma, instead found 6 elements ('1', '2', '3', 'a', '5','6')
+\end{itemize}
+
+\item \textit{expected at least X elements separated by DELIMITER, instead found only Y elements (EXAMPLE)}
+
+list abstraction: \verb|line = {0} int {3} T {len} with delimiter ','|
+
+problems:
+\begin{itemize}
+\item empty (might be ok?): '' --$>$ line has wrong number of elements when splitted by ',' --$>$ expected at least 3 numbers separated by comma, instead found only 1 element ('')
+\item wrong delimiter: '1 2 3' --$>$ line has wrong number of elements when splitted by ',' --$>$ expected at least 3 numbers separated by comma, instead found only 1 element ('1 2 3')
+\item not a number: '1,2' --$>$ line has wrong number of elements when splitted by ',' --$>$ expected at least 3 numbers separated by comma, instead found only 2 elements ('1', '2')
+\end{itemize}
+
+\item \textit{expected numbers separated by DELIMITER, instead found EXAMPLE}
+
+if number of values is not known, but we know it should be numbers
+
+list abstraction: \verb|line = {0} int {len} with delimiter ','|
+
+problems:
+\begin{itemize}
+\item empty (might be ok?): '' --$>$ line[0] is not a number when splitted by ',' --$>$ expected numbers separated by comma, instead found ''
+\item wrong delimiter: '1 2 3' --$>$ line[0] is not a number when splitted by ',' --$>$ expected numbers separated by comma, instead found '1 2 3'
+\item not a number: '1,2,3,a,5,6' --$>$ line[3] is not a number when splitted by ',' --$>$ expected numbers separated by comma, instead found 'a'
+\end{itemize}
+
+\item \textit{a TYPE is expected, instead found EXAMPLE}
+
+if number of elements is correct but type it not
+
+list abstraction: \verb|line = {0} int {3} with delimiter ','|
+
+problems:
+\begin{itemize}
+\item not a number: '1,2,a' --$>$ line[2] is not a number when splitted by ',' --$>$ a number is expected, instead found 'a'
+\end{itemize}
+
+\item \textit{value X has to be COMPARISON than value CONSTANT, but EXAMPLE\_X is not COMPARISON than value CONSTANT}
+
+\item \textit{value X has to be COMPARISON than value Y, but EXAMPLE\_X is not COMPARISON than value EXAMPLE\_Y}
+
+information of value Y is needed. 
+
+should the information be shown for both values? --$>$ if the checker is interactive then it is shown for the first value and if the values gets corrected it should not be shown for the second one. --$>$ if the errors are shown in a 'list' then we should show the message at both values and remove both error messages as soon as one value is corrected
+
+\item \textit{value X has to be COMPARISON than the number of values starting from the Yth value, but EXAMPLE\_X is not COMPARISON than value EXAMPLE\_LEN(Y)}
+
+a button could show the example for the values that were found for Y, there might be a lot so it doesn't make sense to directly show it in the error message but the information might still be useful to the user
+
+\item \textit{value X has to be COMPARISON than the number of lines starting from the Yth line, but EXAMPLE\_X is not COMPARISON than value EXAMPLE\_LEN(Y)}
+
+same as above
+
+\end{itemize}
+
+\section{Examples}
+
+\begin{itemize}
+
+\item \textit{line is one integer}
+\begin{itemize}
+\item \textit{but got: ''}
+
+Message: line is expected to be one number, instead found ''
+
+\item \textit{but got: 'a'}
+
+Message: line is expected to be one number, instead found 'a'
+
+\item \textit{but got: '1 2'}
+
+Message: line is expected to be one number, instead found '1 2'
+\end{itemize}
+
+\item \textit{line is two integer separated by whitespaces}
+\begin{itemize}
+\item \textit{but got: ''}
+
+Message: line is expected to be two numbers separated by whitespaces, instead found ''
+
+\item \textit{but got: 'a'}
+
+Message: line is expected to be two numbers separated by whitespaces, instead found 'a'
+
+\item \textit{but got: '1'}
+
+Message: line is expected to be two numbers separated by whitespaces, but found one numbers
+
+\item \textit{but got: '1 2 3'}
+
+Message: line is expected to be two numbers separated by whitespaces, but found three numbers
+
+\item \textit{but got: '1,2'}
+
+Message: line is expected to be two numbers separated by whitespaces, instead found '1,2'
+
+\item \textit{but got: '1 a'}
+
+Message: line is expected to be two numbers separated by whitespaces, instead found 'a'
+\end{itemize}
+
+\item \textit{line is integers separated by whitespaces}
+\begin{itemize}
+\item \textit{but got: 'a'}
+
+Message: line is expected to be numbers separated by whitespaces, instead found 'a'
+
+\item \textit{but got: '1,2,3,4,5,6'}
+
+Message: line is expected to be numbers separated by whitespaces, instead found '1,2,3,4,5,6'
+
+\item \textit{but got: '1 2 3 4 5 a'}
+
+Message: line is expected to be numbers separated by whitespaces, instead found 'a'
+\end{itemize}
+
+\item \textit{line is numbers separated by whitespaces and first integer > 10}
+\begin{itemize}
+
+\item \textit{but got: '1 2 3 4'}
+
+Message: first number in line has to be greater than 10, but 1 is not greater than 10
+\end{itemize}
+
+\item \textit{line is numbers separated by whitespaces and first number should be smaller or equal to the number of integers that follow}
+\begin{itemize}
+
+\item \textit{but got: '1 2 3 4'}
+
+Message: first number in line has to be smaller or equal to the number of elements in the line starting from the second one, but 1 is not smaller or equal to 3 ('2','3','4')
+
+\item \textit{but got: ''}
+
+---COMMENT: need information if line can be empty! otherwise should also have assumption that there should be at least one number!
+
+\item \textit{but got: '1'}
+
+Message: first number in line has to be smaller or equal to number of elements in the line starting from the second one, but 1 is not smaller or equal to 0 ()
+\end{itemize}
+
+\item \textit{first line in file has to be smaller or equal to the lines that follow}
+\begin{itemize}
+
+\item \textit{but got: '3' and '1' and '1'}
+
+Message: first number in file has to be smaller or equal to the number of lines starting from the second one, but 3 is not smaller or equal to 2 ('1', '1')
+---COMMENT: showing lines or elements in error message only works if there are not too many elements. maybe better to have a button that give more information about what was found.
+\end{itemize}
+
+\end{itemize}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

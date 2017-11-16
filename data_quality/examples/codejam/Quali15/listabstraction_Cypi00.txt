@@ -1,0 +1,73 @@
+
+second try:
+
+
+_T = int(input())
+for _t in range(_T):
+    N, S = input().split()
+    N = int(N)
+
+    res = 0
+    cur = 0
+    # S = {0} T {i} int {i+1} T {N+1}? T {len}? -T-> TOP
+    #            -F-> BOTTOM
+    i = 0
+    # S = {0} T {i} int {i+1} T {N+1}? T {len}? -T-> TOP
+    #            -F-> BOTTOM
+    while i < N + 1:
+        if i > cur:
+            res += i - cur
+            cur = i
+        # S = {0} T {i} int {i+1} T {len}? -T-> TOP
+        #            -F-> BOTTOM
+        cur += int(S[i])
+        # i-1 < N + 1 -T-> TOP
+        #           -F-> Nil
+        # S = {0} T {i} int {i+1} T {len}? -T-> TOP
+        #            -F-> BOTTOM
+        i += 1
+        # i < N + 1 -T-> TOP
+        #           -F-> Nil
+    print('Case #%i:' % (_t + 1), res)
+    # 0 < T -T-> TOP
+    #       -F-> BOTTOM
+# BOTTOM
+
+
+first try:
+
+file:
+L1)         {0} int {1}
+L2.1)       {0} int {1} ({0} int {L2.1[0] + 1} T {len}? with delimiter '') {2} with delimiter ' '
+            AND L2.1[0] < len(L2.1[1])
+...
+L2.(L1[0])) {0} int {1} ({0} int {L2.(L1[0]) + 1} T {len}? with delimiter '') {2} with delimiter ' '
+            AND L2.(L1[0])[0] < len(L2.(L1[0])[1])
+
+# input2 = {0} int {1}
+# input(1.1 - input2) = {0} int {1} ({0} int {input1[0] + 1} T {len}?) {2} with delimiter ' '
+# input(1.1 - input2)[0] < len(input1[1])
+_T = int(input())
+# input(1.1 - 1._T) = {0} int {1} ({0} int {input1[0] + 1} T {len}?) {2} with delimiter ' '
+# input(1.1 - 1._T)[0] < len(input1[1])
+for _t in range(_T):
+    # input1 = {0} int {1} ({0} int {input1[0] + 1} T {len}?) {2} with delimiter ' '
+    # input1[0] < len(input1[1])
+    N, S = input().split()
+    # S = {0} int {N+1} T {len}?
+    # N is int
+    N = int(N)
+
+    res = 0
+    cur = 0
+    # N < len(S)
+    # S = {0} T {N}? int {N+1} T {len}? AND S = {0} T {N-2}? int {N-1} T {len}? AND ... ==> S = {0} int {N+1} T {len}?
+    for i in range(N + 1):
+        if i > cur:
+            res += i - cur
+            cur = i
+        # S = {0} T {i}? int {i+1} T {len}? AND S = {0} T {i-1}? int {i} T {len}? ==> S = {0} T {i-1}? int {i+1} T {len}?
+        # i < len(S)
+        cur += int(S[i])
+    # _t is int
+    print('Case #%i:' % (_t + 1), res)

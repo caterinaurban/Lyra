@@ -9,14 +9,16 @@ for t in range(1, tc+1):
     # MAD: inputs have to exist as integers separated by whitespace
     reqs = list(map(int, input().split()))
     pls = []
+    # MAD: number of lines == n
     for _ in range(n):
         pls.append(list(map(int, input().split())))
     events = []
     for i in range(n):
         for j in range(p):
-            # MAD: len(pls[i]) > max(j) => n > p
+            # MAD: len(pls) > i => len(pls) > n-1 => n > n-1 => true
+            # MAD: len(pls[i]) > j => forall elements x in pls: len(x) >= p
             u = pls[i][j]
-            # MAD: len(reqs) > max(i) => len(reqs) > n
+            # MAD: len(reqs) > i => len(reqs) >= n
             req = reqs[i]
             # MAD: req != 0 because of ZeroDivison => all elements of reqs must be != 0 (until reqs[n-1])
             up = (10 * u) // (9 * req)
