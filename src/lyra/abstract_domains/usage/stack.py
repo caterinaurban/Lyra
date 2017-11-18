@@ -34,7 +34,7 @@ class UsedStack(Stack, State):
         self.stack[-1].access_variable(variable)
         return {variable}
 
-    def _assign_variable(self, left: Expression, right: Expression) -> 'UsedStack':
+    def _assign(self, left: Expression, right: Expression) -> 'UsedStack':
         raise NotImplementedError("Variable assignment is not implemented!")
 
     def _assume(self, condition: Expression) -> 'UsedStack':
@@ -83,9 +83,9 @@ class UsedStack(Stack, State):
         self.stack[-1].output({output})
         return self
 
-    def _substitute_variable(self, left: Expression, right: Expression) -> 'UsedStack':
+    def _substitute(self, left: Expression, right: Expression) -> 'UsedStack':
         if isinstance(left, VariableIdentifier):
-            self.stack[-1].substitute_variable({left}, {right})
+            self.stack[-1].substitute({left}, {right})
         else:
             raise NotImplementedError("Variable substitution for {} is not implemented!".format(left))
         return self

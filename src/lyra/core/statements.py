@@ -162,7 +162,7 @@ class SubscriptionAccess(ExpressionAccess):
     def key(self):
         return self._key
 
-    def __str__(self):
+    def __repr__(self):
         return "{0.target}[{0.key}]".format(self)
 
 
@@ -192,7 +192,7 @@ class SlicingAccess(ExpressionAccess):
     def stride(self):
         return self._stride
 
-    def __str__(self):
+    def __repr__(self):
         if self.stride:
             return "{0.target}[{0.lower}:{0.upper}:{0.stride}]".format(self)
         return "{0.target}[{0.lower}:{0.upper}]".format(self)

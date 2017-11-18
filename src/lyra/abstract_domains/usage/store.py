@@ -73,7 +73,7 @@ class UsedStore(Store, State):
     def _access_variable(self, variable: VariableIdentifier) -> Set[Expression]:
         return {variable}
 
-    def _assign_variable(self, left: Expression, right: Expression) -> 'UsedStore':
+    def _assign(self, left: Expression, right: Expression) -> 'UsedStore':
         raise NotImplementedError("Variable assignment is not implemented!")
 
     def _assume(self, condition: Expression) -> 'UsedStore':
@@ -128,7 +128,7 @@ class UsedStore(Store, State):
                 raise NotImplementedError(f"Type {variable.typ} not yet supported!")
         return self  # nothing to be done
 
-    def _substitute_variable(self, left: Expression, right: Expression) -> 'UsedStore':
+    def _substitute(self, left: Expression, right: Expression) -> 'UsedStore':
         if isinstance(left, VariableIdentifier):
             self._use(left, right)._kill(left, right)
         else:

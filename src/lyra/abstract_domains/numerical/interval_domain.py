@@ -170,12 +170,8 @@ class IntervalState(Store, State):
         lattices = {BooleanLyraType: IntervalLattice, IntegerLyraType: IntervalLattice}
         super().__init__(variables, lattices)
 
-    @copy_docstring(State._access_variable)
-    def _access_variable(self, variable: VariableIdentifier) -> Set[Expression]:
-        return {variable}
-
-    @copy_docstring(State._assign_variable)
-    def _assign_variable(self, left: Expression, right: Expression) -> 'IntervalState':
+    @copy_docstring(State._assign)
+    def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
         if isinstance(left, VariableIdentifier):
             if isinstance(left.typ, BooleanLyraType) or isinstance(left.typ, IntegerLyraType):
                 evaluation = self._evaluation.visit(right, self, dict())
@@ -213,10 +209,6 @@ class IntervalState(Store, State):
         error = f"Assumption of a {normal.__class__.__name__} expression is not supported!"
         raise ValueError(error)
 
-    @copy_docstring(State._evaluate_literal)
-    def _evaluate_literal(self, literal: Expression) -> Set[Expression]:
-        return {literal}
-
     @copy_docstring(State.enter_if)
     def enter_if(self):
         return self  # nothing to be done
@@ -237,9 +229,9 @@ class IntervalState(Store, State):
     def _output(self, output: Expression) -> 'IntervalState':
         return self  # nothing to be done
 
-    @copy_docstring(State._substitute_variable)
-    def _substitute_variable(self, left: Expression, right: Expression):
-        raise NotImplementedError("Variable substitution is not yet implemented!")
+    @copy_docstring(State._substitute)
+    def _substitute(self, left: Expression, right: Expression):
+        raise NotImplementedError("Substitution is not yet implemented!")
 
     # expression evaluation
 

@@ -478,7 +478,7 @@ class OctagonDomain(OctagonLattice, State):
         """
         super().__init__(variables)
 
-    def _substitute_variable(self, left: Expression, right: Expression) -> 'OctagonDomain':
+    def _substitute(self, left: Expression, right: Expression) -> 'OctagonDomain':
         raise NotImplementedError("Octagon domain does not yet support variable substitution.")
 
     def _assume(self, condition: Expression) -> 'OctagonDomain':
@@ -573,7 +573,7 @@ class OctagonDomain(OctagonLattice, State):
         self._assign_negated_other_var(x, y)
         self._assign_same_var_plus_constant(x, interval)
 
-    def _assign_variable(self, left: Expression, right: Expression) -> 'OctagonDomain':
+    def _assign(self, left: Expression, right: Expression) -> 'OctagonDomain':
         # Octagonal Assignments
         if isinstance(left, VariableIdentifier):
             if left.typ == int:

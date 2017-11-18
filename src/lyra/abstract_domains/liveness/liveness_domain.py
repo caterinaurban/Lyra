@@ -124,14 +124,9 @@ class LivenessState(Store, State):
         """The current store is bottom if `all` of its variables map to a bottom element."""
         return all(element.is_bottom() for element in self.store.values())
 
-    @copy_docstring(State._access_variable)
-    def _access_variable(self, variable: VariableIdentifier) -> Set[Expression]:
-        return {variable}
-
-    @copy_docstring(State._assign_variable)
-    def _assign_variable(self, left: Expression, right: Expression):
-        error = "A variable assignment is not expected in a backward analysis!"
-        raise RuntimeError(error)
+    @copy_docstring(State._assign)
+    def _assign(self, left: Expression, right: Expression):
+        raise RuntimeError("Unexpected assignment in a backward analysis!")
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'LivenessState':
@@ -139,10 +134,6 @@ class LivenessState(Store, State):
             if isinstance(identifier, VariableIdentifier):
                 self.store[identifier].top()
         return self
-
-    @copy_docstring(State._evaluate_literal)
-    def _evaluate_literal(self, literal: Expression) -> Set[Expression]:
-        return {literal}
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'LivenessState':
@@ -164,18 +155,18 @@ class LivenessState(Store, State):
     def _output(self, output: Expression) -> 'LivenessState':
         return self  # nothing to be done
 
-    @copy_docstring(State._substitute_variable)
-    def _substitute_variable(self, left: Expression, right: Expression) -> 'LivenessState':
+    @copy_docstring(State._substitute)
+    def _substitute(self, left: Expression, right: Expression) -> 'LivenessState':
         if isinstance(left, VariableIdentifier):
             self.store[left].bottom()
             for identifier in right.ids():
                 if isinstance(identifier, VariableIdentifier):
                     self.store[identifier].top()
                 else:
-                    error = f"Variable substitution with {right} is not implemented!"
+                    error = f"Substitution with {right} is not implemented!"
                     raise NotImplementedError(error)
             return self
-        error = f"Variable substitution for {left} is not implemented!"
+        error = f"Substitution for {left} is not yet implemented!"
         raise NotImplementedError(error)
 
 
@@ -200,8 +191,8 @@ class StrongLivenessState(LivenessState):
                 self.store[identifier] = LivenessLattice(LivenessLattice.Status.Live)
         return self
 
-    @copy_docstring(LivenessState._substitute_variable)
-    def _substitute_variable(self, left: Expression, right: Expression) -> 'StrongLivenessState':
+    @copy_docstring(LivenessState._substitute)
+    def _substitute(self, left: Expression, right: Expression) -> 'StrongLivenessState':
         if isinstance(left, VariableIdentifier):
             if self.store[left].is_top():   # the assigned variable is strongly-live
                 self.store[left].bottom()
@@ -209,8 +200,8 @@ class StrongLivenessState(LivenessState):
                     if isinstance(identifier, VariableIdentifier):
                         self.store[identifier].top()
                     else:
-                        error = f"Variable substitution with {right} is not implemented!"
+                        error = f"Substitution with {right} is not implemented!"
                         raise NotImplementedError(error)
             return self
-        error = f"Variable substitution for {left} is not implemented!"
+        error = f"Substitution for {left} is not yet implemented!"
         raise NotImplementedError(error)

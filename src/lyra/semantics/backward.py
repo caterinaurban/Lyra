@@ -35,10 +35,7 @@ class AssignmentSemantics(BackwardSemantics):
         """
         lhs = self.semantics(stmt.left, state).result    # lhs evaluation
         rhs = self.semantics(stmt.right, state).result   # rhs evaluation
-        if isinstance(stmt.left, VariableAccess):
-            return state.substitute_variable(lhs, rhs)
-        error = f"Backward semantics for assignment {stmt} not yet implemented!"
-        raise NotImplementedError(error)
+        return state.substitute(lhs, rhs)
 
 
 # noinspection PyAbstractClass

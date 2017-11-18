@@ -20,7 +20,7 @@ from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression
-from lyra.core.types import IntegerLyraType, BooleanLyraType
+from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -183,7 +183,8 @@ class UsageStore(Store):
 
         :param variables: list of program variables
         """
-        lattices = {BooleanLyraType: UsageLattice, IntegerLyraType: UsageLattice}
+        types = [BooleanLyraType, IntegerLyraType, ListLyraType]
+        lattices = {typ: UsageLattice for typ in types}
         super().__init__(variables, lattices)
 
     @copy_docstring(Store.is_bottom)
@@ -246,14 +247,9 @@ class UsageState(Stack, State):
         self.lattice.decrease(current)
         return self
 
-    @copy_docstring(State._access_variable)
-    def _access_variable(self, variable: VariableIdentifier) -> Set[Expression]:
-        return {variable}
-
-    @copy_docstring(State._assign_variable)
-    def _assign_variable(self, left: Expression, right: Expression):
-        error = "A variable assignment is not expected in a backward analysis!"
-        raise RuntimeError(error)
+    @copy_docstring(State._assign)
+    def _assign(self, left: Expression, right: Expression):
+        raise RuntimeError("Unexpected assignment in a backward analysis!")
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'UsageState':
@@ -267,10 +263,6 @@ class UsageState(Stack, State):
                 if isinstance(identifier, VariableIdentifier):
                     self.lattice.store[identifier].top()
         return self
-
-    @copy_docstring(State._evaluate_literal)
-    def _evaluate_literal(self, literal: Expression) -> Set[Expression]:
-        return {literal}
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'UsageState':
@@ -295,8 +287,8 @@ class UsageState(Stack, State):
                 self.lattice.store[identifier].top()
         return self
 
-    @copy_docstring(State._substitute_variable)
-    def _substitute_variable(self, left: Expression, right: Expression) -> 'UsageState':
+    @copy_docstring(State._substitute)
+    def _substitute(self, left: Expression, right: Expression) -> 'UsageState':
         if isinstance(left, VariableIdentifier):
             if self.lattice.store[left].is_top() or self.lattice.store[left].is_scoped():
                 # the assigned variable is used or scoped
@@ -305,8 +297,8 @@ class UsageState(Stack, State):
                     if isinstance(identifier, VariableIdentifier):
                         self.lattice.store[identifier].top()
                     else:
-                        error = f"Variable substitution with {right} is not implemented!"
+                        error = f"Substitution with {right} is not implemented!"
                         raise NotImplementedError(error)
             return self
-        error = f"Variable substitution for {left} is not implemented!"
+        error = f"Substitution for {left} is not yet implemented!"
         raise NotImplementedError(error)

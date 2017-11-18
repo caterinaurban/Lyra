@@ -484,7 +484,9 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_Subscript(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.slice, ast.Index):
-            return IndexStmt(pp, self._ensure_stmt_visit(node.value, pp, *args, **kwargs), self._ensure_stmt_visit(node.slice.value, pp))
+            target = self.visit(node.value, types, typ)
+            key = self.visit(node.slice.value, types, typ)
+            return SubscriptionAccess(pp, target, key)
         elif isinstance(node.slice, ast.Slice):
             return SliceStmt(pp, self._ensure_stmt_visit(node.value, pp, *args, **kwargs),
                              self._ensure_stmt_visit(node.slice.lower, pp, *args, **kwargs),
