@@ -1,5 +1,5 @@
 x: int = int(input())
 
-# RESULT: x -> U
+# STATE: x -> U
 
 print(x)

@@ -1,7 +1,7 @@
 n: int = int(input())
 x: int = int(input())
 i: int = 0
-# RESULT: i -> N, n -> N, x -> O
+# STATE: n -> N, x -> W, i -> N
 while i < n:
     x: int = i / 2  # BUG: should be x = x / 2
     i: int = i + 1

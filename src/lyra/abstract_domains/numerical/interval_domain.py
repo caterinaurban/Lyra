@@ -293,13 +293,13 @@ class IntervalState(Store, State):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
-        @copy_docstring(ExpressionVisitor.visit_Slice)
-        def visit_Slice(self, expr: Slice, state=None, evaluation=None):
+        @copy_docstring(ExpressionVisitor.visit_Subscription)
+        def visit_Subscription(self, expr: Subscription, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
-        @copy_docstring(ExpressionVisitor.visit_Index)
-        def visit_Index(self, expr: Index, state=None, evaluation=None):
+        @copy_docstring(ExpressionVisitor.visit_Slicing)
+        def visit_Slicing(self, expr: Slicing, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -403,13 +403,13 @@ class IntervalState(Store, State):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
-        @copy_docstring(ExpressionVisitor.visit_Slice)
-        def visit_Slice(self, expr: Slice, evaluation=None, value=None, state=None):
+        @copy_docstring(ExpressionVisitor.visit_Subscription)
+        def visit_Subscription(self, expr: Subscription, evaluation=None, value=None, state=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
-        @copy_docstring(ExpressionVisitor.visit_Index)
-        def visit_Index(self, expr: Index, evaluation=None, value=None, state=None):
+        @copy_docstring(ExpressionVisitor.visit_Slicing)
+        def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 

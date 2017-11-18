@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">lyra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">src</a></li>
 </ul>
 
             
@@ -154,7 +154,6 @@
  | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
- | <a href="#X"><strong>X</strong></a>
  | <a href="#Z"><strong>Z</strong></a>
  
 </div>
@@ -271,6 +270,12 @@
 </li>
       <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.add_call_semantics">add_call_semantics() (lyra.semantics.semantics.BuiltInCallSemantics method)</a>
 </li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.add_edge">add_edge() (lyra.frontend.cfg_generator.LooseControlFlowGraph method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.add_node">add_node() (lyra.frontend.cfg_generator.LooseControlFlowGraph method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGFactory.add_stmts">add_stmts() (lyra.frontend.cfg_generator.CFGFactory method)</a>
+</li>
       <li><a href="lyra.engine.html#lyra.engine.result.AnalysisResult">AnalysisResult (class in lyra.engine.result)</a>
 </li>
       <li><a href="lyra.engine.html#lyra.engine.backward.BackwardInterpreter.analyze">analyze() (lyra.engine.backward.BackwardInterpreter method)</a>
@@ -287,6 +292,10 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.append">append() (lyra.frontend.cfg_generator.LooseControlFlowGraph method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGFactory.append_cfg">append_cfg() (lyra.frontend.cfg_generator.CFGFactory method)</a>
+</li>
       <li><a href="lyra.core.html#lyra.core.statements.Call.arguments">arguments (lyra.core.statements.Call attribute)</a>
 </li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin">ArithmeticMixin (class in lyra.abstract_domains.lattice)</a>
@@ -308,6 +317,8 @@
 </li>
       </ul></li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State.assume">assume() (lyra.abstract_domains.state.State method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.ast_to_cfg">ast_to_cfg() (in module lyra.frontend.cfg_generator)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.expressions.AttributeReference.attribute">attribute (lyra.core.expressions.AttributeReference attribute)</a>
 </li>
@@ -345,15 +356,17 @@
 </li>
       <li><a href="lyra.core.html#lyra.core.expressions.BinaryComparisonOperation.Operator">BinaryComparisonOperation.Operator (class in lyra.core.expressions)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.core.html#lyra.core.expressions.BinaryOperation">BinaryOperation (class in lyra.core.expressions)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.core.html#lyra.core.expressions.BinaryOperation.Operator">BinaryOperation.Operator (class in lyra.core.expressions)</a>
 </li>
       <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.bool_call_semantics">bool_call_semantics() (lyra.semantics.semantics.BuiltInCallSemantics method)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.types.BooleanLyraType">BooleanLyraType (class in lyra.core.types)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.both_loose_edges">both_loose_edges (lyra.frontend.cfg_generator.LooseControlFlowGraph attribute)</a>
 </li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.KindMixin.Kind.BOTTOM">BOTTOM (lyra.abstract_domains.lattice.KindMixin.Kind attribute)</a>
 </li>
@@ -374,6 +387,8 @@
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin">BottomMixin (class in lyra.abstract_domains.lattice)</a>
 </li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BoundedLattice">BoundedLattice (class in lyra.abstract_domains.lattice)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.SpecialEdgeType.BREAK">BREAK (lyra.frontend.cfg_generator.LooseControlFlowGraph.SpecialEdgeType attribute)</a>
 </li>
       <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics">BuiltInCallSemantics (class in lyra.semantics.semantics)</a>
 </li>
@@ -400,7 +415,13 @@
 </li>
         <li><a href="lyra.engine.html#lyra.engine.runner.Runner.cfg">(lyra.engine.runner.Runner attribute)</a>
 </li>
+        <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGFactory.cfg">(lyra.frontend.cfg_generator.CFGFactory attribute)</a>
+</li>
       </ul></li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGFactory">CFGFactory (class in lyra.frontend.cfg_generator)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor">CFGVisitor (class in lyra.frontend.cfg_generator)</a>
+</li>
       <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.change_S_to_U">change_S_to_U() (lyra.abstract_domains.usage.used_liststart.UsedListStartLattice method)</a>
 </li>
       <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.change_SU_to_O">change_SU_to_O() (lyra.abstract_domains.usage.used_liststart.UsedListStartLattice method)</a>
@@ -428,10 +449,16 @@
 </li>
         <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.combine">(lyra.abstract_domains.usage.used_liststart.UsedListStartLattice method)</a>
 </li>
+        <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.combine">(lyra.frontend.cfg_generator.LooseControlFlowGraph method)</a>
+</li>
       </ul></li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGFactory.complete_basic_block">complete_basic_block() (lyra.frontend.cfg_generator.CFGFactory method)</a>
+</li>
       <li><a href="lyra.core.html#lyra.core.cfg.Conditional.condition">condition (lyra.core.cfg.Conditional attribute)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.cfg.Conditional">Conditional (class in lyra.core.cfg)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.SpecialEdgeType.CONTINUE">CONTINUE (lyra.frontend.cfg_generator.LooseControlFlowGraph.SpecialEdgeType attribute)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.cfg.ControlFlowGraph">ControlFlowGraph (class in lyra.core.cfg)</a>
 </li>
@@ -490,6 +517,12 @@
       <li><a href="lyra.core.html#lyra.core.cfg.Edge.Kind">Edge.Kind (class in lyra.core.cfg)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.cfg.ControlFlowGraph.edges">edges (lyra.core.cfg.ControlFlowGraph attribute)</a>
+
+      <ul>
+        <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.edges">(lyra.frontend.cfg_generator.LooseControlFlowGraph attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.eject">eject() (lyra.frontend.cfg_generator.LooseControlFlowGraph method)</a>
 </li>
       <li><a href="lyra.abstract_domains.liveness.html#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice.element">element (lyra.abstract_domains.liveness.liveness_domain.LivenessLattice attribute)</a>
 
@@ -527,10 +560,10 @@
       </ul></li>
       <li><a href="lyra.core.html#lyra.core.expressions.BinaryComparisonOperation.Operator.Eq">Eq (lyra.core.expressions.BinaryComparisonOperation.Operator attribute)</a>
 </li>
-      <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.eq_call_semantics">eq_call_semantics() (lyra.semantics.semantics.BuiltInCallSemantics method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.eq_call_semantics">eq_call_semantics() (lyra.semantics.semantics.BuiltInCallSemantics method)</a>
+</li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State.evaluate_literal">evaluate_literal() (lyra.abstract_domains.state.State method)</a>
 </li>
       <li><a href="lyra.abstract_domains.liveness.html#lyra.abstract_domains.liveness.liveness_domain.LivenessState.exit_if">exit_if() (lyra.abstract_domains.liveness.liveness_domain.LivenessState method)</a>
@@ -614,6 +647,8 @@
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions_tools.Simplifier.generic_visit">(lyra.core.expressions_tools.Simplifier method)</a>
 </li>
+        <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.generic_visit">(lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -650,6 +685,12 @@
       <li><a href="lyra.core.html#lyra.core.cfg.ControlFlowGraph.in_edges">in_edges() (lyra.core.cfg.ControlFlowGraph method)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.cfg.ControlFlowGraph.in_node">in_node (lyra.core.cfg.ControlFlowGraph attribute)</a>
+
+      <ul>
+        <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.in_node">(lyra.frontend.cfg_generator.LooseControlFlowGraph attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGFactory.incomplete_block">incomplete_block() (lyra.frontend.cfg_generator.CFGFactory method)</a>
 </li>
       <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.increase">increase() (lyra.abstract_domains.usage.usage_domain.UsageLattice method)</a>
 
@@ -697,10 +738,10 @@
 </li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice">IntervalLattice (class in lyra.abstract_domains.numerical.interval_domain)</a>
 </li>
-      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState">IntervalState (class in lyra.abstract_domains.numerical.interval_domain)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState">IntervalState (class in lyra.abstract_domains.numerical.interval_domain)</a>
+</li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement">IntervalState.ArithmeticExpressionRefinement (class in lyra.abstract_domains.numerical.interval_domain)</a>
 </li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation">IntervalState.ExpressionEvaluation (class in lyra.abstract_domains.numerical.interval_domain)</a>
@@ -763,8 +804,12 @@
       </ul></li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.dbm.CDBM.items">items() (lyra.abstract_domains.numerical.dbm.CDBM method)</a>
 </li>
-      <li><a href="lyra.core.html#lyra.core.expressions_tools.iter_child_exprs">iter_child_exprs() (in module lyra.core.expressions_tools)</a>
+      <li><a href="lyra.core.html#lyra.core.expressions.iter_child_exprs">iter_child_exprs() (in module lyra.core.expressions)</a>
+
+      <ul>
+        <li><a href="lyra.core.html#lyra.core.expressions_tools.iter_child_exprs">(in module lyra.core.expressions_tools)</a>
 </li>
+      </ul></li>
       <li><a href="lyra.core.html#lyra.core.expressions_tools.iter_fields">iter_fields() (in module lyra.core.expressions_tools)</a>
 </li>
   </ul></td>
@@ -851,6 +896,16 @@
 </li>
       <li><a href="lyra.core.html#lyra.core.cfg.Edge.Kind.LOOP_OUT">LOOP_OUT (lyra.core.cfg.Edge.Kind attribute)</a>
 </li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.loose">loose() (lyra.frontend.cfg_generator.LooseControlFlowGraph method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.loose_in_edges">loose_in_edges (lyra.frontend.cfg_generator.LooseControlFlowGraph attribute)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.loose_out_edges">loose_out_edges (lyra.frontend.cfg_generator.LooseControlFlowGraph attribute)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph">LooseControlFlowGraph (class in lyra.frontend.cfg_generator)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.SpecialEdgeType">LooseControlFlowGraph.SpecialEdgeType (class in lyra.frontend.cfg_generator)</a>
+</li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.lower">lower (lyra.abstract_domains.numerical.interval_domain.IntervalLattice attribute)</a>
 
       <ul>
@@ -879,10 +934,10 @@
 </li>
       <li><a href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical">lyra.abstract_domains.numerical (module)</a>
 </li>
-      <li><a href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical.dbm">lyra.abstract_domains.numerical.dbm (module)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical.dbm">lyra.abstract_domains.numerical.dbm (module)</a>
+</li>
       <li><a href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical.interval_domain">lyra.abstract_domains.numerical.interval_domain (module)</a>
 </li>
       <li><a href="lyra.abstract_domains.html#module-lyra.abstract_domains.stack">lyra.abstract_domains.stack (module)</a>
@@ -945,6 +1000,10 @@
 </li>
       <li><a href="lyra.engine.usage.html#module-lyra.engine.usage.usage_analysis">lyra.engine.usage.usage_analysis (module)</a>
 </li>
+      <li><a href="lyra.frontend.html#module-lyra.frontend">lyra.frontend (module)</a>
+</li>
+      <li><a href="lyra.frontend.html#module-lyra.frontend.cfg_generator">lyra.frontend.cfg_generator (module)</a>
+</li>
       <li><a href="lyra.html#module-lyra.main">lyra.main (module)</a>
 </li>
       <li><a href="lyra.semantics.html#module-lyra.semantics">lyra.semantics (module)</a>
@@ -967,9 +1026,11 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lyra.html#lyra.main.main">main() (in module lyra.main)</a>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.main">main() (in module lyra.frontend.cfg_generator)</a>
 
       <ul>
+        <li><a href="lyra.html#lyra.main.main">(in module lyra.main)</a>
+</li>
         <li><a href="lyra.engine.html#lyra.engine.runner.Runner.main">(lyra.engine.runner.Runner method)</a>
 </li>
       </ul></li>
@@ -1009,14 +1070,22 @@
 </li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin.neg">neg() (lyra.abstract_domains.lattice.ArithmeticMixin method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression">NegationFreeNormalExpression (class in lyra.core.expressions)</a>
 </li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.NodeIdentifierGenerator.next">next (lyra.frontend.cfg_generator.NodeIdentifierGenerator attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.core.html#lyra.core.cfg.Node">Node (class in lyra.core.cfg)</a>
 </li>
-      <li><a href="lyra.core.html#lyra.core.cfg.ControlFlowGraph.nodes">nodes (lyra.core.cfg.ControlFlowGraph attribute)</a>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.NodeIdentifierGenerator">NodeIdentifierGenerator (class in lyra.frontend.cfg_generator)</a>
 </li>
+      <li><a href="lyra.core.html#lyra.core.cfg.ControlFlowGraph.nodes">nodes (lyra.core.cfg.ControlFlowGraph attribute)</a>
+
+      <ul>
+        <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.nodes">(lyra.frontend.cfg_generator.LooseControlFlowGraph attribute)</a>
+</li>
+      </ul></li>
       <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.not_call_semantics">not_call_semantics() (lyra.semantics.semantics.BuiltInCallSemantics method)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.expressions.BinaryComparisonOperation.Operator.NotEq">NotEq (lyra.core.expressions.BinaryComparisonOperation.Operator attribute)</a>
@@ -1058,7 +1127,11 @@
       <li><a href="lyra.core.html#lyra.core.cfg.ControlFlowGraph.out_edges">out_edges() (lyra.core.cfg.ControlFlowGraph method)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.cfg.ControlFlowGraph.out_node">out_node (lyra.core.cfg.ControlFlowGraph attribute)</a>
+
+      <ul>
+        <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.out_node">(lyra.frontend.cfg_generator.LooseControlFlowGraph attribute)</a>
 </li>
+      </ul></li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State.output">output() (lyra.abstract_domains.state.State method)</a>
 </li>
   </ul></td>
@@ -1081,8 +1154,12 @@
 </li>
       <li><a href="lyra.core.html#lyra.core.cfg.ControlFlowGraph.predecessors">predecessors() (lyra.core.cfg.ControlFlowGraph method)</a>
 </li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.prepend">prepend() (lyra.frontend.cfg_generator.LooseControlFlowGraph method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGFactory.prepend_cfg">prepend_cfg() (lyra.frontend.cfg_generator.CFGFactory method)</a>
+</li>
       <li><a href="lyra.core.html#lyra.core.expressions.AttributeReference.primary">primary (lyra.core.expressions.AttributeReference attribute)</a>
 </li>
       <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.print_call_semantics">print_call_semantics() (lyra.semantics.semantics.BuiltInCallSemantics method)</a>
@@ -1109,6 +1186,8 @@
 
       <ul>
         <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.dbm.CDBM.replace">(lyra.abstract_domains.numerical.dbm.CDBM method)</a>
+</li>
+        <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.replace">(lyra.frontend.cfg_generator.LooseControlFlowGraph method)</a>
 </li>
       </ul></li>
       <li><a href="lyra.core.html#lyra.core.types.resolve_type_annotation">resolve_type_annotation() (in module lyra.core.types)</a>
@@ -1191,12 +1270,18 @@
         <li><a href="lyra.engine.html#lyra.engine.runner.Runner.source">(lyra.engine.runner.Runner attribute)</a>
 </li>
       </ul></li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.source_to_cfg">source_to_cfg() (in module lyra.frontend.cfg_generator)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.LooseControlFlowGraph.special_edges">special_edges (lyra.frontend.cfg_generator.LooseControlFlowGraph attribute)</a>
+</li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.stack.Stack">Stack (class in lyra.abstract_domains.stack)</a>
 </li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.stack.Stack.stack">stack (lyra.abstract_domains.stack.Stack attribute)</a>
 </li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State">State (class in lyra.abstract_domains.state)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.engine.liveness.html#lyra.engine.liveness.liveness_analysis.LivenessAnalysis.state">state() (lyra.engine.liveness.liveness_analysis.LivenessAnalysis method)</a>
 
       <ul>
@@ -1211,8 +1296,6 @@
         <li><a href="lyra.engine.usage.html#lyra.engine.usage.usage_analysis.UsageAnalysis.state">(lyra.engine.usage.usage_analysis.UsageAnalysis method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.core.html#lyra.core.statements.Statement">Statement (class in lyra.core.statements)</a>
 </li>
       <li><a href="lyra.core.html#lyra.core.expressions.Slice.step">step (lyra.core.expressions.Slice attribute)</a>
@@ -1244,6 +1327,8 @@
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin.sub">sub() (lyra.abstract_domains.lattice.ArithmeticMixin method)</a>
 </li>
       <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.sub_call_semantics">sub_call_semantics() (lyra.semantics.semantics.BuiltInCallSemantics method)</a>
+</li>
+      <li><a href="lyra.core.html#lyra.core.expressions.Subscription">Subscription (class in lyra.core.expressions)</a>
 </li>
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.state.State.substitute_variable">substitute_variable() (lyra.abstract_domains.state.State method)</a>
 </li>
@@ -1430,7 +1515,11 @@
 </li>
         <li><a href="lyra.core.html#lyra.core.expressions_tools.OldExpressionVisitor.visit">(lyra.core.expressions_tools.OldExpressionVisitor method)</a>
 </li>
+        <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit">(lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
       </ul></li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_AnnAssign">visit_AnnAssign() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_AttributeReference">visit_AttributeReference() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
@@ -1475,6 +1564,22 @@
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_BinaryComparisonOperation">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
 </li>
       </ul></li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_BinOp">visit_BinOp() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_BoolOp">visit_BoolOp() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_Break">visit_Break() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_Call">visit_Call() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_Compare">visit_Compare() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_Continue">visit_Continue() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_Expr">visit_Expr() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_If">visit_If() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Index">visit_Index() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
@@ -1497,6 +1602,8 @@
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_Input">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
 </li>
       </ul></li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_List">visit_List() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_ListDisplay">visit_ListDisplay() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
@@ -1519,6 +1626,14 @@
         <li><a href="lyra.core.html#lyra.core.expressions_tools.Simplifier.visit_Literal">(lyra.core.expressions_tools.Simplifier method)</a>
 </li>
       </ul></li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_Module">visit_Module() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_Name">visit_Name() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_NameConstant">visit_NameConstant() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_Num">visit_Num() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Slice">visit_Slice() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
@@ -1529,6 +1644,10 @@
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_Slice">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
 </li>
       </ul></li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_Str">visit_Str() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_Subscript">visit_Subscript() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_UnaryArithmeticOperation">visit_UnaryArithmeticOperation() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
@@ -1553,6 +1672,8 @@
         <li><a href="lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_UnaryBooleanOperation">(lyra.core.expressions.NegationFreeNormalExpression method)</a>
 </li>
       </ul></li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_UnaryOp">visit_UnaryOp() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
       <li><a href="lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_VariableIdentifier">visit_VariableIdentifier() (lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement method)</a>
 
       <ul>
@@ -1569,6 +1690,8 @@
         <li><a href="lyra.core.html#lyra.core.expressions_tools.Simplifier.visit_VariadicArithmeticOperation">(lyra.core.expressions_tools.Simplifier method)</a>
 </li>
       </ul></li>
+      <li><a href="lyra.frontend.html#lyra.frontend.cfg_generator.CFGVisitor.visit_While">visit_While() (lyra.frontend.cfg_generator.CFGVisitor method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1577,7 +1700,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.Status.W">W (lyra.abstract_domains.usage.usage_domain.UsageLattice.Status attribute)</a>
 </li>
-      <li><a href="lyra.core.html#lyra.core.expressions_tools.walk">walk() (in module lyra.core.expressions_tools)</a>
+      <li><a href="lyra.core.html#lyra.core.expressions.walk">walk() (in module lyra.core.expressions)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -1586,14 +1709,6 @@
       <li><a href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.Lattice.widening">widening() (lyra.abstract_domains.lattice.Lattice method)</a>
 </li>
       <li><a href="lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.written">written() (lyra.abstract_domains.usage.usage_domain.UsageLattice method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="X">X</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.xor_call_semantics">xor_call_semantics() (lyra.semantics.semantics.BuiltInCallSemantics method)</a>
 </li>
   </ul></td>
 </tr></table>

@@ -479,7 +479,7 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_List(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        return ListDisplayStmt(pp, [self.visit(e, types, typ) for e in node.elts])
+        return ListDisplayAccess(pp, [self.visit(e, types, typ) for e in node.elts])
 
     def visit_Subscript(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)

@@ -1,6 +1,6 @@
 x: int = int(input())
 y: int = int(input())
-# RESULT: x -> U, y -> U, z -> O
+# STATE: x -> U, y -> U, z -> W
 z: int = 1
 if y > x:
     z: int = y

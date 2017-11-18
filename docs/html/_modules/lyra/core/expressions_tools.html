@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lyra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
 </ul>
 
             
@@ -131,14 +131,11 @@
            <div itemprop="articleBody">
             
   <h1>Source code for lyra.core.expressions_tools</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
+<span></span><span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
 
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">BinaryArithmeticOperation</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> \
+    <span class="n">UnaryArithmeticOperation</span><span class="p">,</span> <span class="n">NegationFreeNormalExpression</span>
 <span class="kn">from</span> <span class="nn">lyra.core.special_expressions</span> <span class="k">import</span> <span class="n">VariadicArithmeticOperation</span>
-
-<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">UnaryBooleanOperation</span><span class="p">,</span> <span class="n">BinaryBooleanOperation</span><span class="p">,</span> \
-    <span class="n">BinaryComparisonOperation</span><span class="p">,</span> \
-    <span class="n">BinaryArithmeticOperation</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">UnaryArithmeticOperation</span><span class="p">,</span> <span class="n">NegationFreeNormalExpression</span>
 
 
 <div class="viewcode-block" id="iter_fields"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions_tools.iter_fields">[docs]</a><span class="k">def</span> <span class="nf">iter_fields</span><span class="p">(</span><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
@@ -162,20 +159,6 @@
             <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Expression</span><span class="p">):</span>
                     <span class="k">yield</span> <span class="n">item</span></div>
-
-
-<div class="viewcode-block" id="walk"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions_tools.walk">[docs]</a><span class="k">def</span> <span class="nf">walk</span><span class="p">(</span><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Recursively yield all descendant expressions in the tree starting at *expr*</span>
-<span class="sd">    (including *expr* itself), in no specified order.  This is useful if you</span>
-<span class="sd">    only want to modify expressions in place and don&#39;t care about the context.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span>
-    <span class="n">todo</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="n">expr</span><span class="p">])</span>
-    <span class="k">while</span> <span class="n">todo</span><span class="p">:</span>
-        <span class="n">expr</span> <span class="o">=</span> <span class="n">todo</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
-        <span class="n">todo</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">iter_child_exprs</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
-        <span class="k">yield</span> <span class="n">expr</span></div>
 
 
 <div class="viewcode-block" id="OldExpressionVisitor"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions_tools.OldExpressionVisitor">[docs]</a><span class="k">class</span> <span class="nc">OldExpressionVisitor</span><span class="p">:</span>

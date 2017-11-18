@@ -94,7 +94,7 @@ class UsageLattice(Lattice):
 
         The written lattice element is ``W`` (written).
         """
-        self.replace(UsageLattice(UsageLattice.Status.S))
+        self.replace(UsageLattice(UsageLattice.Status.W))
         return self
 
     @copy_docstring(Lattice.top)
@@ -144,7 +144,8 @@ class UsageLattice(Lattice):
         :param other: other lattice element
         :return: current lattice element modified to reflect a decreased nesting level
         """
-        if self.is_bottom() or self.is_scoped():
+        assert not self.is_written() or not other.is_scoped()
+        if self.is_bottom() or other.is_written() or other.is_top():
             self.replace(other)
         return self
 

@@ -1,11 +1,8 @@
-from copy import deepcopy
 from functools import reduce
 
+from lyra.core.expressions import Expression, BinaryArithmeticOperation, Literal, \
+    UnaryArithmeticOperation, NegationFreeNormalExpression
 from lyra.core.special_expressions import VariadicArithmeticOperation
-
-from lyra.core.expressions import Expression, UnaryBooleanOperation, BinaryBooleanOperation, \
-    BinaryComparisonOperation, \
-    BinaryArithmeticOperation, Literal, UnaryArithmeticOperation, NegationFreeNormalExpression
 
 
 def iter_fields(expr: Expression):
@@ -15,34 +12,6 @@ def iter_fields(expr: Expression):
     """
     for name, field in expr.__dict__.items():
         yield name, field
-
-
-def iter_child_exprs(expr: Expression):
-    """
-    Yield all direct child expressions of *expr*, that is, all fields that are expressions
-    and all items of fields that are lists of expressions.
-    """
-    for _, field in iter_fields(expr):
-        if isinstance(field, Expression):
-            yield field
-        elif isinstance(field, list):
-            for item in field:
-                if isinstance(item, Expression):
-                    yield item
-
-
-def walk(expr: Expression):
-    """
-    Recursively yield all descendant expressions in the tree starting at *expr*
-    (including *expr* itself), in no specified order.  This is useful if you
-    only want to modify expressions in place and don't care about the context.
-    """
-    from collections import deque
-    todo = deque([expr])
-    while todo:
-        expr = todo.popleft()
-        todo.extend(iter_child_exprs(expr))
-        yield expr
 
 
 class OldExpressionVisitor:

@@ -72,7 +72,7 @@ class Runner:
                 visited.add(current.identifier)
                 for stmt in current.stmts:
                     if isinstance(stmt, Assignment) and isinstance(stmt.left, VariableAccess):
-                        variables.append(stmt.left.var)
+                        variables.append(stmt.left.variable)
                 for node in self.cfg.successors(current):
                     worklist.put(node)
         return variables

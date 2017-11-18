@@ -14,6 +14,7 @@ Subpackages
     lyra.abstract_domains
     lyra.core
     lyra.engine
+    lyra.frontend
     lyra.semantics
 
 Submodules

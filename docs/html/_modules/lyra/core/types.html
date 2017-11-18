@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lyra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
 </ul>
 
             
@@ -207,9 +207,11 @@
             <span class="k">return</span> <span class="n">StringLyraType</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">annotation</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Subscript</span><span class="p">):</span>
-        <span class="k">pass</span>
+        <span class="k">if</span> <span class="n">annotation</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="s1">&#39;List&#39;</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">resolve_type_annotation</span><span class="p">(</span><span class="n">annotation</span><span class="o">.</span><span class="n">slice</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ListLyraType</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Type annotation </span><span class="si">{annotation}</span><span class="s2"> is invalid!&quot;</span><span class="p">)</span></div>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Type annotation </span><span class="si">{annotation}</span><span class="s2"> is not yet supported!&quot;</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

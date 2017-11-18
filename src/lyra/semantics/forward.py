@@ -12,7 +12,7 @@ class ForwardSemantics(Semantics):
 class UserDefinedCallSemantics(ForwardSemantics):
     """Forward semantics of user-defined function/method calls."""
 
-    def user_defined_call_semantics(self, stmt: Call, state: State) -> State:
+    def user_defined_call_semantics(self, stmt: Call, state: State):
         """Forward semantics of a user-defined function/method call.
 
         :param stmt: call statement to be executed

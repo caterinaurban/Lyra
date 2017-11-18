@@ -5,11 +5,10 @@ from typing import List, Set, Sequence
 
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
-from lyra.core.expressions import Expression, VariableIdentifier, ListDisplay, Literal, Index
+from lyra.core.expressions import Expression, VariableIdentifier, ListDisplay, Literal, Index, walk
 
 from lyra.abstract_domains.usage.used import UsedLattice, Used
 from lyra.abstract_domains.usage.used_liststart import UsedListStartLattice
-from lyra.core.expressions_tools import walk
 
 
 class UsedStore(Store, State):

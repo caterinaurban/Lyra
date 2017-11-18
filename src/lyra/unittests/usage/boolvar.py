@@ -1,6 +1,6 @@
 b: bool = bool(input())
 q: bool = bool(input())
-# RESULT: b -> U, q -> U, z -> O
+# STATE: b -> U, q -> U, z -> W
 z: int = 1
 if b and q:
     z: int = 1

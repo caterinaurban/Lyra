@@ -74,6 +74,8 @@ def resolve_type_annotation(annotation):
             return StringLyraType()
 
     if isinstance(annotation, ast.Subscript):
-        pass
+        if annotation.value.id == 'List':
+            value = resolve_type_annotation(annotation.slice.value)
+            return ListLyraType(value)
 
-    raise ValueError(f"Type annotation {annotation} is invalid!")
+    raise NotImplementedError(f"Type annotation {annotation} is not yet supported!")

@@ -1,21 +1,29 @@
+"""
+Expressions
+===========
+
+Lyra's internal representation of Python expressions.
+
+:Authors: Caterina Urban and Simon Wehrli
+"""
+
 from abc import ABCMeta, abstractmethod
 from enum import IntEnum
-from typing import Set, Sequence
+from typing import Set, Sequence, List
+
 from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType
 from lyra.core.utils import copy_docstring
 
-"""
-Expressions.
-https://docs.python.org/3.4/reference/expressions.html
-"""
-
 
 class Expression(metaclass=ABCMeta):
+    """Expression representation.
+
+    https://docs.python.org/3.4/reference/expressions.html
+    """
     def __init__(self, typ: LyraType):
-        """Expression representation.
-        https://docs.python.org/3.4/reference/expressions.html
-        
-        :param typ: type of the expression 
+        """Expression construction.
+
+        :param typ: type of the expression
         """
         self._typ = typ
 
@@ -48,17 +56,45 @@ class Expression(metaclass=ABCMeta):
         :return: string representing the expression
         """
 
-    def ids(self) -> Set['Expression']:
+    def ids(self) -> Set['VariableIdentifier']:
         """Identifiers that appear in the expression.
         
         :return: set of identifiers that appear in the expression
         """
-        from lyra.core.expressions_tools import walk
         ids = set()
-        for e in walk(self):
-            if isinstance(e, VariableIdentifier):
-                ids.add(e)
+        for expr in walk(self):
+            if isinstance(expr, VariableIdentifier):
+                ids.add(expr)
         return ids
+
+
+def iter_child_exprs(expr: Expression):
+    """
+    Yield all direct child expressions of ``expr``,
+    that is, all fields that are expressions
+    and all items of fields that are lists of expressions.
+    """
+    for _, field in expr.__dict__.items():
+        if isinstance(field, Expression):
+            yield field
+        elif isinstance(field, list):
+            for item in field:
+                if isinstance(item, Expression):
+                    yield item
+
+
+def walk(expr: Expression):
+    """
+    Recursively yield all expressions in an expression tree
+    starting at ``expr`` (including ``expr`` itself),
+    in no specified order.
+    """
+    from collections import deque
+    todo = deque([expr])
+    while todo:
+        expr = todo.popleft()
+        todo.extend(iter_child_exprs(expr))
+        yield expr
 
 
 # noinspection PyPep8Naming
@@ -105,12 +141,12 @@ class ExpressionVisitor(metaclass=ABCMeta):
         """Visit of an attribute reference."""
 
     @abstractmethod
-    def visit_Slice(self, expr: 'Slice'):
-        """Visit of a slice expression."""
+    def visit_Subscription(self, expr: 'Subscription'):
+        """Visit of a subscription expression."""
 
     @abstractmethod
-    def visit_Index(self, expr: 'Index'):
-        """Visit of an index expression."""
+    def visit_Slicing(self, expr: 'Slicing'):
+        """Visit of a slicing expression."""
 
     @abstractmethod
     def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation'):
@@ -142,9 +178,9 @@ class NegationFreeNormalExpression(ExpressionVisitor):
     """
     An expression visitor that:
 
-    (1) removes negations using De Morgan's law, and
+    1. removes negations using De Morgan's law, and
 
-    (2) puts in the normal form ``expr <= 0``
+    2. puts in the normal form ``expr <= 0``
     all boolean comparison operations with ``=``, ``!=``, ``<``, ``<=``, ``>``, and ``>=`` .
     """
 
@@ -171,12 +207,12 @@ class NegationFreeNormalExpression(ExpressionVisitor):
     def visit_AttributeReference(self, expr: 'AttributeReference', invert=False):
         return expr     # nothing to be done
 
-    @copy_docstring(ExpressionVisitor.visit_Slice)
-    def visit_Slice(self, expr: 'Slice', invert=False):
+    @copy_docstring(ExpressionVisitor.visit_Subscription)
+    def visit_Subscription(self, expr: 'Subscription', invert=False):
         return expr     # nothing to be done
 
-    @copy_docstring(ExpressionVisitor.visit_Index)
-    def visit_Index(self, expr: 'Index', invert=False):
+    @copy_docstring(ExpressionVisitor.visit_Slicing)
+    def visit_Slicing(self, expr: 'Slicing', invert=False):
         return expr     # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -276,10 +312,13 @@ https://docs.python.org/3.4/reference/expressions.html#atoms
 
 
 class Literal(Expression):
+    """Literal expression representation.
+
+    https://docs.python.org/3.4/reference/expressions.html#literals
+    """
     def __init__(self, typ: LyraType, val: str):
-        """Literal expression representation.
-        https://docs.python.org/3.4/reference/expressions.html#literals
-        
+        """Literal expression construction.
+
         :param typ: type of the literal
         :param val: value of the literal
         """
@@ -299,33 +338,17 @@ class Literal(Expression):
     def __str__(self):
         if isinstance(self.typ, StringLyraType):
             return f'"{self.val}"'
-        else:
-            return f"{self.val}"
-
-
-class Input(Expression):
-    def __init__(self, typ: LyraType):
-        """Input expression representation.
-
-        :param typ: type of the input
-        """
-        super().__init__(typ)
-
-    def __eq__(self, other):
-        return self.typ == other.typ
-
-    def __hash__(self):
-        return hash(self.typ)
-
-    def __str__(self):
-        return "input()"
+        return f"{self.val}"
 
 
 class Identifier(Expression):
+    """Identifier expression representation.
+
+    https://docs.python.org/3.4/reference/expressions.html#atom-identifiers
+    """
     def __init__(self, typ: LyraType, name: str):
-        """Identifier expression representation.
-        https://docs.python.org/3.4/reference/expressions.html#atom-identifiers
-        
+        """Identifier expression construction.
+
         :param typ: type of the identifier
         :param name: name of the identifier
         """
@@ -347,8 +370,9 @@ class Identifier(Expression):
 
 
 class VariableIdentifier(Identifier):
+    """Variable identifier expression representation."""
     def __init__(self, typ: LyraType, name: str):
-        """Variable identifier expression representation.
+        """Variable identifier expression construction.
         
         :param typ: type of the identifier
         :param name: name of the identifier
@@ -357,16 +381,16 @@ class VariableIdentifier(Identifier):
 
 
 class ListDisplay(Expression):
-    """List display
+    """List display expression representation.
     
     https://docs.python.org/3/reference/expressions.html#list-displays
     """
 
-    def __init__(self, typ: LyraType, items: Sequence[Expression] = None):
-        """List display representation
+    def __init__(self, typ: LyraType, items: List[Expression] = None):
+        """List display expression construction.
         
-        :param typ: type of the list display
-        :param items: listed items
+        :param typ: type of the list
+        :param items: list of items being displayed
         """
         super().__init__(typ)
         self._items = items or []
@@ -385,6 +409,25 @@ class ListDisplay(Expression):
         return str(self.items)
 
 
+class Input(Expression):
+    """Input expression representation."""
+    def __init__(self, typ: LyraType):
+        """Input expression construction.
+
+        :param typ: type of the input
+        """
+        super().__init__(typ)
+
+    def __eq__(self, other):
+        return self.typ == other.typ
+
+    def __hash__(self):
+        return hash(self.typ)
+
+    def __str__(self):
+        return "input()"
+
+
 """
 Primary Expressions
 https://docs.python.org/3.4/reference/expressions.html#primaries
@@ -396,54 +439,95 @@ class AttributeReference(Expression):
 
     https://docs.python.org/3.4/reference/expressions.html#attribute-references
     """
-
-    def __init__(self, typ: LyraType, primary: Expression, attribute: Identifier):
-        """Attribute reference expression representation.
+    def __init__(self, typ: LyraType, target: Expression, attribute: Identifier):
+        """Attribute reference expression construction.
         
         :param typ: type of the attribute
-        :param primary: object the attribute of which is being referenced
+        :param target: object the attribute of which is being referenced
         :param attribute: attribute being referenced
         """
         super().__init__(typ)
-        self._primary = primary
+        self._target = target
         self._attribute = attribute
 
     @property
-    def primary(self):
-        return self._primary
+    def target(self):
+        return self._target
 
     @property
     def attribute(self):
         return self._attribute
 
     def __eq__(self, other):
-        return (self.typ, self.primary, self.attribute) == (other.typ, other.primary, other.attribute)
+        typ = self.typ == other.typ
+        target = self.target == other.target
+        attribute = self.attribute == other.attribute
+        return typ and target and attribute
 
     def __hash__(self):
-        return hash((self.typ, self.primary, self.attribute))
+        return hash((self.typ, self.target, self.attribute))
 
     def __str__(self):
-        return "{0.primary}.{0.attribute}".format(self)
+        return "{0.target}.{0.attribute}".format(self)
 
 
-class Slice(Expression):
-    """Slice (list/dictionary access) representation.
+class Subscription(Expression):
+    """Subscription expression representation.
+
+    https://docs.python.org/3.4/reference/expressions.html#subscriptions
     """
+    def __init__(self, typ: LyraType, target: Expression, key: Expression):
+        """Subscription expression construction.
 
-    def __init__(self, typ: LyraType, target: Expression, lower: Expression, step: Expression, upper: Expression):
-        """Slice (list/dictionary access) representation.
+        :param typ: type of the subscription
+        :param target: object being subject to subscription
+        :param key: index at which the object is subscripted
+        """
+        super().__init__(typ)
+        self._target = target
+        self._key = key
 
-        :param typ: type of the slice
-        :param target
-        :param lower
-        :param upper
-        :param step
+    @property
+    def target(self):
+        return self._target
+
+    @property
+    def key(self):
+        return self._key
+
+    def __eq__(self, other):
+        typ = self.typ == other.typ
+        target = self.target == other.target
+        key = self.key == other.key
+        return typ and target and key
+
+    def __hash__(self):
+        return hash((self.typ, self.target, self.key))
+
+    def __str__(self):
+        return "{0.target}[{0.key}]".format(self)
+
+
+class Slicing(Expression):
+    """Slicing expression representation.
+
+    https://docs.python.org/3.4/reference/expressions.html#slicings
+    """
+    def __init__(self, typ: LyraType, target: Expression,
+                 lower: Expression, upper: Expression, stride: Expression = None):
+        """Slicing expression construction.
+
+        :param typ: type of the slicing
+        :param target: object being subject to slicing
+        :param lower: lower bound of the slicing
+        :param upper: upper bound of the slicing
+        :param stride: stride of the slicing
         """
         super().__init__(typ)
         self._target = target
         self._lower = lower
-        self._step = step
         self._upper = upper
+        self._stride = stride
 
     @property
     def target(self):
@@ -454,68 +538,37 @@ class Slice(Expression):
         return self._lower
 
     @property
-    def step(self):
-        return self._step
-
-    @property
     def upper(self):
         return self._upper
 
-    def __str__(self):
-        if self.step:
-            return "{}[{}:{}:{}]".format(self.target or "", self.lower, self.step, self.upper or "")
-        else:
-            return "{}[{}:{}]".format(self.target, self.lower or "", self.upper or "")
+    @property
+    def stride(self):
+        return self._stride
 
     def __eq__(self, other):
-        return (self.typ, self.target, self.lower, self.step, self.upper) == (
-            other.typ, other.target, other.lower, self.step, self.upper)
+        typ = self.typ == other.typ
+        target = self.target == other.target
+        lower = self.lower == other.lower
+        upper = self.upper == other.upper
+        stride = self.stride == other.stride
+        return typ and target and lower and upper and stride
 
     def __hash__(self):
-        return hash((self.typ, self.target, self.lower, self.step, self.upper))
-
-
-class Index(Expression):
-    """Index (list/dictionary access) representation.
-    """
-
-    def __init__(self, typ: LyraType, target: Expression, index: Expression):
-        """Index  (list/dictionary access) representation.
-
-        :param typ: type of the attribute
-        :param target
-        :param index
-        """
-        super().__init__(typ)
-        self._target = target
-        self._index = index
-
-    @property
-    def target(self):
-        return self._target
-
-    @property
-    def index(self):
-        return self._index
+        return hash((self.typ, self.target, self.lower, self.upper, self.stride))
 
     def __str__(self):
-        return "{}[{}]".format(self.target, self.index)
-
-    def __eq__(self, other):
-        return (self.typ, self.target, self.index) == (
-            other.typ, other.target, other.index)
-
-    def __hash__(self):
-        return hash((self.typ, self.target, self.index))
+        if self.stride:
+            return "{0.target}[{0.lower}:{0.upper}:{0.stride}]".format(self)
+        return "{0.target}[{0.lower}:{0.upper}]".format(self)
 
 
 """
-Generic Operation Expressions
+Operation Expressions
 """
 
 
 class Operation(Expression, metaclass=ABCMeta):
-    pass
+    """Operation expression representation."""
 
 
 """
@@ -820,3 +873,5 @@ class BinaryComparisonOperation(BinaryOperation):
         :param right: right expression of the operation
         """
         super().__init__(typ, left, operator, right)
+
+

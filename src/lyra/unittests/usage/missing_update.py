@@ -1,8 +1,8 @@
-x1: int = input()  # x1 unused
-x2: int = input()
-x3: int = input()
+x1: int = int(input())  # x1 unused
+x2: int = int(input())
+x3: int = int(input())
 
-# RESULT: asc -> O, temp -> O, x1 -> N, x2 -> U, x3 -> U
+# RESULT: x1 -> N, x2 -> U, x3 -> U, asc -> O, temp -> O
 
 asc: bool = True
 if x1 <= x2:

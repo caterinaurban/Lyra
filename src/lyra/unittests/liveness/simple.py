@@ -1,9 +1,9 @@
 
 # INITIAL: english -> Dead, math -> Dead, science -> Dead, bonus -> Dead, passing -> Dead
-english: bool = input()
-math: bool = input()
-science: bool = input()
-bonus: bool = input()
+english: bool = bool(input())
+math: bool = bool(input())
+science: bool = bool(input())
+bonus: bool = bool(input())
 # STATE: english -> Live, math -> Live, science -> Dead, bonus -> Live, passing -> Dead
 passing: bool = True
 # STATE: english -> Live, math -> Live, science -> Dead, bonus -> Live, passing -> Live

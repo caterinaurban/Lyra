@@ -1,5 +1,5 @@
 x: bool = bool(input())
-# RESULT: x -> U, y -> O
+# STATE: x -> U, y -> W
 y: bool = bool(input())
 if x:
     x: bool = x and y

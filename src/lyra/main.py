@@ -4,9 +4,6 @@ Lyra Static Program Analyzer
 """
 
 import argparse
-
-import sys
-
 from lyra.engine.liveness.liveness_analysis import StrongLivenessAnalysis
 from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
 from lyra.engine.usage.usage_analysis import UsageAnalysis

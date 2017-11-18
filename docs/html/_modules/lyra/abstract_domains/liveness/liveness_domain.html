@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">lyra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">src</a></li>
 </ul>
 
             
@@ -155,7 +155,7 @@
 <span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">VariableIdentifier</span>
 
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.store</span> <span class="k">import</span> <span class="n">Store</span>
-<span class="kn">from</span> <span class="nn">lyra.core.types</span> <span class="k">import</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">BooleanLyraType</span>
+<span class="kn">from</span> <span class="nn">lyra.core.types</span> <span class="k">import</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">BooleanLyraType</span><span class="p">,</span> <span class="n">ListLyraType</span>
 <span class="kn">from</span> <span class="nn">lyra.core.utils</span> <span class="k">import</span> <span class="n">copy_docstring</span>
 
 
@@ -248,7 +248,8 @@
 
 <span class="sd">        :param variables: list of program variables</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">lattices</span> <span class="o">=</span> <span class="p">{</span><span class="n">BooleanLyraType</span><span class="p">:</span> <span class="n">LivenessLattice</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">:</span> <span class="n">LivenessLattice</span><span class="p">}</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">BooleanLyraType</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">ListLyraType</span><span class="p">]</span>
+        <span class="n">lattices</span> <span class="o">=</span> <span class="p">{</span><span class="n">typ</span><span class="p">:</span> <span class="n">LivenessLattice</span> <span class="k">for</span> <span class="n">typ</span> <span class="ow">in</span> <span class="n">types</span><span class="p">}</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">lattices</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LivenessState.is_bottom"><a class="viewcode-back" href="../../../../lyra.abstract_domains.liveness.html#lyra.abstract_domains.liveness.liveness_domain.LivenessState.is_bottom">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Store</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">)</span>

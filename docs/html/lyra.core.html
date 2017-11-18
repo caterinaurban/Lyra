@@ -87,12 +87,13 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">lyra.core package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.engine.html">lyra.engine package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.frontend.html">lyra.frontend package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.semantics.html">lyra.semantics package</a></li>
 </ul>
 </li>
@@ -131,7 +132,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">lyra</a> &raquo;</li>
+          <li><a href="modules.html">src</a> &raquo;</li>
       
           <li><a href="lyra.html">lyra package</a> &raquo;</li>
       
@@ -355,7 +356,10 @@
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.cfg.Edge" title="lyra.core.cfg.Edge"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.cfg.Edge</span></code></a></p>
 </dd></dl>
 
-<span class="target" id="module-lyra.core.expressions"></span><dl class="class">
+<span class="target" id="module-lyra.core.expressions"></span><div class="section" id="expressions">
+<h3>Expressions<a class="headerlink" href="#expressions" title="Permalink to this headline">¶</a></h3>
+<p>Lyra’s internal representation of Python expressions.</p>
+<dl class="class">
 <dt id="lyra.core.expressions.AttributeReference">
 <em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">AttributeReference</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em>, <em>primary: lyra.core.expressions.Expression</em>, <em>attribute: lyra.core.expressions.Identifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#AttributeReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.AttributeReference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Expression" title="lyra.core.expressions.Expression"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Expression</span></code></a></p>
@@ -542,9 +546,11 @@
 <dt id="lyra.core.expressions.Expression">
 <em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">Expression</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#Expression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Expression" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Expression representation.</p>
+<p><a class="reference external" href="https://docs.python.org/3.4/reference/expressions.html">https://docs.python.org/3.4/reference/expressions.html</a></p>
 <dl class="method">
 <dt id="lyra.core.expressions.Expression.ids">
-<code class="descname">ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; typing.Set[_ForwardRef(‘Expression’)]<a class="reference internal" href="_modules/lyra/core/expressions.html#Expression.ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Expression.ids" title="Permalink to this definition">¶</a></dt>
+<code class="descname">ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; typing.Set[_ForwardRef(‘VariableIdentifier’)]<a class="reference internal" href="_modules/lyra/core/expressions.html#Expression.ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Expression.ids" title="Permalink to this definition">¶</a></dt>
 <dd><p>Identifiers that appear in the expression.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -665,6 +671,8 @@ a <cite>NotImplementedError</cite> is raised.</p>
 <dt id="lyra.core.expressions.Identifier">
 <em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">Identifier</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em>, <em>name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#Identifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Identifier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Expression" title="lyra.core.expressions.Expression"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Expression</span></code></a></p>
+<p>Identifier expression representation.</p>
+<p><a class="reference external" href="https://docs.python.org/3.4/reference/expressions.html#atom-identifiers">https://docs.python.org/3.4/reference/expressions.html#atom-identifiers</a></p>
 <dl class="attribute">
 <dt id="lyra.core.expressions.Identifier.name">
 <code class="descname">name</code><a class="headerlink" href="#lyra.core.expressions.Identifier.name" title="Permalink to this definition">¶</a></dt>
@@ -693,6 +701,7 @@ a <cite>NotImplementedError</cite> is raised.</p>
 <dt id="lyra.core.expressions.Input">
 <em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">Input</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Input" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Expression" title="lyra.core.expressions.Expression"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Expression</span></code></a></p>
+<p>Input expression representation.</p>
 </dd></dl>
 
 <dl class="class">
@@ -712,6 +721,8 @@ a <cite>NotImplementedError</cite> is raised.</p>
 <dt id="lyra.core.expressions.Literal">
 <em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">Literal</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em>, <em>val: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#Literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Literal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Expression" title="lyra.core.expressions.Expression"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Expression</span></code></a></p>
+<p>Literal expression representation.</p>
+<p><a class="reference external" href="https://docs.python.org/3.4/reference/expressions.html#literals">https://docs.python.org/3.4/reference/expressions.html#literals</a></p>
 <dl class="attribute">
 <dt id="lyra.core.expressions.Literal.val">
 <code class="descname">val</code><a class="headerlink" href="#lyra.core.expressions.Literal.val" title="Permalink to this definition">¶</a></dt>
@@ -727,7 +738,7 @@ a <cite>NotImplementedError</cite> is raised.</p>
 <ol class="arabic simple">
 <li>removes negations using De Morgan’s law, and</li>
 </ol>
-<p>(2) puts in the normal form <code class="docutils literal"><span class="pre">expr</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code>
+<p>2. puts in the normal form <code class="docutils literal"><span class="pre">expr</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code>
 all boolean comparison operations with <code class="docutils literal"><span class="pre">=</span></code>, <code class="docutils literal"><span class="pre">!=</span></code>, <code class="docutils literal"><span class="pre">&lt;</span></code>, <code class="docutils literal"><span class="pre">&lt;=</span></code>, <code class="docutils literal"><span class="pre">&gt;</span></code>, and <code class="docutils literal"><span class="pre">&gt;=</span></code> .</p>
 <dl class="method">
 <dt id="lyra.core.expressions.NegationFreeNormalExpression.visit_AttributeReference">
@@ -837,6 +848,14 @@ all boolean comparison operations with <code class="docutils literal"><span clas
 </dd></dl>
 
 <dl class="class">
+<dt id="lyra.core.expressions.Subscription">
+<em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">Subscription</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#Subscription"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Subscription" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Expression" title="lyra.core.expressions.Expression"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Expression</span></code></a></p>
+<p>Subscription expression representation.</p>
+<p><a class="reference external" href="https://docs.python.org/3.4/reference/expressions.html#subscriptions">https://docs.python.org/3.4/reference/expressions.html#subscriptions</a></p>
+</dd></dl>
+
+<dl class="class">
 <dt id="lyra.core.expressions.UnaryArithmeticOperation">
 <em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">UnaryArithmeticOperation</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em>, <em>operator: lyra.core.expressions.UnaryArithmeticOperation.Operator</em>, <em>expression: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#UnaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.UnaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.UnaryOperation" title="lyra.core.expressions.UnaryOperation"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.UnaryOperation</span></code></a></p>
@@ -908,8 +927,24 @@ all boolean comparison operations with <code class="docutils literal"><span clas
 <dt id="lyra.core.expressions.VariableIdentifier">
 <em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">VariableIdentifier</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em>, <em>name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#VariableIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.VariableIdentifier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Identifier" title="lyra.core.expressions.Identifier"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Identifier</span></code></a></p>
+<p>Variable identifier expression representation.</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="lyra.core.expressions.iter_child_exprs">
+<code class="descclassname">lyra.core.expressions.</code><code class="descname">iter_child_exprs</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#iter_child_exprs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.iter_child_exprs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield all direct child expressions of <em>expr</em>, that is, all fields that are expressions
+and all items of fields that are lists of expressions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lyra.core.expressions.walk">
+<code class="descclassname">lyra.core.expressions.</code><code class="descname">walk</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#walk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.walk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively yield all expressions in an expression tree
+starting at <code class="docutils literal"><span class="pre">expr</span></code> (including <code class="docutils literal"><span class="pre">expr</span></code> itself), in no specified order.</p>
+</dd></dl>
+
+</div>
 <span class="target" id="module-lyra.core.expressions_tools"></span><dl class="class">
 <dt id="lyra.core.expressions_tools.Expander">
 <em class="property">class </em><code class="descclassname">lyra.core.expressions_tools.</code><code class="descname">Expander</code><a class="reference internal" href="_modules/lyra/core/expressions_tools.html#Expander"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions_tools.Expander" title="Permalink to this definition">¶</a></dt>
@@ -1097,14 +1132,6 @@ that is present on <em>expr</em>.</p>
 <dt id="lyra.core.expressions_tools.simplify">
 <code class="descclassname">lyra.core.expressions_tools.</code><code class="descname">simplify</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions_tools.html#simplify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions_tools.simplify" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="function">
-<dt id="lyra.core.expressions_tools.walk">
-<code class="descclassname">lyra.core.expressions_tools.</code><code class="descname">walk</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions_tools.html#walk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions_tools.walk" title="Permalink to this definition">¶</a></dt>
-<dd><p>Recursively yield all descendant expressions in the tree starting at <em>expr</em>
-(including <em>expr</em> itself), in no specified order.  This is useful if you
-only want to modify expressions in place and don’t care about the context.</p>
-</dd></dl>
 
 <span class="target" id="module-lyra.core.special_expressions"></span><dl class="class">
 <dt id="lyra.core.special_expressions.VariadicArithmeticOperation">

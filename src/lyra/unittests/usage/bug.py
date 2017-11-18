@@ -1,7 +1,7 @@
 x: int = int(input())
 a: int = 0
 
-# RESULT: a -> U, foo -> N, x -> N
+# STATE: x -> N, a -> U, foo -> N
 
 if 3 > x:
     foo: int = 10

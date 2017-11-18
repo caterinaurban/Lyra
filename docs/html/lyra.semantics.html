@@ -36,7 +36,7 @@
     <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
         <link rel="up" title="lyra package" href="lyra.html"/>
         <link rel="next" title="lyra.semantics.usage package" href="lyra.semantics.usage.html"/>
-        <link rel="prev" title="lyra.engine.usage package" href="lyra.engine.usage.html"/> 
+        <link rel="prev" title="lyra.frontend package" href="lyra.frontend.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -87,12 +87,13 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.core.html">lyra.core package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.engine.html">lyra.engine package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.frontend.html">lyra.frontend package</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">lyra.semantics package</a></li>
 </ul>
 </li>
@@ -131,7 +132,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">lyra</a> &raquo;</li>
+          <li><a href="modules.html">src</a> &raquo;</li>
       
           <li><a href="lyra.html">lyra package</a> &raquo;</li>
       
@@ -710,7 +711,7 @@
 <dl class="method">
 <dt id="lyra.semantics.semantics.BuiltInCallSemantics.uadd_call_semantics">
 <code class="descname">uadd_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.uadd_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.uadd_call_semantics" title="Permalink to this definition">¶</a></dt>
-<dd><p>Semantics of a call to ‘+X’ (unary plus).</p>
+<dd><p>Semantics of a call to ‘+’ (unary plus).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -736,34 +737,13 @@
 <dl class="method">
 <dt id="lyra.semantics.semantics.BuiltInCallSemantics.usub_call_semantics">
 <code class="descname">usub_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.usub_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.usub_call_semantics" title="Permalink to this definition">¶</a></dt>
-<dd><p>Semantics of a call to ‘-X’ (unary minus).</p>
+<dd><p>Semantics of a call to ‘-‘ (unary minus).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>stmt</strong> – call to ‘-‘ to be executed</li>
-<li><strong>state</strong> – state before executing the call statement</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.semantics.semantics.BuiltInCallSemantics.xor_call_semantics">
-<code class="descname">xor_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.xor_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.xor_call_semantics" title="Permalink to this definition">¶</a></dt>
-<dd><p>Semantics of a call to ‘xor’.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>stmt</strong> – call to ‘xor’ to be executed</li>
 <li><strong>state</strong> – state before executing the call statement</li>
 </ul>
 </td>
@@ -809,7 +789,8 @@
 <dt id="lyra.semantics.semantics.DefaultSemantics">
 <em class="property">class </em><code class="descclassname">lyra.semantics.semantics.</code><code class="descname">DefaultSemantics</code><a class="reference internal" href="_modules/lyra/semantics/semantics.html#DefaultSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.DefaultSemantics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.semantics.semantics.LiteralEvaluationSemantics" title="lyra.semantics.semantics.LiteralEvaluationSemantics"><code class="xref py py-class docutils literal"><span class="pre">lyra.semantics.semantics.LiteralEvaluationSemantics</span></code></a>, <a class="reference internal" href="#lyra.semantics.semantics.VariableAccessSemantics" title="lyra.semantics.semantics.VariableAccessSemantics"><code class="xref py py-class docutils literal"><span class="pre">lyra.semantics.semantics.VariableAccessSemantics</span></code></a>, <a class="reference internal" href="#lyra.semantics.semantics.ListSemantics" title="lyra.semantics.semantics.ListSemantics"><code class="xref py py-class docutils literal"><span class="pre">lyra.semantics.semantics.ListSemantics</span></code></a>, <a class="reference internal" href="#lyra.semantics.semantics.BuiltInCallSemantics" title="lyra.semantics.semantics.BuiltInCallSemantics"><code class="xref py py-class docutils literal"><span class="pre">lyra.semantics.semantics.BuiltInCallSemantics</span></code></a></p>
-<p>Default semantics of statements. Independently of the direction (forward/backward) of the semantics.</p>
+<p>Default semantics of statements.</p>
+<p>The semantics is independent of the direction (forward/backward) of the analysis.</p>
 </dd></dl>
 
 <dl class="class">
@@ -903,7 +884,7 @@
 <em class="property">class </em><code class="descclassname">lyra.semantics.semantics.</code><code class="descname">Semantics</code><a class="reference internal" href="_modules/lyra/semantics/semantics.html#Semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.Semantics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <p>Semantics of statements.</p>
-<p>Independently of the direction (forward/backward) of the analysis.</p>
+<p>The semantics is independent of the direction (forward/backward) of the analysis.</p>
 <dl class="method">
 <dt id="lyra.semantics.semantics.Semantics.semantics">
 <code class="descname">semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Statement</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#Semantics.semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.Semantics.semantics" title="Permalink to this definition">¶</a></dt>
@@ -984,7 +965,7 @@
         <a href="lyra.semantics.usage.html" class="btn btn-neutral float-right" title="lyra.semantics.usage package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="lyra.engine.usage.html" class="btn btn-neutral" title="lyra.engine.usage package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="lyra.frontend.html" class="btn btn-neutral" title="lyra.frontend package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
