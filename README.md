@@ -11,7 +11,7 @@ in critical decision making in our social, economic, and civic lives.
 
 At the moment, Lyra includes the following static program analyses:
 
-##### Input Data Usage Analysis
+### Input Data Usage Analysis
  
 Lyra automatically detects *unused input data*. For example, consider this program:
 
@@ -30,10 +30,19 @@ if not math:
 print(passing)
 ```
 
-Due to the programming errors indicated in the comments, 
+Due to the indicated errors, 
 the input data stored in the variables ``english`` and ``science`` remains unused.
 
-##### Interval Analysis
+Lyra automatically detects these problems using an input data usage analysis
+based on *syntactic dependencies between variables*.
+Lyra additionally supports a less precise input data usage analysis 
+based on the *strongly live variant of live variable analysis*.
+Both analyses use *summarization* to reason about 
+input data stored in compound data structures such as lists.
+A more precise input data usage analysis detects 
+unused chunks of lists containing input data by *partitioning*.
+
+### Interval Analysis
 
 Lyra automatically computes the *range of possible value of the program variables*. For example:
 
@@ -90,13 +99,13 @@ The following command line options are recognized:
     --analysis [ANALYSIS]   
     
                 Sets the static analysis to be performed. Possible analysis options are:
-                * ``usage`` (input data usage analysis)
+                * ``usage`` (input data usage analysis based on syntactic variable dependencies)
                 * ``liveness`` (input data usage analysis based on strongly live variable analysis)
                 * ``interval`` (interval analysis)
                 Default: ``usage``.
 
 After the analysis, Lyra generates a PDF file showing the control flow graph of the program
-annotated with the result of the analysis.
+annotated with the result of the analysis before and after each statement in the program.
 
 ## Documentation
 
