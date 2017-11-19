@@ -131,7 +131,16 @@
            <div itemprop="articleBody">
             
   <h1>Source code for lyra.core.types</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">ast</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Types</span>
+<span class="sd">=====</span>
+
+<span class="sd">Lyra&#39;s internal representation of Python types.</span>
+
+<span class="sd">:Author: Caterina Urban</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">ast</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
 
 
@@ -183,12 +192,13 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;List type creation.</span>
 
-<span class="sd">        :param typ: type of the list element</span>
+<span class="sd">        :param typ: type of the list elements</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_typ</span> <span class="o">=</span> <span class="n">typ</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">typ</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Type of the list elements.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_typ</span>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

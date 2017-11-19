@@ -131,10 +131,20 @@
            <div itemprop="articleBody">
             
   <h1>Source code for lyra.semantics.backward</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">lyra.semantics.semantics</span> <span class="k">import</span> <span class="n">Semantics</span><span class="p">,</span> <span class="n">DefaultSemantics</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Backward Semantics</span>
+<span class="sd">==================</span>
+
+<span class="sd">Lyra&#39;s internal backward semantics of statements.</span>
+
+<span class="sd">:Authors: Caterina Urban</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">from</span> <span class="nn">lyra.semantics.semantics</span> <span class="k">import</span> <span class="n">Semantics</span><span class="p">,</span> <span class="n">DefaultSemantics</span>
 
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.state</span> <span class="k">import</span> <span class="n">State</span>
-<span class="kn">from</span> <span class="nn">lyra.core.statements</span> <span class="k">import</span> <span class="n">VariableAccess</span><span class="p">,</span> <span class="n">Assignment</span><span class="p">,</span> <span class="n">Call</span>
+<span class="kn">from</span> <span class="nn">lyra.core.statements</span> <span class="k">import</span> <span class="n">Assignment</span><span class="p">,</span> <span class="n">Call</span>
 
 
 <div class="viewcode-block" id="BackwardSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.backward.BackwardSemantics">[docs]</a><span class="k">class</span> <span class="nc">BackwardSemantics</span><span class="p">(</span><span class="n">Semantics</span><span class="p">):</span>
@@ -145,7 +155,8 @@
 <div class="viewcode-block" id="UserDefinedCallSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.backward.UserDefinedCallSemantics">[docs]</a><span class="k">class</span> <span class="nc">UserDefinedCallSemantics</span><span class="p">(</span><span class="n">BackwardSemantics</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Backward semantics of user-defined function/method calls.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="UserDefinedCallSemantics.user_defined_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.backward.UserDefinedCallSemantics.user_defined_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">user_defined_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+    <span class="c1"># noinspection PyUnusedLocal</span>
+<div class="viewcode-block" id="UserDefinedCallSemantics.user_defined_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.backward.UserDefinedCallSemantics.user_defined_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">user_defined_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Backward semantics of a user-defined function/method call.</span>
 <span class="sd">        </span>
 <span class="sd">        :param stmt: call statement to be executed</span>
@@ -168,10 +179,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>    <span class="c1"># lhs evaluation</span>
         <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>   <span class="c1"># rhs evaluation</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">VariableAccess</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">substitute_variable</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
-        <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Backward semantics for assignment </span><span class="si">{stmt}</span><span class="s2"> not yet implemented!&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span></div></div>
 
 
 <span class="c1"># noinspection PyAbstractClass</span>

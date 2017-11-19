@@ -155,10 +155,10 @@ class IntervalState(Store, State):
     The value of all program variables is represented by the unbounded interval by default.
 
     .. document private methods
-    .. automethod:: IntervalState._assign_variable
+    .. automethod:: IntervalState._assign
     .. automethod:: IntervalState._assume
     .. automethod:: IntervalState._output
-    .. automethod:: IntervalState._substitute_variable
+    .. automethod:: IntervalState._substitute
 
     """
     def __init__(self, variables: List[VariableIdentifier]):

@@ -136,11 +136,13 @@
 <span class="sd">===========</span>
 
 <span class="sd">Lyra&#39;s internal representation of Python expressions.</span>
+
+<span class="sd">:Authors: Caterina Urban and Simon Wehrli</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">IntEnum</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">List</span>
 
 <span class="kn">from</span> <span class="nn">lyra.core.types</span> <span class="k">import</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">StringLyraType</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">BooleanLyraType</span>
 <span class="kn">from</span> <span class="nn">lyra.core.utils</span> <span class="k">import</span> <span class="n">copy_docstring</span>
@@ -193,15 +195,16 @@
 <span class="sd">        :return: set of identifiers that appear in the expression</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">walk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">_walk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
                 <span class="n">ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ids</span></div></div>
 
 
-<div class="viewcode-block" id="iter_child_exprs"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.iter_child_exprs">[docs]</a><span class="k">def</span> <span class="nf">iter_child_exprs</span><span class="p">(</span><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_iter_child_exprs</span><span class="p">(</span><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Yield all direct child expressions of *expr*, that is, all fields that are expressions</span>
+<span class="sd">    Yield all direct child expressions of ``expr``,</span>
+<span class="sd">    that is, all fields that are expressions</span>
 <span class="sd">    and all items of fields that are lists of expressions.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -210,20 +213,21 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Expression</span><span class="p">):</span>
-                    <span class="k">yield</span> <span class="n">item</span></div>
+                    <span class="k">yield</span> <span class="n">item</span>
 
 
-<div class="viewcode-block" id="walk"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.walk">[docs]</a><span class="k">def</span> <span class="nf">walk</span><span class="p">(</span><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_walk</span><span class="p">(</span><span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Recursively yield all expressions in an expression tree</span>
-<span class="sd">    starting at ``expr`` (including ``expr`` itself), in no specified order.</span>
+<span class="sd">    starting at ``expr`` (including ``expr`` itself),</span>
+<span class="sd">    in no specified order.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span>
     <span class="n">todo</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="n">expr</span><span class="p">])</span>
     <span class="k">while</span> <span class="n">todo</span><span class="p">:</span>
         <span class="n">expr</span> <span class="o">=</span> <span class="n">todo</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
-        <span class="n">todo</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">iter_child_exprs</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
-        <span class="k">yield</span> <span class="n">expr</span></div>
+        <span class="n">todo</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_iter_child_exprs</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+        <span class="k">yield</span> <span class="n">expr</span>
 
 
 <span class="c1"># noinspection PyPep8Naming</span>
@@ -269,13 +273,13 @@
     <span class="k">def</span> <span class="nf">visit_AttributeReference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;AttributeReference&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Visit of an attribute reference.&quot;&quot;&quot;</span></div>
 
-<div class="viewcode-block" id="ExpressionVisitor.visit_Slice"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_Slice">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">visit_Slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;Slice&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Visit of a slice expression.&quot;&quot;&quot;</span></div>
+<div class="viewcode-block" id="ExpressionVisitor.visit_Subscription"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_Subscription">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">visit_Subscription</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;Subscription&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Visit of a subscription expression.&quot;&quot;&quot;</span></div>
 
-<div class="viewcode-block" id="ExpressionVisitor.visit_Index"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_Index">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">visit_Index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;Index&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Visit of an index expression.&quot;&quot;&quot;</span></div>
+<div class="viewcode-block" id="ExpressionVisitor.visit_Slicing"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_Slicing">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">visit_Slicing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;Slicing&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Visit of a slicing expression.&quot;&quot;&quot;</span></div>
 
 <div class="viewcode-block" id="ExpressionVisitor.visit_UnaryArithmeticOperation"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.ExpressionVisitor.visit_UnaryArithmeticOperation">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">visit_UnaryArithmeticOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;UnaryArithmeticOperation&#39;</span><span class="p">):</span>
@@ -336,12 +340,12 @@
     <span class="k">def</span> <span class="nf">visit_AttributeReference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;AttributeReference&#39;</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">expr</span>     <span class="c1"># nothing to be done</span></div>
 
-<div class="viewcode-block" id="NegationFreeNormalExpression.visit_Slice"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_Slice">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Slice</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">visit_Slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;Slice&#39;</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="NegationFreeNormalExpression.visit_Subscription"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_Subscription">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Subscription</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">visit_Subscription</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;Subscription&#39;</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">expr</span>     <span class="c1"># nothing to be done</span></div>
 
-<div class="viewcode-block" id="NegationFreeNormalExpression.visit_Index"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_Index">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Index</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">visit_Index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;Index&#39;</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="NegationFreeNormalExpression.visit_Slicing"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_Slicing">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Slicing</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">visit_Slicing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="s1">&#39;Slicing&#39;</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">expr</span>     <span class="c1"># nothing to be done</span></div>
 
 <div class="viewcode-block" id="NegationFreeNormalExpression.visit_UnaryArithmeticOperation"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.NegationFreeNormalExpression.visit_UnaryArithmeticOperation">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_UnaryArithmeticOperation</span><span class="p">)</span>
@@ -441,12 +445,12 @@
 
 
 <div class="viewcode-block" id="Literal"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.Literal">[docs]</a><span class="k">class</span> <span class="nc">Literal</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Literal expression representation.</span>
+    <span class="sd">&quot;&quot;&quot;Literal representation.</span>
 
 <span class="sd">    https://docs.python.org/3.4/reference/expressions.html#literals</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Literal expression construction.</span>
+        <span class="sd">&quot;&quot;&quot;Literal construction.</span>
 
 <span class="sd">        :param typ: type of the literal</span>
 <span class="sd">        :param val: value of the literal</span>
@@ -470,32 +474,13 @@
         <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.val}</span><span class="s2">&quot;</span></div>
 
 
-<div class="viewcode-block" id="Input"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.Input">[docs]</a><span class="k">class</span> <span class="nc">Input</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Input expression representation.&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Input expression construction.</span>
-
-<span class="sd">        :param typ: type of the input</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">typ</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">typ</span>
-
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">typ</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;input()&quot;</span></div>
-
-
 <div class="viewcode-block" id="Identifier"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.Identifier">[docs]</a><span class="k">class</span> <span class="nc">Identifier</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Identifier expression representation.</span>
+    <span class="sd">&quot;&quot;&quot;Identifier representation.</span>
 
 <span class="sd">    https://docs.python.org/3.4/reference/expressions.html#atom-identifiers</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Identifier expression construction.</span>
+        <span class="sd">&quot;&quot;&quot;Identifier construction.</span>
 
 <span class="sd">        :param typ: type of the identifier</span>
 <span class="sd">        :param name: name of the identifier</span>
@@ -518,9 +503,9 @@
 
 
 <div class="viewcode-block" id="VariableIdentifier"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.VariableIdentifier">[docs]</a><span class="k">class</span> <span class="nc">VariableIdentifier</span><span class="p">(</span><span class="n">Identifier</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Variable identifier expression representation.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Variable identifier representation.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Variable identifier expression construction.</span>
+        <span class="sd">&quot;&quot;&quot;Variable identifier construction.</span>
 <span class="sd">        </span>
 <span class="sd">        :param typ: type of the identifier</span>
 <span class="sd">        :param name: name of the identifier</span>
@@ -528,17 +513,28 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="LengthIdentifier"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.LengthIdentifier">[docs]</a><span class="k">class</span> <span class="nc">LengthIdentifier</span><span class="p">(</span><span class="n">Identifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sequence or collection length representation.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sequence or collection length construction.</span>
+
+<span class="sd">        :param variable: sequence or collection the length of which is being constructed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;len(</span><span class="si">{0.name}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">IntegerLyraType</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="ListDisplay"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.ListDisplay">[docs]</a><span class="k">class</span> <span class="nc">ListDisplay</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;List display</span>
+    <span class="sd">&quot;&quot;&quot;List display representation.</span>
 <span class="sd">    </span>
 <span class="sd">    https://docs.python.org/3/reference/expressions.html#list-displays</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Expression</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;List display representation</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Expression</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List display construction.</span>
 <span class="sd">        </span>
-<span class="sd">        :param typ: type of the list display</span>
-<span class="sd">        :param items: listed items</span>
+<span class="sd">        :param typ: type of the list</span>
+<span class="sd">        :param items: list of items being displayed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_items</span> <span class="o">=</span> <span class="n">items</span> <span class="ow">or</span> <span class="p">[]</span>
@@ -557,6 +553,25 @@
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="Input"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.Input">[docs]</a><span class="k">class</span> <span class="nc">Input</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Input expression representation.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Input expression construction.</span>
+
+<span class="sd">        :param typ: type of the input</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">typ</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">typ</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">typ</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;input()&quot;</span></div>
+
+
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Primary Expressions</span>
 <span class="sd">https://docs.python.org/3.4/reference/expressions.html#primaries</span>
@@ -564,99 +579,99 @@
 
 
 <div class="viewcode-block" id="AttributeReference"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.AttributeReference">[docs]</a><span class="k">class</span> <span class="nc">AttributeReference</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Attribute reference expression representation.</span>
+    <span class="sd">&quot;&quot;&quot;Attribute reference representation.</span>
 
 <span class="sd">    https://docs.python.org/3.4/reference/expressions.html#attribute-references</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">primary</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">attribute</span><span class="p">:</span> <span class="n">Identifier</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Attribute reference expression representation.</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">attribute</span><span class="p">:</span> <span class="n">Identifier</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Attribute reference construction.</span>
 <span class="sd">        </span>
 <span class="sd">        :param typ: type of the attribute</span>
-<span class="sd">        :param primary: object the attribute of which is being referenced</span>
+<span class="sd">        :param target: object the attribute of which is being referenced</span>
 <span class="sd">        :param attribute: attribute being referenced</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_primary</span> <span class="o">=</span> <span class="n">primary</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_attribute</span> <span class="o">=</span> <span class="n">attribute</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">primary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_primary</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attribute</span>
-
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribute</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">primary</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">attribute</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribute</span><span class="p">))</span>
-
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{0.primary}</span><span class="s2">.</span><span class="si">{0.attribute}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Subscription"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.Subscription">[docs]</a><span class="k">class</span> <span class="nc">Subscription</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Subscription expression representation.</span>
-
-<span class="sd">    https://docs.python.org/3.4/reference/expressions.html#subscriptions</span>
-<span class="sd">    &quot;&quot;&quot;</span></div>
-
-
-
-
-<div class="viewcode-block" id="Index"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.Index">[docs]</a><span class="k">class</span> <span class="nc">Index</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Index (list/dictionary access) representation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Index  (list/dictionary access) representation.</span>
-
-<span class="sd">        :param typ: type of the attribute</span>
-<span class="sd">        :param target</span>
-<span class="sd">        :param index</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_index</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attribute</span> <span class="o">=</span> <span class="n">attribute</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index</span>
-
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">[</span><span class="si">{}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attribute</span>
 
     <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span>
-            <span class="n">other</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">typ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">typ</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">typ</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">target</span>
+        <span class="n">attribute</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribute</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">attribute</span>
+        <span class="k">return</span> <span class="n">typ</span> <span class="ow">and</span> <span class="n">target</span> <span class="ow">and</span> <span class="n">attribute</span>
 
     <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribute</span><span class="p">))</span>
 
-<div class="viewcode-block" id="Slice"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.Slice">[docs]</a><span class="k">class</span> <span class="nc">Slice</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Slice (list/dictionary access) representation.</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{0.target}</span><span class="s2">.</span><span class="si">{0.attribute}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Subscription"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.Subscription">[docs]</a><span class="k">class</span> <span class="nc">Subscription</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Subscription representation.</span>
+
+<span class="sd">    https://docs.python.org/3.4/reference/expressions.html#subscriptions</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subscription construction.</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">lower</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">upper</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Slice (list/dictionary access) representation.</span>
+<span class="sd">        :param typ: type of the subscription</span>
+<span class="sd">        :param target: object being subject to subscription</span>
+<span class="sd">        :param key: index at which the object is subscripted</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">key</span>
 
-<span class="sd">        :param typ: type of the slice</span>
-<span class="sd">        :param target</span>
-<span class="sd">        :param lower</span>
-<span class="sd">        :param upper</span>
-<span class="sd">        :param step</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">typ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">typ</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">typ</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">target</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">key</span>
+        <span class="k">return</span> <span class="n">typ</span> <span class="ow">and</span> <span class="n">target</span> <span class="ow">and</span> <span class="n">key</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{0.target}</span><span class="s2">[</span><span class="si">{0.key}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Slicing"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.Slicing">[docs]</a><span class="k">class</span> <span class="nc">Slicing</span><span class="p">(</span><span class="n">Expression</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Slicing representation.</span>
+
+<span class="sd">    https://docs.python.org/3.4/reference/expressions.html#slicings</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span>
+                 <span class="n">lower</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">upper</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">stride</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Slicing construction.</span>
+
+<span class="sd">        :param typ: type of the slicing</span>
+<span class="sd">        :param target: object being subject to slicing</span>
+<span class="sd">        :param lower: lower bound of the slicing</span>
+<span class="sd">        :param upper: upper bound of the slicing</span>
+<span class="sd">        :param stride: stride of the slicing</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span> <span class="o">=</span> <span class="n">lower</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_step</span> <span class="o">=</span> <span class="n">step</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_upper</span> <span class="o">=</span> <span class="n">upper</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stride</span> <span class="o">=</span> <span class="n">stride</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -667,37 +682,37 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step</span>
-
-    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">upper</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upper</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">[</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">[</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stride</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stride</span>
 
     <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span>
-            <span class="n">other</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span>
+        <span class="n">typ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">typ</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">typ</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">target</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">lower</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">stride</span>
+        <span class="k">return</span> <span class="n">typ</span> <span class="ow">and</span> <span class="n">target</span> <span class="ow">and</span> <span class="n">lower</span> <span class="ow">and</span> <span class="n">upper</span> <span class="ow">and</span> <span class="n">stride</span>
 
     <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">))</span>
 
-
-
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{0.target}</span><span class="s2">[</span><span class="si">{0.lower}</span><span class="s2">:</span><span class="si">{0.upper}</span><span class="s2">:</span><span class="si">{0.stride}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{0.target}</span><span class="s2">[</span><span class="si">{0.lower}</span><span class="s2">:</span><span class="si">{0.upper}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Generic Operation Expressions</span>
+<span class="sd">Operation Expressions</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
 <div class="viewcode-block" id="Operation"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.Operation">[docs]</a><span class="k">class</span> <span class="nc">Operation</span><span class="p">(</span><span class="n">Expression</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-    <span class="k">pass</span></div>
+    <span class="sd">&quot;&quot;&quot;Operation representation.&quot;&quot;&quot;</span></div>
 
 
 <span class="sd">&quot;&quot;&quot;</span>
@@ -706,6 +721,7 @@
 
 
 <div class="viewcode-block" id="UnaryOperation"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.UnaryOperation">[docs]</a><span class="k">class</span> <span class="nc">UnaryOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Unary operation representation.&quot;&quot;&quot;</span>
 <div class="viewcode-block" id="UnaryOperation.Operator"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.UnaryOperation.Operator">[docs]</a>    <span class="k">class</span> <span class="nc">Operator</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Unary operator representation.&quot;&quot;&quot;</span>
 
@@ -717,7 +733,7 @@
 <span class="sd">            &quot;&quot;&quot;</span></div>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Unary operation expression representation.</span>
+        <span class="sd">&quot;&quot;&quot;Unary operation construction.</span>
 <span class="sd">        </span>
 <span class="sd">        :param typ: type of the operation</span>
 <span class="sd">        :param operator: operator of the operation</span>
@@ -808,6 +824,7 @@
 
 
 <div class="viewcode-block" id="BinaryOperation"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.BinaryOperation">[docs]</a><span class="k">class</span> <span class="nc">BinaryOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Binary operation representation.&quot;&quot;&quot;</span>
 <div class="viewcode-block" id="BinaryOperation.Operator"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.expressions.BinaryOperation.Operator">[docs]</a>    <span class="k">class</span> <span class="nc">Operator</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Binary operator representation.&quot;&quot;&quot;</span>
 
@@ -819,7 +836,7 @@
 <span class="sd">            &quot;&quot;&quot;</span></div>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Binary operation expression representation.</span>
+        <span class="sd">&quot;&quot;&quot;Binary operation construction.</span>
 <span class="sd">        </span>
 <span class="sd">        :param typ: type of the operation</span>
 <span class="sd">        :param left: left expression of the operation</span>

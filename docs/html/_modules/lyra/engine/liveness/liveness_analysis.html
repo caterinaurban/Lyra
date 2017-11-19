@@ -131,7 +131,14 @@
            <div itemprop="articleBody">
             
   <h1>Source code for lyra.engine.liveness.liveness_analysis</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">lyra.engine.backward</span> <span class="k">import</span> <span class="n">BackwardInterpreter</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">(Strongly) Live Variable Analysis</span>
+<span class="sd">=================================</span>
+
+<span class="sd">:Author: Caterina Urban</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">lyra.engine.backward</span> <span class="k">import</span> <span class="n">BackwardInterpreter</span>
 <span class="kn">from</span> <span class="nn">lyra.engine.runner</span> <span class="k">import</span> <span class="n">Runner</span>
 <span class="kn">from</span> <span class="nn">lyra.semantics.backward</span> <span class="k">import</span> <span class="n">DefaultBackwardSemantics</span>
 

@@ -107,10 +107,10 @@ class LivenessState(Store, State):
     .. note:: Program variables storing lists are abstracted via summarization.
 
     .. document private methods
-    .. automethod:: LivenessState._assign_variable
+    .. automethod:: LivenessState._assign
     .. automethod:: LivenessState._assume
     .. automethod:: LivenessState._output
-    .. automethod:: LivenessState._substitute_variable
+    .. automethod:: LivenessState._substitute
     """
     def __init__(self, variables: List[VariableIdentifier]):
         """Map each program variable to its liveness status.
@@ -182,10 +182,10 @@ class StrongLivenessState(LivenessState):
     .. note:: Program variables storing lists are abstracted via summarization.
 
     .. document private methods
-    .. automethod:: StrongLivenessState._assign_variable
+    .. automethod:: StrongLivenessState._assign
     .. automethod:: StrongLivenessState._assume
     .. automethod:: StrongLivenessState._output
-    .. automethod:: StrongLivenessState._substitute_variable
+    .. automethod:: StrongLivenessState._substitute
     """
 
     @copy_docstring(LivenessState._output)

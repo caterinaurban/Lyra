@@ -131,7 +131,16 @@
            <div itemprop="articleBody">
             
   <h1>Source code for lyra.core.cfg</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Control Flow Graph</span>
+<span class="sd">==================</span>
+
+<span class="sd">Lyra&#39;s internal representation of a Python program.</span>
+
+<span class="sd">:Author: Caterina Urban</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 

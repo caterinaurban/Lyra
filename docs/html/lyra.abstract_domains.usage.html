@@ -154,91 +154,8 @@
             
   <div class="section" id="module-lyra.abstract_domains.usage">
 <span id="lyra-abstract-domains-usage-package"></span><h1>lyra.abstract_domains.usage package<a class="headerlink" href="#module-lyra.abstract_domains.usage" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="module-lyra.abstract_domains.usage.stack">
-<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.abstract_domains.usage.stack" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="lyra.abstract_domains.usage.stack.UsedStack">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.stack.</code><code class="descname">UsedStack</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.stack.Stack" title="lyra.abstract_domains.stack.Stack"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.stack.Stack</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.state.State" title="lyra.abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.state.State</span></code></a></p>
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.stack.UsedStack.enter_if">
-<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack.enter_if" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.stack.UsedStack.enter_loop">
-<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack.enter_loop" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.stack.UsedStack.exit_if">
-<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack.exit_if" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.stack.UsedStack.exit_loop">
-<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack.exit_loop" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.stack.UsedStack.pop">
-<code class="descname">pop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack.pop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack.pop" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.stack.UsedStack.push">
-<code class="descname">push</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/stack.html#UsedStack.push"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.stack.UsedStack.push" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<span class="target" id="module-lyra.abstract_domains.usage.store"></span><dl class="class">
-<dt id="lyra.abstract_domains.usage.store.UsedStore">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.store.</code><code class="descname">UsedStore</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.store.Store" title="lyra.abstract_domains.store.Store"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.store.Store</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.state.State" title="lyra.abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.state.State</span></code></a></p>
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.store.UsedStore.combine">
-<code class="descname">combine</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.usage.store.UsedStore</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.store.UsedStore<a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore.combine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore.combine" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.store.UsedStore.descend">
-<code class="descname">descend</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.store.UsedStore<a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore.descend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore.descend" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.store.UsedStore.enter_if">
-<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore.enter_if" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.store.UsedStore.enter_loop">
-<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore.enter_loop" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.store.UsedStore.exit_if">
-<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore.exit_if" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.store.UsedStore.exit_loop">
-<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/store.html#UsedStore.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.store.UsedStore.exit_loop" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<span class="target" id="module-lyra.abstract_domains.usage.test_usedListStartLattice"></span><dl class="class">
-<dt id="lyra.abstract_domains.usage.test_usedListStartLattice.TestUsedListStartLattice">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.test_usedListStartLattice.</code><code class="descname">TestUsedListStartLattice</code><span class="sig-paren">(</span><em>methodName=’runTest’</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/test_usedListStartLattice.html#TestUsedListStartLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.test_usedListStartLattice.TestUsedListStartLattice" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></code></p>
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.test_usedListStartLattice.TestUsedListStartLattice.test_combine">
-<code class="descname">test_combine</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/test_usedListStartLattice.html#TestUsedListStartLattice.test_combine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.test_usedListStartLattice.TestUsedListStartLattice.test_combine" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 <span class="target" id="module-lyra.abstract_domains.usage.usage_domain"></span><div class="section" id="syntactic-usage-abstract-domain">
 <h3>Syntactic Usage Abstract Domain<a class="headerlink" href="#syntactic-usage-abstract-domain" title="Permalink to this headline">¶</a></h3>
 <p>Abstract domain to be used for <strong>input data usage analysis</strong> using syntactic variable dependencies.
@@ -520,20 +437,24 @@ A program variable can have value <em>U</em> (used), <em>S</em> (scoped), <em>W<
 <dt id="lyra.abstract_domains.usage.usage_domain.UsageState">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.usage_domain.</code><code class="descname">UsageState</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.stack.Stack" title="lyra.abstract_domains.stack.Stack"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.stack.Stack</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.state.State" title="lyra.abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.state.State</span></code></a></p>
-<p>Input data usageOLD analysis state.
-An element of the syntactic usageOLD abstract domain.</p>
-<p>Stack of maps from each program variable to its usageOLD status.
+<p>Input data usage analysis state.
+An element of the syntactic usage abstract domain.</p>
+<p>Stack of maps from each program variable to its usage status.
 The stack contains a single map by default.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Program variables storing lists are abstracted via summarization.</p>
+</div>
 <dl class="method">
-<dt id="lyra.abstract_domains.usage.usage_domain.UsageState._assign_variable">
-<code class="descname">_assign_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState._assign_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState._assign_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign an expression to a variable.</p>
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageState._assign">
+<code class="descname">_assign</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState._assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState._assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign an expression to another expression.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>left</strong> – expression representing the variable to be assigned to</li>
+<li><strong>left</strong> – expression to be assigned to</li>
 <li><strong>right</strong> – expression to assign</li>
 </ul>
 </td>
@@ -578,15 +499,15 @@ The stack contains a single map by default.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="lyra.abstract_domains.usage.usage_domain.UsageState._substitute_variable">
-<code class="descname">_substitute_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageState<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState._substitute_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState._substitute_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Substitute an expression to a variable.</p>
+<dt id="lyra.abstract_domains.usage.usage_domain.UsageState._substitute">
+<code class="descname">_substitute</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.usage_domain.UsageState<a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageState._substitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageState._substitute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substitute an expression to another expression.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>left</strong> – expression representing the variable to be substituted</li>
+<li><strong>left</strong> – expression to be substituted</li>
 <li><strong>right</strong> – expression to substitute</li>
 </ul>
 </td>
@@ -672,8 +593,12 @@ The stack contains a single map by default.</p>
 <dt id="lyra.abstract_domains.usage.usage_domain.UsageStore">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.usage_domain.</code><code class="descname">UsageStore</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/usage_domain.html#UsageStore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageStore" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.store.Store" title="lyra.abstract_domains.store.Store"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.store.Store</span></code></a></p>
-<p>An element of a store mapping each program variable to its usageOLD status.</p>
+<p>An element of a store mapping each program variable to its usage status.</p>
 <p>All program variables are <em>not used</em> by default.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Program variables storing lists are abstracted via summarization.</p>
+</div>
 <dl class="method">
 <dt id="lyra.abstract_domains.usage.usage_domain.UsageStore._less_equal">
 <code class="descname">_less_equal</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.store.Store</em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#lyra.abstract_domains.usage.usage_domain.UsageStore._less_equal" title="Permalink to this definition">¶</a></dt>
@@ -775,146 +700,6 @@ The stack contains a single map by default.</p>
 </dd></dl>
 
 </div>
-<span class="target" id="module-lyra.abstract_domains.usage.used"></span><dl class="class">
-<dt id="lyra.abstract_domains.usage.used.Used">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.used.</code><code class="descname">Used</code><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used.html#Used"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used.Used" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">enum.Flag</span></code></p>
-<p>Used state of a program variable.</p>
-<dl class="attribute">
-<dt id="lyra.abstract_domains.usage.used.Used.N">
-<code class="descname">N</code><em class="property"> = 0</em><a class="headerlink" href="#lyra.abstract_domains.usage.used.Used.N" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.usage.used.Used.O">
-<code class="descname">O</code><em class="property"> = 1</em><a class="headerlink" href="#lyra.abstract_domains.usage.used.Used.O" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.usage.used.Used.S">
-<code class="descname">S</code><em class="property"> = 2</em><a class="headerlink" href="#lyra.abstract_domains.usage.used.Used.S" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.usage.used.Used.U">
-<code class="descname">U</code><em class="property"> = 3</em><a class="headerlink" href="#lyra.abstract_domains.usage.used.Used.U" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="lyra.abstract_domains.usage.used.UsedLattice">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.used.</code><code class="descname">UsedLattice</code><span class="sig-paren">(</span><em>used: lyra.abstract_domains.usage.used.Used = &lt;Used.N: 0&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used.html#UsedLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin" title="lyra.abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BottomMixin</span></code></a></p>
-<p>Used variable analysis core abstract domain representation.</p>
-<dl class="attribute">
-<dt id="lyra.abstract_domains.usage.used.UsedLattice.COMBINE">
-<code class="descname">COMBINE</code><em class="property"> = {(&lt;Used.N: 0&gt;, &lt;Used.N: 0&gt;): &lt;Used.N: 0&gt;, (&lt;Used.N: 0&gt;, &lt;Used.S: 2&gt;): &lt;Used.S: 2&gt;, (&lt;Used.N: 0&gt;, &lt;Used.O: 1&gt;): &lt;Used.O: 1&gt;, (&lt;Used.N: 0&gt;, &lt;Used.U: 3&gt;): &lt;Used.U: 3&gt;, (&lt;Used.S: 2&gt;, &lt;Used.N: 0&gt;): &lt;Used.S: 2&gt;, (&lt;Used.S: 2&gt;, &lt;Used.S: 2&gt;): &lt;Used.S: 2&gt;, (&lt;Used.S: 2&gt;, &lt;Used.O: 1&gt;): &lt;Used.O: 1&gt;, (&lt;Used.S: 2&gt;, &lt;Used.U: 3&gt;): &lt;Used.U: 3&gt;, (&lt;Used.O: 1&gt;, &lt;Used.N: 0&gt;): &lt;Used.O: 1&gt;, (&lt;Used.O: 1&gt;, &lt;Used.S: 2&gt;): &lt;Used.S: 2&gt;, (&lt;Used.O: 1&gt;, &lt;Used.O: 1&gt;): &lt;Used.O: 1&gt;, (&lt;Used.O: 1&gt;, &lt;Used.U: 3&gt;): &lt;Used.U: 3&gt;, (&lt;Used.U: 3&gt;, &lt;Used.N: 0&gt;): &lt;Used.U: 3&gt;, (&lt;Used.U: 3&gt;, &lt;Used.S: 2&gt;): &lt;Used.U: 3&gt;, (&lt;Used.U: 3&gt;, &lt;Used.O: 1&gt;): &lt;Used.O: 1&gt;, (&lt;Used.U: 3&gt;, &lt;Used.U: 3&gt;): &lt;Used.U: 3&gt;}</em><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.COMBINE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.usage.used.UsedLattice.DESCEND">
-<code class="descname">DESCEND</code><em class="property"> = {&lt;Used.U: 3&gt;: &lt;Used.S: 2&gt;, &lt;Used.S: 2&gt;: &lt;Used.S: 2&gt;, &lt;Used.O: 1&gt;: &lt;Used.N: 0&gt;, &lt;Used.N: 0&gt;: &lt;Used.N: 0&gt;}</em><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.DESCEND" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.used.UsedLattice.combine">
-<code class="descname">combine</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.usage.used.UsedLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.used.UsedLattice<a class="reference internal" href="_modules/lyra/abstract_domains/usage/used.html#UsedLattice.combine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.combine" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.used.UsedLattice.descend">
-<code class="descname">descend</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.used.UsedLattice<a class="reference internal" href="_modules/lyra/abstract_domains/usage/used.html#UsedLattice.descend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.descend" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.used.UsedLattice.is_top">
-<code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/usage/used.html#UsedLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.is_top" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.used.UsedLattice.top">
-<code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used.html#UsedLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.top" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.usage.used.UsedLattice.used">
-<code class="descname">used</code><a class="headerlink" href="#lyra.abstract_domains.usage.used.UsedLattice.used" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<span class="target" id="module-lyra.abstract_domains.usage.used_liststart"></span><dl class="class">
-<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.usage.used_liststart.</code><code class="descname">UsedListStartLattice</code><span class="sig-paren">(</span><em>s: float = 0</em>, <em>u: float = 0</em>, <em>o: float = 0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin" title="lyra.abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BottomMixin</span></code></a></p>
-<p>Used list start analysis abstract domain representation.</p>
-<p>This uses the Used lattice as base and uses it to store the usageOLD of the start of list, each Used element covers
-a possibly empty sequence <code class="docutils literal"><span class="pre">0:q</span></code>. Some additional consistency conditions hold for any element of this lattice 
-that was previously closed by <code class="docutils literal"><span class="pre">closure()</span></code>.</p>
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.change_SU_to_O">
-<code class="descname">change_SU_to_O</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.change_SU_to_O"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.change_SU_to_O" title="Permalink to this definition">¶</a></dt>
-<dd><p>Change previously U/S-annotated to O-annotated</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.change_S_to_U">
-<code class="descname">change_S_to_U</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.change_S_to_U"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.change_S_to_U" title="Permalink to this definition">¶</a></dt>
-<dd><p>Change previously S-annotated (used in outer scope) to U-annotated (definitely used)</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.closed">
-<code class="descname">closed</code><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.closed" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.closure">
-<code class="descname">closure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.closure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.closure" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.combine">
-<code class="descname">combine</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.usage.used_liststart.UsedListStartLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.used_liststart.UsedListStartLattice<a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.combine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.combine" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.descend">
-<code class="descname">descend</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.usage.used_liststart.UsedListStartLattice<a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.descend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.descend" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.is_top">
-<code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.is_top" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.set_used_at">
-<code class="descname">set_used_at</code><span class="sig-paren">(</span><em>index</em>, <em>u: lyra.abstract_domains.usage.used.Used = &lt;Used.U: 3&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.set_used_at"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.set_used_at" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set usageOLD at specified index.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.suo">
-<code class="descname">suo</code><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.suo" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.top">
-<code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.top" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.used_at">
-<code class="descname">used_at</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/usage/used_liststart.html#UsedListStartLattice.used_at"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.used_at" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds usageOLD at specified index.</p>
-<p>Does a linear search through the 3-entry suo dict
-to find the entry that is determining the element usageOLD at index.</p>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 </div>
 

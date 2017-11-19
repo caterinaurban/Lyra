@@ -171,7 +171,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="lyra.abstract_domains.usage.html">lyra.abstract_domains.usage package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="lyra.abstract_domains.usage.html#module-lyra.abstract_domains.usage.stack">Submodules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="lyra.abstract_domains.usage.html#submodules">Submodules</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="lyra.abstract_domains.usage.html#syntactic-usage-abstract-domain">Syntactic Usage Abstract Domain</a></li>
 </ul>
 </li>
@@ -736,31 +736,15 @@ Abstract domain elements support lattice operations and program statements.</p>
 <p class="last">Lattice operations and statements modify the current state.</p>
 </div>
 <dl class="method">
-<dt id="lyra.abstract_domains.state.State.access_variable">
-<code class="descname">access_variable</code><span class="sig-paren">(</span><em>variable: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/abstract_domains/state.html#State.access_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.state.State.access_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Access a variable.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>variable</strong> – variable to be accesses</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified by the variable access</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.state.State.assign_variable">
-<code class="descname">assign_variable</code><span class="sig-paren">(</span><em>left: typing.Set[lyra.core.expressions.Expression], right: typing.Set[lyra.core.expressions.Expression]</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/abstract_domains/state.html#State.assign_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.state.State.assign_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign an expression to a variable.</p>
+<dt id="lyra.abstract_domains.state.State.assign">
+<code class="descname">assign</code><span class="sig-paren">(</span><em>left: typing.Set[lyra.core.expressions.Expression], right: typing.Set[lyra.core.expressions.Expression]</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/abstract_domains/state.html#State.assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.state.State.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign an expression to another expression.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>left</strong> – set of expressions representing the variable to be assigned to</li>
+<li><strong>left</strong> – set of expressions representing the expression to be assigned to</li>
 <li><strong>right</strong> – set of expressions representing the expression to assign</li>
 </ul>
 </td>
@@ -811,22 +795,6 @@ Abstract domain elements support lattice operations and program statements.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a loop</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.state.State.evaluate_literal">
-<code class="descname">evaluate_literal</code><span class="sig-paren">(</span><em>literal: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/abstract_domains/state.html#State.evaluate_literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.state.State.evaluate_literal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluate a literal.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>literal</strong> – expression to be evaluated</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified by the literal evaluation</td>
 </tr>
 </tbody>
 </table>
@@ -897,15 +865,15 @@ Abstract domain elements support lattice operations and program statements.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="lyra.abstract_domains.state.State.substitute_variable">
-<code class="descname">substitute_variable</code><span class="sig-paren">(</span><em>left: typing.Set[lyra.core.expressions.Expression], right: typing.Set[lyra.core.expressions.Expression]</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/abstract_domains/state.html#State.substitute_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.state.State.substitute_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Substitute an expression to a variable.</p>
+<dt id="lyra.abstract_domains.state.State.substitute">
+<code class="descname">substitute</code><span class="sig-paren">(</span><em>left: typing.Set[lyra.core.expressions.Expression], right: typing.Set[lyra.core.expressions.Expression]</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/abstract_domains/state.html#State.substitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.state.State.substitute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substitute an expression to another expression.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>left</strong> – set of expressions representing the variable to be substituted</li>
+<li><strong>left</strong> – set of expressions representing the expression to be substituted</li>
 <li><strong>right</strong> – set of expressions representing the expression to substitute</li>
 </ul>
 </td>

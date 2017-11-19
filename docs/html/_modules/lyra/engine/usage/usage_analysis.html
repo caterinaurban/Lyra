@@ -131,16 +131,23 @@
            <div itemprop="articleBody">
             
   <h1>Source code for lyra.engine.usage.usage_analysis</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">lyra.abstract_domains.usage.usage_domain</span> <span class="k">import</span> <span class="n">UsageState</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Input Data Usage Analysis</span>
+<span class="sd">=========================</span>
+
+<span class="sd">:Author: Caterina Urban</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.usage.usage_domain</span> <span class="k">import</span> <span class="n">UsageState</span>
 <span class="kn">from</span> <span class="nn">lyra.engine.backward</span> <span class="k">import</span> <span class="n">BackwardInterpreter</span>
 <span class="kn">from</span> <span class="nn">lyra.engine.runner</span> <span class="k">import</span> <span class="n">Runner</span>
-<span class="kn">from</span> <span class="nn">lyra.semantics.usage.usage_semantics</span> <span class="k">import</span> <span class="n">UsageSemantics</span>
+<span class="kn">from</span> <span class="nn">lyra.semantics.backward</span> <span class="k">import</span> <span class="n">DefaultBackwardSemantics</span>
 
 
 <div class="viewcode-block" id="UsageAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.usage.html#lyra.engine.usage.usage_analysis.UsageAnalysis">[docs]</a><span class="k">class</span> <span class="nc">UsageAnalysis</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
 
 <div class="viewcode-block" id="UsageAnalysis.interpreter"><a class="viewcode-back" href="../../../../lyra.engine.usage.html#lyra.engine.usage.usage_analysis.UsageAnalysis.interpreter">[docs]</a>    <span class="k">def</span> <span class="nf">interpreter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">BackwardInterpreter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="n">UsageSemantics</span><span class="p">(),</span> <span class="mi">3</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">BackwardInterpreter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="n">DefaultBackwardSemantics</span><span class="p">(),</span> <span class="mi">3</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="UsageAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.usage.html#lyra.engine.usage.usage_analysis.UsageAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">UsageState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span></div></div>

@@ -87,12 +87,13 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.core.html">lyra.core package</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">lyra.engine package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.frontend.html">lyra.frontend package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.semantics.html">lyra.semantics package</a></li>
 </ul>
 </li>
@@ -131,7 +132,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">lyra</a> &raquo;</li>
+          <li><a href="modules.html">src</a> &raquo;</li>
       
           <li><a href="lyra.html">lyra package</a> &raquo;</li>
       
@@ -156,15 +157,24 @@
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="lyra.engine.liveness.html">lyra.engine.liveness package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="lyra.engine.liveness.html#module-lyra.engine.liveness.liveness_analysis">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lyra.engine.liveness.html#module-lyra.engine.liveness.liveness_analysis">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lyra.engine.liveness.html#strongly-live-variable-analysis">(Strongly) Live Variable Analysis</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="lyra.engine.numerical.html">lyra.engine.numerical package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="lyra.engine.numerical.html#module-lyra.engine.numerical.interval_analysis">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lyra.engine.numerical.html#module-lyra.engine.numerical.interval_analysis">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lyra.engine.numerical.html#interval-analysis">Interval analysis</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="lyra.engine.usage.html">lyra.engine.usage package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="lyra.engine.usage.html#module-lyra.engine.usage.usage_analysis">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lyra.engine.usage.html#module-lyra.engine.usage.usage_analysis">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lyra.engine.usage.html#input-data-usage-analysis">Input Data Usage Analysis</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -172,10 +182,21 @@
 </div>
 <div class="section" id="module-lyra.engine.backward">
 <span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.engine.backward" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="backward-analysis-engine">
+<h3>Backward Analysis Engine<a class="headerlink" href="#backward-analysis-engine" title="Permalink to this headline">¶</a></h3>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Author:</th><td class="field-body">Caterina Urban</td>
+</tr>
+</tbody>
+</table>
 <dl class="class">
 <dt id="lyra.engine.backward.BackwardInterpreter">
 <em class="property">class </em><code class="descclassname">lyra.engine.backward.</code><code class="descname">BackwardInterpreter</code><span class="sig-paren">(</span><em>cfg: lyra.core.cfg.ControlFlowGraph</em>, <em>semantics: lyra.semantics.backward.BackwardSemantics</em>, <em>widening: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/backward.html#BackwardInterpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.backward.BackwardInterpreter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.engine.interpreter.Interpreter" title="lyra.engine.interpreter.Interpreter"><code class="xref py py-class docutils literal"><span class="pre">lyra.engine.interpreter.Interpreter</span></code></a></p>
+<p>Backward control flow graph interpreter.</p>
 <dl class="method">
 <dt id="lyra.engine.backward.BackwardInterpreter.analyze">
 <code class="descname">analyze</code><span class="sig-paren">(</span><em>initial: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.engine.result.AnalysisResult<a class="reference internal" href="_modules/lyra/engine/backward.html#BackwardInterpreter.analyze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.backward.BackwardInterpreter.analyze" title="Permalink to this definition">¶</a></dt>
@@ -188,10 +209,22 @@
 
 </dd></dl>
 
-<span class="target" id="module-lyra.engine.forward"></span><dl class="class">
+</div>
+<span class="target" id="module-lyra.engine.forward"></span><div class="section" id="forward-analysis-engine">
+<h3>Forward Analysis Engine<a class="headerlink" href="#forward-analysis-engine" title="Permalink to this headline">¶</a></h3>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Author:</th><td class="field-body">Caterina Urban</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
 <dt id="lyra.engine.forward.ForwardInterpreter">
 <em class="property">class </em><code class="descclassname">lyra.engine.forward.</code><code class="descname">ForwardInterpreter</code><span class="sig-paren">(</span><em>cfg: lyra.core.cfg.ControlFlowGraph</em>, <em>semantics: lyra.semantics.forward.ForwardSemantics</em>, <em>widening: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/forward.html#ForwardInterpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.forward.ForwardInterpreter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.engine.interpreter.Interpreter" title="lyra.engine.interpreter.Interpreter"><code class="xref py py-class docutils literal"><span class="pre">lyra.engine.interpreter.Interpreter</span></code></a></p>
+<p>Forward control flow graph interpreter.</p>
 <dl class="method">
 <dt id="lyra.engine.forward.ForwardInterpreter.analyze">
 <code class="descname">analyze</code><span class="sig-paren">(</span><em>initial: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.engine.result.AnalysisResult<a class="reference internal" href="_modules/lyra/engine/forward.html#ForwardInterpreter.analyze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.forward.ForwardInterpreter.analyze" title="Permalink to this definition">¶</a></dt>
@@ -199,7 +232,18 @@
 
 </dd></dl>
 
-<span class="target" id="module-lyra.engine.interpreter"></span><dl class="class">
+</div>
+<span class="target" id="module-lyra.engine.interpreter"></span><div class="section" id="analysis-engine">
+<h3>Analysis Engine<a class="headerlink" href="#analysis-engine" title="Permalink to this headline">¶</a></h3>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Author:</th><td class="field-body">Caterina Urban</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
 <dt id="lyra.engine.interpreter.Interpreter">
 <em class="property">class </em><code class="descclassname">lyra.engine.interpreter.</code><code class="descname">Interpreter</code><span class="sig-paren">(</span><em>cfg: lyra.core.cfg.ControlFlowGraph</em>, <em>semantics: lyra.semantics.semantics.Semantics</em>, <em>widening: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/interpreter.html#Interpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.interpreter.Interpreter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
@@ -241,6 +285,7 @@
 
 </dd></dl>
 
+</div>
 <span class="target" id="module-lyra.engine.result"></span><dl class="class">
 <dt id="lyra.engine.result.AnalysisResult">
 <em class="property">class </em><code class="descclassname">lyra.engine.result.</code><code class="descname">AnalysisResult</code><span class="sig-paren">(</span><em>cfg: lyra.core.cfg.ControlFlowGraph</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/result.html#AnalysisResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.result.AnalysisResult" title="Permalink to this definition">¶</a></dt>
@@ -291,7 +336,17 @@
 
 </dd></dl>
 
-<span class="target" id="module-lyra.engine.runner"></span><dl class="class">
+<span class="target" id="module-lyra.engine.runner"></span><div class="section" id="program-analysis">
+<h3>Program Analysis<a class="headerlink" href="#program-analysis" title="Permalink to this headline">¶</a></h3>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Author:</th><td class="field-body">Caterina Urban</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
 <dt id="lyra.engine.runner.Runner">
 <em class="property">class </em><code class="descclassname">lyra.engine.runner.</code><code class="descname">Runner</code><a class="reference internal" href="_modules/lyra/engine/runner.html#Runner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.runner.Runner" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
@@ -350,6 +405,7 @@
 
 </dd></dl>
 
+</div>
 </div>
 </div>
 

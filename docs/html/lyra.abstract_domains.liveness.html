@@ -339,16 +339,20 @@ or if is used in a statement other than an assignment.</p>
 An element of the live variable abstract domain.</p>
 <p>Map from each program variable to its liveness status.
 All program variables are <em>dead</em> by default.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Program variables storing lists are abstracted via summarization.</p>
+</div>
 <dl class="method">
-<dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState._assign_variable">
-<code class="descname">_assign_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState._assign_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState._assign_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign an expression to a variable.</p>
+<dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState._assign">
+<code class="descname">_assign</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState._assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState._assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign an expression to another expression.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>left</strong> – expression representing the variable to be assigned to</li>
+<li><strong>left</strong> – expression to be assigned to</li>
 <li><strong>right</strong> – expression to assign</li>
 </ul>
 </td>
@@ -393,15 +397,15 @@ All program variables are <em>dead</em> by default.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState._substitute_variable">
-<code class="descname">_substitute_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState._substitute_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState._substitute_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Substitute an expression to a variable.</p>
+<dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState._substitute">
+<code class="descname">_substitute</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState._substitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState._substitute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substitute an expression to another expression.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>left</strong> – expression representing the variable to be substituted</li>
+<li><strong>left</strong> – expression to be substituted</li>
 <li><strong>right</strong> – expression to substitute</li>
 </ul>
 </td>
@@ -494,16 +498,20 @@ All program variables are <em>dead</em> by default.</p>
 An element of the strongly live variable abstract domain.</p>
 <p>Map from each program variable to its liveness status.
 All program variables are <em>dead</em> by default.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Program variables storing lists are abstracted via summarization.</p>
+</div>
 <dl class="method">
-<dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assign_variable">
-<code class="descname">_assign_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assign_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign an expression to a variable.</p>
+<dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assign">
+<code class="descname">_assign</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign an expression to another expression.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>left</strong> – expression representing the variable to be assigned to</li>
+<li><strong>left</strong> – expression to be assigned to</li>
 <li><strong>right</strong> – expression to assign</li>
 </ul>
 </td>
@@ -548,15 +556,15 @@ All program variables are <em>dead</em> by default.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._substitute_variable">
-<code class="descname">_substitute_variable</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#StrongLivenessState._substitute_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._substitute_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Substitute an expression to a variable.</p>
+<dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._substitute">
+<code class="descname">_substitute</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#StrongLivenessState._substitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._substitute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substitute an expression to another expression.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>left</strong> – expression representing the variable to be substituted</li>
+<li><strong>left</strong> – expression to be substituted</li>
 <li><strong>right</strong> – expression to substitute</li>
 </ul>
 </td>
