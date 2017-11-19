@@ -1,3 +1,13 @@
+"""
+Backward Semantics
+==================
+
+Lyra's internal backward semantics of statements.
+
+:Authors: Caterina Urban
+"""
+
+
 from lyra.semantics.semantics import Semantics, DefaultSemantics
 
 from lyra.abstract_domains.state import State
@@ -12,6 +22,7 @@ class BackwardSemantics(Semantics):
 class UserDefinedCallSemantics(BackwardSemantics):
     """Backward semantics of user-defined function/method calls."""
 
+    # noinspection PyUnusedLocal
     def user_defined_call_semantics(self, stmt: Call, state: State):
         """Backward semantics of a user-defined function/method call.
         

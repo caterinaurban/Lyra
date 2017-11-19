@@ -1,3 +1,12 @@
+"""
+Control Flow Graph
+==================
+
+Lyra's internal representation of a Python program.
+
+:Author: Caterina Urban
+"""
+
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import Dict, List, Set, Tuple, Union

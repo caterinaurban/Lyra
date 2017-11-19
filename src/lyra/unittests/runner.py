@@ -1,3 +1,11 @@
+"""
+Program Analysis - Unit Tests
+=============================
+
+:Author: Caterina Urban and Simon Wehrli
+"""
+
+
 import ast
 import re
 import tokenize

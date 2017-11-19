@@ -1,3 +1,11 @@
+"""
+Usage Lattice - Unit Tests
+==========================
+
+:Author: Caterina Urban
+"""
+
+
 import unittest
 from lyra.abstract_domains.usage.usage_domain import UsageLattice
 

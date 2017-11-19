@@ -1,3 +1,10 @@
+"""
+Program Analysis
+================
+
+:Author: Caterina Urban
+"""
+
 import ast
 import os
 from abc import abstractmethod

@@ -1,3 +1,11 @@
+"""
+Interval Lattice - Unit Tests
+=============================
+
+:Author: Caterina Urban
+"""
+
+
 import unittest
 
 from math import inf
@@ -83,8 +91,8 @@ class TestIntervalLattice(unittest.TestCase):
 
         self.assertEqual(IntervalLattice(0, 1).neg(), IntervalLattice(-1, 0))
 
-        self.assertEqual(IntervalLattice(upper=2).neg(), IntervalLattice(-2, inf))
-        self.assertEqual(IntervalLattice(lower=3).neg(), IntervalLattice(-inf, -3))
+        self.assertEqual(IntervalLattice(upper=2).neg(), IntervalLattice(lower=-2))
+        self.assertEqual(IntervalLattice(lower=3).neg(), IntervalLattice(upper=-3))
 
         self.assertEqual(IntervalLattice(1, 0).neg(), IntervalLattice(1, 0))
 
@@ -113,7 +121,7 @@ class TestIntervalLattice(unittest.TestCase):
         self.assertEqual(IntervalLattice(1, 0).sub(IntervalLattice(0, 1)), IntervalLattice(1, 0))
 
         sub = IntervalLattice(upper=3).sub(IntervalLattice(lower=2))
-        self.assertEqual(sub, IntervalLattice(-inf, 1))
+        self.assertEqual(sub, IntervalLattice(upper=1))
         self.assertEqual(IntervalLattice(2, 4).sub(IntervalLattice(1, 3)), IntervalLattice(-1, 3))
         self.assertEqual(IntervalLattice(1, 2).sub(IntervalLattice(3, 4)), IntervalLattice(-3, -1))
 

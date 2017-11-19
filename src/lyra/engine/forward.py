@@ -1,3 +1,10 @@
+"""
+Forward Analysis Engine
+=======================
+
+:Author: Caterina Urban
+"""
+
 from collections import deque
 from copy import deepcopy
 from queue import Queue
@@ -11,8 +18,9 @@ from lyra.core.cfg import Basic, Loop, Conditional, ControlFlowGraph, Edge
 
 
 class ForwardInterpreter(Interpreter):
+    """Forward control flow graph interpreter."""
     def __init__(self, cfg: ControlFlowGraph, semantics: ForwardSemantics, widening: int):
-        """Forward control flow graph interpreter.
+        """Forward control flow graph interpreter construction.
 
         :param cfg: control flow graph to analyze 
         :param widening: number of iterations before widening 
@@ -86,7 +94,6 @@ class ForwardInterpreter(Interpreter):
                 if isinstance(current, Basic):
                     successor = entry
                     for stmt in current.stmts:
-                        # TODO call before(pp: ProgramPoint) after deepcopy, before semantics
                         successor = self.semantics.semantics(stmt, deepcopy(successor))
                         states.append(successor)
                 elif isinstance(current, Loop):

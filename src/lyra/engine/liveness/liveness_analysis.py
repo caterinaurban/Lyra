@@ -1,3 +1,10 @@
+"""
+(Strongly) Live Variable Analysis
+=================================
+
+:Author: Caterina Urban
+"""
+
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.runner import Runner
 from lyra.semantics.backward import DefaultBackwardSemantics

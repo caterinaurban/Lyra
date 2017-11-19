@@ -1,3 +1,13 @@
+"""
+Forward Semantics
+=================
+
+Lyra's internal forward semantics of statements.
+
+:Authors: Caterina Urban
+"""
+
+
 from lyra.semantics.semantics import Semantics, DefaultSemantics
 
 from lyra.abstract_domains.state import State

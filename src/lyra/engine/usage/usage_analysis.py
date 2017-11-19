@@ -1,3 +1,10 @@
+"""
+Input Data Usage Analysis
+=========================
+
+:Author: Caterina Urban
+"""
+
 from lyra.abstract_domains.usage.usage_domain import UsageState
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.runner import Runner

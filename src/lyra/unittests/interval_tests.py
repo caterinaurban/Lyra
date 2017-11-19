@@ -1,3 +1,11 @@
+"""
+Interval Analysis - Unit Tests
+==============================
+
+:Authors: Caterina Urban and Simon Wehrli
+"""
+
+
 import glob
 import os
 import unittest

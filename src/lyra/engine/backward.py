@@ -1,3 +1,10 @@
+"""
+Backward Analysis Engine
+========================
+
+:Author: Caterina Urban
+"""
+
 from collections import deque
 from copy import deepcopy
 from queue import Queue
@@ -11,8 +18,9 @@ from lyra.core.cfg import Basic, Loop, Conditional, ControlFlowGraph, Edge
 
 
 class BackwardInterpreter(Interpreter):
+    """Backward control flow graph interpreter."""
     def __init__(self, cfg: ControlFlowGraph, semantics: BackwardSemantics, widening: int):
-        """Backward control flow graph interpreter.
+        """Backward control flow graph interpreter construction.
 
         :param cfg: control flow graph to analyze
         :param widening: number of iterations before widening 

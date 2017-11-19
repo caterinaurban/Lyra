@@ -1,3 +1,10 @@
+"""
+Interval analysis
+=================
+
+:Author: Caterina Urban
+"""
+
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.forward import ForwardInterpreter
 from lyra.engine.runner import Runner

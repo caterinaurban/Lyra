@@ -1,3 +1,12 @@
+"""
+Types
+=====
+
+Lyra's internal representation of Python types.
+
+:Author: Caterina Urban
+"""
+
 import ast
 from abc import ABCMeta, abstractmethod
 
@@ -50,12 +59,13 @@ class ListLyraType(LyraType):
     def __init__(self, typ: LyraType):
         """List type creation.
 
-        :param typ: type of the list element
+        :param typ: type of the list elements
         """
         self._typ = typ
 
     @property
     def typ(self):
+        """Type of the list elements."""
         return self._typ
 
     def __repr__(self):
