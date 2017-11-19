@@ -11,8 +11,6 @@ Lifting of a lattice to a set of program variables.
 from collections import defaultdict
 from typing import List, Dict, Any, Type
 
-import sys
-
 from lyra.core.expressions import VariableIdentifier
 from lyra.abstract_domains.lattice import Lattice
 from lyra.core.utils import copy_docstring

@@ -11,7 +11,6 @@ The set of possible values of a program variable in a state is represented as an
 
 from copy import deepcopy
 from math import inf
-from typing import List
 
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin
 from lyra.abstract_domains.state import State

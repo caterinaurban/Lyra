@@ -1,5 +1,3 @@
-import sys
-
 from lyra.engine.liveness.liveness_analysis import LivenessAnalysis, StrongLivenessAnalysis
 from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
 from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis

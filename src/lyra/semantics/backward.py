@@ -1,7 +1,7 @@
 from lyra.semantics.semantics import Semantics, DefaultSemantics
 
 from lyra.abstract_domains.state import State
-from lyra.core.statements import VariableAccess, Assignment, Call
+from lyra.core.statements import Assignment, Call
 
 
 class BackwardSemantics(Semantics):

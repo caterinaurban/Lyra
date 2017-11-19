@@ -98,7 +98,7 @@ class LiteralEvaluation(Statement):
         return "{0.literal}".format(self)
 
 
-class ExpressionAccess(Statement):
+class ExpressionAccess(Statement, metaclass=ABCMeta):
     """Statement representation for statements that
     can appear on the left-hand side of assignments."""
 
@@ -109,7 +109,7 @@ class VariableAccess(ExpressionAccess):
         """Variable access construction.
 
         :param pp: program point associated with the variable access
-        :param literal: variable being accessed
+        :param variable: variable being accessed
         """
         super().__init__(pp)
         self._variable = variable

@@ -385,7 +385,7 @@ class LengthIdentifier(Identifier):
     def __init__(self, variable: VariableIdentifier):
         """Sequence or collection length construction.
 
-        :param object: sequence or collection the length of which is being constructed
+        :param variable: sequence or collection the length of which is being constructed
         """
         name = "len({0.name})".format(variable)
         super().__init__(IntegerLyraType(), name)

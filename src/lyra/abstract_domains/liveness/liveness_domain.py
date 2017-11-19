@@ -15,7 +15,7 @@ or if is used in a statement other than an assignment.
 """
 
 from enum import IntEnum
-from typing import List, Set
+from typing import List
 
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.state import State

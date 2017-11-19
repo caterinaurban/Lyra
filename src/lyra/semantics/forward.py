@@ -1,7 +1,7 @@
 from lyra.semantics.semantics import Semantics, DefaultSemantics
 
 from lyra.abstract_domains.state import State
-from lyra.core.statements import VariableAccess, Assignment, Call
+from lyra.core.statements import Assignment, Call
 
 
 class ForwardSemantics(Semantics):
@@ -12,6 +12,7 @@ class ForwardSemantics(Semantics):
 class UserDefinedCallSemantics(ForwardSemantics):
     """Forward semantics of user-defined function/method calls."""
 
+    # noinspection PyUnusedLocal
     def user_defined_call_semantics(self, stmt: Call, state: State):
         """Forward semantics of a user-defined function/method call.
 
