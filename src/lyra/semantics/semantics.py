@@ -10,7 +10,8 @@ Lyra's internal semantics of statements.
 
 import itertools
 import re
-from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slicing
+from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slicing, \
+    LengthIdentifier
 from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
 from lyra.core.expressions import UnaryOperation
 from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
@@ -18,6 +19,7 @@ from lyra.core.expressions import BinaryBooleanOperation, Input, ListDisplay, Li
 from lyra.abstract_domains.state import State
 from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, \
     ListDisplayAccess, SubscriptionAccess, SlicingAccess
+from lyra.core.types import ListLyraType
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -147,24 +149,6 @@ class CallSemantics(Semantics):
 class BuiltInCallSemantics(CallSemantics):
     """Semantics of built-in function/method calls."""
 
-    # noinspection PyMethodMayBeStatic
-    def input_call_semantics(self, stmt: Call, state: State) -> State:
-        state.result = {Input(stmt.typ)}
-        return state
-
-    def print_call_semantics(self, stmt: Call, state: State) -> State:
-        """Semantics of a call to 'print'.
-        
-        :param stmt: call to 'print' to be executed
-        :param state: state before executing the call statement
-        :return: state modified by the call statement
-        """
-        if len(stmt.arguments) != 1:
-            error = f"Semantics for multiple arguments of {stmt.name} is not yet implemented!"
-            raise NotImplementedError(error)
-        argument = self.semantics(stmt.arguments[0], state).result
-        return state.output(argument)
-
     def _cast_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'int' or 'bool'.
 
@@ -188,6 +172,15 @@ class BuiltInCallSemantics(CallSemantics):
         state.result = result
         return state
 
+    def bool_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of a call to 'bool'.
+
+        :param stmt: call to 'bool' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        return self._cast_call_semantics(stmt, state)
+
     def int_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'int'.
 
@@ -197,14 +190,45 @@ class BuiltInCallSemantics(CallSemantics):
         """
         return self._cast_call_semantics(stmt, state)
 
-    def bool_call_semantics(self, stmt: Call, state: State) -> State:
-        """Semantics of a call to 'bool'.
+    # noinspection PyMethodMayBeStatic
+    def input_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of a calls to 'input'.
 
-        :param stmt: call to 'bool' to be executed
+        :param stmt: call to 'input' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        return self._cast_call_semantics(stmt, state)
+        state.result = {Input(stmt.typ)}
+        return state
+
+    def len_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of a call to 'len'.
+
+        :param stmt: call to 'len' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        assert len(stmt.arguments) == 1  # unary operations have exactly one argument
+        argument = stmt.arguments[0]
+        if isinstance(argument, VariableAccess):
+            variable = argument.variable
+            state.result = {LengthIdentifier(variable)}
+            return state
+        error = f"Semantics for length of {argument} is not yet implemented!"
+        raise NotImplementedError(error)
+
+    def print_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of a call to 'print'.
+        
+        :param stmt: call to 'print' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        if len(stmt.arguments) != 1:
+            error = f"Semantics for multiple arguments of {stmt.name} is not yet implemented!"
+            raise NotImplementedError(error)
+        argument = self.semantics(stmt.arguments[0], state).result
+        return state.output(argument)
 
     def _unary_operation(self, stmt: Call, operator: UnaryOperation.Operator, state: State):
         """Semantics of a call to a unary operation.

@@ -19,7 +19,7 @@ from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
-from lyra.core.expressions import VariableIdentifier, Expression
+from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing
 from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
 
@@ -169,9 +169,11 @@ class UsageLattice(Lattice):
 
 
 class UsageStore(Store):
-    """An element of a store mapping each program variable to its usageOLD status.
+    """An element of a store mapping each program variable to its usage status.
 
     All program variables are *not used* by default.
+
+    .. note:: Program variables storing lists are abstracted via summarization.
 
     .. document private methods
     .. automethod:: UsageStore._less_equal
@@ -179,7 +181,7 @@ class UsageStore(Store):
     .. automethod:: UsageStore._join
     """
     def __init__(self, variables: List[VariableIdentifier]):
-        """Map each program variable to its usageOLD status.
+        """Map each program variable to its usage status.
 
         :param variables: list of program variables
         """
@@ -217,11 +219,13 @@ class UsageStore(Store):
 
 
 class UsageState(Stack, State):
-    """Input data usageOLD analysis state.
-    An element of the syntactic usageOLD abstract domain.
+    """Input data usage analysis state.
+    An element of the syntactic usage abstract domain.
 
-    Stack of maps from each program variable to its usageOLD status.
+    Stack of maps from each program variable to its usage status.
     The stack contains a single map by default.
+
+    .. note:: Program variables storing lists are abstracted via summarization.
 
     .. document private methods
     .. automethod:: UsageState._assign_variable
@@ -293,6 +297,18 @@ class UsageState(Stack, State):
             if self.lattice.store[left].is_top() or self.lattice.store[left].is_scoped():
                 # the assigned variable is used or scoped
                 self.lattice.store[left].written()
+                for identifier in right.ids():
+                    if isinstance(identifier, VariableIdentifier):
+                        self.lattice.store[identifier].top()
+                    else:
+                        error = f"Substitution with {right} is not implemented!"
+                        raise NotImplementedError(error)
+            return self
+        elif isinstance(left, Subscription) or isinstance(left, Slicing):
+            target = left.target
+            if self.lattice.store[target].is_top() or self.lattice.store[target].is_scoped():
+                # the assigned variable is used or scoped
+                self.lattice.store[target].top()      # summarization abstraction
                 for identifier in right.ids():
                     if isinstance(identifier, VariableIdentifier):
                         self.lattice.store[identifier].top()

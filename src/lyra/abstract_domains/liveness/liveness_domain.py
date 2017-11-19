@@ -19,7 +19,7 @@ from typing import List, Set
 
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.state import State
-from lyra.core.expressions import Expression, VariableIdentifier
+from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing
 
 from lyra.abstract_domains.store import Store
 from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType
@@ -104,6 +104,8 @@ class LivenessState(Store, State):
     Map from each program variable to its liveness status.
     All program variables are *dead* by default.
 
+    .. note:: Program variables storing lists are abstracted via summarization.
+
     .. document private methods
     .. automethod:: LivenessState._assign_variable
     .. automethod:: LivenessState._assume
@@ -177,6 +179,8 @@ class StrongLivenessState(LivenessState):
     Map from each program variable to its liveness status.
     All program variables are *dead* by default.
 
+    .. note:: Program variables storing lists are abstracted via summarization.
+
     .. document private methods
     .. automethod:: StrongLivenessState._assign_variable
     .. automethod:: StrongLivenessState._assume
@@ -196,6 +200,17 @@ class StrongLivenessState(LivenessState):
         if isinstance(left, VariableIdentifier):
             if self.store[left].is_top():   # the assigned variable is strongly-live
                 self.store[left].bottom()
+                for identifier in right.ids():
+                    if isinstance(identifier, VariableIdentifier):
+                        self.store[identifier].top()
+                    else:
+                        error = f"Substitution with {right} is not implemented!"
+                        raise NotImplementedError(error)
+            return self
+        elif isinstance(left, Subscription) or isinstance(left, Slicing):
+            target = left.target
+            if self.store[target].is_top():  # the assigned variable is strongly-live
+                # summarization abstraction
                 for identifier in right.ids():
                     if isinstance(identifier, VariableIdentifier):
                         self.store[identifier].top()

@@ -5,7 +5,7 @@ from typing import List, Set, Sequence
 
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
-from lyra.core.expressions import Expression, VariableIdentifier, ListDisplay, Literal, Index, walk
+from lyra.core.expressions import Expression, VariableIdentifier, ListDisplay, Literal, Index, _walk
 
 from lyra.abstract_domains.usage.used import UsedLattice, Used
 from lyra.abstract_domains.usage.used_liststart import UsedListStartLattice
@@ -34,7 +34,7 @@ class UsedStore(Store, State):
     def _use(self, left: VariableIdentifier, right: Expression):
         if issubclass(left.typ, Number):
             if self.store[left].used in [Used.U, Used.S]:
-                for e in walk(right):
+                for e in _walk(right):
                     if isinstance(e, VariableIdentifier):
                         self.store[e].used = Used.U
                     elif isinstance(e, Index):
@@ -87,7 +87,7 @@ class UsedStore(Store, State):
         )
         store_has_effect = used_vars or used_lists
 
-        for e in walk(condition):
+        for e in _walk(condition):
             if isinstance(e, VariableIdentifier):
                 # update to U if exists a variable y in state that is either U or O (note that S is not enough)
                 # or is set intersection, if checks if resulting list is empty

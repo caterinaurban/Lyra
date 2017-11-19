@@ -9,7 +9,7 @@ Lyra's internal representation of Python expressions.
 
 from abc import ABCMeta, abstractmethod
 from enum import IntEnum
-from typing import Set, Sequence, List
+from typing import Set, List
 
 from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType
 from lyra.core.utils import copy_docstring
@@ -62,13 +62,13 @@ class Expression(metaclass=ABCMeta):
         :return: set of identifiers that appear in the expression
         """
         ids = set()
-        for expr in walk(self):
+        for expr in _walk(self):
             if isinstance(expr, VariableIdentifier):
                 ids.add(expr)
         return ids
 
 
-def iter_child_exprs(expr: Expression):
+def _iter_child_exprs(expr: Expression):
     """
     Yield all direct child expressions of ``expr``,
     that is, all fields that are expressions
@@ -83,7 +83,7 @@ def iter_child_exprs(expr: Expression):
                     yield item
 
 
-def walk(expr: Expression):
+def _walk(expr: Expression):
     """
     Recursively yield all expressions in an expression tree
     starting at ``expr`` (including ``expr`` itself),
@@ -93,7 +93,7 @@ def walk(expr: Expression):
     todo = deque([expr])
     while todo:
         expr = todo.popleft()
-        todo.extend(iter_child_exprs(expr))
+        todo.extend(_iter_child_exprs(expr))
         yield expr
 
 
@@ -312,12 +312,12 @@ https://docs.python.org/3.4/reference/expressions.html#atoms
 
 
 class Literal(Expression):
-    """Literal expression representation.
+    """Literal representation.
 
     https://docs.python.org/3.4/reference/expressions.html#literals
     """
     def __init__(self, typ: LyraType, val: str):
-        """Literal expression construction.
+        """Literal construction.
 
         :param typ: type of the literal
         :param val: value of the literal
@@ -342,12 +342,12 @@ class Literal(Expression):
 
 
 class Identifier(Expression):
-    """Identifier expression representation.
+    """Identifier representation.
 
     https://docs.python.org/3.4/reference/expressions.html#atom-identifiers
     """
     def __init__(self, typ: LyraType, name: str):
-        """Identifier expression construction.
+        """Identifier construction.
 
         :param typ: type of the identifier
         :param name: name of the identifier
@@ -370,9 +370,9 @@ class Identifier(Expression):
 
 
 class VariableIdentifier(Identifier):
-    """Variable identifier expression representation."""
+    """Variable identifier representation."""
     def __init__(self, typ: LyraType, name: str):
-        """Variable identifier expression construction.
+        """Variable identifier construction.
         
         :param typ: type of the identifier
         :param name: name of the identifier
@@ -380,14 +380,25 @@ class VariableIdentifier(Identifier):
         super().__init__(typ, name)
 
 
+class LengthIdentifier(Identifier):
+    """Sequence or collection length representation."""
+    def __init__(self, variable: VariableIdentifier):
+        """Sequence or collection length construction.
+
+        :param object: sequence or collection the length of which is being constructed
+        """
+        name = "len({0.name})".format(variable)
+        super().__init__(IntegerLyraType(), name)
+
+
 class ListDisplay(Expression):
-    """List display expression representation.
+    """List display representation.
     
     https://docs.python.org/3/reference/expressions.html#list-displays
     """
 
     def __init__(self, typ: LyraType, items: List[Expression] = None):
-        """List display expression construction.
+        """List display construction.
         
         :param typ: type of the list
         :param items: list of items being displayed
@@ -435,12 +446,12 @@ https://docs.python.org/3.4/reference/expressions.html#primaries
 
 
 class AttributeReference(Expression):
-    """Attribute reference expression representation.
+    """Attribute reference representation.
 
     https://docs.python.org/3.4/reference/expressions.html#attribute-references
     """
     def __init__(self, typ: LyraType, target: Expression, attribute: Identifier):
-        """Attribute reference expression construction.
+        """Attribute reference construction.
         
         :param typ: type of the attribute
         :param target: object the attribute of which is being referenced
@@ -472,12 +483,12 @@ class AttributeReference(Expression):
 
 
 class Subscription(Expression):
-    """Subscription expression representation.
+    """Subscription representation.
 
     https://docs.python.org/3.4/reference/expressions.html#subscriptions
     """
     def __init__(self, typ: LyraType, target: Expression, key: Expression):
-        """Subscription expression construction.
+        """Subscription construction.
 
         :param typ: type of the subscription
         :param target: object being subject to subscription
@@ -509,13 +520,13 @@ class Subscription(Expression):
 
 
 class Slicing(Expression):
-    """Slicing expression representation.
+    """Slicing representation.
 
     https://docs.python.org/3.4/reference/expressions.html#slicings
     """
     def __init__(self, typ: LyraType, target: Expression,
                  lower: Expression, upper: Expression, stride: Expression = None):
-        """Slicing expression construction.
+        """Slicing construction.
 
         :param typ: type of the slicing
         :param target: object being subject to slicing
@@ -568,7 +579,7 @@ Operation Expressions
 
 
 class Operation(Expression, metaclass=ABCMeta):
-    """Operation expression representation."""
+    """Operation representation."""
 
 
 """
@@ -577,6 +588,7 @@ Unary Operation Expressions
 
 
 class UnaryOperation(Operation):
+    """Unary operation representation."""
     class Operator(IntEnum):
         """Unary operator representation."""
 
@@ -588,7 +600,7 @@ class UnaryOperation(Operation):
             """
 
     def __init__(self, typ: LyraType, operator: Operator, expression: Expression):
-        """Unary operation expression representation.
+        """Unary operation construction.
         
         :param typ: type of the operation
         :param operator: operator of the operation
@@ -679,6 +691,7 @@ Binary Operation Expressions
 
 
 class BinaryOperation(Operation):
+    """Binary operation representation."""
     class Operator(IntEnum):
         """Binary operator representation."""
 
@@ -690,7 +703,7 @@ class BinaryOperation(Operation):
             """
 
     def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
-        """Binary operation expression representation.
+        """Binary operation construction.
         
         :param typ: type of the operation
         :param left: left expression of the operation
