@@ -19,7 +19,7 @@ from lyra.core.expressions import BinaryBooleanOperation, Input, ListDisplay, Li
 from lyra.abstract_domains.state import State
 from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, \
     ListDisplayAccess, SubscriptionAccess, SlicingAccess
-from lyra.core.types import ListLyraType
+
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')

@@ -9,10 +9,7 @@ A program variable can have value *U* (used), *S* (scoped), *W* (written), and *
 """
 
 from enum import Flag
-from typing import List, Set, Dict, Type
-
-from collections import defaultdict
-
+from typing import List
 from copy import deepcopy
 
 from lyra.abstract_domains.lattice import Lattice

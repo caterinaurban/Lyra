@@ -14,7 +14,7 @@ from copy import deepcopy
 from typing import Set
 
 from lyra.abstract_domains.lattice import Lattice
-from lyra.core.expressions import Expression, VariableIdentifier
+from lyra.core.expressions import Expression
 
 
 class State(Lattice, metaclass=ABCMeta):
