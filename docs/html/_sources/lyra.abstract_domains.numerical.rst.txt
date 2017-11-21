@@ -24,11 +24,6 @@ Submodules
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: lyra.abstract_domains.numerical.numerical
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 .. automodule:: lyra.abstract_domains.numerical.octagon_domain
     :members:
     :undoc-members:

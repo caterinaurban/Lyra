@@ -1,0 +1,517 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>lyra.frontend package &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
+        <link rel="up" title="lyra package" href="lyra.html"/>
+        <link rel="next" title="lyra.semantics package" href="lyra.semantics.html"/>
+        <link rel="prev" title="lyra.engine.usage package" href="lyra.engine.usage.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.core.html">lyra.core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.engine.html">lyra.engine package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">lyra.frontend package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.semantics.html">lyra.semantics package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.html#module-lyra.main">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="modules.html">src</a> &raquo;</li>
+      
+          <li><a href="lyra.html">lyra package</a> &raquo;</li>
+      
+    <li>lyra.frontend package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/lyra.frontend.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-lyra.frontend">
+<span id="lyra-frontend-package"></span><h1>lyra.frontend package<a class="headerlink" href="#module-lyra.frontend" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-lyra.frontend.cfg_generator">
+<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.frontend.cfg_generator" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lyra.frontend.cfg_generator.CFGFactory">
+<em class="property">class </em><code class="descclassname">lyra.frontend.cfg_generator.</code><code class="descname">CFGFactory</code><span class="sig-paren">(</span><em>id_gen</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGFactory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGFactory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A helper class that encapsulates a partial CFG and possibly some statements not yet attached to CFG.</p>
+<p>Whenever the
+method <cite>complete_basic_block()</cite> is called, it is ensured that all unattached statements are properly attached to
+partial CFG. The partial CFG can be retrieved at any time by property <cite>cfg</cite>.</p>
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGFactory.add_stmts">
+<code class="descname">add_stmts</code><span class="sig-paren">(</span><em>stmts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGFactory.add_stmts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGFactory.add_stmts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds statements to the currently open block.
+:param stmts: a single statement or an iterable of statements
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGFactory.append_cfg">
+<code class="descname">append_cfg</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGFactory.append_cfg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGFactory.append_cfg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.frontend.cfg_generator.CFGFactory.cfg">
+<code class="descname">cfg</code><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGFactory.cfg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGFactory.complete_basic_block">
+<code class="descname">complete_basic_block</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGFactory.complete_basic_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGFactory.complete_basic_block" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGFactory.incomplete_block">
+<code class="descname">incomplete_block</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGFactory.incomplete_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGFactory.incomplete_block" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGFactory.prepend_cfg">
+<code class="descname">prepend_cfg</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGFactory.prepend_cfg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGFactory.prepend_cfg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor">
+<em class="property">class </em><code class="descclassname">lyra.frontend.cfg_generator.</code><code class="descname">CFGVisitor</code><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ast.NodeVisitor</span></code></p>
+<p>This AST visitor generates a CFG recursively.</p>
+<p>Overwritten methods return either a partial CFG or a statement/expression, depending on the type of node.</p>
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.generic_visit">
+<code class="descname">generic_visit</code><span class="sig-paren">(</span><em>node</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.generic_visit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit">
+<code class="descname">visit</code><span class="sig-paren">(</span><em>node</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit a node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_AnnAssign">
+<code class="descname">visit_AnnAssign</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_AnnAssign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_AnnAssign" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_BinOp">
+<code class="descname">visit_BinOp</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_BinOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_BinOp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_BoolOp">
+<code class="descname">visit_BoolOp</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_BoolOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_BoolOp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Break">
+<code class="descname">visit_Break</code><span class="sig-paren">(</span><em>_</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Break"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Break" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Call">
+<code class="descname">visit_Call</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Call" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Compare">
+<code class="descname">visit_Compare</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Compare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Compare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Continue">
+<code class="descname">visit_Continue</code><span class="sig-paren">(</span><em>_</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Continue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Continue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Expr">
+<code class="descname">visit_Expr</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Expr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Expr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_If">
+<code class="descname">visit_If</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_If"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_If" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_List">
+<code class="descname">visit_List</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_List"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Module">
+<code class="descname">visit_Module</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Module" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Name">
+<code class="descname">visit_Name</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_NameConstant">
+<code class="descname">visit_NameConstant</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_NameConstant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_NameConstant" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Num">
+<code class="descname">visit_Num</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Num"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Num" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Str">
+<code class="descname">visit_Str</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Str" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Subscript">
+<code class="descname">visit_Subscript</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Subscript"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Subscript" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_UnaryOp">
+<code class="descname">visit_UnaryOp</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_UnaryOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_UnaryOp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_While">
+<code class="descname">visit_While</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_While"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_While" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph">
+<em class="property">class </em><code class="descclassname">lyra.frontend.cfg_generator.</code><code class="descname">LooseControlFlowGraph</code><span class="sig-paren">(</span><em>nodes: typing.Set[lyra.core.cfg.Node] = None</em>, <em>in_node: lyra.core.cfg.Node = None</em>, <em>out_node: lyra.core.cfg.Node = None</em>, <em>edges: typing.Set[lyra.core.cfg.Edge] = None</em>, <em>loose_in_edges=None</em>, <em>loose_out_edges=None</em>, <em>both_loose_edges=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#LooseControlFlowGraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="class">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.SpecialEdgeType">
+<em class="property">class </em><code class="descname">SpecialEdgeType</code><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#LooseControlFlowGraph.SpecialEdgeType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.SpecialEdgeType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">enum.Enum</span></code></p>
+<p>An enumeration.</p>
+<dl class="attribute">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.SpecialEdgeType.BREAK">
+<code class="descname">BREAK</code><em class="property"> = 1</em><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.SpecialEdgeType.BREAK" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.SpecialEdgeType.CONTINUE">
+<code class="descname">CONTINUE</code><em class="property"> = 2</em><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.SpecialEdgeType.CONTINUE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.add_edge">
+<code class="descname">add_edge</code><span class="sig-paren">(</span><em>edge</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#LooseControlFlowGraph.add_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.add_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a (loose/normal) edge to this loose CFG.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.add_node">
+<code class="descname">add_node</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#LooseControlFlowGraph.add_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.add_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.append">
+<code class="descname">append</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#LooseControlFlowGraph.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.append" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.both_loose_edges">
+<code class="descname">both_loose_edges</code><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.both_loose_edges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.combine">
+<code class="descname">combine</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#LooseControlFlowGraph.combine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.combine" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.edges">
+<code class="descname">edges</code><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.edges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.eject">
+<code class="descname">eject</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.core.cfg.ControlFlowGraph<a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#LooseControlFlowGraph.eject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.eject" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.in_node">
+<code class="descname">in_node</code><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.in_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.loose">
+<code class="descname">loose</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#LooseControlFlowGraph.loose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.loose" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.loose_in_edges">
+<code class="descname">loose_in_edges</code><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.loose_in_edges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.loose_out_edges">
+<code class="descname">loose_out_edges</code><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.loose_out_edges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.nodes">
+<code class="descname">nodes</code><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.nodes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.out_node">
+<code class="descname">out_node</code><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.out_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.prepend">
+<code class="descname">prepend</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#LooseControlFlowGraph.prepend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.prepend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.replace">
+<code class="descname">replace</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#LooseControlFlowGraph.replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.replace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.special_edges">
+<code class="descname">special_edges</code><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.special_edges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.frontend.cfg_generator.NodeIdentifierGenerator">
+<em class="property">class </em><code class="descclassname">lyra.frontend.cfg_generator.</code><code class="descname">NodeIdentifierGenerator</code><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#NodeIdentifierGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.NodeIdentifierGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A helper class to generate a increasing sequence of node identifiers.</p>
+<dl class="attribute">
+<dt id="lyra.frontend.cfg_generator.NodeIdentifierGenerator.next">
+<code class="descname">next</code><a class="headerlink" href="#lyra.frontend.cfg_generator.NodeIdentifierGenerator.next" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="lyra.frontend.cfg_generator.ast_to_cfg">
+<code class="descclassname">lyra.frontend.cfg_generator.</code><code class="descname">ast_to_cfg</code><span class="sig-paren">(</span><em>root_node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#ast_to_cfg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.ast_to_cfg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the control flow graph from a ast node.
+:param root_node: the root node of the AST to be translated to CFG
+:return: the CFG of the passed AST.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lyra.frontend.cfg_generator.main">
+<code class="descclassname">lyra.frontend.cfg_generator.</code><code class="descname">main</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="lyra.frontend.cfg_generator.source_to_cfg">
+<code class="descclassname">lyra.frontend.cfg_generator.</code><code class="descname">source_to_cfg</code><span class="sig-paren">(</span><em>code</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#source_to_cfg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.source_to_cfg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses the given code and creates its control flow graph.
+:param code: the code as a string
+:return: the CFG of code</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="lyra.semantics.html" class="btn btn-neutral float-right" title="lyra.semantics package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="lyra.engine.usage.html" class="btn btn-neutral" title="lyra.engine.usage package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

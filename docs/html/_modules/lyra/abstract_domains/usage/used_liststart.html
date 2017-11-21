@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">lyra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">src</a></li>
 </ul>
 
             
@@ -142,7 +142,7 @@
 <div class="viewcode-block" id="UsedListStartLattice"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice">[docs]</a><span class="k">class</span> <span class="nc">UsedListStartLattice</span><span class="p">(</span><span class="n">BottomMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Used list start analysis abstract domain representation.</span>
 <span class="sd">    </span>
-<span class="sd">    This uses the Used lattice as base and uses it to store the usage of the start of list, each Used element covers </span>
+<span class="sd">    This uses the Used lattice as base and uses it to store the usageOLD of the start of list, each Used element covers</span>
 <span class="sd">    a possibly empty sequence ``0:q``. Some additional consistency conditions hold for any element of this lattice </span>
 <span class="sd">    that was previously closed by ``closure()``. </span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -166,10 +166,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_suo</span>
 
 <div class="viewcode-block" id="UsedListStartLattice.used_at"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.used_at">[docs]</a>    <span class="k">def</span> <span class="nf">used_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Finds usage at specified index.</span>
+        <span class="sd">&quot;&quot;&quot;Finds usageOLD at specified index.</span>
 <span class="sd">        </span>
 <span class="sd">        Does a linear search through the 3-entry suo dict</span>
-<span class="sd">        to find the entry that is determining the element usage at index.</span>
+<span class="sd">        to find the entry that is determining the element usageOLD at index.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span>
         <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">U</span><span class="p">]:</span>
@@ -182,7 +182,7 @@
             <span class="k">return</span> <span class="n">N</span></div>
 
 <div class="viewcode-block" id="UsedListStartLattice.set_used_at"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.used_liststart.UsedListStartLattice.set_used_at">[docs]</a>    <span class="k">def</span> <span class="nf">set_used_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">Used</span> <span class="o">=</span> <span class="n">U</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set usage at specified index.</span>
+        <span class="sd">&quot;&quot;&quot;Set usageOLD at specified index.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">suo</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">index</span><span class="p">)</span>

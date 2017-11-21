@@ -1,10 +1,10 @@
-x = bool(input())
-# RESULT: x -> U, y -> O
-y = bool(input())
+x: bool = bool(input())
+# STATE: x -> U, y -> W
+y: bool = bool(input())
 if x:
-    x = x and y
-    y = False
+    x: bool = x and y
+    y: bool = False
 if x:
-    x = x and y
-    y = False
+    x: bool = x and y
+    y: bool = False
 print(y)

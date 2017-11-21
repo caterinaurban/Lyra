@@ -1,6 +1,15 @@
+"""
+Control Flow Graph
+==================
+
+Lyra's internal representation of a Python program.
+
+:Author: Caterina Urban
+"""
+
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import Dict, List, Set, Tuple, Generator, Union
+from typing import Dict, List, Set, Tuple, Union
 
 from lyra.core.statements import Statement
 
@@ -143,8 +152,7 @@ class Unconditional(Edge):
 
 
 class Conditional(Edge):
-    def __init__(self, source: Union[Node, None], condition: Statement, target: Union[Node, None],
-                 kind=Edge.Kind.DEFAULT):
+    def __init__(self, source: Union[Node, None], condition: Statement, target: Union[Node, None], kind=Edge.Kind.DEFAULT):
         """Conditional edge of a control flow graph.
         
         :param source: source node of the edge
@@ -192,28 +200,6 @@ class ControlFlowGraph:
     @property
     def edges(self) -> Dict[Tuple[Node, Node], Edge]:
         return self._edges
-
-    def nodes_forward(self) -> Generator[Node, None, None]:
-        worklist = [self.in_node]
-        done = set()
-        while worklist:
-            current = worklist.pop()
-            if current not in done:
-                done.add(current)
-                yield current
-                for successor in self.successors(current):
-                    worklist.insert(0, successor)
-
-    def nodes_backward(self) -> Generator[Node, None, None]:
-        worklist = [self.out_node]
-        done = set()
-        while worklist:
-            current = worklist.pop()
-            if current not in done:
-                done.add(current)
-                yield current
-                for predecessor in self.predecessors(current):
-                    worklist.insert(0, predecessor)
 
     def in_edges(self, node: Node) -> Set[Edge]:
         """Ingoing edges of a given node.

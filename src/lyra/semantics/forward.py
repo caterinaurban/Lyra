@@ -1,7 +1,17 @@
+"""
+Forward Semantics
+=================
+
+Lyra's internal forward semantics of statements.
+
+:Authors: Caterina Urban
+"""
+
+
 from lyra.semantics.semantics import Semantics, DefaultSemantics
 
 from lyra.abstract_domains.state import State
-from lyra.core.statements import VariableAccess, Assignment, Call
+from lyra.core.statements import Assignment, Call
 
 
 class ForwardSemantics(Semantics):
@@ -12,14 +22,16 @@ class ForwardSemantics(Semantics):
 class UserDefinedCallSemantics(ForwardSemantics):
     """Forward semantics of user-defined function/method calls."""
 
-    def user_defined_call_semantics(self, stmt: Call, state: State) -> State:
+    # noinspection PyUnusedLocal
+    def user_defined_call_semantics(self, stmt: Call, state: State):
         """Forward semantics of a user-defined function/method call.
 
         :param stmt: call statement to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        raise NotImplementedError("Forward semantics for call statement {} not yet implemented!".format(stmt))
+        error = f"Forward semantics for call statement {stmt} not yet implemented!"
+        raise NotImplementedError(error)
 
 
 class AssignmentSemantics(ForwardSemantics):
@@ -34,10 +46,7 @@ class AssignmentSemantics(ForwardSemantics):
         """
         lhs = self.semantics(stmt.left, state).result    # lhs evaluation
         rhs = self.semantics(stmt.right, state).result   # rhs evaluation
-        if isinstance(stmt.left, VariableAccess):
-            return state.assign_variable(lhs, rhs)
-        else:
-            raise NotImplementedError("Forward semantics for assignment {0!s} not yet implemented!".format(self))
+        return state.assign(lhs, rhs)
 
 
 # noinspection PyAbstractClass

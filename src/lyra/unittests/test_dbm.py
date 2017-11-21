@@ -3,6 +3,7 @@ from unittest import TestCase
 
 from lyra.abstract_domains.numerical.dbm import IntegerCDBM
 
+
 class TestCDBM(TestCase):
     def test_set_get(self):
         dbm = IntegerCDBM(6)

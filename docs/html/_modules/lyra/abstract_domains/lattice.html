@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lyra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
 </ul>
 
             
@@ -136,6 +136,8 @@
 <span class="sd">=======</span>
 
 <span class="sd">Interface of a lattice. Lattice elements support lattice operations.</span>
+
+<span class="sd">:Author: Caterina Urban</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
@@ -210,7 +212,7 @@
         <span class="sd">&quot;&quot;&quot;Partial order between default lattice elements.</span>
 
 <span class="sd">        :param other: other lattice element</span>
-<span class="sd">        :return: whether the current lattice element is less than or equal to the other lattice element</span>
+<span class="sd">        :return: whether the current lattice element is less than or equal to the other element</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -218,7 +220,7 @@
         <span class="sd">&quot;&quot;&quot;Partial order between lattice elements.</span>
 
 <span class="sd">        :param other: other lattice element</span>
-<span class="sd">        :return: whether the current lattice element is less than or equal to the other lattice element</span>
+<span class="sd">        :return: whether the current lattice element is less than or equal to the other element</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
@@ -233,7 +235,7 @@
         <span class="sd">&quot;&quot;&quot;Least upper bound between default lattice elements.</span>
 
 <span class="sd">        :param other: other lattice element</span>
-<span class="sd">        :return: current lattice element modified to be the least upper bound of the two lattice elements</span>
+<span class="sd">        :return: current lattice element modified to be the least upper bound</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -241,7 +243,7 @@
         <span class="sd">&quot;&quot;&quot;Least upper bound between lattice elements.</span>
 
 <span class="sd">        :param other: other lattice element</span>
-<span class="sd">        :return: current lattice element modified to be the least upper bound of the two lattice elements</span>
+<span class="sd">        :return: current lattice element modified to be the least upper bound</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
@@ -255,7 +257,7 @@
         <span class="sd">&quot;&quot;&quot;Least upper bound between multiple lattice elements.</span>
 
 <span class="sd">        :param elements: lattice elements to compute the least upper bound of</span>
-<span class="sd">        :return: current lattice element modified to be the least upper bound of the lattice elements</span>
+<span class="sd">        :return: current lattice element modified to be the least upper bound</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">:</span> <span class="n">s1</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s2</span><span class="p">),</span> <span class="n">elements</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">())</span></div>
@@ -265,7 +267,7 @@
         <span class="sd">&quot;&quot;&quot;Greatest lower bound between default lattice elements.</span>
 
 <span class="sd">        :param other: other lattice element</span>
-<span class="sd">        :return: current lattice element modified to be the greatest lower bound of the two lattice elements</span>
+<span class="sd">        :return: current lattice element modified to be the greatest lower bound</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -273,7 +275,7 @@
         <span class="sd">&quot;&quot;&quot;Greatest lower bound between lattice elements.</span>
 
 <span class="sd">        :param other: other lattice element</span>
-<span class="sd">        :return: current lattice element modified to be the greatest lower bound of the two lattice elements</span>
+<span class="sd">        :return: current lattice element modified to be the greatest lower bound</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
@@ -287,7 +289,7 @@
         <span class="sd">&quot;&quot;&quot;Greatest lower bound between multiple lattice elements.</span>
 
 <span class="sd">        :param elements: lattice elements to compute the greatest lower bound of</span>
-<span class="sd">        :return: current lattice element modified to be the least upper bound of the lattice elements</span>
+<span class="sd">        :return: current lattice element modified to be the least upper bound</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">:</span> <span class="n">s1</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">s2</span><span class="p">),</span> <span class="n">elements</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">top</span><span class="p">())</span></div>
@@ -297,7 +299,7 @@
         <span class="sd">&quot;&quot;&quot;Widening between default lattice elements.</span>
 
 <span class="sd">        :param other: other lattice element</span>
-<span class="sd">        :return: current lattice element modified to be the widening of the two lattice elements</span>
+<span class="sd">        :return: current lattice element modified to be the widening</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -305,11 +307,13 @@
         <span class="sd">&quot;&quot;&quot;Widening between lattice elements.</span>
 
 <span class="sd">        :param other: other lattice element</span>
-<span class="sd">        :return: current lattice element modified to be the widening of the two lattice elements</span>
+<span class="sd">        :return: current lattice element modified to be the widening</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widening</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
@@ -325,7 +329,7 @@
 
 
 <div class="viewcode-block" id="KindMixin"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.KindMixin">[docs]</a><span class="k">class</span> <span class="nc">KindMixin</span><span class="p">(</span><span class="n">Lattice</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Mixin that adds an explicit distinction between bottom, default, and top elements to a lattice.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to add an explicit distinction between bottom, default, and top lattice elements.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="KindMixin.Kind"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.KindMixin.Kind">[docs]</a>    <span class="k">class</span> <span class="nc">Kind</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Kind of a lattice element.&quot;&quot;&quot;</span>
@@ -348,7 +352,7 @@
 
 
 <div class="viewcode-block" id="BottomMixin"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin">[docs]</a><span class="k">class</span> <span class="nc">BottomMixin</span><span class="p">(</span><span class="n">KindMixin</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Mixin that adds a predefined bottom element to a lattice.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to add a predefined bottom element to a lattice.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="BottomMixin.bottom"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin.bottom">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -361,7 +365,7 @@
 
 
 <div class="viewcode-block" id="TopMixin"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.TopMixin">[docs]</a><span class="k">class</span> <span class="nc">TopMixin</span><span class="p">(</span><span class="n">KindMixin</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Mixin that adds a predefined top element to another lattice.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to add a predefined top element to another lattice.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="TopMixin.top"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.TopMixin.top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -397,6 +401,98 @@
 <div class="viewcode-block" id="BoundedLattice.is_top"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BoundedLattice.is_top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">is_top</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">is_top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="n">KindMixin</span><span class="o">.</span><span class="n">Kind</span><span class="o">.</span><span class="n">TOP</span></div></div>
+
+
+<div class="viewcode-block" id="ArithmeticMixin"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin">[docs]</a><span class="k">class</span> <span class="nc">ArithmeticMixin</span><span class="p">(</span><span class="n">Lattice</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to add arithmetic operations to a lattice.&quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_neg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Negation of a default lattice elements.</span>
+
+<span class="sd">        :return: current lattice element modified to be its negation</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ArithmeticMixin.neg"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin.neg">[docs]</a>    <span class="k">def</span> <span class="nf">neg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Negation of a lattice elements.</span>
+
+<span class="sd">        :return: current lattice element modified to be its negation</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_neg</span><span class="p">()</span></div>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Addition between two default lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the sum</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ArithmeticMixin.add"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Addition between two lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the sum</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_sub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Subtraction between two default lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the difference</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ArithmeticMixin.sub"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin.sub">[docs]</a>    <span class="k">def</span> <span class="nf">sub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Subtraction between two lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the difference</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_mult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Multiplication between two default lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the product</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ArithmeticMixin.mult"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin.mult">[docs]</a>    <span class="k">def</span> <span class="nf">mult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Multiplication between two lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the product</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mult</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

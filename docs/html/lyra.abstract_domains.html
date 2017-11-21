@@ -87,15 +87,17 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4 current"><a class="current reference internal" href="#">lyra.abstract_domains package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.core.html">lyra.core package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.engine.html">lyra.engine package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.frontend.html">lyra.frontend package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.semantics.html">lyra.semantics package</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.html#module-lyra.main">Submodules</a></li>
 </ul>
 </li>
 </ul>
@@ -130,7 +132,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">lyra</a> &raquo;</li>
+          <li><a href="modules.html">src</a> &raquo;</li>
       
           <li><a href="lyra.html">lyra package</a> &raquo;</li>
       
@@ -156,21 +158,23 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="lyra.abstract_domains.liveness.html">lyra.abstract_domains.liveness package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="lyra.abstract_domains.liveness.html#module-lyra.abstract_domains.liveness.liveness_domain">Submodules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="lyra.abstract_domains.liveness.html#live-variable-abstract-domain">Live Variable Abstract Domain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.abstract_domains.liveness.html#live-variable-abstract-domains">Live Variable Abstract Domains</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="lyra.abstract_domains.numerical.html">lyra.abstract_domains.numerical package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical.dbm">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical.dbm">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lyra.abstract_domains.numerical.html#interval-abstract-domain">Interval Abstract Domain</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="lyra.abstract_domains.traces.html">lyra.abstract_domains.traces package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="lyra.abstract_domains.traces.html#module-lyra.abstract_domains.traces.traces_domain">Submodules</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="lyra.abstract_domains.usage.html">lyra.abstract_domains.usage package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="lyra.abstract_domains.usage.html#module-lyra.abstract_domains.usage.stack">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lyra.abstract_domains.usage.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lyra.abstract_domains.usage.html#syntactic-usage-abstract-domain">Syntactic Usage Abstract Domain</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -181,11 +185,88 @@
 <div class="section" id="lattice">
 <h3>Lattice<a class="headerlink" href="#lattice" title="Permalink to this headline">¶</a></h3>
 <p>Interface of a lattice. Lattice elements support lattice operations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Author:</th><td class="field-body">Caterina Urban</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="lyra.abstract_domains.lattice.ArithmeticMixin">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.lattice.</code><code class="descname">ArithmeticMixin</code><a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#ArithmeticMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.ArithmeticMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.lattice.Lattice" title="lyra.abstract_domains.lattice.Lattice"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.Lattice</span></code></a></p>
+<p>Mixin to add arithmetic operations to a lattice.</p>
+<dl class="method">
+<dt id="lyra.abstract_domains.lattice.ArithmeticMixin.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.lattice.ArithmeticMixin</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.lattice.ArithmeticMixin<a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#ArithmeticMixin.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.ArithmeticMixin.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Addition between two lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the sum</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.lattice.ArithmeticMixin.mult">
+<code class="descname">mult</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.lattice.ArithmeticMixin</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.lattice.ArithmeticMixin<a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#ArithmeticMixin.mult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.ArithmeticMixin.mult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiplication between two lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the product</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.lattice.ArithmeticMixin.neg">
+<code class="descname">neg</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.lattice.ArithmeticMixin<a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#ArithmeticMixin.neg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.ArithmeticMixin.neg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Negation of a lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be its negation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.lattice.ArithmeticMixin.sub">
+<code class="descname">sub</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.lattice.ArithmeticMixin</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.lattice.ArithmeticMixin<a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#ArithmeticMixin.sub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.ArithmeticMixin.sub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtraction between two lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the difference</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="class">
 <dt id="lyra.abstract_domains.lattice.BottomMixin">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.lattice.</code><code class="descname">BottomMixin</code><a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#BottomMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.BottomMixin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.lattice.KindMixin" title="lyra.abstract_domains.lattice.KindMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.KindMixin</span></code></a></p>
-<p>Mixin that adds a predefined bottom element to a lattice.</p>
+<p>Mixin to add a predefined bottom element to a lattice.</p>
 <dl class="method">
 <dt id="lyra.abstract_domains.lattice.BottomMixin.bottom">
 <code class="descname">bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#BottomMixin.bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.BottomMixin.bottom" title="Permalink to this definition">¶</a></dt>
@@ -287,7 +368,7 @@
 <dt id="lyra.abstract_domains.lattice.KindMixin">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.lattice.</code><code class="descname">KindMixin</code><a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#KindMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.KindMixin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.lattice.Lattice" title="lyra.abstract_domains.lattice.Lattice"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.Lattice</span></code></a></p>
-<p>Mixin that adds an explicit distinction between bottom, default, and top elements to a lattice.</p>
+<p>Mixin to add an explicit distinction between bottom, default, and top lattice elements.</p>
 <dl class="class">
 <dt id="lyra.abstract_domains.lattice.KindMixin.Kind">
 <em class="property">class </em><code class="descname">Kind</code><a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#KindMixin.Kind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.KindMixin.Kind" title="Permalink to this definition">¶</a></dt>
@@ -339,7 +420,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>elements</strong> – lattice elements to compute the least upper bound of</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound of the lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
 </tr>
 </tbody>
 </table>
@@ -355,7 +436,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>elements</strong> – lattice elements to compute the greatest lower bound of</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound of the lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
 </tr>
 </tbody>
 </table>
@@ -413,7 +494,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
 </tr>
 </tbody>
 </table>
@@ -429,7 +510,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other lattice element</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other element</td>
 </tr>
 </tbody>
 </table>
@@ -445,7 +526,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound</td>
 </tr>
 </tbody>
 </table>
@@ -491,7 +572,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the widening of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the widening</td>
 </tr>
 </tbody>
 </table>
@@ -503,7 +584,7 @@
 <dt id="lyra.abstract_domains.lattice.TopMixin">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.lattice.</code><code class="descname">TopMixin</code><a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#TopMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.TopMixin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.lattice.KindMixin" title="lyra.abstract_domains.lattice.KindMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.KindMixin</span></code></a></p>
-<p>Mixin that adds a predefined top element to another lattice.</p>
+<p>Mixin to add a predefined top element to another lattice.</p>
 <dl class="method">
 <dt id="lyra.abstract_domains.lattice.TopMixin.is_top">
 <code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/lattice.html#TopMixin.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.lattice.TopMixin.is_top" title="Permalink to this definition">¶</a></dt>
@@ -538,6 +619,14 @@
 <span class="target" id="module-lyra.abstract_domains.stack"></span><div class="section" id="stack">
 <h3>Stack<a class="headerlink" href="#stack" title="Permalink to this headline">¶</a></h3>
 <p>Stack of lattices.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Authors:</th><td class="field-body">Caterina Urban and Simon Wehrli</td>
+</tr>
+</tbody>
+</table>
 <dl class="class">
 <dt id="lyra.abstract_domains.stack.Stack">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.stack.</code><code class="descname">Stack</code><span class="sig-paren">(</span><em>lattice: typing.Type, arguments: typing.Dict[str, typing.Any]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/stack.html#Stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.stack.Stack" title="Permalink to this definition">¶</a></dt>
@@ -557,7 +646,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other lattice element</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other element</td>
 </tr>
 </tbody>
 </table>
@@ -574,7 +663,7 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound</td>
 </tr>
 </tbody>
 </table>
@@ -591,11 +680,17 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
 </tr>
 </tbody>
 </table>
 <p>The join is performed point-wise for each stack element.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.stack.Stack.lattice">
+<code class="descname">lattice</code><a class="headerlink" href="#lyra.abstract_domains.stack.Stack.lattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lattice element currently on top of the stack.</p>
 </dd></dl>
 
 <dl class="method">
@@ -623,6 +718,14 @@
 <h3>Abstract Domain<a class="headerlink" href="#abstract-domain" title="Permalink to this headline">¶</a></h3>
 <p>Interface of an abstract domain.
 Abstract domain elements support lattice operations and program statements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Author:</th><td class="field-body">Caterina Urban</td>
+</tr>
+</tbody>
+</table>
 <dl class="class">
 <dt id="lyra.abstract_domains.state.State">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.state.</code><code class="descname">State</code><a class="reference internal" href="_modules/lyra/abstract_domains/state.html#State"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.state.State" title="Permalink to this definition">¶</a></dt>
@@ -633,31 +736,15 @@ Abstract domain elements support lattice operations and program statements.</p>
 <p class="last">Lattice operations and statements modify the current state.</p>
 </div>
 <dl class="method">
-<dt id="lyra.abstract_domains.state.State.access_variable">
-<code class="descname">access_variable</code><span class="sig-paren">(</span><em>variable: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/abstract_domains/state.html#State.access_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.state.State.access_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Access a variable.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>variable</strong> – variable to be accesses</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified by the variable access</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.state.State.assign_variable">
-<code class="descname">assign_variable</code><span class="sig-paren">(</span><em>left: typing.Set[lyra.core.expressions.Expression], right: typing.Set[lyra.core.expressions.Expression]</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/abstract_domains/state.html#State.assign_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.state.State.assign_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign an expression to a variable.</p>
+<dt id="lyra.abstract_domains.state.State.assign">
+<code class="descname">assign</code><span class="sig-paren">(</span><em>left: typing.Set[lyra.core.expressions.Expression], right: typing.Set[lyra.core.expressions.Expression]</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/abstract_domains/state.html#State.assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.state.State.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign an expression to another expression.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>left</strong> – set of expressions representing the variable to be assigned to</li>
+<li><strong>left</strong> – set of expressions representing the expression to be assigned to</li>
 <li><strong>right</strong> – set of expressions representing the expression to assign</li>
 </ul>
 </td>
@@ -708,22 +795,6 @@ Abstract domain elements support lattice operations and program statements.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a loop</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.state.State.evaluate_literal">
-<code class="descname">evaluate_literal</code><span class="sig-paren">(</span><em>literal: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/abstract_domains/state.html#State.evaluate_literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.state.State.evaluate_literal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluate a literal.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>literal</strong> – expression to be evaluated</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified by the literal evaluation</td>
 </tr>
 </tbody>
 </table>
@@ -794,15 +865,15 @@ Abstract domain elements support lattice operations and program statements.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="lyra.abstract_domains.state.State.substitute_variable">
-<code class="descname">substitute_variable</code><span class="sig-paren">(</span><em>left: typing.Set[lyra.core.expressions.Expression], right: typing.Set[lyra.core.expressions.Expression]</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/abstract_domains/state.html#State.substitute_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.state.State.substitute_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Substitute an expression to a variable.</p>
+<dt id="lyra.abstract_domains.state.State.substitute">
+<code class="descname">substitute</code><span class="sig-paren">(</span><em>left: typing.Set[lyra.core.expressions.Expression], right: typing.Set[lyra.core.expressions.Expression]</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/abstract_domains/state.html#State.substitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.state.State.substitute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substitute an expression to another expression.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>left</strong> – set of expressions representing the variable to be substituted</li>
+<li><strong>left</strong> – set of expressions representing the expression to be substituted</li>
 <li><strong>right</strong> – set of expressions representing the expression to substitute</li>
 </ul>
 </td>
@@ -820,11 +891,20 @@ Abstract domain elements support lattice operations and program statements.</p>
 <span class="target" id="module-lyra.abstract_domains.store"></span><div class="section" id="store">
 <h3>Store<a class="headerlink" href="#store" title="Permalink to this headline">¶</a></h3>
 <p>Lifting of a lattice to a set of program variables.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Authors:</th><td class="field-body">Caterina Urban and Simon Wehrli</td>
+</tr>
+</tbody>
+</table>
 <dl class="class">
 <dt id="lyra.abstract_domains.store.Store">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.store.</code><code class="descname">Store</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier], lattices: typing.Dict[typing.Type, typing.Type[lyra.abstract_domains.lattice.Lattice]], arguments: typing.Dict[typing.Type, typing.Dict[str, typing.Any]] = defaultdict(&lt;function Store.&lt;lambda&gt;&gt;, {})</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/store.html#Store"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.store.Store" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.lattice.Lattice" title="lyra.abstract_domains.lattice.Lattice"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.Lattice</span></code></a></p>
-<p>Mutable element of a store <code class="docutils literal"><span class="pre">Var</span> <span class="pre">-&gt;</span> <span class="pre">L</span></code>, lifting a lattice <code class="docutils literal"><span class="pre">L</span></code> to a set of program variables <code class="docutils literal"><span class="pre">Var</span></code>.</p>
+<p>Mutable element of a store <code class="docutils literal"><span class="pre">Var</span> <span class="pre">-&gt;</span> <span class="pre">L</span></code>,
+lifting a lattice <code class="docutils literal"><span class="pre">L</span></code> to a set of program variables <code class="docutils literal"><span class="pre">Var</span></code>.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">Lattice operations modify the current store.</p>
@@ -839,7 +919,7 @@ Abstract domain elements support lattice operations and program statements.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other lattice element</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other element</td>
 </tr>
 </tbody>
 </table>
@@ -856,7 +936,7 @@ Abstract domain elements support lattice operations and program statements.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound</td>
 </tr>
 </tbody>
 </table>
@@ -873,7 +953,7 @@ Abstract domain elements support lattice operations and program statements.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound of the two lattice elements</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
 </tr>
 </tbody>
 </table>

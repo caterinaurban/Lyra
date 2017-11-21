@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">lyra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">src</a></li>
 </ul>
 
             
@@ -138,11 +138,10 @@
 
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.state</span> <span class="k">import</span> <span class="n">State</span>
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.store</span> <span class="k">import</span> <span class="n">Store</span>
-<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">ListDisplay</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Index</span>
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">ListDisplay</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">walk</span>
 
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.usage.used</span> <span class="k">import</span> <span class="n">UsedLattice</span><span class="p">,</span> <span class="n">Used</span>
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.usage.used_liststart</span> <span class="k">import</span> <span class="n">UsedListStartLattice</span>
-<span class="kn">from</span> <span class="nn">lyra.core.expressions_tools</span> <span class="k">import</span> <span class="n">walk</span>
 
 
 <div class="viewcode-block" id="UsedStore"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.store.UsedStore">[docs]</a><span class="k">class</span> <span class="nc">UsedStore</span><span class="p">(</span><span class="n">Store</span><span class="p">,</span> <span class="n">State</span><span class="p">):</span>

@@ -4,6 +4,8 @@ Abstract Domain
 
 Interface of an abstract domain.
 Abstract domain elements support lattice operations and program statements.
+
+:Author: Caterina Urban
 """
 
 
@@ -12,7 +14,7 @@ from copy import deepcopy
 from typing import Set
 
 from lyra.abstract_domains.lattice import Lattice
-from lyra.core.expressions import Expression, VariableIdentifier
+from lyra.core.expressions import Expression
 
 
 class State(Lattice, metaclass=ABCMeta):
@@ -38,43 +40,24 @@ class State(Lattice, metaclass=ABCMeta):
         return ", ".join("{}".format(expression) for expression in self.result)
 
     @abstractmethod
-    def _access_variable(self, variable: VariableIdentifier) -> Set[Expression]:
-        """Retrieve a variable value. Account for side-effects by modifying the current state. 
+    def _assign(self, left: Expression, right: Expression) -> 'State':
+        """Assign an expression to another expression.
         
-        :param variable: variable to retrieve the value of
-        :return: set of expressions representing the variable value
-
-        """
-
-    def access_variable(self, variable: VariableIdentifier) -> 'State':
-        """Access a variable.
-        
-        :param variable: variable to be accesses
-        :return: current state modified by the variable access
-
-        """
-        self.result = self._access_variable(variable)
-        return self
-
-    @abstractmethod
-    def _assign_variable(self, left: Expression, right: Expression) -> 'State':
-        """Assign an expression to a variable.
-        
-        :param left: expression representing the variable to be assigned to 
+        :param left: expression to be assigned to
         :param right: expression to assign
         :return: current state modified by the variable assignment
 
         """
 
-    def assign_variable(self, left: Set[Expression], right: Set[Expression]) -> 'State':
-        """Assign an expression to a variable.
+    def assign(self, left: Set[Expression], right: Set[Expression]) -> 'State':
+        """Assign an expression to another expression.
         
-        :param left: set of expressions representing the variable to be assigned to
+        :param left: set of expressions representing the expression to be assigned to
         :param right: set of expressions representing the expression to assign
         :return: current state modified by the variable assignment
 
         """
-        self.big_join([deepcopy(self)._assign_variable(lhs, rhs) for lhs in left for rhs in right])
+        self.big_join([deepcopy(self)._assign(lhs, rhs) for lhs in left for rhs in right])
         self.result = set()  # assignments have no result, only side-effects
         return self
 
@@ -95,25 +78,6 @@ class State(Lattice, metaclass=ABCMeta):
 
         """
         self.big_join([deepcopy(self)._assume(expr) for expr in condition])
-        return self
-
-    @abstractmethod
-    def _evaluate_literal(self, literal: Expression) -> Set[Expression]:
-        """Retrieve a literal value. Account for side-effects by modifying the current state.
-
-        :param literal: literal to retrieve the value of
-        :return: set of expressions representing the literal value
-
-        """
-
-    def evaluate_literal(self, literal: Expression) -> 'State':
-        """Evaluate a literal.
-
-        :param literal: expression to be evaluated
-        :return: current state modified by the literal evaluation
-
-        """
-        self.result = self._evaluate_literal(literal)
         return self
 
     @abstractmethod
@@ -179,23 +143,23 @@ class State(Lattice, metaclass=ABCMeta):
         return self
 
     @abstractmethod
-    def _substitute_variable(self, left: Expression, right: Expression) -> 'State':
-        """Substitute an expression to a variable.
+    def _substitute(self, left: Expression, right: Expression) -> 'State':
+        """Substitute an expression to another expression.
 
-        :param left: expression representing the variable to be substituted
+        :param left: expression to be substituted
         :param right: expression to substitute
         :return: current state modified by the variable substitution
 
         """
 
-    def substitute_variable(self, left: Set[Expression], right: Set[Expression]) -> 'State':
-        """Substitute an expression to a variable.
+    def substitute(self, left: Set[Expression], right: Set[Expression]) -> 'State':
+        """Substitute an expression to another expression.
         
-        :param left: set of expressions representing the variable to be substituted
+        :param left: set of expressions representing the expression to be substituted
         :param right: set of expressions representing the expression to substitute
         :return: current state modified by the variable substitution
 
         """
-        self.big_join([deepcopy(self)._substitute_variable(lhs, rhs) for lhs in left for rhs in right])
+        self.big_join([deepcopy(self)._substitute(l, r) for l in left for r in right])
         self.result = set()  # assignments have no result, only side-effects
         return self

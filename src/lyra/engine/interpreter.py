@@ -1,3 +1,10 @@
+"""
+Analysis Engine
+===============
+
+:Author: Caterina Urban
+"""
+
 from abc import ABCMeta, abstractmethod
 
 from lyra.core.cfg import ControlFlowGraph

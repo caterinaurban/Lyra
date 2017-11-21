@@ -1,11 +1,15 @@
-import ast
+"""
+(Strongly) Live Variable Analysis
+=================================
+
+:Author: Caterina Urban
+"""
 
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.runner import Runner
 from lyra.semantics.backward import DefaultBackwardSemantics
 
-from lyra.abstract_domains.liveness.liveness_domain import LivenessState
-from lyra.core.expressions import VariableIdentifier
+from lyra.abstract_domains.liveness.liveness_domain import LivenessState, StrongLivenessState
 
 
 class LivenessAnalysis(Runner):
@@ -14,6 +18,10 @@ class LivenessAnalysis(Runner):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        names = {nd.id for nd in ast.walk(self.tree) if isinstance(nd, ast.Name) and isinstance(nd.ctx, ast.Store)}
-        variables = [VariableIdentifier(int, name) for name in names]
-        return LivenessState(variables)
+        return LivenessState(self.variables)
+
+
+class StrongLivenessAnalysis(LivenessAnalysis):
+
+    def state(self):
+        return StrongLivenessState(self.variables)

@@ -19,17 +19,12 @@ Submodules
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: lyra.core.expressions_tools
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: lyra.core.special_expressions
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 .. automodule:: lyra.core.statements
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: lyra.core.types
     :members:
     :undoc-members:
     :show-inheritance:

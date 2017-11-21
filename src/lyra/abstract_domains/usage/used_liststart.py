@@ -9,7 +9,7 @@ from lyra.abstract_domains.usage.used import U, S, O, N, UsedLattice, Used
 class UsedListStartLattice(BottomMixin):
     """Used list start analysis abstract domain representation.
     
-    This uses the Used lattice as base and uses it to store the usage of the start of list, each Used element covers 
+    This uses the Used lattice as base and uses it to store the usageOLD of the start of list, each Used element covers
     a possibly empty sequence ``0:q``. Some additional consistency conditions hold for any element of this lattice 
     that was previously closed by ``closure()``. 
     """
@@ -33,10 +33,10 @@ class UsedListStartLattice(BottomMixin):
         return self._suo
 
     def used_at(self, index):
-        """Finds usage at specified index.
+        """Finds usageOLD at specified index.
         
         Does a linear search through the 3-entry suo dict
-        to find the entry that is determining the element usage at index.
+        to find the entry that is determining the element usageOLD at index.
         """
         assert self.closed
         if index < self.suo[U]:
@@ -49,7 +49,7 @@ class UsedListStartLattice(BottomMixin):
             return N
 
     def set_used_at(self, index, u: Used = U):
-        """Set usage at specified index.
+        """Set usageOLD at specified index.
         """
         assert self.closed
         self.suo[u] = max(self.suo[u], index)

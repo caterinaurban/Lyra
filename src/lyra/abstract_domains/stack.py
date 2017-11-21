@@ -3,6 +3,8 @@ Stack
 =====
 
 Stack of lattices.
+
+:Authors: Caterina Urban and Simon Wehrli
 """
 
 from abc import ABCMeta, abstractmethod
@@ -35,6 +37,11 @@ class Stack(BoundedLattice, metaclass=ABCMeta):
     def stack(self):
         """Current stack of lattice elements."""
         return self._stack
+
+    @property
+    def lattice(self):
+        """Lattice element currently on top of the stack."""
+        return self.stack[-1]
 
     def __repr__(self):
         return " | ".join(map(repr, self.stack))

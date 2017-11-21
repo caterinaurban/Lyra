@@ -34,9 +34,9 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
-        <link rel="up" title="lyra" href="modules.html"/>
+        <link rel="up" title="src" href="modules.html"/>
         <link rel="next" title="lyra.abstract_domains package" href="lyra.abstract_domains.html"/>
-        <link rel="prev" title="lyra" href="modules.html"/> 
+        <link rel="prev" title="src" href="modules.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -87,13 +87,18 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">lyra package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.core.html">lyra.core package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.engine.html">lyra.engine package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.frontend.html">lyra.frontend package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.semantics.html">lyra.semantics package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-lyra.main">Submodules</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lyra-static-program-analyzer">Lyra Static Program Analyzer</a></li>
 </ul>
 </li>
 </ul>
@@ -130,7 +135,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">lyra</a> &raquo;</li>
+          <li><a href="modules.html">src</a> &raquo;</li>
       
     <li>lyra package</li>
       <li class="wy-breadcrumbs-aside">
@@ -156,21 +161,23 @@
 <li class="toctree-l2"><a class="reference internal" href="lyra.abstract_domains.html#subpackages">Subpackages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="lyra.abstract_domains.liveness.html">lyra.abstract_domains.liveness package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.liveness.html#module-lyra.abstract_domains.liveness.liveness_domain">Submodules</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="lyra.abstract_domains.liveness.html#live-variable-abstract-domain">Live Variable Abstract Domain</a></li>
+<li class="toctree-l5"><a class="reference internal" href="lyra.abstract_domains.liveness.html#live-variable-abstract-domains">Live Variable Abstract Domains</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="lyra.abstract_domains.numerical.html">lyra.abstract_domains.numerical package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical.dbm">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.numerical.html#module-lyra.abstract_domains.numerical.dbm">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="lyra.abstract_domains.numerical.html#interval-abstract-domain">Interval Abstract Domain</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="lyra.abstract_domains.traces.html">lyra.abstract_domains.traces package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.traces.html#module-lyra.abstract_domains.traces.traces_domain">Submodules</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="lyra.abstract_domains.usage.html">lyra.abstract_domains.usage package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.usage.html#module-lyra.abstract_domains.usage.stack">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.usage.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="lyra.abstract_domains.usage.html#syntactic-usage-abstract-domain">Syntactic Usage Abstract Domain</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -185,44 +192,75 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="lyra.core.html">lyra.core package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="lyra.core.html#module-lyra.core.cfg">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lyra.core.html#module-lyra.core.cfg">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lyra.core.html#control-flow-graph">Control Flow Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.core.html#expressions">Expressions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.core.html#statements">Statements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.core.html#types">Types</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="lyra.engine.html">lyra.engine package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="lyra.engine.html#subpackages">Subpackages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="lyra.engine.liveness.html">lyra.engine.liveness package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="lyra.engine.liveness.html#module-lyra.engine.liveness.liveness_analysis">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.engine.liveness.html#module-lyra.engine.liveness.liveness_analysis">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="lyra.engine.liveness.html#strongly-live-variable-analysis">(Strongly) Live Variable Analysis</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="lyra.engine.numerical.html">lyra.engine.numerical package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="lyra.engine.numerical.html#module-lyra.engine.numerical.interval_analysis">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.engine.numerical.html#module-lyra.engine.numerical.interval_analysis">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="lyra.engine.numerical.html#interval-analysis">Interval analysis</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="lyra.engine.traces.html">lyra.engine.traces package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="lyra.engine.traces.html#module-lyra.engine.traces.traces_analysis">Submodules</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="lyra.engine.usage.html">lyra.engine.usage package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="lyra.engine.usage.html#module-lyra.engine.usage.usage_analysis">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.engine.usage.html#module-lyra.engine.usage.usage_analysis">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="lyra.engine.usage.html#input-data-usage-analysis">Input Data Usage Analysis</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="lyra.engine.html#module-lyra.engine.backward">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="lyra.engine.html#module-lyra.engine.backward">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lyra.engine.html#backward-analysis-engine">Backward Analysis Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.engine.html#forward-analysis-engine">Forward Analysis Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.engine.html#analysis-engine">Analysis Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.engine.html#program-analysis">Program Analysis</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="lyra.frontend.html">lyra.frontend package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="lyra.frontend.html#module-lyra.frontend.cfg_generator">Submodules</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="lyra.semantics.html">lyra.semantics package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="lyra.semantics.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="lyra.semantics.usage.html">lyra.semantics.usage package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="lyra.semantics.usage.html#module-lyra.semantics.usage.usage_semantics">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lyra.semantics.html#module-lyra.semantics.backward">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lyra.semantics.html#backward-semantics">Backward Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.semantics.html#forward-semantics">Forward Semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.semantics.html#semantics">Semantics</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="lyra.semantics.html#module-lyra.semantics.backward">Submodules</a></li>
 </ul>
-</li>
-</ul>
+</div>
+</div>
+<div class="section" id="module-lyra.main">
+<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.main" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="lyra-static-program-analyzer">
+<h3>Lyra Static Program Analyzer<a class="headerlink" href="#lyra-static-program-analyzer" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="lyra.main.main">
+<code class="descclassname">lyra.main.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/main.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.main.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Static analyzer entry point.</p>
+</dd></dl>
+
 </div>
 </div>
 </div>
@@ -237,7 +275,7 @@
         <a href="lyra.abstract_domains.html" class="btn btn-neutral float-right" title="lyra.abstract_domains package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="modules.html" class="btn btn-neutral" title="lyra" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="modules.html" class="btn btn-neutral" title="src" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

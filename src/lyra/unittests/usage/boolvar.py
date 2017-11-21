@@ -1,9 +1,9 @@
-b = bool(input())
-q = bool(input())
-# RESULT: b -> U, q -> U, z -> O
-z = 1
+b: bool = bool(input())
+q: bool = bool(input())
+# STATE: b -> U, q -> U, z -> W
+z: int = 1
 if b and q:
-    z = 1
+    z: int = 1
 else:
-    z = 0
+    z: int = 0
 print(z)

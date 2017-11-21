@@ -1,6 +1,6 @@
-x = int(input())
+x: int = int(input())
 
-# RESULT: a -> O, x -> U
+# STATE: x -> U, a -> W
 
-a = x
+a: int = x
 print(a)

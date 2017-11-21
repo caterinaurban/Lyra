@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lyra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
 </ul>
 
             
@@ -131,16 +131,28 @@
            <div itemprop="articleBody">
             
   <h1>Source code for lyra.semantics.semantics</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">itertools</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Semantics</span>
+<span class="sd">=========</span>
+
+<span class="sd">Lyra&#39;s internal semantics of statements.</span>
+
+<span class="sd">:Authors: Caterina Urban and Simon Wehrli</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
-
-<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">BinaryArithmeticOperation</span><span class="p">,</span> <span class="n">BinaryOperation</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="p">,</span> <span class="n">UnaryOperation</span><span class="p">,</span> \
-    <span class="n">UnaryArithmeticOperation</span><span class="p">,</span> <span class="n">UnaryBooleanOperation</span><span class="p">,</span> <span class="n">BinaryBooleanOperation</span><span class="p">,</span> <span class="n">Input</span><span class="p">,</span> <span class="n">ListDisplay</span><span class="p">,</span> <span class="n">Slice</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">Literal</span>
-
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">BinaryArithmeticOperation</span><span class="p">,</span> <span class="n">Subscription</span><span class="p">,</span> <span class="n">Slicing</span><span class="p">,</span> \
+    <span class="n">LengthIdentifier</span>
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">BinaryOperation</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span>
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">UnaryOperation</span>
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">UnaryArithmeticOperation</span><span class="p">,</span> <span class="n">UnaryBooleanOperation</span>
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">BinaryBooleanOperation</span><span class="p">,</span> <span class="n">Input</span><span class="p">,</span> <span class="n">ListDisplay</span><span class="p">,</span> <span class="n">Literal</span>
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.state</span> <span class="k">import</span> <span class="n">State</span>
-<span class="kn">from</span> <span class="nn">lyra.core.statements</span> <span class="k">import</span> <span class="n">Statement</span><span class="p">,</span> <span class="n">VariableAccess</span><span class="p">,</span> <span class="n">LiteralEvaluation</span><span class="p">,</span> <span class="n">Call</span><span class="p">,</span> <span class="n">ListDisplayStmt</span><span class="p">,</span> <span class="n">SliceStmt</span><span class="p">,</span> \
-    <span class="n">IndexStmt</span>
+<span class="kn">from</span> <span class="nn">lyra.core.statements</span> <span class="k">import</span> <span class="n">Statement</span><span class="p">,</span> <span class="n">VariableAccess</span><span class="p">,</span> <span class="n">LiteralEvaluation</span><span class="p">,</span> <span class="n">Call</span><span class="p">,</span> \
+    <span class="n">ListDisplayAccess</span><span class="p">,</span> <span class="n">SubscriptionAccess</span><span class="p">,</span> <span class="n">SlicingAccess</span>
+
 
 <span class="n">_first1</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(.)([A-Z][a-z]+)&#39;</span><span class="p">)</span>
 <span class="n">_all2</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;([a-z0-9])([A-Z])&#39;</span><span class="p">)</span>
@@ -157,7 +169,10 @@
 
 
 <div class="viewcode-block" id="Semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.Semantics">[docs]</a><span class="k">class</span> <span class="nc">Semantics</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Semantics of statements. Independently of the direction (forward/backward) of the analysis.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Semantics of statements.</span>
+
+<span class="sd">    The semantics is independent of the direction (forward/backward) of the analysis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="Semantics.semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.Semantics.semantics">[docs]</a>    <span class="k">def</span> <span class="nf">semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Statement</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a statement.</span>
@@ -169,101 +184,81 @@
         <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_semantics&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">camel_to_snake</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Semantics for statement </span><span class="si">{stmt}</span><span class="s2"> of type {type(stmt)} not yet implemented! &quot;</span>
-                                      <span class="n">f</span><span class="s2">&quot;You must provide method </span><span class="si">{name}</span><span class="s2">(...)&quot;</span><span class="p">)</span></div></div>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Semantics for statement </span><span class="si">{stmt}</span><span class="s2"> of type {type(stmt)} not yet implemented! &quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error</span> <span class="o">+</span> <span class="n">f</span><span class="s2">&quot;You must provide method </span><span class="si">{name}</span><span class="s2">(...)&quot;</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="LiteralEvaluationSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.LiteralEvaluationSemantics">[docs]</a><span class="k">class</span> <span class="nc">LiteralEvaluationSemantics</span><span class="p">(</span><span class="n">Semantics</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Semantics of literal evaluations.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ExpressionSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.ExpressionSemantics">[docs]</a><span class="k">class</span> <span class="nc">ExpressionSemantics</span><span class="p">(</span><span class="n">Semantics</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Semantics of expression evaluations and accesses.&quot;&quot;&quot;</span>
 
     <span class="c1"># noinspection PyMethodMayBeStatic</span>
-<div class="viewcode-block" id="LiteralEvaluationSemantics.literal_evaluation_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.LiteralEvaluationSemantics.literal_evaluation_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">literal_evaluation_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">LiteralEvaluation</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+<div class="viewcode-block" id="ExpressionSemantics.literal_evaluation_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.ExpressionSemantics.literal_evaluation_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">literal_evaluation_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">LiteralEvaluation</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a literal evaluation.</span>
 <span class="sd">        </span>
 <span class="sd">        :param stmt: literal evaluation statement to be executed</span>
 <span class="sd">        :param state: state before executing the literal evaluation</span>
 <span class="sd">        :return: stated modified by the literal evaluation</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">evaluate_literal</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">literal</span><span class="p">)</span></div></div>
-
-
-<div class="viewcode-block" id="VariableAccessSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.VariableAccessSemantics">[docs]</a><span class="k">class</span> <span class="nc">VariableAccessSemantics</span><span class="p">(</span><span class="n">Semantics</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Semantics of variable accesses.&quot;&quot;&quot;</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">stmt</span><span class="o">.</span><span class="n">literal</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">state</span></div>
 
     <span class="c1"># noinspection PyMethodMayBeStatic</span>
-<div class="viewcode-block" id="VariableAccessSemantics.variable_access_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.VariableAccessSemantics.variable_access_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">variable_access_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">VariableAccess</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+<div class="viewcode-block" id="ExpressionSemantics.variable_access_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.ExpressionSemantics.variable_access_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">variable_access_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">VariableAccess</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a variable access.</span>
 <span class="sd">        </span>
 <span class="sd">        :param stmt: variable access statement to be executed</span>
 <span class="sd">        :param state: state before executing the variable access</span>
 <span class="sd">        :return: state modified by the variable access</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">access_variable</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">var</span><span class="p">)</span></div></div>
+        <span class="n">state</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">stmt</span><span class="o">.</span><span class="n">variable</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">state</span></div>
 
+<div class="viewcode-block" id="ExpressionSemantics.list_display_access_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.ExpressionSemantics.list_display_access_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">list_display_access_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">ListDisplayAccess</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Semantics of a list display access.</span>
 
-<div class="viewcode-block" id="ListSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.ListSemantics">[docs]</a><span class="k">class</span> <span class="nc">ListSemantics</span><span class="p">(</span><span class="n">Semantics</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Semantics of list accesses.&quot;&quot;&quot;</span>
-
-<div class="viewcode-block" id="ListSemantics.list_display_stmt_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.ListSemantics.list_display_stmt_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">list_display_stmt_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">ListDisplayStmt</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Semantics of a list display statement.</span>
-
-<span class="sd">        :param stmt :list display statement to be executed</span>
-<span class="sd">        :param state: state before executing the variable access</span>
-<span class="sd">        :return: state modified by the variable access</span>
+<span class="sd">        :param stmt: list display access statement to be executed</span>
+<span class="sd">        :param state: state before executing the list display access</span>
+<span class="sd">        :return: state modified by the list display access</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">item_sets</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">stmt</span><span class="o">.</span><span class="n">items</span><span class="p">]</span>
-        <span class="n">products</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">item_sets</span><span class="p">)</span>
-        <span class="c1"># TODO infer type??</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">ListDisplay</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">}</span>
-
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">stmt</span><span class="o">.</span><span class="n">items</span><span class="p">]</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">combination</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">items</span><span class="p">):</span>
+            <span class="n">display</span> <span class="o">=</span> <span class="n">ListDisplay</span><span class="p">(</span><span class="n">combination</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="n">combination</span><span class="p">))</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">display</span><span class="p">)</span>
         <span class="n">state</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">result</span>
         <span class="k">return</span> <span class="n">state</span></div>
 
-<div class="viewcode-block" id="ListSemantics.slice_stmt_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.ListSemantics.slice_stmt_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">slice_stmt_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">SliceStmt</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Semantics of a slice statement.</span>
+<div class="viewcode-block" id="ExpressionSemantics.subscription_access_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.ExpressionSemantics.subscription_access_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">subscription_access_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">SubscriptionAccess</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Semantics of a subscription access.</span>
 
-<span class="sd">        :param stmt: slice statement to be executed</span>
-<span class="sd">        :param state: state before executing the variable access</span>
-<span class="sd">        :return: state modified by the variable access</span>
+<span class="sd">        :param stmt: subscription access statement to be executed</span>
+<span class="sd">        :param state: state before executing the subscription access</span>
+<span class="sd">        :return: state modified by the subscription access</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
-        <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">lower</span><span class="p">:</span>
-            <span class="n">lowers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">lowers</span> <span class="o">=</span> <span class="p">{</span><span class="kc">None</span><span class="p">}</span>
-        <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">step</span><span class="p">:</span>
-            <span class="n">steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">steps</span> <span class="o">=</span> <span class="p">{</span><span class="kc">None</span><span class="p">}</span>
-        <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">upper</span><span class="p">:</span>
-            <span class="n">uppers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">uppers</span> <span class="o">=</span> <span class="p">{</span><span class="kc">None</span><span class="p">}</span>
-
-        <span class="n">products</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">lowers</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">uppers</span><span class="p">)</span>
-
-        <span class="c1"># TODO infer type of Slice??</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">Slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span> <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">upper</span> <span class="ow">in</span> <span class="n">products</span><span class="p">}</span>
-
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">primary</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+            <span class="n">subscription</span> <span class="o">=</span> <span class="n">Subscription</span><span class="p">(</span><span class="n">primary</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">primary</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">subscription</span><span class="p">)</span>
         <span class="n">state</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">result</span>
         <span class="k">return</span> <span class="n">state</span></div>
 
-<div class="viewcode-block" id="ListSemantics.index_stmt_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.ListSemantics.index_stmt_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">index_stmt_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">IndexStmt</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Semantics of a index statement.</span>
+<div class="viewcode-block" id="ExpressionSemantics.slicing_access_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.ExpressionSemantics.slicing_access_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">slicing_access_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">SlicingAccess</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Semantics of a slicing access.</span>
 
-<span class="sd">        :param stmt: index statement to be executed</span>
-<span class="sd">        :param state: state before executing the variable access</span>
-<span class="sd">        :return: state modified by the variable access</span>
+<span class="sd">        :param stmt: slicing access statement to be executed</span>
+<span class="sd">        :param state: state before executing the slicing access</span>
+<span class="sd">        :return: state modified by the slicing access</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
-        <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
-
-        <span class="n">products</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
-
-        <span class="c1"># TODO infer type of Slice??</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">Index</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">products</span><span class="p">}</span>
-
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span> <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">stride</span> <span class="k">else</span> <span class="p">{</span><span class="kc">None</span><span class="p">}</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">primary</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">stride</span><span class="p">):</span>
+            <span class="n">slicing</span> <span class="o">=</span> <span class="n">Slicing</span><span class="p">(</span><span class="n">primary</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">primary</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">slicing</span><span class="p">)</span>
         <span class="n">state</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">result</span>
         <span class="k">return</span> <span class="n">state</span></div></div>
 
@@ -281,17 +276,79 @@
         <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_call_semantics&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;user_defined_call_semantics&#39;</span><span class="p">)(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;user_defined_call_semantics&#39;</span><span class="p">)(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="BuiltInCallSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics">[docs]</a><span class="k">class</span> <span class="nc">BuiltInCallSemantics</span><span class="p">(</span><span class="n">CallSemantics</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Semantics of built-in function/method calls.&quot;&quot;&quot;</span>
 
+    <span class="k">def</span> <span class="nf">_cast_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;int&#39; or &#39;bool&#39;.</span>
+
+<span class="sd">        :param stmt: call to &#39;int&#39; or &#39;bool&#39; to be executed</span>
+<span class="sd">        :param state: state before executing the call statement</span>
+<span class="sd">        :return: state modified by the call statement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Semantics for multiple arguments of </span><span class="si">{stmt.name}</span><span class="s2"> is not yet implemented!&quot;</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="n">argument</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">expression</span> <span class="ow">in</span> <span class="n">argument</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="n">Input</span><span class="p">):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Input</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="n">Literal</span><span class="p">):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Literal</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expression</span><span class="o">.</span><span class="n">val</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Argument of type </span><span class="si">{expression.typ}</span><span class="s2"> of </span><span class="si">{stmt.name}</span><span class="s2"> is not yet supported!&quot;</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="n">state</span>
+
+<div class="viewcode-block" id="BuiltInCallSemantics.bool_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.bool_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">bool_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;bool&#39;.</span>
+
+<span class="sd">        :param stmt: call to &#39;bool&#39; to be executed</span>
+<span class="sd">        :param state: state before executing the call statement</span>
+<span class="sd">        :return: state modified by the call statement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cast_call_semantics</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BuiltInCallSemantics.int_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.int_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">int_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;int&#39;.</span>
+
+<span class="sd">        :param stmt: call to &#39;int&#39; to be executed</span>
+<span class="sd">        :param state: state before executing the call statement</span>
+<span class="sd">        :return: state modified by the call statement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cast_call_semantics</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+
     <span class="c1"># noinspection PyMethodMayBeStatic</span>
 <div class="viewcode-block" id="BuiltInCallSemantics.input_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.input_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">input_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Semantics of a calls to &#39;input&#39;.</span>
+
+<span class="sd">        :param stmt: call to &#39;input&#39; to be executed</span>
+<span class="sd">        :param state: state before executing the call statement</span>
+<span class="sd">        :return: state modified by the call statement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">state</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">Input</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">)}</span>
         <span class="k">return</span> <span class="n">state</span></div>
+
+<div class="viewcode-block" id="BuiltInCallSemantics.len_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.len_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">len_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;len&#39;.</span>
+
+<span class="sd">        :param stmt: call to &#39;len&#39; to be executed</span>
+<span class="sd">        :param state: state before executing the call statement</span>
+<span class="sd">        :return: state modified by the call statement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>  <span class="c1"># unary operations have exactly one argument</span>
+        <span class="n">argument</span> <span class="o">=</span> <span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">argument</span><span class="p">,</span> <span class="n">VariableAccess</span><span class="p">):</span>
+            <span class="n">variable</span> <span class="o">=</span> <span class="n">argument</span><span class="o">.</span><span class="n">variable</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">LengthIdentifier</span><span class="p">(</span><span class="n">variable</span><span class="p">)}</span>
+            <span class="k">return</span> <span class="n">state</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Semantics for length of </span><span class="si">{argument}</span><span class="s2"> is not yet implemented!&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.print_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.print_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">print_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;print&#39;.</span>
@@ -300,58 +357,36 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">argument</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>  <span class="c1"># argument evaluation</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Semantics for multiple arguments of </span><span class="si">{stmt.name}</span><span class="s2"> is not yet implemented!&quot;</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="n">argument</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
         <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">argument</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BuiltInCallSemantics.int_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.int_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">int_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;No semantics implemented for the multiple arguments to int()&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_unary_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">UnaryOperation</span><span class="o">.</span><span class="n">Operator</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Semantics of a call to a unary operation.</span>
 
-        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">state</span><span class="p">)</span>
-
-        <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">result</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Input</span><span class="p">):</span>
-                <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Input</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">))</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Literal</span><span class="p">):</span>
-                <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Literal</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">val</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;int(arg) call is not supported for arg of type {type(expr)}&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">state</span></div>
-
-<div class="viewcode-block" id="BuiltInCallSemantics.bool_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.bool_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">bool_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;No semantics implemented for the multiple arguments to bool()&quot;</span><span class="p">)</span>
-
-        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">state</span><span class="p">)</span>
-
-        <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">result</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Input</span><span class="p">):</span>
-                <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Input</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">))</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Literal</span><span class="p">):</span>
-                <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Literal</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">val</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;bool(arg) call is not supported for arg of type {type(expr)}&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">state</span></div>
-
-<div class="viewcode-block" id="BuiltInCallSemantics.unary_operation"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.unary_operation">[docs]</a>    <span class="k">def</span> <span class="nf">unary_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">UnaryOperation</span><span class="o">.</span><span class="n">Operator</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+<span class="sd">        :param stmt: call to unary operation to be executed</span>
+<span class="sd">        :param operator: unary operator</span>
+<span class="sd">        :param state: state before executing the call statements</span>
+<span class="sd">        :return: state modified by the call statement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>  <span class="c1"># unary operations have exactly one argument</span>
-        <span class="n">argument</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>  <span class="c1"># argument evaluation</span>
+        <span class="n">argument</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
         <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">UnaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="p">):</span>
-            <span class="n">expression</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">UnaryArithmeticOperation</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span> <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">argument</span><span class="p">)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">expression</span> <span class="ow">in</span> <span class="n">argument</span><span class="p">:</span>
+                <span class="n">operation</span> <span class="o">=</span> <span class="n">UnaryArithmeticOperation</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">UnaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="p">):</span>
-            <span class="n">expression</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">UnaryBooleanOperation</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span> <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">argument</span><span class="p">)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">expression</span> <span class="ow">in</span> <span class="n">argument</span><span class="p">:</span>
+                <span class="n">operation</span> <span class="o">=</span> <span class="n">UnaryBooleanOperation</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                <span class="n">f</span><span class="s2">&quot;Semantics for statement </span><span class="si">{operator}</span><span class="s2"> of type {type(operator)} not yet implemented!&quot;</span><span class="p">)</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Semantics for unary operation </span><span class="si">{operator}</span><span class="s2"> is not yet implemented!&quot;</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
         <span class="n">state</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">result</span>
-        <span class="k">return</span> <span class="n">state</span></div>
+        <span class="k">return</span> <span class="n">state</span>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.not_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.not_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">not_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;!&#39; (negation).</span>
@@ -360,31 +395,55 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">UnaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Neg</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">UnaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Neg</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="BuiltInCallSemantics.binary_operation"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.binary_operation">[docs]</a>    <span class="k">def</span> <span class="nf">binary_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">BinaryOperation</span><span class="o">.</span><span class="n">Operator</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
-        <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">argument</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span> <span class="k">for</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">]</span>  <span class="c1"># argument evaluation</span>
+<div class="viewcode-block" id="BuiltInCallSemantics.uadd_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.uadd_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">uadd_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;+&#39; (unary plus).</span>
+
+<span class="sd">        :param stmt: call to &#39;+&#39; to be executed</span>
+<span class="sd">        :param state: state before executing the call statement</span>
+<span class="sd">        :return: state modified by the call statement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">UnaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Add</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BuiltInCallSemantics.usub_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.usub_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">usub_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;-&#39; (unary minus).</span>
+
+<span class="sd">        :param stmt: call to &#39;-&#39; to be executed</span>
+<span class="sd">        :param state: state before executing the call statement</span>
+<span class="sd">        :return: state modified by the call statement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">UnaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Sub</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_binary_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">operator</span><span class="p">:</span> <span class="n">BinaryOperation</span><span class="o">.</span><span class="n">Operator</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Semantics of a call to a binary operation.</span>
+
+<span class="sd">        :param stmt: call to binary operation to be executed</span>
+<span class="sd">        :param operator: binary operator</span>
+<span class="sd">        :param state: state before executing the call statements</span>
+<span class="sd">        :return: state modified by the call statement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>     <span class="c1"># binary operations have exactly two arguments</span>
+        <span class="n">argument1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+        <span class="n">argument2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
         <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="p">):</span>
-            <span class="n">expression</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="nb">set</span><span class="p">(</span>
-                <span class="n">BinaryArithmeticOperation</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span> <span class="k">for</span> <span class="n">left</span> <span class="ow">in</span> <span class="n">lhs</span> <span class="k">for</span> <span class="n">right</span> <span class="ow">in</span> <span class="n">rhs</span>
-            <span class="p">),</span> <span class="n">arguments</span><span class="p">)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">argument1</span><span class="p">,</span> <span class="n">argument2</span><span class="p">):</span>
+                <span class="n">operation</span> <span class="o">=</span> <span class="n">BinaryArithmeticOperation</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="p">):</span>
-            <span class="n">expression</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="nb">set</span><span class="p">(</span>
-                <span class="n">BinaryComparisonOperation</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span> <span class="k">for</span> <span class="n">left</span> <span class="ow">in</span> <span class="n">lhs</span> <span class="k">for</span> <span class="n">right</span> <span class="ow">in</span> <span class="n">rhs</span>
-            <span class="p">),</span> <span class="n">arguments</span><span class="p">)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">argument1</span><span class="p">,</span> <span class="n">argument2</span><span class="p">):</span>
+                <span class="n">operation</span> <span class="o">=</span> <span class="n">BinaryComparisonOperation</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">BinaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="p">):</span>
-            <span class="n">expression</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="nb">set</span><span class="p">(</span>
-                <span class="n">BinaryBooleanOperation</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span> <span class="k">for</span> <span class="n">left</span> <span class="ow">in</span> <span class="n">lhs</span> <span class="k">for</span> <span class="n">right</span> <span class="ow">in</span> <span class="n">rhs</span>
-            <span class="p">),</span> <span class="n">arguments</span><span class="p">)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">argument1</span><span class="p">,</span> <span class="n">argument2</span><span class="p">):</span>
+                <span class="n">operation</span> <span class="o">=</span> <span class="n">BinaryBooleanOperation</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                <span class="n">f</span><span class="s2">&quot;Semantics for statement </span><span class="si">{operator}</span><span class="s2"> of type {type(operator)} not yet implemented!&quot;</span><span class="p">)</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Semantics for binary operator </span><span class="si">{operator}</span><span class="s2"> is not yet implemented!&quot;</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
         <span class="n">state</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="n">result</span>
-        <span class="k">return</span> <span class="n">state</span></div>
+        <span class="k">return</span> <span class="n">state</span>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.add_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.add_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">add_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;+&#39; (addition, not concatenation).</span>
@@ -393,7 +452,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Add</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Add</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.sub_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.sub_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">sub_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;-&#39; (subtraction).</span>
@@ -402,7 +461,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Sub</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Sub</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.mult_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.mult_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">mult_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;*&#39; (multiplication, not repetition).</span>
@@ -411,7 +470,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Mult</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Mult</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.div_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.div_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">div_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;/&#39; (division).</span>
@@ -420,25 +479,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Div</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="BuiltInCallSemantics.uadd_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.uadd_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">uadd_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;+X&#39; (unary plus).</span>
-
-<span class="sd">        :param stmt: call to &#39;+&#39; to be executed</span>
-<span class="sd">        :param state: state before executing the call statement</span>
-<span class="sd">        :return: state modified by the call statement</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">UnaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Add</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="BuiltInCallSemantics.usub_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.usub_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">usub_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;-X&#39; (unary minus).</span>
-
-<span class="sd">        :param stmt: call to &#39;-&#39; to be executed</span>
-<span class="sd">        :param state: state before executing the call statement</span>
-<span class="sd">        :return: state modified by the call statement</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">UnaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Sub</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Div</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.eq_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.eq_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">eq_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;==&#39; (equality).</span>
@@ -447,7 +488,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Eq</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Eq</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.noteq_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.noteq_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">noteq_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;!=&#39; (inequality).</span>
@@ -456,7 +497,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">NotEq</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">NotEq</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.lt_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.lt_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">lt_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;&lt;&#39; (less than).</span>
@@ -465,7 +506,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Lt</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Lt</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.lte_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.lte_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">lte_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;&lt;=&#39; (less than or equal to).</span>
@@ -474,7 +515,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">LtE</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">LtE</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.gt_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.gt_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">gt_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;&gt;&#39; (greater than).</span>
@@ -483,7 +524,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Gt</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Gt</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.gte_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.gte_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">gte_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;&gt;=&#39; (greater than or equal to).</span>
@@ -491,7 +532,7 @@
 <span class="sd">        :param stmt: call to &#39;&gt;=&#39; to be executed</span>
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">GtE</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">GtE</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.is_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.is_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">is_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;is&#39; (identity).</span>
@@ -500,7 +541,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Is</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Is</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.isnot_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.isnot_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">isnot_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;is not&#39; (mismatch).</span>
@@ -509,7 +550,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">IsNot</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">IsNot</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.in_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.in_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">in_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;in&#39; (membership).</span>
@@ -518,7 +559,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">In</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">In</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.notin_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.notin_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">notin_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;not in&#39; (non-membership).</span>
@@ -527,7 +568,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">NotIn</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">NotIn</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.and_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.and_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">and_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;and&#39;.</span>
@@ -536,7 +577,7 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">And</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">And</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BuiltInCallSemantics.or_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.or_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">or_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;or&#39;.</span>
@@ -545,20 +586,13 @@
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Or</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="BuiltInCallSemantics.xor_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.BuiltInCallSemantics.xor_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">xor_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Semantics of a call to &#39;xor&#39;.</span>
-
-<span class="sd">        :param stmt: call to &#39;xor&#39; to be executed</span>
-<span class="sd">        :param state: state before executing the call statement</span>
-<span class="sd">        :return: state modified by the call statement</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Xor</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binary_operation</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">BinaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Or</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="DefaultSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.DefaultSemantics">[docs]</a><span class="k">class</span> <span class="nc">DefaultSemantics</span><span class="p">(</span><span class="n">LiteralEvaluationSemantics</span><span class="p">,</span> <span class="n">VariableAccessSemantics</span><span class="p">,</span> <span class="n">ListSemantics</span><span class="p">,</span> <span class="n">BuiltInCallSemantics</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Default semantics of statements. Independently of the direction (forward/backward) of the semantics.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="DefaultSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.semantics.DefaultSemantics">[docs]</a><span class="k">class</span> <span class="nc">DefaultSemantics</span><span class="p">(</span><span class="n">ExpressionSemantics</span><span class="p">,</span> <span class="n">BuiltInCallSemantics</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Default semantics of statements.</span>
+
+<span class="sd">    The semantics is independent of the direction (forward/backward) of the analysis.&quot;&quot;&quot;</span>
     <span class="k">pass</span></div>
 </pre></div>
 

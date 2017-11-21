@@ -1,7 +1,17 @@
-from abc import ABCMeta, abstractmethod
-from typing import List, Sequence
+"""
+Statements
+==========
 
-from lyra.core.expressions import Literal, VariableIdentifier
+Lyra's internal representation of Python statements.
+
+:Authors: Caterina Urban and Simon Wehrli
+"""
+
+from abc import ABCMeta, abstractmethod
+from typing import List
+
+from lyra.core.expressions import Expression, VariableIdentifier
+from lyra.core.types import LyraType
 
 
 class ProgramPoint:
@@ -32,25 +42,20 @@ class ProgramPoint:
         return not (self == other)
 
     def __repr__(self):
-        return str(self)
+        """Unambiguous string representation of the program point
 
-    def __str__(self):
-        """Program point string representation
-
-        :return: string representing the program point
+        :return: unambiguous string representation
         """
         return "[line:{0.line}, column:{0.column}]".format(self)
 
 
-"""
-Statements.
-https://docs.python.org/3.4/reference/simple_stmts.html
-"""
-
-
 class Statement(metaclass=ABCMeta):
+    """Statement representation.
+
+    https://docs.python.org/3.4/reference/simple_stmts.html
+    """
     def __init__(self, pp: ProgramPoint):
-        """Statement representation.
+        """Statement construction.
         
         :param pp: program point associated with the statement  
         """
@@ -60,12 +65,9 @@ class Statement(metaclass=ABCMeta):
     def pp(self):
         return self._pp
 
-    def __repr__(self):
-        return str(self)
-
     @abstractmethod
-    def __str__(self):
-        """Statement string representation.
+    def __repr__(self):
+        """Unambiguous string representation of the statement.
         
         :return: string representing the statement
         """
@@ -78,8 +80,9 @@ https://docs.python.org/3.4/reference/simple_stmts.html#expression-statements
 
 
 class LiteralEvaluation(Statement):
-    def __init__(self, pp: ProgramPoint, literal: Literal):
-        """Literal evaluation representation.
+    """Literal evaluation expression."""
+    def __init__(self, pp: ProgramPoint, literal: Expression):
+        """Literal evaluation construction.
 
         :param pp: program point associated with the literal evaluation
         :param literal: literal being evaluated
@@ -91,30 +94,112 @@ class LiteralEvaluation(Statement):
     def literal(self):
         return self._literal
 
-    def __str__(self):
+    def __repr__(self):
         return "{0.literal}".format(self)
 
 
-class VariableAccess(Statement):
-    def __init__(self, pp: ProgramPoint, var: VariableIdentifier):
-        """Variable access representation.
+class ExpressionAccess(Statement, metaclass=ABCMeta):
+    """Statement representation for statements that
+    can appear on the left-hand side of assignments."""
+
+
+class VariableAccess(ExpressionAccess):
+    """Variable access representation."""
+    def __init__(self, pp: ProgramPoint, variable: VariableIdentifier):
+        """Variable access construction.
 
         :param pp: program point associated with the variable access
-        :param var: variable being accessed
+        :param variable: variable being accessed
         """
         super().__init__(pp)
-        self._var = var
+        self._variable = variable
 
     @property
-    def var(self):
-        return self._var
+    def variable(self):
+        return self._variable
 
-    def __str__(self):
-        return "{0.var}".format(self)
+    def __repr__(self):
+        return "{0.variable}".format(self)
+
+
+class ListDisplayAccess(ExpressionAccess):
+    """List display access representation."""
+    def __init__(self, pp: ProgramPoint, items: List[Statement]):
+        """List display access construction.
+
+        :param pp: program point associated with the list display access
+        :param items: list of items being displayed
+        """
+        super().__init__(pp)
+        self._items = items
+
+    @property
+    def items(self):
+        return self._items
+
+    def __repr__(self):
+        return str(self.items)
+
+
+class SubscriptionAccess(ExpressionAccess):
+    """Subscription access representation."""
+    def __init__(self, pp: ProgramPoint, target: Statement, key: Statement):
+        """Subscription access construction.
+
+        :param pp: program point associated with the subscription access
+        :param target: target of the subscription access
+        :param key: index at which the target is begin subscripted
+        """
+        super().__init__(pp)
+        self._target = target
+        self._key = key
+
+    @property
+    def target(self):
+        return self._target
+
+    @property
+    def key(self):
+        return self._key
+
+    def __repr__(self):
+        return "{0.target}[{0.key}]".format(self)
+
+
+class SlicingAccess(ExpressionAccess):
+    """Slicing access representation."""
+    def __init__(self, pp: ProgramPoint, target: Statement,
+                 lower: Statement, upper: Statement, stride: Statement = None):
+        super().__init__(pp)
+        self._target = target
+        self._lower = lower
+        self._upper = upper
+        self._stride = stride
+
+    @property
+    def target(self):
+        return self._target
+
+    @property
+    def lower(self):
+        return self._lower
+
+    @property
+    def upper(self):
+        return self._upper
+
+    @property
+    def stride(self):
+        return self._stride
+
+    def __repr__(self):
+        if self.stride:
+            return "{0.target}[{0.lower}:{0.upper}:{0.stride}]".format(self)
+        return "{0.target}[{0.lower}:{0.upper}]".format(self)
 
 
 class Call(Statement):
-    def __init__(self, pp: ProgramPoint, name: str, arguments: List[Statement], typ):
+    def __init__(self, pp: ProgramPoint, name: str, arguments: List[Statement], typ: LyraType):
         """Call statement representation.
         
         :param pp: program point associated with the call
@@ -139,8 +224,15 @@ class Call(Statement):
     def typ(self):
         return self._typ
 
-    def __str__(self):
-        return "{}({})".format(self.name, ", ".join("{}".format(argument) for argument in self.arguments))
+    def __repr__(self):
+        arguments = ", ".join("{}".format(argument) for argument in self.arguments)
+        return "{}({})".format(self.name, arguments)
+
+
+"""
+Assignment Statements.
+https://docs.python.org/3.4/reference/simple_stmts.html#assignment-statements
+"""
 
 
 class Assignment(Statement):
@@ -149,7 +241,7 @@ class Assignment(Statement):
     https://docs.python.org/3.4/reference/simple_stmts.html#assignment-statements
     """
 
-    def __init__(self, pp: ProgramPoint, left: Statement, right: Statement):
+    def __init__(self, pp: ProgramPoint, left: ExpressionAccess, right: Statement):
         """Assignment statement representation.
 
         :param pp: program point associated with the statement
@@ -168,97 +260,5 @@ class Assignment(Statement):
     def right(self):
         return self._right
 
-    def __str__(self):
+    def __repr__(self):
         return "{0.left} = {0.right}".format(self)
-
-
-class ListDisplayStmt(Statement):
-    """List display statement representation.
-    
-    https://docs.python.org/3/reference/expressions.html#list-displays
-    """
-
-    def __init__(self, pp: ProgramPoint, items: Sequence[Statement]):
-        """List display statement representation.
-
-        :param pp: program point associated with the list display
-        :param items: list display items
-        """
-        super().__init__(pp)
-        self._items = items
-
-    @property
-    def items(self):
-        return self._items
-
-    def __str__(self):
-        return str(self.items)
-
-
-class SliceStmt(Statement):
-    """Slice statement (list/dictionary access) representation.
-    """
-
-    def __init__(self, pp: ProgramPoint, target: Statement, lower: Statement, step: Statement, upper: Statement):
-        """Slice statement (list/dictionary access) representation.
-
-        :param pp: program point associated with statement
-        :param target
-        :param lower
-        :param upper
-        :param step
-        """
-        super().__init__(pp)
-        self._target = target
-        self._lower = lower
-        self._step = step
-        self._upper = upper
-
-    @property
-    def target(self):
-        return self._target
-
-    @property
-    def lower(self):
-        return self._lower
-
-    @property
-    def step(self):
-        return self._step
-
-    @property
-    def upper(self):
-        return self._upper
-
-    def __str__(self):
-        if self.step:
-            return "{}[{}:{}:{}]".format(self.target or "", self.lower, self.step, self.upper or "")
-        else:
-            return "{}[{}:{}]".format(self.target, self.lower or "", self.upper or "")
-
-
-class IndexStmt(Statement):
-    """Index statement (list/dictionary access) representation.
-    """
-
-    def __init__(self, pp: ProgramPoint, target: Statement, index: Statement):
-        """Index statement (list/dictionary access) representation.
-
-        :param pp: program point associated with statement
-        :param target
-        :param index
-        """
-        super().__init__(pp)
-        self._target = target
-        self._index = index
-
-    @property
-    def target(self):
-        return self._target
-
-    @property
-    def index(self):
-        return self._index
-
-    def __str__(self):
-        return "{}[{}]".format(self.target, self.index)

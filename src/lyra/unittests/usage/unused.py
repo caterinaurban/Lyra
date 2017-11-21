@@ -1,9 +1,9 @@
-x = bool(input())
-y = bool(input())
-# RESULT: t -> N, x -> N, y -> U
+x: bool = bool(input())
+y: bool = bool(input())
+# STATE: x -> N, y -> U, t -> N
 if x:
-    t = True
+    t: bool = True
 else:
-    t = True
+    t: bool = True
 
 print(y)

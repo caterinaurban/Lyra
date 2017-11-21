@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
         <link rel="up" title="lyra.abstract_domains package" href="lyra.abstract_domains.html"/>
-        <link rel="next" title="lyra.abstract_domains.traces package" href="lyra.abstract_domains.traces.html"/>
+        <link rel="next" title="lyra.abstract_domains.usage package" href="lyra.abstract_domains.usage.html"/>
         <link rel="prev" title="lyra.abstract_domains.liveness package" href="lyra.abstract_domains.liveness.html"/> 
 
   
@@ -87,15 +87,17 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.core.html">lyra.core package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.engine.html">lyra.engine package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.frontend.html">lyra.frontend package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.semantics.html">lyra.semantics package</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.html#module-lyra.main">Submodules</a></li>
 </ul>
 </li>
 </ul>
@@ -130,7 +132,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">lyra</a> &raquo;</li>
+          <li><a href="modules.html">src</a> &raquo;</li>
       
           <li><a href="lyra.html">lyra package</a> &raquo;</li>
       
@@ -262,599 +264,460 @@ Bagnara, Patricia M. Hill, Enea Zaffanella</p>
 <code class="descclassname">lyra.abstract_domains.numerical.dbm.</code><code class="descname">nan2inf</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#nan2inf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.nan2inf" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<span class="target" id="module-lyra.abstract_domains.numerical.interval_domain"></span><dl class="class">
-<dt id="lyra.abstract_domains.numerical.interval_domain.Interval">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.interval_domain.</code><code class="descname">Interval</code><span class="sig-paren">(</span><em>lower=-inf</em>, <em>upper=inf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#Interval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.Interval" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.Interval.add">
-<code class="descname">add</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.Interval<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#Interval.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.Interval.add" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.Interval.empty">
-<code class="descname">empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#Interval.empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.Interval.empty" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.interval_domain.Interval.interval">
-<code class="descname">interval</code><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.Interval.interval" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.interval_domain.Interval.lower">
-<code class="descname">lower</code><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.Interval.lower" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.Interval.mult">
-<code class="descname">mult</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.Interval<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#Interval.mult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.Interval.mult" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.Interval.negate">
-<code class="descname">negate</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.Interval<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#Interval.negate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.Interval.negate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.Interval.set_empty">
-<code class="descname">set_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.Interval<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#Interval.set_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.Interval.set_empty" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.Interval.sub">
-<code class="descname">sub</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.Interval<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#Interval.sub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.Interval.sub" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.interval_domain.Interval.upper">
-<code class="descname">upper</code><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.Interval.upper" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.interval_domain.</code><code class="descname">IntervalDomain</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.store.Store" title="lyra.abstract_domains.store.Store"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.store.Store</span></code></a>, <a class="reference internal" href="#lyra.abstract_domains.numerical.numerical.NumericalMixin" title="lyra.abstract_domains.numerical.numerical.NumericalMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.numerical.numerical.NumericalMixin</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.state.State" title="lyra.abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.state.State</span></code></a></p>
-<dl class="class">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain.Visitor">
-<em class="property">class </em><code class="descname">Visitor</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain.Visitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.Visitor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.numerical.interval_domain.Visitor</span></code></p>
-<p>A visitor to abstractly evaluate an expression (with variables) in the interval domain.</p>
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain.Visitor.visit_VariableIdentifier">
-<code class="descname">visit_VariableIdentifier</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.VariableIdentifier</em>, <em>interval_store</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain.Visitor.visit_VariableIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.Visitor.visit_VariableIdentifier" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain.enter_if">
-<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.enter_if" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain.enter_loop">
-<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.enter_loop" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain.exit_if">
-<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.exit_if" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain.exit_loop">
-<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.exit_loop" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain.forget">
-<code class="descname">forget</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain.forget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.forget" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain.get_bounds">
-<code class="descname">get_bounds</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain.get_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.get_bounds" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain.set_bounds">
-<code class="descname">set_bounds</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em>, <em>lower: int</em>, <em>upper: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain.set_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.set_bounds" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain.set_interval">
-<code class="descname">set_interval</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em>, <em>interval: lyra.abstract_domains.numerical.interval_domain.IntervalLattice</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain.set_interval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.set_interval" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain.set_lb">
-<code class="descname">set_lb</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain.set_lb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.set_lb" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalDomain.set_ub">
-<code class="descname">set_ub</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalDomain.set_ub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalDomain.set_ub" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
+<span class="target" id="module-lyra.abstract_domains.numerical.interval_domain"></span><div class="section" id="interval-abstract-domain">
+<h3>Interval Abstract Domain<a class="headerlink" href="#interval-abstract-domain" title="Permalink to this headline">¶</a></h3>
+<p>Non-relational abstract domain to be used for <strong>interval analysis</strong>.
+The set of possible values of a program variable in a state is represented as an interval.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Authors:</th><td class="field-body">Caterina Urban and Simon Wehrli</td>
+</tr>
+</tbody>
+</table>
 <dl class="class">
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.interval_domain.</code><code class="descname">IntervalLattice</code><span class="sig-paren">(</span><em>lower=-inf</em>, <em>upper=inf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.numerical.interval_domain.Interval" title="lyra.abstract_domains.numerical.interval_domain.Interval"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.numerical.interval_domain.Interval</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin" title="lyra.abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BottomMixin</span></code></a></p>
-<dl class="class">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor">
-<em class="property">class </em><code class="descname">Visitor</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.Visitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.core.html#lyra.core.expressions_tools.ExpressionVisitor" title="lyra.core.expressions_tools.ExpressionVisitor"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions_tools.ExpressionVisitor</span></code></a></p>
-<p>A visitor to abstractly evaluate an expression (without variables) in the interval domain.</p>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin" title="lyra.abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BottomMixin</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin" title="lyra.abstract_domains.lattice.ArithmeticMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.ArithmeticMixin</span></code></a></p>
+<p>Interval lattice. The bottom interval represents an empty set.</p>
+<img alt="_images/interval.jpg" src="_images/interval.jpg" />
+<p>The default abstraction is the unbounded interval [-oo, +oo].</p>
 <dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.generic_visit">
-<code class="descname">generic_visit</code><span class="sig-paren">(</span><em>expr</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.Visitor.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.generic_visit" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_BinaryArithmeticOperation">
-<code class="descname">visit_BinaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.BinaryArithmeticOperation</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.Visitor.visit_BinaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_BinaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_Input">
-<code class="descname">visit_Input</code><span class="sig-paren">(</span><em>_: lyra.core.expressions.Input</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.Visitor.visit_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_Input" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_Literal">
-<code class="descname">visit_Literal</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Literal</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.Visitor.visit_Literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_Literal" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_UnaryArithmeticOperation">
-<code class="descname">visit_UnaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.UnaryArithmeticOperation</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.Visitor.visit_UnaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.Visitor.visit_UnaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="classmethod">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.evaluate">
-<em class="property">classmethod </em><code class="descname">evaluate</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates an expression without variables, interpreting constants in the interval domain.</p>
-<p>If this method encounters any variables, it raises a <code class="docutils literal"><span class="pre">ValueError</span></code>.</p>
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice._less_equal">
+<code class="descname">_less_equal</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.interval_domain.IntervalLattice</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice._less_equal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice._less_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partial order between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other element</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">&lt;=</span> <span class="pre">[c,</span> <span class="pre">d]</span></code> if and only if <code class="docutils literal"><span class="pre">c</span> <span class="pre">&lt;=</span> <span class="pre">a</span></code> and <code class="docutils literal"><span class="pre">b</span> <span class="pre">&lt;=</span> <span class="pre">d</span></code>.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.is_bottom">
-<code class="descname">is_bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.is_bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.is_bottom" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice._meet">
+<code class="descname">_meet</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.interval_domain.IntervalLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice._meet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice._meet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Greatest lower bound between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">/\</span> <span class="pre">[c,</span> <span class="pre">d]</span> <span class="pre">=</span> <span class="pre">[max(a,c),</span> <span class="pre">min(b,d)]</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice._join">
+<code class="descname">_join</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.interval_domain.IntervalLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice._join"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice._join" title="Permalink to this definition">¶</a></dt>
+<dd><p>Least upper bound between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">\/</span> <span class="pre">[c,</span> <span class="pre">d]</span> <span class="pre">=</span> <span class="pre">[min(a,c),</span> <span class="pre">max(b,d)]</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice._widening">
+<code class="descname">_widening</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.interval_domain.IntervalLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice._widening"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice._widening" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widening between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the widening</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">▽</span> <span class="pre">[c,</span> <span class="pre">d]</span> <span class="pre">=</span> <span class="pre">[(c</span> <span class="pre">&lt;</span> <span class="pre">a?</span> <span class="pre">-oo</span> <span class="pre">:</span> <span class="pre">a),</span> <span class="pre">(b</span> <span class="pre">&lt;</span> <span class="pre">d?</span> <span class="pre">+oo</span> <span class="pre">:</span> <span class="pre">b)]</span></code>.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.is_top">
 <code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.is_top" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Test whether the lattice element is top.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is top</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.lower">
+<code class="descname">lower</code><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.lower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current lower bound.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current lower bound if the interval is not empty, <code class="docutils literal"><span class="pre">None</span></code> otherwise</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.top">
 <code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.top" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<span class="target" id="module-lyra.abstract_domains.numerical.linear_forms"></span><dl class="exception">
-<dt id="lyra.abstract_domains.numerical.linear_forms.InvalidFormError">
-<em class="property">exception </em><code class="descclassname">lyra.abstract_domains.numerical.linear_forms.</code><code class="descname">InvalidFormError</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/linear_forms.html#InvalidFormError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.InvalidFormError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="lyra.abstract_domains.numerical.linear_forms.LinearForm">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.linear_forms.</code><code class="descname">LinearForm</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/linear_forms.html#LinearForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.LinearForm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p>Holds an expression in linear form with one or several variables: <cite>+/- var1 +/- var2 + … + interval</cite>.</p>
-<dl class="class">
-<dt id="lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor">
-<em class="property">class </em><code class="descname">Visitor</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.core.html#lyra.core.expressions_tools.ExpressionVisitor" title="lyra.core.expressions_tools.ExpressionVisitor"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions_tools.ExpressionVisitor</span></code></a></p>
-<p>A visitor to generate a single variable linear form.</p>
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.generic_visit">
-<code class="descname">generic_visit</code><span class="sig-paren">(</span><em>expr</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.generic_visit" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_BinaryArithmeticOperation">
-<code class="descname">visit_BinaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.BinaryArithmeticOperation</em>, <em>linear_form</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.visit_BinaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_BinaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_Input">
-<code class="descname">visit_Input</code><span class="sig-paren">(</span><em>_: lyra.core.expressions.Input</em>, <em>linear_form</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.visit_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_Input" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_Literal">
-<code class="descname">visit_Literal</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Literal</em>, <em>linear_form</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.visit_Literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_Literal" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_UnaryArithmeticOperation">
-<code class="descname">visit_UnaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.UnaryArithmeticOperation</em>, <em>linear_form</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.visit_UnaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_UnaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_VariableIdentifier">
-<code class="descname">visit_VariableIdentifier</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.VariableIdentifier</em>, <em>linear_form</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.visit_VariableIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_VariableIdentifier" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_VariadicArithmeticOperation">
-<code class="descname">visit_VariadicArithmeticOperation</code><span class="sig-paren">(</span><em>expr: lyra.core.special_expressions.VariadicArithmeticOperation</em>, <em>linear_form</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/linear_forms.html#LinearForm.Visitor.visit_VariadicArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.LinearForm.Visitor.visit_VariadicArithmeticOperation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.linear_forms.LinearForm.interval">
-<code class="descname">interval</code><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.LinearForm.interval" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.linear_forms.LinearForm.var_summands">
-<code class="descname">var_summands</code><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.LinearForm.var_summands" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="lyra.abstract_domains.numerical.linear_forms.SingleVarLinearForm">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.linear_forms.</code><code class="descname">SingleVarLinearForm</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/linear_forms.html#SingleVarLinearForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.SingleVarLinearForm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.numerical.linear_forms.LinearForm" title="lyra.abstract_domains.numerical.linear_forms.LinearForm"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.numerical.linear_forms.LinearForm</span></code></a></p>
-<p>Holds an expression in linear form with a single variable: <cite>+/- var + interval</cite>.</p>
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.linear_forms.SingleVarLinearForm.var">
-<code class="descname">var</code><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.SingleVarLinearForm.var" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.linear_forms.SingleVarLinearForm.var_sign">
-<code class="descname">var_sign</code><a class="headerlink" href="#lyra.abstract_domains.numerical.linear_forms.SingleVarLinearForm.var_sign" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<span class="target" id="module-lyra.abstract_domains.numerical.numerical"></span><dl class="class">
-<dt id="lyra.abstract_domains.numerical.numerical.NumericalMixin">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.numerical.</code><code class="descname">NumericalMixin</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/numerical.html#NumericalMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.numerical.NumericalMixin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p>A mixin to add a numeric interface to abstract domains.</p>
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.numerical.NumericalMixin.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/numerical.html#NumericalMixin.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.numerical.NumericalMixin.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluate the expression within this numerical domain.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.numerical.NumericalMixin.forget">
-<code class="descname">forget</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/numerical.html#NumericalMixin.forget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.numerical.NumericalMixin.forget" title="Permalink to this definition">¶</a></dt>
-<dd><p>Forget all information about a variable.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.numerical.NumericalMixin.get_bounds">
-<code class="descname">get_bounds</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/numerical.html#NumericalMixin.get_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.numerical.NumericalMixin.get_bounds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the upper and lower bound of a variable.</p>
+<dd><p>Top lattice element.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>var</strong> – the variable of interest</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the top lattice element</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A tuple (lower, upper) of the bounds of <code class="docutils literal"><span class="pre">var</span></code></td>
+</tbody>
+</table>
+<p>The top lattice element is <code class="docutils literal"><span class="pre">[-oo,+oo]</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.upper">
+<code class="descname">upper</code><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.upper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current upper bound.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current upper bound if the interval is not empty, <code class="docutils literal"><span class="pre">None</span></code> otherwise</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.interval_domain.</code><code class="descname">IntervalState</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.store.Store" title="lyra.abstract_domains.store.Store"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.store.Store</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.state.State" title="lyra.abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.state.State</span></code></a></p>
+<p>Interval analysis state. An element of the interval abstract domain.</p>
+<p>Map from each program variable to the interval representing its value.
+The value of all program variables is represented by the unbounded interval by default.</p>
 <dl class="method">
-<dt id="lyra.abstract_domains.numerical.numerical.NumericalMixin.set_bounds">
-<code class="descname">set_bounds</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em>, <em>lower: int</em>, <em>upper: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/numerical.html#NumericalMixin.set_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.numerical.NumericalMixin.set_bounds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the upper and lower bound of a variable.</p>
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState._assign">
+<code class="descname">_assign</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalState<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState._assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState._assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign an expression to another expression.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>var</strong> – the variable of interest</li>
-<li><strong>lower</strong> – the upper bound of <code class="docutils literal"><span class="pre">var</span></code></li>
-<li><strong>upper</strong> – the lower bound of <code class="docutils literal"><span class="pre">var</span></code></li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>left</strong> – expression to be assigned to</li>
+<li><strong>right</strong> – expression to assign</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable assignment</p>
 </td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-</dd></dl>
-
-<span class="target" id="module-lyra.abstract_domains.numerical.octagon_domain"></span><dl class="class">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.octagon_domain.</code><code class="descname">OctagonDomain</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice" title="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.numerical.octagon_domain.OctagonLattice</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.state.State" title="lyra.abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.state.State</span></code></a></p>
-<p>Octagon domain. Extends the octagon lattice with state interface.</p>
-<dl class="class">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor">
-<em class="property">class </em><code class="descname">AssumeVisitor</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.AssumeVisitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.core.html#lyra.core.expressions_tools.ExpressionVisitor" title="lyra.core.expressions_tools.ExpressionVisitor"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions_tools.ExpressionVisitor</span></code></a></p>
-<p>Visits an expression and recursively ‘assumes’ the condition tree.</p>
 <dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.generic_visit">
-<code class="descname">generic_visit</code><span class="sig-paren">(</span><em>expr</em>, <em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.AssumeVisitor.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.generic_visit" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_BinaryBooleanOperation">
-<code class="descname">visit_BinaryBooleanOperation</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.BinaryBooleanOperation</em>, <em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.AssumeVisitor.visit_BinaryBooleanOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_BinaryBooleanOperation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_BinaryComparisonOperation">
-<code class="descname">visit_BinaryComparisonOperation</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.BinaryComparisonOperation</em>, <em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.AssumeVisitor.visit_BinaryComparisonOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_BinaryComparisonOperation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_UnaryBooleanOperation">
-<code class="descname">visit_UnaryBooleanOperation</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.UnaryBooleanOperation</em>, <em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.AssumeVisitor.visit_UnaryBooleanOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.AssumeVisitor.visit_UnaryBooleanOperation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer">
-<em class="property">class </em><code class="descname">SmallerEqualConditionTransformer</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.SmallerEqualConditionTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.core.html#lyra.core.expressions_tools.ExpressionTransformer" title="lyra.core.expressions_tools.ExpressionTransformer"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions_tools.ExpressionTransformer</span></code></a></p>
-<p>Transforms all conditions inside expression to format <code class="docutils literal"><span class="pre">e</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code>.</p>
-<dl class="class">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet">
-<em class="property">class </em><code class="descname">ConditionSet</code><span class="sig-paren">(</span><em>conditions</em>, <em>operator: lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.SmallerEqualConditionTransformer.ConditionSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<dl class="class">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator">
-<em class="property">class </em><code class="descname">Operator</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">enum.Enum</span></code></p>
-<p>An enumeration.</p>
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator.JOIN">
-<code class="descname">JOIN</code><em class="property"> = 1</em><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator.JOIN" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator.MEET">
-<code class="descname">MEET</code><em class="property"> = 0</em><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.Operator.MEET" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState._assume">
+<code class="descname">_assume</code><span class="sig-paren">(</span><em>condition: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalState<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState._assume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState._assume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assume that some condition holds in the current state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>condition</strong> – expression representing the assumed condition</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified to satisfy the assumption</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.combine_conditions">
-<code class="descname">combine_conditions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.combine_conditions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.combine_conditions" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.condition_to_octagon">
-<code class="descname">condition_to_octagon</code><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.condition_to_octagon" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.conditions">
-<code class="descname">conditions</code><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.conditions" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.octagons">
-<code class="descname">octagons</code><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.ConditionSet.octagons" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState._output">
+<code class="descname">_output</code><span class="sig-paren">(</span><em>output: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalState<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState._output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState._output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outputs something in the current state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output</strong> – expression representing the output</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified by the output</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.generic_visit">
-<code class="descname">generic_visit</code><span class="sig-paren">(</span><em>expr</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.SmallerEqualConditionTransformer.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.generic_visit" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.visit_BinaryComparisonOperation">
-<code class="descname">visit_BinaryComparisonOperation</code><span class="sig-paren">(</span><em>cond: lyra.core.expressions.BinaryComparisonOperation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.SmallerEqualConditionTransformer.visit_BinaryComparisonOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.SmallerEqualConditionTransformer.visit_BinaryComparisonOperation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.enter_if">
-<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.octagon_domain.OctagonDomain<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.enter_if" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.enter_loop">
-<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.octagon_domain.OctagonDomain<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.enter_loop" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.exit_if">
-<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.octagon_domain.OctagonDomain<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.exit_if" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.exit_loop">
-<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.octagon_domain.OctagonDomain<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonDomain.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonDomain.exit_loop" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState._substitute">
+<code class="descname">_substitute</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState._substitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState._substitute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substitute an expression to another expression.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>left</strong> – expression to be substituted</li>
+<li><strong>right</strong> – expression to substitute</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable substitution</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="class">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.octagon_domain.</code><code class="descname">OctagonLattice</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin" title="lyra.abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BottomMixin</span></code></a>, <a class="reference internal" href="#lyra.abstract_domains.numerical.numerical.NumericalMixin" title="lyra.abstract_domains.numerical.numerical.NumericalMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.numerical.numerical.NumericalMixin</span></code></a></p>
-<p>Octagon lattice.</p>
-<p>One lattice element is represented by a DBM-matrix internally. This matrix has a special index structure. We show 
-an example for 3 variables <cite>v1</cite>, <cite>v2</cite> and <cite>v3</cite>. Every variable contributes two indices, one for the positive and 
-one for the negative variant of a variable.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>    <span class="n">v1</span><span class="o">+</span>  <span class="n">v1</span><span class="o">-</span>  <span class="n">v2</span><span class="o">+</span>  <span class="n">v2</span><span class="o">-</span>  <span class="n">v3</span><span class="o">+</span>  <span class="n">v3</span><span class="o">-</span>
-<span class="n">v1</span><span class="o">+</span>  <span class="n">D</span>    <span class="n">B</span>
-<span class="n">v1</span><span class="o">-</span>  <span class="n">A</span>    <span class="n">D</span> 
-<span class="n">v2</span><span class="o">+</span>  <span class="n">s</span>    <span class="n">A</span>    <span class="n">D</span>    <span class="n">B</span>
-<span class="n">v2</span><span class="o">-</span>  <span class="n">s</span>    <span class="n">s</span>    <span class="n">A</span>    <span class="n">D</span>
-<span class="n">v3</span><span class="o">+</span>  <span class="n">s</span>    <span class="n">s</span>    <span class="n">s</span>    <span class="n">A</span>    <span class="n">D</span>    <span class="n">B</span>
-<span class="n">v3</span><span class="o">-</span>  <span class="n">s</span>    <span class="n">s</span>    <span class="n">s</span>    <span class="n">s</span>    <span class="n">A</span>    <span class="n">D</span>
-</pre></div>
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement">
+<em class="property">class </em><code class="descname">ArithmeticExpressionRefinement</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.core.html#lyra.core.expressions.ExpressionVisitor" title="lyra.core.expressions.ExpressionVisitor"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.ExpressionVisitor</span></code></a></p>
+<p>Visitor that:</p>
+<ol class="arabic simple">
+<li>refines the value of an evaluated arithmetic expression based on a given interval; and</li>
+<li>modifies the current state based on the refined value of the arithmetic expression.</li>
+</ol>
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit">
+<code class="descname">visit</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Expression</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of an evaluated expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_AttributeReference">
+<code class="descname">visit_AttributeReference</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_AttributeReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_AttributeReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of an attribute reference.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryArithmeticOperation">
+<code class="descname">visit_BinaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_BinaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a binary arithmetic operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryBooleanOperation">
+<code class="descname">visit_BinaryBooleanOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_BinaryBooleanOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryBooleanOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a binary boolean operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryComparisonOperation">
+<code class="descname">visit_BinaryComparisonOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_BinaryComparisonOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryComparisonOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a binary comparison operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Input">
+<code class="descname">visit_Input</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Input</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of an input expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_ListDisplay">
+<code class="descname">visit_ListDisplay</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.ListDisplay</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_ListDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_ListDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a list display.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Literal">
+<code class="descname">visit_Literal</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Literal</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_Literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Literal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a literal expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Slicing">
+<code class="descname">visit_Slicing</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Slicing</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_Slicing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Slicing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a slicing expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Subscription">
+<code class="descname">visit_Subscription</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Subscription</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_Subscription"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Subscription" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a subscription expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_UnaryArithmeticOperation">
+<code class="descname">visit_UnaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_UnaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_UnaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a unary arithmetic operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_UnaryBooleanOperation">
+<code class="descname">visit_UnaryBooleanOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_UnaryBooleanOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_UnaryBooleanOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a unary boolean operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_VariableIdentifier">
+<code class="descname">visit_VariableIdentifier</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_VariableIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_VariableIdentifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a variable identifier.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation">
+<em class="property">class </em><code class="descname">ExpressionEvaluation</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.core.html#lyra.core.expressions.ExpressionVisitor" title="lyra.core.expressions.ExpressionVisitor"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.ExpressionVisitor</span></code></a></p>
+<p>Visitor that performs the evaluation of an expression in the interval lattice.</p>
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_AttributeReference">
+<code class="descname">visit_AttributeReference</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.AttributeReference</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_AttributeReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_AttributeReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of an attribute reference.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryArithmeticOperation">
+<code class="descname">visit_BinaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_BinaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a binary arithmetic operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryBooleanOperation">
+<code class="descname">visit_BinaryBooleanOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_BinaryBooleanOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryBooleanOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a binary boolean operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryComparisonOperation">
+<code class="descname">visit_BinaryComparisonOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_BinaryComparisonOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryComparisonOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a binary comparison operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Input">
+<code class="descname">visit_Input</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Input</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of an input expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_ListDisplay">
+<code class="descname">visit_ListDisplay</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.ListDisplay</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_ListDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_ListDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a list display.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Literal">
+<code class="descname">visit_Literal</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Literal</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_Literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Literal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a literal expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Slicing">
+<code class="descname">visit_Slicing</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Slicing</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_Slicing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Slicing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a slicing expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Subscription">
+<code class="descname">visit_Subscription</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Subscription</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_Subscription"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Subscription" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a subscription expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryArithmeticOperation">
+<code class="descname">visit_UnaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_UnaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a unary arithmetic operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryBooleanOperation">
+<code class="descname">visit_UnaryBooleanOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_UnaryBooleanOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryBooleanOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a unary boolean operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_VariableIdentifier">
+<code class="descname">visit_VariableIdentifier</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.VariableIdentifier</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_VariableIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_VariableIdentifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a variable identifier.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.enter_if">
+<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.enter_if" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enter a conditional if statement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a conditional if statement</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.enter_loop">
+<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.enter_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enter a loop.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a loop</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.exit_if">
+<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.exit_if" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exit a conditional if statement.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a conditional if statement</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.exit_loop">
+<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.exit_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exit a loop.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to exit a loop</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 </div>
-<p>NOTE: Since the matrix is a special kind of symmetric, we only show lower left diagonal matrix. See 
-<code class="xref py py-class docutils literal"><span class="pre">abstract_domains.numerical.dbm.DBM</span></code>.</p>
-<p>The actual constraint, e.g. at matrix entry (<code class="docutils literal"><span class="pre">v1+</span></code>, v2+“) is: <code class="docutils literal"><span class="pre">-</span> <span class="pre">v1</span> <span class="pre">+</span> <span class="pre">v2</span> <span class="pre">&lt;=</span> <span class="pre">c</span></code> (<strong>Note the minus before 
-first term</strong>).</p>
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.binary_constraints_indices">
-<code class="descname">binary_constraints_indices</code><span class="sig-paren">(</span><em>sign1: lyra.core.expressions.UnaryArithmeticOperation.Operator = None</em>, <em>var1: lyra.core.expressions.VariableIdentifier = None</em>, <em>sign2: lyra.core.expressions.UnaryArithmeticOperation.Operator = None</em>, <em>var2: lyra.core.expressions.VariableIdentifier = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.binary_constraints_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.binary_constraints_indices" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate the indices of all binary octagonal constraints (of distinct variables <code class="docutils literal"><span class="pre">var1</span></code>, <code class="docutils literal"><span class="pre">var2</span></code>).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sign1</strong> – positive/negative variant of <code class="docutils literal"><span class="pre">var1</span></code> or <code class="docutils literal"><span class="pre">None</span></code> to generate indices for both</li>
-<li><strong>var1</strong> – first variable or <code class="docutils literal"><span class="pre">None</span></code> to generate indices for whole row</li>
-<li><strong>sign2</strong> – positive/negative variant of <code class="docutils literal"><span class="pre">var2</span></code> or <code class="docutils literal"><span class="pre">None</span></code> to generate indices both</li>
-<li><strong>var2</strong> – second variable or <code class="docutils literal"><span class="pre">None</span></code> to generate indices for whole column</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.close">
-<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Closes this octagon.</p>
-<p>Closes the underlying CDBM, if possible, otherwise sets this octagon to bottom.
-:return: True, if this octagon is consistent &lt;=&gt; this octagon is not bottom.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.dbm">
-<code class="descname">dbm</code><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.dbm" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.evaluate">
-<code class="descname">evaluate</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.evaluate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.forget">
-<code class="descname">forget</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.forget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.forget" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.from_interval_domain">
-<code class="descname">from_interval_domain</code><span class="sig-paren">(</span><em>interval_domain: lyra.abstract_domains.numerical.interval_domain.IntervalDomain</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.from_interval_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.from_interval_domain" title="Permalink to this definition">¶</a></dt>
-<dd><p>Translate the interval constraints from interval domain to this octagonal store.</p>
-<p><strong>NOTE</strong>: This does not reset relational constraints in this octagon!</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.get_bounds">
-<code class="descname">get_bounds</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.get_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.get_bounds" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.get_interval">
-<code class="descname">get_interval</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.get_interval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.get_interval" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.get_lb">
-<code class="descname">get_lb</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.get_lb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.get_lb" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.get_ub">
-<code class="descname">get_ub</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.get_ub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.get_ub" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.is_top">
-<code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.is_top" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.lower_octagonal_constraint">
-<code class="descname">lower_octagonal_constraint</code><span class="sig-paren">(</span><em>sign1: lyra.core.expressions.UnaryArithmeticOperation.Operator</em>, <em>var1: lyra.core.expressions.VariableIdentifier</em>, <em>sign2: lyra.core.expressions.UnaryArithmeticOperation.Operator</em>, <em>var2: lyra.core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.lower_octagonal_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.lower_octagonal_constraint" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.lower_ub">
-<code class="descname">lower_ub</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.lower_ub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.lower_ub" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.raise_lb">
-<code class="descname">raise_lb</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.raise_lb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.raise_lb" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.set_bounds">
-<code class="descname">set_bounds</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em>, <em>lower: int</em>, <em>upper: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.set_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.set_bounds" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.set_interval">
-<code class="descname">set_interval</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier, interval: typing.Union[int, lyra.abstract_domains.numerical.interval_domain.IntervalLattice]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.set_interval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.set_interval" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.set_lb">
-<code class="descname">set_lb</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.set_lb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.set_lb" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.set_octagonal_constraint">
-<code class="descname">set_octagonal_constraint</code><span class="sig-paren">(</span><em>sign1: lyra.core.expressions.UnaryArithmeticOperation.Operator</em>, <em>var1: lyra.core.expressions.VariableIdentifier</em>, <em>sign2: lyra.core.expressions.UnaryArithmeticOperation.Operator</em>, <em>var2: lyra.core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.set_octagonal_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.set_octagonal_constraint" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.set_ub">
-<code class="descname">set_ub</code><span class="sig-paren">(</span><em>var: lyra.core.expressions.VariableIdentifier</em>, <em>constant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.set_ub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.set_ub" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.switch_constraints">
-<code class="descname">switch_constraints</code><span class="sig-paren">(</span><em>index1</em>, <em>index2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.switch_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.switch_constraints" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.to_interval_domain">
-<code class="descname">to_interval_domain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.to_interval_domain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.to_interval_domain" title="Permalink to this definition">¶</a></dt>
-<dd><p>Translate this octagonal store into an interval store.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.top">
-<code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/octagon_domain.html#OctagonLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.top" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.variables">
-<code class="descname">variables</code><a class="headerlink" href="#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.variables" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
 </div>
 </div>
 
@@ -865,7 +728,7 @@ first term</strong>).</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="lyra.abstract_domains.traces.html" class="btn btn-neutral float-right" title="lyra.abstract_domains.traces package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="lyra.abstract_domains.usage.html" class="btn btn-neutral float-right" title="lyra.abstract_domains.usage package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="lyra.abstract_domains.liveness.html" class="btn btn-neutral" title="lyra.abstract_domains.liveness package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
         <link rel="up" title="lyra.engine package" href="lyra.engine.html"/>
-        <link rel="next" title="lyra.engine.traces package" href="lyra.engine.traces.html"/>
+        <link rel="next" title="lyra.engine.usage package" href="lyra.engine.usage.html"/>
         <link rel="prev" title="lyra.engine.liveness package" href="lyra.engine.liveness.html"/> 
 
   
@@ -87,15 +87,17 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.core.html">lyra.core package</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="lyra.engine.html">lyra.engine package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.frontend.html">lyra.frontend package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="lyra.semantics.html">lyra.semantics package</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.html#module-lyra.main">Submodules</a></li>
 </ul>
 </li>
 </ul>
@@ -130,7 +132,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">lyra</a> &raquo;</li>
+          <li><a href="modules.html">src</a> &raquo;</li>
       
           <li><a href="lyra.html">lyra package</a> &raquo;</li>
       
@@ -154,22 +156,49 @@
 <span id="lyra-engine-numerical-package"></span><h1>lyra.engine.numerical package<a class="headerlink" href="#module-lyra.engine.numerical" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-lyra.engine.numerical.interval_analysis">
 <span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.engine.numerical.interval_analysis" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="interval-analysis">
+<h3>Interval analysis<a class="headerlink" href="#interval-analysis" title="Permalink to this headline">¶</a></h3>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Author:</th><td class="field-body">Caterina Urban</td>
+</tr>
+</tbody>
+</table>
 <dl class="class">
-<dt id="lyra.engine.numerical.interval_analysis.IntervalAnalysis">
-<em class="property">class </em><code class="descclassname">lyra.engine.numerical.interval_analysis.</code><code class="descname">IntervalAnalysis</code><a class="reference internal" href="_modules/lyra/engine/numerical/interval_analysis.html#IntervalAnalysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.interval_analysis.IntervalAnalysis" title="Permalink to this definition">¶</a></dt>
+<dt id="lyra.engine.numerical.interval_analysis.BackwardIntervalAnalysis">
+<em class="property">class </em><code class="descclassname">lyra.engine.numerical.interval_analysis.</code><code class="descname">BackwardIntervalAnalysis</code><a class="reference internal" href="_modules/lyra/engine/numerical/interval_analysis.html#BackwardIntervalAnalysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.interval_analysis.BackwardIntervalAnalysis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="lyra.engine.html#lyra.engine.runner.Runner" title="lyra.engine.runner.Runner"><code class="xref py py-class docutils literal"><span class="pre">lyra.engine.runner.Runner</span></code></a></p>
 <dl class="method">
-<dt id="lyra.engine.numerical.interval_analysis.IntervalAnalysis.interpreter">
-<code class="descname">interpreter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/numerical/interval_analysis.html#IntervalAnalysis.interpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.interval_analysis.IntervalAnalysis.interpreter" title="Permalink to this definition">¶</a></dt>
+<dt id="lyra.engine.numerical.interval_analysis.BackwardIntervalAnalysis.interpreter">
+<code class="descname">interpreter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/numerical/interval_analysis.html#BackwardIntervalAnalysis.interpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.interval_analysis.BackwardIntervalAnalysis.interpreter" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="lyra.engine.numerical.interval_analysis.IntervalAnalysis.state">
-<code class="descname">state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/numerical/interval_analysis.html#IntervalAnalysis.state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.interval_analysis.IntervalAnalysis.state" title="Permalink to this definition">¶</a></dt>
+<dt id="lyra.engine.numerical.interval_analysis.BackwardIntervalAnalysis.state">
+<code class="descname">state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/numerical/interval_analysis.html#BackwardIntervalAnalysis.state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.interval_analysis.BackwardIntervalAnalysis.state" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
+<dl class="class">
+<dt id="lyra.engine.numerical.interval_analysis.ForwardIntervalAnalysis">
+<em class="property">class </em><code class="descclassname">lyra.engine.numerical.interval_analysis.</code><code class="descname">ForwardIntervalAnalysis</code><a class="reference internal" href="_modules/lyra/engine/numerical/interval_analysis.html#ForwardIntervalAnalysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.interval_analysis.ForwardIntervalAnalysis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.engine.html#lyra.engine.runner.Runner" title="lyra.engine.runner.Runner"><code class="xref py py-class docutils literal"><span class="pre">lyra.engine.runner.Runner</span></code></a></p>
+<dl class="method">
+<dt id="lyra.engine.numerical.interval_analysis.ForwardIntervalAnalysis.interpreter">
+<code class="descname">interpreter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/numerical/interval_analysis.html#ForwardIntervalAnalysis.interpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.interval_analysis.ForwardIntervalAnalysis.interpreter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.engine.numerical.interval_analysis.ForwardIntervalAnalysis.state">
+<code class="descname">state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/numerical/interval_analysis.html#ForwardIntervalAnalysis.state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.interval_analysis.ForwardIntervalAnalysis.state" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 </div>
 
@@ -180,7 +209,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="lyra.engine.traces.html" class="btn btn-neutral float-right" title="lyra.engine.traces package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="lyra.engine.usage.html" class="btn btn-neutral float-right" title="lyra.engine.usage package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="lyra.engine.liveness.html" class="btn btn-neutral" title="lyra.engine.liveness package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

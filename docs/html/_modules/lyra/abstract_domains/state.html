@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lyra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
 </ul>
 
             
@@ -137,6 +137,8 @@
 
 <span class="sd">Interface of an abstract domain.</span>
 <span class="sd">Abstract domain elements support lattice operations and program statements.</span>
+
+<span class="sd">:Author: Caterina Urban</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -145,7 +147,7 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Set</span>
 
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.lattice</span> <span class="k">import</span> <span class="n">Lattice</span>
-<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">VariableIdentifier</span>
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">Expression</span>
 
 
 <div class="viewcode-block" id="State"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.state.State">[docs]</a><span class="k">class</span> <span class="nc">State</span><span class="p">(</span><span class="n">Lattice</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
@@ -171,43 +173,24 @@
         <span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span> <span class="k">for</span> <span class="n">expression</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_access_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Retrieve a variable value. Account for side-effects by modifying the current state. </span>
+    <span class="k">def</span> <span class="nf">_assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;State&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Assign an expression to another expression.</span>
 <span class="sd">        </span>
-<span class="sd">        :param variable: variable to retrieve the value of</span>
-<span class="sd">        :return: set of expressions representing the variable value</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-
-<div class="viewcode-block" id="State.access_variable"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.state.State.access_variable">[docs]</a>    <span class="k">def</span> <span class="nf">access_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;State&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Access a variable.</span>
-<span class="sd">        </span>
-<span class="sd">        :param variable: variable to be accesses</span>
-<span class="sd">        :return: current state modified by the variable access</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_access_variable</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span></div>
-
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_assign_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;State&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Assign an expression to a variable.</span>
-<span class="sd">        </span>
-<span class="sd">        :param left: expression representing the variable to be assigned to </span>
+<span class="sd">        :param left: expression to be assigned to</span>
 <span class="sd">        :param right: expression to assign</span>
 <span class="sd">        :return: current state modified by the variable assignment</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="State.assign_variable"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.state.State.assign_variable">[docs]</a>    <span class="k">def</span> <span class="nf">assign_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">],</span> <span class="n">right</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;State&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Assign an expression to a variable.</span>
+<div class="viewcode-block" id="State.assign"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.state.State.assign">[docs]</a>    <span class="k">def</span> <span class="nf">assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">],</span> <span class="n">right</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;State&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Assign an expression to another expression.</span>
 <span class="sd">        </span>
-<span class="sd">        :param left: set of expressions representing the variable to be assigned to</span>
+<span class="sd">        :param left: set of expressions representing the expression to be assigned to</span>
 <span class="sd">        :param right: set of expressions representing the expression to assign</span>
 <span class="sd">        :return: current state modified by the variable assignment</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">big_join</span><span class="p">([</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_assign_variable</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span> <span class="k">for</span> <span class="n">lhs</span> <span class="ow">in</span> <span class="n">left</span> <span class="k">for</span> <span class="n">rhs</span> <span class="ow">in</span> <span class="n">right</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">big_join</span><span class="p">([</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_assign</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span> <span class="k">for</span> <span class="n">lhs</span> <span class="ow">in</span> <span class="n">left</span> <span class="k">for</span> <span class="n">rhs</span> <span class="ow">in</span> <span class="n">right</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># assignments have no result, only side-effects</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -228,25 +211,6 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">big_join</span><span class="p">([</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_assume</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">condition</span><span class="p">])</span>
-        <span class="k">return</span> <span class="bp">self</span></div>
-
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_evaluate_literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">literal</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Retrieve a literal value. Account for side-effects by modifying the current state.</span>
-
-<span class="sd">        :param literal: literal to retrieve the value of</span>
-<span class="sd">        :return: set of expressions representing the literal value</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-
-<div class="viewcode-block" id="State.evaluate_literal"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.state.State.evaluate_literal">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">literal</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;State&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Evaluate a literal.</span>
-
-<span class="sd">        :param literal: expression to be evaluated</span>
-<span class="sd">        :return: current state modified by the literal evaluation</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate_literal</span><span class="p">(</span><span class="n">literal</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="State.enter_if"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.state.State.enter_if">[docs]</a>    <span class="nd">@abstractmethod</span>
@@ -312,24 +276,24 @@
         <span class="k">return</span> <span class="bp">self</span></div>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_substitute_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;State&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Substitute an expression to a variable.</span>
+    <span class="k">def</span> <span class="nf">_substitute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;State&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Substitute an expression to another expression.</span>
 
-<span class="sd">        :param left: expression representing the variable to be substituted</span>
+<span class="sd">        :param left: expression to be substituted</span>
 <span class="sd">        :param right: expression to substitute</span>
 <span class="sd">        :return: current state modified by the variable substitution</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="State.substitute_variable"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.state.State.substitute_variable">[docs]</a>    <span class="k">def</span> <span class="nf">substitute_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">],</span> <span class="n">right</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;State&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Substitute an expression to a variable.</span>
+<div class="viewcode-block" id="State.substitute"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.state.State.substitute">[docs]</a>    <span class="k">def</span> <span class="nf">substitute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">],</span> <span class="n">right</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Expression</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;State&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Substitute an expression to another expression.</span>
 <span class="sd">        </span>
-<span class="sd">        :param left: set of expressions representing the variable to be substituted</span>
+<span class="sd">        :param left: set of expressions representing the expression to be substituted</span>
 <span class="sd">        :param right: set of expressions representing the expression to substitute</span>
 <span class="sd">        :return: current state modified by the variable substitution</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">big_join</span><span class="p">([</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_substitute_variable</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span> <span class="k">for</span> <span class="n">lhs</span> <span class="ow">in</span> <span class="n">left</span> <span class="k">for</span> <span class="n">rhs</span> <span class="ow">in</span> <span class="n">right</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">big_join</span><span class="p">([</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">left</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">right</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># assignments have no result, only side-effects</span>
         <span class="k">return</span> <span class="bp">self</span></div></div>
 </pre></div>

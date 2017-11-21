@@ -1,8 +1,5 @@
-x = 2
-y = 4
-x = 1
-if y > x:
-    z = y
-else:
-    z = y * y
-x = z
+
+example: List[int] = [0, 1, 2]
+# a: int = example[0]
+
+print(example)

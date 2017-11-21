@@ -1,3 +1,10 @@
+"""
+Forward Analysis Engine
+=======================
+
+:Author: Caterina Urban
+"""
+
 from collections import deque
 from copy import deepcopy
 from queue import Queue
@@ -11,8 +18,9 @@ from lyra.core.cfg import Basic, Loop, Conditional, ControlFlowGraph, Edge
 
 
 class ForwardInterpreter(Interpreter):
+    """Forward control flow graph interpreter."""
     def __init__(self, cfg: ControlFlowGraph, semantics: ForwardSemantics, widening: int):
-        """Forward control flow graph interpreter.
+        """Forward control flow graph interpreter construction.
 
         :param cfg: control flow graph to analyze 
         :param widening: number of iterations before widening 
@@ -49,16 +57,30 @@ class ForwardInterpreter(Interpreter):
                     else:
                         predecessor = deepcopy(initial).bottom()
                     # handle conditional edges
-                    if isinstance(edge, Conditional):
-                        # TODO somewhere here call before(pp: ProgramPoint) after deepcopy, before semantics
-                        predecessor = self.semantics.semantics(edge.condition, predecessor).filter()
-                    # handle non-default edges
-                    if edge.kind == Edge.Kind.IF_IN:
+                    if isinstance(edge, Conditional) and edge.kind == Edge.Kind.DEFAULT:
+                        neighbors = self.cfg.out_edges(edge.source)
+                        branch = any(edge.kind == Edge.Kind.IF_IN for edge in neighbors)
+                        loop = any(edge.kind == Edge.Kind.LOOP_IN for edge in neighbors)
+                        assert (branch or loop) and not (branch and loop)
+                        predecessor = predecessor.enter_if() if branch else predecessor
+                        predecessor = predecessor.enter_loop() if loop else predecessor
+                        condition = edge.condition
+                        predecessor = self.semantics.semantics(condition, predecessor).filter()
+                        predecessor = predecessor.exit_if() if branch else predecessor
+                        predecessor = predecessor.exit_loop() if loop else predecessor
+                    elif edge.kind == Edge.Kind.IF_IN:
                         predecessor = predecessor.enter_if()
-                    elif edge.kind == Edge.Kind.IF_OUT:
-                        predecessor = predecessor.exit_if()
+                        assert isinstance(edge, Conditional)
+                        condition = edge.condition
+                        predecessor = self.semantics.semantics(condition, predecessor).filter()
                     elif edge.kind == Edge.Kind.LOOP_IN:
                         predecessor = predecessor.enter_loop()
+                        assert isinstance(edge, Conditional)
+                        condition = edge.condition
+                        predecessor = self.semantics.semantics(condition, predecessor).filter()
+                    # handle unconditional non-default edges
+                    if edge.kind == Edge.Kind.IF_OUT:
+                        predecessor = predecessor.exit_if()
                     elif edge.kind == Edge.Kind.LOOP_OUT:
                         predecessor = predecessor.exit_loop()
                     entry = entry.join(predecessor)
@@ -72,7 +94,6 @@ class ForwardInterpreter(Interpreter):
                 if isinstance(current, Basic):
                     successor = entry
                     for stmt in current.stmts:
-                        # TODO somewhere here call before(pp: ProgramPoint) after deepcopy, before semantics
                         successor = self.semantics.semantics(stmt, deepcopy(successor))
                         states.append(successor)
                 elif isinstance(current, Loop):

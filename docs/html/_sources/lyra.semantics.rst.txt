@@ -6,13 +6,6 @@ lyra\.semantics package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-
-    lyra.semantics.usage
-
 Submodules
 ----------
 

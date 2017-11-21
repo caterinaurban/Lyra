@@ -2,7 +2,7 @@ from lyra.core.expressions import *
 from lyra.core.special_expressions import VariadicArithmeticOperation
 
 from lyra.abstract_domains.numerical.interval_domain import IntervalLattice
-from lyra.core.expressions_tools import ExpressionVisitor
+from lyra.core.expressions_tools import OldExpressionVisitor
 
 Sign = UnaryArithmeticOperation.Operator
 PLUS = Sign.Add

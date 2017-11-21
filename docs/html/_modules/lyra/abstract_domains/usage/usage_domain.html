@@ -1,0 +1,511 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>lyra.abstract_domains.usage.usage_domain &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">src</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../../index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      
+    <li>lyra.abstract_domains.usage.usage_domain</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for lyra.abstract_domains.usage.usage_domain</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Syntactic Usage Abstract Domain</span>
+<span class="sd">===============================</span>
+
+<span class="sd">Abstract domain to be used for **input data usage analysis** using syntactic variable dependencies.</span>
+<span class="sd">A program variable can have value *U* (used), *S* (scoped), *W* (written), and *N* (not used).</span>
+
+<span class="sd">:Authors: Simon Wehrli and Caterina Urban</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Flag</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.lattice</span> <span class="k">import</span> <span class="n">Lattice</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.stack</span> <span class="k">import</span> <span class="n">Stack</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.state</span> <span class="k">import</span> <span class="n">State</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.store</span> <span class="k">import</span> <span class="n">Store</span>
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">Subscription</span><span class="p">,</span> <span class="n">Slicing</span>
+<span class="kn">from</span> <span class="nn">lyra.core.types</span> <span class="k">import</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">BooleanLyraType</span><span class="p">,</span> <span class="n">ListLyraType</span>
+<span class="kn">from</span> <span class="nn">lyra.core.utils</span> <span class="k">import</span> <span class="n">copy_docstring</span>
+
+
+<div class="viewcode-block" id="UsageLattice"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice">[docs]</a><span class="k">class</span> <span class="nc">UsageLattice</span><span class="p">(</span><span class="n">Lattice</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Usage lattice::</span>
+
+<span class="sd">            U</span>
+<span class="sd">          /   \\</span>
+<span class="sd">        S       O</span>
+<span class="sd">          \\   /</span>
+<span class="sd">            N</span>
+
+<span class="sd">    The default lattice element is ``N`` (not used).</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: UsageLattice._less_equal</span>
+<span class="sd">    .. automethod:: UsageLattice._meet</span>
+<span class="sd">    .. automethod:: UsageLattice._join</span>
+<span class="sd">    .. automethod:: UsageLattice._widening</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="UsageLattice.Status"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.Status">[docs]</a>    <span class="k">class</span> <span class="nc">Status</span><span class="p">(</span><span class="n">Flag</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Usage status.</span>
+
+<span class="sd">        The current lattice element can be:</span>
+
+<span class="sd">        * ``U`` (used): used at the current nesting level</span>
+
+<span class="sd">        * ``S`` (scoped): used at a lower nesting level</span>
+
+<span class="sd">        * ``W`` (written): used at a lower nesting level and modified at the current nesting level</span>
+
+<span class="sd">        * ``N`` (not used): unused</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">usage</span><span class="p">:</span> <span class="n">Status</span> <span class="o">=</span> <span class="n">Status</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_element</span> <span class="o">=</span> <span class="n">usage</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">element</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Current lattice element.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_element</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">name</span>
+
+<div class="viewcode-block" id="UsageLattice.bottom"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.bottom">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The bottom lattice element is ``N`` (not used).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">UsageLattice</span><span class="p">(</span><span class="n">UsageLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">N</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsageLattice.scoped"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.scoped">[docs]</a>    <span class="k">def</span> <span class="nf">scoped</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Scoped lattice element.</span>
+
+<span class="sd">        :return: current lattice element modified to be the scoped lattice element</span>
+
+<span class="sd">        The scoped lattice element is ``S`` (scoped).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">UsageLattice</span><span class="p">(</span><span class="n">UsageLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">S</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsageLattice.written"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.written">[docs]</a>    <span class="k">def</span> <span class="nf">written</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Written lattice element.</span>
+
+<span class="sd">        :return: current lattice element modified to be the written lattice element</span>
+
+<span class="sd">        The written lattice element is ``W`` (written).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">UsageLattice</span><span class="p">(</span><span class="n">UsageLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">W</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsageLattice.top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The top lattice element is ``U`` (used).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">UsageLattice</span><span class="p">(</span><span class="n">UsageLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">U</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsageLattice.is_bottom"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.is_bottom">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">==</span> <span class="n">UsageLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">N</span></div>
+
+<div class="viewcode-block" id="UsageLattice.is_scoped"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.is_scoped">[docs]</a>    <span class="k">def</span> <span class="nf">is_scoped</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test whether the lattice element is ``S`` (scoped).</span>
+
+<span class="sd">        :return: whether the lattice element is ``S`` (scoped)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">==</span> <span class="n">UsageLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">S</span></div>
+
+<div class="viewcode-block" id="UsageLattice.is_written"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.is_written">[docs]</a>    <span class="k">def</span> <span class="nf">is_written</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test whether the lattice element is ``W`` (written).</span>
+
+<span class="sd">        :return: whether the lattice element is ``W`` (written)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">==</span> <span class="n">UsageLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">W</span></div>
+
+<div class="viewcode-block" id="UsageLattice.is_top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.is_top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">is_top</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_top</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">==</span> <span class="n">UsageLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">U</span></div>
+
+<div class="viewcode-block" id="UsageLattice.increase"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.increase">[docs]</a>    <span class="k">def</span> <span class="nf">increase</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Increase the nesting level.</span>
+
+<span class="sd">        :return: current lattice element modified to reflect an increased nesting level</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scoped</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_written</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsageLattice.decrease"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice.decrease">[docs]</a>    <span class="k">def</span> <span class="nf">decrease</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;UsageLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Decrease the nesting level by combining lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to reflect a decreased nesting level</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_written</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">is_scoped</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_written</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsageLattice._less_equal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice._less_equal">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">less_equal</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_less_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;UsageLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">element</span></div>
+
+<div class="viewcode-block" id="UsageLattice._meet"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice._meet">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">_meet</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_meet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;UsageLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageLattice&#39;</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">UsageLattice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">&amp;</span> <span class="n">other</span><span class="o">.</span><span class="n">element</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsageLattice._join"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice._join">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">_join</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;UsageLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageLattice&#39;</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">UsageLattice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">|</span> <span class="n">other</span><span class="o">.</span><span class="n">element</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsageLattice._widening"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageLattice._widening">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">_widening</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_widening</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;UsageLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageLattice&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_join</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="UsageStore"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageStore">[docs]</a><span class="k">class</span> <span class="nc">UsageStore</span><span class="p">(</span><span class="n">Store</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An element of a store mapping each program variable to its usage status.</span>
+
+<span class="sd">    All program variables are *not used* by default.</span>
+
+<span class="sd">    .. note:: Program variables storing lists are abstracted via summarization.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: UsageStore._less_equal</span>
+<span class="sd">    .. automethod:: UsageStore._meet</span>
+<span class="sd">    .. automethod:: UsageStore._join</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Map each program variable to its usage status.</span>
+
+<span class="sd">        :param variables: list of program variables</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="n">BooleanLyraType</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">ListLyraType</span><span class="p">]</span>
+        <span class="n">lattices</span> <span class="o">=</span> <span class="p">{</span><span class="n">typ</span><span class="p">:</span> <span class="n">UsageLattice</span> <span class="k">for</span> <span class="n">typ</span> <span class="ow">in</span> <span class="n">types</span><span class="p">}</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">lattices</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UsageStore.is_bottom"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageStore.is_bottom">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Store</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The current store is bottom if `all` of its variables map to a bottom element.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="UsageStore.increase"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageStore.increase">[docs]</a>    <span class="k">def</span> <span class="nf">increase</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageStore&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Increase the nesting level.</span>
+
+<span class="sd">        :return: current lattice element modified to reflect an increased nesting level</span>
+
+<span class="sd">        The increase is performed point-wise for each variable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">increase</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsageStore.decrease"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageStore.decrease">[docs]</a>    <span class="k">def</span> <span class="nf">decrease</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;UsageStore&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageStore&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Decrease the nesting level by combining lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to reflect a decreased nesting level</span>
+
+<span class="sd">        The decrease is performed point-wise for each variable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">decrease</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<div class="viewcode-block" id="UsageState"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageState">[docs]</a><span class="k">class</span> <span class="nc">UsageState</span><span class="p">(</span><span class="n">Stack</span><span class="p">,</span> <span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Input data usage analysis state.</span>
+<span class="sd">    An element of the syntactic usage abstract domain.</span>
+
+<span class="sd">    Stack of maps from each program variable to its usage status.</span>
+<span class="sd">    The stack contains a single map by default.</span>
+
+<span class="sd">    .. note:: Program variables storing lists are abstracted via summarization.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: UsageState._assign</span>
+<span class="sd">    .. automethod:: UsageState._assume</span>
+<span class="sd">    .. automethod:: UsageState._output</span>
+<span class="sd">    .. automethod:: UsageState._substitute</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">]):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">UsageStore</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;variables&#39;</span><span class="p">:</span> <span class="n">variables</span><span class="p">})</span>
+
+<div class="viewcode-block" id="UsageState.push"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageState.push">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Stack</span><span class="o">.</span><span class="n">push</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">push</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="p">)</span><span class="o">.</span><span class="n">increase</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsageState.pop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageState.pop">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">decrease</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsageState._assign"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageState._assign">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_assign</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unexpected assignment in a backward analysis!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="UsageState._assume"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageState._assume">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_assume</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_assume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageState&#39;</span><span class="p">:</span>
+        <span class="n">effect</span> <span class="o">=</span> <span class="kc">False</span>      <span class="c1"># effect of the current nesting level on the outcome of the program</span>
+        <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">is_written</span><span class="p">()</span> <span class="ow">or</span> <span class="n">value</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+                <span class="n">effect</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">effect</span><span class="p">:</span>      <span class="c1"># the current nesting level has an effect on the outcome of the program</span>
+            <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">condition</span><span class="o">.</span><span class="n">ids</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span><span class="o">.</span><span class="n">top</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsageState.enter_if"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageState.enter_if">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">enter_if</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">enter_if</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageState&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="UsageState.exit_if"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageState.exit_if">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">exit_if</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">exit_if</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageState&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="UsageState.enter_loop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageState.enter_loop">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">enter_loop</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">enter_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageState&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="UsageState.exit_loop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageState.exit_loop">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">exit_loop</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">exit_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageState&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="UsageState._output"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageState._output">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_output</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageState&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">ids</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span><span class="o">.</span><span class="n">top</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="UsageState._substitute"><a class="viewcode-back" href="../../../../lyra.abstract_domains.usage.html#lyra.abstract_domains.usage.usage_domain.UsageState._substitute">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_substitute</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_substitute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;UsageState&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">is_top</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">is_scoped</span><span class="p">():</span>
+                <span class="c1"># the assigned variable is used or scoped</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">written</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">right</span><span class="o">.</span><span class="n">ids</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span><span class="o">.</span><span class="n">top</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Substitution with </span><span class="si">{right}</span><span class="s2"> is not implemented!&quot;</span>
+                        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">Subscription</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">Slicing</span><span class="p">):</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">left</span><span class="o">.</span><span class="n">target</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">is_top</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">is_scoped</span><span class="p">():</span>
+                <span class="c1"># the assigned variable is used or scoped</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">top</span><span class="p">()</span>      <span class="c1"># summarization abstraction</span>
+                <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">right</span><span class="o">.</span><span class="n">ids</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span><span class="o">.</span><span class="n">top</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Substitution with </span><span class="si">{right}</span><span class="s2"> is not implemented!&quot;</span>
+                        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Substitution for </span><span class="si">{left}</span><span class="s2"> is not yet implemented!&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

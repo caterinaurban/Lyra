@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">lyra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">Lyra</a></li>
 </ul>
 
             
@@ -142,7 +142,7 @@
 <span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="o">*</span>
 
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.numerical.dbm</span> <span class="k">import</span> <span class="n">IntegerCDBM</span>
-<span class="kn">from</span> <span class="nn">lyra.abstract_domains.numerical.interval_domain</span> <span class="k">import</span> <span class="n">IntervalLattice</span><span class="p">,</span> <span class="n">IntervalDomain</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.numerical.interval_domain</span> <span class="k">import</span> <span class="n">IntervalLattice</span><span class="p">,</span> <span class="n">IntervalState</span>
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.numerical.numerical</span> <span class="k">import</span> <span class="n">NumericalMixin</span>
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.numerical.linear_forms</span> <span class="k">import</span> <span class="n">SingleVarLinearForm</span><span class="p">,</span> <span class="n">LinearForm</span><span class="p">,</span> <span class="n">InvalidFormError</span>
 <span class="kn">from</span> <span class="nn">lyra.core.expressions_tools</span> <span class="k">import</span> <span class="n">ExpressionVisitor</span><span class="p">,</span> <span class="n">ExpressionTransformer</span><span class="p">,</span> \
@@ -400,12 +400,12 @@
 
 <div class="viewcode-block" id="OctagonLattice.to_interval_domain"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.to_interval_domain">[docs]</a>    <span class="k">def</span> <span class="nf">to_interval_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Translate this octagonal store into an interval store.&quot;&quot;&quot;</span>
-        <span class="n">interval_store</span> <span class="o">=</span> <span class="n">IntervalDomain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+        <span class="n">interval_store</span> <span class="o">=</span> <span class="n">IntervalState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
             <span class="n">interval_store</span><span class="o">.</span><span class="n">set_interval</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_interval</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">interval_store</span></div>
 
-<div class="viewcode-block" id="OctagonLattice.from_interval_domain"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.from_interval_domain">[docs]</a>    <span class="k">def</span> <span class="nf">from_interval_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval_domain</span><span class="p">:</span> <span class="n">IntervalDomain</span><span class="p">):</span>
+<div class="viewcode-block" id="OctagonLattice.from_interval_domain"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.numerical.octagon_domain.OctagonLattice.from_interval_domain">[docs]</a>    <span class="k">def</span> <span class="nf">from_interval_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval_domain</span><span class="p">:</span> <span class="n">IntervalState</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Translate the interval constraints from interval domain to this octagonal store.</span>
 <span class="sd">        </span>
 <span class="sd">        **NOTE**: This does not reset relational constraints in this octagon!</span>
