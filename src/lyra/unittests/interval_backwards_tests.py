@@ -9,7 +9,7 @@ from lyra.abstract_domains.numerical.interval_domain import IntervalState
 from lyra.unittests.runner import TestRunner
 
 
-class IntervalTest(TestRunner):
+class IntervalBackwardsTest(TestRunner):
 
     def interpreter(self):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
@@ -23,7 +23,7 @@ def test_suite():
     name = os.getcwd() + '/interval_backwards/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
-            suite.addTest(IntervalTest(path))
+            suite.addTest(IntervalBackwardsTest(path))
     return suite
 
 
