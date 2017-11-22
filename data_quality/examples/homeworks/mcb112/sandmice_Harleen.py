@@ -291,4 +291,4 @@ def main(sandmousefile):
     plt.show()
 
 if __name__ == '__main__':
-    main('data/sandmouse.fa_error_dict.txt')
+    main('data/sandmouse.fa.txt')

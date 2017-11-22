@@ -1,0 +1,55 @@
+example:
+
+for i in range(N):
+    a = S[i]
+
+forward:
+
+# S = {0} T {len}?
+i = 0
+# S = {0} T {len}?
+while i < N:
+    # S = {0} T {len}?
+    a = int(S[i])
+    # S = {0 i} int {1 i+1} T {len}?
+    i = i+1
+    # S = {0 i-1} int {1 i} T {len}?
+
+# S = {0} T {len}?
+i = 0
+# S = {0} T {len}?
+while i < N:
+    # S = {0} int {i} T {len}?
+    a = int(S[i])
+    # S = {0} int {i} int {i+1} T {len}?
+    i = i+1
+    # S = {0} int {i-1} int {i} T {len}?
+# S = {0} int {N} T {len}?
+
+backwards:
+
+i = 0
+while i < N:
+    # i < N-1 ==> S = {0} T {i} T {N-1} T {len}?
+    # S = {0} T {i} int {i+1} T {N-1}? T {len}?
+    a = int(S[i])
+    # i < N-1
+    # S = {0} T {len}?
+    i = i+1
+    # i < N
+    # S = {0} T {len}?
+# S = {0} T {len}?
+
+# S = {0} int {1} int {2} T {N-1}? T {len}?
+i = 0
+# S = {0} T {i} int {i+1} int {i+2} T {N-1}? T {len}?
+while i < N:
+    # i < N-1
+    # S = {0} T {i} int {i+1} int {i+2} T {N-1}? T {len}?
+    a = int(S[i])
+    # i < N-1
+    # S = {0} T {i+1} int {i+2} T {N-1}? T {len}?
+    i = i+1
+    # i < N
+    # S = {0} T {i} int {i+1} T {N-1}? T {len}?
+# S = {0} T {len}?

@@ -41,7 +41,12 @@ def parse_FASTQ(file):
 
             elif last_line == "+":
                 # we reached a quality score line
-                quality_dict[seq] = mean_score(line)
+                sum = 0
+                scores_dict = creates_scores_dict()  # we need to call the dictionary to have it initiated
+                for char in line:
+                    sum += scores_dict[char]
+                mean_score = sum/ len(line)
+                quality_dict[seq] = mean_score
 
             last_line = line
             line = f.readline()

@@ -17,13 +17,13 @@ def extract_from_file(filename):
         # MAD: len(fields) >= 1
         student_names.append(fields[0])
         cur_hw_grades = []
-        # MAD: len(fields) >= 3
+        # MAD: fields[1:-1] must be integer
         for grade in fields[1:-1]:
-            # MAD: elements of grade must be integers
+            # MAD: grade must be integer
             cur_hw_grades.append(int(grade))
         hw_grades.append(cur_hw_grades)
         # MAD: len(fields) >= 1
-        # MAD: elements of fields must be integers
+        # MAD: last elements of fields must be int
         test_grades.append(int(fields[-1]))
     
     return numpy.array(student_names), numpy.array(hw_grades), numpy.array(test_grades)

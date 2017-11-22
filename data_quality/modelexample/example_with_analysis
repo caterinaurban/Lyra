@@ -1,0 +1,49 @@
+
+f = open('input.txt', 'r')
+# LINES = {0} T {1} ({0} T {1} int {2} int {3} int {4} int {5} T {len_fields}? with delimiter ',') {len_lines}?
+first_line = f.readline()
+# LINES = {0} ({0} T {1} int {2} int {3} int {4} int {5} T {len_fields}? with delimiter ',') {len_lines}?
+lines = f.readlines()
+f.close()
+
+names = []
+grades = []
+
+# lines = {0} ({0} T {1} int {2} int {3} int {4} int {5} T {len_fields}? with delimiter ',') {len_lines}?
+for line in lines:
+    # line = {0} T {1} int {2} int {3} int {4} int {5} T {len_fields}? with delimiter ','
+    fields = line.strip().split(",")
+    names.append(fields[0])
+    curr_grades = []
+
+    # fields = {0} T {1} int {2} int {3} int {4} int {5} T {len_fields}?
+    if len(fields) == 5:
+
+        # fields = {0} int {5} T {len_fields}?
+        for grade in fields[1:5]:
+
+            # grade = int
+            curr_grades.append(int(grade))
+    else:
+
+        # fields = {0} T {1} int {2} int {3} int {4} int {5} int {6} int {7} int {8} int {9} T {len_fields}?
+        for i in range(4):
+
+            # fields = {0} T {i+1}? int {i+2} T {i+5} int{i+6} T {len_fields}?
+            curr_average = (int(fields[i+1]) + int(fields[i+5])) / 2
+            curr_grades.append(curr_average)
+    grades.append(curr_grades)
+
+print()
+print('averages:')
+
+# grades = {0} T {len_names-1}? int {len_names} T {len}?
+# names = {0} T {len_names-1}? T {len_names} T {len_names}?
+for i in range(len(names)):
+
+    # grades = {0} T {i}? int {i+1} T {len_grades}?
+    # names = {0} T {i}? T {i+1} T {len_names}?
+    average_grade = sum(grades[i]) / len(grades[i])
+
+    # names = {0} T {i}? T {i+1} T {len_names}?
+    print(names[i], average_grade)

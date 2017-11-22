@@ -63,29 +63,35 @@ def get_pair_location(my_pair, filename):
 
 
 def get_csv_matrix(filename):
+    # MAD: number of lines in input > 0 to get len(rows) > 0
     f = open(filename, 'r')
     rows = []
     line_num = 0
-    row_len = 0 
+    row_len = 0
+    # MAD: len(f) > 0 to get len(rows) > 0
+    # MAD: len(f) <= 0 or line_num == 0 or len(row) == row_len
     for line in f:
         vals = line.split(',')
         row = []
         try:
             for v in vals:
-                # MAD: values in line must exist as commaseparated floats (to avoid raise Error (A)
+                # MAD: values in line must exist as commaseparated floats (to avoid raise Error (A))
                 v = float(v)
                 row.append(v)
             rows.append(row)
         except ValueError:
             return None
+        # MAD: line_num == 0 or len(row) == row_len
         if line_num == 0:
             row_len = len(row)
         else: 
             line_num += 1
-            # MAD: avoid raise Error (A): if len(f) > 0 and line_num != 0 then len(row) == row_len
+            # MAD: len(row) == row_len
             if len(row) != row_len:
+                # MAD: return value cannot be None
                 return None
     return rows  # MAD: avoid raise Error (A): len(rows) > 0
+    # MAD: return value cannot be None
 
 
 def add_csv_mats(file1, file2, outfile):
@@ -95,7 +101,7 @@ def add_csv_mats(file1, file2, outfile):
     if not mat1 or not mat2:
         # MAD: avoid raise Error (A)
         raise ValueError("Invalid input matrix")
-
+    # MAD: len(mat1) != len(mat2)
     if len(mat1) != len(mat2):
         # MAD: avoid raise Error: len(mat1) == len(mat2)
         raise ValueError("Row dimensions don't match!")

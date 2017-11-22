@@ -256,4 +256,4 @@ def main(inputfile):
         prev_v = v1
 
 if __name__ == '__main__':
-    main('new_data_1')
+    main('new_data_1_error_end')

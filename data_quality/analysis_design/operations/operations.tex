@@ -1,0 +1,405 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, portrait, margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float}% If comment this, figure moves to Page 2
+% Fancy header package for version number
+\usepackage[font={small,it}]{caption}
+
+\usepackage{fancyhdr}
+%\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\newcommand{\bigcell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ 
+\lstdefinelanguage{Python2}{
+  language     = Python,
+  morekeywords = {assert},
+}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{white},   
+    commentstyle=\color{ForestGreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{black},
+    stringstyle=\color{red},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle, language=Python2}
+
+\begin{document}
+
+\title{Operations and Lattices}
+
+\maketitle
+
+\pagenumbering{arabic}
+
+\section{Lattice - Type}
+
+BOTTOM - Bool (0) - Int (1) - Float (2) - Any (3)
+
+\begin{itemize}
+\item \textit{\_\_repr\_\_}: type name
+\item \textit{bottom}: BOTTOM
+\item \textit{top}: Any
+\item \textit{is\_bottom}: is special symbol BOTTOM?
+\item \textit{is\_top}: is Any?
+\item \textit{less\_equal}: x < y
+\item \textit{join}: max()
+\item \textit{meet}: min()
+\item \textit{widening}: join()
+\end{itemize}
+
+\section{Lattice - Expression (bounds)}
+
+The bounds use an expression lattice of the form v + k where v is a variable and k is a constant in Z. variable v0 is a variable that is always evaluated to zero.
+
+\begin{itemize}
+\item \textit{\_\_repr\_\_}: variable + constant (this means that we only do a syntactic comparision when doing '==' if we do not override \_\_eq\_\_)
+\item \textit{bottom}: set expression to special symbol bottom (unreachability)
+\item \textit{top}: set expression to special symbol top (all possible expressions)
+\item \textit{is\_bottom}: is special symbol bottom?
+\item \textit{is\_top}: is special symbol top?
+\item \textit{less\_equal}: $v + i \leq v' + j$ if $v == v'$ and $i \leq j$, or more sophisticated: check the value of v and v'
+\item \textit{join}: as bounds: keep list of all expression
+\item \textit{meet}: as bounds: only keep those that exist in both
+\item \textit{widening}: 
+\end{itemize}
+
+\section{Lattice - List Abstraction}
+
+\begin{itemize}
+\item \textit{\_\_repr\_\_}: list abstraction as in paper with \{\} as bounds, ? for possible empty elements and elements in between
+\item \textit{bottom}: set to special symbol bottom (unreachability)
+\item \textit{top}: set to special symbol top (all possible list abstractions)
+\item \textit{is\_bottom}: is special symbol bottom?
+\item \textit{is\_top}: is special symbol top?
+\item \textit{less\_equal}: as described in paper, 1) purification (remove bounds that appear only in one, except constants), 2) segment-wise unification of bounds, 3) less than of elements
+\item \textit{join}: as described in paper, 1) purification (remove bounds that appear only in one, except constants), 2) segment-wise unification of bounds, 3) join of elements
+\item \textit{meet}: as described in paper, 1) purification (remove bounds that appear only in one, except constants), 2) segment-wise unification of bounds, 3) meet of elements
+\item \textit{widening}: as described in paper, 1) purification (remove bounds that appear only in one, except constants), 2) segment-wise unification of bounds, 3) widening of elements
+\end{itemize}
+
+\section{Lattice - Assumption}
+
+\begin{itemize}
+\item \textit{\_\_repr\_\_}: (NAME of type, [x,y] as range)
+\item \textit{bottom}: (BOTTOM, BOTTOM)
+\item \textit{top}: (Any, [-oo,+oo])
+\item \textit{is\_bottom}: is (BOTTOM, BOTTOM)
+\item \textit{is\_top}: is (Any, [-oo,+oo])
+\item \textit{less\_equal}: less\_equal of every tuple element
+\item \textit{join}: element-wise join
+\item \textit{meet}: element-wise meet
+\item \textit{widening}: element-wise widening
+\end{itemize}
+
+\section{State - List Abstraction}
+
+\begin{itemize}
+\item \textit{access\_variable}: 
+\item \textit{assign\_variable}:
+\begin{itemize}
+\item $a = []$ results in \verb|a = {0} T {0 a.Length}?|
+\item $a = [x_1,...,x_n]$ results in \verb|a = {0} x_1 {1} ... {n} x_n {n+1 a.Length}|
+\item $a[i] = ...$ changes the ith element: find highest bound $B_l < i$ and smallest bound $B_h > i$, join elements inbetween, insert \verb|{i} ... {i+1}|
+\end{itemize}
+\item \textit{assume}: apply condition on store
+\item \textit{evaluate\_literal}: return literal
+\item \textit{enter\_if}: backward: join elements using unification algorithm
+\item \textit{exit\_if}: forward: join elements using unification algorithm
+\item \textit{enter\_loop}:
+\item \textit{exit\_loop}: if loop header is for x in y: \verb|y = {0} information of x {len}?|, if loop header for x in range(y): put in 0..y where x is used
+\item \textit{filter}: same as 'assume'
+\item \textit{substitute\_variable}:
+\end{itemize}
+
+\section{State - Backwards Assumption Analysis}
+
+\begin{itemize}
+\item \textit{access\_variable}: return current assumption
+\item \textit{assign\_variable}:
+\item \textit{assume}: apply condition on store
+\item \textit{evaluate\_literal}: return literal
+\item \textit{enter\_if}: join branches using unification algorithm
+\item \textit{exit\_if}: -
+\item \textit{enter\_loop}:
+\begin{itemize}
+\item if loop header is for x in list: \verb|list = {0} assumptions for x {len}?|
+\item if loop header is for x in range(N): put in 0..N where x is used
+\end{itemize}
+\item \textit{exit\_loop}:
+\item \textit{filter}: same as 'assume'
+\item \textit{substitute\_variable}:
+\begin{itemize}
+\item if a[i] is accessed: if a == T create \verb|a = {0} T {i}? T {i+1} T {len}?|, else: find highest bound $B_l < i$ and smallest bound $B_h > i$, join elements inbetween, insert \verb|{i} T {i+1}|
+\item perform a meet of the assumptions of the variables on both sides of the equation, if the right side is an expression, calculate the inverse. if the expression is not invertible remove assumptions and use T for current assumptions
+\end{itemize}
+\end{itemize}
+
+\section{Join of Loop}
+
+\begin{itemize}
+\item \textit{for i in range(N):}
+\begin{itemize}
+\item before loop: \verb|{0} >10 {len}?|
+\item else branch: \verb|{0} BOTTOM {i N+1}? >10 {len}?|
+\item in loop: \verb|{0} BOTTOM {i N+1}? >10 {len}?|
+\item doing [i=i+1]: \verb|{0} BOTTOM {i}? BOTTOM {i+1 N+1} >10 {len}?|
+\item doing [int(a[i])]: \verb|{0} BOTTOM {i}? int {i+1 N+1} >10 {len}?|
+\item at loop header: \verb|{0} BOTTOM {i}? int {i+1 N+1} >10 {len}?| 
+
+OR \verb|{0} >0 {1 N+1} >10 {len}? (we know i in range(N), know 'nothing' about i+1)|
+\item join with else: \verb|{0} BOTTOM {i}? int {N+1}? >10 {len}?| 
+
+OR \verb|{0} >0 {N+1} >10 {len}?|
+\item again in loop: \verb|{0} BOTTOM {i}? int {N+1}? >10 {len}?| 
+
+OR \verb|{0} >0 {N+1}? >10 {len}?|
+\item doing [i=i+1]: \verb|{0} BOTTOM {i}? BOTTOM {i+1}? int {N+1}? >10 {len}?| 
+
+OR \verb|{0} >0 {N+1}? >10 {len}?|
+\item doing [int(a[i])]: \verb|{0} BOTTOM {i}? int {i+1}? int {N+1}? >10 {len}?|
+
+OR \verb|{0} >0 {N+1}? >10 {len}?|
+\item at loop header again: \verb|{0} BOTTOM {i}? int {i+1}? int {N+1}? >10 {len}?| 
+
+OR \verb|{0} >0 {N+1}? >10 {len}?|
+\item join with else: \verb|{0} BOTTOM {i}? int {N+1}? >10 {len}?| 
+
+OR \verb|{0} >0 {N+1}? >10 {len}?|
+\end{itemize}
+\end{itemize}
+
+loop paths:
+\begin{itemize}
+  \item 1) loop is intered or not
+  \item 2) a list inside loop is altered
+  \item 2a) a list inside loop is altered dependent on iterating variable
+  \item 3.1) an assumption is added to a list inside loop concerning an element
+  \item 3.2) an assumption is added to a list inside loop concerning a bound
+  \item 3a) there is an assumption after the loop
+  \item 3b) a stronger assumption than after the loop is added to a list inside loop
+\end{itemize}
+
+different kind of for loops using 'in list':
+
+\begin{lstlisting}[numbers=none]
+# 1) nothing in list changes and no preknowledge:
+for x in list: # list = {0} T {len}?
+    y = x + 1
+list = {0} T {len}?
+
+# results in {0} T {len}?
+
+
+# 2) nothing in list changes and some preknowledge:
+for x in list: # list = {0} >0 {len}?
+    y = x + 1
+list = {0} >0 {len}?
+
+# results in {0} >0 {len}?
+
+
+# 3) something in list changes and no preknowledge:
+for x in list: # list = {0} >10 {len}?
+    assert x > 10
+list = {0} T {len}?
+
+# results in {0} >10 {len}?
+
+
+# 4) something in list changes and some stronger preknowledge:
+for x in list: # list = {0} >10 {len}?
+    assert x > 0
+list = {0} >10 {len}?
+
+# results in {0} >10 {len}?
+
+
+# 5a) something in list changes and some weaker preknowledge:
+for x in list: # list = {0} >10 {len}?
+    assert x > 10
+list = {0} >0 {len}?
+
+# results in {0} >10 {len}?
+
+
+# 5b) something in list changes and some weaker preknowledge and second list:
+for x in list1: # list1 = {0} >10 {len}?, list2 = {0} >0 {2} >10 {3} >0 {len}?
+    assert x > 10
+    assert list2[2] > 10
+list1 = {0} >0 {len}?
+list2 = {0} >0 {len}?
+
+# results in list1 = {0} >10 {len}?
+# results in list2 = {0} >0 {2} >10 {3} >0 {len}? if len(list1) > 1, else: list2 = {0} >0 {len}?
+\end{lstlisting}
+
+
+
+different kind of for loops using 'in range()':
+
+\begin{lstlisting}[numbers=none]
+# 1) nothing in list changes and no preknowledge:
+for i in range(N): # list = {0} T {len}?
+    y = i + 1
+list = {0} T {len}?
+
+# results in {0} T {len}?
+
+
+# 2) nothing in list changes and some preknowledge:
+for i in range(N): # list = {0} >0 {len}?
+    y = i + 1
+list = {0} >0 {len}?
+
+# results in {0} >0 {len}?
+
+
+# 3) something in list changes and no preknowledge:
+for i in range(N): # list = {0} >10 {N+1} T {len}?
+    assert list[i] > 10
+list = {0} T {len}?
+
+# results in {0} >10 {N+1} T {len}?
+
+
+# 4) something in list changes and some stronger preknowledge:
+for i in range(N): # list = {0} >10 {N+1} T {len}
+    assert list[i] > 0
+list = {0} >10 {len}?
+
+# results in {0} >10 {N+1} T {len}
+
+
+# 5a) something in list changes and some weaker preknowledge:
+for i in range(N): # list = {0} >10 {N+1} >0 {len}?
+    # list = {0} >0 {i}? >10 {i+1} T {len}?
+    assert list[i] > 10
+    # list = {0} >0 {len}?
+list = {0} >0 {len}?
+
+# results in {0} >10 {N+1} >0 {len}?
+
+
+# 5b) something in list changes and some weaker preknowledge and second list:
+for i in range(N): # list1 = {0} >10 {N+1} >0 {len}?, list2 = {0} >0 {2} >10 {3} >0 {len}?
+    assert list1[i] > 10
+    assert list2[2] > 10
+list1 = {0} >0 {len}?
+list2 = {0} >0 {len}?
+
+# results in list1 = {0} >10 {N+1} >0 {len}?
+# results in list2 = {0} >0 {2} >10 {3} >0 {len}? if N > 0, else: list2 = {0} >0 {len}?
+
+
+# 5b2) something in list changes and some weaker preknowledge and second list and constant range:
+for i in range(5): # list1 = {0} >10 {6} >0 {len}?, list2 = {0} >0 {2} >10 {3} >0 {len}?
+    assert list1[i] > 10
+    assert list2[2] > 10
+list1 = {0} >0 {len}?
+list2 = {0} >0 {len}?
+
+# results in list1 = {0} >10 {6}? >0 {len}? 
+# results in list2 = {0} >0 {2}? >10 {3}? >0 {len}? if 5 > 0, else: list2 = {0} >0 {len}?
+
+
+# 5c) something in list changes and some weaker preknowledge and second list changes too:
+for i in range(N): # list1 = {0} >10 {N+1} >0 {len}?, list2 = {0} >10 {N+1} >0 {len}?
+    assert list1[i] > 10
+    assert list2[i] > 10
+list1 = {0} >0 {len}?
+list2 = {0} >0 {len}?
+
+# results in list1 = {0} >10 {N+1} >0 {len}?
+# results in list2 = {0} >10 {N+1} >0 {len}?
+
+
+# 6) values in list change and some preknowledge (with widening of array element):
+for i in range(N): # list = {0} >10 {2} T {3}? >10 {len}?
+    list[2] = list[2] + 1
+list = {0} >10 {len}?
+
+# results in list = {0} >10 {2} T {3} >10 {len}? if N > 0, else: list = {0} >10 {len}?
+\end{lstlisting}
+
+Simple join not useful because would always end up with \verb|{0} T {len}?| or T.
+Simple meet would not work in case 6.
+Solution1: just take result from loop. If the array does not change in loop, we will end up with an unmodified array segmentation. If array was changed the assumptions will change as they change in the loop because as soon as the array has elements it will for sure enter the loop. Without elements there are no assumptions which is indicated by ?. But this works only if we know that the loop is entered for sure.
+Solution2: take result from loop if known that rang
+
+
+\begin{lstlisting}[numbers=none]
+i = 0
+while i < T:
+    x = int(a[i])
+    i = i + 1
+\end{lstlisting}
+
+\begin{itemize}
+\item at end: \verb|a = {0} T {len}?|
+\item not(i$<$T): \verb|a = {0} T {len}? and i >= T|
+\item i$<$T: \verb|a = {0} T {len}? and i < T|
+\item i = i + 1: \verb|a = {0} T {len}? and i+1 < T|
+\item a[i]: \verb|a = {0} T {i}? int {i+1} T {len}? and i+1 < T|
+\item before next loop: \verb|a = {0} T {i}? int {i+1} T {len}? and i+1 < T|
+\item join not(i$<$T) and before next loop \verb|a = {0} T {len}?|
+\end{itemize}
+
+
+
+\begin{lstlisting}[numbers=none]
+
+# join {0} int {len} and {0} >0 {len} ==> l = {0} int, >0 {len}?
+
+for a in l:
+    # a > 0
+    x = 1 / a
+
+# l = {0} int {len}?
+    
+for a in l:
+    x = int(a)
+\end{lstlisting}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

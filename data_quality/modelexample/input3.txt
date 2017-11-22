@@ -1,13 +1,12 @@
-student name, hw or exam, grades
-anna,hw,5,5,4,5
+anna,midterms,5,5
 anna,exam,3
 steven,exam,6
-paul,hw,5,3,5,4
+paul,midterms,5,3
 paul,exam,4
-tim,hw,3,3,2,3
-sonja,hw,5,5,4,5
+tim,midterms,3,3
+sonja,midterms,5,5
 sonja,exam,5
-peter,hw,6,6,2,3
-vanessa,hw,5,3,5,4
+peter,midterms,6,6
+vanessa,midterms,5,3
 kate,exam,4
-charlie,hw,3,3,2,3
+charlie,midterms,3,3
