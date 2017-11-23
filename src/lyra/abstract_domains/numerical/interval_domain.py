@@ -26,13 +26,17 @@ class IntervalLattice(BottomMixin, ArithmeticMixin):
 
     .. image:: _static/interval.jpg
 
-    The default abstraction is the unbounded interval [-oo, +oo].
+    The default abstraction is the unbounded interval ``[-oo, +oo]``.
 
     .. document private methods
     .. automethod:: IntervalLattice._less_equal
     .. automethod:: IntervalLattice._meet
     .. automethod:: IntervalLattice._join
     .. automethod:: IntervalLattice._widening
+    .. automethod:: IntervalLattice._neg
+    .. automethod:: IntervalLattice._add
+    .. automethod:: IntervalLattice._sub
+    .. automethod:: IntervalLattice._mult
     """
     def __init__(self, lower=-inf, upper=inf):
         super().__init__()
@@ -50,8 +54,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin):
         """
         if self.is_bottom():
             return None
-        else:
-            return self._lower
+        return self._lower
 
     @property
     def upper(self):
@@ -61,14 +64,12 @@ class IntervalLattice(BottomMixin, ArithmeticMixin):
         """
         if self.is_bottom():
             return None
-        else:
-            return self._upper
+        return self._upper
 
     def __repr__(self):
         if self.is_bottom():
             return "⊥"
-        else:
-            return f"[{self.lower}, {self.upper}]"
+        return f"[{self.lower}, {self.upper}]"
 
     @copy_docstring(BottomMixin.top)
     def top(self) -> 'IntervalLattice':
@@ -428,7 +429,7 @@ class IntervalState(Store, State):
                     elif refined == IntervalLattice(0, 0):
                         refinement = IntervalLattice(1, 1)
                         return self.visit(expr.expression, evaluation, refinement, state)
-            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
+            error = f"Refinement for a {expr.__class__.__name__} expression is not supported!"
             raise ValueError(error)
 
         @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
@@ -447,16 +448,16 @@ class IntervalState(Store, State):
                 refinement2 = deepcopy(evaluation[expr.left]).sub(refined)
                 right = self.visit(expr.right, evaluation, refinement2, left)
                 return right
-            raise ValueError(f"Binary operator '{str(expr.operator)}' is not supported!")
+            raise ValueError(f"Binary operator '{expr.operator}' is not supported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
         def visit_BinaryBooleanOperation(self, expr, evaluation=None, value=None, state=None):
-            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
+            error = f"Refinement for a {expr.__class__.__name__} expression is not supported!"
             raise ValueError(error)
 
         @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
         def visit_BinaryComparisonOperation(self, expr, evaluation=None, value=None, state=None):
-            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
+            error = f"Refinement for a {expr.__class__.__name__} expression is not supported!"
             raise ValueError(error)
 
     _refinement = ArithmeticExpressionRefinement()  # static class member shared between instances

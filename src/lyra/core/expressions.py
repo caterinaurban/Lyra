@@ -223,7 +223,7 @@ class NegationFreeNormalExpression(ExpressionVisitor):
     def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', invert=False):
         if expr.operator == UnaryBooleanOperation.Operator.Neg:
             return self.visit(expr.expression, invert=not invert)
-        raise ValueError(f"Unary boolean operator {expr} is unsupported!")
+        raise ValueError(f"Unary boolean operator {expr.operator} is unsupported!")
 
     @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
     def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', invert=False):
@@ -360,10 +360,10 @@ class Identifier(Expression):
         return self._name
 
     def __eq__(self, other):
-        return (self.typ, self.name) == (other.typ, other.name)
+        return self.name == other.name
 
     def __hash__(self):
-        return hash((self.typ, self.name))
+        return hash(self.name)
 
     def __str__(self):
         return "{0.name}".format(self)

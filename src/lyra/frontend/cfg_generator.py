@@ -447,14 +447,14 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_Compare(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        last_comp = self.visit(node.comparators[0], types, typ)
+        last_comp = self.visit(node.comparators[0], types, None)
         result = Call(pp, type(node.ops[0]).__name__.lower(),
-                      [self.visit(node.left, types, typ), last_comp],
+                      [self.visit(node.left, types, None), last_comp],
                       BooleanLyraType())
         for op, comp in list(zip(node.ops, node.comparators))[1:]:
             cur_call = Call(pp, type(op).__name__.lower(),
                             [last_comp,
-                             self.visit(comp, types, typ)],
+                             self.visit(comp, types, None)],
                             BooleanLyraType())
             result = Call(pp, 'and',
                           [result,
