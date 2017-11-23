@@ -114,4 +114,7 @@ Lyra's documentation is available online: http://caterinaurban.github.io/Lyra/
 ## Authors
 
 * **Caterina Urban**, ETH Zurich, Switzerland
+
+## Contributors
+
 * **Simon Wehrli**, ETH Zurich, Switzerland
