@@ -80,7 +80,7 @@ class LivenessLattice(Lattice):
 
     @copy_docstring(Lattice.less_equal)
     def _less_equal(self, other: 'LivenessLattice') -> bool:
-        return self.element < other.element
+        return self.element <= other.element
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'LivenessLattice') -> 'LivenessLattice':

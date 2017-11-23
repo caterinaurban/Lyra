@@ -45,7 +45,7 @@ class State(Lattice, metaclass=ABCMeta):
         
         :param left: expression to be assigned to
         :param right: expression to assign
-        :return: current state modified by the variable assignment
+        :return: current state modified by the assignment
 
         """
 
@@ -54,7 +54,7 @@ class State(Lattice, metaclass=ABCMeta):
         
         :param left: set of expressions representing the expression to be assigned to
         :param right: set of expressions representing the expression to assign
-        :return: current state modified by the variable assignment
+        :return: current state modified by the assignment
 
         """
         self.big_join([deepcopy(self)._assign(lhs, rhs) for lhs in left for rhs in right])
@@ -148,7 +148,7 @@ class State(Lattice, metaclass=ABCMeta):
 
         :param left: expression to be substituted
         :param right: expression to substitute
-        :return: current state modified by the variable substitution
+        :return: current state modified by the substitution
 
         """
 
@@ -157,7 +157,7 @@ class State(Lattice, metaclass=ABCMeta):
         
         :param left: set of expressions representing the expression to be substituted
         :param right: set of expressions representing the expression to substitute
-        :return: current state modified by the variable substitution
+        :return: current state modified by the substitution
 
         """
         self.big_join([deepcopy(self)._substitute(l, r) for l in left for r in right])

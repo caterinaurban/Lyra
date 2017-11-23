@@ -219,7 +219,12 @@ class KindMixin(Lattice, metaclass=ABCMeta):
 
 
 class BottomMixin(KindMixin, metaclass=ABCMeta):
-    """Mixin to add a predefined bottom element to a lattice."""
+    """Mixin to add a predefined bottom element to a lattice.
+
+    .. warning::
+        Subclasses are expected to provide consistent method implementations
+        that check for the eventuality of ``is_bottom()`` being true.
+    """
 
     @copy_docstring(Lattice.bottom)
     def bottom(self):
@@ -232,7 +237,12 @@ class BottomMixin(KindMixin, metaclass=ABCMeta):
 
 
 class TopMixin(KindMixin, metaclass=ABCMeta):
-    """Mixin to add a predefined top element to another lattice."""
+    """Mixin to add a predefined top element to another lattice.
+
+    .. warning::
+        Subclasses are expected to provide consistent method implementations
+        that check for the eventuality of ``is_top()`` being true.
+    """
 
     @copy_docstring(Lattice.top)
     def top(self):

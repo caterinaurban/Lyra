@@ -46,6 +46,13 @@ class IntegerLyraType(LyraType):
         return "int"
 
 
+class FloatLyraType(LyraType):
+    """Float type representation."""
+
+    def __repr__(self):
+        return "float"
+
+
 class StringLyraType(LyraType):
     """String type representation."""
 
@@ -80,6 +87,8 @@ def resolve_type_annotation(annotation):
             return BooleanLyraType()
         elif annotation.id == 'int':
             return IntegerLyraType()
+        elif annotation.id == 'float':
+            return FloatLyraType()
         elif annotation.id == 'str':
             return StringLyraType()
 

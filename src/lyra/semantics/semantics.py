@@ -11,7 +11,7 @@ Lyra's internal semantics of statements.
 import itertools
 import re
 from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slicing, \
-    LengthIdentifier
+    LengthIdentifier, VariableIdentifier
 from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
 from lyra.core.expressions import UnaryOperation
 from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
@@ -166,6 +166,8 @@ class BuiltInCallSemantics(CallSemantics):
                 result.add(Input(stmt.typ))
             elif isinstance(expression, Literal):
                 result.add(Literal(stmt.typ, expression.val))
+            elif isinstance(expression, VariableIdentifier):
+                result.add(VariableIdentifier(stmt.typ, expression.name))
             else:
                 error = f"Argument of type {expression.typ} of {stmt.name} is not yet supported!"
                 raise NotImplementedError(error)
@@ -185,6 +187,15 @@ class BuiltInCallSemantics(CallSemantics):
         """Semantics of a call to 'int'.
 
         :param stmt: call to 'int' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        return self._cast_call_semantics(stmt, state)
+
+    def float_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of a call to 'float'.
+
+        :param stmt: call to 'float' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
