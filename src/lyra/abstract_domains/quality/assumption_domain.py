@@ -35,6 +35,7 @@ class AssumptionState(Store, State):
         types = [BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType, ListLyraType]
         lattices = {typ: TypeLattice for typ in types}
         super().__init__(variables, lattices)
+        self.store[VariableIdentifier(ListLyraType, '.IN')] = TypeLattice()
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
@@ -78,8 +79,11 @@ class AssumptionState(Store, State):
         error = f'Substitution for {left} not yet implemented!'
         raise NotImplementedError(error)
 
+    @property
+    def input_var(self):
+        return VariableIdentifier(ListLyraType, '.IN')
+
     class AssumptionRefinement(ExpressionVisitor):
-        """TODO return NotImplementedError instead of state"""
         def visit_Subscription(self, expr, assumption=None, state=None):
             return state  # nothing to be done
 
@@ -114,7 +118,8 @@ class AssumptionState(Store, State):
             raise NotImplementedError(error)
 
         def visit_Input(self, expr, assumption=None, state=None):
-            return state  # TODO
+            state.store[state.input_var] = state.store[state.input_var].meet(assumption)
+            return state
 
         def visit_ListDisplay(self, expr, assumption=None, state=None):
             return state  # nothing to be done
