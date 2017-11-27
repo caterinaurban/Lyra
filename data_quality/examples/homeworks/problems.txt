@@ -1,0 +1,10 @@
+avoid raise error
+- 1516b/ex5_soln
+- cis192/tadas412
+
+len(array) > x
+- dat8/homework3_chipotle
+
+line must contain specific element
+- dat8/homework3_chipotle
+- tau2016/solution4_inline

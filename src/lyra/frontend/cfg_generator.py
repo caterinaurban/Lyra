@@ -6,7 +6,8 @@ from lyra.core.cfg import *
 from lyra.core.expressions import *
 
 from lyra.core.statements import *
-from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation
+from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
+    FloatLyraType
 from lyra.visualization.graph_renderer import CfgRenderer
 
 
@@ -307,6 +308,9 @@ class CFGVisitor(ast.NodeVisitor):
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.n, int):
             expr = Literal(IntegerLyraType(), str(node.n))
+            return LiteralEvaluation(pp, expr)
+        elif isinstance(node.n, float):
+            expr = Literal(FloatLyraType(), str(node.n))
             return LiteralEvaluation(pp, expr)
         raise NotImplementedError(f"Num {node.n.__class__.__name__} is not yet supported!")
 

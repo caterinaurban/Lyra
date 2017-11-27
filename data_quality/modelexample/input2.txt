@@ -1,0 +1,13 @@
+student name, hw or exam, grades
+anna,hw,5,5,4,5
+anna,exam,3
+steven,exam,6
+paul,hw,5,3,5,4
+paul,exam,4
+tim,hw,3,3,2,3
+sonja,hw,5,5,4,5
+sonja,exam,5
+peter,hw,6,6,2,3
+vanessa,hw,5,3,5,4
+kate,exam,4
+charlie,hw,3,3,2,3

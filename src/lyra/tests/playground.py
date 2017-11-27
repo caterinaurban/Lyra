@@ -9,4 +9,6 @@ from lyra.engine.usage.usage_analysis import UsageAnalysis
 
 # UsageAnalysis().main("usage/example.py")
 
+# BackwardIntervalAnalysis().main("numerical/example.py")
+
 ForwardIntervalAnalysis().main("numerical/example.py")

@@ -1,0 +1,241 @@
+
+simple example
+
+# input1 = {0} T {3} T {len} with delimiter ','
+b = input().split(',')
+
+# b[2] ==> b = {0} T {3} T {len}
+print(b[2])
+
+
+simple example - if
+
+# LINES = {0} T
+#         {.len3-2} [-len({len-1}), len(len-1)]
+#         {.len3-1} ({0} T {b}? THIS != 10 {b+1} T {.len2}? --TRUE--> best = {0} T {11} T {.len1}?
+#                                                           --FALSE-> best = {0} T {.len1}?)
+#         {.len3} with delimiter ','
+b = input()
+
+# LINES = {0} T
+#         {.len3-1} ({0} T {b}? THIS != 10 {b+1} T {.len2}? --TRUE--> best = {0} T {11} T {.len1}?
+#                                                           --FALSE-> best = {0} T {.len1}?)
+#         {.len3} with delimiter ','
+a = input().split(',')
+
+# a = {0} T {b}? THIS != 10 {b+1} T {.len2}? --TRUE--> best = {0} T {11} T {.len1}?
+#                                            --FALSE-> best = {0} T {.len1}?
+# b = [-.len2, .len2-1]
+if a[b] == 10:
+
+    # best = {0} T {11} T {.len1}?
+    best[10] = b
+
+# else:
+# a = {0} T {b}? THIS != 10 {b+1} T {.len2}?
+# best = {0} T {.len1}?
+# b = [-.len2, .len2-1]
+
+# a = {0} T {.len2}?
+# best = {0} T {.len1}?
+# b = [-inf, inf]
+
+
+simple example - input loop
+
+# LINES = {0} ({0} T {3} T {.len2}? with delimiter ',') {.len1}
+for line in file:
+    # line = {0} T {3} T {.len2}? with delimiter ','
+    a = line.split(',')
+
+    # a = {0} T {3} T {.len2}?
+    x = a[2]
+
+    # LINES = {0} T {.len1}
+
+# a = {0} T {.len2}?
+# LINES = {0} T {.len1}?
+
+
+simple example - input loop with other input
+
+N = input()
+# LINES = {0} ({0} T {3} T {.len2}? with delimiter ',') {.len1}
+for i in range(N):
+    # LINES = {0} T {.len1-1} ({0} T {3} T {.len2}? with delimiter ',') {.len1}
+    a = input().split(',')
+
+    # a = {0} T {3} T {.len2}?
+    x = a[2]
+
+    # i = [0, N-1]
+
+# a = {0} T {.len2}?
+# LINES = {0} T {.len1}?
+
+
+simple example - input loop with other input as while loop
+
+LINES = {0} < 0 {1} T {.len1-1} ({0} T {3} T {.len2}? with delimiter ',') {.len1}
+OR LINES = {0} >= 0 {1} T {.len1}?
+N = input()
+
+i = 0
+
+# i < N --TRUE--> LINES = {0} T {.len1-1} ({0} T {3} T {.len2}? with delimiter ',') {.len1}
+#       --FALSE-> LINES = {0} T {.len1}?
+while i < N:
+
+    # LINES = {0} T {.len1-1} ({0} T {3} T {.len2}? with delimiter ',') {.len1}
+    a = input().split(',')
+
+    # a = {0} T {3} T {.len2}?
+    x = a[2]
+
+    i += 1
+
+# a = {0} T {.len2}?
+# LINES = {0} T {.len1}?
+
+
+simple example - input loop with other input as while loop and not a input every iteration
+
+LINES = {0} < 0 {1} T {.len1-1} ({0} T {3} T {.len2}? with delimiter ',') {.len1}
+OR LINES = {0} >= 0 {1} T {.len1}?
+N = input()
+
+i = 0
+
+# i < N --TRUE--> LINES = {0} T {.len1-1} ({0} T {3} T {.len2}? with delimiter ',') {.len1}
+#       --FALSE-> LINES = {0} T {.len1}?
+while i < N:
+
+    # i > 10 --TRUE--> LINES = {0} T {.len1-1} ({0} T {3} T {.len2}? with delimiter ',') {.len1}
+    #        --FALSE-> LINES = {0} T {.len1}
+    if i > 10:
+        # LINES = {0} T {.len1-1} ({0} T {3} T {.len2}? with delimiter ',') {.len1}
+        a = input().split(',')
+
+    # a = {0} T {3} T {.len2}?
+    x = a[2]
+
+    i += 1
+
+# a = {0} T {.len2}?
+# LINES = {0} T {.len1}?
+
+
+simple example - loop with break and assume max i
+
+i = 0
+while i < N:
+    # loop start: i <= 10 --T--> a = {0} T {i}? int {i+1} T {len}?
+    # loop start:         --F--> a = {0} T {6} T {10} T {i}? int {i+1} T {len}?
+
+    # i <= 10 --T--> a = {0} T {i}? int {i+1} T {len}?
+    #         --F--> a = {0} T {6} T {10} T {i}? int {i+1} T {len}?
+    x = int(a[i])
+
+    # i <= 10 --T--> a = {0} T {len}
+    #         --F--> a = {0} T {6} T {len}
+    if i > 10:
+
+        # a = {0} T {6} T {len}?
+        # i+1 < N and i > 10
+        x = a[5]
+
+        # a = {0} T {len}?
+        # i+1 < N and i > 10
+
+    # else: a = {0} T {len}?
+    # else: i+1 < N and i <= 10
+
+    # a = {0} T {len}?
+    # i+1 < N
+    i += 1
+
+    # loop end: a = {0} T {len}?
+    # loop end: i < N
+
+# a = {0} T {len}?
+# i >= N
+
+second iteration:
+
+i = 0
+while i < N:
+    # loop start: i <= 10 --T--> a = {0} T {i}? T {N} T {len}
+    #                     --F--> a = {0} T {11} T {i}? T {N} T {len}
+
+    # i <= 10 --T--> a = {0} T {i}? T {len}
+    #         --F--> a = {0} T {11} T {i}? T {len}
+    x = a[i]
+
+    # i <= 10 --T--> a = {0} T {len}
+    #         --F--> a = {0} T {11} T {len}
+    if i > 10:
+
+        # i <= 10 --T--> Nil
+        #         --F--> a = {0} T {6} T {10} T {i+1}? int {i+2} T {N}? T {len}?
+        # i+1 < N and i > 10
+        x = a[5]
+
+        # i <= 10 --T--> Nil
+        #         --F--> a = {0} T {6} T {10} T {i+1}? int {i+2} T {N}? T {len}?
+        # i+1 < N and i > 10
+
+    # else: i <= 10 --T--> a = {0} T {i+1}? int {i+2} T {N}? T {len}?
+    # else:         --F--> Nil
+    # else: i+1 < N and i <= 10
+
+    # i <= 10 --T--> a = {0} T {i+1}? int {i+2} T {N}? T {len}?
+    #         --F--> a = {0} T {6} T {10} T {i+1}? int {i+2} T {N}? T {len}?
+    # i+1 < N
+    i += 1
+
+    # loop end: i <= 10 --T--> a = {0} T {i}? int {i+1} T {N}? T {len}?
+    # loop end:         --F--> a = {0} T {6} T {10} T {i}? int {i+1} T {N}? T {len}?
+    # loop end: i < N
+
+# a = {0} T {len}?
+# i >= N
+
+
+example from Quali15 - Cypi00
+
+# input1 = {0} T {1} T {2}
+# N is int ==> input1 = {0} int {1} T {2}
+# S = {0} int {1} int {2} int {3} T {len}? ==> input = {0} int {1} ({0} int {1} int {2} int {3} T {len}?) {2} with delimiter ' '
+N, S = input().split()
+
+# N is int
+N = int(N)
+res = 0
+cur = 0
+
+# S = {0} T {1} int {2} int {3} T {len}?
+# S = {0} int {1} T {len}?
+# ==> S = {0} int {1} int {2} int {3} T {len}?
+i = 0
+
+# S = {0} T {1} int {2} int {3} T {len}?
+# S = {0} T {i} int {i+1} T {len}?
+cur += int(S[i])
+
+# S = {0} T {2} int {3} T {len}?
+# S = {0} T {1} int {2} T {len}?
+# ==> S = {0} T {1} int {2} int {3} T {len}?
+i = 1
+
+# S = {0} T {2} int {3} T {len}?
+# S = {0} T {i} T {len}?
+cur += int(S[i])
+
+# S = {0} T {2} int {3} T {len}?
+i = 2
+
+# S[i] ==> S = {0} T {i+1} T {len}?
+# int(element of S) => S = {0} T {i} int {i+1} T {len}?
+cur += int(S[i])
+print('Case #%i:' % (_t + 1), res)
+# S = {0} T {len}?

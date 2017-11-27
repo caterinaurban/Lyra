@@ -95,3 +95,21 @@ ENV/
 
 # generated docs
 /docs/_build/
+
+data_quality/examples/homeworks/dnaAnalyzer/homework2\.zip
+
+data_quality/examples/homeworks/dnaAnalyzer/homework2/answers\.txt
+
+data_quality/examples/homeworks/dnaAnalyzer/homework2/data/
+
+data_quality/examples/homeworks/dnaAnalyzer/homework2/dna_analysis\.py
+
+data_quality/examples/homeworks/dnaAnalyzer/homework2/expected_output/
+
+data_quality/**/*.aux
+
+data_quality/**/*.log
+
+data_quality/**/*.pdf
+
+data_quality/**/*.out
