@@ -1,11 +1,10 @@
 
-# INITIAL: N -> Any, .IN -> Float
-if True:
-    # STATE: N -> Any, .IN -> Int
-    N:int = input()
+in1: float = input()
+in2: float = input()
+in3: float = input()
+
+if in1 > 10:
+    N:int = in2
 else:
-    # STATE: N -> Any, .IN -> Float
-    N:float = input()
-# STATE: N -> Float, .IN -> Any
+    N:float = in3
 N: float = N + 1
-# FINAL: N -> Any, .IN -> ⊥
