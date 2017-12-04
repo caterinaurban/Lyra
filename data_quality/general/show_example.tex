@@ -136,6 +136,34 @@ print('class average:', sum(grades) / len(grades)) (*@\label{Example3step1}@*)
  (*@\label{Example3step0}@*) 
 \end{lstlisting}
 
+without append:
+
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}
+data = [[], [], [], [], [], []] (*@\label{Example3WAstep12}@*) 
+i = 0
+for line in open('input3.txt', 'r'): (*@\label{Example3WAstep11}@*) 
+    data[i] = line.split(",") (*@\label{Example3WAstep10}@*) 
+    i = i + 1
+
+grades = [0, 0, 0, 0, 0, 0]
+i = 0
+for fields in data: (*@\label{Example3WAstep9}@*) 
+    if fields[1] == 'midterms': (*@\label{Example3WAstep8}@*) 
+        grade = (int(fields[2]) + 2 * int(fields[3])) / 3 (*@\label{Example3WAstep7}@*) 
+        grades[i] = grade (*@\label{Example3WAstep6}@*) 
+    else:
+        grades[i] = int(fields[2]) (*@\label{Example3WAstep5}@*) 
+    i = i + 1
+
+for grade in grades: (*@\label{Example3WAWAstep4}@*) 
+    if grade < 1 or grade > 6: (*@\label{Example3step3}@*) 
+        raise ValueError('Invalid grade!') (*@\label{Example3WAstep2}@*) 
+
+print('class average:', sum(grades) / len(grades)) (*@\label{Example3WAstep1}@*) 
+ (*@\label{Example3WAstep0}@*) 
+\end{lstlisting}
+
 
 
 \section{Automation Example3}
@@ -154,7 +182,7 @@ print('class average:', sum(grades) / len(grades)) (*@\label{Example3step1}@*)
 
 \item \textit{line \ref{Example3step3}:} In order not to reach bad state need to negate condition: $grade >= 1$ and $grade <= 6$
 
-\verb|grade == int and grade == [1,6]|
+\verb|grade == float and grade == [1,6]|
 
 \item \textit{line \ref{Example3step4}:} for-loop header reached, iteration limit not reached, no fixed point, no loop variable
 
@@ -162,11 +190,11 @@ print('class average:', sum(grades) / len(grades)) (*@\label{Example3step1}@*)
 
 \item \textit{line \ref{Example3step3} (2nd round):} In order not to reach bad state need to negate condition: $grade >= 1$ and $grade <= 6$
 
-\verb|grade == int and grade == [1,6]|
+\verb|grade == float and grade == [1,6]|
 
 \item \textit{line \ref{Example3step4} (2nd round):} for-loop header reached, fixed point reached. condition for grade has to hold for every element in grades:
 
-\verb|grades = {0} int, [1,6] {len_grades}|
+\verb|grades = {0} float, [1,6] {len_grades}|
 
 \item \textit{line \ref{Example3step5}:} array access: \verb|fields = {0} T {2} T {3} T {len_fields}?|
 

@@ -56,6 +56,8 @@
 
 BOTTOM - Bool (0) - Int (1) - Float (2) - Any (3)
 
+ADDED: type 'Uninit'. I need a special symbol .IN to 
+
 \begin{itemize}
 \item \textit{\_\_repr\_\_}: type name
 \item \textit{bottom}: BOTTOM
@@ -101,15 +103,31 @@ The bounds use an expression lattice of the form v + k where v is a variable and
 \section{Lattice - Assumption}
 
 \begin{itemize}
-\item \textit{\_\_repr\_\_}: (NAME of type, [x,y] as range)
-\item \textit{bottom}: (BOTTOM, BOTTOM)
-\item \textit{top}: (Any, [-oo,+oo])
-\item \textit{is\_bottom}: is (BOTTOM, BOTTOM)
-\item \textit{is\_top}: is (Any, [-oo,+oo])
+\item \textit{\_\_repr\_\_}: (NAME of type, [x,y] as range, input)
+\item \textit{bottom}: (BOTTOM, BOTTOM, BOTTOM)
+\item \textit{top}: (Any, [-oo,+oo], TOP)
+\item \textit{is\_bottom}: is (BOTTOM, BOTTOM, BOTTOM)
+\item \textit{is\_top}: is (Any, [-oo,+oo], TOP)
 \item \textit{less\_equal}: less\_equal of every tuple element
 \item \textit{join}: element-wise join
 \item \textit{meet}: element-wise meet
 \item \textit{widening}: element-wise widening
+\end{itemize}
+
+\section{Lattice - Input}
+
+list of elements (that can be lists) with an information about separation of value in each list and information about filename
+
+\begin{itemize}
+\item \textit{\_\_repr\_\_}: (listabstraction with elements of assumption lattice and information about , filename)
+\item \textit{bottom}: (BOTTOM, BOTTOM)
+\item \textit{top}: (TOP, TOP)
+\item \textit{is\_bottom}: is (BOTTOM, BOTTOM)
+\item \textit{is\_top}: is (TOP, TOP)
+\item \textit{less\_equal}: for same filename: less\_equal of every tuple element
+\item \textit{join}: for same filename: element-wise join
+\item \textit{meet}: for same filename: element-wise meet
+\item \textit{widening}: for same filename: element-wise widening
 \end{itemize}
 
 \section{State - List Abstraction}
@@ -132,6 +150,7 @@ The bounds use an expression lattice of the form v + k where v is a variable and
 \item \textit{substitute\_variable}:
 \end{itemize}
 
+
 \section{State - Backwards Assumption Analysis}
 
 \begin{itemize}
@@ -153,6 +172,60 @@ The bounds use an expression lattice of the form v + k where v is a variable and
 \item if a[i] is accessed: if a == T create \verb|a = {0} T {i}? T {i+1} T {len}?|, else: find highest bound $B_l < i$ and smallest bound $B_h > i$, join elements inbetween, insert \verb|{i} T {i+1}|
 \item perform a meet of the assumptions of the variables on both sides of the equation, if the right side is an expression, calculate the inverse. if the expression is not invertible remove assumptions and use T for current assumptions
 \end{itemize}
+\end{itemize}
+
+
+\section{State - Backwards Assumption Analysis (without List Abstraction)}
+
+\begin{itemize}
+\item \textit{assign\_variable}: not in backwards analysis
+\item \textit{assume}:
+\begin{enumerate}
+\item turn current state into an IntervalState and call assume of IntervalState, use returned information as range assumptions
+\item visit condition to get type assumptions
+\end{enumerate} 
+\item \textit{enter\_if}: nothing to do
+\item \textit{exit\_if}: nothing to do
+\item \textit{enter\_loop}: nothing to do
+\item \textit{exit\_loop}: nothing to do
+\item \textit{filter}: same as 'assume'
+\item \textit{output}: visit expression of output
+\item \textit{raise\_error}: turn current store to bottom
+\item \textit{substitute\_variable}:
+\begin{enumerate}
+\item use current assumption of left hand side to refine assumptions on right hand side
+\item assume top for variable on left hand side
+\item turn current state into an IntervalState and call assume of IntervalState, use returned information as range assumptions
+\item visit condition to get type assumptions
+\end{enumerate}
+\end{itemize}
+
+
+\section{Refinement - Backwards Assumption Analysis}
+
+\begin{itemize}
+\item \textit{visit Subscription}: nothing to do
+\item \textit{visit Literal}: nothing to do
+\item \textit{visit Slicing}: nothing to do
+\item \textit{visit BinaryBooleanOperation}: visit left and right side
+\item \textit{visit UnaryArithmeticOperation}: visit expr using type information of whole expression and given assumption
+\item \textit{visit BinaryArithmeticOperation}: visit left and right side using type information of whole expression and given assumption
+\item \textit{visit BinaryComparisonOperation}: visit left and right side
+\item \textit{visit AttributeReference}: not supported
+\item \textit{visit Input}: meet given assumption with type of input expression, add assumption to list. if self is bottom, start with a new list
+\item \textit{visit ListDisplay}: nothing to do
+\item \textit{visit UnaryBooleanOperation}: visit expr
+\item \textit{visit VariableIdentifier}:
+\begin{enumerate}
+\item meet assumption of variable with given assumption
+\item meet type assumption of variable with type of variable expression
+\end{enumerate}
+\end{itemize}
+
+\section{Lattice interaction}
+
+\begin{itemize}
+\item if I have an assumption lattice with 
 \end{itemize}
 
 \section{Join of Loop}
