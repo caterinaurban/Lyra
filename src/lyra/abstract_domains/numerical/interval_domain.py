@@ -18,7 +18,7 @@ from lyra.abstract_domains.store import Store
 from lyra.core.expressions import *
 
 from lyra.core.utils import copy_docstring
-from lyra.core.types import BooleanLyraType, IntegerLyraType
+from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType
 
 
 class IntervalLattice(BottomMixin, ArithmeticMixin):
@@ -167,13 +167,16 @@ class IntervalState(Store, State):
 
         :param variables: list of program variables
         """
-        lattices = {BooleanLyraType: IntervalLattice, IntegerLyraType: IntervalLattice}
+        lattices = {BooleanLyraType: IntervalLattice,
+                    IntegerLyraType: IntervalLattice,
+                    FloatLyraType: IntervalLattice}
         super().__init__(variables, lattices)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
         if isinstance(left, VariableIdentifier):
-            if isinstance(left.typ, BooleanLyraType) or isinstance(left.typ, IntegerLyraType):
+            if isinstance(left.typ, BooleanLyraType) or isinstance(left.typ, IntegerLyraType)\
+                    or isinstance(left.typ, FloatLyraType):
                 evaluation = self._evaluation.visit(right, self, dict())
                 self.store[left] = evaluation[right]
             else:
@@ -229,6 +232,10 @@ class IntervalState(Store, State):
     def _output(self, output: Expression) -> 'IntervalState':
         return self  # nothing to be done
 
+    @copy_docstring(State._output)
+    def _raise_error(self, output: Expression) -> 'IntervalState':
+        return self  # nothing to be done
+
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression):
         raise NotImplementedError("Substitution is not yet implemented!")
@@ -252,6 +259,10 @@ class IntervalState(Store, State):
                 val = int(expr.val)
                 evaluation[expr] = IntervalLattice(val, val)
                 return evaluation
+            elif isinstance(expr.typ, FloatLyraType):
+                val = float(expr.val)
+                evaluation[expr] = IntervalLattice(val, val)
+                return evaluation
             raise ValueError(f"Literal type {expr.typ} is not supported!")
 
         @copy_docstring(ExpressionVisitor.visit_Input)
@@ -261,7 +272,7 @@ class IntervalState(Store, State):
             if isinstance(expr.typ, BooleanLyraType):
                 evaluation[expr] = IntervalLattice(0, 1)
                 return evaluation
-            elif isinstance(expr.typ, IntegerLyraType):
+            elif isinstance(expr.typ, IntegerLyraType) or isinstance(expr.typ, FloatLyraType):
                 evaluation[expr] = IntervalLattice()
                 return evaluation
             raise ValueError(f"Input type {expr.typ} is not supported!")
@@ -270,7 +281,8 @@ class IntervalState(Store, State):
         def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType):
+            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType)\
+                    or isinstance(expr.typ, FloatLyraType):
                 evaluation[expr] = deepcopy(state.store[expr])
                 return evaluation
             raise ValueError(f"Variable type {expr.typ} is not supported!")
@@ -303,7 +315,7 @@ class IntervalState(Store, State):
             if expr.operator == UnaryArithmeticOperation.Operator.Add:
                 return evaluated
             elif expr.operator == UnaryArithmeticOperation.Operator.Sub:
-                evaluated[expr] = deepcopy(evaluated[expr.expression]).negate()
+                evaluated[expr] = deepcopy(evaluated[expr.expression]).neg()
                 return evaluated
             raise ValueError(f"Unary operator '{expr.operator}' is not supported!")
 
@@ -380,7 +392,8 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):
-            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType):
+            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType)\
+                    or isinstance(expr.typ, FloatLyraType):
                 state.store[expr] = evaluation[expr].meet(value)
                 return state
             raise ValueError(f"Variable type {expr.typ} is not supported!")
