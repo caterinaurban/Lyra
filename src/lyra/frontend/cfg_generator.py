@@ -317,7 +317,7 @@ class CFGVisitor(ast.NodeVisitor):
     # noinspection PyMethodMayBeStatic
     def visit_Str(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        expr = Literal(typ, node.s)
+        expr = Literal(StringLyraType, node.s)
         return LiteralEvaluation(pp, expr)
 
     # noinspection PyMethodMayBeStatic
@@ -485,6 +485,11 @@ class CFGVisitor(ast.NodeVisitor):
         pp = ProgramPoint(node.lineno, node.col_offset)
         return ListDisplayAccess(pp, [self.visit(e, types, typ) for e in node.elts])
 
+    def visit_Raise(self, node, types=None, typ=None):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        exception_call = self.visit(node.exc, types, typ)
+        return Raise(pp, exception_call)
+
     def visit_Subscript(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.slice, ast.Index):
@@ -513,7 +518,7 @@ class CFGVisitor(ast.NodeVisitor):
         cfg_factory = CFGFactory(self._id_gen)
 
         for child in body:
-            if isinstance(child, (ast.AnnAssign, ast.Expr)):
+            if isinstance(child, (ast.AnnAssign, ast.Expr, ast.Raise)):
                 cfg_factory.add_stmts(self.visit(child, types))
             elif isinstance(child, ast.If):
                 cfg_factory.complete_basic_block()
