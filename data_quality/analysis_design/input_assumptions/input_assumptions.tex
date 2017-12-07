@@ -52,9 +52,21 @@
 
 \pagenumbering{arabic}
 
-\section{Desgin}
+\section{Design}
 
-Problem: join with different number of inputs:
+\subsection{New Idea}
+
+
+
+\subsection{First Idea}
+
+First idea was to have a list abstraction for the inputs. Every time input() is encountered we add an element to the front of the current .IN element. The problem with this approach is, that the program analysis does an overapproximation whereas for the input list we don't want to do an overapproximation but just keep the current state. A problem then occurs for example if we have a loop gathering calling input and maybe some input() before the loop. The code before the loop will be analyzed before the loop body because of the worklist algorithm. This means that if we for example later realize we don't know how many iterations are done in the input calling loop we need to remove the assumption when analyzing the code before the loop again. 
+
+Furthermore there is a difference in joining if-else and while. In the if-else case we want to do a real join whereas in the while case we want to keep on adding assumptions and ignore the empty assumption list on the else case of the while loop. 
+
+Also if we enter a loop and we already found 4 inputs and then enter a loop we need to make sure that the loop does not think that we need to add 4 elements in every loop iteration.
+
+\subsection{Problem: join with different number of inputs:}
 
 \begin{lstlisting}[numbers=none]
 

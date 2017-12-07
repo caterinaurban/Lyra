@@ -64,7 +64,7 @@ ADDED: type 'Uninit'. I need a special symbol .IN to
 \item \textit{top}: Any
 \item \textit{is\_bottom}: is special symbol BOTTOM?
 \item \textit{is\_top}: is Any?
-\item \textit{less\_equal}: x < y
+\item \textit{less\_equal}: x $<$ y
 \item \textit{join}: max()
 \item \textit{meet}: min()
 \item \textit{widening}: join()
@@ -193,15 +193,17 @@ list of elements (that can be lists) with an information about separation of val
 \item \textit{raise\_error}: turn current store to bottom
 \item \textit{substitute\_variable}:
 \begin{enumerate}
-\item use current assumption of left hand side to refine assumptions on right hand side
-\item assume top for variable on left hand side
-\item turn current state into an IntervalState and call assume of IntervalState, use returned information as range assumptions
-\item visit condition to get type assumptions
+\item save current assumption of left side
+\item get range assumption by calling IntervalState.substitute()
+\item save current range assumption of left side
+\item make left side top
+\item visit right hand side with assumption saved before
+\item meet left hand range assumption with previously saved range assumption
 \end{enumerate}
 \end{itemize}
 
 
-\section{Refinement - Backwards Assumption Analysis}
+\section{Refinement - Backwards Assumption Analysis (without List Abstraction)}
 
 \begin{itemize}
 \item \textit{visit Subscription}: nothing to do
@@ -212,7 +214,12 @@ list of elements (that can be lists) with an information about separation of val
 \item \textit{visit BinaryArithmeticOperation}: visit left and right side using type information of whole expression and given assumption
 \item \textit{visit BinaryComparisonOperation}: visit left and right side
 \item \textit{visit AttributeReference}: not supported
-\item \textit{visit Input}: meet given assumption with type of input expression, add assumption to list. if self is bottom, start with a new list
+\item \textit{visit Input}: 
+\begin{enumerate}
+\item meet given assumption with type of input expression
+\item if current .IN is bottom: start with a new list with the current assumption
+\item else: add assumption to input list
+\end{enumerate}
 \item \textit{visit ListDisplay}: nothing to do
 \item \textit{visit UnaryBooleanOperation}: visit expr
 \item \textit{visit VariableIdentifier}:
@@ -220,12 +227,6 @@ list of elements (that can be lists) with an information about separation of val
 \item meet assumption of variable with given assumption
 \item meet type assumption of variable with type of variable expression
 \end{enumerate}
-\end{itemize}
-
-\section{Lattice interaction}
-
-\begin{itemize}
-\item if I have an assumption lattice with 
 \end{itemize}
 
 \section{Join of Loop}
