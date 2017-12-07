@@ -239,8 +239,11 @@ class Raise(Statement):
         self._exception = exception
 
     def __repr__(self):
-        arguments = ", ".join("{}".format(argument) for argument in self.exception.arguments)
-        return f"raise {self.exception.name}({arguments})"
+        if isinstance(self.exception, Call):
+            arguments = ", ".join("{}".format(argument) for argument in self.exception.arguments)
+            return f"raise {self.exception.name}({arguments})"
+        else:
+            return f"raise {self.exception.variable.name}"
 
     @property
     def exception(self):

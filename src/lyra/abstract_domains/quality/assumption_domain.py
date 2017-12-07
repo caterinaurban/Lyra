@@ -13,8 +13,7 @@ from lyra.abstract_domains.quality.assumption_lattice import TypeLattice, Assump
     InputAssumptionLattice
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
-from lyra.core.expressions import Expression, VariableIdentifier, Subscription, ExpressionVisitor, \
-    Slicing
+from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor
 from lyra.core.types import ListLyraType, IntegerLyraType, BooleanLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -47,8 +46,6 @@ class AssumptionState(Store, State):
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'AssumptionState':
         curr_condition = condition
-        if self.is_bottom():
-            return self
         self._assume_range(curr_condition)
         self._refinement.visit(condition, None, self)
         return self
@@ -90,14 +87,12 @@ class AssumptionState(Store, State):
     def _substitute(self, left: Expression, right: Expression) -> 'AssumptionState':
         if isinstance(left, VariableIdentifier):
             assumption = deepcopy(self.store[left])
-            self._substitute_range(left, right)
+            assumptions_range = self._substitute_range(left, right)
+            assumptions_range_left = deepcopy(assumptions_range.store[left].range_assumption)
             self.store[left].top()
-            return self._refinement.visit(right, assumption, self)
-        elif isinstance(left, Subscription) or isinstance(left, Slicing):
-            assumption = deepcopy(self.store[left.target])
-            self._substitute_range(left, right)
-            self.store[left.target].top()
-            return self._refinement.visit(right, assumption, self)
+            self._refinement.visit(right, assumption, self)
+            self.store[left].range_assumption.meet(assumptions_range_left)
+            return self
         error = f'Substitution for {left} not yet implemented!'
         raise NotImplementedError(error)
 
@@ -107,8 +102,7 @@ class AssumptionState(Store, State):
         """
         interval_state = self.assmp_to_interval_state()
         res = interval_state.substitute([left], [right])
-        self.interval_to_assmp_state(res)
-        return self
+        return self.interval_to_assmp_state(res)
 
     @property
     def input_var(self):
@@ -121,19 +115,18 @@ class AssumptionState(Store, State):
         variables = [v for v in self.variables if isinstance(v.typ, FloatLyraType)
                      or isinstance(v.typ, IntegerLyraType) or isinstance(v.typ, BooleanLyraType)]
         interval_state = IntervalState(variables)
-        assumptions = [(k, v) for (k, v) in self.store.items() if isinstance(v, AssumptionLattice)
-                       and (type(k.typ) in [BooleanLyraType, IntegerLyraType, FloatLyraType])]
-        for key, value in assumptions:
-            interval_state.store[key] = value.range_assumption
+        assumptions = [(k, v) for (k, v) in self.store.items() if isinstance(v, AssumptionLattice)]
+        for var, assmp in assumptions:
+            interval_state.store[var] = deepcopy(assmp.range_assumption)
         return interval_state
 
     def interval_to_assmp_state(self, interval_state: IntervalState):
         """
         Overwrites information of the current store with information from the interval state
         """
-        for key, value in interval_state.store.items():
-            type_assumption = self.store[key].type_assumption
-            self.store[key] = AssumptionLattice(type_assumption, value)
+        for var, interval in interval_state.store.items():
+            type_assumption = self.store[var].type_assumption
+            self.store[var] = AssumptionLattice(type_assumption, interval)
         return self
 
     class AssumptionRefinement(ExpressionVisitor):
@@ -175,7 +168,7 @@ class AssumptionState(Store, State):
         def visit_Input(self, expr, assumption=None, state=None):
             type_assumption = TypeLattice.from_lyra_type(expr.typ)
             input_assumption = AssumptionLattice(type_assumption).meet(assumption)
-            if state.store[state.input_var].is_bottom():
+            if state.store[state.input_var].is_bottom() or state.store[state.input_var].is_top():
                 state.store[state.input_var] = InputAssumptionLattice()
             state.store[state.input_var].add_assumption(input_assumption)
             return state

@@ -104,6 +104,24 @@ class TypeLattice(BottomMixin):
         self.replace(TypeLattice(TypeLattice.Status.Bool))
         return self
 
+    def is_real(self) -> 'bool':
+        """
+        Returns True if the current type lattice element is of type float
+        """
+        return self.element == TypeLattice.Status.Float
+
+    def is_integer(self) -> 'bool':
+        """
+        Returns True if the current type lattice element is of type int
+        """
+        return self.element == TypeLattice.Status.Int
+
+    def is_boolean(self) -> 'bool':
+        """
+        Returns True if the current type lattice element is of type bool
+        """
+        return self.element == TypeLattice.Status.Bool
+
     @copy_docstring(Lattice.is_top)
     def is_top(self) -> bool:
         return self.element == TypeLattice.Status.Any
@@ -253,14 +271,16 @@ class InputAssumptionLattice(BottomMixin, TopMixin):
 
     def __repr__(self):
         if self.is_bottom():
-            return '[]'
+            return '⊥'
+        if self.is_top():
+            return 'T'
         assumption_repr = [assumption.__repr__() for assumption in self._input_assmp_backwards]
         comma_separated = ', '.join(assumption_repr)
         return f'[{comma_separated}]'
 
     @property
     def assumptions(self):
-        if self.is_bottom():
+        if self.is_bottom() or self.is_top():
             return []
         return self._input_assmp_backwards
 
@@ -277,12 +297,12 @@ class InputAssumptionLattice(BottomMixin, TopMixin):
                 if not assmp1.less_equal(assmp2):
                     return False
             return True
-        return len(self._input_assmp_backwards) < len(other._input_assmp_backwards)
+        return False
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
         if len(self._input_assmp_backwards) != len(other._input_assmp_backwards):
-            return self.bottom()
+            self.top()
         else:
             for assmp1, assmp2 in zip(self._input_assmp_backwards, other._input_assmp_backwards):
                 assmp1.join(assmp2)
@@ -291,7 +311,7 @@ class InputAssumptionLattice(BottomMixin, TopMixin):
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
         if len(self._input_assmp_backwards) != len(other._input_assmp_backwards):
-            self.bottom()
+            self._input_assmp_backwards = []
         else:
             for assmp1, assmp2 in zip(self._input_assmp_backwards, other._input_assmp_backwards):
                 assmp1.meet(assmp2)
@@ -300,7 +320,7 @@ class InputAssumptionLattice(BottomMixin, TopMixin):
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
         if len(self._input_assmp_backwards) != len(other._input_assmp_backwards):
-            self.bottom()
+            self._input_assmp_backwards = []
         else:
             for assmp1, assmp2 in zip(self._input_assmp_backwards, other._input_assmp_backwards):
                 assmp1.widening(assmp2)
