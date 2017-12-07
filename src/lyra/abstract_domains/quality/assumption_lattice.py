@@ -320,7 +320,7 @@ class InputAssumptionLattice(BottomMixin, TopMixin):
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
         if len(self._input_assmp_backwards) != len(other._input_assmp_backwards):
-            self._input_assmp_backwards = []
+            self.top()
         else:
             for assmp1, assmp2 in zip(self._input_assmp_backwards, other._input_assmp_backwards):
                 assmp1.widening(assmp2)
