@@ -1,5 +1,6 @@
 import json
 from json import JSONDecoder
+from math import inf
 
 from lyra.abstract_domains.numerical.interval_domain import IntervalLattice
 from lyra.abstract_domains.quality.assumption_lattice import AssumptionLattice, TypeLattice
@@ -8,7 +9,7 @@ from lyra.abstract_domains.quality.assumption_lattice import AssumptionLattice, 
 class AssumptionEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, AssumptionLattice):
-            return {"assmp":obj.type_assumption, "range":obj.range_assumption}
+            return {"type_assmp": obj.type_assumption, "range_assmp":obj .range_assumption}
         if isinstance(obj, TypeLattice):
             return obj.__repr__()
         if isinstance(obj, IntervalLattice):
@@ -24,7 +25,24 @@ class AssumptionDecoder(json.JSONDecoder):
 
     def default(self, obj):
 
-        return obj  #TODO
+        if "0" in obj:
+            return obj["0"]
+
+        type_assumption = TypeLattice()
+        range_assumption = IntervalLattice()
+        if "type_assmp" in obj:
+            type_assmp = obj["type_assmp"]
+            if type_assmp == "Int":
+                type_assumption = TypeLattice().integer()
+            elif type_assmp == "Float":
+                type_assumption = TypeLattice().real()
+        if "range_assmp" in obj:
+            bounds = obj["range_assmp"][1:-1].split(',')
+            bounds[0] = -inf if bounds[0].strip() == "-inf" else int(bounds[0])
+            bounds[1] = inf if bounds[1].strip() == "inf" else int(bounds[1])
+            range_assumption = IntervalLattice(bounds[0], bounds[1])
+
+        return AssumptionLattice(type_assumption, range_assumption)
 
 
 class JSONHandler:
