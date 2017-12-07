@@ -3,10 +3,10 @@ from lyra.quality_analysis.input_checker.input_checker import InputChecker
 from lyra.quality_analysis.json_handler import JSONHandler
 
 
-def main():
+def run_analysis(python_file_name):
     print("Running analysis")
 
-    result = AssumptionAnalysis().main("../tests/quality/interm_example.py", True)
+    result = AssumptionAnalysis().main(f"../tests/quality/{python_file_name}.py", False)
 
     print("Analysis done")
 
@@ -20,19 +20,26 @@ def main():
 
     print("Writing assumption to json")
 
-    program_name = "interm_example"
-    json_handler = JSONHandler()
-    json_handler.input_assumptions_to_json(program_name, input_assumptions)
+    JSONHandler().input_assumptions_to_json(python_file_name, input_assumptions)
 
-    # print("Reading assumption from json")
 
-    # input_assumptions_from_json = json_handler.json_to_input_assumptions(program_name)
+def run_checker(python_file_name):
+    print("Reading assumption from json")
 
-    print('Running input checker')
+    input_assumptions = JSONHandler().json_to_input_assumptions(python_file_name)
 
-    InputChecker(program_name).check_input('interm_input.in', input_assumptions)
+    print("Running input checker")
 
-    print('Input checking done')
+    InputChecker(python_file_name).check_input(f"{python_file_name}.in", input_assumptions)
+
+    print("Input checking done")
+
+
+def main(python_file_name):
+    run_analysis(python_file_name)
+    run_checker(python_file_name)
 
 if __name__ == '__main__':
-    main()
+    curr_python_file_name = "interm_example"
+    main(curr_python_file_name)
+    #run_checker(curr_python_file_name)

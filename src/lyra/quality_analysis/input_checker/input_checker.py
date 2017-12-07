@@ -76,6 +76,8 @@ class InputChecker:
                 lower = range_assmp.lower
                 upper = range_assmp.upper
                 self.write_range_error(line_num, input_line, lower, upper)
+                has_errors = True
+                continue
         if not has_errors:
             self.write_no_error()
         self._error_file.close()
