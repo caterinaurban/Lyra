@@ -96,6 +96,17 @@ ENV/
 # generated docs
 /docs/_build/
 
+
+data_quality/examples/brca/*.txt
+
+data_quality/examples/codejam/input.txt
+
+data_quality/examples/codejam/output.txt
+
+data_quality/examples/github/RuiqingQiu/adult.data.txt
+
+data_quality/examples/github/RuiqingQiu/new_data*
+
 data_quality/examples/homeworks/dnaAnalyzer/homework2\.zip
 
 data_quality/examples/homeworks/dnaAnalyzer/homework2/answers\.txt
@@ -106,6 +117,14 @@ data_quality/examples/homeworks/dnaAnalyzer/homework2/dna_analysis\.py
 
 data_quality/examples/homeworks/dnaAnalyzer/homework2/expected_output/
 
+data_quality/examples/homeworks/mcb112/data/*
+
+data_quality/examples/homeworks/1516b/data/marie.txt
+
+data_quality/examples/homeworks/tau2016/plant_names.txt
+
+data_quality/examples/tutorials/jadianes/*.data*
+
 data_quality/**/*.aux
 
 data_quality/**/*.log
@@ -113,6 +132,14 @@ data_quality/**/*.log
 data_quality/**/*.pdf
 
 data_quality/**/*.out
+
+data_quality/**/*.csv
+
+data_quality/**/*.tsv
+
+data_quality/**/*.fq
+
+data_quality/checker_design/tikz-uml\.sty
 
 src/lyra/quality_analysis/assumptions_interm_example\.json
 
