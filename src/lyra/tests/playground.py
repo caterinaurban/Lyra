@@ -8,12 +8,12 @@ from lyra.engine.usage.usage_analysis import UsageAnalysis
 
 # StrongLivenessAnalysis().main("liveness/example.py")
 
-# UsageAnalysis().main("usage/example.py")
+# UsageAnalysis().main("quality/interm_example.py")
 
 # BoolTracesAnalysis().main("traces/example.py")
 
 # BackwardIntervalAnalysis().main("quality/example.py")
 
-# ForwardIntervalAnalysis().main("numerical/example.py")
+# ForwardIntervalAnalysis().main("quality/example.py")
 
 AssumptionAnalysis().main("quality/example.py")
