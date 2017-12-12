@@ -46,7 +46,7 @@ class InputChecker:
                 return "string"
 
     def count_values(self, filename):
-        input_file = open(f"../tests/quality/{filename}", 'r')
+        input_file = open(f"../tests/quality/{filename}.in", 'r')
         num = 0
         for _ in input_file:
             num += 1
@@ -57,7 +57,7 @@ class InputChecker:
         num_values = self.count_values(filename)
         if num_values < len(assumptions):
             self.write_missing_error(len(assumptions), num_values)
-        input_file = open(f"../tests/quality/{filename}", 'r')
+        input_file = open(f"../tests/quality/{filename}.in", 'r')
         line_num = 0
         has_errors = False
         for assumption in assumptions:

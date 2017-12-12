@@ -30,7 +30,7 @@ def run_checker(python_file_name):
 
     print("Running input checker")
 
-    InputChecker(python_file_name).check_input(f"{python_file_name}.in", input_assumptions)
+    InputChecker(python_file_name).check_input(python_file_name, input_assumptions)
 
     print("Input checking done")
 
