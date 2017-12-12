@@ -65,6 +65,7 @@ class ForwardInterpreter(Interpreter):
                         predecessor = predecessor.enter_if() if branch else predecessor
                         predecessor = predecessor.enter_loop() if loop else predecessor
                         condition = edge.condition
+                        predecessor = predecessor.before(condition.pp)
                         predecessor = self.semantics.semantics(condition, predecessor).filter()
                         predecessor = predecessor.exit_if() if branch else predecessor
                         predecessor = predecessor.exit_loop() if loop else predecessor
@@ -72,11 +73,13 @@ class ForwardInterpreter(Interpreter):
                         predecessor = predecessor.enter_if()
                         assert isinstance(edge, Conditional)
                         condition = edge.condition
+                        predecessor = predecessor.before(condition.pp)
                         predecessor = self.semantics.semantics(condition, predecessor).filter()
                     elif edge.kind == Edge.Kind.LOOP_IN:
                         predecessor = predecessor.enter_loop()
                         assert isinstance(edge, Conditional)
                         condition = edge.condition
+                        predecessor = predecessor.before(condition.pp)
                         predecessor = self.semantics.semantics(condition, predecessor).filter()
                     # handle unconditional non-default edges
                     if edge.kind == Edge.Kind.IF_OUT:
@@ -94,6 +97,7 @@ class ForwardInterpreter(Interpreter):
                 if isinstance(current, Basic):
                     successor = entry
                     for stmt in current.stmts:
+                        successor = successor.before(stmt.pp)
                         successor = self.semantics.semantics(stmt, deepcopy(successor))
                         states.append(successor)
                 elif isinstance(current, Loop):
