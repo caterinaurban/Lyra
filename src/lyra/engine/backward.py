@@ -72,15 +72,18 @@ class BackwardInterpreter(Interpreter):
                         assert (branch or loop) and not (branch and loop)
                         successor = successor.enter_if() if branch else successor
                         successor = successor.enter_loop() if loop else successor
+                        successor = successor.before(edge.condition.pp)
                         successor = self.semantics.semantics(edge.condition, successor).filter()
                         successor = successor.exit_if() if branch else successor
                         successor = successor.exit_loop() if loop else successor
                     elif edge.kind == Edge.Kind.IF_IN:
                         assert isinstance(edge, Conditional)
+                        successor = successor.before(edge.condition.pp)
                         successor = self.semantics.semantics(edge.condition, successor).filter()
                         successor = successor.exit_if()
                     elif edge.kind == Edge.Kind.LOOP_IN:
                         assert isinstance(edge, Conditional)
+                        successor = successor.before(edge.condition.pp)
                         successor = self.semantics.semantics(edge.condition, successor).filter()
                         successor = successor.exit_loop()
                     entry = entry.join(successor)
@@ -94,6 +97,7 @@ class BackwardInterpreter(Interpreter):
                 if isinstance(current, Basic):
                     successor = entry
                     for stmt in reversed(current.stmts):
+                        successor = successor.before(stmt.pp)
                         successor = self.semantics.semantics(stmt, deepcopy(successor))
                         states.appendleft(successor)
                 elif isinstance(current, Loop):

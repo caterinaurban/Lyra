@@ -15,6 +15,7 @@ from typing import Set
 
 from lyra.abstract_domains.lattice import Lattice
 from lyra.core.expressions import Expression
+from lyra.core.statements import ProgramPoint
 
 
 class State(Lattice, metaclass=ABCMeta):
@@ -26,6 +27,7 @@ class State(Lattice, metaclass=ABCMeta):
     def __init__(self):
         super().__init__()
         self._result = set()
+        self._pp = None
 
     @property
     def result(self):
@@ -35,6 +37,15 @@ class State(Lattice, metaclass=ABCMeta):
     @result.setter
     def result(self, result: Set[Expression]):
         self._result = result
+
+    @property
+    def pp(self):
+        """Program point of the currently analyzed statement."""
+        return self._pp
+
+    @pp.setter
+    def pp(self, pp: ProgramPoint):
+        self._pp = pp
 
     def __repr__(self):
         return ", ".join("{}".format(expression) for expression in self.result)
@@ -78,6 +89,15 @@ class State(Lattice, metaclass=ABCMeta):
 
         """
         self.big_join([deepcopy(self)._assume(expr) for expr in condition])
+        return self
+
+    def before(self, pp: ProgramPoint) -> 'State':
+        """Set the program point of the currently analyzed statement.
+
+        :param pp: current program point
+        :return: current state modified to set the current program point
+        """
+        self.pp = pp
         return self
 
     @abstractmethod
