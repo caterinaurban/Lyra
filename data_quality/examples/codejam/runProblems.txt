@@ -1,1 +1,0 @@
-cat input_file.txt | python3.6 script.py > output_file.txt
