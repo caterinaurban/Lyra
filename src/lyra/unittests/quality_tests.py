@@ -28,7 +28,7 @@ class QualityTest(TestRunner):
 
 def test_suite():
     suite = unittest.TestSuite()
-    name = os.getcwd() + '/quality/**.py'
+    name = os.getcwd() + '/quality/analysis/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             suite.addTest(QualityTest(path))
