@@ -1,6 +1,8 @@
 from lyra.engine.quality.assumption_analysis import AssumptionAnalysis
 from lyra.quality_analysis.input_checker.input_checker import InputChecker
 from lyra.quality_analysis.json_handler import JSONHandler
+from lyra.quality_analysis.static_analyzer.input_assumption_collector import \
+    InputAssumptionCollector
 
 
 def run_analysis(python_file_name):
@@ -8,15 +10,20 @@ def run_analysis(python_file_name):
 
     result = AssumptionAnalysis().main(f"../tests/quality/{python_file_name}.py", False)
 
-    print("Analysis done")
-
     for block, analysis in result.result.items():
         if block.identifier == 1:
             assumption_lattice = analysis[0].store[analysis[0].input_var]
             break
     if assumption_lattice is None:
         raise Exception("Cannot find input assumption in analysis result.")
-    input_assumptions = list(reversed(assumption_lattice.assumptions))
+    assumptions = assumption_lattice.assumptions
+
+    print("Collecting result")
+
+    assumption_collector = InputAssumptionCollector(result.cfg, assumptions)
+    input_assumptions = assumption_collector.collect_input_assumptions()
+
+    print("Analysis done")
 
     print("Writing assumption to json")
 
@@ -40,6 +47,6 @@ def main(python_file_name):
     run_checker(python_file_name)
 
 if __name__ == '__main__':
-    curr_python_file_name = "interm_example"
+    curr_python_file_name = "example"
     main(curr_python_file_name)
     #run_checker(curr_python_file_name)
