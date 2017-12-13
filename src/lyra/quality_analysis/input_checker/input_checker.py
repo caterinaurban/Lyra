@@ -14,7 +14,7 @@ class InputChecker:
 
     def write_missing_error(self, num_values_expected, num_values_found):
         error = f'Missing value: ' \
-                f'expected {num_values_expected} values instead found {num_values_found}.'
+                f'expected at least {num_values_expected} values instead found {num_values_found}.'
         self._error_file.write(error)
         self._error_file.write('\n')
 
