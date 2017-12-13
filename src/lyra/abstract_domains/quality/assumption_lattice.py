@@ -8,6 +8,7 @@ from enum import IntEnum, Enum
 
 from lyra.abstract_domains.lattice import Lattice, BottomMixin, TopMixin
 from lyra.abstract_domains.numerical.interval_domain import IntervalLattice
+from lyra.core.statements import ProgramPoint
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType
 from lyra.core.utils import copy_docstring
 
@@ -250,6 +251,69 @@ class AssumptionLattice(Lattice):
         self.range_assumption.widening(other.range_assumption)
         return self
 
+
+class InputAssumptionDictLattice(BottomMixin, TopMixin):
+
+    def __init__(self):
+        super().__init__()
+        self._input_assmp = dict()
+
+    def __repr__(self):
+        if self.is_bottom():
+            return '⊥'
+        if self.is_top():
+            return 'T'
+        return self._input_assmp.__repr__() # TODO
+        #assumption_repr = [assumption.__repr__() for assumption in self._input_assmp]
+        #comma_separated = ', '.join(assumption_repr)
+        #return f'[{comma_separated}]'
+
+    @property
+    def assumptions(self):
+        if self.is_bottom() or self.is_top():
+            return dict()
+        return self._input_assmp
+
+    def put_assumption(self, pp: ProgramPoint, assumption: AssumptionLattice):
+        """
+        Puts the assumption into the input assumption dictionary
+        """
+        self._input_assmp[pp] = assumption
+
+    @copy_docstring(Lattice._less_equal)
+    def _less_equal(self, other: 'InputAssumptionLattice') -> bool:
+        if len(self.assumptions) == len(other.assumptions):
+            for pp in self.assumptions:
+                if pp not in other.assumptions:
+                    return False
+                if not self.assumptions[pp].less_equal(other.assumptions[pp]):
+                    return False
+            return True
+        return len(self.assumptions) < len(other.assumptions)
+
+    @copy_docstring(Lattice._join)
+    def _join(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
+        for pp in [k for k in self.assumptions.keys() if k in other.assumptions.keys()]:
+            self.assumptions[pp].join(other.assumptions[pp])
+        for pp in [k for k in other.assumptions.keys() if k not in self.assumptions.keys()]:
+            self.assumptions[pp] = other.assumptions[pp]
+        return self
+
+    @copy_docstring(Lattice._meet)
+    def _meet(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
+        for pp in [k for k in self.assumptions.keys() if k not in other.assumptions.keys()]:
+            self.assumptions.pop(pp)
+        for pp in self.assumptions.keys():
+            self.assumptions[pp].meet(other.assumptions[pp])
+        return self
+
+    @copy_docstring(Lattice._widening)
+    def _widening(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
+        for pp in [k for k in self.assumptions.keys() if k in other.assumptions.keys()]:
+            self.assumptions[pp].widening(other.assumptions[pp])
+        for pp in [k for k in other.assumptions.keys() if k not in self.assumptions.keys()]:
+            self.assumptions[pp] = other.assumptions[pp]
+        return self
 
 class InputAssumptionLattice(BottomMixin, TopMixin):
     """
