@@ -10,7 +10,7 @@ from copy import deepcopy
 
 from lyra.abstract_domains.numerical.interval_domain import IntervalState
 from lyra.abstract_domains.quality.assumption_lattice import TypeLattice, AssumptionLattice, \
-    InputAssumptionLattice
+    InputAssumptionDictLattice
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor
@@ -36,7 +36,7 @@ class AssumptionState(Store, State):
         types = [BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType, ListLyraType]
         lattices = {typ: AssumptionLattice for typ in types}
         super().__init__(variables, lattices)
-        self.store[self.input_var] = InputAssumptionLattice()
+        self.store[self.input_var] = InputAssumptionDictLattice()
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
@@ -169,8 +169,8 @@ class AssumptionState(Store, State):
             type_assumption = TypeLattice.from_lyra_type(expr.typ)
             input_assumption = AssumptionLattice(type_assumption).meet(assumption)
             if state.store[state.input_var].is_bottom() or state.store[state.input_var].is_top():
-                state.store[state.input_var] = InputAssumptionLattice()
-            state.store[state.input_var].add_assumption(input_assumption)
+                state.store[state.input_var] = InputAssumptionDictLattice()
+            state.store[state.input_var].put_assumption(state.pp, input_assumption)
             return state
 
         def visit_ListDisplay(self, expr, assumption=None, state=None):
