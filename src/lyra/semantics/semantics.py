@@ -243,6 +243,9 @@ class BuiltInCallSemantics(CallSemantics):
         argument = self.semantics(stmt.arguments[0], state).result
         return state.output(argument)
 
+    def range_call_semantics(self, stmt: Call, state: State) -> State:
+        return state
+
     def raise_semantics(self, stmt: Raise, state: State) -> State:
         """Semantics of raising an Error.
 
