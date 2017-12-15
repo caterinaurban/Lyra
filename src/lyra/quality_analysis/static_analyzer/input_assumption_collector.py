@@ -3,7 +3,7 @@ from copy import deepcopy
 from lyra.core.cfg import ControlFlowGraph, Loop, Edge
 from collections import deque
 
-from lyra.core.statements import Call, Assignment, VariableAccess, LiteralEvaluation
+from lyra.core.statements import Call, Assignment, VariableAccess, LiteralEvaluation, Raise
 from lyra.core.types import IntegerLyraType
 
 
@@ -47,7 +47,7 @@ class InputAssumptionCollector:
                     if information_loss:
                         break
 
-            self.nodes_done.append(current_node)
+                self.nodes_done.append(current_node)
 
             if current_node == self.cfg.out_node:
                 break
@@ -61,6 +61,11 @@ class InputAssumptionCollector:
         return self.node_to_input[current_node]
 
     def get_prev_assmp(self, current_node, node_to_input):
+        """
+        Merge the information from the last node(s) with the current node
+
+        :return: If no information loss occurred
+        """
         sources = [e[0] for e in self.edges_done if e[1] == current_node
                    and self.cfg.edges[e].kind != Edge.Kind.LOOP_OUT]
         if len(sources) == 1:
@@ -72,38 +77,46 @@ class InputAssumptionCollector:
         return True
 
     def analyze_node(self, current_node, node_to_input):
-        if len(node_to_input.keys()) > 0:
-            if not self.get_prev_assmp(current_node, node_to_input):
-                return False
-        # analyze statements
+        """
+        Gets the assumptions from the last node(s) and analyzes the statements of the node
+
+        :return: If no information loss occurred
+        """
+        if not self.get_prev_assmp(current_node, node_to_input):
+            return False
         for stmt in current_node.stmts:
-            if not self.analyze_stmt_for_input(stmt, current_node, node_to_input):
-                return False
+            self.analyze_stmt_for_input(stmt, current_node, node_to_input)
         return True
 
     def handle_multiple_sources(self, sources, current_node, node_to_input):
+        """
+        Performs the merge of multiple nodes whose target is the current node
+
+        :param sources: Nodes that need to be merged
+        :return: If the merge was successful (no information loss)
+        """
         merge_successful = True
         merged_assmps = deepcopy(node_to_input[sources[0]])
         for source in sources[1:]:
-            if source not in node_to_input:
+            assmp = node_to_input[source]
+            if len(assmp) != len(merged_assmps):
                 node_to_input[current_node] = []
-                merged_assmps = self.find_common_assmp(sources, self.edges_done, node_to_input)
+                merged_assmps = self.find_common_assmp(sources, node_to_input)
                 merge_successful = False
             else:
-                assmp = node_to_input[source]
-                if len(assmp) != len(merged_assmps):
-                    node_to_input[current_node] = []
-                    merged_assmps = self.find_common_assmp(sources, self.edges_done, node_to_input)
-                    merge_successful = False
-                else:
-                    for assmp1, assmp2 in zip(merged_assmps, assmp):
-                        assmp1.join(assmp2)
+                for assmp1, assmp2 in zip(merged_assmps, assmp):
+                    assmp1.join(assmp2)
         node_to_input[current_node] = merged_assmps
         return merge_successful
 
-    def find_common_assmp(self, nodes, edges, node_to_input):
+    def find_common_assmp(self, nodes, node_to_input):
+        """
+        Finds the last node that all nodes have in common and returns its assumption
+
+        :return: Found assumption
+        """
         node_sources = [[n] for n in nodes]
-        edges_todo = deepcopy(edges)
+        edges_todo = deepcopy(self.edges_done)
         while len(edges_todo) > 0:
             for edge in edges_todo:
                 for node_source in node_sources:
@@ -113,17 +126,17 @@ class InputAssumptionCollector:
                     return node_to_input[edge[0]]
 
     def analyze_stmt_for_input(self, stmt, curr_node, node_to_input):
-        """"""
+        """
+        Adds the corresponding assumption of the line if it contains an input() call
+
+        """
         stmts_to_check = deque([stmt])
         while len(stmts_to_check) > 0:
             curr_stmt = stmts_to_check.pop()
             if isinstance(curr_stmt, Call):
                 if curr_stmt.name == 'input':
                     pp_line = curr_stmt.pp.line
-                    input_assmps_pp = [k for k in self.input_assumptions if k.line == pp_line]
-                    if len(input_assmps_pp) == 0:
-                        return False
-                    assmp_pp = input_assmps_pp[0]
+                    assmp_pp = [k for k in self.input_assumptions if k.line == pp_line][0]
                     assumption = self.input_assumptions[assmp_pp]
                     if curr_node in node_to_input:
                         node_to_input[curr_node].append(assumption)
@@ -133,13 +146,17 @@ class InputAssumptionCollector:
                     stmts_to_check.extend(curr_stmt.arguments)
             elif isinstance(curr_stmt, Assignment):
                 stmts_to_check.extend([curr_stmt.left, curr_stmt.right])
-            elif isinstance(curr_stmt, (VariableAccess, LiteralEvaluation)):
+            elif isinstance(curr_stmt, (VariableAccess, LiteralEvaluation, Raise)):
                 continue
             else:
                 raise NotImplementedError(f"Analysis for {type(curr_stmt)} not yet implemented")
-        return True
 
     def analyze_loop(self, current_node):
+        """
+        Analyzes a loop
+
+        :return: If no information loss occurred
+        """
         loop_node_to_input = {current_node: []}
         loop_in_node = current_node
         one_iter_done = False
@@ -178,6 +195,11 @@ class InputAssumptionCollector:
         return loop_node_to_input[next_edge[0]] * num_iter
 
     def find_number_of_iterations(self, condition):
+        """
+        Finds the number of iterations of a loop condition
+
+        :return: number of iterations
+        """
         if not (isinstance(condition, Call) and condition.name == 'in'):
             raise NotImplementedError("Loop analysis only implemented for \'in\' condition.")
         in_argument = condition.arguments[1]
