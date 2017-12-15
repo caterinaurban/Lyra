@@ -39,7 +39,7 @@ class InputAssumptionCollector:
                 if isinstance(current_node, Loop):
                     input_assmps = self.analyze_loop(current_node)
                     information_loss = not self.get_prev_assmp(current_node, self.node_to_input)
-                    if information_loss:
+                    if information_loss or input_assmps is None:
                         break
                     self.node_to_input[current_node].extend(input_assmps)
                 else:
@@ -77,19 +77,27 @@ class InputAssumptionCollector:
                 return False
         # analyze statements
         for stmt in current_node.stmts:
-            self.analyze_stmt_for_input(stmt, current_node, node_to_input)
+            if not self.analyze_stmt_for_input(stmt, current_node, node_to_input):
+                return False
         return True
 
     def handle_multiple_sources(self, sources, current_node, node_to_input):
         merge_successful = True
         merged_assmps = deepcopy(node_to_input[sources[0]])
-        for assmp in [node_to_input[source] for source in sources[1:]]:
-            if len(assmp) != len(merged_assmps):
+        for source in sources[1:]:
+            if source not in node_to_input:
                 node_to_input[current_node] = []
                 merged_assmps = self.find_common_assmp(sources, self.edges_done, node_to_input)
                 merge_successful = False
-            for assmp1, assmp2 in zip(merged_assmps, assmp):
-                assmp1.join(assmp2)
+            else:
+                assmp = node_to_input[source]
+                if len(assmp) != len(merged_assmps):
+                    node_to_input[current_node] = []
+                    merged_assmps = self.find_common_assmp(sources, self.edges_done, node_to_input)
+                    merge_successful = False
+                else:
+                    for assmp1, assmp2 in zip(merged_assmps, assmp):
+                        assmp1.join(assmp2)
         node_to_input[current_node] = merged_assmps
         return merge_successful
 
@@ -112,7 +120,10 @@ class InputAssumptionCollector:
             if isinstance(curr_stmt, Call):
                 if curr_stmt.name == 'input':
                     pp_line = curr_stmt.pp.line
-                    assmp_pp = [k for k in self.input_assumptions if k.line == pp_line][0]
+                    input_assmps_pp = [k for k in self.input_assumptions if k.line == pp_line]
+                    if len(input_assmps_pp) == 0:
+                        return False
+                    assmp_pp = input_assmps_pp[0]
                     assumption = self.input_assumptions[assmp_pp]
                     if curr_node in node_to_input:
                         node_to_input[curr_node].append(assumption)
@@ -126,9 +137,10 @@ class InputAssumptionCollector:
                 continue
             else:
                 raise NotImplementedError(f"Analysis for {type(curr_stmt)} not yet implemented")
+        return True
 
     def analyze_loop(self, current_node):
-        loop_node_to_input = dict()
+        loop_node_to_input = {current_node: []}
         loop_in_node = current_node
         one_iter_done = False
         while current_node != loop_in_node or not one_iter_done:
@@ -138,11 +150,12 @@ class InputAssumptionCollector:
                                  and self.cfg.edges[e].kind != Edge.Kind.LOOP_OUT]
             if len(edges_with_target) > 0:
                 current_node = edges_with_target[0][0]
-                self.analyze_loop(current_node)
+                continue
 
             # check if current_node already analyzed
             if current_node not in self.nodes_done:
-                self.analyze_node(current_node, loop_node_to_input)
+                if not self.analyze_node(current_node, loop_node_to_input):
+                    return None
 
             self.nodes_done.append(current_node)
 
@@ -160,6 +173,8 @@ class InputAssumptionCollector:
                                      and self.cfg.edges[e].kind == Edge.Kind.LOOP_IN][0]
         condition = self.cfg.edges[condition_edge].condition
         num_iter = self.find_number_of_iterations(condition)
+        if next_edge[0] not in loop_node_to_input:
+            return None
         return loop_node_to_input[next_edge[0]] * num_iter
 
     def find_number_of_iterations(self, condition):
