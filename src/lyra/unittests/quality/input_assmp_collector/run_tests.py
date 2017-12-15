@@ -23,9 +23,11 @@ def run_analysis(python_file_name):
     return InputAssumptionCollector(cfg, input_assmps).collect_input_assumptions()
 
 if __name__ == '__main__':
-    tests = {"loop": "[(Int, [-inf, inf]), (Float, [-inf, inf]), (Float, [-inf, inf]), (Float, [-inf, inf]), (Int, [-inf, inf])]",
-             "simple": "[(Int, [-inf, inf]), (Float, [-inf, inf]), (Any, [-inf, inf])]",
-             "ifelse": "[(Int, [-inf, inf]), (Float, [-inf, inf]), (Any, [-inf, inf])]"
+    tests = {
+        "simple": "[(Int, [-inf, inf]), (Float, [-inf, inf]), (Any, [-inf, inf])]",
+        "ifelse": "[(Int, [-inf, inf]), (Float, [-inf, inf]), (Any, [-inf, inf])]",
+        "loop": "[(Int, [-inf, inf]), (Float, [-inf, inf]), (Float, [-inf, inf]), (Float, [-inf, inf]), (Int, [-inf, inf])]",
+        "loop_w_infoloss": "[(Int, [-inf, inf]), (Float, [-inf, inf]), (Float, [-inf, inf]), (Int, [-inf, inf])]",
             }
     for test in tests.keys():
         final = run_analysis(test)
