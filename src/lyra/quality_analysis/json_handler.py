@@ -37,10 +37,16 @@ class AssumptionDecoder(json.JSONDecoder):
             elif type_assmp == "Float":
                 type_assumption = TypeLattice().real()
         if "range_assmp" in obj:
-            bounds = obj["range_assmp"][1:-1].split(',')
-            bounds[0] = -inf if bounds[0].strip() == "-inf" else int(bounds[0])
-            bounds[1] = inf if bounds[1].strip() == "inf" else int(bounds[1])
-            range_assumption = IntervalLattice(bounds[0], bounds[1])
+            bounds = obj["range_assmp"]
+            if bounds == '⊥':
+                range_assumption = IntervalLattice().bottom()
+            elif bounds == 'T':
+                range_assumption = IntervalLattice()
+            else:
+                bounds = obj["range_assmp"][1:-1].split(',')
+                bounds[0] = -inf if bounds[0].strip() == "-inf" else int(bounds[0])
+                bounds[1] = inf if bounds[1].strip() == "inf" else int(bounds[1])
+                range_assumption = IntervalLattice(bounds[0], bounds[1])
 
         return AssumptionLattice(type_assumption, range_assumption)
 
