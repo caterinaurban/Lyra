@@ -28,6 +28,7 @@ if __name__ == '__main__':
         "ifelse": "[(Int, [-inf, inf]), (Float, [-inf, inf]), (Any, [-inf, inf])]",
         "loop": "[(Int, [-inf, inf]), (Float, [-inf, inf]), (Float, [-inf, inf]), (Float, [-inf, inf]), (Int, [-inf, inf])]",
         "loop_w_infoloss": "[(Int, [-inf, inf]), (Float, [-inf, inf]), (Float, [-inf, inf]), (Int, [-inf, inf])]",
+        "example": ""
             }
     for test in tests.keys():
         final = run_analysis(test)
