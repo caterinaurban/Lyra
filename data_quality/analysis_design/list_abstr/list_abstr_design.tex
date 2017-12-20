@@ -61,19 +61,69 @@
 \item variable abstract domain: X
 \item Array Element abstract domain: A
 \item variable environment abstract domain: R
+\item convertion array element and variable environment: C(A,R)
+\end{itemize}
+
+\section{Definition - Elements}
+
+Question: Should Array element be another S (segmentation) or is only an element of the Assumption Lattice possible?
+
+Answer1: If we only allow Assumption Lattice we have to overapproximate a whole list for list of lists (which can happen if input should be represented as a matrix.
+
+Answer2: If we only allow another S we end up in an infinite loop
+
+Answer3: Array element can either be another S or an element of the Assumption lattice
+
+Question if Answer3 is chosen: How to do the Conversion C of $A \leftrightarrow S$? Is a conversion necessary?
+
+Answer: No Conversion is necessary. The elements in R are the same as in A.
+
+\begin{itemize}
+  \item S:
+  \begin{itemize}
+    \item $b_l$: $(b_1\in B, a_1\in A)$
+    \item e: $[(b_1\in B, a_1\in A, \{\_, ?\}), ..., (b_{n-1}\in B, a_{n-1}\in A, \{\_, ?\})]$
+    \item $b_l$: $(b_n\in B, \{\_, ?\})$
+  \end{itemize}
+  \item B: $[b_1, ..., b_n]$ s.t. $b_1 = ... = b_n$ and $b_i \in E$
+  \item E: expressions of the form $v + i$
+  \item X: $variables \cup \{v_o\} \cup \{*.Length\}$ with * being the array name
+  \item A: $a\in AssumptionLattice \vee a\in S$
+  \item R: variable $\rightarrow$ $r\in AssumptionLattice \vee r \in S$
+  \item C: not needed
 \end{itemize}
 
 \section{Example}
 
-\verb|{0} x {1 a} y {b} z {len}|
+\verb|{0} (int, [-inf, inf]) {1 a} (T, [-inf, inf]) {b} (int, [-inf, inf]) {A.Length}|
 
 \begin{itemize}
-\item Array Segmentation abstract domain: \verb|{v_0+0} x {v_0+1 a+0} y {b+0} z {len+0}|
-\item Bound abstract domain: \verb|{v_0+1 a+0}|
-\item Expression abstract domain: \verb|v_0 + 1, a + 0|
-\item variable abstract domain: \verb|v_0, a|
-\item Array Element abstract domain: \verb|x|
-\item variable environment abstract domain: \verb|b -> [10, 12], z -> (Int, [1,2])|
+\item S: 
+
+\verb|{v_0+0} (int, [-inf, inf])|
+
+\verb|{v_0+1 a+0} (T, [-inf,inf]) True|
+
+\verb|{b+0} (int, [-inf, inf]) True|
+
+\verb|{A.Length+0} True|
+\item B: 
+
+\verb|[v_0+0]| and \verb|[v_0+1, a+0]| and \verb|[b+0]| and \verb|[A.Length+0}|
+\item E: 
+
+\verb|v_0+0| and \verb|v_0+1 a+0| and \verb|b+0| and \verb|A.Length+0|
+\item X:
+
+\verb|v_0| and \verb|a| and \verb|b| and  and \verb|A.Length|
+\item A: 
+
+\verb|(int, [-inf,inf])| and \verb|(T, [-inf,inf])|
+\item R: 
+
+\verb|v_0 -> (int, [0, 0]), a -> (int, [1, 1]),|
+
+\verb|b -> (int, [2, inf]), A.Length -> (int, [3, inf])|
 \end{itemize}
 
 \section{Implementation}
@@ -81,17 +131,17 @@
 \subsection{Initialization}
 
 \begin{itemize}
-\item $b_l$: \verb|[0], T)|
+\item $b_l$: \verb|([v_0+0], (Any, [-inf, inf]))|
 \item $e$: \verb|[]|
-\item $b_h$: \verb|([len], ?)|
+\item $b_h$: \verb|([A.Length+0], False)|
 \end{itemize}
 
-\subsection{From Example}
+\subsection{Example}
 
 \begin{itemize}
-\item $b_l$: \verb|([0], x)|
-\item $e$: \verb|[([1, a], y, _), ([b], z, _)]|
-\item $b_h$: \verb|([len], _)|
+\item $b_l$: \verb|([v_0+0], (int, [-inf, inf]))|
+\item $e$: \verb|[([v_0+1, a+0], (T, [-inf, inf]), _), ([b+0], (int, [-inf, inf]), True)]|
+\item $b_h$: \verb|([A.Length+0], True)|
 \end{itemize}
 
 
