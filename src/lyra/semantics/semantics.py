@@ -244,6 +244,7 @@ class BuiltInCallSemantics(CallSemantics):
         return state.output(argument)
 
     def range_call_semantics(self, stmt: Call, state: State) -> State:
+        state.result = {stmt}
         return state
 
     def raise_semantics(self, stmt: Raise, state: State) -> State:
