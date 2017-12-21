@@ -149,6 +149,10 @@ class ExpressionVisitor(metaclass=ABCMeta):
         """Visit of a slicing expression."""
 
     @abstractmethod
+    def visit_Call(self, expr: 'Call'):
+        """Visit of a call expression."""
+
+    @abstractmethod
     def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation'):
         """Visit of a unary arithmetic operation."""
 
@@ -213,6 +217,10 @@ class NegationFreeNormalExpression(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_Slicing)
     def visit_Slicing(self, expr: 'Slicing', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Call)
+    def visit_Call(self, expr: 'Call', invert=False):
         return expr     # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -572,6 +580,43 @@ class Slicing(Expression):
             return "{0.target}[{0.lower}:{0.upper}:{0.stride}]".format(self)
         return "{0.target}[{0.lower}:{0.upper}]".format(self)
 
+
+class Call(Expression):
+    """Call representation.
+
+    https://docs.python.org/3.4/reference/expressions.html#calls
+    """
+    def __init__(self, typ: LyraType, name: str, arguments: List[Expression]):
+        """Call construction
+
+        :param typ: type of the call
+        :param name: name of the call
+        :param arguments: arguments of the call
+        """
+        super().__init__(typ)
+        self._name = name
+        self._arguments = arguments
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def arguments(self):
+        return self._arguments
+
+    def __eq__(self, other):
+        typ =  self.typ == other.typ
+        name = self.name == other.name
+        arguments = self.arguments == other.arguments
+        return typ and name and arguments
+
+    def __hash__(self):
+        return hash((self.typ, self.name, self.arguments))
+
+    def __str__(self):
+        comma_sep_args = ", ".join(self.arguments)
+        return f"{self.name}({comma_sep_args})"
 
 """
 Operation Expressions
