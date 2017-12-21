@@ -13,5 +13,5 @@ a: float = 1 - a
 
 # STATE a -> (Float, [-inf, 10]), .IN -> []
 if a > 10:
-    # STATE a -> (⊥, ⊥), .IN -> ⊥
+    # STATE a -> (⊥, ⊥), .IN -> [] | []
     raise Exception("NO")
