@@ -10,13 +10,57 @@ from copy import deepcopy
 
 from lyra.abstract_domains.numerical.interval_domain import IntervalState
 from lyra.abstract_domains.quality.assumption_lattice import TypeLattice, AssumptionLattice, \
-    InputAssumptionDictLattice
+    InputAssumptionLattice
+from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
-from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor
+from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor, \
+    BinaryComparisonOperation
+from lyra.core.statements import Call, LiteralEvaluation
 from lyra.core.types import ListLyraType, IntegerLyraType, BooleanLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
+
+
+class InputAssumptionStack(Stack):
+    """ Input Assumption Stack
+
+    Stack of elements from the Input Assumption Lattice.
+
+    """
+
+    def __init__(self):
+        super().__init__(InputAssumptionLattice, {})
+
+    @copy_docstring(Stack.pop)
+    def pop(self):
+        if len(self.stack) > 1:
+            element = self.stack.pop()
+            if len(element.assmps) > 0:
+                if element.is_loop:
+                    num_iter = self.get_num_iter_from_condition(element.condition)
+                    if num_iter is None:
+                        self.lattice.top()
+                    else:
+                        self.stack[-1].add_assumptions_with_iter(num_iter, element.assmps)
+                else:
+                    self.stack[-1].add_assumptions_front(element.assmps)
+
+    def get_num_iter_from_condition(self, condition):
+        """Extracts the number of iterations from a condition"""
+        if isinstance(condition, BinaryComparisonOperation):
+            if condition.operator == BinaryComparisonOperation.Operator.In:
+                in_element = condition.right
+                if isinstance(in_element, Call) and in_element.name == "range":
+                    if len(in_element.arguments) == 1:
+                        num_iter = in_element.arguments[0]
+                        if isinstance(num_iter, LiteralEvaluation):
+                            return int(num_iter.literal.val)
+        return None
+
+    @copy_docstring(Stack.push)
+    def push(self):
+        self.stack.append(InputAssumptionLattice())
 
 
 class AssumptionState(Store, State):
@@ -36,7 +80,7 @@ class AssumptionState(Store, State):
         types = [BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType, ListLyraType]
         lattices = {typ: AssumptionLattice for typ in types}
         super().__init__(variables, lattices)
-        self.store[self.input_var] = InputAssumptionDictLattice()
+        self.store[self.input_var] = InputAssumptionStack()
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
@@ -45,6 +89,7 @@ class AssumptionState(Store, State):
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'AssumptionState':
+        self.current_stack_top.condition = condition
         curr_condition = condition
         self._assume_range(curr_condition)
         self._refinement.visit(condition, None, self)
@@ -55,25 +100,30 @@ class AssumptionState(Store, State):
         Executes assume for the range assumption
         """
         interval_state = self.assmp_to_interval_state()
-        res = interval_state.assume([condition])
+        res = interval_state.assume({condition})
         self.interval_to_assmp_state(res)
         return self
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'AssumptionState':
-        return self  # nothing to be done
+        self.store[self.input_var].push()
+        return self
 
     @copy_docstring(State.exit_if)
     def exit_if(self) -> 'AssumptionState':
-        return self  # nothing to be done
+        self.store[self.input_var].pop()
+        return self
 
     @copy_docstring(State.enter_loop)
     def enter_loop(self) -> 'AssumptionState':
-        return self  # nothing to be done
+        self.store[self.input_var].push()
+        self.current_stack_top.is_loop = True
+        return self
 
     @copy_docstring(State.exit_loop)
     def exit_loop(self) -> 'AssumptionState':
-        return self  # nothing to be done
+        self.store[self.input_var].pop()
+        return self
 
     @copy_docstring(State._output)
     def _output(self, output: Expression) -> 'AssumptionState':
@@ -101,12 +151,16 @@ class AssumptionState(Store, State):
         Executes substitute for the range assumption
         """
         interval_state = self.assmp_to_interval_state()
-        res = interval_state.substitute([left], [right])
+        res = interval_state.substitute({left}, {right})
         return self.interval_to_assmp_state(res)
 
     @property
     def input_var(self):
-        return VariableIdentifier(ListLyraType, '.IN')
+        return VariableIdentifier(StringLyraType(), '.IN')
+
+    @property
+    def current_stack_top(self):
+        return self.store[self.input_var].stack[-1]
 
     def assmp_to_interval_state(self):
         """
@@ -139,6 +193,9 @@ class AssumptionState(Store, State):
         def visit_Slicing(self, expr, assumption=None, state=None):
             return state  # nothing to be done
 
+        def visit_Call(self, expr, assumption=None, state=None):
+            return state  # nothing to be done
+
         def visit_BinaryBooleanOperation(self, expr, assumption=None, state=None):
             left = self.visit(expr.left, AssumptionLattice(), state)
             right = self.visit(expr.right, AssumptionLattice(), left)
@@ -168,9 +225,9 @@ class AssumptionState(Store, State):
         def visit_Input(self, expr, assumption=None, state=None):
             type_assumption = TypeLattice.from_lyra_type(expr.typ)
             input_assumption = AssumptionLattice(type_assumption).meet(assumption)
-            if state.store[state.input_var].is_bottom() or state.store[state.input_var].is_top():
-                state.store[state.input_var] = InputAssumptionDictLattice()
-            state.store[state.input_var].put_assumption(state.pp, input_assumption)
+            if state.store[state.input_var].lattice.is_top():
+                state.current_stack_top.meet(InputAssumptionLattice())
+            state.store[state.input_var].lattice.add_assumption_front(input_assumption)
             return state
 
         def visit_ListDisplay(self, expr, assumption=None, state=None):
@@ -186,6 +243,6 @@ class AssumptionState(Store, State):
             return state
 
         def visit_LengthIdentifier(self, expr, assumption=None, state=None):
-            return state #TODO
+            return state
 
     _refinement = AssumptionRefinement()
