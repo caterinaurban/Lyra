@@ -164,10 +164,9 @@ class State(Lattice, metaclass=ABCMeta):
 
     @abstractmethod
     def _raise_error(self) -> 'State':
-        """Outputs something in the current state.
+        """Raises an error
 
-        :param output: expression representing the output
-        :return: current state modified by the output
+        :return: current state modified by the error
 
         """
 
