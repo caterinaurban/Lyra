@@ -410,6 +410,43 @@ class CFGVisitor(ast.NodeVisitor):
 
         return cfg
 
+    def visit_For(self, node, types=None, typ=None):
+        header_node = Loop(self._id_gen.next)
+
+        cfg = self._translate_body(node.body, types, typ)
+        body_in_node = cfg.in_node
+        body_out_node = cfg.out_node
+
+        pp = ProgramPoint(node.target.lineno, node.target.col_offset)
+        target = self.visit(node.target, types, BooleanLyraType())
+        iter = self.visit(node.iter, types, BooleanLyraType())
+
+        test = Call(pp, "in", [target, iter], BooleanLyraType())
+        neg_test = Call(pp, "not", [test], BooleanLyraType())
+
+        cfg.add_node(header_node)
+        cfg.in_node = header_node
+
+        cfg.add_edge(Conditional(header_node, test, body_in_node, Edge.Kind.LOOP_IN))
+        cfg.add_edge(Conditional(header_node, neg_test, None))
+        if body_out_node:  # if control flow can exit the body at all, add an unconditional LOOP_OUT edge
+            cfg.add_edge(Unconditional(body_out_node, header_node, Edge.Kind.LOOP_OUT))
+
+        if node.orelse:  # if there is else branch
+            orelse_cfg = self._translate_body(node.orelse, types)
+            if orelse_cfg.out_node:  # if control flow can exit the else at all, add an unconditional DEFAULT edge
+                orelse_cfg.add_edge(Unconditional(orelse_cfg.out_node, None, Edge.Kind.DEFAULT))
+            cfg.append(orelse_cfg)
+
+        for special_edge, edge_type in cfg.special_edges:
+            if edge_type == LooseControlFlowGraph.SpecialEdgeType.CONTINUE:
+                cfg.add_edge(Unconditional(special_edge.source, header_node, Edge.Kind.LOOP_OUT))
+            elif edge_type == LooseControlFlowGraph.SpecialEdgeType.BREAK:
+                cfg.add_edge(Unconditional(special_edge.source, None, Edge.Kind.LOOP_OUT))
+        cfg.special_edges.clear()
+
+        return cfg
+
     def visit_Break(self, _, types=None, typ=None):
         dummy = _dummy(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
@@ -528,6 +565,10 @@ class CFGVisitor(ast.NodeVisitor):
                 cfg_factory.complete_basic_block()
                 while_cfg = self.visit(child, types)
                 cfg_factory.append_cfg(while_cfg)
+            elif isinstance(child, ast.For):
+                cfg_factory.complete_basic_block()
+                for_cfg = self.visit(child, types)
+                cfg_factory.append_cfg(for_cfg)
             elif isinstance(child, ast.Break):
                 cfg_factory.complete_basic_block()
                 break_cfg = self.visit(child, types)
