@@ -1,0 +1,83 @@
+{
+    "0": [
+        {
+            "type_assmp": "Int",
+            "range_assmp": "[1, 1]"
+        },
+        {
+            "iterations": 5,
+            "assmps": [
+                {
+                    "type_assmp": "Int",
+                    "range_assmp": "[50, 50]"
+                },
+                {
+                    "iterations": 3,
+                    "assmps": [
+                        {
+                            "type_assmp": "Int",
+                            "range_assmp": "[30, 30]"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "iterations": 7,
+            "assmps": [
+                {
+                    "type_assmp": "Int",
+                    "range_assmp": "[70, 70]"
+                },
+                {
+                    "iterations": 2,
+                    "assmps": [
+                        {
+                            "type_assmp": "Int",
+                            "range_assmp": "[20, 20]"
+                        },
+                        {
+                            "iterations": 8,
+                            "assmps": [
+                                {
+                                    "type_assmp": "Int",
+                                    "range_assmp": "[80, 80]"
+                                }
+                            ]
+                        },
+                        {
+                            "type_assmp": "Int",
+                            "range_assmp": "[2, 2]"
+                        }
+                    ]
+                },
+                {
+                    "type_assmp": "Int",
+                    "range_assmp": "[3, 3]"
+                },
+                {
+                    "iterations": 5,
+                    "assmps": [
+                        {
+                            "type_assmp": "Int",
+                            "range_assmp": "[50, 50]"
+                        }
+                    ]
+                },
+                {
+                    "iterations": 4,
+                    "assmps": [
+                        {
+                            "type_assmp": "Int",
+                            "range_assmp": "[40, 40]"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type_assmp": "Int",
+            "range_assmp": "[5, 5 ]"
+        }
+    ]
+}

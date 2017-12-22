@@ -1,0 +1,23 @@
+Missing value: expected at least 22 values instead found 3.
+Type Error in line 1: expected one value of type integer instead found 'a'.
+Type Error in line 2: expected one value of type float instead found 'b'.
+Type Error in line 3: expected one value of type integer instead found 'c'.
+Type Error in line 4: expected one value of type integer instead found ''.
+Type Error in line 5: expected one value of type integer instead found ''.
+Type Error in line 6: expected one value of type float instead found ''.
+Type Error in line 7: expected one value of type integer instead found ''.
+Type Error in line 8: expected one value of type integer instead found ''.
+Type Error in line 9: expected one value of type integer instead found ''.
+Type Error in line 10: expected one value of type float instead found ''.
+Type Error in line 11: expected one value of type integer instead found ''.
+Type Error in line 12: expected one value of type integer instead found ''.
+Type Error in line 13: expected one value of type integer instead found ''.
+Type Error in line 14: expected one value of type float instead found ''.
+Type Error in line 15: expected one value of type integer instead found ''.
+Type Error in line 16: expected one value of type integer instead found ''.
+Type Error in line 17: expected one value of type integer instead found ''.
+Type Error in line 18: expected one value of type float instead found ''.
+Type Error in line 19: expected one value of type integer instead found ''.
+Type Error in line 20: expected one value of type integer instead found ''.
+Type Error in line 21: expected one value of type integer instead found ''.
+Type Error in line 22: expected one value of type float instead found ''.

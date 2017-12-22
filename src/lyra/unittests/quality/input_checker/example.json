@@ -1,0 +1,30 @@
+{
+    "0": [
+        {
+            "type_assmp": "Int",
+            "range_assmp": "[-inf, inf]"
+        },
+        {
+            "iterations": 5,
+            "assmps": [
+                {
+                    "type_assmp": "Float",
+                    "range_assmp": "[-inf, inf]"
+                },
+                {
+                    "iterations": 3,
+                    "assmps": [
+                        {
+                            "type_assmp": "Int",
+                            "range_assmp": "[-inf, inf]"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type_assmp": "Float",
+            "range_assmp": "[-inf, inf]"
+        }
+    ]
+}
