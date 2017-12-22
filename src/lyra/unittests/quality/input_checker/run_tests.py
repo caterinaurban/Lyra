@@ -2,7 +2,6 @@ import glob
 import os
 import filecmp
 
-from lyra.quality_analysis.input_checker.input_checker import InputChecker
 from lyra.quality_analysis.run_analysis import QualityAnalysisRunner
 
 

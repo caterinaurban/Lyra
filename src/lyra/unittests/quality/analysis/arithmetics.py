@@ -1,4 +1,3 @@
-
 # STATE a -> (Any, [-inf, inf]), .IN -> [(Float, [-10, inf])]
 a: float = float(input())
 

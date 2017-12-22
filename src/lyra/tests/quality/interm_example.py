@@ -1,4 +1,3 @@
-
 number_grades_in: str = input()
 number_grades: int = int(number_grades_in)
 

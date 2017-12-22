@@ -419,9 +419,9 @@ class CFGVisitor(ast.NodeVisitor):
 
         pp = ProgramPoint(node.target.lineno, node.target.col_offset)
         target = self.visit(node.target, types, BooleanLyraType())
-        iter = self.visit(node.iter, types, BooleanLyraType())
+        iteration = self.visit(node.iter, types, BooleanLyraType())
 
-        test = Call(pp, "in", [target, iter], BooleanLyraType())
+        test = Call(pp, "in", [target, iteration], BooleanLyraType())
         neg_test = Call(pp, "not", [test], BooleanLyraType())
 
         cfg.add_node(header_node)

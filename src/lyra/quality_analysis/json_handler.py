@@ -23,8 +23,8 @@ class AssumptionEncoder(json.JSONEncoder):
 
 class AssumptionDecoder(json.JSONDecoder):
 
-    def __init__(self, *args, **kargs):
-        JSONDecoder.__init__(self, object_hook=self.default, *args, **kargs)
+    def __init__(self):
+        JSONDecoder.__init__(self, object_hook=self.default)
 
     def default(self, obj):
 
@@ -72,7 +72,7 @@ class JSONHandler:
         """
         Writes the assumptions to a json file
         """
-        final_input_dict = {"0":final_input_state}
+        final_input_dict = {"0": final_input_state}
         with open(self.filename(program_name), 'w') as f:
             json.dump(final_input_dict, f, cls=AssumptionEncoder, indent=4)
 

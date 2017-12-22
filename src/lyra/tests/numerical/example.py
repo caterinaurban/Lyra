@@ -1,4 +1,3 @@
-
 a: int = 10
 i: int = 0
 if a > 5:

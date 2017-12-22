@@ -586,7 +586,7 @@ class Call(Expression):
 
     https://docs.python.org/3.4/reference/expressions.html#calls
     """
-    def __init__(self, typ: LyraType, name: str, arguments: List[Expression]):
+    def __init__(self, typ: LyraType, name: str, arguments: [Expression]):
         """Call construction
 
         :param typ: type of the call
@@ -606,7 +606,7 @@ class Call(Expression):
         return self._arguments
 
     def __eq__(self, other):
-        typ =  self.typ == other.typ
+        typ = self.typ == other.typ
         name = self.name == other.name
         arguments = self.arguments == other.arguments
         return typ and name and arguments
@@ -931,5 +931,3 @@ class BinaryComparisonOperation(BinaryOperation):
         :param right: right expression of the operation
         """
         super().__init__(typ, left, operator, right)
-
-
