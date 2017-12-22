@@ -1,5 +1,3 @@
-from math import inf
-
 from lyra.abstract_domains.quality.assumption_lattice import TypeLattice, AssumptionLattice, \
     InputAssumptionLattice
 
@@ -10,10 +8,9 @@ class InputChecker:
     assumption analysis
     """
 
-    def __init__(self, program_name):
-        self._error_file = open(f"errors_{program_name}.txt", 'w')
-        self.input_file = open(f"../tests/quality/{program_name}.in", 'r')
-
+    def __init__(self, program_path, program_name):
+        self.error_file = open(f"errors_{program_name}.txt", "w")
+        self.input_file = open(f"{program_path}{program_name}.in", "r")
 
     def write_missing_error(self, num_values_expected, num_values_found):
         """Prints an error because there are more assumptions than values
@@ -23,8 +20,8 @@ class InputChecker:
         """
         error = f'Missing value: ' \
                 f'expected at least {num_values_expected} values instead found {num_values_found}.'
-        self._error_file.write(error)
-        self._error_file.write('\n')
+        self.error_file.write(error)
+        self.error_file.write('\n')
 
     def write_type_error(self, line_num, input_line, type_assmp):
         """Prints an error because an input is not of an expected type
@@ -36,8 +33,8 @@ class InputChecker:
         error = f'Type Error in line {line_num}: ' \
                 f'expected one value of type {self.type_to_type_name(type_assmp)} ' \
                 f'instead found \'{input_line}\'.'
-        self._error_file.write(error)
-        self._error_file.write('\n')
+        self.error_file.write(error)
+        self.error_file.write('\n')
 
     def write_range_error(self, line_num, input_line, lower, upper):
         """Prints an error because an input is not in an expected range
@@ -50,15 +47,15 @@ class InputChecker:
         error = f'Range Error in line {line_num}: ' \
                 f'expected one value in range [{lower}, {upper}] ' \
                 f'instead found \'{input_line}\'.'
-        self._error_file.write(error)
-        self._error_file.write('\n')
+        self.error_file.write(error)
+        self.error_file.write('\n')
 
     def write_no_error(self):
         """Prints a message that no error has been found
         """
         error = f'The input data did not violate any assumptions found by the analyzer.'
-        self._error_file.write(error)
-        self._error_file.write('\n')
+        self.error_file.write(error)
+        self.error_file.write('\n')
 
     def type_to_type_name(self, type_assmp: TypeLattice):
         """Returns the name of the type, given an element of the TypeLattice
@@ -73,13 +70,12 @@ class InputChecker:
         if type_assmp == TypeLattice().top():
             return "string"
 
-    def count_values(self, filename: str):
-        """Count the number of lines in a file
+    def count_values(self):
+        """Count the number of lines in the input file
 
-        :param filename: name of the input file
         :return: number of lines found
         """
-        input_file = open(f"../tests/quality/{filename}.in", 'r')
+        input_file = open(self.input_file.name, 'r')
         num = 0
         for _ in input_file:
             num += 1
@@ -101,20 +97,19 @@ class InputChecker:
                 num_assmps += 1
         return curr_iterations * num_assmps
 
-    def check_input(self, filename: str, assumptions: []):
+    def check_input(self, assumptions: []):
         """Checks if the input file fulfils all the assumptions
 
-        :param filename: filename of the input file
         :param assumptions: all assumptions
         """
-        num_values = self.count_values(filename)
+        num_values = self.count_values()
         num_total_assmps = self.find_num_total_assmps(assumptions, 1)
         if num_values < num_total_assmps:
             self.write_missing_error(num_total_assmps, num_values)
         has_errors = self.check_assmps(assumptions, 1, 0)
         if not has_errors:
             self.write_no_error()
-        self._error_file.close()
+        self.error_file.close()
         self.input_file.close()
 
     def check_assmps(self, assumptions, iterations, line_num):
@@ -123,7 +118,6 @@ class InputChecker:
         :param assumptions: assumption to check
         :param iterations: how many iterations have to be done for the current assumption
         :param line_num: current line number of the input file
-        :param has_error: if an error has been found
         :return: if an error has been found
         """
         has_error = False
@@ -153,12 +147,15 @@ class InputChecker:
             except ValueError:
                 self.write_type_error(line_num, input_line, type_assmp)
                 return True
-        if type_assmp == TypeLattice().real():
+        elif type_assmp == TypeLattice().real():
             try:
                 val = float(input_line)
             except ValueError:
                 self.write_type_error(line_num, input_line, type_assmp)
                 return True
+        else:
+            return False
+
         range_assmp = assumption.range_assumption
         if val < range_assmp.lower or val > range_assmp.upper:
             lower = range_assmp.lower
