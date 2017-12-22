@@ -1,8 +1,6 @@
 from lyra.engine.quality.assumption_analysis import AssumptionAnalysis
 from lyra.quality_analysis.input_checker.input_checker import InputChecker
 from lyra.quality_analysis.json_handler import JSONHandler
-from lyra.quality_analysis.static_analyzer.input_assumption_collector import \
-    InputAssumptionCollector
 
 
 def run_analysis(python_file_name):
@@ -16,12 +14,7 @@ def run_analysis(python_file_name):
             break
     if assumption_lattice is None:
         raise Exception("Cannot find input assumption in analysis result.")
-    assumptions = assumption_lattice.assumptions
-
-    print("Collecting result")
-
-    assumption_collector = InputAssumptionCollector(result.cfg, assumptions)
-    input_assumptions = assumption_collector.collect_input_assumptions()
+    input_assumptions = assumption_lattice.lattice.assmps
 
     print("Analysis done")
 
@@ -49,4 +42,3 @@ def main(python_file_name):
 if __name__ == '__main__':
     curr_python_file_name = "example"
     main(curr_python_file_name)
-    #run_checker(curr_python_file_name)

@@ -3,13 +3,16 @@ from json import JSONDecoder
 from math import inf
 
 from lyra.abstract_domains.numerical.interval_domain import IntervalLattice
-from lyra.abstract_domains.quality.assumption_lattice import AssumptionLattice, TypeLattice
+from lyra.abstract_domains.quality.assumption_lattice import AssumptionLattice, TypeLattice, \
+    InputAssumptionLattice
 
 
 class AssumptionEncoder(json.JSONEncoder):
     def default(self, obj):
+        if isinstance(obj, InputAssumptionLattice):
+            return {"iterations": obj.iterations, "assmps": obj.assmps}
         if isinstance(obj, AssumptionLattice):
-            return {"type_assmp": obj.type_assumption, "range_assmp":obj .range_assumption}
+            return {"type_assmp": obj.type_assumption, "range_assmp": obj.range_assumption}
         if isinstance(obj, TypeLattice):
             return obj.__repr__()
         if isinstance(obj, IntervalLattice):
@@ -27,6 +30,11 @@ class AssumptionDecoder(json.JSONDecoder):
 
         if "0" in obj:
             return obj["0"]
+
+        if "iterations" in obj:
+            num_iter = obj["iterations"]
+            assmps = obj["assmps"]
+            return InputAssumptionLattice(num_iter, assmps)
 
         type_assumption = TypeLattice()
         range_assumption = IntervalLattice()
