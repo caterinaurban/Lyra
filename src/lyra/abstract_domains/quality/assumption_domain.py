@@ -15,8 +15,7 @@ from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor, \
-    BinaryComparisonOperation
-from lyra.core.statements import Call, LiteralEvaluation
+    BinaryComparisonOperation, Literal, CallExpr
 from lyra.core.types import ListLyraType, IntegerLyraType, BooleanLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -51,11 +50,24 @@ class InputAssumptionStack(Stack):
         if isinstance(condition, BinaryComparisonOperation):
             if condition.operator == BinaryComparisonOperation.Operator.In:
                 in_element = condition.right
-                if isinstance(in_element, Call) and in_element.name == "range":
-                    if len(in_element.arguments) == 1:
-                        num_iter = in_element.arguments[0]
-                        if isinstance(num_iter, LiteralEvaluation):
-                            return int(num_iter.literal.val)
+                if isinstance(in_element, CallExpr) and in_element.name == "range":
+                    arguments = in_element.arguments
+                    if len(arguments) in [1, 2, 3] \
+                            and all(isinstance(arguments[i], Literal)
+                                    for i in range(len(arguments))):
+                        start = 0
+                        steps = 1
+                        if len(in_element.arguments) == 1:
+                            end = int(arguments[0].val)
+                        elif len(in_element.arguments) == 2:
+                            start = int(arguments[0].val)
+                            end = int(arguments[1].val)
+                        else:
+                            start = int(arguments[0].val)
+                            end = int(arguments[1].val)
+                            steps = int(arguments[2].val)
+                        return (end - start) // steps
+
         return None
 
     @copy_docstring(Stack.push)
@@ -92,7 +104,7 @@ class AssumptionState(Store, State):
         self.current_stack_top.condition = condition
         curr_condition = condition
         self._assume_range(curr_condition)
-        self._refinement.visit(condition, None, self)
+        self._refinement.visit(condition, AssumptionLattice(), self)
         return self
 
     def _assume_range(self, condition: Expression) -> 'AssumptionState':
@@ -137,7 +149,7 @@ class AssumptionState(Store, State):
     def _substitute(self, left: Expression, right: Expression) -> 'AssumptionState':
         if isinstance(left, VariableIdentifier):
             assumption = deepcopy(self.store[left])
-            assumptions_range = self._substitute_range(left, right)
+            assumptions_range = self.substitute_range(left, right)
             assumptions_range_left = deepcopy(assumptions_range.store[left].range_assumption)
             self.store[left].top()
             self._refinement.visit(right, assumption, self)
@@ -146,9 +158,12 @@ class AssumptionState(Store, State):
         error = f'Substitution for {left} not yet implemented!'
         raise NotImplementedError(error)
 
-    def _substitute_range(self, left: Expression, right: Expression) -> 'AssumptionState':
-        """
-        Executes substitute for the range assumption
+    def substitute_range(self, left: Expression, right: Expression) -> 'AssumptionState':
+        """Executes substitute for the range assumption
+
+        :param left: left hand side expression
+        :param right: right hand side expression
+        :return: state after substitution of the ranges
         """
         interval_state = self.assmp_to_interval_state()
         res = interval_state.substitute({left}, {right})
@@ -193,7 +208,7 @@ class AssumptionState(Store, State):
         def visit_Slicing(self, expr, assumption=None, state=None):
             return state  # nothing to be done
 
-        def visit_Call(self, expr, assumption=None, state=None):
+        def visit_CallExpr(self, expr, assumption=None, state=None):
             return state  # nothing to be done
 
         def visit_BinaryBooleanOperation(self, expr, assumption=None, state=None):

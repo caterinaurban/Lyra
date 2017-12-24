@@ -106,7 +106,7 @@ class InputChecker:
         num_total_assmps = self.find_num_total_assmps(assumptions, 1)
         if num_values < num_total_assmps:
             self.write_missing_error(num_total_assmps, num_values)
-        has_errors = self.check_assmps(assumptions, 1, 0)
+        (has_errors, _) = self.check_assmps(assumptions, 1, 0)
         if not has_errors:
             self.write_no_error()
         self.error_file.close()
