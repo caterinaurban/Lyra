@@ -149,7 +149,7 @@ class ExpressionVisitor(metaclass=ABCMeta):
         """Visit of a slicing expression."""
 
     @abstractmethod
-    def visit_Call(self, expr: 'Call'):
+    def visit_CallExpr(self, expr: 'CallExpr'):
         """Visit of a call expression."""
 
     @abstractmethod
@@ -219,8 +219,8 @@ class NegationFreeNormalExpression(ExpressionVisitor):
     def visit_Slicing(self, expr: 'Slicing', invert=False):
         return expr     # nothing to be done
 
-    @copy_docstring(ExpressionVisitor.visit_Call)
-    def visit_Call(self, expr: 'Call', invert=False):
+    @copy_docstring(ExpressionVisitor.visit_CallExpr)
+    def visit_CallExpr(self, expr: 'CallExpr', invert=False):
         return expr     # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -581,7 +581,7 @@ class Slicing(Expression):
         return "{0.target}[{0.lower}:{0.upper}]".format(self)
 
 
-class Call(Expression):
+class CallExpr(Expression):
     """Call representation.
 
     https://docs.python.org/3.4/reference/expressions.html#calls
@@ -612,7 +612,7 @@ class Call(Expression):
         return typ and name and arguments
 
     def __hash__(self):
-        return hash((self.typ, self.name, self.arguments))
+        return hash((self.typ, self.name, tuple(self.arguments)))
 
     def __str__(self):
         comma_sep_args = ", ".join(self.arguments)

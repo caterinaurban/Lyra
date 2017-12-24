@@ -11,7 +11,7 @@ Lyra's internal semantics of statements.
 import itertools
 import re
 from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slicing, \
-    LengthIdentifier, VariableIdentifier
+    LengthIdentifier, VariableIdentifier, CallExpr
 from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
 from lyra.core.expressions import UnaryOperation
 from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
@@ -244,7 +244,8 @@ class BuiltInCallSemantics(CallSemantics):
         return state.output(argument)
 
     def range_call_semantics(self, stmt: Call, state: State) -> State:
-        state.result = {stmt}
+        arguments = [self.semantics(arg, state).result.pop() for arg in stmt.arguments]
+        state.result = {CallExpr(stmt.typ, stmt.name, arguments)}
         return state
 
     def raise_semantics(self, stmt: Raise, state: State) -> State:

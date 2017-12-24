@@ -307,8 +307,8 @@ class IntervalState(Store, State):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
-        @copy_docstring(ExpressionVisitor.visit_Call)
-        def visit_Call(self, expr: Call, state=None, evaluation=None):
+        @copy_docstring(ExpressionVisitor.visit_CallExpr)
+        def visit_CallExpr(self, expr: CallExpr, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -423,8 +423,8 @@ class IntervalState(Store, State):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
-        @copy_docstring(ExpressionVisitor.visit_Call)
-        def visit_Call(self, expr: Call, evaluation=None, value=None, state=None):
+        @copy_docstring(ExpressionVisitor.visit_CallExpr)
+        def visit_CallExpr(self, expr: CallExpr, evaluation=None, value=None, state=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
