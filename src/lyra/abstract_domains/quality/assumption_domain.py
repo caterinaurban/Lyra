@@ -8,6 +8,8 @@ from typing import List
 
 from copy import deepcopy
 
+import math
+
 from lyra.abstract_domains.numerical.interval_domain import IntervalState
 from lyra.abstract_domains.quality.assumption_lattice import TypeLattice, AssumptionLattice, \
     InputAssumptionLattice
@@ -35,15 +37,24 @@ class InputAssumptionStack(Stack):
     def pop(self):
         if len(self.stack) > 1:
             element = self.stack.pop()
-            if len(element.assmps) > 0:
-                if element.is_loop:
+            if self.lattice.is_top():
+                return
+            if element.is_top():
+                self.lattice.top()
+                return
+            if element.is_loop:
+                if len(element.assmps) > 0:
                     num_iter = self.get_num_iter_from_condition(element.condition)
                     if num_iter is None:
                         self.lattice.top()
                     else:
-                        self.stack[-1].add_assumptions_with_iter(num_iter, element.assmps)
+                        if self.lattice.assmps[0].iterations is None:
+                            self.lattice.assmps.pop(0)
+                        self.lattice.add_assumptions_with_iter(num_iter, element.assmps)
                 else:
-                    self.stack[-1].add_assumptions_front(element.assmps)
+                    self.lattice.add_assumptions_with_iter(None, element.assmps)
+            else:
+                self.lattice.add_assumptions_front(element.assmps)
 
     def get_num_iter_from_condition(self, condition):
         """Extracts the number of iterations from a condition"""
@@ -66,8 +77,7 @@ class InputAssumptionStack(Stack):
                             start = int(arguments[0].val)
                             end = int(arguments[1].val)
                             steps = int(arguments[2].val)
-                        return (end - start) // steps
-
+                        return math.ceil((end - start) / steps)
         return None
 
     @copy_docstring(Stack.push)
@@ -175,7 +185,7 @@ class AssumptionState(Store, State):
 
     @property
     def current_stack_top(self):
-        return self.store[self.input_var].stack[-1]
+        return self.store[self.input_var].lattice
 
     def assmp_to_interval_state(self):
         """
