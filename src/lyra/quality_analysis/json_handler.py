@@ -10,6 +10,8 @@ from lyra.abstract_domains.quality.assumption_lattice import AssumptionLattice, 
 class AssumptionEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, InputAssumptionLattice):
+            if obj.iterations is None:
+                return {}
             return {"iterations": obj.iterations, "assmps": obj.assmps}
         if isinstance(obj, AssumptionLattice):
             return {"type_assmp": obj.type_assumption, "range_assmp": obj.range_assumption}
@@ -27,6 +29,9 @@ class AssumptionDecoder(json.JSONDecoder):
         JSONDecoder.__init__(self, object_hook=self.default)
 
     def default(self, obj):
+
+        if not obj:
+            return None
 
         if "0" in obj:
             return obj["0"]

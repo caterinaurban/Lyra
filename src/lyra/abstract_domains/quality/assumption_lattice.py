@@ -310,14 +310,14 @@ class InputAssumptionLattice(BoundedLattice):
         """
         self._assmps = assmps + self.assmps
 
-    def add_assumptions_with_iter(self, iterations: int, assmps):
+    def add_assumptions_with_iter(self, iterations: int, assmps, is_loop=True):
         """Adds assumptions to the front of the assumption list and sets the itartion number.
 
         :param iterations: number of times the assumptions appear in input file
         :param assmps: list of assumptions to be added to the list of current assumptions
         """
         input_assmps = InputAssumptionLattice(iterations, assmps)
-        input_assmps.is_loop = True
+        input_assmps.is_loop = is_loop
         self._assmps.insert(0, input_assmps)
 
     @copy_docstring(Lattice._less_equal)
@@ -331,42 +331,110 @@ class InputAssumptionLattice(BoundedLattice):
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
-        if other.iterations is None:
+        if len(self.assmps) == len(other.assmps) == 0:
             return self
-        if self.iterations is None:
-            return self.replace(deepcopy(other))
-        if self.iterations != other.iterations:
+        if len(self.assmps) == 0 or len(other.assmps) == 0:
             return self.top()
+        self_is_case = isinstance(self.assmps[0], InputAssumptionLattice)
+        self_is_case = self_is_case and not self.assmps[0].is_loop
+        other_is_case = isinstance(other.assmps[0], InputAssumptionLattice)
+        other_is_case = other_is_case and not other.assmps[0].is_loop
+        if self_is_case and other_is_case:
+            self.join_case(other)
+            return self
+        elif not self_is_case and not other_is_case:
+            self.join_loop(other)
+            return self
+        elif self_is_case and isinstance(other.assmps[0], AssumptionLattice):
+            if len(self.assmps[0].assmps) == 1 and self.assmps[0].assmps[0] == other.assmps[0]:
+                self._assmps = deepcopy(other.assmps)
+                return self
+        elif other_is_case and isinstance(self.assmps[0], AssumptionLattice):
+            if len(other.assmps[0].assmps) == 1 and other.assmps[0].assmps[0] == self.assmps[0]:
+                return self
+        self.assmps.clear()
+        return self
+
+    def join_case(self, other):
+        new_assmps = []
+        iter_self = 0
+        iter_other = 0
+        while iter_self < len(self.assmps[0].assmps) or iter_other < len(other.assmps[0].assmps):
+            if iter_self < len(self.assmps[0].assmps):
+                curr_self = self.assmps[0].assmps[iter_self]
+            else:
+                curr_self = None
+            if iter_other < len(other.assmps[0].assmps):
+                curr_other = other.assmps[0].assmps[iter_other]
+            else:
+                curr_other = None
+            self_is_None = isinstance(curr_self, InputAssumptionLattice) and curr_self.iterations is None
+            other_is_None = isinstance(curr_other, InputAssumptionLattice) and curr_other.iterations is None
+            if self_is_None and other_is_None:
+                new_assmps.append(curr_self)
+                iter_self += 1
+                iter_other += 1
+                continue
+            if curr_self is None or curr_other is None:
+                break
+            if self_is_None and not isinstance(curr_other, InputAssumptionLattice):
+                return self.top()
+            if other_is_None and not isinstance(curr_self, InputAssumptionLattice):
+                return self.top()
+            if self_is_None and curr_other.is_loop:
+                new_assmps.append(curr_other)
+                iter_self += 1
+                iter_other += 1
+                continue
+            if other_is_None and curr_self.is_loop:
+                new_assmps.append(curr_self)
+                iter_self += 1
+                iter_other += 1
+                continue
+            if curr_self is None or curr_other is None:
+                break
+            if type(curr_other) != type(curr_self):
+                break
+            new_assmps.append(curr_self.join(curr_other))
+            iter_self += 1
+            iter_other += 1
+        self.assmps[0]._assmps = new_assmps
+        return self
+
+    def join_loop(self, other):
         if len(self.assmps) == len(other.assmps):
+            new_assmps = []
             for assmp1, assmp2 in zip(self.assmps, other.assmps):
                 assmp1_inputlattice = isinstance(assmp1, InputAssumptionLattice)
                 assmp2_inputlattice = isinstance(assmp2, InputAssumptionLattice)
                 if assmp1_inputlattice and assmp1.iterations is None:
-                    assmp1.replace(deepcopy(assmp2))
+                    new_assmps.append(assmp2)
                 elif assmp2_inputlattice and assmp2.iterations is None:
-                    continue
+                    new_assmps.append(assmp1)
                 elif assmp1_inputlattice == assmp2_inputlattice:
-                    assmp1.join(assmp2)
+                    new_assmps.append(assmp1.join(assmp2))
                 else:
-                    return self.top()
+                    self.assmps.clear()
+                    return self
+            self._assmps = new_assmps
             return self
 
-        if len(self.assmps) > len(other.assmps) > 0:
+        if len(self.assmps) > len(other.assmps):
             if isinstance(other.assmps[0], InputAssumptionLattice):
                 other_is_placeholder = other.assmps[0].iterations is None
-                self_are_inputlattices = isinstance(self.assmps[0], InputAssumptionLattice)\
-                                         and isinstance(self.assmps[1], InputAssumptionLattice)
+                self_are_inputlattices = isinstance(self.assmps[0], InputAssumptionLattice)
+                self_are_inputlattices &= isinstance(self.assmps[1], InputAssumptionLattice)
                 if other_is_placeholder and self_are_inputlattices:
                     self.assmps[0].join(self.assmps[1])
                     self.assmps.pop(1)
                     assert len(self.assmps) == len(other.assmps)
                     self.join(other)
                     return self
-        elif len(other.assmps) > len(self.assmps) > 0:
+        elif len(other.assmps) > len(self.assmps):
             if isinstance(self.assmps[0], InputAssumptionLattice):
                 self_is_placeholder = self.assmps[0].iterations is None
-                other_are_inputlattices = isinstance(other.assmps[0], InputAssumptionLattice) \
-                                        and isinstance(other.assmps[1], InputAssumptionLattice)
+                other_are_inputlattices = isinstance(other.assmps[0], InputAssumptionLattice)
+                other_are_inputlattices &= isinstance(other.assmps[1], InputAssumptionLattice)
                 if self_is_placeholder and other_are_inputlattices:
                     other_copy = deepcopy(other)
                     other_copy.assmps[0].join(other_copy.assmps[1])
@@ -374,8 +442,8 @@ class InputAssumptionLattice(BoundedLattice):
                     assert len(self.assmps) == len(other_copy.assmps)
                     self.join(other_copy)
                     return self
-
-        return self.top()
+        self.assmps.clear()
+        return self
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'InputAssumptionLattice'):
