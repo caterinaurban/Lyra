@@ -37,8 +37,6 @@ class InputAssumptionStack(Stack):
     def pop(self):
         if len(self.stack) > 1:
             element = self.stack.pop()
-            if self.lattice.is_top():
-                return
             if element.is_top():
                 self.lattice.top()
                 return
@@ -48,13 +46,15 @@ class InputAssumptionStack(Stack):
                     if num_iter is None:
                         self.lattice.top()
                     else:
-                        if self.lattice.assmps[0].iterations is None:
+                        if len(self.lattice.assmps) > 0 \
+                                and isinstance(self.lattice.assmps[0], InputAssumptionLattice) \
+                                and self.lattice.assmps[0].iterations is None:
                             self.lattice.assmps.pop(0)
                         self.lattice.add_assumptions_with_iter(num_iter, element.assmps)
                 else:
                     self.lattice.add_assumptions_with_iter(None, element.assmps)
-            else:
-                self.lattice.add_assumptions_front(element.assmps)
+            elif len(element.assmps) > 0:
+                self.lattice.add_assumptions_with_iter(1, element.assmps, False)
 
     def get_num_iter_from_condition(self, condition):
         """Extracts the number of iterations from a condition"""
@@ -82,6 +82,9 @@ class InputAssumptionStack(Stack):
 
     @copy_docstring(Stack.push)
     def push(self):
+        if self.lattice.is_top():
+            self.stack.pop()
+            self.stack.append(InputAssumptionLattice())
         self.stack.append(InputAssumptionLattice())
 
 
