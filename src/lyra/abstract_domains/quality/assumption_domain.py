@@ -38,39 +38,24 @@ class InputAssumptionStack(Stack):
         if len(self.stack) > 1:
             element = self.stack.pop()
             if element.is_top():
-                self.lattice.top()
+                if len(self.stack) > 1:
+                    self.lattice.top()
                 return
             if element.is_loop:
                 if len(element.assmps) > 0:
-                    if self.all_are_placeholders(element):
-                        return  # inner loop should be done first
                     num_iter = self.get_num_iter_from_condition(element.condition)
                     if num_iter is None:
                         self.lattice.top()
-                    elif self.has_placeholder_to_substitute(self.lattice):
-                            self.lattice.assmps.pop(0)
-                            self.lattice.add_assumptions_with_iter(num_iter, element.assmps)
-                            self.lattice.join_as_loop = True
+                    else:
+                        self.lattice.bottom()
+                        self.stack.append(InputAssumptionLattice())
+                        self.lattice.add_assumptions_with_iter(num_iter, element.assmps)
+                        self.lattice.join_as_loop = True
                 else:
-                    self.lattice.add_assumptions_with_iter(None, element.assmps)
                     self.lattice.join_as_loop = True
             elif len(element.assmps) > 0:
                 self.lattice.add_assumptions_front(element.assmps)
                 self.lattice.join_as_loop = False
-
-    def has_placeholder_to_substitute(self, element):
-        """Checks if the given elenement has a placeholder that can be substituted with a loop
-        """
-        return len(element.assmps) > 0 \
-               and isinstance(element.assmps[0], InputAssumptionLattice) \
-               and element.assmps[0].iterations is None
-
-    def all_are_placeholders(self, element):
-        """Checks if the given elenement has a placeholder that can be substituted with a loop
-        """
-        return len(element.assmps) > 0 \
-               and all([isinstance(e, InputAssumptionLattice) for e in element.assmps]) \
-               and all([e.iterations is None for e in element.assmps])
 
     def get_num_iter_from_condition(self, condition):
         """Extracts the number of iterations from a condition"""
@@ -98,21 +83,39 @@ class InputAssumptionStack(Stack):
 
     @copy_docstring(Stack.push)
     def push(self):
-        if self.lattice.is_top():
-            self.stack.pop()
-            self.stack.append(InputAssumptionLattice())
         self.stack.append(InputAssumptionLattice())
 
     @copy_docstring(Stack.join)
     def join(self, other):
+        if self.lattice.is_bottom():
+            self.lattice.replace(other.lattice)
+            return self
+        elif other.lattice.is_bottom():
+            return self
         if self.lattice.is_top():
             return self
-        if self.is_bottom() or other.is_top():
-            return self.replace(other)
-        elif other.is_bottom() or self.is_top():
+        if self.lattice.join_as_loop or other.lattice.join_as_loop:
+            if len(self.stack) == len(other.stack):
+                for i, item in enumerate(self.stack):
+                    if len(item.assmps) == len(other.stack[i].assmps):
+                        item.join(other.stack[i])
+                    elif len(item.assmps) < len(other.stack[i].assmps):
+                        item.replace(other.stack[i])
+            elif len(self.stack) > len(other.stack):
+                loop = self.stack.pop()
+                self.join(other)
+                self.lattice.add_assumptions_front(loop.assmps)
+            else:
+                other_copy = deepcopy(other)
+                loop = other_copy.stack.pop()
+                self.join(other_copy)
+                self.lattice.add_assumptions_front(loop.assmps)
+            self.lattice.join_as_loop = False
             return self
-        else:
-            return self.lattice.join(other.lattice)
+        if len(self.stack) > 1 and len(self.lattice.assmps) != len(other.lattice.assmps):
+            self.lattice.top()
+            return self
+        return self.lattice.join(other.lattice)
 
 
 class AssumptionState(Store, State):
@@ -280,7 +283,7 @@ class AssumptionState(Store, State):
         def visit_Input(self, expr, assumption=None, state=None):
             type_assumption = TypeLattice.from_lyra_type(expr.typ)
             input_assumption = AssumptionLattice(type_assumption).meet(assumption)
-            if state.store[state.input_var].lattice.is_top():
+            if state.store[state.input_var].lattice.is_top() and len(state.store[state.input_var].stack) == 1:
                 state.current_stack_top.meet(InputAssumptionLattice())
             state.store[state.input_var].lattice.add_assumption_front(input_assumption)
             return state
