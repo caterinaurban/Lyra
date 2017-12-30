@@ -343,56 +343,17 @@ class InputAssumptionLattice(BoundedLattice):
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
-        if self.iterations is None:
-            return self.replace(other)
-        if other.iterations is None:
-            return self
         if len(self.assmps) == len(other.assmps) == 0:
             return self
         if len(self.assmps) == 0 or len(other.assmps) == 0:
-            return self.top()
-        if self.join_as_loop != other.join_as_loop:
-            return self.top()
-        if self.join_as_loop:
-            if len(self.assmps) == len(other.assmps):
-                new_assmps = []
-                for assmp1, assmp2 in zip(self.assmps, other.assmps):
-                    if self.is_loop_placeholder(assmp1) and self.is_loop_placeholder(assmp2):
-                        new_assmps.append(assmp1)
-                    else:
-                        new_assmps.append(deepcopy(assmp1).join(assmp2))
-                self._assmps = new_assmps
-                return self
-            if len(self.assmps) > len(other.assmps):
-                if self.join_as_loop and other.join_as_loop:
-                    self.assmps.pop(1)
-                    self.join(other)
-                    return self
-            if len(other.assmps) > len(self.assmps):
-                if self.join_as_loop and other.join_as_loop:
-                    other_copy = deepcopy(other)
-                    other_copy.assmps.pop(1)
-                    self.join(other_copy)
-                    return self
-
+            self.assmps.clear()
+            return self
         new_assmps = []
         for assmp1, assmp2 in zip(self.assmps, other.assmps):
-            if self.is_loop_placeholder(assmp1):
-                if isinstance(assmp2, InputAssumptionLattice):
-                    new_assmps.append(assmp2)
-                else:
-                    break
-            elif self.is_loop_placeholder(assmp2):
-                if isinstance(assmp1, InputAssumptionLattice):
-                    new_assmps.append(assmp1)
-                else:
-                    break
-            elif type(assmp1) != type(assmp2):
+            if type(assmp1) != type(assmp2):
                 break
             else:
                 new_assmps.append(deepcopy(assmp1).join(assmp2))
-        if len(new_assmps) == 0:
-            return self.top()
         self._assmps = new_assmps
         return self
 
