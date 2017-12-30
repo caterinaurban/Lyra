@@ -1,4 +1,4 @@
-# STATE a -> (Any, [-inf, inf]), i -> (Any, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, inf]), (Int, [-inf, inf]), [(Int, [-inf, inf])]]
+# STATE a -> (Any, [-inf, inf]), i -> (Any, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, inf]), (Int, [-inf, inf]), (Int, [-inf, inf])]
 a: int = int(input())
 i: int = int(input())
 if a > 10:
