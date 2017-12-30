@@ -42,19 +42,35 @@ class InputAssumptionStack(Stack):
                 return
             if element.is_loop:
                 if len(element.assmps) > 0:
+                    if self.all_are_placeholders(element):
+                        return  # inner loop should be done first
                     num_iter = self.get_num_iter_from_condition(element.condition)
                     if num_iter is None:
                         self.lattice.top()
-                    else:
-                        if len(self.lattice.assmps) > 0 \
-                                and isinstance(self.lattice.assmps[0], InputAssumptionLattice) \
-                                and self.lattice.assmps[0].iterations is None:
+                    elif self.has_placeholder_to_substitute(self.lattice):
                             self.lattice.assmps.pop(0)
-                        self.lattice.add_assumptions_with_iter(num_iter, element.assmps)
+                            self.lattice.add_assumptions_with_iter(num_iter, element.assmps)
+                            self.lattice.join_as_loop = True
                 else:
                     self.lattice.add_assumptions_with_iter(None, element.assmps)
+                    self.lattice.join_as_loop = True
             elif len(element.assmps) > 0:
-                self.lattice.add_assumptions_with_iter(1, element.assmps, False)
+                self.lattice.add_assumptions_front(element.assmps)
+                self.lattice.join_as_loop = False
+
+    def has_placeholder_to_substitute(self, element):
+        """Checks if the given elenement has a placeholder that can be substituted with a loop
+        """
+        return len(element.assmps) > 0 \
+               and isinstance(element.assmps[0], InputAssumptionLattice) \
+               and element.assmps[0].iterations is None
+
+    def all_are_placeholders(self, element):
+        """Checks if the given elenement has a placeholder that can be substituted with a loop
+        """
+        return len(element.assmps) > 0 \
+               and all([isinstance(e, InputAssumptionLattice) for e in element.assmps]) \
+               and all([e.iterations is None for e in element.assmps])
 
     def get_num_iter_from_condition(self, condition):
         """Extracts the number of iterations from a condition"""
@@ -86,6 +102,17 @@ class InputAssumptionStack(Stack):
             self.stack.pop()
             self.stack.append(InputAssumptionLattice())
         self.stack.append(InputAssumptionLattice())
+
+    @copy_docstring(Stack.join)
+    def join(self, other):
+        if self.lattice.is_top():
+            return self
+        if self.is_bottom() or other.is_top():
+            return self.replace(other)
+        elif other.is_bottom() or self.is_top():
+            return self
+        else:
+            return self.lattice.join(other.lattice)
 
 
 class AssumptionState(Store, State):

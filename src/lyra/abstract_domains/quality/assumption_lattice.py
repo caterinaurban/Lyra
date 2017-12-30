@@ -276,6 +276,7 @@ class InputAssumptionLattice(BoundedLattice):
         else:
             self._assmps = assmps
         self.is_loop = False
+        self.join_as_loop = False
         self.condition = None
 
     def __repr__(self):
@@ -284,7 +285,7 @@ class InputAssumptionLattice(BoundedLattice):
         if self.is_top():
             return "T"
         if self.iterations is None:
-            return "NONE"
+            return "LOOP"
         if self.iterations == 1:
             return self.assmps.__repr__()
         return f"{self.iterations} x {self.assmps.__repr__()}"
@@ -329,120 +330,70 @@ class InputAssumptionLattice(BoundedLattice):
                 return False
         return True
 
+    def is_loop_placeholder(self, assmp):
+        """Checks if the assumption element is a loop placeholder
+
+        :param assmp: assumption to check
+        """
+        if not isinstance(assmp, InputAssumptionLattice):
+            return False
+        if assmp.iterations is not None:
+            return False
+        return True
+
     @copy_docstring(Lattice._join)
     def _join(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
+        if self.iterations is None:
+            return self.replace(other)
+        if other.iterations is None:
+            return self
         if len(self.assmps) == len(other.assmps) == 0:
             return self
         if len(self.assmps) == 0 or len(other.assmps) == 0:
             return self.top()
-        self_is_case = isinstance(self.assmps[0], InputAssumptionLattice)
-        self_is_case = self_is_case and not self.assmps[0].is_loop
-        other_is_case = isinstance(other.assmps[0], InputAssumptionLattice)
-        other_is_case = other_is_case and not other.assmps[0].is_loop
-        if self_is_case and other_is_case:
-            self.join_case(other)
-            return self
-        elif not self_is_case and not other_is_case:
-            self.join_loop(other)
-            return self
-        elif self_is_case and isinstance(other.assmps[0], AssumptionLattice):
-            if len(self.assmps[0].assmps) == 1 and self.assmps[0].assmps[0] == other.assmps[0]:
-                self._assmps = deepcopy(other.assmps)
+        if self.join_as_loop != other.join_as_loop:
+            return self.top()
+        if self.join_as_loop:
+            if len(self.assmps) == len(other.assmps):
+                new_assmps = []
+                for assmp1, assmp2 in zip(self.assmps, other.assmps):
+                    if self.is_loop_placeholder(assmp1) and self.is_loop_placeholder(assmp2):
+                        new_assmps.append(assmp1)
+                    else:
+                        new_assmps.append(deepcopy(assmp1).join(assmp2))
+                self._assmps = new_assmps
                 return self
-        elif other_is_case and isinstance(self.assmps[0], AssumptionLattice):
-            if len(other.assmps[0].assmps) == 1 and other.assmps[0].assmps[0] == self.assmps[0]:
-                return self
-        self.assmps.clear()
-        return self
-
-    def join_case(self, other):
-        new_assmps = []
-        iter_self = 0
-        iter_other = 0
-        while iter_self < len(self.assmps[0].assmps) or iter_other < len(other.assmps[0].assmps):
-            if iter_self < len(self.assmps[0].assmps):
-                curr_self = self.assmps[0].assmps[iter_self]
-            else:
-                curr_self = None
-            if iter_other < len(other.assmps[0].assmps):
-                curr_other = other.assmps[0].assmps[iter_other]
-            else:
-                curr_other = None
-            self_is_None = isinstance(curr_self, InputAssumptionLattice) and curr_self.iterations is None
-            other_is_None = isinstance(curr_other, InputAssumptionLattice) and curr_other.iterations is None
-            if self_is_None and other_is_None:
-                new_assmps.append(curr_self)
-                iter_self += 1
-                iter_other += 1
-                continue
-            if curr_self is None or curr_other is None:
-                break
-            if self_is_None and not isinstance(curr_other, InputAssumptionLattice):
-                return self.top()
-            if other_is_None and not isinstance(curr_self, InputAssumptionLattice):
-                return self.top()
-            if self_is_None and curr_other.is_loop:
-                new_assmps.append(curr_other)
-                iter_self += 1
-                iter_other += 1
-                continue
-            if other_is_None and curr_self.is_loop:
-                new_assmps.append(curr_self)
-                iter_self += 1
-                iter_other += 1
-                continue
-            if curr_self is None or curr_other is None:
-                break
-            if type(curr_other) != type(curr_self):
-                break
-            new_assmps.append(curr_self.join(curr_other))
-            iter_self += 1
-            iter_other += 1
-        self.assmps[0]._assmps = new_assmps
-        return self
-
-    def join_loop(self, other):
-        if len(self.assmps) == len(other.assmps):
-            new_assmps = []
-            for assmp1, assmp2 in zip(self.assmps, other.assmps):
-                assmp1_inputlattice = isinstance(assmp1, InputAssumptionLattice)
-                assmp2_inputlattice = isinstance(assmp2, InputAssumptionLattice)
-                if assmp1_inputlattice and assmp1.iterations is None:
-                    new_assmps.append(assmp2)
-                elif assmp2_inputlattice and assmp2.iterations is None:
-                    new_assmps.append(assmp1)
-                elif assmp1_inputlattice == assmp2_inputlattice:
-                    new_assmps.append(assmp1.join(assmp2))
-                else:
-                    self.assmps.clear()
-                    return self
-            self._assmps = new_assmps
-            return self
-
-        if len(self.assmps) > len(other.assmps):
-            if isinstance(other.assmps[0], InputAssumptionLattice):
-                other_is_placeholder = other.assmps[0].iterations is None
-                self_are_inputlattices = isinstance(self.assmps[0], InputAssumptionLattice)
-                self_are_inputlattices &= isinstance(self.assmps[1], InputAssumptionLattice)
-                if other_is_placeholder and self_are_inputlattices:
-                    self.assmps[0].join(self.assmps[1])
+            if len(self.assmps) > len(other.assmps):
+                if self.join_as_loop and other.join_as_loop:
                     self.assmps.pop(1)
-                    assert len(self.assmps) == len(other.assmps)
                     self.join(other)
                     return self
-        elif len(other.assmps) > len(self.assmps):
-            if isinstance(self.assmps[0], InputAssumptionLattice):
-                self_is_placeholder = self.assmps[0].iterations is None
-                other_are_inputlattices = isinstance(other.assmps[0], InputAssumptionLattice)
-                other_are_inputlattices &= isinstance(other.assmps[1], InputAssumptionLattice)
-                if self_is_placeholder and other_are_inputlattices:
+            if len(other.assmps) > len(self.assmps):
+                if self.join_as_loop and other.join_as_loop:
                     other_copy = deepcopy(other)
-                    other_copy.assmps[0].join(other_copy.assmps[1])
                     other_copy.assmps.pop(1)
-                    assert len(self.assmps) == len(other_copy.assmps)
                     self.join(other_copy)
                     return self
-        self.assmps.clear()
+
+        new_assmps = []
+        for assmp1, assmp2 in zip(self.assmps, other.assmps):
+            if self.is_loop_placeholder(assmp1):
+                if isinstance(assmp2, InputAssumptionLattice):
+                    new_assmps.append(assmp2)
+                else:
+                    break
+            elif self.is_loop_placeholder(assmp2):
+                if isinstance(assmp1, InputAssumptionLattice):
+                    new_assmps.append(assmp1)
+                else:
+                    break
+            elif type(assmp1) != type(assmp2):
+                break
+            else:
+                new_assmps.append(deepcopy(assmp1).join(assmp2))
+        if len(new_assmps) == 0:
+            return self.top()
+        self._assmps = new_assmps
         return self
 
     @copy_docstring(Lattice._meet)
