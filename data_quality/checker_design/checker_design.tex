@@ -53,6 +53,18 @@
 
 \pagenumbering{arabic}
 
+\section{Error Correction}
+
+User needs some means to correct the error. 
+
+\begin{itemize}
+  \item After the user did the corrections in the program we write the changes to the input file and rerun the checker.
+  \item Idea: We keep a separate file where the input data is copied to and add placeholders for input data that needs correction. This way when scanning the file again to write down the corrected values we know where we have to check for new values.
+  
+  Problem: What if the user makes additional changes in the original file. A developer also corrects his own code when error messages appear and copies it if necessary. It is also easy to show how to do it with a separate file. We would just have to tell the user that only changes in the new file are taken into account. But if the user can change the file (delete a row etc) we cannot add placeholders because it would be confusing. So we just order the new values internally by location. If the user changes anything in the file manually the changes will only be seen if the checker is rerun.
+\begin{itemize}
+
+
 \section{Steps}
 
 \begin{enumerate}
