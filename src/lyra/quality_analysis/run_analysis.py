@@ -1,5 +1,5 @@
 from lyra.engine.quality.assumption_analysis import AssumptionAnalysis
-from lyra.quality_analysis.input_checker.input_checker import InputChecker
+from lyra.quality_analysis.input_checker import InputChecker
 from lyra.quality_analysis.json_handler import JSONHandler
 
 
@@ -23,22 +23,27 @@ class QualityAnalysisRunner:
 
         print("Writing assumption to json")
 
-        JSONHandler().input_assumptions_to_json(program_name, input_assumptions)
+        json_handler = JSONHandler(program_path, program_name)
+        json_handler.input_assumptions_to_json(input_assumptions)
 
-    def run_checker(self, program_path, program_name):
+    def run_checker(self, program_path, program_name, input_file_name):
         print("Reading assumption from json")
 
-        input_assumptions = JSONHandler().json_to_input_assumptions(program_name)
+        json_handler = JSONHandler(program_path, program_name)
+        input_assumptions = json_handler.json_to_input_assumptions()
 
         print("Running input checker")
 
-        InputChecker(program_path, program_name).check_input(input_assumptions)
+        checker = InputChecker(program_path, input_file_name, program_name)
+        errors = checker.check_input(input_assumptions)
 
         print("Input checking done")
 
-    def main(self, program_path, program_name):
+        return errors
+
+    def main(self, program_path, program_name, input_file_name):
         self.run_analysis(program_path, program_name)
-        self.run_checker(program_path, program_name)
+        return self.run_checker(program_path, program_name, input_file_name)
 
 if __name__ == '__main__':
-    QualityAnalysisRunner().main("../tests/quality/", "example")
+    QualityAnalysisRunner().main("example/", "checker_example", "checker_example.in")
