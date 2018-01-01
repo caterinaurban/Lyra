@@ -8,9 +8,10 @@ class InputChecker:
     assumption analysis
     """
 
-    def __init__(self, program_path, program_name):
-        self.error_file = open(f"errors_{program_name}.txt", "w")
-        self.input_file = open(f"{program_path}{program_name}.in", "r")
+    def __init__(self, input_file_path, input_file_name, program_name):
+        self.error_file = open(f"{input_file_path}errors_{program_name}.txt", "w")
+        self.input_file = open(f"{input_file_path}{input_file_name}", "r")
+        self.errors = []
 
     def write_missing_error(self, num_values_expected, num_values_found):
         """Prints an error because there are more assumptions than values
@@ -22,6 +23,12 @@ class InputChecker:
                 f'expected at least {num_values_expected} values instead found {num_values_found}.'
         self.error_file.write(error)
         self.error_file.write('\n')
+        return error
+
+    def create_type_error(self, line_num, input_line, type_assmp):
+        return f'Type Error in line {line_num}: ' \
+                f'expected one value of type {self.type_to_type_name(type_assmp)} ' \
+                f'instead found \'{input_line}\'.'
 
     def write_type_error(self, line_num, input_line, type_assmp):
         """Prints an error because an input is not of an expected type
@@ -30,11 +37,15 @@ class InputChecker:
         :param input_line: input that contains the error
         :param type_assmp: expected type
         """
-        error = f'Type Error in line {line_num}: ' \
-                f'expected one value of type {self.type_to_type_name(type_assmp)} ' \
-                f'instead found \'{input_line}\'.'
+        error = self.create_type_error(line_num, input_line, type_assmp)
         self.error_file.write(error)
         self.error_file.write('\n')
+        return error
+
+    def create_range_error(self, line_num, input_line, lower, upper):
+        return f'Range Error in line {line_num}: ' \
+                f'expected one value in range [{lower}, {upper}] ' \
+                f'instead found \'{input_line}\'.'
 
     def write_range_error(self, line_num, input_line, lower, upper):
         """Prints an error because an input is not in an expected range
@@ -44,11 +55,10 @@ class InputChecker:
         :param lower: expected lower bound
         :param upper: exptected upper bound
         """
-        error = f'Range Error in line {line_num}: ' \
-                f'expected one value in range [{lower}, {upper}] ' \
-                f'instead found \'{input_line}\'.'
+        error = self.create_range_error(line_num, input_line, lower, upper)
         self.error_file.write(error)
         self.error_file.write('\n')
+        return error
 
     def write_no_error(self):
         """Prints a message that no error has been found
@@ -110,6 +120,7 @@ class InputChecker:
             self.write_no_error()
         self.error_file.close()
         self.input_file.close()
+        return self.errors
 
     def check_assmps(self, assumptions, iterations, line_num):
         """Checks recursively if the inputs fulfil the assumptions
@@ -144,13 +155,17 @@ class InputChecker:
             try:
                 val = int(input_line)
             except ValueError:
-                self.write_type_error(line_num, input_line, type_assmp)
+                error_message = self.write_type_error(line_num, input_line, type_assmp)
+                new_error = ErrorInformation(line_num, input_line, error_message, assumption)
+                self.errors.append(new_error)
                 return True
         elif type_assmp == TypeLattice().real():
             try:
                 val = float(input_line)
             except ValueError:
-                self.write_type_error(line_num, input_line, type_assmp)
+                error_message = self.write_type_error(line_num, input_line, type_assmp)
+                new_error = ErrorInformation(line_num, input_line, error_message, assumption)
+                self.errors.append(new_error)
                 return True
         else:
             return False
@@ -159,6 +174,43 @@ class InputChecker:
         if val < range_assmp.lower or val > range_assmp.upper:
             lower = range_assmp.lower
             upper = range_assmp.upper
-            self.write_range_error(line_num, input_line, lower, upper)
+            error_message = self.write_range_error(line_num, input_line, lower, upper)
+            new_error = ErrorInformation(line_num, input_line, error_message, assumption)
+            self.errors.append(new_error)
             return True
         return False
+
+    def check_assmp(self, assumption: AssumptionLattice, value, line_num):
+        type_assmp = assumption.type_assumption
+        if type_assmp == TypeLattice().integer():
+            try:
+                val = int(value)
+            except ValueError:
+                error_message = self.create_type_error(line_num, value, type_assmp)
+                return ErrorInformation(line_num, value, error_message, assumption)
+        elif type_assmp == TypeLattice().real():
+            try:
+                val = float(value)
+            except ValueError:
+                error_message = self.create_type_error(line_num, value, type_assmp)
+                return ErrorInformation(line_num, value, error_message, assumption)
+        else:
+            return None
+
+        range_assmp = assumption.range_assumption
+        if val < range_assmp.lower or val > range_assmp.upper:
+            lower = range_assmp.lower
+            upper = range_assmp.upper
+            error_message = self.create_range_error(line_num, value, lower, upper)
+            return ErrorInformation(line_num, value, error_message, assumption)
+        return None
+
+
+class ErrorInformation:
+
+    def __init__(self, location, old_value, error_message, assumption):
+        self.location = location
+        self.old_value = old_value
+        self.new_value = old_value
+        self.error_message = error_message
+        self.assumption = assumption

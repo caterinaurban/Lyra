@@ -70,26 +70,24 @@ class JSONHandler:
     for the input checker
     """
 
-    def filename(self, program_name):
-        return f'{program_name}.json'
+    def __init__(self, program_path, program_name):
+        self.filename = f"{program_path}{program_name}.json"
 
-    def input_assumptions_to_json(self, program_name, final_input_state):
+    def input_assumptions_to_json(self, final_input_state):
         """
         Writes the assumptions to a json file
         """
         final_input_dict = {"0": final_input_state}
-        with open(self.filename(program_name), 'w') as f:
+        with open(self.filename, 'w') as f:
             json.dump(final_input_dict, f, cls=AssumptionEncoder, indent=4)
 
-    def json_to_input_assumptions(self, program_name):
+    def json_to_input_assumptions(self):
         """
         Reads assumptions from a json file
         """
         try:
-            with open(self.filename(program_name), 'r') as f:
+            with open(self.filename, 'r') as f:
                 data = json.load(f, cls=AssumptionDecoder)
             return data
         except FileNotFoundError:
-            error = f'No file with name {self.filename(program_name)} was found ' \
-                    f'for program {program_name}'
-            raise FileNotFoundError(error)
+            raise FileNotFoundError(f"File {self.filename} does not exist.")
