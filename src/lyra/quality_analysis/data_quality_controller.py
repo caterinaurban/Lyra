@@ -6,7 +6,7 @@ from lyra.quality_analysis.run_analysis import QualityAnalysisRunner
 
 
 class DataQualityController:
-
+    """Controller for the input correction application."""
     def __init__(self):
         self.quality_analysis = QualityAnalysisRunner()
         self.input_correction = None
@@ -17,13 +17,12 @@ class DataQualityController:
         self.path = "example/"
 
     def run(self):
+        """Starts the input correction application."""
         self.input_correction = InputCorrection(self)
         self.input_correction.mainloop()
-        # run input updater
-        # recheck input
-        pass
 
     def run_analysis(self):
+        """Runs the assumption analysis."""
         print("Running analysis")
 
         result = AssumptionAnalysis().main(f"{self.path}{self.program_name}.py", False)
@@ -36,6 +35,10 @@ class DataQualityController:
         self.json_handler.input_assumptions_to_json(input_assumptions)
 
     def run_checker(self):
+        """Runs the input checker.
+
+        :return: the errors find by the input checker
+        """
         print("Reading assumption from json")
 
         input_assumptions = self.json_handler.json_to_input_assumptions()
@@ -48,11 +51,22 @@ class DataQualityController:
 
         return errors
 
-    def check_new_val(self, new_val, assmp, location):
-        error = self.input_checker.check_assmp(assmp, new_val, location)
-        return error is not None
+    def check_new_val(self, new_val, assmp):
+        """Checks if the value fulfils the assumption
+
+        :param new_val: value that should fulfil the assumption
+        :param assmp: assumption that should be fulfilled
+        :return: if the value fulfils the assumption
+        """
+        return self.input_checker.check_assmp(new_val, assmp)
 
     def start_analysis(self, program_name, input_filename):
+        """Starts the assumtion analysis.
+
+        :param program_name: name of the python program that will be analyzed
+        :param input_filename: name of the input file
+        :return: errors found by the input checker
+        """
         self.program_name = program_name
         self.input_filename = input_filename
         self.json_handler = JSONHandler(self.path, self.program_name)
@@ -61,6 +75,11 @@ class DataQualityController:
         return self.run_checker()
 
     def extract_assumptions(self, analysis_result):
+        """ Extracts the input assumptions from an analysis result
+
+        :param analysis_result: result of the analysis
+        :return: assumptions about the input
+        """
         assumption_lattice = None
         for block, analysis in analysis_result.result.items():
             if block.identifier == 1:
