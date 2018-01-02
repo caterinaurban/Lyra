@@ -11,3 +11,4 @@ else:
 b: int = float(input())
 b: int = int(input())
 b: int = int(input())
+print(b)

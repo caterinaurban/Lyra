@@ -1,3 +1,8 @@
+from shutil import copyfile
+
+import os
+import subprocess
+
 from lyra.engine.quality.assumption_analysis import AssumptionAnalysis
 from lyra.quality_analysis.input_checker import InputChecker
 from lyra.quality_analysis.input_correction_view import InputCorrection
@@ -74,6 +79,47 @@ class DataQualityController:
         self.run_analysis()
         return self.run_checker()
 
+    def check_corrected_input(self, errors):
+        """Writes the new values back to the input file and runs the input checker.
+
+        :param errors: current errors with information about new values
+        :return: errors found by the input checker
+        """
+        if len(errors) > 0:
+            new_values = [(e.location, e.new_value) for e in errors]
+            new_values = sorted(new_values, key=lambda val: val[0])
+            self.write_new_values(new_values)
+        errors = self.run_checker()
+        if len(errors) == 0:
+            self.execute_input_program()
+        return errors
+
+    def write_new_values(self, new_values):
+        """Writes the new values to the input file.
+
+        :param new_values: sorted List of tuples (location, new value)
+        """
+        curr_val_index = 0
+        curr_loc = new_values[curr_val_index][0]
+        with open(self.path + self.input_filename, "r") as input_file:
+            with open(self.path + self.input_filename + ".temp", "w") as input_file_tmp:
+                line_num = 0
+                line = ""
+                while curr_val_index < len(new_values) or line:
+                    line = input_file.readline()
+                    if line_num+1 == curr_loc:
+                        input_file_tmp.write(new_values[curr_val_index][1] + "\n")
+                        curr_val_index += 1
+                        if curr_val_index < len(new_values):
+                            curr_loc = new_values[curr_val_index][0]
+                        else:
+                            curr_loc = -1
+                    else:
+                        input_file_tmp.write(line)
+                    line_num += 1
+        copyfile(self.path + self.input_filename + ".temp", self.path + self.input_filename)
+        os.remove(self.path + self.input_filename + ".temp")
+
     def extract_assumptions(self, analysis_result):
         """ Extracts the input assumptions from an analysis result
 
@@ -88,6 +134,17 @@ class DataQualityController:
         if assumption_lattice is None:
             raise Exception("Cannot find input assumption in analysis result.")
         return assumption_lattice.lattice.assmps
+
+    def execute_input_program(self):
+        """Executes the analyzed program."""
+        print("\n --- EXECUTING PROGRAM ---\n")
+        with open(self.path + "execute_program.sh", "w") as exec_program:
+            exec_program.write(f"python3.6 {self.path}{self.program_name}.py <<EOF\n")
+            with open(self.path + self.input_filename, "r") as input_file:
+                for line in input_file:
+                    exec_program.write(line)
+            exec_program.write(f"\nEOF")
+        subprocess.call("./" + self.path + "execute_program.sh", shell=True)
 
 if __name__ == "__main__":
     DataQualityController().run()

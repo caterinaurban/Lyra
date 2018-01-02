@@ -9,8 +9,10 @@ class InputChecker:
     """
 
     def __init__(self, input_file_path, input_file_name, program_name):
-        self.error_file = open(f"{input_file_path}errors_{program_name}.txt", "w")
-        self.input_file = open(f"{input_file_path}{input_file_name}", "r")
+        self.error_file_name = f"{input_file_path}errors_{program_name}.txt"
+        self.input_file_name = f"{input_file_path}{input_file_name}"
+        self.error_file = None
+        self.input_file = None
         self.errors = []
 
     def write_missing_error(self, num_values_expected, num_values_found):
@@ -87,11 +89,10 @@ class InputChecker:
 
         :return: number of lines found
         """
-        input_file = open(self.input_file.name, 'r')
-        num = 0
-        for _ in input_file:
-            num += 1
-        input_file.close()
+        with open(self.input_file.name, 'r') as input_file:
+            num = 0
+            for _ in input_file:
+                num += 1
         return num
 
     def find_num_total_assmps(self, assumptions, curr_iterations):
@@ -114,6 +115,9 @@ class InputChecker:
 
         :param assumptions: all assumptions
         """
+        self.error_file = open(self.error_file_name, "w")
+        self.input_file = open(self.input_file_name, "r")
+        self.errors = []
         num_values = self.count_values()
         num_total_assmps = self.find_num_total_assmps(assumptions, 1)
         if num_values < num_total_assmps:
