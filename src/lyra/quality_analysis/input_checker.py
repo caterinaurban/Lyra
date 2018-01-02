@@ -26,9 +26,10 @@ class InputChecker:
         return error
 
     def create_type_error(self, line_num, input_line, type_assmp):
+        """ Creates an error messages because of a wrong type."""
         return f'Type Error in line {line_num}: ' \
-                f'expected one value of type {self.type_to_type_name(type_assmp)} ' \
-                f'instead found \'{input_line}\'.'
+               f'expected one value of type {self.type_to_type_name(type_assmp)} ' \
+               f'instead found \'{input_line}\'.'
 
     def write_type_error(self, line_num, input_line, type_assmp):
         """Prints an error because an input is not of an expected type
@@ -43,9 +44,10 @@ class InputChecker:
         return error
 
     def create_range_error(self, line_num, input_line, lower, upper):
+        """ Creates an error messages because of a wrong range."""
         return f'Range Error in line {line_num}: ' \
-                f'expected one value in range [{lower}, {upper}] ' \
-                f'instead found \'{input_line}\'.'
+               f'expected one value in range [{lower}, {upper}] ' \
+               f'instead found \'{input_line}\'.'
 
     def write_range_error(self, line_num, input_line, lower, upper):
         """Prints an error because an input is not in an expected range
@@ -180,34 +182,35 @@ class InputChecker:
             return True
         return False
 
-    def check_assmp(self, assumption: AssumptionLattice, value, line_num):
+    def check_assmp(self, value, assumption: AssumptionLattice):
+        """Checks if a value fulfils an assumption
+
+        :param assumption: the assumption that should be fulfilled
+        :param value: the value that should fulfil the assumption
+        :return: If the value fulfils the assumption
+        """
         type_assmp = assumption.type_assumption
         if type_assmp == TypeLattice().integer():
             try:
                 val = int(value)
             except ValueError:
-                error_message = self.create_type_error(line_num, value, type_assmp)
-                return ErrorInformation(line_num, value, error_message, assumption)
+                return False
         elif type_assmp == TypeLattice().real():
             try:
                 val = float(value)
             except ValueError:
-                error_message = self.create_type_error(line_num, value, type_assmp)
-                return ErrorInformation(line_num, value, error_message, assumption)
+                return False
         else:
-            return None
+            return True
 
         range_assmp = assumption.range_assumption
         if val < range_assmp.lower or val > range_assmp.upper:
-            lower = range_assmp.lower
-            upper = range_assmp.upper
-            error_message = self.create_range_error(line_num, value, lower, upper)
-            return ErrorInformation(line_num, value, error_message, assumption)
-        return None
+            return False
+        return True
 
 
 class ErrorInformation:
-
+    """Contains information about an error."""
     def __init__(self, location, old_value, error_message, assumption):
         self.location = location
         self.old_value = old_value

@@ -8,7 +8,13 @@ from lyra.abstract_domains.quality.assumption_lattice import AssumptionLattice, 
 
 
 class AssumptionEncoder(json.JSONEncoder):
+    """Converter from input assumptions to serializable objects."""
     def default(self, obj):
+        """ Turns the assumption objects into serializable objects
+
+        :param obj: current object to turn into a serializable object
+        :return: serializable object representation of the assumption objects
+        """
         if isinstance(obj, InputAssumptionLattice):
             if obj.iterations is None:
                 return {}
@@ -19,17 +25,20 @@ class AssumptionEncoder(json.JSONEncoder):
             return obj.__repr__()
         if isinstance(obj, IntervalLattice):
             return obj.__repr__()
-
         return json.JSONEncoder.default(self, obj)
 
 
 class AssumptionDecoder(json.JSONDecoder):
-
+    """Converter from serialized objects to input assumptions."""
     def __init__(self):
         JSONDecoder.__init__(self, object_hook=self.default)
 
     def default(self, obj):
+        """ Turns the serialized objects back to assumptions
 
+        :param obj: current serialized object
+        :return: assumption representation of the serialized objects
+        """
         if not obj:
             return None
 
@@ -67,24 +76,19 @@ class AssumptionDecoder(json.JSONDecoder):
 class JSONHandler:
     """
     Handles methods to create and read json files created by an assumption analysis to use them
-    for the input checker
+    for the input checker.
     """
-
     def __init__(self, program_path, program_name):
         self.filename = f"{program_path}{program_name}.json"
 
     def input_assumptions_to_json(self, final_input_state):
-        """
-        Writes the assumptions to a json file
-        """
+        """Writes the assumptions to a json file."""
         final_input_dict = {"0": final_input_state}
         with open(self.filename, 'w') as f:
             json.dump(final_input_dict, f, cls=AssumptionEncoder, indent=4)
 
     def json_to_input_assumptions(self):
-        """
-        Reads assumptions from a json file
-        """
+        """Reads assumptions from a json file."""
         try:
             with open(self.filename, 'r') as f:
                 data = json.load(f, cls=AssumptionDecoder)

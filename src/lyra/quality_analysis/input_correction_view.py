@@ -2,7 +2,7 @@ import tkinter as tk
 
 
 class InputCorrection(tk.Tk):
-
+    """Container class for the input correction application."""
     def __init__(self, controller):
         super().__init__()
         container = tk.Frame(self)
@@ -15,7 +15,7 @@ class InputCorrection(tk.Tk):
 
 
 class InputCorrectionFiles(tk.Frame):
-
+    """Screen to input information about the program and input file."""
     def __init__(self, container, controller):
         tk.Frame.__init__(self, container)
         self.controller = controller
@@ -35,10 +35,11 @@ class InputCorrectionFiles(tk.Frame):
         self.container.entry_input.grid(row=1, column=1)
         self.container.entry_input.insert(0, "checker_example.in")
 
-        run_button = tk.Button(self, text='Run', command=self.start_anaylis)
+        run_button = tk.Button(self, text='Run', command=self.show_main_screen)
         run_button.grid(row=3, column=0)
 
-    def start_anaylis(self):
+    def show_main_screen(self):
+        """Shows the main screen of the application."""
         program_name = self.container.entry_program.get()
         input_file = self.container.entry_input.get()
         main_page = InputCorrectionMain(self.container, self.controller, program_name, input_file)
@@ -47,7 +48,8 @@ class InputCorrectionFiles(tk.Frame):
 
 
 class InputCorrectionMain(tk.Frame):
-
+    """Main screen of the input correction application. Starts the analysis automaticalliy
+    when initialized."""
     def __init__(self, parent, controller, program_name, input_filename):
         tk.Frame.__init__(self, parent)
 
@@ -86,40 +88,44 @@ class InputCorrectionMain(tk.Frame):
         next_button.image = next_image
         next_button.grid(row=3, column=6)
 
-        run_button = tk.Button(self, text='Run', command=self.start_anaylis, anchor=tk.W)
+        run_button = tk.Button(self, text='Run', command=self.run_anaylis, anchor=tk.W)
         run_button.grid(row=4, column=0, pady=10)
 
-        self.start_anaylis()
+        self.run_anaylis()
 
     def show_prev_error(self):
+        """Show the previous error in the list."""
         if self.error_index > 0:
             self.error_index -= 1
             self.show_error()
 
     def show_next_error(self):
+        """Show the next error in the list."""
         if self.error_index < len(self.errors) - 1:
             self.error_index += 1
             self.show_error()
 
     def show_error(self):
+        """Show information about the current error."""
         error = self.errors[self.error_index]
         self.old_val.config(text=error.old_value)
         self.entry_new_val.delete(0, tk.END)
         self.entry_new_val.insert(0, error.new_value)
         self.label_error.config(text=error.error_message)
 
-    def check_new_val(self):
+    def check_new_val(self, event):
+        """Check if the current new value given by the user fulfils the assumptions."""
         new_val = self.entry_new_val.get()
         self.errors[self.error_index].new_value = new_val
         assmp = self.errors[self.error_index].assumption
-        location = self.errors[self.error_index].location
-        has_error = self.controller.check_new_val(new_val, assmp, location)
-        if has_error:
-            self.label_new_val_ok.config(text="BAD")
-        else:
+        is_ok = self.controller.check_new_val(new_val, assmp)
+        if is_ok:
             self.label_new_val_ok.config(text="GOOD")
+        else:
+            self.label_new_val_ok.config(text="BAD")
 
-    def start_anaylis(self):
+    def run_anaylis(self):
+        """Runs the assumption analysis and shows information about the first error."""
         self.errors = self.controller.start_analysis(self.program_name, self.input_filename)
         self.error_index = 0
         self.show_error()
