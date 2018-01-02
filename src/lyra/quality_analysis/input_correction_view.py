@@ -64,6 +64,9 @@ class InputCorrectionMain(tk.Frame):
         self.label_error = tk.Label(self, text="ERROR", width=80, anchor=tk.W)
         self.label_error.grid(row=0, column=0, columnspan=10, ipady=10, padx=10)
 
+        self.label_progress = tk.Label(self, text="PROGRESS")
+        self.label_progress.grid(row=0, column=8, ipady=10)
+
         label_old_val = tk.Label(self, text="Old value:")
         label_old_val.grid(row=1, column=1, columnspan=2)
         self.old_val = tk.Label(self, text="")
@@ -88,10 +91,10 @@ class InputCorrectionMain(tk.Frame):
         next_button.image = next_image
         next_button.grid(row=3, column=6)
 
-        run_button = tk.Button(self, text='Run', command=self.run_anaylis, anchor=tk.W)
+        run_button = tk.Button(self, text="Check", command=self.check_corrected_input, anchor=tk.W)
         run_button.grid(row=4, column=0, pady=10)
 
-        self.run_anaylis()
+        self.start_analysis()
 
     def show_prev_error(self):
         """Show the previous error in the list."""
@@ -107,11 +110,20 @@ class InputCorrectionMain(tk.Frame):
 
     def show_error(self):
         """Show information about the current error."""
-        error = self.errors[self.error_index]
-        self.old_val.config(text=error.old_value)
-        self.entry_new_val.delete(0, tk.END)
-        self.entry_new_val.insert(0, error.new_value)
-        self.label_error.config(text=error.error_message)
+        if len(self.errors) > 0:
+            error = self.errors[self.error_index]
+            self.old_val.config(text=error.old_value)
+            self.entry_new_val.delete(0, tk.END)
+            self.entry_new_val.insert(0, error.new_value)
+            self.label_error.config(text=error.error_message)
+            self.label_progress.config(text=f"{self.error_index+1}/{len(self.errors)}")
+            self.check_new_val(None)
+        else:
+            self.old_val.config(text="")
+            self.entry_new_val.delete(0, tk.END)
+            self.label_error.config(text="No errors were found.")
+            self.label_progress.config(text="0/0")
+            self.label_new_val_ok.config(text="")
 
     def check_new_val(self, event):
         """Check if the current new value given by the user fulfils the assumptions."""
@@ -124,8 +136,15 @@ class InputCorrectionMain(tk.Frame):
         else:
             self.label_new_val_ok.config(text="BAD")
 
-    def run_anaylis(self):
+    def start_analysis(self):
         """Runs the assumption analysis and shows information about the first error."""
         self.errors = self.controller.start_analysis(self.program_name, self.input_filename)
         self.error_index = 0
         self.show_error()
+
+    def check_corrected_input(self):
+        """Writes the new values back to the input file and runs the input checker."""
+        self.errors = self.controller.check_corrected_input(self.errors)
+        self.error_index = 0
+        self.show_error()
+
