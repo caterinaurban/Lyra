@@ -20,23 +20,21 @@ class InputCorrectionFiles(tk.Frame):
         tk.Frame.__init__(self, container)
         self.controller = controller
         self.container = container
-        container.grid_columnconfigure(0, weight=2)
-        container.grid_columnconfigure(1, weight=1)
 
         label_program = tk.Label(self, text="Program")
-        label_program.grid(row=0, column=0)
+        label_program.grid(row=0, column=0, pady=6)
         self.container.entry_program = tk.Entry(self)
         self.container.entry_program.grid(row=0, column=1)
         self.container.entry_program.insert(0, "checker_example")
 
         label_input = tk.Label(self, text="Input File")
-        label_input.grid(row=1, column=0)
+        label_input.grid(row=1, column=0, pady=6)
         self.container.entry_input = tk.Entry(self)
         self.container.entry_input.grid(row=1, column=1)
         self.container.entry_input.insert(0, "checker_example.in")
 
         run_button = tk.Button(self, text='Run', command=self.show_main_screen)
-        run_button.grid(row=3, column=0)
+        run_button.grid(row=3, column=0, pady=10)
 
     def show_main_screen(self):
         """Shows the main screen of the application."""
@@ -61,35 +59,46 @@ class InputCorrectionMain(tk.Frame):
 
         self.container = parent
 
-        self.label_error = tk.Label(self, text="ERROR", width=80, anchor=tk.W)
-        self.label_error.grid(row=0, column=0, columnspan=10, ipady=10, padx=10)
+        border_error = tk.Label(self, width=65, borderwidth=2, relief="solid")
+        border_error.grid(row=0, column=0, columnspan=10, ipady=15, pady=10, ipadx=30, sticky=tk.W)
 
-        self.label_progress = tk.Label(self, text="PROGRESS")
-        self.label_progress.grid(row=0, column=8, ipady=10)
+        self.label_error = tk.Label(self, text="ERROR", width=70, anchor=tk.W)
+        self.label_error.grid(row=0, column=0, columnspan=10)
+
+        self.label_progress = tk.Label(self, text="PROGRESS", borderwidth=2, relief="raised")
+        self.label_progress.grid(row=0, column=9, pady=10, ipady=3, ipadx=3)
+
+        border_old_val = tk.Label(self, width=20, height=6, borderwidth=2, relief="solid")
+        border_old_val.grid(row=1, column=1, columnspan=2, rowspan=2)
 
         label_old_val = tk.Label(self, text="Old value:")
         label_old_val.grid(row=1, column=1, columnspan=2)
         self.old_val = tk.Label(self, text="")
         self.old_val.grid(row=2, column=1, columnspan=2, ipady=10)
 
+        border_new_val = tk.Label(self, width=35, height=6, borderwidth=2, relief="solid")
+        border_new_val.grid(row=1, column=4, columnspan=4, rowspan=2, padx=3, pady=8, sticky=tk.W)
+
         label_new_val = tk.Label(self, text="New value:")
         label_new_val.grid(row=1, column=4, columnspan=4)
         self.new_val_var = tk.StringVar()
         self.entry_new_val = tk.Entry(self, textvariable=self.new_val_var)
-        self.entry_new_val.grid(row=2, column=4, columnspan=4)
+        self.entry_new_val.grid(row=2, column=4, columnspan=4, padx=5)
         self.entry_new_val.bind("<KeyRelease>", self.check_new_val)
-        self.label_new_val_ok = tk.Label(self, text="BAD")
-        self.label_new_val_ok.grid(row=2, column=7, columnspan=2)
+        error_image = tk.PhotoImage(file="icons/error.png")
+        self.label_new_val_ok = tk.Label(self, image=error_image)
+        self.label_new_val_ok.image = error_image
+        self.label_new_val_ok.grid(row=2, column=7)
 
         prev_image = tk.PhotoImage(file="icons/prev.png")
         prev_button = tk.Button(self, image=prev_image, command=self.show_prev_error)
         prev_button.image = prev_image
-        prev_button.grid(row=3, column=5)
+        prev_button.grid(row=3, column=5, sticky=tk.E)
 
         next_image = tk.PhotoImage(file="icons/next.png")
         next_button = tk.Button(self, image=next_image, command=self.show_next_error)
         next_button.image = next_image
-        next_button.grid(row=3, column=6)
+        next_button.grid(row=3, column=6, sticky=tk.W, padx=20)
 
         run_button = tk.Button(self, text="Check", command=self.check_corrected_input, anchor=tk.W)
         run_button.grid(row=4, column=0, pady=10)
@@ -127,14 +136,20 @@ class InputCorrectionMain(tk.Frame):
 
     def check_new_val(self, event):
         """Check if the current new value given by the user fulfils the assumptions."""
+        if len(self.errors) == 0:
+            return
         new_val = self.entry_new_val.get()
         self.errors[self.error_index].new_value = new_val
         assmp = self.errors[self.error_index].assumption
         is_ok = self.controller.check_new_val(new_val, assmp)
         if is_ok:
-            self.label_new_val_ok.config(text="GOOD")
+            error_image = tk.PhotoImage(file="icons/checkmark.png")
+            self.label_new_val_ok.config(image=error_image)
+            self.label_new_val_ok.image = error_image
         else:
-            self.label_new_val_ok.config(text="BAD")
+            error_image = tk.PhotoImage(file="icons/error.png")
+            self.label_new_val_ok.config(image=error_image)
+            self.label_new_val_ok.image = error_image
 
     def start_analysis(self):
         """Runs the assumption analysis and shows information about the first error."""
