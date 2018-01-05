@@ -187,7 +187,9 @@ class IntervalState(Store, State):
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'IntervalState':
-        normal = NegationFreeNormalExpression().visit(condition)
+        negation_free_normal_expr = NegationFreeNormalExpression()
+        converted_condition = negation_free_normal_expr.preprocess(condition)
+        normal = negation_free_normal_expr.visit(converted_condition)
         if isinstance(normal, VariableIdentifier) and isinstance(normal.typ, BooleanLyraType):
             evaluation = self._evaluation.visit(normal, self, dict())
             return self._refinement.visit(normal, evaluation, IntervalLattice(1, 1), self)
@@ -292,6 +294,11 @@ class IntervalState(Store, State):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
         def visit_AttributeReference(self, expr: AttributeReference, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
@@ -304,11 +311,6 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
-
-        @copy_docstring(ExpressionVisitor.visit_CallExpr)
-        def visit_CallExpr(self, expr: CallExpr, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -408,6 +410,11 @@ class IntervalState(Store, State):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
+            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
         def visit_AttributeReference(self, expr, evaluation=None, value=None, state=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
@@ -420,11 +427,6 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
-            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
-
-        @copy_docstring(ExpressionVisitor.visit_CallExpr)
-        def visit_CallExpr(self, expr: CallExpr, evaluation=None, value=None, state=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
