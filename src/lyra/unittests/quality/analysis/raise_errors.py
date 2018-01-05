@@ -1,5 +1,5 @@
 
-# STATE a -> (Any, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Float, [10, 20]), (Float, [5, 40])]
+# STATE a -> (Any, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Float, [5, 40]), (Float, [10, 20])]
 a: float = float(input())
 b: float = float(input())
 
@@ -20,5 +20,5 @@ if a < 5:
 
 # STATE a -> (Float, [-inf, 40]), b -> (Any, [-inf, inf]), .IN -> []
 if a > 40:
-    # STATE a -> (⊥, ⊥), b -> (⊥, ⊥), .IN -> ⊥
+    # STATE a -> (⊥, ⊥), b -> (⊥, ⊥), .IN -> [] | []
     raise Exception("Error!")

@@ -1,5 +1,4 @@
-
-# STATE a -> (Any, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, inf]), (Int, [-inf, 9])]
+# STATE a -> (Any, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, 9]), (Int, [-inf, inf])]
 a: int = int(input())
 # STATE a -> (Int, [-inf, 9]), b -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, inf])]
 b: int = int(input())
@@ -12,5 +11,5 @@ a: int = b
 
 # STATE a -> (Int, [-inf, 10]), b -> (Any, [-inf, inf]), .IN -> []
 if a > 10:
-    # STATE a -> (⊥, ⊥), b -> (⊥, ⊥), .IN -> ⊥
+    # STATE a -> (⊥, ⊥), b -> (⊥, ⊥), .IN -> [] | []
     raise ValueError

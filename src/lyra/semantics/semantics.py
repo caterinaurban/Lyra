@@ -169,7 +169,7 @@ class BuiltInCallSemantics(CallSemantics):
             elif isinstance(expression, VariableIdentifier):
                 result.add(VariableIdentifier(typ, expression.name))
             elif isinstance(expression, Subscription):
-                pass # TODO
+                pass  # TODO
             else:
                 error = f"Argument of type {expression.typ} of {stmt.name} is not yet supported!"
                 raise NotImplementedError(error)

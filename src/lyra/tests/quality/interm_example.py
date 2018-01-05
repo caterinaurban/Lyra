@@ -1,4 +1,3 @@
-
 number_grades_in: str = input()
 number_grades: int = int(number_grades_in)
 
@@ -21,3 +20,5 @@ else:
 
 if (grade1 < 1 or grade1 > 6) or (grade2 < 1 or grade2 > 6):
     raise ValueError('Invalid grade!')
+
+print((grade1 + grade2) / 2)
