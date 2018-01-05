@@ -317,7 +317,7 @@ class CFGVisitor(ast.NodeVisitor):
     # noinspection PyMethodMayBeStatic
     def visit_Str(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        expr = Literal(StringLyraType, node.s)
+        expr = Literal(StringLyraType(), node.s)
         return LiteralEvaluation(pp, expr)
 
     # noinspection PyMethodMayBeStatic

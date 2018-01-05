@@ -179,8 +179,8 @@ class AssumptionState(Store, State):
     def _output(self, output: Expression) -> 'AssumptionState':
         return self._refinement.visit(output, AssumptionLattice(), self)
 
-    @copy_docstring(State._raise_error)
-    def _raise_error(self) -> 'AssumptionState':
+    @copy_docstring(State.raise_error)
+    def raise_error(self) -> 'AssumptionState':
         return self.bottom()
 
     @copy_docstring(State._substitute)

@@ -319,7 +319,7 @@ class NegationFreeNormalExpression(ExpressionVisitor):
             inverted = expr.operator == UnaryBooleanOperation.Operator.Neg
             expr = expr.expression
         ins = [BinaryComparisonOperation.Operator.In, BinaryComparisonOperation.Operator.NotIn]
-        if expr.operator not in ins:
+        if not isinstance(expr, BinaryComparisonOperation) or expr.operator not in ins:
             return expression
         if isinstance(expr.right, Range):
             iter_var = expr.left
