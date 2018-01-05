@@ -1,0 +1,235 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, portrait, margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float}% If comment this, figure moves to Page 2
+% Fancy header package for version number
+\usepackage[font={small,it}]{caption}
+
+\usepackage{fancyhdr}
+%\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\newcommand{\bigcell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ 
+\lstdefinelanguage{Python2}{
+  language     = Python,
+  morekeywords = {assert},
+}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{white},   
+    commentstyle=\color{ForestGreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{black},
+    stringstyle=\color{red},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle, language=Python2}
+
+\begin{document}
+
+\title{Analysis Design Todo}
+
+\maketitle
+
+\pagenumbering{arabic}
+
+\section{General input reading example}
+
+\begin{lstlisting}
+f = open("filename", "r")
+data = []
+for line in f:
+    values = line.split(",")
+    data.append(values)
+for datavalues in data:
+    val1 = datavalues[1]
+    intval1 = int(val1)
+\end{lstlisting}
+
+Information to extract:\\
+
+\begin{itemize}
+  \item val1 is int (done) (val $\rightarrow$ int)
+  \item assumption of val1 applies to datavalues[1] (datavalues $\rightarrow$ $[any, int, any, ..., any]$)
+  \item len(datavalues) $\ge$ 1 (len\_datavalues $\rightarrow$ [1, inf])
+  \item assumptions of datavalues apply for every element in data (data $\rightarrow$ $[[any, int, any, ..., any], $ $..., [any, int, any, ..., any]]$)
+  \item assumption of last element in data applies for values (values $\rightarrow$ $[any, int, any, ..., any]$)
+  \item assumptions of values apply for every element in a string splitted by "," (line $\rightarrow$ $[any, int, any, ..., any]$ with delimiter ",")
+  \item assumptions of line apply to all elements in f (f $\rightarrow$ [$[any, int, any, ..., any]$ with delimiter ",", ..., $[any, int, any, ..., any]$ with delimiter ","])
+  \item f is file with name "filename" (.IN $\rightarrow$ [$[any, int, any, ..., any]$ with delimiter ",", ..., $[any, int, any, ..., any]$ with delimiter ","] with filename = "filename")
+\end{itemize}
+
+\begin{enumerate}
+  \item before loop: \\
+  intval $\rightarrow$ any \\
+  val1 $\rightarrow$ any \\
+  datavalues $\rightarrow$ \{0\} any \{$len_{datavalues}$\}? \\
+  data $\rightarrow$ \{0\} any \{$len_{data}$\}? \\
+  
+  \item else loop (not(datavalues in data)): \\
+  intval $\rightarrow$ any \\
+  val1 $\rightarrow$ any \\
+  datavalues $\rightarrow$ \{0\} any \{$len_{datavalues}$\}? \\
+  data $\rightarrow$ \{0\} BOTTOM \{$len_{data}$\}? \\
+  
+  \item in loop (1): \\
+  intval $\rightarrow$ any \\
+  val1 $\rightarrow$ int \\
+  datavalues $\rightarrow$ \{0\} any \{$len_{datavalues}$\}? \\
+  data $\rightarrow$ \{0\} any \{$len_{data}$\}? \\
+  
+  \item in loop (2): \\
+  intval $\rightarrow$ any \\
+  val1 $\rightarrow$ any \\
+  datavalues $\rightarrow$ \{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}? \\
+  data $\rightarrow$ \{0\} any \{$len_{data}$\}? \\
+  
+  \item loop header (datavalues in data): \\
+  intval $\rightarrow$ any \\
+  val1 $\rightarrow$ any \\
+  datavalues $\rightarrow$ \{0\} any \{$len_{datavalues}$\}? \\
+  data $\rightarrow$ \{0\} (\{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}?) \{$len_{data}$\} \\
+  
+  \item merged: \\
+  intval $\rightarrow$ any \\
+  val1 $\rightarrow$ any \\
+  datavalues $\rightarrow$ \{0\} any \{$len_{datavalues}$\} \\
+  data $\rightarrow$ \{0\} (\{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}?) \{$len_{data}$\}? \\
+  
+  \item before loop: \\
+  data $\rightarrow$ \{0\} (\{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}?) \{$len_{data}$\}? \\
+  values $\rightarrow$ any
+  line $\rightarrow$ any
+  f $\rightarrow$ \{0\} any \{$len_{f}$\}? \\
+  
+  \item else loop (not line in f): \\
+  data $\rightarrow$ \{0\} (\{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}?) \{$len_{data}$\}? \\
+  values $\rightarrow$ any \\
+  line $\rightarrow$ any \\
+  f $\rightarrow$ \{0\} BOTTOM \{$len_{f}$\}? \\
+  
+  \item in loop (1): \\
+  data $\rightarrow$ \{0\} (\{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}?) \{$len_{data}$\}? \\
+  values $\rightarrow$ \{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}? \\
+  line $\rightarrow$ any \\
+  f $\rightarrow$ \{0\} any \{$len_{f}$\}? \\
+  
+  \item in loop (2): \\
+  data $\rightarrow$ \{0\} (\{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}?) \{$len_{data}$\}? \\
+  values $\rightarrow$ any \\
+  line $\rightarrow$ \{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}? with delimiter "," \\
+  f $\rightarrow$ \{0\} any \{$len_{f}$\}? \\
+  
+  \item loop header (line in f): \\
+  data $\rightarrow$ \{0\} (\{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}?) \{$len_{data}$\}? \\
+  values $\rightarrow$ any \\
+  line $\rightarrow$ any \\
+  f $\rightarrow$ \{0\} \{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}? with delimiter "," \{$len_{f}$\} \\
+  
+  \item merged: \\
+  data $\rightarrow$ \{0\} (\{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}?) \{$len_{data}$\}? \\
+  values $\rightarrow$ any \\
+  line $\rightarrow$ any \\
+  f $\rightarrow$ \{0\} (\{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}? with delimiter ",") \{$len_{f}$\}? \\
+  
+  \item open file: \\
+  data $\rightarrow$ \{0\} (\{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}?) \{$len_{data}$\}? \\
+  values $\rightarrow$ any \\
+  line $\rightarrow$ any \\
+  f $\rightarrow$ any \\
+  .IN $\rightarrow$ FORALL: (\{0\} any \{1\} int \{2\} any \{$len_{datavalues}$\}? with delimiter ",") with filename "filename" \\
+  
+\end{enumerate}
+
+\section{Relationship example}
+
+\begin{lstlisting}
+f = open("filename", "r")
+num = int(f.readline())
+for line in range(num):
+    x = float(f.readline())
+    print(x)
+\end{lstlisting}
+
+Problem: how to realize that f is input? \\
+Idea: annotate each input where it came from (input(), f, ...) if we realize that for example f is not a call to open() (or some other means of input) we could remove those entries
+
+Problem: need some relational domain for example if for i in range(N) the N might need to be substituted with N = N + 1 etc.\\
+Idea: if needed have a store entry $iter_1 \rightarrow N$ etc so that we can substitute those iteration variable at the end (with for example an input).\\
+
+
+\begin{enumerate}
+  \item before loop: \\
+  x $\rightarrow$ any \\
+  line $\rightarrow$ any \\
+  num $\rightarrow$ any \\
+  f $\rightarrow$ any \\
+  .IN $\rightarrow$ []
+  
+  \item else loop (not(line in range(num))): \\
+  x $\rightarrow$ any \\
+  line $\rightarrow$ any \\
+  num $\rightarrow$ int, [-inf, 0] \\
+  f $\rightarrow$ any \\
+  .IN $\rightarrow$ []
+  
+  \item in loop: \\
+  x $\rightarrow$ any \\
+  line $\rightarrow$ any \\
+  num $\rightarrow$ int, [1, inf] \\
+  .IN $\rightarrow$ [float]
+  
+  \item merged \\
+  x $\rightarrow$ any \\
+  line $\rightarrow$ any \\
+  num $\rightarrow$ int \\
+  .IN $\rightarrow$ [num x float]
+  
+  \item after loop (1) \\
+  x $\rightarrow$ any \\
+  line $\rightarrow$ any \\
+  num $\rightarrow$ int \\
+  .IN $\rightarrow$ [int, .IN[-2] x float]
+\end{enumerate}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
