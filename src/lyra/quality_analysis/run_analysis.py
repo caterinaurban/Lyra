@@ -16,7 +16,9 @@ def run_analysis(python_file_name):
             break
     if assumption_lattice is None:
         raise Exception("Cannot find input assumption in analysis result.")
-    input_assumptions = list(reversed(assumption_lattice.assumptions))
+    input_assumptions = assumption_lattice.lattice.assmps
+
+    print("Analysis done")
 
     print("Writing assumption to json")
 
@@ -40,6 +42,5 @@ def main(python_file_name):
     run_checker(python_file_name)
 
 if __name__ == '__main__':
-    curr_python_file_name = "interm_example"
+    curr_python_file_name = "example"
     main(curr_python_file_name)
-    #run_checker(curr_python_file_name)
