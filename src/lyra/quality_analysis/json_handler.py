@@ -66,7 +66,7 @@ class JSONHandler:
     """
 
     def filename(self, program_name):
-        return f'assumptions_{program_name}.json'
+        return f'{program_name}.json'
 
     def input_assumptions_to_json(self, program_name, final_input_state):
         """
@@ -87,4 +87,4 @@ class JSONHandler:
         except FileNotFoundError:
             error = f'No file with name {self.filename(program_name)} was found ' \
                     f'for program {program_name}'
-            raise error
+            raise FileNotFoundError(error)
