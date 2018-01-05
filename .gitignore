@@ -150,3 +150,7 @@ src/lyra/quality_analysis/input_checker/input_checker_playground\.py
 src/lyra/quality_analysis/assumptions_example\.json
 
 src/lyra/quality_analysis/errors_example\.txt
+
+src/lyra/quality_analysis/example/checker_example\.json
+
+src/lyra/quality_analysis/example/errors_checker_example\.txt
