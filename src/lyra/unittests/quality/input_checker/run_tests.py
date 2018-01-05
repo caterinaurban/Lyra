@@ -13,7 +13,7 @@ class InputCheckerTests:
         num_tests_correct = 0
         for path in glob.iglob(jsons):
             program_name = path.split('/')[-1].split('.')[0]
-            QualityAnalysisRunner().run_checker(program_path, program_name)
+            QualityAnalysisRunner().run_checker(program_path, program_name, f"{program_name}.in")
             file_err_name = f"errors_{program_name}.txt"
             file_err = program_path + file_err_name
             file_err_exp_name = f"errors_{program_name}_expected.txt"
