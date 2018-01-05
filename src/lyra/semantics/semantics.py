@@ -11,7 +11,7 @@ Lyra's internal semantics of statements.
 import itertools
 import re
 from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slicing, \
-    LengthIdentifier, VariableIdentifier, CallExpr
+    LengthIdentifier, VariableIdentifier, Range
 from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
 from lyra.core.expressions import UnaryOperation
 from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
@@ -19,7 +19,7 @@ from lyra.core.expressions import BinaryBooleanOperation, Input, ListDisplay, Li
 from lyra.abstract_domains.state import State
 from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, \
     ListDisplayAccess, SubscriptionAccess, SlicingAccess, Raise
-from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType
+from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, ListLyraType
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -90,7 +90,7 @@ class ExpressionSemantics(Semantics):
         items = [self.semantics(item, state).result for item in stmt.items]
         result = set()
         for combination in itertools.product(*items):
-            display = ListDisplay(combination[0], list(combination))
+            display = ListDisplay(ListLyraType(combination[0].typ), list(combination))
             result.add(display)
         state.result = result
         return state
@@ -245,7 +245,19 @@ class BuiltInCallSemantics(CallSemantics):
 
     def range_call_semantics(self, stmt: Call, state: State) -> State:
         arguments = [self.semantics(arg, state).result.pop() for arg in stmt.arguments]
-        state.result = {CallExpr(stmt.typ, stmt.name, arguments)}
+        start = Literal(IntegerLyraType(), "0")
+        step = Literal(IntegerLyraType(), "1")
+        if len(arguments) == 1:
+            end = arguments[0]
+        elif len(arguments) in [2, 3]:
+            start = arguments[0]
+            end = arguments[1]
+            if len(arguments) == 3:
+                step = arguments[2]
+        else:
+            error = f"Semantics for range call with {len(arguments)} arguments is not implemented!"
+            raise NotImplementedError(error)
+        state.result = {Range(stmt.typ, start, end, step)}
         return state
 
     def raise_semantics(self, stmt: Raise, state: State) -> State:

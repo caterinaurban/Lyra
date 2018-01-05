@@ -17,7 +17,7 @@ from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor, \
-    BinaryComparisonOperation, Literal, CallExpr
+    BinaryComparisonOperation, Literal, Range
 from lyra.core.types import ListLyraType, IntegerLyraType, BooleanLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -62,23 +62,18 @@ class InputAssumptionStack(Stack):
         if isinstance(condition, BinaryComparisonOperation):
             if condition.operator == BinaryComparisonOperation.Operator.In:
                 in_element = condition.right
-                if isinstance(in_element, CallExpr) and in_element.name == "range":
-                    arguments = in_element.arguments
-                    if len(arguments) in [1, 2, 3] \
-                            and all(isinstance(arguments[i], Literal)
-                                    for i in range(len(arguments))):
-                        start = 0
-                        steps = 1
-                        if len(in_element.arguments) == 1:
-                            end = int(arguments[0].val)
-                        elif len(in_element.arguments) == 2:
-                            start = int(arguments[0].val)
-                            end = int(arguments[1].val)
-                        else:
-                            start = int(arguments[0].val)
-                            end = int(arguments[1].val)
-                            steps = int(arguments[2].val)
-                        return math.ceil((end - start) / steps)
+                if isinstance(in_element, Range):
+                    start_literal = isinstance(in_element.start, Literal)
+                    end_literal = isinstance(in_element.end, Literal)
+                    step_literal = isinstance(in_element.step, Literal)
+                    if start_literal and end_literal and step_literal:
+                        start = int(in_element.start.val)
+                        end = int(in_element.end.val)
+                        step = int(in_element.step.val)
+                        return math.ceil((end - start) / step)
+                    else:
+                        error = f"Analysis of range() is only implemented for Literal arguments."
+                        raise NotImplementedError(error)
         return None
 
     @copy_docstring(Stack.push)
@@ -242,28 +237,31 @@ class AssumptionState(Store, State):
         return self
 
     class AssumptionRefinement(ExpressionVisitor):
+        @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr, assumption=None, state=None):
             return state  # nothing to be done
 
+        @copy_docstring(ExpressionVisitor.visit_Literal)
         def visit_Literal(self, expr, assumption=None, state=None):
             return state  # nothing to be done
 
+        @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr, assumption=None, state=None):
             return state  # nothing to be done
 
-        def visit_CallExpr(self, expr, assumption=None, state=None):
-            return state  # nothing to be done
-
+        @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
         def visit_BinaryBooleanOperation(self, expr, assumption=None, state=None):
             left = self.visit(expr.left, AssumptionLattice(), state)
             right = self.visit(expr.right, AssumptionLattice(), left)
             return right
 
+        @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
         def visit_UnaryArithmeticOperation(self, expr, assumption=None, state=None):
             expr_type = TypeLattice.from_lyra_type(expr.typ)
             refined = AssumptionLattice(expr_type.meet(assumption.type_assumption))
             return self.visit(expr.expression, refined, state)
 
+        @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
         def visit_BinaryArithmeticOperation(self, expr, assumption=None, state=None):
             expr_type = TypeLattice.from_lyra_type(expr.typ)
             refined = AssumptionLattice(expr_type.meet(assumption.type_assumption))
@@ -271,36 +269,44 @@ class AssumptionState(Store, State):
             right = self.visit(expr.right, refined, left)
             return right
 
+        @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
         def visit_BinaryComparisonOperation(self, expr, assumption=None, state=None):
             left = self.visit(expr.left, AssumptionLattice(), state)
             right = self.visit(expr.right, AssumptionLattice(), left)
             return right
 
+        @copy_docstring(ExpressionVisitor.visit_AttributeReference)
         def visit_AttributeReference(self, expr, assumption=None, state=None):
             error = f'Refinement for a {expr.__class__.__name__} is not supported!'
             raise NotImplementedError(error)
 
+        @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr, assumption=None, state=None):
             type_assumption = TypeLattice.from_lyra_type(expr.typ)
             input_assumption = AssumptionLattice(type_assumption).meet(assumption)
-            if state.store[state.input_var].lattice.is_top() and len(state.store[state.input_var].stack) == 1:
-                state.current_stack_top.meet(InputAssumptionLattice())
+            if state.store[state.input_var].lattice.is_top():
+                if len(state.store[state.input_var].stack) == 1:
+                    state.current_stack_top.meet(InputAssumptionLattice())
             state.store[state.input_var].lattice.add_assumption_front(input_assumption)
             return state
 
+        @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr, assumption=None, state=None):
             return state  # nothing to be done
 
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr, assumption=None, state=None):
+            return state  # nothing to be done
+
+        @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
         def visit_UnaryBooleanOperation(self, expr, assumption=None, state=None):
             return self.visit(expr.expression, TypeLattice(), state)
 
+        @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, assumption=None, state=None):
             state.store[expr].meet(assumption)
             expr_type = TypeLattice.from_lyra_type(expr.typ)
             state.store[expr].type_assumption.meet(expr_type)
-            return state
-
-        def visit_LengthIdentifier(self, expr, assumption=None, state=None):
             return state
 
     _refinement = AssumptionRefinement()

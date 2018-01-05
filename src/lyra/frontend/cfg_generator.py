@@ -7,7 +7,7 @@ from lyra.core.expressions import *
 
 from lyra.core.statements import *
 from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
-    FloatLyraType
+    FloatLyraType, ListLyraType
 from lyra.visualization.graph_renderer import CfgRenderer
 
 
@@ -418,8 +418,13 @@ class CFGVisitor(ast.NodeVisitor):
         body_out_node = cfg.out_node
 
         pp = ProgramPoint(node.target.lineno, node.target.col_offset)
-        target = self.visit(node.target, types, BooleanLyraType())
-        iteration = self.visit(node.iter, types, BooleanLyraType())
+        iteration = self.visit(node.iter, types, ListLyraType(IntegerLyraType()))
+        if isinstance(iteration, Call) and iteration.name == "range":
+            target_type = IntegerLyraType()
+        else:
+            error = f"The for loop iteration statment {node.iter} is not yet translatable to CFG!"
+            raise NotImplementedError(error)
+        target = self.visit(node.target, types, target_type)
 
         test = Call(pp, "in", [target, iteration], BooleanLyraType())
         neg_test = Call(pp, "not", [test], BooleanLyraType())

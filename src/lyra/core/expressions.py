@@ -137,6 +137,10 @@ class ExpressionVisitor(metaclass=ABCMeta):
         """Visit of a list display."""
 
     @abstractmethod
+    def visit_Range(self, expr: 'Range'):
+        """Visit of a range call."""
+
+    @abstractmethod
     def visit_AttributeReference(self, expr: 'AttributeReference'):
         """Visit of an attribute reference."""
 
@@ -147,10 +151,6 @@ class ExpressionVisitor(metaclass=ABCMeta):
     @abstractmethod
     def visit_Slicing(self, expr: 'Slicing'):
         """Visit of a slicing expression."""
-
-    @abstractmethod
-    def visit_CallExpr(self, expr: 'CallExpr'):
-        """Visit of a call expression."""
 
     @abstractmethod
     def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation'):
@@ -207,6 +207,10 @@ class NegationFreeNormalExpression(ExpressionVisitor):
     def visit_ListDisplay(self, expr: 'ListDisplay', invert=False):
         return expr     # nothing to be done
 
+    @copy_docstring(ExpressionVisitor.visit_Range)
+    def visit_Range(self, expr: 'Range', invert=False):
+        return expr     # nothing to be done
+
     @copy_docstring(ExpressionVisitor.visit_AttributeReference)
     def visit_AttributeReference(self, expr: 'AttributeReference', invert=False):
         return expr     # nothing to be done
@@ -217,10 +221,6 @@ class NegationFreeNormalExpression(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_Slicing)
     def visit_Slicing(self, expr: 'Slicing', invert=False):
-        return expr     # nothing to be done
-
-    @copy_docstring(ExpressionVisitor.visit_CallExpr)
-    def visit_CallExpr(self, expr: 'CallExpr', invert=False):
         return expr     # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -312,7 +312,30 @@ class NegationFreeNormalExpression(ExpressionVisitor):
             return BinaryComparisonOperation(expr.typ, left, operator, right)
         raise ValueError(f"Boolean comparison operator {expr} is unsupported!")
 
-
+    def preprocess(self, expression):
+        inverted = False
+        expr = expression
+        if isinstance(expr, UnaryBooleanOperation):
+            inverted = expr.operator == UnaryBooleanOperation.Operator.Neg
+            expr = expr.expression
+        ins = [BinaryComparisonOperation.Operator.In, BinaryComparisonOperation.Operator.NotIn]
+        if expr.operator not in ins:
+            return expression
+        if isinstance(expr.right, Range):
+            iter_var = expr.left
+            start = expr.right.start
+            end = expr.right.end
+            op_iter_start = BinaryComparisonOperation.Operator.GtE
+            op_iter_end = BinaryComparisonOperation.Operator.Lt
+            op_connection = BinaryBooleanOperation.Operator.And
+            if inverted:
+                op_iter_start = op_iter_start.reverse_operator()
+                op_iter_end = op_iter_end.reverse_operator()
+                op_connection = op_connection.reverse_operator()
+            gte_start = BinaryComparisonOperation(expr.typ, iter_var, op_iter_start, start)
+            lt_end = BinaryComparisonOperation(expr.typ, iter_var, op_iter_end, end)
+            return BinaryBooleanOperation(expr.typ, gte_start, op_connection, lt_end)
+        return expression
 """
 Atomic Expressions
 https://docs.python.org/3.4/reference/expressions.html#atoms
@@ -447,6 +470,47 @@ class Input(Expression):
         return "input()"
 
 
+class Range(Expression):
+    """Range Call representation."""
+    def __init__(self, typ: LyraType, start: Expression, end: Expression, step: Expression):
+        """Range call expression construction.
+
+        :param typ: type of the range call
+        :param start: start of the range
+        :param end: end of the range (exclusive)
+        :param step: size of steps that are taken in the range
+        """
+        super().__init__(typ)
+        self._start = start
+        self._end = end
+        self._step = step
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def end(self):
+        return self._end
+
+    @property
+    def step(self):
+        return self._step
+
+    def __eq__(self, other):
+        typ = self.typ == other.typ
+        start = self.start == other.start
+        end = self.end == other.end
+        step = self.step == other.step
+        return typ and start and end and step
+
+    def __hash__(self):
+        return hash((self.typ, self.start, self.end, self.step))
+
+    def __str__(self):
+        return f"range({self.start}, {self.end}, {self.step})"
+
+
 """
 Primary Expressions
 https://docs.python.org/3.4/reference/expressions.html#primaries
@@ -579,44 +643,6 @@ class Slicing(Expression):
         if self.stride:
             return "{0.target}[{0.lower}:{0.upper}:{0.stride}]".format(self)
         return "{0.target}[{0.lower}:{0.upper}]".format(self)
-
-
-class CallExpr(Expression):
-    """Call representation.
-
-    https://docs.python.org/3.4/reference/expressions.html#calls
-    """
-    def __init__(self, typ: LyraType, name: str, arguments: [Expression]):
-        """Call construction
-
-        :param typ: type of the call
-        :param name: name of the call
-        :param arguments: arguments of the call
-        """
-        super().__init__(typ)
-        self._name = name
-        self._arguments = arguments
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def arguments(self):
-        return self._arguments
-
-    def __eq__(self, other):
-        typ = self.typ == other.typ
-        name = self.name == other.name
-        arguments = self.arguments == other.arguments
-        return typ and name and arguments
-
-    def __hash__(self):
-        return hash((self.typ, self.name, tuple(self.arguments)))
-
-    def __str__(self):
-        comma_sep_args = ", ".join(self.arguments)
-        return f"{self.name}({comma_sep_args})"
 
 """
 Operation Expressions
