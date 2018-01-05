@@ -145,8 +145,6 @@ src/lyra/quality_analysis/assumptions_interm_example\.json
 
 src/lyra/quality_analysis/errors_interm_example\.txt
 
-src/lyra/quality_analysis/input_checker/input_checker_playground\.py
-
 src/lyra/quality_analysis/assumptions_example\.json
 
 src/lyra/quality_analysis/errors_example\.txt
