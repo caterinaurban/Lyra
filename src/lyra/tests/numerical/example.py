@@ -1,7 +1,6 @@
-
-a: int = 10
-i: int = 0
-if a > 5:
-    i: int = i + 1
+a: int = int(input())
+if 1 <= a <= 9:
+    b: int = a
 else:
-    i: int = i - 1
+    b: int = 0
+print(b)
