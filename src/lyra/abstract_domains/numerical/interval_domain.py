@@ -18,7 +18,7 @@ from lyra.abstract_domains.store import Store
 from lyra.core.expressions import *
 
 from lyra.core.utils import copy_docstring
-from lyra.core.types import BooleanLyraType, IntegerLyraType
+from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType
 
 
 class IntervalLattice(BottomMixin, ArithmeticMixin):
@@ -167,13 +167,16 @@ class IntervalState(Store, State):
 
         :param variables: list of program variables
         """
-        lattices = {BooleanLyraType: IntervalLattice, IntegerLyraType: IntervalLattice}
+        lattices = {BooleanLyraType: IntervalLattice,
+                    IntegerLyraType: IntervalLattice,
+                    FloatLyraType: IntervalLattice}
         super().__init__(variables, lattices)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
         if isinstance(left, VariableIdentifier):
-            if isinstance(left.typ, BooleanLyraType) or isinstance(left.typ, IntegerLyraType):
+            if isinstance(left.typ, BooleanLyraType) or isinstance(left.typ, IntegerLyraType)\
+                    or isinstance(left.typ, FloatLyraType):
                 evaluation = self._evaluation.visit(right, self, dict())
                 self.store[left] = evaluation[right]
             else:
@@ -184,7 +187,9 @@ class IntervalState(Store, State):
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'IntervalState':
-        normal = NegationFreeNormalExpression().visit(condition)
+        negation_free_normal_expr = NegationFreeNormalExpression()
+        converted_condition = negation_free_normal_expr.preprocess(condition)
+        normal = negation_free_normal_expr.visit(converted_condition)
         if isinstance(normal, VariableIdentifier) and isinstance(normal.typ, BooleanLyraType):
             evaluation = self._evaluation.visit(normal, self, dict())
             return self._refinement.visit(normal, evaluation, IntervalLattice(1, 1), self)
@@ -229,9 +234,43 @@ class IntervalState(Store, State):
     def _output(self, output: Expression) -> 'IntervalState':
         return self  # nothing to be done
 
+    @copy_docstring(State.raise_error)
+    def raise_error(self) -> 'IntervalState':
+        return self  # nothing to be done
+
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression):
-        raise NotImplementedError("Substitution is not yet implemented!")
+        interval_left = deepcopy(self.store[left])
+        self.store[left].top()
+        if isinstance(left, VariableIdentifier):
+            if isinstance(right, VariableIdentifier):
+                self.store[right] = interval_left
+                return self
+            if isinstance(right, BinaryArithmeticOperation):
+                eval_left = self._evaluation.visit(right.left, self, dict())[right.left]
+                eval_right = self._evaluation.visit(right.right, self, dict())[right.right]
+                if right.operator == BinaryArithmeticOperation.Operator.Add:
+                    if isinstance(right.left, VariableIdentifier):
+                        self.store[right.left] = interval_left.sub(eval_right)
+                        return self
+                    if isinstance(right.right, VariableIdentifier):
+                        self.store[right.right] = interval_left.sub(eval_left)
+                        return self
+                if right.operator == BinaryArithmeticOperation.Operator.Sub:
+                    if isinstance(right.left, VariableIdentifier):
+                        self.store[right.left] = interval_left.add(eval_right)
+                    elif isinstance(right.right, VariableIdentifier):
+                        self.store[right.right] = eval_left.sub(interval_left)
+                    else:
+                        error = f"Substitution for {left} = {right} is not yet implemented!"
+                        raise NotImplementedError(error)
+                    return self
+            if isinstance(right, Literal):
+                return self
+            if isinstance(right, Input):
+                self.store[left].top()
+                return self
+        raise NotImplementedError(f"Substitution for {left} = {right} is not yet implemented!")
 
     # expression evaluation
 
@@ -252,6 +291,10 @@ class IntervalState(Store, State):
                 val = int(expr.val)
                 evaluation[expr] = IntervalLattice(val, val)
                 return evaluation
+            elif isinstance(expr.typ, FloatLyraType):
+                val = float(expr.val)
+                evaluation[expr] = IntervalLattice(val, val)
+                return evaluation
             raise ValueError(f"Literal type {expr.typ} is not supported!")
 
         @copy_docstring(ExpressionVisitor.visit_Input)
@@ -261,7 +304,7 @@ class IntervalState(Store, State):
             if isinstance(expr.typ, BooleanLyraType):
                 evaluation[expr] = IntervalLattice(0, 1)
                 return evaluation
-            elif isinstance(expr.typ, IntegerLyraType):
+            elif isinstance(expr.typ, IntegerLyraType) or isinstance(expr.typ, FloatLyraType):
                 evaluation[expr] = IntervalLattice()
                 return evaluation
             raise ValueError(f"Input type {expr.typ} is not supported!")
@@ -270,13 +313,19 @@ class IntervalState(Store, State):
         def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType):
+            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType)\
+                    or isinstance(expr.typ, FloatLyraType):
                 evaluation[expr] = deepcopy(state.store[expr])
                 return evaluation
             raise ValueError(f"Variable type {expr.typ} is not supported!")
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -303,7 +352,7 @@ class IntervalState(Store, State):
             if expr.operator == UnaryArithmeticOperation.Operator.Add:
                 return evaluated
             elif expr.operator == UnaryArithmeticOperation.Operator.Sub:
-                evaluated[expr] = deepcopy(evaluated[expr.expression]).negate()
+                evaluated[expr] = deepcopy(evaluated[expr.expression]).neg()
                 return evaluated
             raise ValueError(f"Unary operator '{expr.operator}' is not supported!")
 
@@ -380,13 +429,19 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):
-            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType):
+            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType)\
+                    or isinstance(expr.typ, FloatLyraType):
                 state.store[expr] = evaluation[expr].meet(value)
                 return state
             raise ValueError(f"Variable type {expr.typ} is not supported!")
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
+            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 

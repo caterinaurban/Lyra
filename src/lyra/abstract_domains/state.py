@@ -163,6 +163,14 @@ class State(Lattice, metaclass=ABCMeta):
         return self
 
     @abstractmethod
+    def raise_error(self) -> 'State':
+        """Raises an error
+
+        :return: current state modified by the error
+
+        """
+
+    @abstractmethod
     def _substitute(self, left: Expression, right: Expression) -> 'State':
         """Substitute an expression to another expression.
 

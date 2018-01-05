@@ -6,7 +6,8 @@ from lyra.core.cfg import *
 from lyra.core.expressions import *
 
 from lyra.core.statements import *
-from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation
+from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
+    FloatLyraType, ListLyraType
 from lyra.visualization.graph_renderer import CfgRenderer
 
 
@@ -308,12 +309,15 @@ class CFGVisitor(ast.NodeVisitor):
         if isinstance(node.n, int):
             expr = Literal(IntegerLyraType(), str(node.n))
             return LiteralEvaluation(pp, expr)
+        elif isinstance(node.n, float):
+            expr = Literal(FloatLyraType(), str(node.n))
+            return LiteralEvaluation(pp, expr)
         raise NotImplementedError(f"Num {node.n.__class__.__name__} is not yet supported!")
 
     # noinspection PyMethodMayBeStatic
     def visit_Str(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        expr = Literal(typ, node.s)
+        expr = Literal(StringLyraType(), node.s)
         return LiteralEvaluation(pp, expr)
 
     # noinspection PyMethodMayBeStatic
@@ -381,6 +385,48 @@ class CFGVisitor(ast.NodeVisitor):
 
         pp = ProgramPoint(node.test.lineno, node.test.col_offset)
         test = self.visit(node.test, types, BooleanLyraType())
+        neg_test = Call(pp, "not", [test], BooleanLyraType())
+
+        cfg.add_node(header_node)
+        cfg.in_node = header_node
+
+        cfg.add_edge(Conditional(header_node, test, body_in_node, Edge.Kind.LOOP_IN))
+        cfg.add_edge(Conditional(header_node, neg_test, None))
+        if body_out_node:  # if control flow can exit the body at all, add an unconditional LOOP_OUT edge
+            cfg.add_edge(Unconditional(body_out_node, header_node, Edge.Kind.LOOP_OUT))
+
+        if node.orelse:  # if there is else branch
+            orelse_cfg = self._translate_body(node.orelse, types)
+            if orelse_cfg.out_node:  # if control flow can exit the else at all, add an unconditional DEFAULT edge
+                orelse_cfg.add_edge(Unconditional(orelse_cfg.out_node, None, Edge.Kind.DEFAULT))
+            cfg.append(orelse_cfg)
+
+        for special_edge, edge_type in cfg.special_edges:
+            if edge_type == LooseControlFlowGraph.SpecialEdgeType.CONTINUE:
+                cfg.add_edge(Unconditional(special_edge.source, header_node, Edge.Kind.LOOP_OUT))
+            elif edge_type == LooseControlFlowGraph.SpecialEdgeType.BREAK:
+                cfg.add_edge(Unconditional(special_edge.source, None, Edge.Kind.LOOP_OUT))
+        cfg.special_edges.clear()
+
+        return cfg
+
+    def visit_For(self, node, types=None, typ=None):
+        header_node = Loop(self._id_gen.next)
+
+        cfg = self._translate_body(node.body, types, typ)
+        body_in_node = cfg.in_node
+        body_out_node = cfg.out_node
+
+        pp = ProgramPoint(node.target.lineno, node.target.col_offset)
+        iteration = self.visit(node.iter, types, ListLyraType(IntegerLyraType()))
+        if isinstance(iteration, Call) and iteration.name == "range":
+            target_type = IntegerLyraType()
+        else:
+            error = f"The for loop iteration statment {node.iter} is not yet translatable to CFG!"
+            raise NotImplementedError(error)
+        target = self.visit(node.target, types, target_type)
+
+        test = Call(pp, "in", [target, iteration], BooleanLyraType())
         neg_test = Call(pp, "not", [test], BooleanLyraType())
 
         cfg.add_node(header_node)
@@ -481,6 +527,11 @@ class CFGVisitor(ast.NodeVisitor):
         pp = ProgramPoint(node.lineno, node.col_offset)
         return ListDisplayAccess(pp, [self.visit(e, types, typ) for e in node.elts])
 
+    def visit_Raise(self, node, types=None, typ=None):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        exception_call = self.visit(node.exc, types, typ)
+        return Raise(pp, exception_call)
+
     def visit_Subscript(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.slice, ast.Index):
@@ -509,7 +560,7 @@ class CFGVisitor(ast.NodeVisitor):
         cfg_factory = CFGFactory(self._id_gen)
 
         for child in body:
-            if isinstance(child, (ast.AnnAssign, ast.Expr)):
+            if isinstance(child, (ast.AnnAssign, ast.Expr, ast.Raise)):
                 cfg_factory.add_stmts(self.visit(child, types))
             elif isinstance(child, ast.If):
                 cfg_factory.complete_basic_block()
@@ -519,6 +570,10 @@ class CFGVisitor(ast.NodeVisitor):
                 cfg_factory.complete_basic_block()
                 while_cfg = self.visit(child, types)
                 cfg_factory.append_cfg(while_cfg)
+            elif isinstance(child, ast.For):
+                cfg_factory.complete_basic_block()
+                for_cfg = self.visit(child, types)
+                cfg_factory.append_cfg(for_cfg)
             elif isinstance(child, ast.Break):
                 cfg_factory.complete_basic_block()
                 break_cfg = self.visit(child, types)

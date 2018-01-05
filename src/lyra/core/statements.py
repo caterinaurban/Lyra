@@ -229,6 +229,27 @@ class Call(Statement):
         return "{}({})".format(self.name, arguments)
 
 
+class Raise(Statement):
+    def __init__(self, pp: ProgramPoint, exception: Call):
+        """Call statement representation.
+
+        :param pp: program point associated with the call
+        """
+        super().__init__(pp)
+        self._exception = exception
+
+    def __repr__(self):
+        if isinstance(self.exception, Call):
+            arguments = ", ".join("{}".format(argument) for argument in self.exception.arguments)
+            return f"raise {self.exception.name}({arguments})"
+        else:
+            return f"raise {self.exception.variable.name}"
+
+    @property
+    def exception(self):
+        return self._exception
+
+
 """
 Assignment Statements.
 https://docs.python.org/3.4/reference/simple_stmts.html#assignment-statements
