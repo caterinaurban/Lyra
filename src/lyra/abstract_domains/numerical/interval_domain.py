@@ -234,8 +234,8 @@ class IntervalState(Store, State):
     def _output(self, output: Expression) -> 'IntervalState':
         return self  # nothing to be done
 
-    @copy_docstring(State._output)
-    def _raise_error(self) -> 'IntervalState':
+    @copy_docstring(State.raise_error)
+    def raise_error(self) -> 'IntervalState':
         return self  # nothing to be done
 
     @copy_docstring(State._substitute)
