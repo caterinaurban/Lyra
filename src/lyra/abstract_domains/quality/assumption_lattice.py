@@ -6,7 +6,9 @@ Assumption Lattice
 """
 from enum import IntEnum, Enum
 
-from lyra.abstract_domains.lattice import Lattice, BottomMixin, TopMixin
+from copy import deepcopy
+
+from lyra.abstract_domains.lattice import Lattice, BottomMixin, BoundedLattice
 from lyra.abstract_domains.numerical.interval_domain import IntervalLattice
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType
 from lyra.core.utils import copy_docstring
@@ -251,12 +253,13 @@ class AssumptionLattice(Lattice):
         return self
 
 
-class InputAssumptionLattice(BottomMixin, TopMixin):
+class InputAssumptionLattice(BoundedLattice):
     """
-    The Assumption Lattice is represented as a list containing the assumptions made about the
-    input in the correct order
+    The Input Assumption Lattice consists of two elements:
+    iterations: the number of times the same assumption applies
+    assumptions: the assumption for those inputs
 
-    The default element is an empty list.
+    The default element is 1 iteration number and an empty list.
 
     .. document private methods
     .. automethod:: AssumptionLattice._less_equal
@@ -265,64 +268,103 @@ class InputAssumptionLattice(BottomMixin, TopMixin):
     .. automethod:: AssumptionLattice._widening
     """
 
-    def __init__(self):
+    def __init__(self, iterations=1, assmps=None):
         super().__init__()
-        self._input_assmp_backwards = []
+        self.iterations = iterations
+        if assmps is None:
+            self._assmps = []
+        else:
+            self._assmps = assmps
+        self.is_loop = False
+        self.join_as_loop = False
+        self.condition = None
 
     def __repr__(self):
         if self.is_bottom():
-            return '⊥'
+            return "⊥"
         if self.is_top():
-            return 'T'
-        assumption_repr = [assumption.__repr__() for assumption in self._input_assmp_backwards]
-        comma_separated = ', '.join(assumption_repr)
-        return f'[{comma_separated}]'
+            return "T"
+        if self.iterations is None:
+            return "LOOP"
+        if self.iterations == 1:
+            return self.assmps.__repr__()
+        return f"{self.iterations} x {self.assmps.__repr__()}"
 
     @property
-    def assumptions(self):
+    def assmps(self):
         if self.is_bottom() or self.is_top():
-            return []
-        return self._input_assmp_backwards
+            return None
+        return self._assmps
 
-    def add_assumption(self, assumption: AssumptionLattice):
+    def add_assumption_front(self, assmp: AssumptionLattice):
+        """Adds an assumption to the front of the assumption list.
+
+        :param assmp: assumption to be added to the list of current assumptions
         """
-        Adds the assumption to the input assumption list
+        assert isinstance(assmp, AssumptionLattice)
+        self._assmps.insert(0, assmp)
+
+    def add_assumptions_front(self, assmps: [AssumptionLattice]):
+        """Adds multiple assumption to the front of the assumption list.
+
+        :param assmps: list of assumptions to be added to the list of current assumptions
         """
-        self._input_assmp_backwards.append(assumption)
+        self._assmps = assmps + self.assmps
+
+    def add_assumptions_with_iter(self, iterations: int, assmps, is_loop=True):
+        """Adds assumptions to the front of the assumption list and sets the itartion number.
+
+        :param iterations: number of times the assumptions appear in input file
+        :param assmps: list of assumptions to be added to the list of current assumptions
+        """
+        input_assmps = InputAssumptionLattice(iterations, assmps)
+        input_assmps.is_loop = is_loop
+        self._assmps.insert(0, input_assmps)
 
     @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'InputAssumptionLattice') -> bool:
-        if len(self._input_assmp_backwards) == len(other._input_assmp_backwards):
-            for assmp1, assmp2 in zip(self._input_assmp_backwards, other._input_assmp_backwards):
-                if not assmp1.less_equal(assmp2):
-                    return False
-            return True
-        return False
+        if len(self.assmps) != len(other.assmps):
+            return False
+        for assmp1, assmp2 in zip(self.assmps, other.assmps):
+            if not assmp1.less_equal(assmp2):
+                return False
+        return True
+
+    def is_loop_placeholder(self, assmp):
+        """Checks if the assumption element is a loop placeholder
+
+        :param assmp: assumption to check
+        """
+        if not isinstance(assmp, InputAssumptionLattice):
+            return False
+        if assmp.iterations is not None:
+            return False
+        return True
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
-        if len(self._input_assmp_backwards) != len(other._input_assmp_backwards):
-            self.top()
-        else:
-            for assmp1, assmp2 in zip(self._input_assmp_backwards, other._input_assmp_backwards):
-                assmp1.join(assmp2)
+        if len(self.assmps) == len(other.assmps) == 0:
+            return self
+        if len(self.assmps) == 0 or len(other.assmps) == 0:
+            self.assmps.clear()
+            return self
+        new_assmps = []
+        for assmp1, assmp2 in zip(self.assmps, other.assmps):
+            if type(assmp1) != type(assmp2):
+                break
+            else:
+                new_assmps.append(deepcopy(assmp1).join(assmp2))
+        self._assmps = new_assmps
         return self
 
     @copy_docstring(Lattice._meet)
-    def _meet(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
-        if len(self._input_assmp_backwards) != len(other._input_assmp_backwards):
-            self._input_assmp_backwards = []
-        else:
-            for assmp1, assmp2 in zip(self._input_assmp_backwards, other._input_assmp_backwards):
-                assmp1.meet(assmp2)
-        return self
+    def _meet(self, other: 'InputAssumptionLattice'):
+        raise NotImplementedError(f"Meet for {self} and {other} is not implemented.")
 
     @copy_docstring(Lattice._widening)
-    def _widening(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
-        if len(self._input_assmp_backwards) != len(other._input_assmp_backwards):
-            self.top()
-        else:
-            for assmp1, assmp2 in zip(self._input_assmp_backwards, other._input_assmp_backwards):
-                assmp1.widening(assmp2)
-        return self
+    def _widening(self, other: 'InputAssumptionLattice'):
+        raise NotImplementedError(f"Widening for {self} and {other} is not implemented.")
+
+
+
 

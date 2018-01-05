@@ -187,7 +187,9 @@ class IntervalState(Store, State):
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'IntervalState':
-        normal = NegationFreeNormalExpression().visit(condition)
+        negation_free_normal_expr = NegationFreeNormalExpression()
+        converted_condition = negation_free_normal_expr.preprocess(condition)
+        normal = negation_free_normal_expr.visit(converted_condition)
         if isinstance(normal, VariableIdentifier) and isinstance(normal.typ, BooleanLyraType):
             evaluation = self._evaluation.visit(normal, self, dict())
             return self._refinement.visit(normal, evaluation, IntervalLattice(1, 1), self)
@@ -232,13 +234,43 @@ class IntervalState(Store, State):
     def _output(self, output: Expression) -> 'IntervalState':
         return self  # nothing to be done
 
-    @copy_docstring(State._output)
-    def _raise_error(self, output: Expression) -> 'IntervalState':
+    @copy_docstring(State.raise_error)
+    def raise_error(self) -> 'IntervalState':
         return self  # nothing to be done
 
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression):
-        raise NotImplementedError("Substitution is not yet implemented!")
+        interval_left = deepcopy(self.store[left])
+        self.store[left].top()
+        if isinstance(left, VariableIdentifier):
+            if isinstance(right, VariableIdentifier):
+                self.store[right] = interval_left
+                return self
+            if isinstance(right, BinaryArithmeticOperation):
+                eval_left = self._evaluation.visit(right.left, self, dict())[right.left]
+                eval_right = self._evaluation.visit(right.right, self, dict())[right.right]
+                if right.operator == BinaryArithmeticOperation.Operator.Add:
+                    if isinstance(right.left, VariableIdentifier):
+                        self.store[right.left] = interval_left.sub(eval_right)
+                        return self
+                    if isinstance(right.right, VariableIdentifier):
+                        self.store[right.right] = interval_left.sub(eval_left)
+                        return self
+                if right.operator == BinaryArithmeticOperation.Operator.Sub:
+                    if isinstance(right.left, VariableIdentifier):
+                        self.store[right.left] = interval_left.add(eval_right)
+                    elif isinstance(right.right, VariableIdentifier):
+                        self.store[right.right] = eval_left.sub(interval_left)
+                    else:
+                        error = f"Substitution for {left} = {right} is not yet implemented!"
+                        raise NotImplementedError(error)
+                    return self
+            if isinstance(right, Literal):
+                return self
+            if isinstance(right, Input):
+                self.store[left].top()
+                return self
+        raise NotImplementedError(f"Substitution for {left} = {right} is not yet implemented!")
 
     # expression evaluation
 
@@ -289,6 +321,11 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -400,6 +437,11 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
+            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 

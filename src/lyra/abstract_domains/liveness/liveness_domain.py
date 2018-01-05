@@ -195,6 +195,10 @@ class StrongLivenessState(LivenessState):
                 self.store[identifier] = LivenessLattice(LivenessLattice.Status.Live)
         return self
 
+    @copy_docstring(LivenessState.raise_error)
+    def raise_error(self) -> 'StrongLivenessState':
+        return self.bottom()
+
     @copy_docstring(LivenessState._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'StrongLivenessState':
         if isinstance(left, VariableIdentifier):

@@ -288,6 +288,10 @@ class UsageState(Stack, State):
                 self.lattice.store[identifier].top()
         return self
 
+    @copy_docstring(State.raise_error)
+    def raise_error(self):
+        return self
+
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'UsageState':
         if isinstance(left, VariableIdentifier):
