@@ -8,7 +8,7 @@ class QualityAnalysisRunner:
     def run_analysis(self, program_path, program_name):
         print("Running analysis")
 
-        result = AssumptionAnalysis().main(f"{program_path}{program_name}.py", False)
+        result = AssumptionAnalysis().main(f"{program_path}{program_name}.py")
 
         assumption_lattice = None
         for block, analysis in result.result.items():

@@ -91,18 +91,17 @@ class Runner:
                     worklist.put(node)
         return variables
 
-    def main(self, path, do_render=True):
+    def main(self, path):
         self.path = path
         with open(self.path, 'r') as source:
             self.source = source.read()
             self.tree = ast.parse(self.source)
             self.cfg = ast_to_cfg(self.tree)
-        return self.run(do_render)
+        return self.run()
 
-    def run(self, do_render=True) -> AnalysisResult:
+    def run(self) -> AnalysisResult:
         result = self.interpreter().analyze(self.state())
-        if do_render:
-            self.render(result)
+        self.render(result)
         return result
 
     def render(self, result):
