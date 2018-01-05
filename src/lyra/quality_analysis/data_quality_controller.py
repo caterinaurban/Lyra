@@ -30,7 +30,7 @@ class DataQualityController:
         """Runs the assumption analysis."""
         print("Running analysis")
 
-        result = AssumptionAnalysis().main(f"{self.path}{self.program_name}.py", False)
+        result = AssumptionAnalysis(do_render=False).main(f"{self.path}{self.program_name}.py")
         input_assumptions = self.extract_assumptions(result)
 
         print("Analysis done")
