@@ -145,6 +145,7 @@ class DataQualityController:
                     exec_program.write(line)
             exec_program.write(f"\nEOF")
         subprocess.call("./" + self.path + "execute_program.sh", shell=True)
+        print("")
 
 if __name__ == "__main__":
     DataQualityController().run()
