@@ -259,7 +259,7 @@ class InputAssumptionLattice(BoundedLattice):
     iterations: the number of times the same assumption applies
     assumptions: the assumption for those inputs
 
-    The default element is 1 iteration number and an empty list.
+    The default element is the element with 1 iteration and an empty list.
 
     .. document private methods
     .. automethod:: AssumptionLattice._less_equal
@@ -271,10 +271,7 @@ class InputAssumptionLattice(BoundedLattice):
     def __init__(self, iterations=1, assmps=None):
         super().__init__()
         self.iterations = iterations
-        if assmps is None:
-            self._assmps = []
-        else:
-            self._assmps = assmps
+        self._assmps = assmps if assmps is not None else []
         self.is_loop = False
         self.join_as_loop = False
         self.condition = None
@@ -284,8 +281,6 @@ class InputAssumptionLattice(BoundedLattice):
             return "⊥"
         if self.is_top():
             return "T"
-        if self.iterations is None:
-            return "LOOP"
         if self.iterations == 1:
             return self.assmps.__repr__()
         return f"{self.iterations} x {self.assmps.__repr__()}"
@@ -301,7 +296,6 @@ class InputAssumptionLattice(BoundedLattice):
 
         :param assmp: assumption to be added to the list of current assumptions
         """
-        assert isinstance(assmp, AssumptionLattice)
         self._assmps.insert(0, assmp)
 
     def add_assumptions_front(self, assmps: [AssumptionLattice]):
@@ -311,14 +305,14 @@ class InputAssumptionLattice(BoundedLattice):
         """
         self._assmps = assmps + self.assmps
 
-    def add_assumptions_with_iter(self, iterations: int, assmps, is_loop=True):
-        """Adds assumptions to the front of the assumption list and sets the itartion number.
+    def add_assumptions_with_iter(self, iterations: int, assmps):
+        """Adds assumptions to the front of the assumption list and sets the iteration number.
 
-        :param iterations: number of times the assumptions appear in input file
+        :param iterations: number of times the assumptions appear in the input file
         :param assmps: list of assumptions to be added to the list of current assumptions
         """
         input_assmps = InputAssumptionLattice(iterations, assmps)
-        input_assmps.is_loop = is_loop
+        input_assmps.is_loop = True
         self._assmps.insert(0, input_assmps)
 
     @copy_docstring(Lattice._less_equal)
@@ -328,17 +322,6 @@ class InputAssumptionLattice(BoundedLattice):
         for assmp1, assmp2 in zip(self.assmps, other.assmps):
             if not assmp1.less_equal(assmp2):
                 return False
-        return True
-
-    def is_loop_placeholder(self, assmp):
-        """Checks if the assumption element is a loop placeholder
-
-        :param assmp: assumption to check
-        """
-        if not isinstance(assmp, InputAssumptionLattice):
-            return False
-        if assmp.iterations is not None:
-            return False
         return True
 
     @copy_docstring(Lattice._join)

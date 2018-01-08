@@ -58,7 +58,11 @@ class InputAssumptionStack(Stack):
                 self.lattice.join_as_loop = False
 
     def get_num_iter_from_condition(self, condition):
-        """Extracts the number of iterations from a condition"""
+        """Extracts the number of iterations from a condition
+
+        :param condition: condition to analyze for number of iterations
+        :return: number of iterations if possible, otherwise None
+        """
         if isinstance(condition, BinaryComparisonOperation):
             if condition.operator == BinaryComparisonOperation.Operator.In:
                 in_element = condition.right
