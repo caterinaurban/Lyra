@@ -1,0 +1,250 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, portrait, margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float}% If comment this, figure moves to Page 2
+% Fancy header package for version number
+\usepackage[font={small,it}]{caption}
+
+\usepackage{fancyhdr}
+%\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\newcommand{\bigcell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ 
+\lstdefinelanguage{Python2}{
+  language     = Python,
+  morekeywords = {assert},
+}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{white},   
+    commentstyle=\color{ForestGreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{black},
+    stringstyle=\color{red},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle, language=Python2}
+
+\begin{document}
+
+\title{Relationships}
+
+\maketitle
+
+\pagenumbering{arabic}
+
+\section{Examples}
+
+
+\subsection{Example codejam}
+\begin{lstlisting}
+iterations = int(input())
+for i in range(iterations):
+\end{lstlisting}
+
+
+Assumption: $iterations \times [assmps]$\\
+
+Relationship of num\_iter of for loop with iterations. \\
+Idea: have a special "loop iteration variable" for every loop. We then can have [$iter_n\times[assmps]$] in the input assumption lattice. \\
+
+
+
+\subsection{Example brca 1}
+\begin{lstlisting}
+for line in file:
+\end{lstlisting}
+
+
+Assumption: $ALL \times [assmps]$\\
+
+Need some means of telling that all rows in file should be the same\\
+
+
+\subsection{Example brca 2}
+\begin{lstlisting}
+index = int(input())
+inputs = input().split(",")
+values = map(int, inputs)
+print(values[index])
+\end{lstlisting}
+
+
+Assumption: $[IN_1 = (Int, [-IN_2, IN_2-1]), (IN_2 = [IN_1+1, \infty]) \times [(Int, [-\infty, \infty])]\:with\:delimiter\:","]$\\
+
+
+Problem: currently we have an assumption object for every variable in the store. When we have an octagon domain we have a matrix with the numerical relationships of all the variable so we cannot keep an assumption for every variable.\\
+Idea1: still have an assumption per variable and incorporate assumption with relationships later.
+
+\begin{enumerate}
+  \item index $<$ $len_{values}$
+
+  index $\rightarrow$ $(int, [-\infty, \infty])$
+
+  values $\rightarrow$ $len_{values}\times[(any, [-\infty, \infty])]$
+
+  \item inputs $\rightarrow$ $len_{inputs}\times[(any, [-\infty, \infty])]$
+
+  $len_{inputs} = len_{values}$
+
+  index $<$ $len_{inputs}$
+
+  \item .IN $\rightarrow$ $[len_{.IN1}\times[(any, [-\infty, \infty])]\:with\:delimiter\:","]$
+
+  $len_{.IN1} = len_{inputs}$
+
+  index $<$ $len_{.IN1}$
+
+  \item .IN $\rightarrow$ $[(int, [-\infty, \infty]), len_{.IN1}\times[(any, [-\infty, \infty])]\:with\:delimiter\:","]$
+
+  $.IN[0]$ $<$ $len_{.IN1}$
+
+  \item Final info possibilites:
+
+  \begin{itemize}
+    \item .IN $\rightarrow$ $[(int, [-(.IN[1].iter), (.IN[1].iter-1)]), [(.IN[0]), \infty]\times[(int, [-\infty, \infty])]\:with\:delimiter\:","]$
+    
+    \item .IN $\rightarrow$ $[(int, [-\infty, \infty]), len_{.IN1}\times[(any, [-\infty, \infty])]\:with\:delimiter\:","]$
+    
+    $IN[0]$ $<$ $len_{.IN1}$
+  \end{itemize}
+  
+\end{enumerate}
+
+
+\subsection{Example oja}
+\begin{lstlisting}
+a = int(input())
+values = map(int, input().split(","))  # or values = [1,2,3]
+for i in range(a):
+    print(values[i])  # or print(values[3])
+\end{lstlisting}
+
+
+Assumption: $[IN_1 = (Int, ([-IN_2, IN_2-1], if IN_1 > 0)), (IN_2 = [IN_1+1, \infty],\:if\:IN_1 > 0) \times [(Int, [-\infty, \infty])]\:with\:delimiter\:","]$\\
+
+
+If x comes from input we have the relation $a < len(values)$ otherwise we have $a < 3$. This is always true because if $a < 0$ the assumptions also hold. But to be correct we need to say ($a < len(values)$ if $a > 0$) because only then the loop is entered. In the case that we use $print(values[3])$ we only know that $len(values) > 3$ if $a > 0$. In that case the condition $len(values) > 3$ has no relation to the iteration condition variable $a$.\\
+\begin{itemize}
+  \item Question: How can we tell if it is okey to keep the assumptions?\\
+  Answer: If we include the conditional information that the loop is entered.
+  \item Question: Can we say that as soon as we relate an assumption to the iteration condition variable $a$ we can use the assumptions?\\
+  NO: for i in range(a): print(values[20-i]). It follows: $20-(a-1) < len(values)$. The input $len(values) = 1$ and $a = -10$ would be a valid input but violates the assumption ($20-(-11) < 1$).
+\end{itemize}
+
+
+\begin{enumerate}
+  \item in loop:\\
+  $i < len_{values}$
+  
+  \item loop header:\\
+  $i \geq 0$ and $i \leq a-1$\\
+  $a-1 < len_{values}$
+\end{enumerate}
+
+Problem: if we join the assumptions we have from the loop with the ones in the else branch we loose all information. We need to keep the information that as soon as $a > 0$ we have those assumptions. It would also be okey to keep assumption $a-1 < len_{values}$ because if $a < 0$ the relationship will always be true. But that will not always be the case. Example: $for\:i\:in\:range(a): x = values[10]$ we cannot have the assumption that $len_{values} > 10$. But this problem could be solved with keeping the assumption information ($a-1 < len_{values}$ if $a > 0$). But how would you do that with the octagon matrix? How to keep the relational constraint together with the conditional information?\\
+Important: You need to think about how to pull/push information from/to the octagon domain. It's the same as with the interval domain. You only use it to get information not to store it. So do we have an assumption lattice matrix? Or do we keep an octagon matrix and query information from that one?
+
+\section{Issues}
+
+\begin{enumerate}
+  \item Problem: How to give the relations to the input checker? What kind of format?
+  \item Problem: How to give information about relational inputs to input checker so that he can easily check and create error messages?\\
+  Idea1: Include all information in .IN variable (in list) and input checker has to do things on the fly or create some kind of input table. The input checker then needs to keep track of errors that he only knows happen later (e.g. like example above we know error only after input 1 is read.). This is not such a big problem because we only want to create one error so we only have to check the assumption we have at the point where we have all the inputs we need.\\
+  Idea2: Have some additional table where we keep information about the relations. In the .IN variable we only have symbols. The input checker would then have a table with all elements of the relations to fill out. When should the relation be checked? On the fly or at the end? If on the fly the checker would have to go through all the relations.
+  \item Problem: Input checker has to know relational violations as soon as possible because if we have an iteration of assumptions the checker needs to know how many iterations there are.\\
+  Idea: Then there will be a symbolic variable for sure that the checker needs to get. That value should also already be in the table. If not there was an error before and we can stop checking the next inputs.
+  \item Problem: How to show the relational error to the user? How to make clear that these two errors are related?\\
+  Idea: Show both values on same screen so that user can change them simulatenously (or only one of both)
+  \item Problem: If the user wants to change the number of values they have to do so in the file directly.\\
+  Idea: Have a button that opens the file for editing.
+\end{enumerate}
+
+
+\section{Ideas}
+
+\begin{itemize}
+  \item every element in the store is a dictionary element from variable to either an assumption lattice or an input assumption lattice (need to change name, or maybe a different construct because input lattice might have more specific implementations). So that we can have assumptions about multiple elements in a list. 
+  \item We need to differentiate between input assumption lattice elements that tell how many lines look like this and elements that tell us how many values are on one line. This can easily be done because for every element we have the "with delimiter" attribute that tells us if the elements are splitted and therefore on the same line.
+\end{itemize}
+
+
+\section{Checker Design}
+
+\subsection{Tasks}
+
+\begin{itemize}
+  \item Check relationship between two values.
+  \item Store or get values when second element of relationship found and possibly create error message.
+  \item Find the number of iterations that is in relation with other input.
+  \item Differentiate between "at least x values in line (with delimiter)" and "exactly x values in line (with delimiter)" and "exactly (or maybe also at least?) x lines with the following assumptions".
+  \item Some assumptions only hold if values have a certain format and don't need to be fulfiled under certain conditions.
+\end{itemize}
+
+\subsection{Information in JSON}
+
+\begin{itemize}
+  \item Assumption of a value. (assmp)
+  \item Delimiter of a line. (structure)
+  \item Num of values in line. (structure)
+  \item Num of iterations of certain lines. (structure)
+  \item Relationship assumptions between values. (assmp/structure)
+  \item Relationship assumptions between values/num of iterations. (assmp/structure)
+  \item Condition under which an assumption has to be validated. (assmps)
+\end{itemize}
+
+\subsection{Example}
+
+\begin{lstlisting}
+2
+3
+1,2,3,4,5
+2
+5,5,5,5,5
+\end{lstlisting}
+
+Assumptions:\\
+$[IN_1 = (Int, [-\infty, \infty]),$\\
+$IN_1 \times [IN_2 = (Int, [-\infty, \infty]), [IN_2+1, \infty] \times [(Float, [0, \infty])] \:with\:delimiter\:","]]]$\\
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
