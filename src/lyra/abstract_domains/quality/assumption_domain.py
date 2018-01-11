@@ -37,25 +37,42 @@ class InputAssumptionStack(Stack):
     def pop(self):
         if len(self.stack) > 1:
             element = self.stack.pop()
-            if element.is_top():
-                if len(self.stack) > 1:
-                    self.lattice.top()
-                return
-            if element.is_loop:
+            if element.infoloss:
+                self.lattice.assmps.clear()
+                self.lattice.infoloss = True
+            elif element.is_loop:
                 if len(element.assmps) > 0:
                     num_iter = self.get_num_iter_from_condition(element.condition)
                     if num_iter is None:
-                        self.lattice.top()
-                    else:
-                        self.lattice.bottom()
-                        self.stack.append(InputAssumptionLattice())
-                        self.lattice.add_assumptions_with_iter(num_iter, element.assmps)
-                        self.lattice.join_as_loop = True
+                        self.lattice.assmps.clear()
+                        self.lattice.infoloss = True
+                        return
+                    if self.check_second_iteration(element):
+                        if self.lattice.assmps[0].less_equal(element):
+                            self.lattice.assmps.pop(0)
+                    pp = element.assmps[0].pp
+                    self.lattice.add_assmps_with_iter(num_iter, element.assmps, pp)
+                    self.lattice.join_as_loop = True
                 else:
                     self.lattice.join_as_loop = True
             elif len(element.assmps) > 0:
                 self.lattice.add_assumptions_front(element.assmps)
                 self.lattice.join_as_loop = False
+
+    def check_second_iteration(self, element):
+        """Checks if the assumption in front of the current stack top is from the same program
+        point than the front assumption of the element that we pop.
+
+        :param element: The element that is currently popped
+        :return: f the assumption in front of the current stack top is from the same program
+        point than the parameter element.
+        """
+        if len(self.lattice.assmps) == 0:
+            return False
+        prev_element = self.lattice.assmps[0]
+        if not isinstance(prev_element, InputAssumptionLattice):
+            return False
+        return prev_element.pp == element.assmps[0].pp
 
     def get_num_iter_from_condition(self, condition):
         """Extracts the number of iterations from a condition
@@ -83,38 +100,6 @@ class InputAssumptionStack(Stack):
     @copy_docstring(Stack.push)
     def push(self):
         self.stack.append(InputAssumptionLattice())
-
-    @copy_docstring(Stack.join)
-    def join(self, other):
-        if self.lattice.is_bottom():
-            self.lattice.replace(other.lattice)
-            return self
-        elif other.lattice.is_bottom():
-            return self
-        if self.lattice.is_top():
-            return self
-        if self.lattice.join_as_loop or other.lattice.join_as_loop:
-            if len(self.stack) == len(other.stack):
-                for i, item in enumerate(self.stack):
-                    if len(item.assmps) == len(other.stack[i].assmps):
-                        item.join(other.stack[i])
-                    elif len(item.assmps) < len(other.stack[i].assmps):
-                        item.replace(other.stack[i])
-            elif len(self.stack) > len(other.stack):
-                loop = self.stack.pop()
-                self.join(other)
-                self.lattice.add_assumptions_front(loop.assmps)
-            else:
-                other_copy = deepcopy(other)
-                loop = other_copy.stack.pop()
-                self.join(other_copy)
-                self.lattice.add_assumptions_front(loop.assmps)
-            self.lattice.join_as_loop = False
-            return self
-        if len(self.stack) > 1 and len(self.lattice.assmps) != len(other.lattice.assmps):
-            self.lattice.top()
-            return self
-        return self.lattice.join(other.lattice)
 
 
 class AssumptionState(Store, State):
@@ -288,9 +273,10 @@ class AssumptionState(Store, State):
         def visit_Input(self, expr, assumption=None, state=None):
             type_assumption = TypeLattice.from_lyra_type(expr.typ)
             input_assumption = AssumptionLattice(type_assumption).meet(assumption)
-            if state.store[state.input_var].lattice.is_top():
+            input_assumption.pp = state.pp
+            if state.store[state.input_var].lattice.infoloss:
                 if len(state.store[state.input_var].stack) == 1:
-                    state.current_stack_top.meet(InputAssumptionLattice())
+                    state.store[state.input_var].lattice.infoloss = False
             state.store[state.input_var].lattice.add_assumption_front(input_assumption)
             return state
 

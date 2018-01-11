@@ -184,6 +184,7 @@ class AssumptionLattice(Lattice):
             AssumptionLattice.Assumption.type_assmp: type_element,
             AssumptionLattice.Assumption.range_assmp: range_element
         }
+        self.pp = None
 
     def __repr__(self):
         assumptions = [self.type_assumption, self.range_assumption]
@@ -268,13 +269,15 @@ class InputAssumptionLattice(BoundedLattice):
     .. automethod:: AssumptionLattice._widening
     """
 
-    def __init__(self, iterations=1, assmps=None):
+    def __init__(self, iterations=1, assmps=None, pp=None):
         super().__init__()
         self.iterations = iterations
         self._assmps = assmps if assmps is not None else []
         self.is_loop = False
         self.join_as_loop = False
         self.condition = None
+        self.pp = pp
+        self.infoloss = False
 
     def __repr__(self):
         if self.is_bottom():
@@ -305,19 +308,26 @@ class InputAssumptionLattice(BoundedLattice):
         """
         self._assmps = assmps + self.assmps
 
-    def add_assumptions_with_iter(self, iterations: int, assmps):
+    def add_assmps_with_iter(self, iterations: int, assmps, pp):
         """Adds assumptions to the front of the assumption list and sets the iteration number.
 
         :param iterations: number of times the assumptions appear in the input file
         :param assmps: list of assumptions to be added to the list of current assumptions
+        :param pp: program point of the first assumption
         """
-        input_assmps = InputAssumptionLattice(iterations, assmps)
+        input_assmps = InputAssumptionLattice(iterations, assmps, pp)
         input_assmps.is_loop = True
         self._assmps.insert(0, input_assmps)
 
     @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'InputAssumptionLattice') -> bool:
-        if len(self.assmps) != len(other.assmps):
+        if self.infoloss and other.infoloss:
+            return True
+        if self.infoloss or other.infoloss:
+            return False
+        if len(self.assmps) < len(other.assmps):
+            return True
+        if len(self.assmps) > len(other.assmps):
             return False
         for assmp1, assmp2 in zip(self.assmps, other.assmps):
             if not assmp1.less_equal(assmp2):
@@ -326,15 +336,28 @@ class InputAssumptionLattice(BoundedLattice):
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
+        if self.infoloss:
+            return self
+        if other.infoloss:
+            return self.replace(other)
         if len(self.assmps) == len(other.assmps) == 0:
             return self
-        if len(self.assmps) == 0 or len(other.assmps) == 0:
+        if self.join_as_loop:
+            assert other.join_as_loop
+            if len(self.assmps) > len(other.assmps):
+                return self
+            else:
+                return self.replace(other)
+        if len(self.assmps) != len(other.assmps):
             self.assmps.clear()
+            self.infoloss = True
             return self
         new_assmps = []
         for assmp1, assmp2 in zip(self.assmps, other.assmps):
             if type(assmp1) != type(assmp2):
-                break
+                self.assmps.clear()
+                self.infoloss = True
+                return self
             else:
                 new_assmps.append(deepcopy(assmp1).join(assmp2))
         self._assmps = new_assmps
@@ -347,7 +370,3 @@ class InputAssumptionLattice(BoundedLattice):
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'InputAssumptionLattice'):
         raise NotImplementedError(f"Widening for {self} and {other} is not implemented.")
-
-
-
-
