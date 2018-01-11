@@ -55,6 +55,23 @@
 
 \pagenumbering{arabic}
 
+\section{Sophisticated if/else join}
+
+Main idea: To join two cases of possibly different length we have to unpack loops ($20 \times [a, b] = [a, b, a, b ...]$) if needed and join the single assumptions with the other case.
+
+\begin{itemize}
+  \item $[a] \sqcup [b]$\\
+  result: $[a \sqcup b]$
+  \item $[a] \sqcup [b, c]$\\
+  result: $[a \sqcup b]$\\
+  This would cause problems in the case $\frac{[a, b]}{[c]} \sqcup \frac{[a]}{[c]}$. In this case we would result in $\frac{[a]}{[c]}$ but what we really want to do is $[a, b, c] \sqcup [a, c]$
+  \item $[N \times [a]] \sqcup [N \times [b]]$\\
+  result: $[N \times [a \sqcup b]]$
+  \item $[N \times [a]] \sqcup [M \times [b]]$\\
+  result: $[min(N,M) \times [a \sqcup b]]$
+\end{itemize}
+
+
 \section{Issues}
 
 \subsection{Issue 1}
