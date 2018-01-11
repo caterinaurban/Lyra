@@ -48,8 +48,7 @@ class InputAssumptionStack(Stack):
                         self.lattice.infoloss = True
                         return
                     if self.check_second_iteration(element):
-                        if self.lattice.assmps[0].less_equal(element):
-                            self.lattice.assmps.pop(0)
+                        self.lattice.assmps.pop(0)
                     pp = element.assmps[0].pp
                     self.lattice.add_assmps_with_iter(num_iter, element.assmps, pp)
                     self.lattice.join_as_loop = True
@@ -120,6 +119,7 @@ class AssumptionState(Store, State):
         lattices = {typ: AssumptionLattice for typ in types}
         super().__init__(variables, lattices)
         self.store[self.input_var] = InputAssumptionStack()
+        self.store[self.input_var].lattice.is_main = True
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
