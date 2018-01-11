@@ -278,6 +278,7 @@ class InputAssumptionLattice(BoundedLattice):
         self.condition = None
         self.pp = pp
         self.infoloss = False
+        self.is_main = False
 
     def __repr__(self):
         if self.is_bottom():
@@ -325,9 +326,7 @@ class InputAssumptionLattice(BoundedLattice):
             return True
         if self.infoloss or other.infoloss:
             return False
-        if len(self.assmps) < len(other.assmps):
-            return True
-        if len(self.assmps) > len(other.assmps):
+        if len(self.assmps) != len(other.assmps):
             return False
         for assmp1, assmp2 in zip(self.assmps, other.assmps):
             if not assmp1.less_equal(assmp2):
@@ -348,7 +347,7 @@ class InputAssumptionLattice(BoundedLattice):
                 return self
             else:
                 return self.replace(other)
-        if len(self.assmps) != len(other.assmps):
+        if len(self.assmps) != len(other.assmps) and not self.is_main:
             self.assmps.clear()
             self.infoloss = True
             return self
@@ -356,7 +355,8 @@ class InputAssumptionLattice(BoundedLattice):
         for assmp1, assmp2 in zip(self.assmps, other.assmps):
             if type(assmp1) != type(assmp2):
                 self.assmps.clear()
-                self.infoloss = True
+                if not self.is_main:
+                    self.infoloss = True
                 return self
             else:
                 new_assmps.append(deepcopy(assmp1).join(assmp2))
