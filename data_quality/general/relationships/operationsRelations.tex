@@ -1,0 +1,130 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, portrait, margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float}
+\usepackage[font={small,it}]{caption}
+
+\usepackage{fancyhdr}
+%\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\newcommand{\bigcell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ 
+\lstdefinelanguage{Python2}{
+  language     = Python,
+  morekeywords = {assert},
+}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{white},   
+    commentstyle=\color{ForestGreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{black},
+    stringstyle=\color{red},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle, language=Python2}
+
+\begin{document}
+
+\title{Operations for Relationships}
+
+\maketitle
+
+\pagenumbering{arabic}
+
+\section{Operations}
+
+\subsection{Initialization}
+
+
+\begin{itemize}
+  \item $variable \rightarrow (Any)$
+  \item $len_{somelist} \rightarrow (Int)$
+  \item $somelist \rightarrow len_{somelist} \times [(Any)]$
+  \item octagon with variables and list lengths and $len_{somelist} \geq 0$
+\end{itemize}
+
+\subsection{Substitute}
+
+\begin{itemize}
+  \item $a = a + 1$\\
+  octagon substitute with arithmetic
+  \item $a = b$\\
+  octagon substitute (propagate info from a to b)
+  \item $a = 2$\\
+  substitute all relations containing a (ex: $a < b$ gets $2 < b$, or $len_{vals} > a$ gets $len_{vals} > 2)$
+  \item $somelist = line.split(",")$\\ with $somelist \rightarrow len_{somelist} \times [(Int)]$ and $len_{somelist} > 3$
+  \begin{itemize}
+    \item substitute list info: $line \rightarrow len_{line} \times [(Int)]\:with\:delimiter\:","$ 
+    \item reset info about $somelist$: $somelist \rightarrow len_{somelist} \times [(Any)]$
+    \item substitute info about $len_{somelist}$: $len_{line} > 3$
+    \item reset info about $len_{somelist}$: $len_{somelist} \geq -\infty$ and $len_{somelist} \leq \infty$
+  \end{itemize}
+  \item $somelist = otherlist$\\ with $len_{somelist} > 4$\\
+  substitute relations with $len_{somelist}$: $len_{otherlist} > 4$ and reset $somelist$
+\end{itemize}
+
+\subsection{Substitute with input}
+
+\begin{itemize}
+  \item $a = input()$\\ with $a < b$
+  \begin{itemize}
+    \item update input: $.IN \rightarrow [IN_1]$
+    \item substitute all relations containing a with new input variable (ex: $a < b$ gets $IN_1 < b$, or $len_{vals} > a)$ gets $len_{vals} > IN_1)$
+  \end{itemize}
+  \item $somelist = input()$\\ with $somelist \rightarrow len_{somelist} \times [(Int)]\:with\:delimiter\:","$ and $len_{somelist} > 3$
+  \begin{itemize}
+    \item update input: $.IN \rightarrow [LEN_2 \times [(Int)]\:with\:delimiter\:","]$
+    \item substitute octagon containing $len_{somelist}$: $LEN_2 > 3$
+  \end{itemize}
+\end{itemize}
+
+\subsection{Assume}
+
+\begin{itemize}
+  \item $for\:i\:in\:range(N)$ or $if a > b:$\\
+  We call assume for the octagon domain with ($i \geq 0$ and $i < N$) or ($a > b:$)
+  \item joining loop with else: $for\:i\:in\:range(N)$\\
+  We only know that this loop is entered if $N > 0$. We therefore have to keep around two octagon domains:\\
+  One with the assumptions of the inside of the loop with an annotation that they only hold if $N > 0$. One with the assumptions from the else branch with the annotation if $N \leq 0$.
+  \item joining if/else: $if a > b:$\\
+  Similar to loop. Keep two octagon domains
+\end{itemize}
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

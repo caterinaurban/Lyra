@@ -7,8 +7,7 @@
 \usepackage{mathtools}
 \usepackage{color}
 \usepackage[dvipsnames]{xcolor}
-\usepackage{float}% If comment this, figure moves to Page 2
-% Fancy header package for version number
+\usepackage{float}
 \usepackage[font={small,it}]{caption}
 
 \usepackage{fancyhdr}
@@ -57,8 +56,8 @@
 
 \subsection{Example codejam}
 \begin{lstlisting}
-iterations = int(input())
-for i in range(iterations):
+iterations = int(input())  # or iterations = len(input().split(",")) (sandmice_Harleen)
+for i in range(iterations):  
 \end{lstlisting}
 
 
@@ -78,6 +77,22 @@ for line in file:
 Assumption: $ALL \times [assmps]$\\
 
 Need some means of telling that all rows in file should be the same\\
+
+
+\subsection{Example sandmice_Harleen}
+\begin{lstlisting}
+len_input = len(input().split(","))
+for i in range(len_input):
+    if somelist[i] > 10:
+\end{lstlisting}
+
+
+\subsection{Example solution4_inline}
+\begin{lstlisting}
+x = N / len(somelist)
+\end{lstlisting}
+
+When we initialize the variables we can start with $len_{somelist} >= 0$. We therefore know in the above situation that $len_{somelist} > 0$.
 
 
 \subsection{Example brca 2}
@@ -212,9 +227,9 @@ Important: You need to think about how to pull/push information from/to the octa
   \item Condition under which an assumption has to be validated. (assmps)
 \end{itemize}
 
-\subsection{Example}
+\subsection{Example with info in one list}
 
-\begin{lstlisting}
+\begin{lstlisting}[numbers=none]
 2
 3
 1,2,3,4,5
@@ -224,27 +239,163 @@ Important: You need to think about how to pull/push information from/to the octa
 
 Assumptions:\\
 $[IN_1 = (Int, [-\infty, \infty]),$\\
-$IN_1 \times [IN_2 = (Int, [-\infty, \infty]), [IN_2+1, \infty] \times [(Float, [0, \infty])] \:with\:delimiter\:","]]]$\\
+$IN_1 \times [IN_2 = (Int, [-\infty, IN_3-1]), (IN_3 = [IN_2+1, \infty]) \times [(Float, [0, \infty])]\:with\:delimiter\:","]]$\\
+
+Approach:
+\begin{enumerate}
+  \item Get first assumption: $IN_1 = (Int, [-\infty, \infty])$
+  \item Get first input line: $2$
+  \item Compare input with assumption, if ok save input in $IN_1$
+  \item Get next assumption: $IN_1 \times [IN_2 = (Int, [-\infty, IN_3-1]), (IN_3 = [IN_2+1, \infty]) \times [(Float, [0, \infty])] \:with\:delimiter\:","]]$
+  \item Get value for iteration number $IN_1$: $2$
+  \item Loop for 2:
+  \begin{enumerate}
+    \item Save/Reset stored values because of iteration (so we don't take $IN_3$ value from last iteration).
+    \item Get next assumption: $IN_2 = (Int, [-\infty, IN_3-1])$ ($IN_3$ not yet set, so continue)
+    \item Compare input with assumption, if ok save input in $IN_2$
+    \item Get next assumption: $(IN_3 = [IN_2+1, \infty]) \times [(Float, [0, \infty])] \:with\:delimiter\:","]$
+    \item Get value for iteration number $IN_2+1$: $[3+1, \infty]$,
+    \item Split line by delimiter ",". Check number of elements at least $4$. Save num of elements in $IN_3$
+    \item Get next assumption: $(Float, [0, \infty])$
+    \item Compare inputs with assumption
+  \end{enumerate}
+\end{enumerate}
+
+\subsection{Example with relationship info separated}
+
+\begin{lstlisting}
+N = int(input())
+for i in range(N):
+    M = int(input())
+    inputs = input().split(",")
+    vals = map(float, inputs)
+    print(vals[M])
+\end{lstlisting}
+
+\begin{enumerate}
+  \item START:
+  
+  $N \rightarrow (Any, [-\infty, \infty])$
+  
+  $M \rightarrow (Any, [-\infty, \infty])$
+  
+  $len_{vals} \rightarrow (Int, [0, \infty])$
+  
+  $len_{inputs} \rightarrow (Int, [0, \infty])$
+  
+  $vals \rightarrow len_{vals} \times []$
+  
+  $inputs \rightarrow len_{inputs} \times []$
+  
+  \item $M \rightarrow (Int, [-\infty, \infty])$
+  
+  $M < len_{vals}$
+  
+  \item $inputs \rightarrow len_{inputs} \times [(Float, [-\infty, \infty])]$
+  
+  $M < len_{inputs}$
+  
+  \item $.IN \rightarrow [LEN_1 \times [IN_2]\:with\:delimiter\:","]$
+  
+  $IN_2 \rightarrow (Float, [-\infty, \infty])$
+  
+  $LEN_1 \rightarrow (Int, [-\infty, \infty])$
+  
+  $M < LEN_1$ (need to substitute. Or do we have to have $LEN_1$ from the beginning?)
+  
+  \item $.IN \rightarrow [IN_3, LEN_1 \times [IN_2]\:with\:delimiter\:","]$
+  
+  $IN_3 \rightarrow (Int, [-\infty, \infty])$
+  
+  $IN_3 < LEN_1$ (need to substitute.)
+  
+  \item $.IN \rightarrow [LEN_4 \times [IN_3, LEN_1 \times [IN_2]\:with\:delimiter\:","]]$
+  
+  $N \rightarrow (Int, [-\infty, \infty])$
+  
+  $LEN_4 = N$ (need to give information to octagon.)
+  
+  $LEN_4 \rightarrow (Int, [-\infty, \infty])$
+  
+  \item $.IN \rightarrow [IN_5, LEN_4 \times [IN_3, LEN_1 \times [IN_2]\:with\:delimiter\:","]]$
+  
+  $IN_5 \rightarrow (Int, [-\infty, \infty])$
+  
+  $LEN_4 = IN_5$ (need to give information to octagon.)
+  
+  \item FINAL: $.IN \rightarrow [IN_5, LEN_4 \times [IN_3, LEN_1 \times [IN_2]\:with\:delimiter\:","]]$
+  
+  $IN_2 \rightarrow (Float, [-\infty, \infty])$
+  
+  $IN_3 \rightarrow (Int, [-\infty, \infty])$
+  
+  $IN_5 \rightarrow (Int, [-\infty, \infty])$
+  
+  $IN_3 < LEN_1$
+  
+  $LEN_4 = IN_5$
+\end{enumerate}
+
+In the end you give to the input checker all relationships for LEN/IN variables.
+
+\begin{lstlisting}[numbers=none]
+2
+3
+1,2,3,4,5
+2
+5,5,5,5,5
+\end{lstlisting}
+
+
+
+\begin{itemize}
+  \item Structure:\\
+  $[IN_5, LEN_4 \times [IN_3, LEN_1 \times [IN_2]\:with\:delimiter\:","]]$
+  \item Assumptions:\\
+  $IN_5 \rightarrow (Int, [-\infty, \infty])$\\
+  $IN_3 \rightarrow (Int, [-\infty, \infty])$\\
+  $IN_2 \rightarrow (Float, [-\infty, \infty])$
+  \item Relations:\\
+  $IN_3 < LEN_1$\\
+  $LEN_4 = IN_5$\\
+\end{itemize}
+
+Approach:
+\begin{enumerate}
+  \item Prepare dictionary for needed values: $\{LEN_1: None, IN_3: None, LEN_4: None, IN_5: None\}$
+  \item Get first element in structure: $IN_5$
+  \item Get first input, store $IN_5$ in dictionary: $\{LEN_1: None, IN_3: None, LEN_4: None, IN_5: 2\}$
+  \item Check assumption for $IN_5$: $(Int, [-\infty, \infty])$
+  \item Check relation for $IN_5$: $LEN_4 = IN_5$ but $LEN_4$ not yet initialized, so continue.
+  \item Get next element in structure: $LEN_4 \times [IN_3, LEN_1 \times [IN_2]\:with\:delimiter\:","]$
+  \item Get relation for $LEN_4$: $LEN_4 = IN_5$ therefore get value for $LEN_4$ from $IN_5$: 2
+  \item Store current dictionary: $\{LEN_1: None, IN_3: None, LEN_4: 2, IN_5: 2\}$
+  \item Loop for 2:
+  \begin{enumerate}
+    \item Reset dictionary: $\{LEN_1: None, IN_3: None, LEN_4: 2, IN_5: 2\}$
+    \item Get next element in structure: $IN_3$
+    \item Get next input, store $IN_3$ in dictionary: $\{LEN_1: None, IN_3: 3, LEN_4: 2, IN_5: 2\}$
+    \item Check relation for $IN_3$: $IN_3 < LEN_1$ but $LEN_1$ not yet initialized, so continue.
+    \item Get next element in structure: $LEN_1 \times [IN_2]\:with\:delimiter\:","$
+    \item Get next input: 1,2,3,4,5
+    \item Get value for $LEN_1$ by splitting input by "," and counting: $\{LEN_1: 5, IN_3: 3, LEN_4: 2, IN_5: 2\}$
+    \item Check relation for $LEN_1$: $IN_3 < LEN_1$
+    \item Store current dictionary: $\{LEN_1: 5, IN_3: 3, LEN_4: 2, IN_5: 2\}$
+    \item Loop through values:
+    \begin{enumerate}
+      \item Reset dictionary: $\{LEN_1: 5, IN_3: 3, LEN_4: 2, IN_5: 2\}$
+      \item Get next element in structure: $IN_2$
+      \item Check current assumption for value: $(Float, [-\infty, \infty])$
+    \end{enumerate}
+  \end{enumerate}
+\end{enumerate}
+
+
+Problem: How to know what values have to be stored because they are needed for relationship checking?\\
+Idea: Preprocess relationships to create empty dictionary with values that need to be stored during checking.\\
+
+Advantage: Having everything in one list is difficult because how to reference an other number that might be deeply nested? With this approach the information of the structure, the assumptions and the relation is separated.\\
+Also the interval lattice might not be needed anymore because we can do the things directly in the octagon. (or even have to so that we know if $a < 2$ and $a = b$ we want to know that also $b < 2$).
 
 \end{document}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
