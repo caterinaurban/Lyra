@@ -1,4 +1,4 @@
-# STATE a -> (Any, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, 9]), (Int, [-inf, inf])]
+# INITIAL a -> (Any, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, 9]), (Int, [-inf, inf])]
 a: int = int(input())
 # STATE a -> (Int, [-inf, 9]), b -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, inf])]
 b: int = int(input())

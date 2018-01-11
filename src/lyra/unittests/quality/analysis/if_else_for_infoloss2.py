@@ -1,4 +1,4 @@
-# STATE a -> (Any, [-inf, inf]), i -> (Int, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, inf]), 4 x [(Float, [-inf, inf])], 4 x [(Float, [-inf, inf])], (Float, [-inf, inf])]
+# INITIAL a -> (Any, [-inf, inf]), i -> (Int, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, inf]), 4 x [(Float, [-inf, inf])], 4 x [(Float, [-inf, inf])], (Float, [-inf, inf])]
 a: int = int(input())
 for i in range(4):
     if a > 10:

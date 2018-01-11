@@ -1,4 +1,4 @@
-# STATE a -> (Any, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Float, [5, 40]), (Float, [10, 20])]
+# INITIAL a -> (Any, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Float, [5, 40]), (Float, [10, 20])]
 a: float = float(input())
 b: float = float(input())
 
