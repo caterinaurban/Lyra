@@ -64,11 +64,13 @@ Main idea: To join two cases of possibly different length we have to unpack loop
   result: $[a \sqcup b]$
   \item $[a] \sqcup [b, c]$\\
   result: $[a \sqcup b]$\\
-  This would cause problems in the case $\frac{[a, b]}{[c]} \sqcup \frac{[a]}{[c]}$. In this case we would result in $\frac{[a]}{[c]}$ but what we really want to do is $[a, b, c] \sqcup [a, c]$
+  This would cause problems in the case $\frac{[a, b]}{[c]} \sqcup \frac{[a]}{[c]}$. In this case we would result in $\frac{[a]}{[c]}$ but what we really want to do is $[a, b, c] \sqcup [a, c]$. We could only do the sophisticated join if we are at the bottom of the stack.
   \item $[N \times [a]] \sqcup [N \times [b]]$\\
   result: $[N \times [a \sqcup b]]$
   \item $[N \times [a]] \sqcup [M \times [b]]$\\
   result: $[min(N,M) \times [a \sqcup b]]$
+  \item $[N \times [a]] \sqcup [b]$\\
+  result: $[a \sqcup b]$ with loop unrolling so we end up with $[(N-1) \times [a], _]$
 \end{itemize}
 
 
