@@ -17,7 +17,7 @@ from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor, \
-    BinaryComparisonOperation, Literal, Range
+    BinaryComparisonOperation, Literal, Range, UnaryArithmeticOperation
 from lyra.core.types import ListLyraType, IntegerLyraType, BooleanLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -83,17 +83,30 @@ class InputAssumptionStack(Stack):
             if condition.operator == BinaryComparisonOperation.Operator.In:
                 in_element = condition.right
                 if isinstance(in_element, Range):
-                    start_literal = isinstance(in_element.start, Literal)
-                    end_literal = isinstance(in_element.end, Literal)
-                    step_literal = isinstance(in_element.step, Literal)
-                    if start_literal and end_literal and step_literal:
-                        start = int(in_element.start.val)
-                        end = int(in_element.end.val)
-                        step = int(in_element.step.val)
+                    start = self.get_value_for_iteration(in_element.start)
+                    end = self.get_value_for_iteration(in_element.end)
+                    step = self.get_value_for_iteration(in_element.step)
+                    if start is not None and end is not None and step is not None:
                         return math.ceil((end - start) / step)
-                    else:
-                        error = f"Analysis of range() is only implemented for Literal arguments."
-                        raise NotImplementedError(error)
+                    error = f"Analysis of range() is only implemented for Literal arguments."
+                    raise NotImplementedError(error)
+        return None
+
+    def get_value_for_iteration(self, iter_expr):
+        """Gets the value from an expression. Works for Literals or UnaryOperations of a Literal.
+
+        :param iter_expr: expression to extract the value from
+        :return: The value of the evaluated expression or None
+        """
+        if isinstance(iter_expr, Literal):
+            return int(iter_expr.val)
+        elif isinstance(iter_expr, UnaryArithmeticOperation):
+            is_minus = iter_expr.operator == UnaryArithmeticOperation.Operator.Sub
+            if isinstance(iter_expr.expression, Literal):
+                val = int(iter_expr.expression.val)
+                if is_minus:
+                    val = -val
+                return val
         return None
 
     @copy_docstring(Stack.push)
