@@ -351,17 +351,92 @@ class InputAssumptionLattice(BoundedLattice):
             self.assmps.clear()
             self.infoloss = True
             return self
-        new_assmps = []
-        for assmp1, assmp2 in zip(self.assmps, other.assmps):
-            if type(assmp1) != type(assmp2):
-                self.assmps.clear()
-                if not self.is_main:
-                    self.infoloss = True
-                return self
-            else:
-                new_assmps.append(deepcopy(assmp1).join(assmp2))
-        self._assmps = new_assmps
+        if self.is_main:
+            self.join_cases(other)
+        else:
+            new_assmps = []
+            for assmp1, assmp2 in zip(self.assmps, other.assmps):
+                if type(assmp1) != type(assmp2):
+                    self.assmps.clear()
+                    if not self.is_main:
+                        self.infoloss = True
+                    return self
+                else:
+                    new_assmps.append(deepcopy(assmp1).join(assmp2))
+            self._assmps = new_assmps
         return self
+
+    def join_cases(self, other):
+        """Joins two InputAssumptionLattice. It unrolls assumptions in loops if necessary.
+
+        [a] ⊔ [b] = [a ⊔ b]
+
+        [N x [a]] ⊔ [b1, b2] = [a ⊔ b1, [(N-1) x [a]] ⊔ [b2]]
+
+        [N x [a1], a2] ⊔ [M x [b1], b2] with N < M:  [N x [a1 ⊔ b1], [a2] ⊔ [(M-N) x [b1], b2]]
+
+        :param other: other InputAssumptionLattice that should be joined with self
+        """
+        self_stack = self.assmps
+        other_stack = other.assmps
+        final_assmps = []
+        while len(self_stack) > 0 and len(other_stack) > 0:
+            curr_self = self_stack.pop(0)
+            curr_other = other_stack.pop(0)
+            self_assmp_lattice = isinstance(curr_self, AssumptionLattice)
+            other_assmp_lattice = isinstance(curr_other, AssumptionLattice)
+            if self_assmp_lattice and other_assmp_lattice:
+                final_assmps.append(curr_self.join(curr_other))
+            elif not self_assmp_lattice and not other_assmp_lattice:
+                assert isinstance(curr_self, InputAssumptionLattice)
+                assert isinstance(curr_other, InputAssumptionLattice)
+                if curr_self.iterations == curr_other.iterations:
+                    for assmp1, assmp2 in zip(curr_self.assmps, curr_other.assmps):
+                        assmp1.join(assmp2)
+                    final_assmps.append(curr_self)
+                elif curr_self.iterations < curr_other.iterations:
+                    copy_other_first = deepcopy(curr_other)
+                    copy_other_first.iterations = curr_self.iterations
+                    copy_other_second = deepcopy(curr_other)
+                    copy_other_second.iterations -= curr_self.iterations
+                    if copy_other_second.iterations == 1:
+                        other_stack = copy_other_second.assmps + other_stack
+                    else:
+                        other_stack.insert(0, copy_other_second)
+                    other_stack.insert(0, copy_other_first)
+                    self_stack.insert(0, curr_self)
+                else:
+                    copy_self = deepcopy(curr_self)
+                    copy_self.iterations = curr_other.iterations
+                    curr_self.iterations -= curr_other.iterations
+                    if curr_self.iterations == 1:
+                        self_stack = curr_self.assmps + self_stack
+                    else:
+                        self_stack.insert(0, curr_self)
+                    self_stack.insert(0, copy_self)
+                    other_stack.insert(0, curr_other)
+            elif self_assmp_lattice:
+                assert isinstance(curr_other, InputAssumptionLattice)
+                copy_other = deepcopy(curr_other)
+                copy_other.iterations -= 1
+                if copy_other.iterations == 1:
+                    other_stack = copy_other.assmps + other_stack
+                else:
+                    other_stack.insert(0, copy_other)
+                other_stack = curr_other.assmps + other_stack
+                self_stack.insert(0, curr_self)
+            else:
+                assert isinstance(curr_self, InputAssumptionLattice)
+                assert isinstance(curr_other, AssumptionLattice)
+                copy_self = deepcopy(curr_self)
+                copy_self.iterations -= 1
+                if copy_self.iterations == 1:
+                    self_stack = copy_self.assmps + self_stack
+                else:
+                    self_stack.insert(0, copy_self)
+                self_stack = curr_self.assmps + self_stack
+                other_stack.insert(0, curr_other)
+        self._assmps = final_assmps
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'InputAssumptionLattice'):
