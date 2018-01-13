@@ -79,15 +79,16 @@ Assumption: $ALL \times [assmps]$\\
 Need some means of telling that all rows in file should be the same\\
 
 
-\subsection{Example sandmice_Harleen}
+\subsection{Example sandmice\_Harleen}
 \begin{lstlisting}
+somelist = input().split(";")
 len_input = len(input().split(","))
 for i in range(len_input):
     if somelist[i] > 10:
 \end{lstlisting}
 
 
-\subsection{Example solution4_inline}
+\subsection{Example solution4\_inline}
 \begin{lstlisting}
 x = N / len(somelist)
 \end{lstlisting}
@@ -396,6 +397,144 @@ Idea: Preprocess relationships to create empty dictionary with values that need 
 
 Advantage: Having everything in one list is difficult because how to reference an other number that might be deeply nested? With this approach the information of the structure, the assumptions and the relation is separated.\\
 Also the interval lattice might not be needed anymore because we can do the things directly in the octagon. (or even have to so that we know if $a < 2$ and $a = b$ we want to know that also $b < 2$).
+
+\section{Approach without introducing new variables in octagon}
+
+\subsection{Copy info when input}
+
+Input Object: N x (V, AssumptionLattice, Octagon, Store) (with delimiter D)
+\begin{itemize}
+  \item \textit{N}: number of times this assumption is repeated (with delimiter D in same line, otherwise multiple lines)
+  \item \textit{V}: variable name that is equal to input (a = input())
+  \item \textit{AssumptionLattice}: assumption about that variable
+  \item \textit{Octagon}: current octagon object will be copied when a = input() is encountered (without applying a = input() on it)
+  \item \textit{Store}: describes the relationship of a variable to an input
+  \item \textit{with delimiter D}: if the assumption holds for multiple values in a line
+  \item \textit{D}: what kind of delimiter is used
+\end{itemize}
+
+
+
+Functionality:
+\begin{enumerate}
+  \item a = int(input()) with $a < b$\\
+  save $IN \rightarrow [(a, (int), a < b, a \rightarrow L[0])]$\\
+  reset the general octagon domain info for a
+  \item $b = b + 1$\\
+  substitute the information in the input collection: $IN \rightarrow [(a, (int), a < b - 1, a \rightarrow L[0])]$
+  \item $a = a + 1$\\
+  don't do anything (in input collection) because a is locked in that input (the assignment is done for an 'other' a)
+  \item b = int(input())\\
+  save it and update the information about b in all inputs:\\
+  $IN \rightarrow [(b, (int), \_, b \rightarrow L[1]), (a, (int), a < b - 1, a \rightarrow L[0]\:and\:b \rightarrow L[1])]$
+  \item For the input checker we will send it as $[(int), (int)]$ with $L[0] < L[1] - 1$
+\end{enumerate}
+
+\subsection{General}
+
+Situation to solve:
+\begin{itemize}
+  \item N = input(); for i in range(N): a = input();
+  \item a = input(); b = input(); if $a < b$: raise Error;
+  \item a = input(); b = input().split(); print(b[a]);
+\end{itemize}
+
+
+Idea: Put variables directly in .IN and substitute them in there if necessary. If $a = input()$ is encountered don't apply it to the octagon in order to keep information like $a < b$. We keep the information that $b \rightarrow L[0]$. If we then encounter $a = input()$ we can substitute the relation so that $L[1] < L[0]$.\\
+Problem: b = input(); a = input(); if $a > b$: raise Error; a = input() if $a < b$: raise Error;\\
+Solution: Have assumption that same names cannot be reused before an input() statement. Otherwise can also do something like SSA.\\
+
+How does it work with intervals?\\
+With interval we also have a = input(). As soon as we encounter a = input() the information about a is reset (to $[-\infty, \infty]$) and ALL information is put into the .IN input collection. This approach does not work with octagons because we don't have all the information yet when encountering $a = input()$.\\
+How could we make sure, that all relational information about a variable is transfered to the input lattice as soon as we read a = input()? So that we can reset the variable in the octagon without loosing the relational information. The problem is, that one part of the relation is now in the "input world" whereas the other part is still in the "analysis world".\\
+Idea: Keep a special input octagon in the Input Lattice. In there we then have information like $a < L[0]$. In each step of the analysis we need to check if variables have to be substituted. 
+
+Information needed:
+\begin{itemize}
+  \item Where are the inputs?
+  \item What range must the values be in?
+  \item What are the relationships between values?
+\end{itemize}
+
+\subsection{Copy info from current input}
+
+\begin{lstlisting}
+a = int(input())
+a = a + 1
+b = input()
+b = int(b)
+if a < b:
+  raise Error
+\end{lstlisting}
+
+\begin{enumerate}
+  \item octagon: $a < b$
+  \item assumption: $b \rightarrow (int)$
+  \item $IN \rightarrow [(b, (int), a < b, \_)]$\\
+  octagon is empty\\
+  The information from the octagon before applying b = int(input()) is copied to the current input. In this input the variable b is locked and any changes to b in the code will not applied to the octagon saved here.
+  \item $IN \rightarrow [(b, (int), a - 1 < b, \_)]$
+  \item $IN \rightarrow [(a, (int), \_, \_), (b,  a - 1 <b, a \rightarrow IN[1])]$
+  \item final: $IN \rightarrow [(int), (int)]$ with $IN[1] - 1 < IN[0]$
+\end{enumerate}
+
+\begin{lstlisting}
+a = int(input())
+a = a + 1
+b = int(input())
+if a < b:
+  raise Error
+b = int(input())
+if a > b:
+  raise Error
+\end{lstlisting}
+
+\begin{enumerate}
+  \item octagon: $a > b$
+  \item assumption: $b \rightarrow (int)$
+  \item $IN \rightarrow [(b, (int), a > b, \_)]$\\
+  octagon is empty\\
+  \item octagon: $a < b$
+  \item $IN \rightarrow [(b, (int), a < b, \_), (b, (int), a > b), \_)]$
+  \item $IN \rightarrow [(b, (int), a - 1 < b, \_), (b, (int), a - 1 > b), \_)]$
+  \item $IN \rightarrow [(a, (int), \_, \_), (b, (int), a - 1 < b, a \rightarrow L[0]), (b, (int), a - 1 > b), a \rightarrow L[0])]$
+  \item final: $IN \rightarrow [(int), (int), (int)]$ with $IN[1] - 1 < IN[0]$ and $IN[2] - 1 < IN[0]$
+\end{enumerate}
+
+
+\subsection{Example brca 2}
+\begin{lstlisting}
+index = int(input())
+inputs = input().split(",")
+values = map(int, inputs)
+print(values[index])
+\end{lstlisting}
+
+Problem: Still need octagon information even after a = input()\\
+Approach1: Don't apply a = input() on octagon so that a is still around.\\
+Approach2: Add new variable to octagon.\\
+
+\begin{enumerate}
+  \item $index \rightarrow (any)$\\
+  $index \geq -\infty$ and $index \leq \infty$\\
+  $values \rightarrow (int)$\\
+  $len_{values} \rightarrow (any)$\\
+  $len_{values} \geq 0$ and $index \leq \infty$\\
+  $inputs \rightarrow (int)$\\
+  $len_{inputs} \rightarrow (any)$\\
+  $len_{inputs} \geq 0$ and $index \leq \infty$
+  
+  \item $index \rightarrow (int)$\\
+  $index < len_{values}$
+
+  \item $len_{inputs} = len_{values}$\\
+  $index < len_{inputs}$\\
+  $inputs \rightarrow (int)$
+
+  \item $.IN \rightarrow [len_{inputs}\times[(int)]\:with\:delimiter\:","]$\\
+
+  \item ---  
+\end{enumerate}
 
 \end{document}
 
