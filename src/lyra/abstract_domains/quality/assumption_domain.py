@@ -133,6 +133,8 @@ class AssumptionState(Store, State):
         super().__init__(variables, lattices)
         self.store[self.input_var] = InputAssumptionStack()
         self.store[self.input_var].lattice.is_main = True
+        interval_vars = [v for v in variables if not isinstance(v.typ, StringLyraType)]
+        self.store[self.relationship] = IntervalState(interval_vars)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
@@ -151,8 +153,7 @@ class AssumptionState(Store, State):
         """
         Executes assume for the range assumption
         """
-        interval_state = self.assmp_to_interval_state()
-        res = interval_state.assume({condition})
+        res = self.store[self.relationship].assume({condition})
         self.interval_to_assmp_state(res)
         return self
 
@@ -188,12 +189,19 @@ class AssumptionState(Store, State):
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'AssumptionState':
         if isinstance(left, VariableIdentifier):
-            assumption = deepcopy(self.store[left])
-            assumptions_range = self.substitute_range(left, right)
-            assumptions_range_left = deepcopy(assumptions_range.store[left].range_assumption)
+            assumptions = deepcopy(self.store[left])
+            assumption = InputAssumptionLattice(1, assumptions)
+            #assumption = deepcopy(self.store[left])
+            assumption.var_name = left
+            assumption.relations = deepcopy(self.store[self.relationship])
+            num_in_elements = len(self.store[self.input_var].lattice.assmps)
+            assumption.input_info = {left: num_in_elements}
+
+            self.substitute_range(left, right)
+            self.substitute_range_in_assmps(left, right, self.current_stack_top.assmps)
+
             self.store[left].top()
             self._refinement.visit(right, assumption, self)
-            self.store[left].range_assumption.meet(assumptions_range_left)
             return self
         error = f'Substitution for {left} not yet implemented!'
         raise NotImplementedError(error)
@@ -205,29 +213,29 @@ class AssumptionState(Store, State):
         :param right: right hand side expression
         :return: state after substitution of the ranges
         """
-        interval_state = self.assmp_to_interval_state()
-        res = interval_state.substitute({left}, {right})
+        res = self.store[self.relationship].substitute({left}, {right})
         return self.interval_to_assmp_state(res)
+
+    def substitute_range_in_assmps(self, left, right, assmps) -> 'AssumptionState':
+        for assumption in assmps:
+            if isinstance(assumption, AssumptionLattice):
+                if assumption.var_name != left:
+                    assumption.relations.substitute({left}, {right})
+            else:
+                self.substitute_range_in_assmps(left, right, assumption.assmps)
+        return self
 
     @property
     def input_var(self):
         return VariableIdentifier(StringLyraType(), '.IN')
 
     @property
+    def relationship(self):
+        return VariableIdentifier(StringLyraType(), '.REL')
+
+    @property
     def current_stack_top(self):
         return self.store[self.input_var].lattice
-
-    def assmp_to_interval_state(self):
-        """
-        Turns the current AssumptionState into an IntervalState
-        """
-        variables = [v for v in self.variables if isinstance(v.typ, FloatLyraType)
-                     or isinstance(v.typ, IntegerLyraType) or isinstance(v.typ, BooleanLyraType)]
-        interval_state = IntervalState(variables)
-        assumptions = [(k, v) for (k, v) in self.store.items() if isinstance(v, AssumptionLattice)]
-        for var, assmp in assumptions:
-            interval_state.store[var] = deepcopy(assmp.range_assumption)
-        return interval_state
 
     def interval_to_assmp_state(self, interval_state: IntervalState):
         """
@@ -235,7 +243,7 @@ class AssumptionState(Store, State):
         """
         for var, interval in interval_state.store.items():
             type_assumption = self.store[var].type_assumption
-            self.store[var] = AssumptionLattice(type_assumption, interval)
+            self.store[var] = AssumptionLattice(type_assumption)
         return self
 
     class AssumptionRefinement(ExpressionVisitor):
@@ -284,13 +292,18 @@ class AssumptionState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr, assumption=None, state=None):
-            type_assumption = TypeLattice.from_lyra_type(expr.typ)
-            input_assumption = AssumptionLattice(type_assumption).meet(assumption)
-            input_assumption.pp = state.pp
+            type_assmp = TypeLattice.from_lyra_type(expr.typ)
+            #var_name = assumption.var_name
+            #rel = assumption.relations
+            #num_in_elements = len(state.store[state.input_var].lattice.assmps)
+            #in_info = {assumption.var_name: num_in_elements}
+            #input_assmp = AssumptionLattice(type_assmp, var_name, rel, in_info).meet(assumption)
+            assumption.assmps.type_assumption.meet(type_assmp)
+            assumption.pp = state.pp
             if state.store[state.input_var].lattice.infoloss:
                 if len(state.store[state.input_var].stack) == 1:
                     state.store[state.input_var].lattice.infoloss = False
-            state.store[state.input_var].lattice.add_assumption_front(input_assumption)
+            state.store[state.input_var].lattice.add_assumption_front(assumption)
             return state
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
@@ -307,7 +320,7 @@ class AssumptionState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, assumption=None, state=None):
-            state.store[expr].meet(assumption)
+            state.store[expr].type_assumption.meet(assumption.type_assumption)
             expr_type = TypeLattice.from_lyra_type(expr.typ)
             state.store[expr].type_assumption.meet(expr_type)
             return state

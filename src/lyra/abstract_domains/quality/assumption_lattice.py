@@ -9,7 +9,6 @@ from enum import IntEnum, Enum
 from copy import deepcopy
 
 from lyra.abstract_domains.lattice import Lattice, BottomMixin, BoundedLattice
-from lyra.abstract_domains.numerical.interval_domain import IntervalLattice
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType
 from lyra.core.utils import copy_docstring
 
@@ -172,22 +171,18 @@ class AssumptionLattice(Lattice):
         """
 
         type_assmp = 'type_assmp'
-        range_assmp = 'range_assmp'
 
-    def __init__(self, type_element=None, range_element=None):
+    def __init__(self, type_element=None):
         super().__init__()
         if type_element is None:
             type_element = TypeLattice().top()
-        if range_element is None:
-            range_element = IntervalLattice().top()
         self._assumptions = {
-            AssumptionLattice.Assumption.type_assmp: type_element,
-            AssumptionLattice.Assumption.range_assmp: range_element
+            AssumptionLattice.Assumption.type_assmp: type_element
         }
         self.pp = None
 
     def __repr__(self):
-        assumptions = [self.type_assumption, self.range_assumption]
+        assumptions = [self.type_assumption]
         assumption_repr = [assumption.__repr__() for assumption in assumptions]
         comma_separated = ', '.join(assumption_repr)
         return f'({comma_separated})'
@@ -199,10 +194,6 @@ class AssumptionLattice(Lattice):
     @property
     def type_assumption(self):
         return self.assumptions[AssumptionLattice.Assumption.type_assmp]
-
-    @property
-    def range_assumption(self):
-        return self.assumptions[AssumptionLattice.Assumption.range_assmp]
 
     @copy_docstring(Lattice.bottom)
     def bottom(self):
@@ -232,25 +223,21 @@ class AssumptionLattice(Lattice):
 
     @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'AssumptionLattice') -> bool:
-        return self.type_assumption.less_equal(other.type_assumption) \
-               and self.range_assumption.less_equal(other.range_assumption)
+        return self.type_assumption.less_equal(other.type_assumption)
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'AssumptionLattice') -> 'AssumptionLattice':
         self.type_assumption.join(other.type_assumption)
-        self.range_assumption.join(other.range_assumption)
         return self
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'AssumptionLattice') -> 'AssumptionLattice':
         self.type_assumption.meet(other.type_assumption)
-        self.range_assumption.meet(other.range_assumption)
         return self
 
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'AssumptionLattice') -> 'AssumptionLattice':
         self.type_assumption.widening(other.type_assumption)
-        self.range_assumption.widening(other.range_assumption)
         return self
 
 
@@ -269,22 +256,31 @@ class InputAssumptionLattice(BoundedLattice):
     .. automethod:: AssumptionLattice._widening
     """
 
-    def __init__(self, iterations=1, assmps=None, pp=None):
+    def __init__(self, iterations=1, assmps=None, pp=None, var_name=None, relations=None, input_info=None):
         super().__init__()
         self.iterations = iterations
         self._assmps = assmps if assmps is not None else []
-        self.is_loop = False
-        self.join_as_loop = False
-        self.condition = None
+        self.var_name = var_name
+        self.relations = relations
+        self.input_info = input_info if input_info is not None else {}
         self.pp = pp
         self.infoloss = False
         self.is_main = False
+        self.is_loop = False
+        self.join_as_loop = False
+        self.condition = None
+        self.add_input_info = False
 
     def __repr__(self):
         if self.is_bottom():
             return "⊥"
         if self.is_top():
             return "T"
+
+        if self.var_name is not None:
+            input_info = {k.__str__(): v for k, v in self.input_info.items()}
+            return f'({self.var_name}, {self.assmps.__repr__()}, {self.relations}, {input_info})'
+
         if self.iterations == 1:
             return self.assmps.__repr__()
         return f"{self.iterations} x {self.assmps.__repr__()}"
@@ -326,12 +322,30 @@ class InputAssumptionLattice(BoundedLattice):
             return True
         if self.infoloss or other.infoloss:
             return False
-        if len(self.assmps) != len(other.assmps):
+        if self.iterations != other.iterations:
             return False
-        for assmp1, assmp2 in zip(self.assmps, other.assmps):
-            if not assmp1.less_equal(assmp2):
+        if isinstance(self.assmps, list) and isinstance(other.assmps, list):
+            if len(self.assmps) == len(other.assmps):
+                for assmp1, assmp2 in zip(self.assmps, other.assmps):
+                    if not assmp1.less_equal(assmp2):
+                        return False
+                return True
+            return False
+        elif not isinstance(self.assmps, list) and not isinstance(other.assmps, list):
+            if self.var_name is None:
+                self.var_name = other.var_name
+            assert self.var_name == other.var_name
+            if self.input_info is None:
+                self.input_info = other.input_info
+            assert self.input_info == other.input_info
+            if not self.assmps.less_equal(other.assmps):
                 return False
-        return True
+            if not self.relations.less_equal(other.relations):
+                return False
+            if self.input_info != other.input_info:
+                return False
+            return True
+        return False
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
