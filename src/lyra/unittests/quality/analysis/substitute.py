@@ -1,15 +1,14 @@
-# INITIAL a -> (Any, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, 9]), (Int, [-inf, inf])]
+# INITIAL [(Int, [-inf, 9]), (Int, [-inf, inf])]
 a: int = int(input())
-# STATE a -> (Int, [-inf, 9]), b -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, inf])]
+# STATE a -> (Int), b -> (Any), .IN -> [(b, (Int), a -> [-inf, 9], b -> [-inf, inf], {'b': [1]})], .REL -> a -> [-inf, 9], b -> [-inf, inf]
 b: int = int(input())
-# STATE a -> (Int, [-inf, 9]), b -> (Any, [-inf, inf]), .IN -> []
+# STATE a -> (Int), b -> (Any), .IN -> [], .REL -> a -> [-inf, 9], b -> [-inf, inf]
 b: int = a
-# STATE a -> (Any, [-inf, inf]), b -> (Int, [-inf, 9]), .IN -> []
+# STATE a -> (Any), b -> (Int), .IN -> [], .REL -> a -> [-inf, inf], b -> [-inf, 9]
 b: int = b + 1
-# STATE a -> (Any, [-inf, inf]), b -> (Int, [-inf, 10]), .IN -> []
+# STATE a -> (Any), b -> (Int), .IN -> [], .REL -> a -> [-inf, inf], b -> [-inf, 10]
 a: int = b
 
-# STATE a -> (Int, [-inf, 10]), b -> (Any, [-inf, inf]), .IN -> []
+# STATE a -> (Int), b -> (Any), .IN -> [], .REL -> a -> [-inf, 10], b -> [-inf, inf]
 if a > 10:
-    # STATE a -> (⊥, ⊥), b -> (⊥, ⊥), .IN -> [] | []
     raise ValueError
