@@ -12,7 +12,7 @@ import math
 
 from lyra.abstract_domains.numerical.interval_domain import IntervalState
 from lyra.abstract_domains.quality.assumption_lattice import TypeLattice, AssumptionLattice, \
-    InputAssumptionLattice
+    InputAssumptionLattice, MultiInputAssumptionLattice
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
@@ -31,7 +31,7 @@ class InputAssumptionStack(Stack):
     """
 
     def __init__(self):
-        super().__init__(InputAssumptionLattice, {})
+        super().__init__(MultiInputAssumptionLattice, {})
 
     @copy_docstring(Stack.pop)
     def pop(self):
@@ -49,7 +49,7 @@ class InputAssumptionStack(Stack):
                         return
                     if self.check_second_iteration(element):
                         self.lattice.assmps.pop(0)
-                    pp = element.assmps[0].pp
+                    pp = element.pp
                     self.lattice.add_assmps_with_iter(num_iter, element.assmps, pp)
                     self.lattice.join_as_loop = True
                 else:
@@ -69,9 +69,11 @@ class InputAssumptionStack(Stack):
         if len(self.lattice.assmps) == 0:
             return False
         prev_element = self.lattice.assmps[0]
-        if not isinstance(prev_element, InputAssumptionLattice):
+        if not isinstance(prev_element, MultiInputAssumptionLattice):
             return False
-        return prev_element.pp == element.assmps[0].pp
+        if prev_element.pp is None:
+            return False
+        return prev_element.pp == element.pp
 
     def get_num_iter_from_condition(self, condition):
         """Extracts the number of iterations from a condition
@@ -111,7 +113,7 @@ class InputAssumptionStack(Stack):
 
     @copy_docstring(Stack.push)
     def push(self):
-        self.stack.append(InputAssumptionLattice())
+        self.stack.append(MultiInputAssumptionLattice())
 
 
 class AssumptionState(Store, State):
@@ -135,6 +137,7 @@ class AssumptionState(Store, State):
         self.store[self.input_var].lattice.is_main = True
         interval_vars = [v for v in variables if not isinstance(v.typ, StringLyraType)]
         self.store[self.relationship] = IntervalState(interval_vars)
+        self.new_input = None
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
@@ -143,7 +146,7 @@ class AssumptionState(Store, State):
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'AssumptionState':
-        self.current_stack_top.condition = condition
+        self.stack_top.condition = condition
         curr_condition = condition
         self._assume_range(curr_condition)
         self._refinement.visit(condition, AssumptionLattice(), self)
@@ -170,11 +173,12 @@ class AssumptionState(Store, State):
     @copy_docstring(State.enter_loop)
     def enter_loop(self) -> 'AssumptionState':
         self.store[self.input_var].push()
-        self.current_stack_top.is_loop = True
+        self.stack_top.is_loop = True
         return self
 
     @copy_docstring(State.exit_loop)
     def exit_loop(self) -> 'AssumptionState':
+        self.stack_top.pp = self.pp
         self.store[self.input_var].pop()
         return self
 
@@ -189,22 +193,34 @@ class AssumptionState(Store, State):
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'AssumptionState':
         if isinstance(left, VariableIdentifier):
-            assumptions = deepcopy(self.store[left])
-            assumption = InputAssumptionLattice(1, assumptions)
-            #assumption = deepcopy(self.store[left])
-            assumption.var_name = left
-            assumption.relations = deepcopy(self.store[self.relationship])
-            num_in_elements = len(self.store[self.input_var].lattice.assmps)
-            assumption.input_info = {left: num_in_elements}
-
-            self.substitute_range(left, right)
-            self.substitute_range_in_assmps(left, right, self.current_stack_top.assmps)
-
+            relations_numerical = self.substitute_range(left, right)
+            assumption = deepcopy(self.store[left])
+            relations_before = deepcopy(self.store[self.relationship])
             self.store[left].top()
             self._refinement.visit(right, assumption, self)
+            self.store[self.relationship] = relations_numerical
+            if self.new_input is not None:
+                input_assmp = InputAssumptionLattice(assmp=self.new_input)
+                input_assmp.var_name = left
+                input_assmp.relations = relations_before
+                input_assmp.input_info = {left: self.compute_next_input_index()}
+                input_assmp.pp = self.pp
+                self.stack_top.add_assumption_front(input_assmp)
+            self.substitute_input_assmps(left, right, self.stack_top.assmps)
+            self.new_input = None
             return self
         error = f'Substitution for {left} not yet implemented!'
         raise NotImplementedError(error)
+
+    def compute_next_input_index(self):
+        """Computes the next index that should be used for an input."""
+        input_index = []
+        for input_stack in self.store[self.input_var].stack:
+            if len(input_stack.assmps) == 0:
+                input_index.append(1)
+                return input_index
+            input_index.append(len(input_stack.assmps))
+        return input_index
 
     def substitute_range(self, left: Expression, right: Expression) -> 'AssumptionState':
         """Executes substitute for the range assumption
@@ -213,17 +229,27 @@ class AssumptionState(Store, State):
         :param right: right hand side expression
         :return: state after substitution of the ranges
         """
-        res = self.store[self.relationship].substitute({left}, {right})
-        return self.interval_to_assmp_state(res)
+        relations = deepcopy(self.store[self.relationship])
+        return relations.substitute({left}, {right})
 
-    def substitute_range_in_assmps(self, left, right, assmps) -> 'AssumptionState':
+    def substitute_input_assmps(self, left, right, assmps) -> 'AssumptionState':
+        """Substitutes the variables used in the input assumption collection.
+
+        :param left: left hand side expression
+        :param right: right hand side expression
+        :param assmps: current assumptions to substitute
+        """
         for assumption in assmps:
-            if isinstance(assumption, AssumptionLattice):
-                if assumption.var_name != left:
+            if isinstance(assumption, InputAssumptionLattice):
+                if self.new_input is not None:
+                    new_input_assmp = self.stack_top.assmps[0]
+                    var_name = new_input_assmp.var_name
+                    input_index = new_input_assmp.input_info[var_name]
+                    assumption.input_info[var_name] = input_index
+                elif assumption.var_name != left:
                     assumption.relations.substitute({left}, {right})
             else:
-                self.substitute_range_in_assmps(left, right, assumption.assmps)
-        return self
+                self.substitute_input_assmps(left, right, assumption.assmps)
 
     @property
     def input_var(self):
@@ -234,7 +260,7 @@ class AssumptionState(Store, State):
         return VariableIdentifier(StringLyraType(), '.REL')
 
     @property
-    def current_stack_top(self):
+    def stack_top(self):
         return self.store[self.input_var].lattice
 
     def interval_to_assmp_state(self, interval_state: IntervalState):
@@ -293,17 +319,10 @@ class AssumptionState(Store, State):
         @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr, assumption=None, state=None):
             type_assmp = TypeLattice.from_lyra_type(expr.typ)
-            #var_name = assumption.var_name
-            #rel = assumption.relations
-            #num_in_elements = len(state.store[state.input_var].lattice.assmps)
-            #in_info = {assumption.var_name: num_in_elements}
-            #input_assmp = AssumptionLattice(type_assmp, var_name, rel, in_info).meet(assumption)
-            assumption.assmps.type_assumption.meet(type_assmp)
-            assumption.pp = state.pp
+            state.new_input = AssumptionLattice(type_assmp).meet(assumption)
             if state.store[state.input_var].lattice.infoloss:
                 if len(state.store[state.input_var].stack) == 1:
                     state.store[state.input_var].lattice.infoloss = False
-            state.store[state.input_var].lattice.add_assumption_front(assumption)
             return state
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
