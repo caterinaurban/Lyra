@@ -402,15 +402,16 @@ Also the interval lattice might not be needed anymore because we can do the thin
 
 \subsection{Copy info when input}
 
-Input Object: N x (V, AssumptionLattice, Octagon, Store) (with delimiter D)
+MultiInputAssumption: N x [InputAssumption (, InputAssumption)*] (with delimiter D)\\
+InputAssumption: (V, AssumptionLattice, Octagon, Dict)
 \begin{itemize}
-  \item \textit{N}: number of times this assumption is repeated (with delimiter D in same line, otherwise multiple lines)
-  \item \textit{V}: variable name that is equal to input (a = input())
-  \item \textit{AssumptionLattice}: assumption about that variable
-  \item \textit{Octagon}: current octagon object will be copied when a = input() is encountered (without applying a = input() on it)
-  \item \textit{Store}: describes the relationship of a variable to an input
-  \item \textit{with delimiter D}: if the assumption holds for multiple values in a line
-  \item \textit{D}: what kind of delimiter is used
+  \item \textit{N}: Number of times this assumption is repeated (with delimiter D in same line, otherwise multiple lines)
+  \item \textit{V}: Variable name that is equal to input (a = input()). This is needed because when we need to apply the semantics we are not allowed to apply semantics of this variable because it is now an input and therefore not that variable anymore.
+  \item \textit{AssumptionLattice}: Assumption about that variable. Currently only shows the type. Could be extended with strings or 'cannot be zero'.
+  \item \textit{Octagon}: Current octagon object. It will be copied when a = input() is encountered (without applying a = input() on it).
+  \item \textit{Dict}: Describes the relationship of a variable to an input. This is needed so that if we add the second variable of a relation to the input the first variable needs to know that now the relation is not with that variable anymore but with an other input.
+  \item \textit{with delimiter D}: If the assumption holds for multiple values in a line.
+  \item \textit{D}: What delimiter is used.
 \end{itemize}
 
 

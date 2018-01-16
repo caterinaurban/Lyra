@@ -1,0 +1,36 @@
+if else infoloss 2
+
+backward:
+while not worklist.empty():
+entry = deepcopy(initial)
+  time1: 27732
+if current.identifier != self.cfg.out_node.identifier:
+edges = self.cfg.out_edges(current)
+  time2:   486
+for edge in edges:
+entry = entry.join(successor)
+  time3: 81493
+if isinstance(current, Loop) and self.widening < iteration:
+  time4:  2811
+if previous is None or not entry.less_equal(previous):
+  time5: 26975
+if isinstance(edge, Conditional) and edge.kind == Edge.Kind.DEFAULT:
+  time6: 11939
+elif edge.kind == Edge.Kind.IF_IN:
+  time7: 18733
+elif edge.kind == Edge.Kind.LOOP_IN:
+  time8: 12057
+if edge.target in self.result.result:
+  time9: 35961
+else:
+  time10:  293
+
+
+
+
+substitute_time:12092
+assume_time:23083
+pop_case:16
+pop_loop:358
+-----analysis:139828
+
