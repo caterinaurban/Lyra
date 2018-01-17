@@ -135,7 +135,8 @@ class AssumptionState(Store, State):
         super().__init__(variables, lattices)
         self.store[self.input_var] = InputAssumptionStack()
         self.store[self.input_var].lattice.is_main = True
-        interval_vars = [v for v in variables if not isinstance(v.typ, StringLyraType)]
+        interval_types = (BooleanLyraType, IntegerLyraType, FloatLyraType)
+        interval_vars = [v for v in variables if isinstance(v.typ, interval_types)]
         self.store[self.relationship] = IntervalState(interval_vars)
         self.new_input = None
 
@@ -230,6 +231,8 @@ class AssumptionState(Store, State):
         :return: state after substitution of the ranges
         """
         relations = deepcopy(self.store[self.relationship])
+        if not isinstance(left.typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
+            return relations
         return relations.substitute({left}, {right})
 
     def substitute_input_assmps(self, left, right, assmps) -> 'AssumptionState':

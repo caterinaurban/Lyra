@@ -413,11 +413,6 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_For(self, node, types=None, typ=None):
         header_node = Loop(self._id_gen.next)
 
-        cfg = self._translate_body(node.body, types, typ)
-        body_in_node = cfg.in_node
-        body_out_node = cfg.out_node
-
-        pp = ProgramPoint(node.target.lineno, node.target.col_offset)
         iteration = self.visit(node.iter, types, ListLyraType(IntegerLyraType()))
         if isinstance(iteration, Call) and iteration.name == "range":
             target_type = IntegerLyraType()
@@ -425,6 +420,12 @@ class CFGVisitor(ast.NodeVisitor):
             error = f"The for loop iteration statment {node.iter} is not yet translatable to CFG!"
             raise NotImplementedError(error)
         target = self.visit(node.target, types, target_type)
+
+        cfg = self._translate_body(node.body, types, typ)
+        body_in_node = cfg.in_node
+        body_out_node = cfg.out_node
+
+        pp = ProgramPoint(node.target.lineno, node.target.col_offset)
 
         test = Call(pp, "in", [target, iteration], BooleanLyraType())
         neg_test = Call(pp, "not", [test], BooleanLyraType())
