@@ -121,6 +121,46 @@ for i in range(N):
     raise ValueError
 \end{lstlisting}
 
+\begin{lstlisting}
+# final: [10 x [(.IN[1].len x [(int), _] with delimiter " "), ((int), .IN[0] < .IN[1].len)]]
+# [10 x [(a, (int), _, {a: 1}), (b, (int), b < len_a, {b: 0, a: 1})]]
+for i in range(10):
+  # [len_a x [(a, (int), _, {a: 1})] with delimiter " ", (b, (int), b < len_a, {b: 0, a: 1})]
+  a = map(int, input().split())
+  # [(b, (int), b < len_a, {b: 0})]
+  b = int(input())
+  # b < len_a
+  x = a[b]
+\end{lstlisting}
+
+\begin{lstlisting}
+# final: [((int), _), ((int), 0 < .IN[0].len, .IN[1] < .IN[0].len) x [((int), _)] with delimiter " "]]
+# [(N, (int), _, {N: 1}), (len_values, (int), 0 < len_values and N-1 < len_values, {len_values: 0, N: 1}) x [(values, (int), _, {values: 0, N: 1})] with delimiter " "]
+N = int(input())
+# [(len_values, (int), 0 < len_values and N-1 < len_values, {len_values: 0}) x [(values, (int), 0 < len_values and N-1 < len_values, {values: 0})]]
+values = map(int, input().split())
+# 0 < len_values and N - 1 < len_values
+# i >= 0, i < N
+for i in range(N):
+  # i < len_values
+  x = values[i]
+\end{lstlisting}
+
+\begin{lstlisting}
+a = 0
+i = 0
+# [(x, (int), _, {x: 0})]
+while i < 10:
+  # [(x, (int), x <= a - 2, {x: 0})]
+  a = a + 2
+  i = i + 1
+# [(x, (int), x <= a, {x: 0})]
+x = int(input())
+# x <= a
+if x > a:
+  raise ValueError
+\end{lstlisting}
+
 
 \section{Operations}
 
@@ -159,7 +199,7 @@ Solution: Do both separately and join.
   substitute all relations containing a (ex: $a < b$ gets $2 < b$, or $len_{vals} > a$ gets $len_{vals} > 2)$
   \item $somelist = line.split(",")$\\ with $somelist \rightarrow len_{somelist} \times [(Int)]$ and $len_{somelist} > 3$
   \begin{itemize}
-    \item substitute list info: $line \rightarrow len_{line} \times [(Int)]\:with\:delimiter\:","$ 
+    \item substitute list info: $line \rightarrow len_{line} \times [(Int)]\ with\ delimiter\ ","$ 
     \item reset info about $somelist$: $somelist \rightarrow len_{somelist} \times [(Any)]$
     \item substitute info about $len_{somelist}$: $len_{line} > 3$
     \item reset info about $len_{somelist}$: $len_{somelist} \geq -\infty$ and $len_{somelist} \leq \infty$
@@ -176,9 +216,9 @@ Solution: Do both separately and join.
     \item update input: $.IN \rightarrow [IN_1]$
     \item substitute all relations containing a with new input variable (ex: $a < b$ gets $IN_1 < b$, or $len_{vals} > a)$ gets $len_{vals} > IN_1)$
   \end{itemize}
-  \item $somelist = input()$\\ with $somelist \rightarrow len_{somelist} \times [(Int)]\:with\:delimiter\:","$ and $len_{somelist} > 3$
+  \item $somelist = input()$\\ with $somelist \rightarrow len_{somelist} \times [(Int)]\ with\ delimiter\ ","$ and $len_{somelist} > 3$
   \begin{itemize}
-    \item update input: $.IN \rightarrow [LEN_2 \times [(Int)]\:with\:delimiter\:","]$
+    \item update input: $.IN \rightarrow [LEN_2 \times [(Int)]\ with\ delimiter\ ","]$
     \item substitute octagon containing $len_{somelist}$: $LEN_2 > 3$
   \end{itemize}
 \end{itemize}
@@ -186,9 +226,9 @@ Solution: Do both separately and join.
 \subsection{Assume}
 
 \begin{itemize}
-  \item $for\:i\:in\:range(N)$ or $if a > b:$\\
+  \item $for\ i\ in\ range(N)$ or $if a > b:$\\
   We call assume for the octagon domain with ($i \geq 0$ and $i < N$) or ($a > b:$)
-  \item joining loop with else: $for\:i\:in\:range(N)$\\
+  \item joining loop with else: $for\ i\ in\ range(N)$\\
   We only know that this loop is entered if $N > 0$. We therefore have to keep around two octagon domains:\\
   One with the assumptions of the inside of the loop with an annotation that they only hold if $N > 0$. One with the assumptions from the else branch with the annotation if $N \leq 0$.
   \item joining if/else: $if a > b:$\\

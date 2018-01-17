@@ -1,0 +1,189 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, portrait, margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float}
+\usepackage[font={small,it}]{caption}
+
+\usepackage{fancyhdr}
+%\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\newcommand{\bigcell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ 
+\lstdefinelanguage{Python2}{
+  language     = Python,
+  morekeywords = {assert},
+}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{white},   
+    commentstyle=\color{ForestGreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{black},
+    stringstyle=\color{red},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle, language=Python2}
+
+\begin{document}
+
+\title{Operations for Relationships}
+
+\maketitle
+
+\pagenumbering{arabic}
+
+\section{Encoding/Decoding Input Assumptions in JSON}
+
+
+\subsection{In Program after analysis finished}
+
+In reality we have assumption like $N - 1 - len_{values} \leq 0$ that need to be in a format that is more human readable.\\
+Idea: move a negative variable to other side $N - 1 \leq len_{values}$ or any variable else.\\
+\\
+$[(N, (int), \_, {N: 1}),$\\
+$(len_{values}, (int), N-1 < len_{values}, \{len_{values}: 0, N: 1\})$\\
+$\times [(values, (int), \_, \{values: 0, N: 1\})]\ with\ delimiter\ "\ "]$\\
+\begin{itemize}
+  \item MultiInputAssumptionLattice 1 x
+  \begin{itemize}
+    \item InputAssumptionLattice 
+    \begin{itemize}
+      \item var name: N
+      \item AssumptionLattice (int)
+      \item relations: []
+      \item input info: N: 1
+    \end{itemize}
+    \item MultiInputAssumptionLattice (with delimiter " ")
+    \begin{itemize}
+      \item InputAssumptionLattice 
+      \begin{itemize}
+	\item var name: $len_{values}$
+	\item AssumptionLattice (int)
+	\item relations: $[0 < len_{values}, N-1 < len_{values}]$
+	\item input info: $\{len_{values}: 0, N: 1\}$
+      \end{itemize}
+      \item InputAssumptionLattice 
+      \begin{itemize}
+	\item var name: values
+	\item AssumptionLattice (int)
+	\item relations: []
+	\item input info: $\{values: 0, N: 1\}$
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+
+Important: You need to distinguish if there have to be at least 0 elements or if the assumptions just not hold if there are no elements or the number of elements is $\leq$ 0 .\\
+Example1: for i in range(N): some assumptions\\
+Example2: if len(values) $\leq$ 0: raise Error\\
+To do so you have to make sure not to include i $leq$ 0 when analyzing a loop header.
+
+\subsection{In Program after initial processing:}
+
+$[((int, \_),$\\
+$((int), [.IN[1]-1 < THIS.len])$\\
+$\times [((int), \_)]\ wD\ " "]]$\\
+
+\begin{itemize}
+  \item List 
+  \begin{itemize}
+    \item Tuple 
+    \begin{itemize}
+      \item (int)
+      \item $[]$
+    \end{itemize}
+    \item MultiInput with delimiter " "
+    \begin{itemize}
+      \item Tuple
+      \begin{itemize}
+	\item (int)
+	\item $[.IN[1]-1 < THIS.len]$
+      \end{itemize}
+      \item Tuple
+      \begin{itemize}
+	\item (int)
+	\item $[]$
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+
+
+\subsection{Information needed for JSON}
+
+before:\\
+$[(N, (int), \_, {N: 1}),$\\
+$(len_{values}, (int), N-1 < len_{values}, \{len_{values}: 0, N: 1\})$\\
+$\times [(values, (int), \_, \{values: 0, N: 1\})]\ wD\ " "]$\\
+after:\\
+$[((int, \_),$\\
+$((int), [.IN[1]-1 < THIS.len])$\\
+$\times [((int), \_)]\ wD\ " "]]$\\
+\\
+Encoded information:\\
+\begin{itemize}
+  \item assumptions per line:\\
+  $[line1, line2, ...]$
+  \item assumptions about repetition of lines:\\
+  $N \times [line1, line2, ...]$
+  \item assumptions on same line with delimiter:\\
+  $len \times [assmps]\ with\ delimiter\ ","$
+  \item assumptions about type:\\
+  $((type), ...)$
+  \item assumptions about relationship to current value:\\
+  $(..., THIS < .IN[0])$
+  \item assumptions about repetition number:\\
+  $((type), relations) \times [assmps]$
+\end{itemize}
+
+\subsection{JSON Design}
+
+\begin{itemize}
+  \item TYPE: "bool" or "int" or "float" or "any"
+  \item current element reference: "THIS"
+  \item other element reference. id:number
+  \item RELATION: left hand side of $\leq$ (example: $THIS - 1 + id{:}2$ of $THIS - 1 + id{:}2 \leq 0$. Input checker can then split by " ", look for "THIS" and a constant and/or an id)
+  \item ASSUMPTION: $\{type: TYPE, relations: [RELATION, ...]\}$
+  \item DELIMITER: delimiter of values on the same line
+  \item assumption with repetition:\\
+  $\{repetition:ASSUMPTION/CONSTANT,$\\
+  $assumptions:[ASSUMPTION, ...]$\\
+  $(, delimiter:DELIMITER)\}$ (if delimiter exists assumptions hold for values on the same line, otherwise the values are on seperate lines)
+  \item list of assumptions with identifiers: $[..., 0{:}\{ASSUMPTION(WITHREP)\}]$
+\end{itemize}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
