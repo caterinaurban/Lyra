@@ -1,6 +1,6 @@
 # INITIAL [(Int, [-inf, 9]), (Int, [-inf, inf])]
 a: int = int(input())
-# STATE a -> (Int), b -> (Any), .IN -> [(b, (Int), a -> [-inf, 9], b -> [-inf, inf], {'b': [1]})], .REL -> a -> [-inf, 9], b -> [-inf, inf]
+# STATE a -> (Int), b -> (Any), .IN -> [(b, (Int), a -> [-inf, 9], b -> [-inf, inf], {'b': 4})], .REL -> a -> [-inf, 9], b -> [-inf, inf]
 b: int = int(input())
 # STATE a -> (Int), b -> (Any), .IN -> [], .REL -> a -> [-inf, 9], b -> [-inf, inf]
 b: int = a

@@ -1,4 +1,4 @@
-# INITIAL [(Float, [-inf, inf])]
+# INITIAL [(Float, [-inf, inf]), (Int, [-inf, 35])]
 a: float = float(input())
 
 # b: int = 0
@@ -11,10 +11,10 @@ if a > 10:
     # b: int = b - 13
     x: int = b - 13
 else:
-    c: int = int(input())
+    b: int = int(input())
 
     #
-    x: int = c
+    x: int = b
 # if b < c:
 if x > 22:
     raise ValueError
