@@ -66,7 +66,7 @@ class TypeLattice(BottomMixin):
         return cls(TypeLattice.Status.Any)
 
     @property
-    def element(self) -> Status:
+    def element(self):
         if self.is_bottom():
             return None
         return self._element
@@ -246,7 +246,7 @@ class InputAssumptionLattice(BoundedLattice):
     relations: relational assumption of the input
     input_info: information about locations of related inputs
 
-    The default element is (None, [], None, {})
+    The default element is (None, Any, None, {})
 
     .. document private methods
     .. automethod:: InputAssumptionLattice._less_equal
@@ -255,14 +255,17 @@ class InputAssumptionLattice(BoundedLattice):
     .. automethod:: InputAssumptionLattice._widening
     """
 
-    def __init__(self, var_name=None, assmp=None, relations=None, input_info=None, pp=None):
+    def __init__(self, var_name=None, assmp=None, relations=None, input_info=None):
         super().__init__()
         self.var_name = var_name
         self.relations = relations
         self.input_info = input_info if input_info is not None else {}
         self.assmp = assmp if assmp is not None else AssumptionLattice()
-        self.pp = pp
         self.infoloss = False
+
+    @property
+    def input_id(self):
+        return self.input_info[self.var_name]
 
     def __repr__(self):
         if self.is_bottom():
@@ -293,23 +296,17 @@ class InputAssumptionLattice(BoundedLattice):
         if self.infoloss:
             return self
         if other.infoloss:
-            return self.replace(other)
+            return self.replace(deepcopy(other))
         self.assmp.join(other.assmp)
         if self.var_name != other.var_name:
-            self.relations.store[self.var_name].top()
-            self.relations.store[other.var_name].top()
+            self.infoloss = True
             return self
         else:
             self.relations.join(other.relations)
         if self.input_info != other.input_info:
             for var_name, input_index in self.input_info.items():
-                if len(input_index) < len(other.input_info[var_name]):
+                if input_index > other.input_info[var_name]:
                     self.input_info[var_name] = other.input_info[var_name]
-                elif len(input_index) == len(other.input_info[var_name]):
-                    new_input_info = []
-                    for ind1, ind2 in zip(self.input_info[var_name], other.input_info[var_name]):
-                        new_input_info.append(max(ind1, ind2))
-                    self.input_info[var_name] = new_input_info
         return self
 
     @copy_docstring(Lattice._meet)
@@ -346,6 +343,7 @@ class MultiInputAssumptionLattice(BoundedLattice):
         self.is_loop = False
         self.join_as_loop = False
         self.condition = None
+        self.input_id = None
 
     def __repr__(self):
         if self.is_bottom():
@@ -385,6 +383,7 @@ class MultiInputAssumptionLattice(BoundedLattice):
         """
         input_assmps = MultiInputAssumptionLattice(iterations, assmps, pp)
         input_assmps.is_loop = True
+        input_assmps.input_id = pp.line
         self._assmps.insert(0, input_assmps)
 
     @copy_docstring(Lattice._less_equal)
@@ -411,15 +410,26 @@ class MultiInputAssumptionLattice(BoundedLattice):
         if self.infoloss:
             return self
         if other.infoloss:
-            return self.replace(other)
+            return self.replace(deepcopy(other))
         if len(self.assmps) == len(other.assmps) == 0:
             return self
         if self.join_as_loop:
             assert other.join_as_loop
-            if len(self.assmps) > len(other.assmps):
+            if len(self.assmps) == 0:
+                self.replace(deepcopy(other))
+                return self
+            elif len(other.assmps) == 0:
+                return self
+            self_input_pp = self.assmps[0].input_id
+            other_input_pp = other.assmps[0].input_id
+            if self_input_pp == other_input_pp:
+                return self
+            elif self_input_pp < other_input_pp:
+                self._assmps = self.assmps[:1] + other.assmps
                 return self
             else:
-                return self.replace(other)
+                self._assmps = deepcopy(other.assmps[:1]) + self.assmps
+                return self
         if len(self.assmps) != len(other.assmps) and not self.is_main:
             self.assmps.clear()
             self.infoloss = True
@@ -429,13 +439,19 @@ class MultiInputAssumptionLattice(BoundedLattice):
         else:
             new_assmps = []
             for assmp1, assmp2 in zip(self.assmps, other.assmps):
-                if type(assmp1) != type(assmp2):
+                if type(assmp1) != type(assmp2) or assmp1.infoloss or assmp2.infoloss:
                     self.assmps.clear()
                     if not self.is_main:
                         self.infoloss = True
                     return self
                 else:
                     new_assmps.append(deepcopy(assmp1).join(assmp2))
+                    if assmp1.infoloss:
+                        self.assmps.clear()
+                        if not self.is_main:
+                            self.infoloss = True
+                        return self
+
             self._assmps = new_assmps
         return self
 
@@ -459,13 +475,18 @@ class MultiInputAssumptionLattice(BoundedLattice):
             self_assmp_lattice = isinstance(curr_self, InputAssumptionLattice)
             other_assmp_lattice = isinstance(curr_other, InputAssumptionLattice)
             if self_assmp_lattice and other_assmp_lattice:
-                final_assmps.append(curr_self.join(curr_other))
+                curr_self.join(curr_other)
+                if curr_self.infoloss:
+                    break
+                final_assmps.append(curr_self)
             elif not self_assmp_lattice and not other_assmp_lattice:
                 assert isinstance(curr_self, MultiInputAssumptionLattice)
                 assert isinstance(curr_other, MultiInputAssumptionLattice)
                 if curr_self.iterations == curr_other.iterations:
                     for assmp1, assmp2 in zip(curr_self.assmps, curr_other.assmps):
                         assmp1.join(assmp2)
+                        if assmp1.infoloss:
+                            break
                     final_assmps.append(curr_self)
                 elif curr_self.iterations < curr_other.iterations:
                     copy_other_first = deepcopy(curr_other)

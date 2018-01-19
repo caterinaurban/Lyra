@@ -49,8 +49,7 @@ class InputAssumptionStack(Stack):
                         return
                     if self.check_second_iteration(element):
                         self.lattice.assmps.pop(0)
-                    pp = element.pp
-                    self.lattice.add_assmps_with_iter(num_iter, element.assmps, pp)
+                    self.lattice.add_assmps_with_iter(num_iter, element.assmps, element.pp)
                     self.lattice.join_as_loop = True
                 else:
                     self.lattice.join_as_loop = True
@@ -204,7 +203,7 @@ class AssumptionState(Store, State):
                 input_assmp = InputAssumptionLattice(assmp=self.new_input)
                 input_assmp.var_name = left
                 input_assmp.relations = relations_before
-                input_assmp.input_info = {left: self.compute_next_input_index()}
+                input_assmp.input_info = {left: self.pp.line}
                 input_assmp.pp = self.pp
                 self.stack_top.add_assumption_front(input_assmp)
             self.substitute_input_assmps(left, right, self.stack_top.assmps)
@@ -212,16 +211,6 @@ class AssumptionState(Store, State):
             return self
         error = f'Substitution for {left} not yet implemented!'
         raise NotImplementedError(error)
-
-    def compute_next_input_index(self):
-        """Computes the next index that should be used for an input."""
-        input_index = []
-        for input_stack in self.store[self.input_var].stack:
-            if len(input_stack.assmps) == 0:
-                input_index.append(1)
-                return input_index
-            input_index.append(len(input_stack.assmps))
-        return input_index
 
     def substitute_range(self, left: Expression, right: Expression) -> 'AssumptionState':
         """Executes substitute for the range assumption
@@ -235,7 +224,7 @@ class AssumptionState(Store, State):
             return relations
         return relations.substitute({left}, {right})
 
-    def substitute_input_assmps(self, left, right, assmps) -> 'AssumptionState':
+    def substitute_input_assmps(self, left, right, assmps):
         """Substitutes the variables used in the input assumption collection.
 
         :param left: left hand side expression
@@ -247,9 +236,10 @@ class AssumptionState(Store, State):
                 if self.new_input is not None:
                     new_input_assmp = self.stack_top.assmps[0]
                     var_name = new_input_assmp.var_name
-                    input_index = new_input_assmp.input_info[var_name]
-                    assumption.input_info[var_name] = input_index
-                elif assumption.var_name != left:
+                    if var_name not in assumption.input_info:
+                        input_index = new_input_assmp.input_info[var_name]
+                        assumption.input_info[var_name] = input_index
+                elif assumption.var_name is not None and assumption.var_name.name != left.name:
                     assumption.relations.substitute({left}, {right})
             else:
                 self.substitute_input_assmps(left, right, assumption.assmps)
