@@ -134,19 +134,21 @@ class InputCorrectionMain(tk.Frame):
             self.label_progress.config(text="0/0")
             self.label_new_val_ok.config(text="")
 
-    def check_new_val(self, event):
+    def check_new_val(self, _):
         """Check if the current new value given by the user fulfils the assumptions."""
         if len(self.errors) == 0:
             return
         new_val = self.entry_new_val.get()
-        self.errors[self.error_index].new_value = new_val
-        assmp = self.errors[self.error_index].assumption
-        is_ok = self.controller.check_new_val(new_val, assmp)
-        if is_ok:
+        curr_error = self.errors[self.error_index]
+        curr_error.new_value = new_val
+        new_error = self.controller.check_new_val(curr_error)
+        if new_error is None:
             error_image = tk.PhotoImage(file="icons/checkmark.png")
             self.label_new_val_ok.config(image=error_image)
             self.label_new_val_ok.image = error_image
         else:
+            self.errors[self.error_index] = new_error
+            self.label_error.config(text=new_error.error_message)
             error_image = tk.PhotoImage(file="icons/error.png")
             self.label_new_val_ok.config(image=error_image)
             self.label_new_val_ok.image = error_image
@@ -162,4 +164,3 @@ class InputCorrectionMain(tk.Frame):
         self.errors = self.controller.check_corrected_input(self.errors)
         self.error_index = 0
         self.show_error()
-

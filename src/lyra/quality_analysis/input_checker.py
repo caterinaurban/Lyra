@@ -1,5 +1,16 @@
-from lyra.abstract_domains.quality.assumption_lattice import TypeLattice, AssumptionLattice, \
-    InputAssumptionLattice
+from lyra.abstract_domains.quality.assumption_lattice import TypeLattice, \
+    MultiInputAssumptionLattice
+from lyra.quality_analysis.InputAssumptionSimplification import SimpleAssumption
+
+
+class ErrorInformation:
+    """Contains information about an error."""
+    def __init__(self, location, old_value, error_message, assumption):
+        self.location = location
+        self.old_value = old_value
+        self.new_value = old_value
+        self.error_message = error_message
+        self.assumption = assumption
 
 
 class InputChecker:
@@ -64,6 +75,22 @@ class InputChecker:
         self.error_file.write('\n')
         return error
 
+    def create_relation_error(self, line_num, relation):
+        """Creates an error messages because of a wrong relation."""
+        return f'Relation Error in line {line_num}: ' \
+               f'the following relation is violated: {relation}.'
+
+    def write_relation_error(self, line_num, relation):
+        """Prints an error because a relation is violated
+
+        :param line_num: line number of the input
+        :param relation: the violated relation
+        """
+        error = self.create_relation_error(line_num, relation)
+        self.error_file.write(error)
+        self.error_file.write('\n')
+        return error
+
     def write_no_error(self):
         """Prints a message that no error has been found
         """
@@ -104,7 +131,7 @@ class InputChecker:
         """
         num_assmps = 0
         for assmp in assumptions:
-            if isinstance(assmp, InputAssumptionLattice):
+            if isinstance(assmp, MultiInputAssumptionLattice):
                 num_assmps += self.find_num_total_assmps(assmp.assmps, assmp.iterations)
             else:
                 num_assmps += 1
@@ -140,7 +167,7 @@ class InputChecker:
         has_error = False
         for _ in range(iterations):
             for assmp in assumptions:
-                if isinstance(assmp, InputAssumptionLattice):
+                if isinstance(assmp, MultiInputAssumptionLattice):
                     (err, line_num) = self.check_assmps(assmp.assmps, assmp.iterations, line_num)
                 else:
                     line_num += 1
@@ -149,7 +176,7 @@ class InputChecker:
                 has_error |= err
         return has_error, line_num
 
-    def check_one_assmp(self, assumption: AssumptionLattice, input_line: str, line_num: int):
+    def check_one_assmp(self, assumption: SimpleAssumption, input_line: str, line_num: int):
         """Checks if the current input fulfils the assumption
 
         :param assumption: current assumption
@@ -157,7 +184,7 @@ class InputChecker:
         :param line_num: current line number of input
         :return: if an error has been found
         """
-        type_assmp = assumption.type_assumption
+        type_assmp = assumption.assmps.type_assumption
         if type_assmp == TypeLattice().integer():
             try:
                 val = int(input_line)
@@ -177,48 +204,46 @@ class InputChecker:
         else:
             return False
 
-        range_assmp = assumption.range_assumption
-        if val < range_assmp.lower or val > range_assmp.upper:
-            lower = range_assmp.lower
-            upper = range_assmp.upper
-            error_message = self.write_range_error(line_num, input_line, lower, upper)
-            new_error = ErrorInformation(line_num, input_line, error_message, assumption)
-            self.errors.append(new_error)
-            return True
-        return False
-
-    def check_assmp(self, value, assumption: AssumptionLattice):
-        """Checks if a value fulfils an assumption
-
-        :param assumption: the assumption that should be fulfilled
-        :param value: the value that should fulfil the assumption
-        :return: If the value fulfils the assumption
-        """
-        type_assmp = assumption.type_assumption
-        if type_assmp == TypeLattice().integer():
-            try:
-                val = int(value)
-            except ValueError:
-                return False
-        elif type_assmp == TypeLattice().real():
-            try:
-                val = float(value)
-            except ValueError:
-                return False
-        else:
-            return True
-
-        range_assmp = assumption.range_assumption
-        if val < range_assmp.lower or val > range_assmp.upper:
-            return False
+        relations = assumption.relations
+        for relation in relations:
+            relation_ok = True
+            if not relation.evaluate(val):
+                relation_ok = False
+                error_message = self.write_relation_error(line_num, relation)
+                new_error = ErrorInformation(line_num, input_line, error_message, assumption)
+                self.errors.append(new_error)
+            if not relation_ok:
+                return True
         return True
 
+    def check_assmp(self, error: ErrorInformation):
+        """Checks if a value fulfils an assumption
 
-class ErrorInformation:
-    """Contains information about an error."""
-    def __init__(self, location, old_value, error_message, assumption):
-        self.location = location
-        self.old_value = old_value
-        self.new_value = old_value
-        self.error_message = error_message
-        self.assumption = assumption
+        :param error: the current error that should be checked
+        :return: the error with an adapted error message or None if no error was found
+        """
+        type_assmp = error.assumption.assmps.type_assumption
+        if type_assmp == TypeLattice().integer():
+            try:
+                val = int(error.new_value)
+            except ValueError:
+                message = self.create_type_error(error.location, error.new_value, type_assmp)
+                error.error_message = message
+                return error
+        elif type_assmp == TypeLattice().real():
+            try:
+                val = float(error.new_value)
+            except ValueError:
+                message = self.create_type_error(error.location, error.new_value, type_assmp)
+                error.error_message = message
+                return error
+        else:
+            return None
+
+        relations = error.assumption.relations
+        for relation in relations:
+            if not relation.evaluate(val):
+                message = self.create_relation_error(error.location, error.assumption.relations)
+                error.error_message = message
+                return error
+        return None

@@ -1,10 +1,23 @@
 import json
 from json import JSONDecoder
-from math import inf
 
-from lyra.abstract_domains.numerical.interval_domain import IntervalLattice
+from lyra.abstract_domains.numerical.interval_domain import IntervalState
 from lyra.abstract_domains.quality.assumption_lattice import AssumptionLattice, TypeLattice, \
-    InputAssumptionLattice
+    InputAssumptionLattice, MultiInputAssumptionLattice
+from lyra.quality_analysis.InputAssumptionSimplification import SimpleRelation, SimpleAssumption
+
+
+class IdJSON:
+    """Constants for the JSON encoding."""
+    type_assmp = "type_assmp"
+    iterations = "iterations"
+    assmps = "assmps"
+    relations = "relations"
+    id = "id"
+    rel_this_pos = "rel_this_pos"
+    rel_constant = "rel_constant"
+    rel_other_pos = "rel_other_pos"
+    rel_other_id = "rel_other_id"
 
 
 class AssumptionEncoder(json.JSONEncoder):
@@ -15,16 +28,21 @@ class AssumptionEncoder(json.JSONEncoder):
         :param obj: current object to turn into a serializable object
         :return: serializable object representation of the assumption objects
         """
-        if isinstance(obj, InputAssumptionLattice):
-            if obj.iterations is None:
-                return {}
-            return {"iterations": obj.iterations, "assmps": obj.assmps}
-        if isinstance(obj, AssumptionLattice):
-            return {"type_assmp": obj.type_assumption, "range_assmp": obj.range_assumption}
+        if isinstance(obj, MultiInputAssumptionLattice):
+            if isinstance(obj.iterations, InputAssumptionLattice):
+                raise NotImplementedError
+            else:
+                return {IdJSON.iterations: obj.iterations, IdJSON.assmps: obj.assmps}
+        if isinstance(obj, SimpleAssumption):
+            return {IdJSON.type_assmp: obj.assmps.type_assumption, IdJSON.relations: obj.relations,
+                    IdJSON.id: obj.var_id}
         if isinstance(obj, TypeLattice):
             return obj.__repr__()
-        if isinstance(obj, IntervalLattice):
-            return obj.__repr__()
+        if isinstance(obj, SimpleRelation):
+            return {IdJSON.rel_this_pos: obj.this_pos, IdJSON.rel_other_pos: obj.other_pos,
+                    IdJSON.rel_other_id: obj.other_id, IdJSON.rel_constant: obj.constant}
+        if isinstance(obj, IntervalState):
+            raise NotImplementedError
         return json.JSONEncoder.default(self, obj)
 
 
@@ -39,38 +57,30 @@ class AssumptionDecoder(json.JSONDecoder):
         :param obj: current serialized object
         :return: assumption representation of the serialized objects
         """
-        if not obj:
-            return None
 
-        if "0" in obj:
-            return obj["0"]
+        if IdJSON.rel_this_pos in obj:
+            this_pos = obj[IdJSON.rel_this_pos]
+            constant = obj[IdJSON.rel_constant]
+            other_pos = obj[IdJSON.rel_other_pos]
+            other_id = obj[IdJSON.rel_other_id]
+            return SimpleRelation(this_pos, constant, other_pos, other_id)
 
-        if "iterations" in obj:
-            num_iter = obj["iterations"]
-            assmps = obj["assmps"]
-            return InputAssumptionLattice(num_iter, assmps)
-
-        type_assumption = TypeLattice()
-        range_assumption = IntervalLattice()
-        if "type_assmp" in obj:
-            type_assmp = obj["type_assmp"]
+        if IdJSON.id in obj:
+            type_assmp = obj[IdJSON.type_assmp]
+            type_assumption = TypeLattice()
             if type_assmp == "Int":
                 type_assumption = TypeLattice().integer()
             elif type_assmp == "Float":
                 type_assumption = TypeLattice().real()
-        if "range_assmp" in obj:
-            bounds = obj["range_assmp"]
-            if bounds == '⊥':
-                range_assumption = IntervalLattice().bottom()
-            elif bounds == 'T':
-                range_assumption = IntervalLattice()
-            else:
-                bounds = obj["range_assmp"][1:-1].split(',')
-                bounds[0] = -inf if bounds[0].strip() == "-inf" else int(bounds[0])
-                bounds[1] = inf if bounds[1].strip() == "inf" else int(bounds[1])
-                range_assumption = IntervalLattice(bounds[0], bounds[1])
+            assmp = AssumptionLattice(type_assumption)
+            return SimpleAssumption(obj[IdJSON.id], assmp, obj[IdJSON.relations])
 
-        return AssumptionLattice(type_assumption, range_assumption)
+        if "iterations" in obj:
+            num_iter = obj[IdJSON.iterations]
+            assmps = obj[IdJSON.assmps]
+            return MultiInputAssumptionLattice(num_iter, assmps)
+
+        raise NotImplementedError(f"JSON Decoding for object {obj} is not implemented.")
 
 
 class JSONHandler:
@@ -83,7 +93,7 @@ class JSONHandler:
 
     def input_assumptions_to_json(self, final_input_state):
         """Writes the assumptions to a json file."""
-        final_input_dict = {"0": final_input_state}
+        final_input_dict = final_input_state
         with open(self.filename, 'w') as f:
             json.dump(final_input_dict, f, cls=AssumptionEncoder, indent=4)
 
