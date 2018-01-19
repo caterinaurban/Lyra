@@ -139,6 +139,7 @@ $[((int, \_),$\\
 $((int), [.IN[1]-1 < THIS.len])$\\
 $\times [((int), \_)]\ wD\ " "]]$\\
 \\
+A relationship is always stored at the second input that is read. As soon as we encounter a relationship the first value should already be in the list of saved values.
 Encoded information:\\
 \begin{itemize}
   \item assumptions per line:\\
@@ -162,7 +163,7 @@ Encoded information:\\
   \item current element reference: "THIS"
   \item other element reference. id:number
   \item RELATION: left hand side of $\leq$ (example: $THIS - 1 + id{:}2$ of $THIS - 1 + id{:}2 \leq 0$. Input checker can then split by " ", look for "THIS" and a constant and/or an id)
-  \item ASSUMPTION: $\{type: TYPE, relations: [RELATION, ...]\}$
+  \item ASSUMPTION: $\{id: CONSTANT, type: TYPE, relations: [RELATION, ...]\}$
   \item DELIMITER: delimiter of values on the same line
   \item assumption with repetition:\\
   $\{repetition:ASSUMPTION/CONSTANT,$\\
@@ -170,6 +171,22 @@ Encoded information:\\
   $(, delimiter:DELIMITER)\}$ (if delimiter exists assumptions hold for values on the same line, otherwise the values are on seperate lines)
   \item list of assumptions with identifiers: $[..., 0{:}\{ASSUMPTION(WITHREP)\}]$
 \end{itemize}
+
+\section{Checker Tasks}
+
+\begin{enumerate}
+  \item Read assumptions from JSON
+  \begin{enumerate}
+    \item Keep track of all ids whose values need to be stored for a later comparison. Every time a relationship is read save the value of the smaller id. That is the id of the value that has to be stored.
+  \end{enumerate}
+  \item Input: [assumptions]
+  \item iterate through assumptions
+  \begin{enumerate}
+    \item Keep track of the next id that has to be stored (then we don't have to check for every value if it's in the list but just compare it to the next id that has to be saved).
+    \item If a relationship is encountered 
+  \end{enumerate}
+\end{enumerate}
+
 
 \end{document}
 
