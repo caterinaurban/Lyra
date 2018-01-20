@@ -148,17 +148,15 @@ class AssumptionState(Store, State):
     def _assume(self, condition: Expression) -> 'AssumptionState':
         self.stack_top.condition = condition
         curr_condition = condition
-        self._assume_range(curr_condition)
+        relations = self._assume_relations(curr_condition)
         self._refinement.visit(condition, AssumptionLattice(), self)
+        self.store[self.relationship] = relations
         return self
 
-    def _assume_range(self, condition: Expression) -> 'AssumptionState':
-        """
-        Executes assume for the range assumption
-        """
-        res = self.store[self.relationship].assume({condition})
-        self.interval_to_assmp_state(res)
-        return self
+    def _assume_relations(self, condition: Expression) -> 'AssumptionState':
+        """Executes assume for the relations"""
+        relations = deepcopy(self.store[self.relationship])
+        return relations.assume({condition})
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'AssumptionState':
@@ -193,7 +191,7 @@ class AssumptionState(Store, State):
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'AssumptionState':
         if isinstance(left, VariableIdentifier):
-            relations_numerical = self.substitute_range(left, right)
+            relations_numerical = self.substitute_relations(left, right)
             assumption = deepcopy(self.store[left])
             relations_before = deepcopy(self.store[self.relationship])
             self.store[left].top()
@@ -212,7 +210,7 @@ class AssumptionState(Store, State):
         error = f'Substitution for {left} not yet implemented!'
         raise NotImplementedError(error)
 
-    def substitute_range(self, left: Expression, right: Expression) -> 'AssumptionState':
+    def substitute_relations(self, left: Expression, right: Expression) -> 'AssumptionState':
         """Executes substitute for the range assumption
 
         :param left: left hand side expression
@@ -224,7 +222,7 @@ class AssumptionState(Store, State):
             return relations
         return relations.substitute({left}, {right})
 
-    def substitute_input_assmps(self, left, right, assmps):
+    def substitute_input_assmps(self, left: VariableIdentifier, right: Expression, assmps):
         """Substitutes the variables used in the input assumption collection.
 
         :param left: left hand side expression
@@ -256,9 +254,11 @@ class AssumptionState(Store, State):
     def stack_top(self):
         return self.store[self.input_var].lattice
 
-    def interval_to_assmp_state(self, interval_state: IntervalState):
-        """
-        Overwrites information of the current store with information from the interval state
+    def interval_to_assmp_state(self, interval_state: IntervalState) -> 'AssumptionState':
+        """Overwrites information of the current store with information from the interval state
+
+        :param interval_state:
+        :return:
         """
         for var, interval in interval_state.store.items():
             type_assumption = self.store[var].type_assumption

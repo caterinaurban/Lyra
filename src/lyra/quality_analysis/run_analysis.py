@@ -1,6 +1,6 @@
 from lyra.engine.quality.assumption_analysis import AssumptionAnalysis
 from lyra.quality_analysis.InputAssumptionSimplification import InputAssumptionSimplification
-from lyra.quality_analysis.input_checker import InputChecker
+from lyra.quality_analysis.input_checker import InputChecker, ErrorInformation
 from lyra.quality_analysis.json_handler import JSONHandler
 
 
@@ -28,8 +28,11 @@ class QualityAnalysisRunner:
 
         self.json_handler.input_assumptions_to_json(input_assumptions)
 
-    def run_checker(self):
-        """Runs the input checker to compare inputs to assumptions gathered by the analysis."""
+    def run_checker(self) -> [ErrorInformation]:
+        """Runs the input checker to compare inputs to assumptions gathered by the analysis.
+
+        :return: List of errors found by the checker
+        """
         print("Reading assumption from json")
 
         input_assumptions = self.json_handler.json_to_input_assumptions()
@@ -42,7 +45,11 @@ class QualityAnalysisRunner:
 
         return errors
 
-    def main(self):
+    def main(self) -> [ErrorInformation]:
+        """Runs the analysis and input checker
+
+        :return: List of errors found by the checker
+        """
         self.run_analysis()
         return self.run_checker()
 
