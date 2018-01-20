@@ -136,7 +136,7 @@ class AssumptionState(Store, State):
         self.store[self.input_var].lattice.is_main = True
         interval_types = (BooleanLyraType, IntegerLyraType, FloatLyraType)
         interval_vars = [v for v in variables if isinstance(v.typ, interval_types)]
-        self.store[self.relationship] = IntervalState(interval_vars)
+        self.store[self.relationship_var] = IntervalState(interval_vars)
         self.new_input = None
 
     @copy_docstring(State._assign)
@@ -148,15 +148,16 @@ class AssumptionState(Store, State):
     def _assume(self, condition: Expression) -> 'AssumptionState':
         self.stack_top.condition = condition
         curr_condition = condition
-        relations = self._assume_relations(curr_condition)
+        self.assume_relations(curr_condition)
         self._refinement.visit(condition, AssumptionLattice(), self)
-        self.store[self.relationship] = relations
         return self
 
-    def _assume_relations(self, condition: Expression) -> 'AssumptionState':
-        """Executes assume for the relations"""
-        relations = deepcopy(self.store[self.relationship])
-        return relations.assume({condition})
+    def assume_relations(self, condition: Expression):
+        """Executes assume for the relations
+
+        :param condition: condition to assume
+        """
+        self.relationship_state.assume({condition})
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'AssumptionState':
@@ -191,12 +192,11 @@ class AssumptionState(Store, State):
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'AssumptionState':
         if isinstance(left, VariableIdentifier):
-            relations_numerical = self.substitute_relations(left, right)
+            relations_before = deepcopy(self.relationship_state)
+            self.substitute_relations(left, right)
             assumption = deepcopy(self.store[left])
-            relations_before = deepcopy(self.store[self.relationship])
             self.store[left].top()
             self._refinement.visit(right, assumption, self)
-            self.store[self.relationship] = relations_numerical
             if self.new_input is not None:
                 input_assmp = InputAssumptionLattice(assmp=self.new_input)
                 input_assmp.var_name = left
@@ -210,17 +210,14 @@ class AssumptionState(Store, State):
         error = f'Substitution for {left} not yet implemented!'
         raise NotImplementedError(error)
 
-    def substitute_relations(self, left: Expression, right: Expression) -> 'AssumptionState':
-        """Executes substitute for the range assumption
+    def substitute_relations(self, left: Expression, right: Expression):
+        """Executes substitute for the relations
 
         :param left: left hand side expression
         :param right: right hand side expression
-        :return: state after substitution of the ranges
         """
-        relations = deepcopy(self.store[self.relationship])
-        if not isinstance(left.typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
-            return relations
-        return relations.substitute({left}, {right})
+        if isinstance(left.typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
+            self.relationship_state.substitute({left}, {right})
 
     def substitute_input_assmps(self, left: VariableIdentifier, right: Expression, assmps):
         """Substitutes the variables used in the input assumption collection.
@@ -243,15 +240,23 @@ class AssumptionState(Store, State):
                 self.substitute_input_assmps(left, right, assumption.assmps)
 
     @property
-    def input_var(self):
+    def input_var(self) -> VariableIdentifier:
         return VariableIdentifier(StringLyraType(), '.IN')
 
     @property
-    def relationship(self):
+    def relationship_var(self) -> VariableIdentifier:
         return VariableIdentifier(StringLyraType(), '.REL')
 
     @property
-    def stack_top(self):
+    def relationship_state(self) -> IntervalState:
+        return self.store[self.relationship_var]
+
+    @property
+    def relationships(self) -> dict:
+        return self.relationship_state.store
+
+    @property
+    def stack_top(self) -> MultiInputAssumptionLattice:
         return self.store[self.input_var].lattice
 
     def interval_to_assmp_state(self, interval_state: IntervalState) -> 'AssumptionState':
@@ -268,7 +273,19 @@ class AssumptionState(Store, State):
     class AssumptionRefinement(ExpressionVisitor):
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr, assumption=None, state=None):
-            return state  # nothing to be done
+            # TODO
+            #    if isinstance(expr.key, Literal):
+            #        self.assume_length_assmp(expr.target, expr.key, state)
+            #    return state
+            return state
+
+        #def assume_length_assmp(self, target: VariableIdentifier, min_length, state):
+        #    length_var = [v for v in state.variables if v.name == f"len_{target.name}"]
+        #    assert len(length_var) == 1
+        #    cond_type = BooleanLyraType()
+        #    operator = BinaryComparisonOperation.Operator.GtE
+        #    condition = BinaryComparisonOperation(cond_type, length_var[0], operator, min_length)
+        #    state.assume([condition])
 
         @copy_docstring(ExpressionVisitor.visit_Literal)
         def visit_Literal(self, expr, assumption=None, state=None):

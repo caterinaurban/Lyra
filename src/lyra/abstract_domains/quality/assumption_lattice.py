@@ -360,14 +360,14 @@ class MultiInputAssumptionLattice(BoundedLattice):
             return None
         return self._assmps
 
-    def add_assumption_front(self, assmp: AssumptionLattice):
+    def add_assumption_front(self, assmp: InputAssumptionLattice):
         """Adds an assumption to the front of the assumption list.
 
         :param assmp: assumption to be added to the list of current assumptions
         """
         self._assmps.insert(0, assmp)
 
-    def add_assumptions_front(self, assmps: [AssumptionLattice]):
+    def add_assumptions_front(self, assmps: [InputAssumptionLattice]):
         """Adds multiple assumption to the front of the assumption list.
 
         :param assmps: list of assumptions to be added to the list of current assumptions
