@@ -17,7 +17,8 @@ from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor, \
-    BinaryComparisonOperation, Literal, Range, UnaryArithmeticOperation
+    BinaryComparisonOperation, Literal, Range, UnaryArithmeticOperation, LengthIdentifier, \
+    UnaryBooleanOperation, Subscription
 from lyra.core.types import ListLyraType, IntegerLyraType, BooleanLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -157,7 +158,8 @@ class AssumptionState(Store, State):
 
         :param condition: condition to assume
         """
-        self.relationship_state.assume({condition})
+        if self.check_if_interval_support(condition):
+            self.relationship_state.assume({condition})
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'AssumptionState':
@@ -207,6 +209,11 @@ class AssumptionState(Store, State):
             self.substitute_input_assmps(left, right, self.stack_top.assmps)
             self.new_input = None
             return self
+        #TODO
+        #elif isinstance(left, Subscription):
+        #    self._refinement.visit(left, AssumptionLattice(), self)
+        #    self._refinement.visit(right, AssumptionLattice(), self)
+        #    return self
         error = f'Substitution for {left} not yet implemented!'
         raise NotImplementedError(error)
 
@@ -216,7 +223,7 @@ class AssumptionState(Store, State):
         :param left: left hand side expression
         :param right: right hand side expression
         """
-        if isinstance(left.typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
+        if self.check_if_interval_support(left) and self.check_if_interval_support(right):
             self.relationship_state.substitute({left}, {right})
 
     def substitute_input_assmps(self, left: VariableIdentifier, right: Expression, assmps):
@@ -238,6 +245,20 @@ class AssumptionState(Store, State):
                     assumption.relations.substitute({left}, {right})
             else:
                 self.substitute_input_assmps(left, right, assumption.assmps)
+
+    def check_if_interval_support(self, expr):
+        """Checks if the current expression is supported by the interval analysis.
+
+        :param expr: current expression
+        :return: True if the expression is supported by the interval analysis
+        """
+        if isinstance(expr.typ, (StringLyraType, ListLyraType)):
+            return False
+        elif isinstance(expr, Subscription):
+            return False
+        elif isinstance(expr, UnaryBooleanOperation):
+            return self.check_if_interval_support(expr.expression)
+        return True
 
     @property
     def input_var(self) -> VariableIdentifier:
@@ -273,10 +294,9 @@ class AssumptionState(Store, State):
     class AssumptionRefinement(ExpressionVisitor):
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr, assumption=None, state=None):
-            # TODO
-            #    if isinstance(expr.key, Literal):
-            #        self.assume_length_assmp(expr.target, expr.key, state)
-            #    return state
+            #TODO
+            #if isinstance(expr.key, Literal):
+            #    self.assume_length_assmp(expr.target, expr.key, state)
             return state
 
         #def assume_length_assmp(self, target: VariableIdentifier, min_length, state):
@@ -345,7 +365,7 @@ class AssumptionState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
         def visit_UnaryBooleanOperation(self, expr, assumption=None, state=None):
-            return self.visit(expr.expression, TypeLattice(), state)
+            return self.visit(expr.expression, AssumptionLattice(), state)
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, assumption=None, state=None):
@@ -353,5 +373,9 @@ class AssumptionState(Store, State):
             expr_type = TypeLattice.from_lyra_type(expr.typ)
             state.store[expr].type_assumption.meet(expr_type)
             return state
+
+        #@copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+        #def visit_LengthIdentifier(self, expr: LengthIdentifier, state=None, evaluation=None):
+        #    return state #TODO
 
     _refinement = AssumptionRefinement()

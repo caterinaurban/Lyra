@@ -131,6 +131,10 @@ class ExpressionVisitor(metaclass=ABCMeta):
     @abstractmethod
     def visit_VariableIdentifier(self, expr: 'VariableIdentifier'):
         """Visit of a variable identifier."""
+    #TODO
+    #@abstractmethod
+    #def visit_LengthIdentifier(self, expr: 'LengthIdentifier'):
+    #    """Visit of a length identifier."""
 
     @abstractmethod
     def visit_ListDisplay(self, expr: 'ListDisplay'):
@@ -750,7 +754,7 @@ class UnaryBooleanOperation(UnaryOperation):
 
         def __str__(self):
             if self.value == 1:
-                return "not"
+                return "not "
 
     def __init__(self, typ: LyraType, operator: Operator, expression: Expression):
         """Unary boolean operation expression representation.

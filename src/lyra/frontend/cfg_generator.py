@@ -416,6 +416,13 @@ class CFGVisitor(ast.NodeVisitor):
         iteration = self.visit(node.iter, types, ListLyraType(IntegerLyraType()))
         if isinstance(iteration, Call) and iteration.name == "range":
             target_type = IntegerLyraType()
+        elif isinstance(iteration, VariableAccess):
+            iter_type = iteration.variable.typ
+            if isinstance(iter_type, ListLyraType):
+                target_type = iter_type.typ
+            else:
+                error = f"Loop iteration for type {iter_type} is not yet translatable to CFG!"
+                raise NotImplementedError(error)
         else:
             error = f"The for loop iteration statment {node.iter} is not yet translatable to CFG!"
             raise NotImplementedError(error)

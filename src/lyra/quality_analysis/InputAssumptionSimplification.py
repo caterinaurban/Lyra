@@ -84,8 +84,10 @@ class InputAssumptionSimplification:
                 new_assmps.append(assmp)
             else:
                 var_id = assmp.input_info[assmp.var_name]
-                relation = assmp.relations.store[assmp.var_name]
-                relations = self.lattice_to_simple_relations(relation)
+                relations = []
+                if assmp.var_name in assmp.relations.store:
+                    relation = assmp.relations.store[assmp.var_name]
+                    relations = self.lattice_to_simple_relations(relation)
                 assumption = SimpleAssumption(var_id, assmp.assmp, relations)
                 new_assmps.append(assumption)
         return new_assmps

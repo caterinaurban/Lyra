@@ -14,7 +14,6 @@ from typing import List
 from lyra.core.cfg import Loop
 from lyra.core.expressions import VariableIdentifier
 from lyra.core.statements import Assignment, VariableAccess, Call
-#from lyra.core.types import StringLyraType, ListLyraType, IntegerLyraType
 from lyra.engine.result import AnalysisResult
 
 from lyra.frontend.cfg_generator import ast_to_cfg
