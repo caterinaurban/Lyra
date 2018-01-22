@@ -1,24 +1,33 @@
-{
-    "0": [
-        {
-            "type_assmp": "Float",
-            "range_assmp": "[0, inf]"
-        },
-        {
-            "type_assmp": "Float",
-            "range_assmp": "[-inf, inf]"
-        },
-        {
-            "type_assmp": "Int",
-            "range_assmp": "[-inf, inf]"
-        },
-        {
-            "type_assmp": "Int",
-            "range_assmp": "[-inf, inf]"
-        },
-        {
-            "type_assmp": "Any",
-            "range_assmp": "[-inf, inf]"
-        }
-    ]
-}
+[
+    {
+        "type_assmp": "Float",
+        "relations": [
+            {
+                  "rel_this_pos": false,
+                  "rel_other_pos": true,
+                  "rel_other_id": null,
+                  "rel_constant": 0
+            }],
+        "id": 1
+    },
+    {
+        "type_assmp": "Float",
+        "relations": [],
+        "id": 2
+    },
+    {
+        "type_assmp": "Int",
+        "relations": [],
+        "id": 3
+    },
+    {
+        "type_assmp": "Int",
+        "relations": [],
+        "id": 4
+    },
+    {
+        "type_assmp": "Any",
+        "relations": [],
+        "id": 5
+    }
+]

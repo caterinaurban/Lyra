@@ -1,83 +1,235 @@
-{
-    "0": [
-        {
-            "type_assmp": "Int",
-            "range_assmp": "[1, 1]"
-        },
-        {
-            "iterations": 5,
-            "assmps": [
-                {
-                    "type_assmp": "Int",
-                    "range_assmp": "[50, 50]"
-                },
-                {
-                    "iterations": 3,
-                    "assmps": [
-                        {
-                            "type_assmp": "Int",
-                            "range_assmp": "[30, 30]"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "iterations": 7,
-            "assmps": [
-                {
-                    "type_assmp": "Int",
-                    "range_assmp": "[70, 70]"
-                },
-                {
-                    "iterations": 2,
-                    "assmps": [
-                        {
-                            "type_assmp": "Int",
-                            "range_assmp": "[20, 20]"
-                        },
-                        {
-                            "iterations": 8,
-                            "assmps": [
-                                {
-                                    "type_assmp": "Int",
-                                    "range_assmp": "[80, 80]"
-                                }
-                            ]
-                        },
-                        {
-                            "type_assmp": "Int",
-                            "range_assmp": "[2, 2]"
-                        }
-                    ]
-                },
-                {
-                    "type_assmp": "Int",
-                    "range_assmp": "[3, 3]"
-                },
-                {
-                    "iterations": 5,
-                    "assmps": [
-                        {
-                            "type_assmp": "Int",
-                            "range_assmp": "[50, 50]"
-                        }
-                    ]
-                },
-                {
-                    "iterations": 4,
-                    "assmps": [
-                        {
-                            "type_assmp": "Int",
-                            "range_assmp": "[40, 40]"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "type_assmp": "Int",
-            "range_assmp": "[5, 5 ]"
-        }
-    ]
-}
+[
+    {
+        "type_assmp": "Int",
+        "relations": [
+            {
+                  "rel_this_pos": false,
+                  "rel_other_pos": true,
+                  "rel_other_id": null,
+                  "rel_constant": 1
+            },
+            {
+                  "rel_this_pos": true,
+                  "rel_other_pos": true,
+                  "rel_other_id": null,
+                  "rel_constant": -1
+            }
+        ],
+        "id": 1
+    },
+    {
+        "iterations": 5,
+        "assmps": [
+            {
+                "type_assmp": "Int",
+                "relations": [
+                    {
+                          "rel_this_pos": false,
+                          "rel_other_pos": true,
+                          "rel_other_id": null,
+                          "rel_constant": 50
+                    },
+                    {
+                          "rel_this_pos": true,
+                          "rel_other_pos": true,
+                          "rel_other_id": null,
+                          "rel_constant": -50
+                    }
+                ],
+                "id": 2
+            },
+            {
+                "iterations": 3,
+                "assmps": [
+                    {
+                        "type_assmp": "Int",
+                        "relations": [
+                            {
+                                  "rel_this_pos": false,
+                                  "rel_other_pos": true,
+                                  "rel_other_id": null,
+                                  "rel_constant": 30
+                            },
+                            {
+                                  "rel_this_pos": true,
+                                  "rel_other_pos": true,
+                                  "rel_other_id": null,
+                                  "rel_constant": -30
+                            }
+                        ],
+                        "id": 3
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "iterations": 7,
+        "assmps": [
+            {
+                "type_assmp": "Int",
+                "relations": [
+                    {
+                          "rel_this_pos": false,
+                          "rel_other_pos": true,
+                          "rel_other_id": null,
+                          "rel_constant": 70
+                    },
+                    {
+                          "rel_this_pos": true,
+                          "rel_other_pos": true,
+                          "rel_other_id": null,
+                          "rel_constant": -70
+                    }
+                ],
+                "id": 4
+            },
+            {
+                "iterations": 2,
+                "assmps": [
+                    {
+                        "type_assmp": "Int",
+                        "relations": [
+                            {
+                                  "rel_this_pos": false,
+                                  "rel_other_pos": true,
+                                  "rel_other_id": null,
+                                  "rel_constant": 20
+                            },
+                            {
+                                  "rel_this_pos": true,
+                                  "rel_other_pos": true,
+                                  "rel_other_id": null,
+                                  "rel_constant": -20
+                            }
+                        ],
+                        "id": 5
+                    },
+                    {
+                        "iterations": 8,
+                        "assmps": [
+                            {
+                                "type_assmp": "Int",
+                                "relations": [
+                                    {
+                                          "rel_this_pos": false,
+                                          "rel_other_pos": true,
+                                          "rel_other_id": null,
+                                          "rel_constant": 80
+                                    },
+                                    {
+                                          "rel_this_pos": true,
+                                          "rel_other_pos": true,
+                                          "rel_other_id": null,
+                                          "rel_constant": -80
+                                    }
+                                ],
+                                "id": 6
+                            }
+                        ]
+                    },
+                    {
+                        "type_assmp": "Int",
+                        "relations": [
+                            {
+                                  "rel_this_pos": false,
+                                  "rel_other_pos": true,
+                                  "rel_other_id": null,
+                                  "rel_constant": 2
+                            },
+                            {
+                                  "rel_this_pos": true,
+                                  "rel_other_pos": true,
+                                  "rel_other_id": null,
+                                  "rel_constant": -2
+                            }
+                        ],
+                        "id": 7
+                    }
+                ]
+            },
+            {
+                "type_assmp": "Int",
+                "relations": [
+                    {
+                          "rel_this_pos": false,
+                          "rel_other_pos": true,
+                          "rel_other_id": null,
+                          "rel_constant": 3
+                    },
+                    {
+                          "rel_this_pos": true,
+                          "rel_other_pos": true,
+                          "rel_other_id": null,
+                          "rel_constant": -3
+                    }
+                ],
+                "id": 8
+            },
+            {
+                "iterations": 5,
+                "assmps": [
+                    {
+                        "type_assmp": "Int",
+                        "relations": [
+                            {
+                                  "rel_this_pos": false,
+                                  "rel_other_pos": true,
+                                  "rel_other_id": null,
+                                  "rel_constant": 50
+                            },
+                            {
+                                  "rel_this_pos": true,
+                                  "rel_other_pos": true,
+                                  "rel_other_id": null,
+                                  "rel_constant": -50
+                            }
+                        ],
+                        "id": 9
+                    }
+                ]
+            },
+            {
+                "iterations": 4,
+                "assmps": [
+                    {
+                        "type_assmp": "Int",
+                        "relations": [
+                            {
+                                  "rel_this_pos": false,
+                                  "rel_other_pos": true,
+                                  "rel_other_id": null,
+                                  "rel_constant": 40
+                            },
+                            {
+                                  "rel_this_pos": true,
+                                  "rel_other_pos": true,
+                                  "rel_other_id": null,
+                                  "rel_constant": -40
+                            }
+                        ],
+                        "id": 10
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "type_assmp": "Int",
+        "relations": [
+            {
+                  "rel_this_pos": false,
+                  "rel_other_pos": true,
+                  "rel_other_id": null,
+                  "rel_constant": 5
+            },
+            {
+                  "rel_this_pos": true,
+                  "rel_other_pos": true,
+                  "rel_other_id": null,
+                  "rel_constant": -5
+            }
+        ],
+        "id": 11
+    }
+]
