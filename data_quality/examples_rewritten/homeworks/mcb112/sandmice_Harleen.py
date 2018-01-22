@@ -9,7 +9,7 @@ path = '/home/madi/Documents/ETH/master/masterthesis/lyrarep/Lyra/data_quality/e
 pathogen = []  # Inititializing an empty list
 for line in open(path + "pathogen.fa.txt"):  # For each line in the input file
     line = line.rstrip('\n')  # Remove the trailing newline
-    if line[0] == '>': continue  # Skip comment lines
+    if line[0] != '>': continue  # Skip comment lines
     pathogen.append(line)  # Split into fields on whitespace
 
 sandmouse = []  # Inititializing an empty list
