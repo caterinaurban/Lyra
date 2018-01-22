@@ -1,6 +1,6 @@
 from lyra.abstract_domains.quality.assumption_lattice import TypeLattice, \
     MultiInputAssumptionLattice
-from lyra.quality_analysis.InputAssumptionSimplification import SimpleAssumption
+from lyra.quality_analysis.InputAssumptionSimplification import SimpleAssumption, SimpleRelation
 
 
 class ErrorInformation:
@@ -75,18 +75,18 @@ class InputChecker:
         self.error_file.write('\n')
         return error
 
-    def create_relation_error(self, line_num, relation):
+    def create_relation_error(self, line_num: int, relation: SimpleRelation):
         """Creates an error messages because of a wrong relation."""
         return f'Relation Error in line {line_num}: ' \
                f'the following relation is violated: {relation}.'
 
-    def write_relation_error(self, line_num, relation):
+    def write_relation_error(self, line_num: int, relation: SimpleRelation):
         """Prints an error because a relation is violated
 
         :param line_num: line number of the input
         :param relation: the violated relation
         """
-        error = self.create_relation_error(line_num, relation)
+        error = self.create_relation_error(line_num, relation.create_user_friendly_message())
         self.error_file.write(error)
         self.error_file.write('\n')
         return error

@@ -32,6 +32,24 @@ class SimpleRelation:
                 curr_val -= other_value
         return curr_val <= 0
 
+    def create_user_friendly_message(self) -> str:
+        """Create a user friendly string of the current relation
+
+        :return: A user friendly message of the current relation
+        """
+        if self.this_pos:
+            if self.other_id is not None:
+                error = "User friendly creation with other variable is not implemented yet."
+                raise NotImplementedError(error)
+            else:
+                return f"THIS <= {-self.constant}"
+        else:
+            if self.other_id is not None:
+                error = "User friendly creation with other variable is not implemented yet."
+                raise NotImplementedError(error)
+            else:
+                return f"THIS >= {-self.constant}"
+
     def __repr__(self):
         sign_this = "" if self.this_pos else "-"
         repr_str = f"{sign_this}THIS"
