@@ -1,5 +1,5 @@
 from lyra.engine.quality.assumption_analysis import AssumptionAnalysis
-from lyra.quality_analysis.InputAssumptionSimplification import InputAssumptionSimplification
+from lyra.quality_analysis.input_assmp_simplification import InputAssumptionSimplification
 from lyra.quality_analysis.input_checker import InputChecker, ErrorInformation
 from lyra.quality_analysis.json_handler import JSONHandler
 
@@ -20,13 +20,13 @@ class QualityAnalysisRunner:
 
         result = self.analysis.main(f"{self.program_path}{self.program_name}.py")
 
-        input_assumptions = self.assmp_simplification.analysis_result_to_simple_assmps(result)
+        input_assmps, inputs = self.assmp_simplification.analysis_result_to_checker_assmps(result)
 
         print("Analysis done")
 
         print("Writing assumption to json")
 
-        self.json_handler.input_assumptions_to_json(input_assumptions)
+        self.json_handler.input_assumptions_to_json(input_assmps, inputs)
 
     def run_checker(self) -> [ErrorInformation]:
         """Runs the input checker to compare inputs to assumptions gathered by the analysis.
@@ -35,11 +35,11 @@ class QualityAnalysisRunner:
         """
         print("Reading assumption from json")
 
-        input_assumptions = self.json_handler.json_to_input_assumptions()
+        input_assumptions, inputs = self.json_handler.json_to_input_assumptions()
 
         print("Running input checker")
 
-        errors = self.input_checker.check_input(input_assumptions)
+        errors = self.input_checker.check_input(input_assumptions, inputs)
 
         print("Input checking done")
 

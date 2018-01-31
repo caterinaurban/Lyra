@@ -131,10 +131,6 @@ class ExpressionVisitor(metaclass=ABCMeta):
     @abstractmethod
     def visit_VariableIdentifier(self, expr: 'VariableIdentifier'):
         """Visit of a variable identifier."""
-    #TODO
-    #@abstractmethod
-    #def visit_LengthIdentifier(self, expr: 'LengthIdentifier'):
-    #    """Visit of a length identifier."""
 
     @abstractmethod
     def visit_ListDisplay(self, expr: 'ListDisplay'):

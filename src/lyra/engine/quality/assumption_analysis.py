@@ -1,7 +1,6 @@
 from lyra.abstract_domains.quality.assumption_domain import AssumptionState
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.runner import Runner
-from lyra.quality_analysis.InputAssumptionSimplification import InputAssumptionSimplification
 from lyra.semantics.backward import DefaultBackwardSemantics
 
 
@@ -21,10 +20,9 @@ class AssumptionAnalysis(Runner):
     def run(self):
         result = self.interpreter().analyze(self.state())
         if self.show_simple:
-            simple_res = InputAssumptionSimplification().analysis_result_to_simple_assmps(result)
             for node, items in result.result.items():
                 if node.identifier == 1:
-                    items[0] = simple_res
+                    items[0] = items[0].stack_top.assmps
         if self.do_render:
             self.render(result)
         return result

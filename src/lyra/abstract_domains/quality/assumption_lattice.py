@@ -4,11 +4,14 @@ Assumption Lattice
 
 :Author: Caterina Urban and Madelin Schumacher
 """
+from copy import deepcopy
 from enum import IntEnum, Enum
 
-from copy import deepcopy
-
 from lyra.abstract_domains.lattice import Lattice, BottomMixin, BoundedLattice
+from lyra.abstract_domains.numerical.interval_domain import IntervalLattice
+from lyra.abstract_domains.quality.simple_relation_lattice import SimpleExpression
+from lyra.core.expressions import VariableIdentifier
+from lyra.core.statements import ProgramPoint
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType
 from lyra.core.utils import copy_docstring
 
@@ -150,6 +153,7 @@ class AssumptionLattice(Lattice):
     """
     The Assumption Lattice is represented as a dictionary with different kinds of assumptions.
     The 'type_assmp' element is an assumption of the type.
+    The 'range_assmp' element is an assumption about the range.
 
     The default element is the tuple with all assumption elements set to top.
 
@@ -165,21 +169,27 @@ class AssumptionLattice(Lattice):
         Name of the assumptions that are covered by the assumption lattice
 
         * ``type_assmp``: Used for assumptions about the type
+
+        * ``range_assmp``: Used for assumptions about the range of values
         """
 
         type_assmp = 'type_assmp'
+        range_assmp = 'range_assmp'
 
-    def __init__(self, type_element=None):
+    def __init__(self, type_element=None, range_element=None):
         super().__init__()
         if type_element is None:
             type_element = TypeLattice().top()
+        if range_element is None:
+            range_element = IntervalLattice().top()
         self._assumptions = {
-            AssumptionLattice.Assumption.type_assmp: type_element
+            AssumptionLattice.Assumption.type_assmp: type_element,
+            AssumptionLattice.Assumption.range_assmp: range_element
         }
         self.pp = None
 
     def __repr__(self):
-        assumptions = [self.type_assumption]
+        assumptions = [self.type_assumption, self.range_assumption]
         assumption_repr = [assumption.__repr__() for assumption in assumptions]
         comma_separated = ', '.join(assumption_repr)
         return f'({comma_separated})'
@@ -191,6 +201,10 @@ class AssumptionLattice(Lattice):
     @property
     def type_assumption(self):
         return self.assumptions[AssumptionLattice.Assumption.type_assmp]
+
+    @property
+    def range_assumption(self):
+        return self.assumptions[AssumptionLattice.Assumption.range_assmp]
 
     @copy_docstring(Lattice.bottom)
     def bottom(self):
@@ -220,33 +234,34 @@ class AssumptionLattice(Lattice):
 
     @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'AssumptionLattice') -> bool:
-        return self.type_assumption.less_equal(other.type_assumption)
+        type_leq = self.type_assumption.less_equal(other.type_assumption)
+        return type_leq and self.range_assumption.less_equal(other.range_assumption)
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'AssumptionLattice') -> 'AssumptionLattice':
         self.type_assumption.join(other.type_assumption)
+        self.range_assumption.join(other.range_assumption)
         return self
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'AssumptionLattice') -> 'AssumptionLattice':
         self.type_assumption.meet(other.type_assumption)
+        self.range_assumption.meet(other.range_assumption)
         return self
 
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'AssumptionLattice') -> 'AssumptionLattice':
         self.type_assumption.widening(other.type_assumption)
+        self.range_assumption.widening(other.range_assumption)
         return self
 
 
 class InputAssumptionLattice(BoundedLattice):
     """
-    The Input Assumption Lattice consists of four elements:
-    var_name: the name of the variable that was substituted for the input
+    The Input Assumption Lattice consists of three elements:
+    input_id: a unique id for the input
     assmp: an element of the AssumptionLattice with the assumption for the input
-    relations: relational assumption of the input
-    input_info: information about locations of related inputs
-
-    The default element is (None, Any, None, {})
+    relations: relational assumptions of the input
 
     .. document private methods
     .. automethod:: InputAssumptionLattice._less_equal
@@ -255,25 +270,22 @@ class InputAssumptionLattice(BoundedLattice):
     .. automethod:: InputAssumptionLattice._widening
     """
 
-    def __init__(self, var_name=None, assmp=None, relations=None, input_info=None):
+    def __init__(self, input_id: int, assmp: AssumptionLattice, relations):
         super().__init__()
-        self.var_name = var_name
-        self.relations = relations
-        self.input_info = input_info if input_info is not None else {}
+        self.input_id = VariableIdentifier(IntegerLyraType(), f".ID={input_id}")
         self.assmp = assmp if assmp is not None else AssumptionLattice()
+        self.relations = relations
         self.infoloss = False
-
-    @property
-    def input_id(self):
-        return self.input_info[self.var_name]
 
     def __repr__(self):
         if self.is_bottom():
             return "⊥"
         if self.is_top():
             return "T"
-        input_info = {k.__str__(): v for k, v in self.input_info.items()}
-        return f'({self.var_name}, {self.assmp.__repr__()}, {self.relations}, {input_info})'
+        input_id = self.input_id.name.split("=")[1]
+        if len(self.relations.relations) == 0:
+            return f'{input_id}:{self.assmp.__repr__()}'
+        return f'{input_id}:({self.assmp.__repr__()}, {self.relations})'
 
     @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'InputAssumptionLattice') -> bool:
@@ -281,15 +293,10 @@ class InputAssumptionLattice(BoundedLattice):
             return True
         if self.infoloss or other.infoloss:
             return False
-        if (self.var_name is None) != (other.var_name is None):
-            return False
-        if not self.assmp.less_equal(other.assmp):
-            return False
-        if not self.relations.less_equal(other.relations):
-            return False
-        if self.input_info != other.input_info:
-            return False
-        return True
+        same_input_id = self.input_id == other.input_id
+        leq_assmp = self.assmp.less_equal(other.assmp)
+        leq_relations = self.relations.less_equal(other.relations)
+        return same_input_id and leq_assmp and leq_relations
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'InputAssumptionLattice') -> 'InputAssumptionLattice':
@@ -297,16 +304,13 @@ class InputAssumptionLattice(BoundedLattice):
             return self
         if other.infoloss:
             return self.replace(deepcopy(other))
+        if self.input_id != other.input_id:
+            id_num_self = int(self.input_id.name.split("=")[1])
+            id_num_other = int(other.input_id.name.split("=")[1])
+            if id_num_self > id_num_other:
+                self.input_id = other.input_id
         self.assmp.join(other.assmp)
-        if self.var_name != other.var_name:
-            self.infoloss = True
-            return self
-        else:
-            self.relations.join(other.relations)
-        if self.input_info != other.input_info:
-            for var_name, input_index in self.input_info.items():
-                if input_index > other.input_info[var_name]:
-                    self.input_info[var_name] = other.input_info[var_name]
+        self.relations.join(other.relations)
         return self
 
     @copy_docstring(Lattice._meet)
@@ -333,8 +337,10 @@ class MultiInputAssumptionLattice(BoundedLattice):
     .. automethod:: MultiInputAssumptionLattice._widening
     """
 
-    def __init__(self, iterations=1, assmps=None, pp=None):
+    def __init__(self, iterations=None, assmps=None, pp=None):
         super().__init__()
+        if iterations is None:
+            iterations = SimpleExpression(const=1)
         self.iterations = iterations
         self._assmps = assmps if assmps is not None else []
         self.pp = pp
@@ -350,9 +356,9 @@ class MultiInputAssumptionLattice(BoundedLattice):
             return "⊥"
         if self.is_top():
             return "T"
-        if self.iterations == 1:
-            return self.assmps.__repr__()
-        return f"{self.iterations} x {self.assmps.__repr__()}"
+        if self.iterations == SimpleExpression(const=1):
+            return f"{self.assmps}"
+        return f"{self.iterations.__repr__()} x {self.assmps}"
 
     @property
     def assmps(self):
@@ -374,7 +380,7 @@ class MultiInputAssumptionLattice(BoundedLattice):
         """
         self._assmps = assmps + self.assmps
 
-    def add_assmps_with_iter(self, iterations: int, assmps, pp):
+    def add_assmps_with_iter(self, iterations: SimpleExpression, assmps, pp: ProgramPoint):
         """Adds assumptions to the front of the assumption list and sets the iteration number.
 
         :param iterations: number of times the assumptions appear in the input file
@@ -383,7 +389,7 @@ class MultiInputAssumptionLattice(BoundedLattice):
         """
         input_assmps = MultiInputAssumptionLattice(iterations, assmps, pp)
         input_assmps.is_loop = True
-        input_assmps.input_id = pp.line
+        input_assmps.input_id = VariableIdentifier(IntegerLyraType(), f".ID={pp.line}")
         self._assmps.insert(0, input_assmps)
 
     @copy_docstring(Lattice._less_equal)
@@ -420,8 +426,8 @@ class MultiInputAssumptionLattice(BoundedLattice):
                 return self
             elif len(other.assmps) == 0:
                 return self
-            self_input_pp = self.assmps[0].input_id
-            other_input_pp = other.assmps[0].input_id
+            self_input_pp = int(self.assmps[0].input_id.name.split("=")[1])
+            other_input_pp = int(other.assmps[0].input_id.name.split("=")[1])
             if self_input_pp == other_input_pp:
                 return self
             elif self_input_pp < other_input_pp:
@@ -492,8 +498,9 @@ class MultiInputAssumptionLattice(BoundedLattice):
                     copy_other_first = deepcopy(curr_other)
                     copy_other_first.iterations = curr_self.iterations
                     copy_other_second = deepcopy(curr_other)
-                    copy_other_second.iterations -= curr_self.iterations
-                    if copy_other_second.iterations == 1:
+                    if copy_other_second.iterations.sub(curr_self.iterations) is None:
+                        break
+                    if copy_other_second.iterations == SimpleExpression(const=1):
                         other_stack = copy_other_second.assmps + other_stack
                     else:
                         other_stack.insert(0, copy_other_second)
@@ -502,8 +509,9 @@ class MultiInputAssumptionLattice(BoundedLattice):
                 else:
                     copy_self = deepcopy(curr_self)
                     copy_self.iterations = curr_other.iterations
-                    curr_self.iterations -= curr_other.iterations
-                    if curr_self.iterations == 1:
+                    if curr_self.iterations.sub(curr_other.iterations) is None:
+                        break
+                    if curr_self.iterations == SimpleExpression(const=1):
                         self_stack = curr_self.assmps + self_stack
                     else:
                         self_stack.insert(0, curr_self)
@@ -512,8 +520,8 @@ class MultiInputAssumptionLattice(BoundedLattice):
             elif self_assmp_lattice:
                 assert isinstance(curr_other, MultiInputAssumptionLattice)
                 copy_other = deepcopy(curr_other)
-                copy_other.iterations -= 1
-                if copy_other.iterations == 1:
+                copy_other.iterations.sub(1)
+                if copy_other.iterations == SimpleExpression(const=1):
                     other_stack = copy_other.assmps + other_stack
                 else:
                     other_stack.insert(0, copy_other)
@@ -523,8 +531,8 @@ class MultiInputAssumptionLattice(BoundedLattice):
                 assert isinstance(curr_self, MultiInputAssumptionLattice)
                 assert isinstance(curr_other, InputAssumptionLattice)
                 copy_self = deepcopy(curr_self)
-                copy_self.iterations -= 1
-                if copy_self.iterations == 1:
+                copy_self.iterations.sub(1)
+                if copy_self.iterations == SimpleExpression(const=1):
                     self_stack = copy_self.assmps + self_stack
                 else:
                     self_stack.insert(0, copy_self)

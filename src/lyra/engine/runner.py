@@ -81,11 +81,6 @@ class Runner:
                 for stmt in current.stmts:
                     if isinstance(stmt, Assignment) and isinstance(stmt.left, VariableAccess):
                         variables.append(stmt.left.variable)
-                        # TODO
-                        #if isinstance(stmt.left.variable.typ, (StringLyraType, ListLyraType)):
-                        #    var_name = f"len_{stmt.left.variable.name}"
-                        #    len_var = VariableIdentifier(IntegerLyraType(), var_name)
-                        #    variables.append(len_var)
                 if isinstance(current, Loop):
                     edges = self.cfg.edges.items()
                     conds = [edge.condition for nodes, edge in edges if nodes[0] == current]

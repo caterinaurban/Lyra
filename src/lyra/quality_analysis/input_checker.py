@@ -1,14 +1,15 @@
-from lyra.abstract_domains.quality.assumption_lattice import TypeLattice, \
-    MultiInputAssumptionLattice
-from lyra.quality_analysis.InputAssumptionSimplification import SimpleAssumption, SimpleRelation
+from lyra.abstract_domains.quality.assumption_lattice import TypeLattice
+from lyra.quality_analysis.input_assmp_simplification import CheckerExpression, \
+    CheckerAssumption, CheckerMultiAssumption
 
 
 class ErrorInformation:
     """Contains information about an error."""
-    def __init__(self, location, old_value, error_message, assumption):
+    def __init__(self, location, old_value, rel_val, error_message, assumption):
         self.location = location
         self.old_value = old_value
         self.new_value = old_value
+        self.rel_val = rel_val
         self.error_message = error_message
         self.assumption = assumption
 
@@ -75,18 +76,19 @@ class InputChecker:
         self.error_file.write('\n')
         return error
 
-    def create_relation_error(self, line_num: int, relation: SimpleRelation):
+    def create_relation_error(self, line_num: int, relation: str, relation_evaluated: str):
         """Creates an error messages because of a wrong relation."""
         return f'Relation Error in line {line_num}: ' \
-               f'the following relation is violated: {relation}.'
+               f'expected: ({relation}) but found: ({relation_evaluated}).'
 
-    def write_relation_error(self, line_num: int, relation: SimpleRelation):
+    def write_relation_error(self, line_num: int, relation: str, relation_evaluated: str):
         """Prints an error because a relation is violated
 
         :param line_num: line number of the input
         :param relation: the violated relation
+        :param relation_evaluated: the violated relation and variables replaced with number
         """
-        error = self.create_relation_error(line_num, relation.create_user_friendly_message())
+        error = self.create_relation_error(line_num, relation, relation_evaluated)
         self.error_file.write(error)
         self.error_file.write('\n')
         return error
@@ -111,110 +113,91 @@ class InputChecker:
         if type_assmp == TypeLattice().top():
             return "string"
 
-    def count_values(self):
-        """Count the number of lines in the input file
-
-        :return: number of lines found
-        """
-        with open(self.input_file.name, 'r') as input_file:
-            num = 0
-            for _ in input_file:
-                num += 1
-        return num
-
-    def find_num_total_assmps(self, assumptions, curr_iterations):
-        """Finds the number of total assumptions
-
-        :param assumptions: assumptions to count
-        :param curr_iterations: number of iterations of the current assumptions
-        :return: number of assumptions
-        """
-        num_assmps = 0
-        for assmp in assumptions:
-            if isinstance(assmp, MultiInputAssumptionLattice):
-                num_assmps += self.find_num_total_assmps(assmp.assmps, assmp.iterations)
-            else:
-                num_assmps += 1
-        return curr_iterations * num_assmps
-
-    def check_input(self, assumptions: []):
+    def check_input(self, assumptions, inputs: [str]):
         """Checks if the input file fulfils all the assumptions
 
         :param assumptions: all assumptions
+        :param inputs: list of inputs that need to be stored for relation checking
         """
         self.error_file = open(self.error_file_name, "w")
         self.input_file = open(self.input_file_name, "r")
         self.errors = []
-        num_values = self.count_values()
-        num_total_assmps = self.find_num_total_assmps(assumptions, 1)
-        if num_values < num_total_assmps:
-            self.write_missing_error(num_total_assmps, num_values)
-        (has_errors, _) = self.check_assmps(assumptions, 1, 0)
-        if not has_errors:
+        input_saving = {}
+        for an_input in inputs:
+            input_saving[an_input] = None
+        one_iter = CheckerExpression(True, None, 1)
+        self.check_assmps(assumptions, one_iter, 0, input_saving)
+        if len(self.errors) == 0:
             self.write_no_error()
         self.error_file.close()
         self.input_file.close()
         return self.errors
 
-    def check_assmps(self, assumptions, iterations, line_num):
+    def check_assmps(self, assumptions, iterations: CheckerExpression, line_num, inputs):
         """Checks recursively if the inputs fulfil the assumptions
 
         :param assumptions: assumption to check
         :param iterations: how many iterations have to be done for the current assumption
         :param line_num: current line number of the input file
+        :param inputs: dictionary to store values of inputs for relation checking
         :return: if an error has been found
         """
-        has_error = False
-        for _ in range(iterations):
+        num_iter = iterations.evaluate(inputs)
+        if num_iter is None:
+            return None
+        for _ in range(num_iter):
             for assmp in assumptions:
-                if isinstance(assmp, MultiInputAssumptionLattice):
-                    (err, line_num) = self.check_assmps(assmp.assmps, assmp.iterations, line_num)
+                if isinstance(assmp, CheckerMultiAssumption):
+                    line_num = self.check_assmps(assmp.assmps, assmp.iterations, line_num, inputs)
+                    if line_num is None:
+                        return None
                 else:
                     line_num += 1
                     input_line = self.input_file.readline().strip()
-                    err = self.check_one_assmp(assmp, input_line, line_num)
-                has_error |= err
-        return has_error, line_num
+                    self.check_one_assmp(assmp, input_line, line_num, inputs)
+        return line_num
 
-    def check_one_assmp(self, assumption: SimpleAssumption, input_line: str, line_num: int):
+    def check_one_assmp(self, assmp: CheckerAssumption, input_line: str, line_num, inputs):
         """Checks if the current input fulfils the assumption
 
-        :param assumption: current assumption
+        :param assmp: current assumption
         :param input_line: current input
         :param line_num: current line number of input
+        :param inputs: dictionary of stored values for relation checking
         :return: if an error has been found
         """
-        type_assmp = assumption.assmps.type_assumption
+        type_assmp = assmp.assmps.type_assumption
         if type_assmp == TypeLattice().integer():
             try:
                 val = int(input_line)
             except ValueError:
-                error_message = self.write_type_error(line_num, input_line, type_assmp)
-                new_error = ErrorInformation(line_num, input_line, error_message, assumption)
+                err_message = self.write_type_error(line_num, input_line, type_assmp)
+                new_error = ErrorInformation(line_num, input_line, None, err_message, assmp)
                 self.errors.append(new_error)
-                return True
+                return
         elif type_assmp == TypeLattice().real():
             try:
                 val = float(input_line)
             except ValueError:
-                error_message = self.write_type_error(line_num, input_line, type_assmp)
-                new_error = ErrorInformation(line_num, input_line, error_message, assumption)
+                err_message = self.write_type_error(line_num, input_line, type_assmp)
+                new_error = ErrorInformation(line_num, input_line, None, err_message, assmp)
                 self.errors.append(new_error)
-                return True
+                return
         else:
-            return False
+            return
 
-        relations = assumption.relations
+        if assmp.var_id in inputs:
+            inputs[assmp.var_id] = val
+
+        relations = assmp.relations
         for relation in relations:
-            relation_ok = True
-            if not relation.evaluate(val):
-                relation_ok = False
-                error_message = self.write_relation_error(line_num, relation)
-                new_error = ErrorInformation(line_num, input_line, error_message, assumption)
+            other_val = inputs[relation.other_id]
+            if not relation.evaluate(val, other_val):
+                rel_with_vars = relation.user_friendly_relation_with_vars()
+                rel_with_nums = relation.user_friendly_relation(val, other_val)
+                err_message = self.write_relation_error(line_num, rel_with_vars, rel_with_nums)
+                new_error = ErrorInformation(line_num, input_line, other_val, err_message, assmp)
                 self.errors.append(new_error)
-            if not relation_ok:
-                return True
-        return True
 
     def check_assmp(self, error: ErrorInformation):
         """Checks if a value fulfils an assumption
@@ -242,8 +225,11 @@ class InputChecker:
 
         relations = error.assumption.relations
         for relation in relations:
-            if not relation.evaluate(val):
-                message = self.create_relation_error(error.location, error.assumption.relations)
+            other_val = error.rel_val
+            if not relation.evaluate(val, other_val):
+                rel_vars = relation.user_friendly_relation_with_vars()
+                rel_nums = relation.user_friendly_relation(val, other_val)
+                message = self.create_relation_error(error.location, rel_vars, rel_nums)
                 error.error_message = message
                 return error
         return None

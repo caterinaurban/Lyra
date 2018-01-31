@@ -4,21 +4,22 @@ Assumption Domain
 
 :Author: Caterina Urban and Madelin Schumacher
 """
-from typing import List
-
 from copy import deepcopy
+from typing import List
 
 import math
 
-from lyra.abstract_domains.numerical.interval_domain import IntervalState
+from lyra.abstract_domains.numerical.interval_domain import IntervalState, IntervalLattice
 from lyra.abstract_domains.quality.assumption_lattice import TypeLattice, AssumptionLattice, \
     InputAssumptionLattice, MultiInputAssumptionLattice
+
+from lyra.abstract_domains.quality.simple_relation_lattice import SimpleRelationsLattice, \
+    SimpleExpression, SimpleRelation
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor, \
-    BinaryComparisonOperation, Literal, Range, UnaryArithmeticOperation, LengthIdentifier, \
-    UnaryBooleanOperation, Subscription
+    BinaryComparisonOperation, Range, BinaryOperation, UnaryOperation
 from lyra.core.types import ListLyraType, IntegerLyraType, BooleanLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -79,36 +80,23 @@ class InputAssumptionStack(Stack):
         """Extracts the number of iterations from a condition
 
         :param condition: condition to analyze for number of iterations
-        :return: number of iterations if possible, otherwise None
+        :return: number of iterations as a tuple (start, end, step)
         """
         if isinstance(condition, BinaryComparisonOperation):
             if condition.operator == BinaryComparisonOperation.Operator.In:
-                in_element = condition.right
-                if isinstance(in_element, Range):
-                    start = self.get_value_for_iteration(in_element.start)
-                    end = self.get_value_for_iteration(in_element.end)
-                    step = self.get_value_for_iteration(in_element.step)
-                    if start is not None and end is not None and step is not None:
-                        return math.ceil((end - start) / step)
-                    error = f"Analysis of range() is only implemented for Literal arguments."
-                    raise NotImplementedError(error)
-        return None
-
-    def get_value_for_iteration(self, iter_expr):
-        """Gets the value from an expression. Works for Literals or UnaryOperations of a Literal.
-
-        :param iter_expr: expression to extract the value from
-        :return: The value of the evaluated expression or None
-        """
-        if isinstance(iter_expr, Literal):
-            return int(iter_expr.val)
-        elif isinstance(iter_expr, UnaryArithmeticOperation):
-            is_minus = iter_expr.operator == UnaryArithmeticOperation.Operator.Sub
-            if isinstance(iter_expr.expression, Literal):
-                val = int(iter_expr.expression.val)
-                if is_minus:
-                    val = -val
-                return val
+                in_cond = condition.right
+                if isinstance(in_cond, Range):
+                    start = SimpleExpression.from_expression(in_cond.start)
+                    end = SimpleExpression.from_expression(in_cond.end)
+                    step = SimpleExpression.from_expression(in_cond.step)
+                    if step == SimpleExpression(const=1):
+                        return end.sub(start)
+                    elif start.is_constant() and end.is_constant() and step.is_constant():
+                        value = math.ceil((end.const - start.const) / step.const)
+                        return SimpleExpression(const=value)
+                    else:
+                        error = f"Iteration analysis of {condition} is not implemented."
+                        raise NotImplementedError(error)
         return None
 
     @copy_docstring(Stack.push)
@@ -135,9 +123,9 @@ class AssumptionState(Store, State):
         super().__init__(variables, lattices)
         self.store[self.input_var] = InputAssumptionStack()
         self.store[self.input_var].lattice.is_main = True
-        interval_types = (BooleanLyraType, IntegerLyraType, FloatLyraType)
-        interval_vars = [v for v in variables if isinstance(v.typ, interval_types)]
-        self.store[self.relationship_var] = IntervalState(interval_vars)
+        self.store[self.relationship_var] = SimpleRelationsLattice()
+        for var in [v for v in variables if v.typ == BooleanLyraType()]:
+            self.store[var].range_assmp = IntervalLattice(0, 1)
         self.new_input = None
 
     @copy_docstring(State._assign)
@@ -148,18 +136,27 @@ class AssumptionState(Store, State):
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'AssumptionState':
         self.stack_top.condition = condition
-        curr_condition = condition
-        self.assume_relations(curr_condition)
+        range_info = self.assume_range_info(condition)
         self._refinement.visit(condition, AssumptionLattice(), self)
+        if range_info is not None:
+            self.apply_range_info_to_assmps(range_info)
+        relation = SimpleRelation.from_expression(condition)
+        if relation is not None:
+            self.relationships.add(relation)
         return self
 
-    def assume_relations(self, condition: Expression):
-        """Executes assume for the relations
+    def assume_range_info(self, condition: Expression):
+        """Executes assume using the IntervalState.
 
-        :param condition: condition to assume
+        :param condition: the condition that is assumed
+        :return: the interval Store after executing assume or None if not executable in the
+        IntervalState
         """
-        if self.check_if_interval_support(condition):
-            self.relationship_state.assume({condition})
+        interval_state = self.create_interval_state([condition])
+        if interval_state is None:
+            return None
+        interval_state.assume({condition})
+        return interval_state.store
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'AssumptionState':
@@ -194,71 +191,118 @@ class AssumptionState(Store, State):
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'AssumptionState':
         if isinstance(left, VariableIdentifier):
-            relations_before = deepcopy(self.relationship_state)
-            self.substitute_relations(left, right)
-            assumption = deepcopy(self.store[left])
+            left_assumption = deepcopy(self.store[left])
+            interval_store = self.substitute_range_info(left, right)
             self.store[left].top()
-            self._refinement.visit(right, assumption, self)
+            self._refinement.visit(right, left_assumption, self)
+            if interval_store is not None:
+                self.apply_range_info_to_assmps(interval_store)
             if self.new_input is not None:
-                input_assmp = InputAssumptionLattice(assmp=self.new_input)
-                input_assmp.var_name = left
-                input_assmp.relations = relations_before
-                input_assmp.input_info = {left: self.pp.line}
-                input_assmp.pp = self.pp
+                input_id = VariableIdentifier(IntegerLyraType(), f".ID={self.pp.line}")
+                relations = self.relationships.remove_relations_for_input(left, input_id)
+                input_assmp = InputAssumptionLattice(self.pp.line, self.new_input, relations)
                 self.stack_top.add_assumption_front(input_assmp)
-            self.substitute_input_assmps(left, right, self.stack_top.assmps)
+                self.substitute_relationships_in_input(left, input_id)
+            else:
+                self.relationships.substitute_all(left, right)
+                self.substitute_relationships_in_input(left, right)
             self.new_input = None
             return self
-        #TODO
-        #elif isinstance(left, Subscription):
-        #    self._refinement.visit(left, AssumptionLattice(), self)
-        #    self._refinement.visit(right, AssumptionLattice(), self)
-        #    return self
         error = f'Substitution for {left} not yet implemented!'
         raise NotImplementedError(error)
 
-    def substitute_relations(self, left: Expression, right: Expression):
-        """Executes substitute for the relations
+    def apply_range_info_to_assmps(self, ranges: dict):
+        """Applies information from a dictionary variable -> IntervalLattice to the assumptions.
 
-        :param left: left hand side expression
-        :param right: right hand side expression
+        :param ranges: map from variables to intervals
         """
-        if self.check_if_interval_support(left) and self.check_if_interval_support(right):
-            self.relationship_state.substitute({left}, {right})
+        for var_expr, range_val in ranges.items():
+            self.store[var_expr].range_assumption.bottom().join(range_val)
 
-    def substitute_input_assmps(self, left: VariableIdentifier, right: Expression, assmps):
-        """Substitutes the variables used in the input assumption collection.
+    def substitute_range_info(self, left: Expression, right: Expression):
+        """Uses an IntervalState to get information about the range of values.
+        Substitute in IntervalState will only be executed if the types are valid for an interval
+        analysis.
 
-        :param left: left hand side expression
-        :param right: right hand side expression
-        :param assmps: current assumptions to substitute
+        :param left: expression of the left hand side of the substitution
+        :param right: expression of the right hand side of the substitution
+        :return: Map from variables to intervals or None if interval analysis cannot be done
         """
-        for assumption in assmps:
-            if isinstance(assumption, InputAssumptionLattice):
-                if self.new_input is not None:
-                    new_input_assmp = self.stack_top.assmps[0]
-                    var_name = new_input_assmp.var_name
-                    if var_name not in assumption.input_info:
-                        input_index = new_input_assmp.input_info[var_name]
-                        assumption.input_info[var_name] = input_index
-                elif assumption.var_name is not None and assumption.var_name.name != left.name:
-                    assumption.relations.substitute({left}, {right})
+        interval_state = self.create_interval_state([left, right])
+        if interval_state is None:
+            return None
+        interval_state.substitute({left}, {right})
+        return interval_state.store
+
+    def create_interval_state(self, exprs: [Expression]):
+        """Creates an interval state using the variables in the expression. Returns None if one of
+        the variables cannot be used for interval analysis.
+
+        :param exprs: variables in this expression are used to create an IntervalState
+        :return: newly created IntervalState with variables used in the exprs argument
+        """
+        interval_store = self.create_interval_store(exprs, {})
+        if interval_store is None:
+            return None
+        variables = [v for v in interval_store]
+        interval_state = IntervalState(variables)
+        for var, interval in interval_store.items():
+            interval_state.store[var] = interval
+        return interval_state
+
+    def create_interval_store(self, exprs: [Expression], store: dict):
+        """Creates an interval store using the variables in the expression. Returns None if one of
+        the variables cannot be used for interval analysis.
+
+        :param exprs: variables in this expression are used to create an interval store
+        :param store: map from variables to IntervalLattice objects
+        :return: newly created map from variables to IntervalLattice objects with variables
+        used in the exprs argument
+        """
+        for expr in exprs:
+            if isinstance(expr, VariableIdentifier):
+                if not isinstance(expr.typ, (IntegerLyraType, FloatLyraType, BooleanLyraType)):
+                    return None
+                if expr not in store:
+                    store[expr] = deepcopy(self.store[expr].range_assumption)
+            elif isinstance(expr, UnaryOperation):
+                self.create_interval_store([expr.expression], store)
+            elif isinstance(expr, BinaryOperation):
+                self.create_interval_store([expr.left, expr.right], store)
+            elif isinstance(expr, Range):
+                self.create_interval_store([expr.start, expr.end, expr.step], store)
+        return store
+
+    def substitute_relationships_in_input(self, var: VariableIdentifier, right):
+        """Substitutes a variable if it appears in a relationship in the input collection.
+
+        :param var: variable that is substituted
+        :param right: expression the variable is substituted with
+        """
+        for assmps in self.input_assmp_stack:
+            self.substitute_relation_in_assmp(var, right, assmps)
+
+    def substitute_relation_in_assmp(self, var: VariableIdentifier, right, assmp):
+        """Substitutes a variable for an expression in the given assumption.
+
+        :param var: variable that is substituted
+        :param right: expression the variable is substituted with
+        :param assmp: assumption whose relation variables have to be substituted
+        """
+
+        if isinstance(assmp, MultiInputAssumptionLattice):
+            right_expr = SimpleExpression.from_expression(right)
+            if right_expr is None:
+                if assmp.iterations.var == var:
+                    self.stack_top.assmps.clear()
+                    self.stack_top.infoloss = True
+                    return
             else:
-                self.substitute_input_assmps(left, right, assumption.assmps)
-
-    def check_if_interval_support(self, expr):
-        """Checks if the current expression is supported by the interval analysis.
-
-        :param expr: current expression
-        :return: True if the expression is supported by the interval analysis
-        """
-        if isinstance(expr.typ, (StringLyraType, ListLyraType)):
-            return False
-        elif isinstance(expr, Subscription):
-            return False
-        elif isinstance(expr, UnaryBooleanOperation):
-            return self.check_if_interval_support(expr.expression)
-        return True
+                assmp.iterations.substitute_expr(var, right_expr)
+            for a in assmp.assmps:
+                self.substitute_relation_in_assmp(var, right, a)
+        else:
+            assmp.relations.substitute_all(var, right)
 
     @property
     def input_var(self) -> VariableIdentifier:
@@ -269,43 +313,21 @@ class AssumptionState(Store, State):
         return VariableIdentifier(StringLyraType(), '.REL')
 
     @property
-    def relationship_state(self) -> IntervalState:
+    def relationships(self) -> SimpleRelationsLattice:
         return self.store[self.relationship_var]
 
     @property
-    def relationships(self) -> dict:
-        return self.relationship_state.store
+    def input_assmp_stack(self) -> [MultiInputAssumptionLattice]:
+        return self.store[self.input_var].stack
 
     @property
     def stack_top(self) -> MultiInputAssumptionLattice:
         return self.store[self.input_var].lattice
 
-    def interval_to_assmp_state(self, interval_state: IntervalState) -> 'AssumptionState':
-        """Overwrites information of the current store with information from the interval state
-
-        :param interval_state:
-        :return:
-        """
-        for var, interval in interval_state.store.items():
-            type_assumption = self.store[var].type_assumption
-            self.store[var] = AssumptionLattice(type_assumption)
-        return self
-
     class AssumptionRefinement(ExpressionVisitor):
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr, assumption=None, state=None):
-            #TODO
-            #if isinstance(expr.key, Literal):
-            #    self.assume_length_assmp(expr.target, expr.key, state)
             return state
-
-        #def assume_length_assmp(self, target: VariableIdentifier, min_length, state):
-        #    length_var = [v for v in state.variables if v.name == f"len_{target.name}"]
-        #    assert len(length_var) == 1
-        #    cond_type = BooleanLyraType()
-        #    operator = BinaryComparisonOperation.Operator.GtE
-        #    condition = BinaryComparisonOperation(cond_type, length_var[0], operator, min_length)
-        #    state.assume([condition])
 
         @copy_docstring(ExpressionVisitor.visit_Literal)
         def visit_Literal(self, expr, assumption=None, state=None):
@@ -350,9 +372,9 @@ class AssumptionState(Store, State):
         def visit_Input(self, expr, assumption=None, state=None):
             type_assmp = TypeLattice.from_lyra_type(expr.typ)
             state.new_input = AssumptionLattice(type_assmp).meet(assumption)
-            if state.store[state.input_var].lattice.infoloss:
+            if state.stack_top.infoloss:
                 if len(state.store[state.input_var].stack) == 1:
-                    state.store[state.input_var].lattice.infoloss = False
+                    state.stack_top.infoloss = False
             return state
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
@@ -369,13 +391,9 @@ class AssumptionState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, assumption=None, state=None):
-            state.store[expr].type_assumption.meet(assumption.type_assumption)
+            state.store[expr].meet(assumption)
             expr_type = TypeLattice.from_lyra_type(expr.typ)
             state.store[expr].type_assumption.meet(expr_type)
             return state
-
-        #@copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
-        #def visit_LengthIdentifier(self, expr: LengthIdentifier, state=None, evaluation=None):
-        #    return state #TODO
 
     _refinement = AssumptionRefinement()
