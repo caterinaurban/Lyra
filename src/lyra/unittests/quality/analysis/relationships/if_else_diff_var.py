@@ -1,12 +1,12 @@
-# INITIAL [2:(Float, [-inf, inf]), 5:(Int, [-inf, 35])]
+# INITIAL [2:(Float, [-inf, inf]), 6:(Int, [-inf, inf])]
 a: float = float(input())
-x: int = 0
+b: int = 0
+c: int = 0
 if a > 10:
     b: int = int(input())
-    x: int = b - 13
+    b: int = b - 13
 else:
     c: int = int(input())
-    x: int = c
-if x > 22:
+if b <= c:
     raise ValueError
 

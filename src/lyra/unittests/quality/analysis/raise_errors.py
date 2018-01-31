@@ -1,4 +1,4 @@
-# INITIAL [(Float, [5, 40]), (Float, [10, 20])]
+# INITIAL [2:(Float, [5, 40]), 3:(Float, [10, 20])]
 a: float = float(input())
 b: float = float(input())
 if b < 10:

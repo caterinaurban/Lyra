@@ -1,4 +1,4 @@
-# INITIAL [(Int, [-inf, inf]), (Int, [-inf, inf]), 3 x [(Float, [-inf, inf])], (Int, [-inf, inf]), (Float, [-inf, inf]), (Float, [-inf, inf])]
+# INITIAL [2:(Int, [-inf, inf]), 4:(Int, [-inf, inf]), 3 x [6:(Float, [-inf, inf])], 7:(Int, [-inf, inf]), 8:(Float, [-inf, inf]), 13:(Float, [-inf, inf])]
 a: int = int(input())
 if a < 2:
     b: int = int(input())

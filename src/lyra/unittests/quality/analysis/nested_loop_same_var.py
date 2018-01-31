@@ -1,4 +1,4 @@
-# INITIAL [(Int, [-inf, 1]), (Int, [2, inf]), 10 x [(Float, [-inf, 3]), (Float, [4, inf]), 20 x [(Float, [-inf, 5]), (Float, [6, inf])], 30 x [(Float, [-inf, 7]), (Float, [8, inf])]]]
+# INITIAL [2:(Int, [-inf, 1]), 5:(Int, [2, inf]), 10 x [9:(Float, [-inf, 3]), 12:(Float, [4, inf]), 20 x [16:(Float, [-inf, 5]), 19:(Float, [6, inf])], 30 x [23:(Float, [-inf, 7]), 26:(Float, [8, inf])]]]
 a: int = int(input())
 if a > 1:
     raise ValueError

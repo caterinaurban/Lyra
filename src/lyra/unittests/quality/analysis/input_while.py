@@ -1,4 +1,4 @@
-# INITIAL [(Int, [-inf, inf])]
+# INITIAL [2:(Int, [-inf, inf])]
 a: int = int(input())
 b: int = 0
 

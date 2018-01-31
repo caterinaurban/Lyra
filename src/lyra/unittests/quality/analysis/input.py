@@ -1,4 +1,4 @@
-# INITIAL [(Int, [-inf, inf]), (Float, [-inf, inf]), (Any, [-inf, inf]), (Float, [-inf, inf]), (Int, [-inf, inf])]
+# INITIAL [2:(Int, [-inf, inf]), 4:(Float, [-inf, inf]), 7:(Any, [-inf, inf]), 8:(Float, [-inf, inf]), 9:(Int, [-inf, inf])]
 a: int = int(input())
 if a > 10:
     b: int = int(input())

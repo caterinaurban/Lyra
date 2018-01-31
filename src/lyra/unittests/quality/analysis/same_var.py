@@ -1,4 +1,4 @@
-# INITIAL [(Float, [-inf, 10]), (Int, [5, inf]), (Int, [2, 2])]
+# INITIAL [2:(Float, [-inf, 10]), 5:(Int, [5, inf]), 8:(Int, [2, 2])]
 a: float = float(input())
 if a > 10:
     raise ValueError

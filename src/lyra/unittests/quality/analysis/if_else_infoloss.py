@@ -1,4 +1,4 @@
-# INITIAL [(Int, [-inf, inf])]
+# INITIAL [3:(Int, [-inf, inf]), 5:(Int, [-inf, inf]), 8:(Float, [-inf, inf])]
 i: int = 0
 a: int = int(input())
 if a > 10:
@@ -6,5 +6,5 @@ if a > 10:
 else:
     c: int = int(input())
     c: int = int(input())
-b: int = float(input())
+b: float = float(input())
 

@@ -1,4 +1,4 @@
-# INITIAL [(Int, [-inf, 10]), (Int, [-inf, inf])]
+# INITIAL [2:(Int, [-inf, 10]), 3:(Int, [-inf, inf])]
 a: int = int(input())
 b: int = int(input())
 for i in range(100):

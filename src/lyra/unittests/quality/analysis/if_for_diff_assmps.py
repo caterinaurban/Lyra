@@ -1,4 +1,4 @@
-# INITIAL [(Int, [-inf, inf]), 3 x [(Float, [-inf, 40])], (Float, [-inf, 10])]
+# INITIAL [2:(Int, [-inf, inf]), 3 x [5:(Float, [-inf, 40])], 5:(Float, [-inf, 10])]
 a: int = int(input())
 if a > 10:
     for i in range(20):

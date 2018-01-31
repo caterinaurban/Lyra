@@ -1,15 +1,15 @@
-# INITIAL [(Float, [-10, inf])]
+# INITIAL [2:(Float, [-10, inf])]
 a: float = float(input())
 
-# STATE a -> (Float), .IN -> [], .REL -> a -> [-10, inf]
+# STATE a -> (Float, [-10, inf]), .IN -> [], .REL -> []
 a: float = a + 1
-# STATE a -> (Float), .IN -> [], .REL -> a -> [-9, inf]
+# STATE a -> (Float, [-9, inf]), .IN -> [], .REL -> []
 a: float = a - 1
-# STATE a -> (Float), .IN -> [], .REL -> a -> [-10, inf]
+# STATE a -> (Float, [-10, inf]), .IN -> [], .REL -> []
 a: float = 1 + a
-# STATE a -> (Float), .IN -> [], .REL -> a -> [-9, inf]
+# STATE a -> (Float, [-9, inf]), .IN -> [], .REL -> []
 a: float = 1 - a
 
-# STATE a -> (Float), .IN -> [], .REL -> a -> [-inf, 10]
+# STATE a -> (Float, [-inf, 10]), .IN -> [], .REL -> []
 if a > 10:
     raise Exception("NO")

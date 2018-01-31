@@ -1,4 +1,4 @@
-# INITIAL [(Int, [-inf, inf]), 10 x [(Float, [-inf, inf])]]
+# INITIAL [2:(Int, [-inf, inf]), 10 x [7:(Float, [-inf, inf])]]
 a: int = int(input())
 for i in range(10):
     a: int = a + 1

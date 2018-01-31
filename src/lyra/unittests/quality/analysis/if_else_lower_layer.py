@@ -1,4 +1,4 @@
-# INITIAL [(Int, [-inf, inf]), (Int, [10, 40])]
+# INITIAL [2:(Int, [-inf, inf]), 6:(Int, [10, 40]), 18:(Int, [-inf, inf])]
 a: int = int(input())
 b: int = 0
 if a > 10:
