@@ -52,6 +52,33 @@
 
 \pagenumbering{arabic}
 
+\section{Work todo}
+
+\subsection{from examples}
+
+\begin{itemize}
+\item reading multiple inputs: a, b = input().split() or values = input().split() (needs implementation of split, multiple inputs and lists)
+\item iterating over ranges with non-literal arguments (needs relationships)
+\item adding assumptions from loops that execute for sure
+        \begin{itemize}
+        \item needs store (for assumptions) and relationships in stack
+        \item or if we have a loop with "for i in range(10)" we get "not(for i in range)" which is false so we know we can assume bottom here and just take the branch from the loop
+        \item problems arize if we have "for i in range(N)", then we would need something like: (assmps, if N $>$ 0)
+        \end{itemize}
+\item adding conditionals to assumptions: "if a $>$ 10: x = list[n]"
+\item Relationships (needs octagon)
+\item assumptions about lists (x = a[b] means that $len_a > b$)
+\item support other means of input like open(filename), f.readline() etc.
+\end{itemize}
+
+\subsection{other}
+
+\begin{itemize}
+\item improve design of input checker
+\item decide/do evaluation
+\item write thesis
+\end{itemize}
+
 \section{General input reading example}
 
 \begin{lstlisting}
