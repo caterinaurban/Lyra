@@ -226,6 +226,8 @@ class InputChecker:
         relations = error.assumption.relations
         for relation in relations:
             other_val = error.rel_val
+            if relation.other_id is not None and other_val is None:
+                continue
             if not relation.evaluate(val, other_val):
                 rel_vars = relation.user_friendly_relation_with_vars()
                 rel_nums = relation.user_friendly_relation(val, other_val)

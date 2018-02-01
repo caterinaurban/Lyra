@@ -25,8 +25,6 @@ class CheckerRelation:
         :param other_value: value for the other variable if existing
         :return: if the evaluated relation is true
         """
-        assert self.other_id is not None
-        assert other_value is not None
         curr_val = this_value if self.this_pos else -this_value
         curr_val += self.constant
         if other_value is not None:
@@ -50,6 +48,11 @@ class CheckerRelation:
         :param other_val: the value that is substituted with the second variable
         :return: a user friendly representation of the relation
         """
+        if self.other_id is None:
+            if self.this_pos:
+                return f"{this_val} <= {-self.constant}"
+            else:
+                return f"{this_val} <= {self.constant}"
         if self.this_pos and self.other_pos:
             return f"{this_val} + {other_val} <= {-self.constant}"
         elif self.this_pos:
@@ -203,5 +206,5 @@ class InputAssumptionSimplification:
                 inputs.union(self.extract_inputs(assmp.assmps))
             else:
                 for relation in assmp.relations:
-                    inputs.add(relation.other_id)
+                    inputs.add(relation.other_id.name)
         return inputs
