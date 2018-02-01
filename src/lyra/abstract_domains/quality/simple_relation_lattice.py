@@ -1,7 +1,7 @@
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
 from lyra.core.expressions import VariableIdentifier, Literal, Expression, \
     BinaryArithmeticOperation, BinaryComparisonOperation, UnaryBooleanOperation, \
-    UnaryArithmeticOperation
+    UnaryArithmeticOperation, ListDisplay, LengthIdentifier, Identifier
 from lyra.core.types import FloatLyraType, IntegerLyraType, BooleanLyraType
 from lyra.core.utils import copy_docstring
 
@@ -9,15 +9,12 @@ from lyra.core.utils import copy_docstring
 class SimpleRelation:
     """Stores a relational constraint."""
 
-    def __init__(self, first_pos: bool, first, constant: int, second_pos: bool, second):
+    def __init__(self, first_pos=True, first=None, constant=0, second_pos=True, second=None):
         self.first_pos = first_pos
-        self.first = first
+        self.first = first if first is not None else SimpleExpression.var_zero
         self.constant = constant
         self.second_pos = second_pos
-        self.second = second
-        self.first_is_input = False
-        self.second_is_input = False
-        assert self.second is not None
+        self.second = second if second is not None else SimpleExpression.var_zero
 
     @classmethod
     def from_expression(cls, expr: Expression):
@@ -31,14 +28,21 @@ class SimpleRelation:
                 return None
             if isinstance(expr.left, Literal) or isinstance(expr.right, Literal):
                 return None
-            left_is_var = isinstance(expr.left, VariableIdentifier)
-            right_is_var = isinstance(expr.right, VariableIdentifier)
+            left_is_var = isinstance(expr.left, (VariableIdentifier, LengthIdentifier))
+            right_is_var = isinstance(expr.right, (VariableIdentifier, LengthIdentifier))
             if left_is_var and right_is_var:
-                if expr.operator == BinaryComparisonOperation.Operator.LtE:
-                    if inverted:
-                        return cls(False, expr.left, 1, True, expr.right)
-                    else:
-                        return cls(True, expr.left, 0, False, expr.right)
+                is_lte = expr.operator == BinaryComparisonOperation.Operator.LtE
+                is_lt = expr.operator == BinaryComparisonOperation.Operator.Lt
+                is_gte = expr.operator == BinaryComparisonOperation.Operator.GtE
+                is_gt = expr.operator == BinaryComparisonOperation.Operator.Gt
+                if is_lte and not inverted or is_gt and inverted:
+                    return cls(True, expr.left, 0, False, expr.right)
+                if is_lt and not inverted or is_gte and inverted:
+                    return cls(True, expr.left, 1, False, expr.right)
+                if is_gte and not inverted or is_lt and inverted:
+                    return cls(False, expr.left, 0, True, expr.right)
+                if is_gt and not inverted or is_lte and inverted:
+                    return cls(False, expr.left, 1, True, expr.right)
         return None
 
     def contains(self, var: VariableIdentifier) -> bool:
@@ -47,20 +51,18 @@ class SimpleRelation:
         :param var: variable that is checked if it appears in the relation
         :return: if the variable appears in the relation
         """
-        first_is_var = isinstance(self.first, VariableIdentifier) and self.first == var
-        return first_is_var or isinstance(self.second, VariableIdentifier) and self.second == var
+        return self.first == var or self.second == var
 
-    def substitute(self, var: VariableIdentifier, expr: 'SimpleExpression'):
+    def substitute(self, var: Identifier, expr: 'SimpleExpression'):
         """Substitutes a variable in the current relation with the given expression
 
         :param var: variable that is substituted
         :param expr: expression the variable is substituted with
         """
-        assert self.second is not None
         if self.first == var:
             self.first = expr.var
             is_pos = self.first_pos
-        elif self.second is not None and self.second == var:
+        elif self.second == var:
             self.second = expr.var
             is_pos = self.second_pos
         else:
@@ -70,7 +72,6 @@ class SimpleRelation:
             self.constant += expr.const
         else:
             self.constant -= expr.const
-        assert self.second is not None
         return self
 
     def __eq__(self, other: 'SimpleRelation'):
@@ -82,8 +83,8 @@ class SimpleRelation:
     def __repr__(self):
         sign_first = "" if self.first_pos else "-"
         sign_other = "+" if self.second_pos else "-"
-        sign_constant = "+" if self.constant > 0 else "-"
-        constant = self.constant if self.constant > 0 else -self.constant
+        sign_constant = "+" if self.constant >= 0 else "-"
+        constant = self.constant if self.constant >= 0 else -self.constant
         rel = f"{sign_first}{self.first} {sign_other} {self.second} {sign_constant} {constant}"
         return f"{rel} <= 0"
 
@@ -123,7 +124,7 @@ class SimpleRelationsLattice(BottomMixin):
             relation.substitute(var, input_id_simple_expr)
         return SimpleRelationsLattice(relations)
 
-    def substitute_all(self, var: VariableIdentifier, expr: Expression):
+    def substitute_all(self, var, expr: Expression):
         """Substitutes a variable in all relations with the given expression
 
         :param var: variable that is substituted
@@ -131,13 +132,23 @@ class SimpleRelationsLattice(BottomMixin):
         """
         new_relations = []
         for relation in self.relations:
-            expr_simple = SimpleExpression.from_expression(expr)
-            if expr_simple is None:
-                if not relation.contains(var):
+            if isinstance(expr, ListDisplay):
+                len_var = LengthIdentifier(var)
+                if relation.contains(len_var):
+                    relation.substitute(len_var, SimpleExpression(const=len(expr.items)))
                     new_relations.append(relation)
-                continue
-            new_relation = relation.substitute(var, expr_simple)
-            new_relations.append(new_relation)
+                else:
+                    new_relations.append(relation)
+            elif relation.contains(var):
+                expr_simple = SimpleExpression.from_expression(expr)
+                if expr_simple is None:
+                    if not relation.contains(var):
+                        new_relations.append(relation)
+                    continue
+                new_relation = relation.substitute(var, expr_simple)
+                new_relations.append(new_relation)
+            else:
+                new_relations.append(relation)
         self.relations = new_relations
 
     def add(self, relation: SimpleRelation):
@@ -213,7 +224,7 @@ class SimpleExpression:
             if inverted:
                 val = -val
             return cls(const=val)
-        elif isinstance(expr, VariableIdentifier):
+        elif isinstance(expr, (VariableIdentifier, LengthIdentifier)):
             return cls(not inverted, expr)
         elif isinstance(expr, BinaryArithmeticOperation):
             if isinstance(expr.left, VariableIdentifier) and isinstance(expr.right, Literal):

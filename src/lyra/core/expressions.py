@@ -133,6 +133,10 @@ class ExpressionVisitor(metaclass=ABCMeta):
         """Visit of a variable identifier."""
 
     @abstractmethod
+    def visit_LengthIdentifier(self, expr: 'VariableIdentifier'):
+        """Visit of a variable identifier."""
+
+    @abstractmethod
     def visit_ListDisplay(self, expr: 'ListDisplay'):
         """Visit of a list display."""
 
@@ -201,6 +205,10 @@ class NegationFreeNormalExpression(ExpressionVisitor):
         if isinstance(expr.typ, BooleanLyraType) and invert:
             operator = UnaryBooleanOperation.Operator.Neg
             return UnaryBooleanOperation(BooleanLyraType(), operator, expr)
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+    def visit_LengthIdentifier(self, expr: 'VariableIdentifier', invert=False):
         return expr     # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_ListDisplay)

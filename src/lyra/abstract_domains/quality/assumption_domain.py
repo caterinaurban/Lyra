@@ -19,7 +19,8 @@ from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor, \
-    BinaryComparisonOperation, Range, BinaryOperation, UnaryOperation
+    BinaryComparisonOperation, Range, BinaryOperation, UnaryOperation, LengthIdentifier, \
+    Subscription, ListDisplay, Identifier, Literal
 from lyra.core.types import ListLyraType, IntegerLyraType, BooleanLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -89,6 +90,8 @@ class InputAssumptionStack(Stack):
                     start = SimpleExpression.from_expression(in_cond.start)
                     end = SimpleExpression.from_expression(in_cond.end)
                     step = SimpleExpression.from_expression(in_cond.step)
+                    if start is None or end is None or step is None:
+                        return None
                     if step == SimpleExpression(const=1):
                         return end.sub(start)
                     elif start.is_constant() and end.is_constant() and step.is_constant():
@@ -125,7 +128,7 @@ class AssumptionState(Store, State):
         self.store[self.input_var].lattice.is_main = True
         self.store[self.relationship_var] = SimpleRelationsLattice()
         for var in [v for v in variables if v.typ == BooleanLyraType()]:
-            self.store[var].range_assmp = IntervalLattice(0, 1)
+            self.store[var].range_assumption.meet(IntervalLattice(0, 1))
         self.new_input = None
 
     @copy_docstring(State._assign)
@@ -206,7 +209,16 @@ class AssumptionState(Store, State):
             else:
                 self.relationships.substitute_all(left, right)
                 self.substitute_relationships_in_input(left, right)
+                if isinstance(right, ListDisplay):
+                    list_id = self.find_length_var(left)
+                    list_len = Literal(IntegerLyraType(), str(len(right.items)))
+                    self.relationships.substitute_all(list_id, list_len)
+                    self.substitute_relationships_in_input(list_id, list_len)
             self.new_input = None
+            return self
+        if isinstance(left, Subscription):
+            self._refinement.visit(left, self.store[left.target], self)
+            self._refinement.visit(right, self.store[left.target], self)
             return self
         error = f'Substitution for {left} not yet implemented!'
         raise NotImplementedError(error)
@@ -248,6 +260,8 @@ class AssumptionState(Store, State):
         interval_state = IntervalState(variables)
         for var, interval in interval_store.items():
             interval_state.store[var] = interval
+            if isinstance(var.typ, BooleanLyraType):
+                interval_state.store[var].meet(IntervalLattice(0, 1))
         return interval_state
 
     def create_interval_store(self, exprs: [Expression], store: dict):
@@ -259,6 +273,7 @@ class AssumptionState(Store, State):
         :return: newly created map from variables to IntervalLattice objects with variables
         used in the exprs argument
         """
+        interval_ok = True
         for expr in exprs:
             if isinstance(expr, VariableIdentifier):
                 if not isinstance(expr.typ, (IntegerLyraType, FloatLyraType, BooleanLyraType)):
@@ -266,14 +281,18 @@ class AssumptionState(Store, State):
                 if expr not in store:
                     store[expr] = deepcopy(self.store[expr].range_assumption)
             elif isinstance(expr, UnaryOperation):
-                self.create_interval_store([expr.expression], store)
+                interval_ok = self.create_interval_store([expr.expression], store)
             elif isinstance(expr, BinaryOperation):
-                self.create_interval_store([expr.left, expr.right], store)
+                interval_ok = self.create_interval_store([expr.left, expr.right], store)
             elif isinstance(expr, Range):
-                self.create_interval_store([expr.start, expr.end, expr.step], store)
+                interval_ok = self.create_interval_store([expr.start, expr.end, expr.step], store)
+            elif isinstance(expr, (Subscription, LengthIdentifier)):
+                return None
+        if not interval_ok:
+            return None
         return store
 
-    def substitute_relationships_in_input(self, var: VariableIdentifier, right):
+    def substitute_relationships_in_input(self, var: Identifier, right):
         """Substitutes a variable if it appears in a relationship in the input collection.
 
         :param var: variable that is substituted
@@ -282,7 +301,7 @@ class AssumptionState(Store, State):
         for assmps in self.input_assmp_stack:
             self.substitute_relation_in_assmp(var, right, assmps)
 
-    def substitute_relation_in_assmp(self, var: VariableIdentifier, right, assmp):
+    def substitute_relation_in_assmp(self, var: Identifier, right, assmp):
         """Substitutes a variable for an expression in the given assumption.
 
         :param var: variable that is substituted
@@ -291,18 +310,31 @@ class AssumptionState(Store, State):
         """
 
         if isinstance(assmp, MultiInputAssumptionLattice):
-            right_expr = SimpleExpression.from_expression(right)
-            if right_expr is None:
-                if assmp.iterations.var == var:
-                    self.stack_top.assmps.clear()
-                    self.stack_top.infoloss = True
-                    return
-            else:
+            if assmp.iterations.var == var:
+                right_expr = SimpleExpression.from_expression(right)
+                if right_expr is None:
+                    if assmp.iterations.var == var:
+                        self.stack_top.assmps.clear()
+                        self.stack_top.infoloss = True
+                        return
                 assmp.iterations.substitute_expr(var, right_expr)
             for a in assmp.assmps:
                 self.substitute_relation_in_assmp(var, right, a)
         else:
             assmp.relations.substitute_all(var, right)
+
+    def find_length_var(self, var: VariableIdentifier) -> LengthIdentifier:
+        """Returns the LengthIdentifier of a variable
+
+        :param var: variable whose Lengthidentifier should be foun
+        :return: LengthIdentifier of given variable
+        """
+        length_vars = [v for v in self.variables if isinstance(v, LengthIdentifier)]
+        length_vars_for_var = [v for v in length_vars if v.name == f"len({var.name})"]
+        if len(length_vars_for_var) != 1:
+            error = f"There should be exactly one LengthIdentifier for variable {var.name}"
+            raise ValueError(error)
+        return length_vars_for_var[0]
 
     @property
     def input_var(self) -> VariableIdentifier:
@@ -327,6 +359,12 @@ class AssumptionState(Store, State):
     class AssumptionRefinement(ExpressionVisitor):
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr, assumption=None, state=None):
+            key = expr.key
+            target = expr.target
+            if isinstance(key, VariableIdentifier) and isinstance(target, VariableIdentifier):
+                length_target = state.find_length_var(target)
+                length_relation = SimpleRelation(True, key, 1, False, length_target)
+                state.relationships.add(length_relation)
             return state
 
         @copy_docstring(ExpressionVisitor.visit_Literal)
@@ -394,6 +432,10 @@ class AssumptionState(Store, State):
             state.store[expr].meet(assumption)
             expr_type = TypeLattice.from_lyra_type(expr.typ)
             state.store[expr].type_assumption.meet(expr_type)
+            return state
+
+        @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+        def visit_LengthIdentifier(self, expr, assumption=None, state=None):
             return state
 
     _refinement = AssumptionRefinement()
