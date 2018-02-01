@@ -9,8 +9,11 @@ Assumption Analysis - Unit Tests
 import glob
 import os
 import unittest
+from typing import List
 
 from lyra.abstract_domains.quality.assumption_domain import AssumptionState
+from lyra.core.expressions import Identifier, LengthIdentifier
+from lyra.core.types import ListLyraType, StringLyraType
 from lyra.engine.backward import BackwardInterpreter
 from lyra.semantics.backward import DefaultBackwardSemantics
 
@@ -24,6 +27,14 @@ class QualityTest(TestRunner):
 
     def state(self):
         return AssumptionState(self.variables)
+
+    @property
+    def variables(self) -> List[Identifier]:
+        all_vars = super().variables
+        for var in all_vars:
+            if isinstance(var.typ, (ListLyraType, StringLyraType)):
+                all_vars.append(LengthIdentifier(var))
+        return all_vars
 
     def runTest(self):
         result = self.interpreter().analyze(self.state())
