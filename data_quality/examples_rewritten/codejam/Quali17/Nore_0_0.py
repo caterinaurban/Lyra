@@ -1,22 +1,28 @@
-# MAD: input has to exist as integer
-t = int(input())
+t: int = int(input())
 
-# MAD: t >= 1, otherwise no output
 for tc in range(1, t + 1):
-    print("Case #" + str(tc) + ": ", end = "")
-    # MAD: input has to exist as two integers separated by whitespace
-    line, k = input().strip().split()
-    # MAD: input has to exist as integer
-    k = int(k)
-    line = [c == "+" for c in line]
-    r = 0
+    print("Case #")  # print without multiple arguments
+    print(tc)
+    print(": ")
+    line_str: str = input()  # instead of line, k = input().strip().split()
+    k_str: str = input()
+    k: int = int(k_str)
+    line: List[bool] = [False, False, False]  # instead of empty list
+    # loop instead of list comprehension
+    for i in range(len(line_str)):  # i in range(line_str) instead of c in line_str
+        line[i]: bool = line_str[i] == "+"
+    r: float = 0
     for i in range(len(line) - k + 1):
-        # MAD: len(line) > max(i) => len(line) > len(line) - k + 1 - 1 => len(line) > len(line) - k => k > 0
         if not line[i]:
-            r += 1
+            r: float = r + 1  # rewritten +=
             for j in range(k):
-                line[i+j] = not line[i+j]
-    if all(line):
+                line[i+j]: bool = not line[i+j]
+    # loop instead of all(line)
+    all_line: bool = True
+    for i in range(len(line)):
+        if not line:
+            all_line: bool = False
+    if all_line:
         print(r)
     else:
         print("IMPOSSIBLE")
