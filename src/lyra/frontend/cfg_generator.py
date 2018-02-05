@@ -529,7 +529,18 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        return Call(pp, node.func.id, [self.visit(arg, types, typ) for arg in node.args], typ)
+        func = self.visit(node.func, types, typ)
+        if isinstance(func, VariableAccess):
+            return Call(pp, func.variable.name, [self.visit(arg, types, typ) for arg in node.args], typ)
+        elif isinstance(func, AttributeReference):
+            target = self.visit(func.target, types, typ)
+            args = [target] + [self.visit(arg, types, typ) for arg in node.args]
+            return Call(pp, func.attribute, args, typ)
+        error = f"Call with function type {func.__class__.__name__} is not yet supported!"
+        raise NotImplementedError(error)
+
+    def visit_Attribute(self, node, types=None, typ=None):
+        return AttributeReference(typ, node.value, node.attr)
 
     def visit_List(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)

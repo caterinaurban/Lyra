@@ -337,13 +337,14 @@ class MultiInputAssumptionLattice(BoundedLattice):
     .. automethod:: MultiInputAssumptionLattice._widening
     """
 
-    def __init__(self, iterations=None, assmps=None, pp=None):
+    def __init__(self, iterations=None, assmps=None, pp=None, delimiter=None):
         super().__init__()
         if iterations is None:
             iterations = SimpleExpression(const=1)
         self.iterations = iterations
         self._assmps = assmps if assmps is not None else []
         self.pp = pp
+        self.delimiter = delimiter
         self.infoloss = False
         self.is_main = False
         self.is_loop = False
@@ -356,9 +357,10 @@ class MultiInputAssumptionLattice(BoundedLattice):
             return "⊥"
         if self.is_top():
             return "T"
+        delimiter = f" with delimiter \'{self.delimiter}\'" if self.delimiter is not None else ""
         if self.iterations == SimpleExpression(const=1):
             return f"{self.assmps}"
-        return f"{self.iterations.__repr__()} x {self.assmps}"
+        return f"{self.iterations.__repr__()} x {self.assmps}{delimiter}"
 
     @property
     def assmps(self):

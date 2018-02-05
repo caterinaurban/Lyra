@@ -334,6 +334,11 @@ class IntervalState(Store, State):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
+        @copy_docstring(ExpressionVisitor.visit_Split)
+        def visit_Split(self, expr: Split, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
         def visit_AttributeReference(self, expr: AttributeReference, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
@@ -452,6 +457,11 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_Range)
         def visit_Range(self, expr: Range, state=None, evaluation=None):
+            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Split)
+        def visit_Split(self, expr: Split, state=None, evaluation=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 

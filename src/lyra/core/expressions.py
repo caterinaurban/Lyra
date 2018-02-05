@@ -145,6 +145,10 @@ class ExpressionVisitor(metaclass=ABCMeta):
         """Visit of a range call."""
 
     @abstractmethod
+    def visit_Split(self, expr: 'Split'):
+        """Visit of a spli call."""
+
+    @abstractmethod
     def visit_AttributeReference(self, expr: 'AttributeReference'):
         """Visit of an attribute reference."""
 
@@ -217,6 +221,10 @@ class NegationFreeNormalExpression(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_Range)
     def visit_Range(self, expr: 'Range', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Split)
+    def visit_Split(self, expr: 'Split', invert=False):
         return expr     # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_AttributeReference)
@@ -523,6 +531,39 @@ class Range(Expression):
 
     def __str__(self):
         return f"range({self.start}, {self.end}, {self.step})"
+
+
+class Split(Expression):
+    """Split call representation"""
+    def __init__(self, typ: LyraType, target: Expression, delimiter: str):
+        """Split call expression construction.
+
+        :param typ: type of the split call
+        :param target: target on which split() is called
+        :param delimiter: delimiter used
+        """
+        super().__init__(typ)
+        self._target = target
+        self._delimiter = delimiter
+
+    @property
+    def target(self):
+        return self._target
+
+    @property
+    def delimiter(self):
+        return self._delimiter
+
+    def __hash__(self):
+        return hash((self.target, self.delimiter))
+
+    def __eq__(self, other):
+        return self.target == other.target and self.delimiter == other.delimiter
+
+    def __str__(self):
+        if self.delimiter is None:
+            return f"{self.target}.split()"
+        return f"{self.target}.split({self.delimiter})"
 
 
 """

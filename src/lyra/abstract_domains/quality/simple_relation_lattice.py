@@ -9,12 +9,12 @@ from lyra.core.utils import copy_docstring
 class SimpleRelation:
     """Stores a relational constraint."""
 
-    def __init__(self, first_pos=True, first=None, constant=0, second_pos=True, second=None):
+    def __init__(self, first_pos, first, constant, second_pos, second):
         self.first_pos = first_pos
-        self.first = first if first is not None else SimpleExpression.var_zero
+        self.first = first
         self.constant = constant
         self.second_pos = second_pos
-        self.second = second if second is not None else SimpleExpression.var_zero
+        self.second = second
 
     @classmethod
     def from_expression(cls, expr: Expression):
@@ -51,7 +51,10 @@ class SimpleRelation:
         :param var: variable that is checked if it appears in the relation
         :return: if the variable appears in the relation
         """
-        return self.first == var or self.second == var
+        if self.first == var or self.second == var:
+            return True
+        length_var = LengthIdentifier(var)
+        return self.first == length_var or self.second == length_var
 
     def substitute(self, var: Identifier, expr: 'SimpleExpression'):
         """Substitutes a variable in the current relation with the given expression
@@ -64,6 +67,12 @@ class SimpleRelation:
             is_pos = self.first_pos
         elif self.second == var:
             self.second = expr.var
+            is_pos = self.second_pos
+        elif isinstance(self.first, LengthIdentifier) and self.first.name == f"len({var.name})":
+            self.first = LengthIdentifier(expr.var)
+            is_pos = self.first_pos
+        elif isinstance(self.second, LengthIdentifier) and self.second.name == f"len({var.name})":
+            self.second = LengthIdentifier(expr.var)
             is_pos = self.second_pos
         else:
             return self
@@ -133,8 +142,8 @@ class SimpleRelationsLattice(BottomMixin):
         new_relations = []
         for relation in self.relations:
             if isinstance(expr, ListDisplay):
-                len_var = LengthIdentifier(var)
-                if relation.contains(len_var):
+                if relation.contains(var):
+                    len_var = LengthIdentifier(var)
                     relation.substitute(len_var, SimpleExpression(const=len(expr.items)))
                     new_relations.append(relation)
                 else:
@@ -206,7 +215,7 @@ class SimpleExpression:
     The expression is of the from +/- var + const
     """
 
-    def __init__(self, var_pos=True, var: VariableIdentifier = None, const: float = 0):
+    def __init__(self, var_pos=True, var: VariableIdentifier=None, const: float=0):
         super().__init__()
         self.var_pos = var_pos
         self.var = var if var is not None else self.var_zero

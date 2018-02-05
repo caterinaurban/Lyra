@@ -203,14 +203,22 @@ class AssumptionState(Store, State):
             if self.new_input is not None:
                 input_id = VariableIdentifier(IntegerLyraType(), f".ID={self.pp.line}")
                 relations = self.relationships.remove_relations_for_input(left, input_id)
-                input_assmp = InputAssumptionLattice(self.pp.line, self.new_input, relations)
+                assmp = self.new_input[0]
+                delimiter = self.new_input[1]
+                input_assmp = InputAssumptionLattice(self.pp.line, assmp, relations)
+                if delimiter is not None:
+                    len_var = LengthIdentifier(left)
+                    len_assmp = self.store[len_var].range_assumption.lower
+                    iters = SimpleExpression(const=max(0, len_assmp))
+                    assmps = [input_assmp]
+                    input_assmp = MultiInputAssumptionLattice(iters, assmps, self.pp, delimiter)
                 self.stack_top.add_assumption_front(input_assmp)
                 self.substitute_relationships_in_input(left, input_id)
             else:
                 self.relationships.substitute_all(left, right)
                 self.substitute_relationships_in_input(left, right)
                 if isinstance(right, ListDisplay):
-                    list_id = self.find_length_var(left)
+                    list_id = LengthIdentifier(left)
                     list_len = Literal(IntegerLyraType(), str(len(right.items)))
                     self.relationships.substitute_all(list_id, list_len)
                     self.substitute_relationships_in_input(list_id, list_len)
@@ -323,19 +331,6 @@ class AssumptionState(Store, State):
         else:
             assmp.relations.substitute_all(var, right)
 
-    def find_length_var(self, var: VariableIdentifier) -> LengthIdentifier:
-        """Returns the LengthIdentifier of a variable
-
-        :param var: variable whose Lengthidentifier should be foun
-        :return: LengthIdentifier of given variable
-        """
-        length_vars = [v for v in self.variables if isinstance(v, LengthIdentifier)]
-        length_vars_for_var = [v for v in length_vars if v.name == f"len({var.name})"]
-        if len(length_vars_for_var) != 1:
-            error = f"There should be exactly one LengthIdentifier for variable {var.name}"
-            raise ValueError(error)
-        return length_vars_for_var[0]
-
     @property
     def input_var(self) -> VariableIdentifier:
         return VariableIdentifier(StringLyraType(), '.IN')
@@ -361,10 +356,15 @@ class AssumptionState(Store, State):
         def visit_Subscription(self, expr, assumption=None, state=None):
             key = expr.key
             target = expr.target
-            if isinstance(key, VariableIdentifier) and isinstance(target, VariableIdentifier):
-                length_target = state.find_length_var(target)
-                length_relation = SimpleRelation(True, key, 1, False, length_target)
-                state.relationships.add(length_relation)
+            if isinstance(target, VariableIdentifier):
+                length_target = LengthIdentifier(target)
+                if isinstance(key, VariableIdentifier):
+                    length_relation = SimpleRelation(True, key, 1, False, length_target)
+                    state.relationships.add(length_relation)
+                elif isinstance(key, Literal):
+                    length_min = int(key.val) + 1
+                    assmp = AssumptionLattice(TypeLattice().integer(), IntervalLattice(length_min))
+                    state.store[length_target].meet(assmp.meet(assumption))
             return state
 
         @copy_docstring(ExpressionVisitor.visit_Literal)
@@ -409,7 +409,7 @@ class AssumptionState(Store, State):
         @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr, assumption=None, state=None):
             type_assmp = TypeLattice.from_lyra_type(expr.typ)
-            state.new_input = AssumptionLattice(type_assmp).meet(assumption)
+            state.new_input = (AssumptionLattice(type_assmp).meet(assumption), None)
             if state.stack_top.infoloss:
                 if len(state.store[state.input_var].stack) == 1:
                     state.stack_top.infoloss = False
@@ -421,6 +421,15 @@ class AssumptionState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_Range)
         def visit_Range(self, expr, assumption=None, state=None):
+            return state  # nothing to be done
+
+        @copy_docstring(ExpressionVisitor.visit_Split)
+        def visit_Split(self, expr, assumption=None, state=None):
+            self.visit(expr.target, assumption, state)
+            if expr.delimiter is None:
+                state.new_input = (state.new_input[0], "")
+            else:
+                state.new_input = (state.new_input[0], expr.delimiter)
             return state  # nothing to be done
 
         @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)

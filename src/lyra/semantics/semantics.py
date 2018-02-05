@@ -11,7 +11,7 @@ Lyra's internal semantics of statements.
 import itertools
 import re
 from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slicing, \
-    LengthIdentifier, VariableIdentifier, Range
+    LengthIdentifier, VariableIdentifier, Range, Split
 from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
 from lyra.core.expressions import UnaryOperation
 from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
@@ -244,6 +244,12 @@ class BuiltInCallSemantics(CallSemantics):
         return state.output(argument)
 
     def range_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of a call to 'range'.
+
+        :param stmt: call to 'range' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
         arguments = [self.semantics(arg, state).result.pop() for arg in stmt.arguments]
         start = Literal(IntegerLyraType(), "0")
         step = Literal(IntegerLyraType(), "1")
@@ -258,6 +264,22 @@ class BuiltInCallSemantics(CallSemantics):
             error = f"Semantics for range call with {len(arguments)} arguments is not implemented!"
             raise NotImplementedError(error)
         state.result = {Range(stmt.typ, start, end, step)}
+        return state
+
+    def split_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of a call to 'split'.
+
+        :param stmt: call to 'split' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        target = self.semantics(stmt.arguments[0], state).result.pop()
+        delimiter = None
+        if len(stmt.arguments) > 1:
+            delimiter_lit = self.semantics(stmt.arguments[1], state).result.pop()
+            assert isinstance(delimiter_lit, Literal)
+            delimiter = delimiter_lit.val
+        state.result = {Split(stmt.typ, target, delimiter)}
         return state
 
     def raise_semantics(self, stmt: Raise, state: State) -> State:
