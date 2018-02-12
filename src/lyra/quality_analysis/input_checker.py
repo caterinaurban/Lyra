@@ -19,6 +19,10 @@ class ErrorInformation:
         self.rel_location = None
         self.rel_assmp = None
         self.is_first_val = True
+        self.prev_line = None
+        self.next_line = None
+        self.rel_prev_line = None
+        self.rel_next_line = None
 
     def add_rel_info(self, relation, rel_value: str, rel_loccation: int, rel_assmp):
         """Adds relational info to the error.
@@ -51,6 +55,7 @@ class InputChecker:
         self.error_file = None
         self.input_file = None
         self.inputs = {}
+        self.prev_line = ""
 
     def write_missing_error(self, num_values_expected, num_values_found, line_num=None, delm=None):
         """Prints an error because there are more assumptions than values
@@ -85,6 +90,7 @@ class InputChecker:
         if not range_assmp.is_top():
             error += f"\nin range [{range_assmp.lower}, {range_assmp.upper}]"
         if relations is not None and len(relations) > 0:
+            relations = ", ".join([r.__repr__() for r in relations])
             error += f"\nwith relation {relations}"
         return error
 
@@ -204,9 +210,10 @@ class InputChecker:
         self.input_file = open(self.input_file_name, "r")
         errors = []
         self.inputs = {}
+        self.prev_line = ""
         for an_input in inputs:
             self.inputs[an_input] = None
-        self.inputs[CheckerZeroIdentifier()] = (0, None, None)
+        self.inputs[CheckerZeroIdentifier()] = (0, None, None, None, None)
         one_iter = CheckerExpression(True, None, 1)
         self.check_assmps(assumptions, one_iter, -1, None, errors)
         if len(errors) == 0:
@@ -231,6 +238,7 @@ class InputChecker:
 
             line += 1
             curr_input = self.input_file.readline().strip()
+            self.update_next_line_val(errors, curr_input)
             if num_iter is None:
                 return line
 
@@ -242,12 +250,13 @@ class InputChecker:
             assmp = assumptions.assmps[0]
             len_id = CheckerLengthIdentifier(assmp.var_id.input_id)
             if len_id in self.inputs:
-                self.inputs[len_id] = (len(values), line, assumptions)
+                self.inputs[len_id] = (len(values), line, assumptions, self.prev_line, None)
 
             if len(values) < num_iter:
                 msg = self.write_missing_error(num_iter, len(values), line, delimiter)
                 err_lvl = ErrorInformation.ErrorLevel.Missing
                 new_error = ErrorInformation(line, curr_input, msg, assmp, err_lvl)
+                new_error.prev_line = self.prev_line
                 errors.append(new_error)
                 return line
             for relation in assmp.relations:
@@ -255,8 +264,10 @@ class InputChecker:
                 rel_val = self.inputs[other_id]
                 if rel_val is None:
                     continue
-                if not relation.evaluate((len_id, len(values)), (other_id, rel_val[0])):
-                    rel_eval = relation.user_friendly_relation(len(values), rel_val[0])
+                val1 = (len_id, len(values))
+                val2 = (other_id, rel_val[0])
+                if not relation.evaluate(val1, val2):
+                    rel_eval = relation.user_friendly_relation(val1, val2)
                     rel_vars = relation.user_friendly_relation_with_vars()
                     rel_assmp = rel_val[2]
                     assmps = assumptions
@@ -264,7 +275,11 @@ class InputChecker:
                     lvl = ErrorInformation.ErrorLevel.Relation
                     new_error = ErrorInformation(line, curr_input, msg, assumptions, lvl)
                     new_error.add_rel_info(relation, str(rel_val[0]), rel_val[1], rel_assmp)
+                    new_error.prev_line = self.prev_line
+                    new_error.rel_prev_line = rel_val[3]
+                    new_error.rel_next_line = rel_val[4]
                     errors.append(new_error)
+            self.prev_line = curr_input
         else:
             num_iter = iters.evaluate(self.inputs)
             if num_iter is None:
@@ -284,10 +299,24 @@ class InputChecker:
                     else:
                         line += 1
                         input_line = self.input_file.readline().strip()
+                        self.update_next_line_val(errors, input_line)
                         error = self.check_one_assmp(assmp, input_line, line)
                         if error is not None:
+                            error.prev_line = self.prev_line
                             errors.append(error)
+                        self.prev_line = input_line
         return line
+
+    def update_next_line_val(self, errors: [ErrorInformation], input_line: str):
+        """Updates information about the next line of an input with an error
+
+        :param errors: current errors
+        :param input_line: current input
+        """
+        if len(errors) > 0 and errors[-1].next_line is None:
+            errors[-1].next_line = input_line
+        for input_id, input_val in [(i, v) for i, v in self.inputs.items() if v is not None and v[-1] is None]:
+            self.inputs[input_id] = self.inputs[input_id][:-1] + (input_line,)
 
     def check_one_assmp(self, assmp: CheckerAssumption, in_val: str, line: int):
         """Checks if the current input fulfils the assumption
@@ -323,7 +352,7 @@ class InputChecker:
         input_id = assmp.var_id
 
         if input_id in self.inputs:
-            self.inputs[input_id] = (val, line, assmp)
+            self.inputs[input_id] = (val, line, assmp, self.prev_line, None)
 
         if range_assmp.lower != -inf or range_assmp.upper != inf:
             if val < range_assmp.lower or val > range_assmp.upper:
@@ -337,12 +366,17 @@ class InputChecker:
             rel_val = self.inputs[other_id]
             if rel_val is None:
                 continue
-            if not relation.evaluate((input_id, val), (other_id, rel_val[0])):
-                rel_eval = relation.user_friendly_relation(val, rel_val[0])
+            val1 = (input_id, val)
+            val2 = (other_id, rel_val[0])
+            if not relation.evaluate(val1, val2):
+                rel_eval = relation.user_friendly_relation(val1, val2)
                 msg = self.write_relation_error(line, assmp, rel_val[2], relation, rel_eval)
                 lvl = ErrorInformation.ErrorLevel.Relation
                 new_error = ErrorInformation(line, in_val, msg, assmp, lvl)
                 new_error.add_rel_info(relation, str(rel_val[0]), rel_val[1], rel_val[2])
+                new_error.prev_line = self.prev_line
+                new_error.rel_prev_line = rel_val[3]
+                new_error.rel_next_line = rel_val[4]
                 if isinstance(relation.this_id, CheckerZeroIdentifier):
                     new_error.is_first_val = False
                 return new_error
@@ -397,7 +431,7 @@ class InputChecker:
         eval_other_value = self.evaluate_value(error.rel_val, error.rel_assmp)
         relation = error.relation
         if not relation.evaluate(eval_value, eval_other_value):
-            rel = relation.user_friendly_relation(eval_value[1], eval_other_value[1])
+            rel = relation.user_friendly_relation(eval_value, eval_other_value)
             rel_str = relation.user_friendly_relation_with_vars()
             loc = error.location
             assmp1 = error.assumption

@@ -92,8 +92,9 @@ class DataQualityController:
                             curr_loc = -1
                     else:
                         if not line.endswith("\n"):
-                            line += "\n"
-                        input_file_tmp.write(line)
+                            input_file_tmp.write(line + "\n")
+                        else:
+                            input_file_tmp.write(line)
                     line_num += 1
         copyfile(self.path + self.input_filename + ".temp", self.path + self.input_filename)
         os.remove(self.path + self.input_filename + ".temp")

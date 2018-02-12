@@ -85,15 +85,26 @@ class CheckerRelation:
 
         :return: a user friendly representation of the relation using the input ids
         """
-        return self.user_friendly_relation(self.this_id, self.other_id)
+        first_val = (self.this_id, self.this_id)
+        second_val = (self.other_id, self.other_id)
+        return self.user_friendly_relation(first_val, second_val)
 
-    def user_friendly_relation(self, this_val, other_val) -> str:
+    def user_friendly_relation(self, first_value, second_value) -> str:
         """Creates a user friendly representation of the relation
 
-        :param this_val: the value that is substituted with the first variable
-        :param other_val: the value that is substituted with the second variable
+        :param first_value: (input id, value) that is substituted with one variable
+        :param second_value: (input id, value) that is substituted with the other variable
         :return: a user friendly representation of the relation
         """
+        if first_value[0] == self.this_id and second_value[0] == self.other_id:
+            this_val = first_value[1]
+            other_val = second_value[1]
+        elif first_value[0] == self.other_id and second_value[0] == self.this_id:
+            this_val = second_value[1]
+            other_val = first_value[1]
+        else:
+            error = f"{first_value} and {second_value} are not compatible with relation {self}"
+            raise Exception(error)
         if isinstance(this_val, CheckerZeroIdentifier):
             this_val = 0
         if isinstance(other_val, CheckerZeroIdentifier):
