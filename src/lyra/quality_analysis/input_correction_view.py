@@ -1,5 +1,9 @@
 import tkinter as tk
 
+from copy import deepcopy
+
+from lyra.quality_analysis.input_assmp_simplification import CheckerZeroIdentifier
+
 
 class InputCorrection(tk.Tk):
     """Container class for the input correction application."""
@@ -7,7 +11,7 @@ class InputCorrection(tk.Tk):
         super().__init__()
         container = tk.Frame(self)
         container.pack()
-        self.geometry('%dx%d+%d+%d' % (600, 300, 300, 100))
+        self.geometry('%dx%d+%d+%d' % (800, 500, 300, 100))
 
         input_files_view = InputCorrectionFiles(container, controller)
         input_files_view.grid(row=0, column=0, sticky="nsew")
@@ -44,6 +48,15 @@ class InputCorrectionFiles(tk.Frame):
         main_page.grid(row=0, column=0, sticky="nsew")
         main_page.tkraise()
 
+row_error = 0
+row_label_val = 1
+row_val = 2
+row_label_val2 = 3
+row_val2 = 4
+row_prev_next = 5
+row_check = 6
+error_width = 80
+
 
 class InputCorrectionMain(tk.Frame):
     """Main screen of the input correction application. Starts the analysis automaticalliy
@@ -56,111 +69,171 @@ class InputCorrectionMain(tk.Frame):
         self.input_filename = input_filename
         self.errors = []
         self.error_index = 0
+        self.relation_widgets = []
 
         self.container = parent
 
-        border_error = tk.Label(self, width=65, borderwidth=2, relief="solid")
-        border_error.grid(row=0, column=0, columnspan=10, ipady=15, pady=10, ipadx=30, sticky=tk.W)
+        border_error = tk.Label(self, width=error_width+10, borderwidth=2, relief="solid")
+        border_error.grid(row=row_error, column=0, columnspan=10, ipady=30, pady=10, ipadx=30)
 
-        self.label_error = tk.Label(self, text="ERROR", width=70, anchor=tk.W)
-        self.label_error.grid(row=0, column=0, columnspan=10)
+        self.label_error = tk.Label(self, text="ERROR", width=error_width, anchor=tk.W)
+        self.label_error.grid(row=row_error, column=0, columnspan=10)
 
         self.label_progress = tk.Label(self, text="PROGRESS", borderwidth=2, relief="raised")
-        self.label_progress.grid(row=0, column=9, pady=10, ipady=3, ipadx=3)
+        self.label_progress.grid(row=row_error, column=9, pady=10, ipady=3, ipadx=3)
 
         border_old_val = tk.Label(self, width=20, height=6, borderwidth=2, relief="solid")
-        border_old_val.grid(row=1, column=1, columnspan=2, rowspan=2)
+        border_old_val.grid(row=row_label_val, column=1, columnspan=2, rowspan=2)
 
         label_old_val = tk.Label(self, text="Old value:")
-        label_old_val.grid(row=1, column=1, columnspan=2)
+        label_old_val.grid(row=row_label_val, column=1, columnspan=2)
         self.old_val = tk.Label(self, text="")
-        self.old_val.grid(row=2, column=1, columnspan=2, ipady=10)
+        self.old_val.grid(row=row_val, column=1, columnspan=2, ipady=10)
 
         border_new_val = tk.Label(self, width=35, height=6, borderwidth=2, relief="solid")
-        border_new_val.grid(row=1, column=4, columnspan=4, rowspan=2, padx=3, pady=8, sticky=tk.W)
+        border_new_val.grid(row=row_label_val, column=4, columnspan=4, rowspan=2, padx=3, pady=8)
 
         label_new_val = tk.Label(self, text="New value:")
-        label_new_val.grid(row=1, column=4, columnspan=4)
+        label_new_val.grid(row=row_label_val, column=4, columnspan=4)
         self.new_val_var = tk.StringVar()
         self.entry_new_val = tk.Entry(self, textvariable=self.new_val_var)
-        self.entry_new_val.grid(row=2, column=4, columnspan=4, padx=5)
-        self.entry_new_val.bind("<KeyRelease>", self.check_new_val)
-        error_image = tk.PhotoImage(file="icons/error.png")
-        self.label_new_val_ok = tk.Label(self, image=error_image)
-        self.label_new_val_ok.image = error_image
-        self.label_new_val_ok.grid(row=2, column=7)
+        self.entry_new_val.grid(row=row_val, column=4, columnspan=4, padx=5)
+        self.entry_new_val.bind("<Return>", self.check_new_val)
 
-        prev_image = tk.PhotoImage(file="icons/prev.png")
-        prev_button = tk.Button(self, image=prev_image, command=self.show_prev_error)
-        prev_button.image = prev_image
-        prev_button.grid(row=3, column=5, sticky=tk.E)
+        self.old_val2 = None
+        self.new_val_var2 = None
+        self.entry_new_val2 = None
 
-        next_image = tk.PhotoImage(file="icons/next.png")
-        next_button = tk.Button(self, image=next_image, command=self.show_next_error)
-        next_button.image = next_image
-        next_button.grid(row=3, column=6, sticky=tk.W, padx=20)
-
-        run_button = tk.Button(self, text="Check", command=self.check_corrected_input, anchor=tk.W)
-        run_button.grid(row=4, column=0, pady=10)
+        self.entry_locked = False
 
         self.start_analysis()
 
-    def show_prev_error(self):
-        """Show the previous error in the list."""
-        if self.error_index > 0:
-            self.error_index -= 1
-            self.show_error()
+    def show_relation_error_widgets(self):
+        """Adds the widgets used for displaying a relational error"""
+        border_old_val2 = tk.Label(self, width=20, height=6, borderwidth=2, relief="solid")
+        border_old_val2.grid(row=row_label_val2, column=1, columnspan=2, rowspan=2)
 
-    def show_next_error(self):
-        """Show the next error in the list."""
-        if self.error_index < len(self.errors) - 1:
-            self.error_index += 1
-            self.show_error()
+        label_old_val2 = tk.Label(self, text="Old value:")
+        label_old_val2.grid(row=row_label_val2, column=1, columnspan=2)
+        self.old_val2 = tk.Label(self, text="")
+        self.old_val2.grid(row=row_val2, column=1, columnspan=2, ipady=10)
+
+        border_new_val2 = tk.Label(self, width=35, height=6, borderwidth=2, relief="solid")
+        border_new_val2.grid(row=row_label_val2, column=4, columnspan=4, rowspan=2, padx=3, pady=8)
+
+        label_new_val2 = tk.Label(self, text="New value:")
+        label_new_val2.grid(row=row_label_val2, column=4, columnspan=4)
+        self.new_val_var2 = tk.StringVar()
+        self.entry_new_val2 = tk.Entry(self, textvariable=self.new_val_var2)
+        self.entry_new_val2.grid(row=row_val2, column=4, columnspan=4, padx=5)
+        self.entry_new_val2.bind("<Return>", self.check_new_val)
+
+        self.relation_widgets = [border_old_val2, label_old_val2, self.old_val2, border_new_val2]
+        self.relation_widgets += [label_new_val2, self.entry_new_val2]
 
     def show_error(self):
         """Show information about the current error."""
         if len(self.errors) > 0:
             error = self.errors[self.error_index]
-            self.old_val.config(text=error.old_value)
+            self.old_val.config(text=error.value)
             self.entry_new_val.delete(0, tk.END)
-            self.entry_new_val.insert(0, error.new_value)
+            self.entry_new_val.insert(0, error.value)
             self.label_error.config(text=error.error_message)
             self.label_progress.config(text=f"{self.error_index+1}/{len(self.errors)}")
-            self.check_new_val(None)
+            if error.relation is not None:
+                for widget in self.relation_widgets:
+                    widget.grid_forget()
+                if not isinstance(error.relation.other_id, CheckerZeroIdentifier):
+                    self.show_relation_error_widgets()
+                    self.old_val2.config(text=error.rel_val)
+                    self.entry_new_val2.delete(0, tk.END)
+                    self.entry_new_val2.insert(0, error.rel_val)
+                    state = "normal" if error.is_first_val else "readonly"
+                    self.entry_new_val.config(state=state)
+                    state2 = "readonly" if error.is_first_val else "normal"
+                    self.entry_new_val2.config(state=state2)
+                else:
+                    self.entry_new_val.config(state="normal")
+            else:
+                for widget in self.relation_widgets:
+                    widget.grid_forget()
+                self.entry_new_val.config(state="normal")
         else:
             self.old_val.config(text="")
             self.entry_new_val.delete(0, tk.END)
+            if self.old_val2 is not None:
+                self.old_val2.config(text="")
+                self.entry_new_val2.delete(0, tk.END)
             self.label_error.config(text="No errors were found.")
             self.label_progress.config(text="0/0")
-            self.label_new_val_ok.config(text="")
 
     def check_new_val(self, _):
         """Check if the current new value given by the user fulfils the assumptions."""
         if len(self.errors) == 0:
             return
+        curr_error = deepcopy(self.errors[self.error_index])
         new_val = self.entry_new_val.get()
-        curr_error = self.errors[self.error_index]
-        curr_error.new_value = new_val
+        curr_error.value = new_val
+        rel_val = None
+        if curr_error.relation is not None:
+            if not isinstance(curr_error.relation.other_id, CheckerZeroIdentifier):
+                rel_val = self.entry_new_val2.get()
+                curr_error.rel_val = rel_val
         new_error = self.controller.check_new_val(curr_error)
-        if new_error is None:
-            error_image = tk.PhotoImage(file="icons/checkmark.png")
-            self.label_new_val_ok.config(image=error_image)
-            self.label_new_val_ok.image = error_image
+        old_error = self.errors[self.error_index]
+
+        if old_error.relation is None:
+            if new_error is None:
+                self.check_corrected_input(new_val, rel_val)
+            elif new_error.error_level < self.errors[self.error_index].error_level:
+                self.keep_old_value()
+            else:
+                self.errors[self.error_index] = new_error
+                self.show_error()
+        elif new_error is not None and new_error.is_first_val:
+            self.keep_old_value()
+        elif old_error.is_first_val:
+            if isinstance(curr_error.relation.other_id, CheckerZeroIdentifier):
+                self.check_corrected_input(new_val, rel_val)
+                self.show_error()
+            else:
+                old_error.value = new_val
+                old_error.is_first_val = False
+                self.show_error()
+        elif new_error is None:
+            self.check_corrected_input(new_val, rel_val)
+            self.show_error()
+        elif new_error.is_first_val or new_error.error_level < old_error.error_level:
+            self.keep_old_value()
         else:
-            self.errors[self.error_index] = new_error
-            self.label_error.config(text=new_error.error_message)
-            error_image = tk.PhotoImage(file="icons/error.png")
-            self.label_new_val_ok.config(image=error_image)
-            self.label_new_val_ok.image = error_image
+            if isinstance(new_error.relation.other_id, CheckerZeroIdentifier):
+                self.check_corrected_input(new_val, rel_val)
+                self.show_error()
+            else:
+                self.errors[self.error_index] = new_error
+                self.show_error()
+
+    def check_corrected_input(self, new_val: str, rel_val: str):
+        """Writes the new values to the file and checks the input
+
+        :param new_val: new value of the current error
+        :param rel_val: relational value of the current error
+        """
+        self.errors[self.error_index].value = new_val
+        self.errors[self.error_index].rel_val = rel_val
+        self.errors = self.controller.check_corrected_input(self.errors[self.error_index])
+        self.error_index = 0
+        self.show_error()
+
+    def keep_old_value(self):
+        """Shows the values that were entered before."""
+        self.entry_new_val.delete(0, tk.END)
+        self.entry_new_val.insert(0, self.errors[self.error_index].value)
+        self.entry_new_val2.delete(0, tk.END)
+        self.entry_new_val2.insert(0, self.errors[self.error_index].rel_val)
 
     def start_analysis(self):
         """Runs the assumption analysis and shows information about the first error."""
         self.errors = self.controller.start_analysis(self.program_name, self.input_filename)
-        self.error_index = 0
-        self.show_error()
-
-    def check_corrected_input(self):
-        """Writes the new values back to the input file and runs the input checker."""
-        self.errors = self.controller.check_corrected_input(self.errors)
         self.error_index = 0
         self.show_error()

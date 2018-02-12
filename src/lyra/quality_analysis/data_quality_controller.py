@@ -5,6 +5,7 @@ import subprocess
 
 from lyra.quality_analysis.input_checker import InputChecker, ErrorInformation
 from lyra.quality_analysis.input_correction_view import InputCorrection
+from lyra.quality_analysis.json_handler import JSONHandler
 from lyra.quality_analysis.run_analysis import QualityAnalysisRunner
 
 
@@ -17,6 +18,7 @@ class DataQualityController:
         self.program_name = None
         self.input_filename = None
         self.path = "example/"
+        self.json_info = None
 
     def run(self):
         """Starts the input correction application."""
@@ -29,10 +31,10 @@ class DataQualityController:
         :param error: the current error that should be checked
         :return: the error with an adapted error message or None if no error was found
         """
-        return self.input_checker.check_assmp(error)
+        return self.input_checker.check_new_value(error)
 
-    def start_analysis(self, program_name, input_filename):
-        """Starts the assumtion analysis.
+    def start_analysis(self, program_name: str, input_filename: str) -> [ErrorInformation]:
+        """Runs the assumption analysis, creates a json file and runs the input checker.
 
         :param program_name: name of the python program that will be analyzed
         :param input_filename: name of the input file
@@ -43,19 +45,27 @@ class DataQualityController:
         self.input_checker = InputChecker(self.path, self.input_filename, self.program_name)
         self.analysis = QualityAnalysisRunner(self.path, self.program_name, self.input_filename)
         self.analysis.run_analysis()
-        return self.analysis.run_checker()
+        json_handler = JSONHandler(self.path, self.program_name)
+        self.json_info = json_handler.json_to_input_assumptions()
+        return self.run_checker()
 
-    def check_corrected_input(self, errors):
+    def run_checker(self):
+        """Runs the input checker."""
+        input_assumptions, inputs = self.json_info
+        return self.input_checker.check_input(input_assumptions, inputs)
+
+    def check_corrected_input(self, error: ErrorInformation) -> [ErrorInformation]:
         """Writes the new values back to the input file and runs the input checker.
 
-        :param errors: current errors with information about new values
+        :param error: error with information about new values
         :return: errors found by the input checker
         """
-        if len(errors) > 0:
-            new_values = [(e.location, e.new_value) for e in errors]
-            new_values = sorted(new_values, key=lambda val: val[0])
-            self.write_new_values(new_values)
-        errors = self.analysis.run_checker()
+        new_values = [(error.location, error.value)]
+        if error.rel_val is not None:
+            new_values.append((error.rel_location, error.rel_val))
+        new_values = sorted(new_values, key=lambda val: val[0])
+        self.write_new_values(new_values)
+        errors = self.run_checker()
         if len(errors) == 0:
             self.execute_input_program()
         return errors
@@ -73,7 +83,7 @@ class DataQualityController:
                 line = ""
                 while curr_val_index < len(new_values) or line:
                     line = input_file.readline()
-                    if line_num+1 == curr_loc:
+                    if line_num == curr_loc:
                         input_file_tmp.write(new_values[curr_val_index][1] + "\n")
                         curr_val_index += 1
                         if curr_val_index < len(new_values):
@@ -81,6 +91,8 @@ class DataQualityController:
                         else:
                             curr_loc = -1
                     else:
+                        if not line.endswith("\n"):
+                            line += "\n"
                         input_file_tmp.write(line)
                     line_num += 1
         copyfile(self.path + self.input_filename + ".temp", self.path + self.input_filename)

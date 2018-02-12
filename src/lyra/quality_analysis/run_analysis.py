@@ -1,5 +1,5 @@
+from lyra.abstract_domains.quality.assumption_lattice import MultiInputAssumptionLattice
 from lyra.engine.quality.assumption_analysis import AssumptionAnalysis
-from lyra.quality_analysis.input_assmp_simplification import InputAssumptionSimplification
 from lyra.quality_analysis.input_checker import InputChecker, ErrorInformation
 from lyra.quality_analysis.json_handler import JSONHandler
 
@@ -12,7 +12,6 @@ class QualityAnalysisRunner:
         self.analysis = AssumptionAnalysis(False)
         self.json_handler = JSONHandler(program_path, program_name)
         self.input_checker = InputChecker(program_path, input_file_name, program_name)
-        self.assmp_simplification = InputAssumptionSimplification()
 
     def run_analysis(self):
         """Runs the quality analysis."""
@@ -20,13 +19,36 @@ class QualityAnalysisRunner:
 
         result = self.analysis.main(f"{self.program_path}{self.program_name}.py")
 
-        input_assmps, inputs = self.assmp_simplification.analysis_result_to_checker_assmps(result)
+        input_assmps = []
+        for node, items in result.result.items():
+            if node.identifier == 1:
+                input_assmps = items[0].stack_top.assmps
+
+        inputs = self.extract_inputs(input_assmps)
 
         print("Analysis done")
 
         print("Writing assumption to json")
 
         self.json_handler.input_assumptions_to_json(input_assmps, inputs)
+
+    def extract_inputs(self, input_assmps: MultiInputAssumptionLattice) -> [str]:
+        """Extracts input ids that are needed for relational constraints
+
+        :param input_assmps: assumptions to extract the inputs ids from
+        :return: list of extracted input ids
+        """
+        inputs = set()
+        for assmp in input_assmps:
+            if isinstance(assmp, MultiInputAssumptionLattice):
+                inputs.add(assmp.iterations.var.name)
+                inner_inputs = self.extract_inputs(assmp.assmps)
+                inputs.update(inner_inputs)
+            else:
+                for relation in assmp.relations.relations:
+                    inputs.add(relation.first.name)
+                    inputs.add(relation.second.name)
+        return inputs
 
     def run_checker(self) -> [ErrorInformation]:
         """Runs the input checker to compare inputs to assumptions gathered by the analysis.

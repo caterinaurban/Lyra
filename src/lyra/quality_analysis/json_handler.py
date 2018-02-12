@@ -2,18 +2,24 @@ import json
 from json import JSONDecoder
 from typing import Set
 
-from lyra.abstract_domains.quality.assumption_lattice import AssumptionLattice, TypeLattice
-from lyra.abstract_domains.quality.simple_relation_lattice import SimpleExpression
-from lyra.core.expressions import VariableIdentifier
+from lyra.abstract_domains.numerical.interval_domain import IntervalLattice
+from lyra.abstract_domains.quality.assumption_lattice import AssumptionLattice, TypeLattice, \
+    InputAssumptionLattice, MultiInputAssumptionLattice
+from lyra.abstract_domains.quality.simple_relation_lattice import SimpleExpression, \
+    SimpleRelationsLattice, SimpleRelation
+from lyra.core.expressions import VariableIdentifier, LengthIdentifier
 from lyra.quality_analysis.input_assmp_simplification import CheckerRelation, \
-    CheckerAssumption, CheckerMultiAssumption, CheckerExpression
+    CheckerAssumption, CheckerMultiAssumption, CheckerExpression, CheckerLengthIdentifier, \
+    CheckerIdentifier, CheckerZeroIdentifier
 
 
 class IdJSON:
     """Constants for the JSON encoding."""
     type_assmp = "type_assmp"
+    range_assmp = "range_assmp"
     iterations = "iterations"
     assmps = "assmps"
+    delimiter = "delimiter"
     relations = "relations"
     inputs = "inputs"
     id = "id"
@@ -35,22 +41,28 @@ class AssumptionEncoder(json.JSONEncoder):
         :param obj: current object to turn into a serializable object
         :return: serializable object representation of the assumption objects
         """
-        if isinstance(obj, CheckerMultiAssumption):
-            return {IdJSON.iterations: obj.iterations, IdJSON.assmps: obj.assmps}
-        if isinstance(obj, CheckerAssumption):
-            return {IdJSON.type_assmp: obj.assmps.type_assumption, IdJSON.relations: obj.relations,
-                    IdJSON.id: obj.var_id}
-        if isinstance(obj, CheckerRelation):
-            return {IdJSON.rel_this_pos: obj.this_pos, IdJSON.rel_this_id: obj.this_id,
-                    IdJSON.rel_other_pos: obj.other_pos, IdJSON.rel_other_id: obj.other_id,
+        if isinstance(obj, MultiInputAssumptionLattice):
+            return {IdJSON.iterations: obj.iterations, IdJSON.assmps: obj.assmps,
+                    IdJSON.delimiter: obj.delimiter}
+        if isinstance(obj, InputAssumptionLattice):
+            return {IdJSON.type_assmp: obj.assmp.type_assumption,
+                    IdJSON.range_assmp: obj.assmp.range_assumption,
+                    IdJSON.relations: obj.relations, IdJSON.id: obj.input_id}
+        if isinstance(obj, SimpleRelationsLattice):
+            return obj.relations
+        if isinstance(obj, SimpleRelation):
+            return {IdJSON.rel_this_pos: obj.first_pos, IdJSON.rel_this_id: obj.first,
+                    IdJSON.rel_other_pos: obj.second_pos, IdJSON.rel_other_id: obj.second,
                     IdJSON.rel_constant: obj.constant}
         if isinstance(obj, SimpleExpression):
             return {IdJSON.expr_var_pos: obj.var_pos, IdJSON.expr_var: obj.var,
                     IdJSON.expr_const: obj.const}
-        if isinstance(obj, VariableIdentifier):
+        if isinstance(obj, (VariableIdentifier, LengthIdentifier)):
             return obj.name
         if isinstance(obj, TypeLattice):
             return obj.__repr__()
+        if isinstance(obj, IntervalLattice):
+            return [obj.lower, obj.upper]
         if isinstance(obj, Set):
             return {IdJSON.inputs: list(obj)}
         return json.JSONEncoder.default(self, obj)
@@ -69,11 +81,19 @@ class AssumptionDecoder(json.JSONDecoder):
         """
 
         if IdJSON.rel_this_pos in obj:
-            this_pos = obj[IdJSON.rel_this_pos]
-            this_id = obj[IdJSON.rel_this_id]
+            id1 = self.convert_to_identifier(obj[IdJSON.rel_this_id])
+            id2 = self.convert_to_identifier(obj[IdJSON.rel_other_id])
+            if isinstance(id1, CheckerZeroIdentifier):
+                this_pos = obj[IdJSON.rel_other_pos]
+                this_id = id2
+                other_pos = obj[IdJSON.rel_this_pos]
+                other_id = id1
+            else:
+                this_pos = obj[IdJSON.rel_this_pos]
+                this_id = id1
+                other_pos = obj[IdJSON.rel_other_pos]
+                other_id = id2
             constant = obj[IdJSON.rel_constant]
-            other_pos = obj[IdJSON.rel_other_pos]
-            other_id = obj[IdJSON.rel_other_id]
             return CheckerRelation(this_pos, this_id, other_pos, other_id, constant)
 
         if IdJSON.id in obj:
@@ -83,26 +103,43 @@ class AssumptionDecoder(json.JSONDecoder):
                 type_assumption = TypeLattice().integer()
             elif type_assmp == "Float":
                 type_assumption = TypeLattice().real()
-            assmp = AssumptionLattice(type_assumption)
-            return CheckerAssumption(obj[IdJSON.id], assmp, obj[IdJSON.relations])
+            range_assmp = obj[IdJSON.range_assmp]
+            range_assumption = IntervalLattice(range_assmp[0], range_assmp[1])
+            assmp = AssumptionLattice(type_assumption, range_assumption)
+            input_id = self.convert_to_identifier(obj[IdJSON.id])
+            return CheckerAssumption(input_id, assmp, obj[IdJSON.relations])
 
         if IdJSON.iterations in obj:
             num_iter = obj[IdJSON.iterations]
             assmps = obj[IdJSON.assmps]
-            return CheckerMultiAssumption(num_iter, assmps)
+            delimiter = obj[IdJSON.delimiter]
+            return CheckerMultiAssumption(num_iter, assmps, delimiter)
 
         if IdJSON.expr_var in obj:
             var_pos = obj[IdJSON.expr_var_pos]
-            var = obj[IdJSON.expr_var]
-            if var == ".VAR0":
-                var = None
+            var = self.convert_to_identifier(obj[IdJSON.expr_var])
             const = obj[IdJSON.expr_const]
             return CheckerExpression(var_pos, var, const)
 
         if IdJSON.inputs in obj:
-            return obj[IdJSON.inputs]
+            input_ids = [self.convert_to_identifier(inp) for inp in obj[IdJSON.inputs]]
+            return [inp for inp in input_ids if inp is not None]
 
         raise NotImplementedError(f"JSON Decoding for object {obj} is not implemented.")
+
+    def convert_to_identifier(self, input_name: str):
+        """Converts an input id to an input identifier object
+
+        :param input_name: name of the input to convert
+        :return: the newly created identifier
+        """
+        if input_name.startswith("len("):
+            input_id = input_name.split("=")[1][:-1]
+            return CheckerLengthIdentifier(input_id)
+        elif input_name == ".VAR0":
+            return CheckerZeroIdentifier()
+        input_id = input_name.split("=")[1]
+        return CheckerIdentifier(input_id)
 
 
 class JSONHandler:
@@ -113,14 +150,14 @@ class JSONHandler:
     def __init__(self, program_path, program_name):
         self.filename = f"{program_path}{program_name}.json"
 
-    def input_assumptions_to_json(self, checker_assumptions, inputs: Set[str]):
+    def input_assumptions_to_json(self, input_assmps, inputs: Set[str]):
         """Writes the assumptions to a json file.
 
-        :param checker_assumptions: the assumptions that are written to a json file
+        :param input_assmps: the assumptions that are written to a json file
         :param inputs: set of inputs the checker needs to store for relation checking
         """
         with open(self.filename, 'w') as f:
-            json.dump([checker_assumptions, inputs], f, cls=AssumptionEncoder, indent=4)
+            json.dump([input_assmps, inputs], f, cls=AssumptionEncoder, indent=4)
 
     def json_to_input_assumptions(self):
         """Reads assumptions from a json file."""
