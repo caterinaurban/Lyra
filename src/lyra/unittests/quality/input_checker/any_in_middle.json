@@ -1,16 +1,16 @@
 [
     [
         {
-            "type_assmp": "Float",
+            "type_assmp": "Int",
             "range_assmp": [
-                0,
+                -Infinity,
                 Infinity
             ],
             "relations": [],
             "id": ".ID=1"
         },
         {
-            "type_assmp": "Float",
+            "type_assmp": "Any",
             "range_assmp": [
                 -Infinity,
                 Infinity
@@ -26,24 +26,6 @@
             ],
             "relations": [],
             "id": ".ID=3"
-        },
-        {
-            "type_assmp": "Int",
-            "range_assmp": [
-                -Infinity,
-                Infinity
-            ],
-            "relations": [],
-            "id": ".ID=4"
-        },
-        {
-            "type_assmp": "Any",
-            "range_assmp": [
-                -Infinity,
-                Infinity
-            ],
-            "relations": [],
-            "id": ".ID=5"
         }
     ],
     {

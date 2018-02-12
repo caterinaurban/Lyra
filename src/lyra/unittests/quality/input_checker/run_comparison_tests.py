@@ -12,9 +12,6 @@ class InputCheckerTests:
         jsons = program_path + "**.json"
         num_tests_correct = 0
         for path in glob.iglob(jsons):
-            if not path.endswith("for_loop_join.json"):
-                continue
-            #TODO: change json to new schema + add program to reproduce jsons
             program_name = path.split('/')[-1].split('.')[0]
             QualityAnalysisRunner(program_path, program_name, f"{program_name}.in").run_checker()
             file_err_name = f"errors_{program_name}.txt"

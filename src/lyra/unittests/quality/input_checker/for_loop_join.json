@@ -2,6 +2,10 @@
     [
         {
             "type_assmp": "Int",
+            "range_assmp": [
+                -Infinity,
+                Infinity
+            ],
             "relations": [],
             "id": ".ID=2"
         },
@@ -14,10 +18,15 @@
             "assmps": [
                 {
                     "type_assmp": "Float",
+                    "range_assmp": [
+                        -Infinity,
+                        Infinity
+                    ],
                     "relations": [],
                     "id": ".ID=5"
                 }
-            ]
+            ],
+            "delimiter": null
         },
         {
             "iterations": {
@@ -28,10 +37,15 @@
             "assmps": [
                 {
                     "type_assmp": "Float",
+                    "range_assmp": [
+                        -Infinity,
+                        Infinity
+                    ],
                     "relations": [],
                     "id": ".ID=5"
                 }
-            ]
+            ],
+            "delimiter": null
         }
     ],
     {

@@ -1,32 +1,63 @@
 [
-    {
-        "type_assmp": "Int",
-        "relations": [],
-        "id": 1
-    },
-    {
-        "iterations": 5,
-        "assmps": [
-            {
-                "type_assmp": "Float",
-               "relations": [],
-                "id": 2
+    [
+        {
+            "type_assmp": "Int",
+            "range_assmp": [
+                -Infinity,
+                Infinity
+            ],
+            "relations": [],
+            "id": ".ID=1"
+        },
+        {
+            "iterations": {
+                "expr_var_pos": true,
+                "expr_var": ".VAR0",
+                "expr_const": 5
             },
-            {
-                "iterations": 3,
-                "assmps": [
-                    {
-                        "type_assmp": "Int",
-                        "relations": [],
-                        "id": 3
-                    }
-                ]
-            }
-        ]
-    },
+            "assmps": [
+                {
+                    "type_assmp": "Float",
+                    "range_assmp": [
+                        -Infinity,
+                        Infinity
+                    ],
+                   "relations": [],
+                    "id": ".ID=2"
+                },
+                {
+                    "iterations": {
+                        "expr_var_pos": true,
+                        "expr_var": ".VAR0",
+                        "expr_const": 3
+                    },
+                    "assmps": [
+                        {
+                            "type_assmp": "Int",
+                            "range_assmp": [
+                                -Infinity,
+                                Infinity
+                            ],
+                            "relations": [],
+                            "id": ".ID=3"
+                        }
+                    ],
+                    "delimiter": null
+                }
+            ],
+            "delimiter": null
+        },
+        {
+            "type_assmp": "Float",
+            "range_assmp": [
+                -Infinity,
+                Infinity
+            ],
+            "relations":  [],
+            "id": ".ID=4"
+        }
+    ],
     {
-        "type_assmp": "Float",
-        "relations":  [],
-        "id": 4
+        "inputs": []
     }
 ]

@@ -1,1 +1,2 @@
-Type Error in line 1: expected one value of type integer instead found 'a'.
+Type Error in line 1: expected one value of type integer
+instead found 'a'.
