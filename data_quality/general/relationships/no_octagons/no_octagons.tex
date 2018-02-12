@@ -185,11 +185,36 @@ Idea: support simplified version of relations: $\pm VAR1 + constant \pm VAR2 \le
 
 \section{Input Checker Design}
 
-\begin{itemize}
-  \item Check correct type
-  \item Check correct range
-  \item Check correct relation
-\end{itemize}
+\begin{enumerate}
+  \item Get JSON assumptions, run analysis, run checker, get errors, display first error
+  \item After return hit: Check if correct:
+    \begin{itemize}
+        \item If again type error: update error message
+        \item If error < error before -> not allowed! show old value
+        \item If error > error before: show new error
+        \item If relational error: show second entry. First need to approve first entry, then second
+    \begin{itemize}
+  \item If correct: rerun checks, get new errors, present first one
+\end{enumerate}
+
+\subsection{Relational Errors}
+
+\begin{enumerate}
+  \item Get JSON assumptions, run analysis, run checker, get errors, display relational error
+  \item Current entry is locked, other entry is enabled
+  \item User hits return (on other entry):
+  \begin{enumerate}
+    \item Check if other entry still correct type and range
+    \item If not correct type: don't allow new value
+    \item If correct: disable other entry, enable current entry
+  \end{enumerate}
+  \item User hits return (on current entry):
+  \begin{enumerate}
+    \item Check if current entry still correct type and range
+    \item If not correct type: don't allow new value
+    \item If correct: write entries down and recheck assumptions
+  \end{enumerate}
+\end{enumerate}
 
 \subsection{Algorithm}
 
@@ -213,6 +238,7 @@ Idea: support simplified version of relations: $\pm VAR1 + constant \pm VAR2 \le
         \item if value is in range: check if relations are correct:
         \begin{enumerate}
             \item if relationship partner is None (because there was an error with that value): ignore relation
+            \item if relationship is false: show two entry fields to change first/second value. first user needs to check in first value, only then is second value available for changing. the first value can only be changed in the range (it was already checked for that) so that the first value canno be wrong again. if the first value changes the amount of assumption (because N x [assmps]) then we might jump back some errors.
         \end{enumerate}
     \end{enumerate}
 \end{enumerate}
