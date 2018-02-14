@@ -88,7 +88,8 @@ class InputCorrectionMain(tk.Frame):
         self.label_progress.grid(row=row_error, column=9, pady=10, ipady=3, ipadx=3)
 
         border_old_val = tk.Label(self, width=20, borderwidth=2, relief="solid")
-        border_old_val.grid(row=row_label_val, column=1, columnspan=2, rowspan=row_val_after, ipady=40)
+        border_old_val.grid(row=row_label_val, column=1, columnspan=2,
+                            rowspan=row_val_after, ipady=40)
 
         label_old_val = tk.Label(self, text="Old value:")
         label_old_val.grid(row=row_label_val, column=1, columnspan=2)
@@ -112,7 +113,8 @@ class InputCorrectionMain(tk.Frame):
         label_empty.grid(row=row_val_after+1, column=1, columnspan=2)
 
         border_new_val = tk.Label(self, width=35, borderwidth=2, relief="solid")
-        border_new_val.grid(row=row_label_val, column=4, columnspan=4, rowspan=row_val_after, ipady=40)
+        border_new_val.grid(row=row_label_val, column=4, columnspan=4,
+                            rowspan=row_val_after, ipady=40)
 
         label_new_val = tk.Label(self, text="New value:")
         label_new_val.grid(row=row_label_val, column=4, columnspan=4)
@@ -121,8 +123,11 @@ class InputCorrectionMain(tk.Frame):
         self.entry_new_val.grid(row=row_val, column=4, columnspan=4, padx=5)
         self.entry_new_val.bind("<Return>", self.check_new_val)
 
+        self.label_assmp_val = tk.Label(self, text="")
+        self.label_assmp_val.grid(row=row_val_before, column=8, rowspan=2)
+
         self.val1_widgets = [border_old_val, label_old_val, self.old_val, border_new_val]
-        self.val1_widgets += [label_new_val, self.entry_new_val]
+        self.val1_widgets += [label_new_val, self.entry_new_val, self.label_assmp_val]
         self.val1_widgets += [self.label_old_line_before, self.label_old_line]
         self.val1_widgets += [self.label_old_line_after, self.old_val_before, self.old_val_after]
 
@@ -134,6 +139,7 @@ class InputCorrectionMain(tk.Frame):
         self.old_val_after2 = None
         self.new_val_var2 = None
         self.entry_new_val2 = None
+        self.label_assmp_val2 = None
 
         self.entry_locked = False
 
@@ -142,7 +148,8 @@ class InputCorrectionMain(tk.Frame):
     def show_relation_error_widgets(self):
         """Adds the widgets used for displaying a relational error"""
         border_old_val2 = tk.Label(self, width=20, borderwidth=2, relief="solid")
-        border_old_val2.grid(row=row_label_val2, column=1, columnspan=2, rowspan=row_val_after, ipady=40)
+        border_old_val2.grid(row=row_label_val2, column=1, columnspan=2,
+                             rowspan=row_val_after, ipady=40)
 
         label_old_val2 = tk.Label(self, text="Old value:")
         label_old_val2.grid(row=row_label_val2, column=1, columnspan=2)
@@ -163,7 +170,8 @@ class InputCorrectionMain(tk.Frame):
         self.old_val_after2.grid(row=row_val_after2, column=1, columnspan=2)
 
         border_new_val2 = tk.Label(self, width=35, borderwidth=2, relief="solid")
-        border_new_val2.grid(row=row_label_val2, column=4, columnspan=4, rowspan=row_val_after, ipady=40)
+        border_new_val2.grid(row=row_label_val2, column=4, columnspan=4,
+                             rowspan=row_val_after, ipady=40)
 
         label_new_val2 = tk.Label(self, text="New value:")
         label_new_val2.grid(row=row_label_val2, column=4, columnspan=4)
@@ -172,10 +180,14 @@ class InputCorrectionMain(tk.Frame):
         self.entry_new_val2.grid(row=row_val2, column=4, columnspan=4, padx=5)
         self.entry_new_val2.bind("<Return>", self.check_new_val)
 
+        self.label_assmp_val2 = tk.Label(self, text="")
+        self.label_assmp_val2.grid(row=row_val_before2, column=8, rowspan=2)
+
         self.relation_widgets = [border_old_val2, label_old_val2, self.old_val2, border_new_val2]
         self.relation_widgets += [label_new_val2, self.entry_new_val2, self.old_val_after2]
         self.relation_widgets += [self.label_old_line_before2, self.label_old_line2]
         self.relation_widgets += [self.label_old_line_after2, self.old_val_before2]
+        self.relation_widgets += [self.label_assmp_val2]
 
     def show_error(self):
         """Show information about the current error."""
@@ -202,15 +214,16 @@ class InputCorrectionMain(tk.Frame):
 
         :param error: current error to display
         """
-        self.label_old_line_before.config(text=f"Line {error.location}:")
+        self.label_old_line_before.config(text=f"Line {error.location.user_line-1}:")
         self.old_val_before.config(text=error.prev_line)
-        self.label_old_line.config(text=f"Line {error.location+1}:")
+        self.label_old_line.config(text=f"Line {error.location.user_line}:")
         self.old_val.config(text=error.value)
-        self.label_old_line_after.config(text=f"Line {error.location+2}:")
+        self.label_old_line_after.config(text=f"Line {error.location.user_line+1}:")
         self.old_val_after.config(text=error.next_line)
 
         self.entry_new_val.delete(0, tk.END)
         self.entry_new_val.insert(0, error.value)
+        self.label_assmp_val.config(text=error.create_info_msg(True))
         self.label_error.config(text=error.error_message)
         self.label_progress.config(text=f"{self.error_index+1}/{len(self.errors)}")
 
@@ -224,12 +237,13 @@ class InputCorrectionMain(tk.Frame):
         if not isinstance(error.relation.other_id, CheckerZeroIdentifier):
             self.show_relation_error_widgets()
 
-            self.label_old_line_before2.config(text=f"Line {error.rel_location}:")
+            self.label_old_line_before2.config(text=f"Line {error.rel_location.user_line-1}:")
             self.old_val_before2.config(text=error.rel_prev_line)
-            self.label_old_line2.config(text=f"Line {error.rel_location+1}:")
+            self.label_old_line2.config(text=f"Line {error.rel_location.user_line}:")
             self.old_val2.config(text=error.rel_val)
-            self.label_old_line_after2.config(text=f"Line {error.rel_location+2}:")
+            self.label_old_line_after2.config(text=f"Line {error.rel_location.user_line+1}:")
             self.old_val_after2.config(text=error.rel_next_line)
+            self.label_assmp_val2.config(text=error.create_info_msg(False))
 
             self.entry_new_val2.delete(0, tk.END)
             self.entry_new_val2.insert(0, error.rel_val)

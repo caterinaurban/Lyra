@@ -76,7 +76,7 @@ class DataQualityController:
         :param new_values: sorted List of tuples (location, new value)
         """
         curr_val_index = 0
-        curr_loc = new_values[curr_val_index][0]
+        curr_loc = new_values[curr_val_index][0].file_line
         with open(self.path + self.input_filename, "r") as input_file:
             with open(self.path + self.input_filename + ".temp", "w") as input_file_tmp:
                 line_num = 0
@@ -87,7 +87,7 @@ class DataQualityController:
                         input_file_tmp.write(new_values[curr_val_index][1] + "\n")
                         curr_val_index += 1
                         if curr_val_index < len(new_values):
-                            curr_loc = new_values[curr_val_index][0]
+                            curr_loc = new_values[curr_val_index][0].file_line
                         else:
                             curr_loc = -1
                     else:

@@ -80,15 +80,6 @@ class CheckerRelation:
                 return self.this_id
         return None
 
-    def user_friendly_relation_with_vars(self) -> str:
-        """Creates a user friendly representation of the relation using the input ids
-
-        :return: a user friendly representation of the relation using the input ids
-        """
-        first_val = (self.this_id, self.this_id)
-        second_val = (self.other_id, self.other_id)
-        return self.user_friendly_relation(first_val, second_val)
-
     def user_friendly_relation(self, first_value, second_value) -> str:
         """Creates a user friendly representation of the relation
 
@@ -111,21 +102,21 @@ class CheckerRelation:
             other_val = 0
         if self.other_id is None:
             if self.this_pos:
-                return f"{this_val} <= {-self.constant}"
+                return f"{this_val} ≤ {-self.constant}"
             else:
-                return f"{this_val} <= {self.constant}"
+                return f"{this_val} ≤ {self.constant}"
         if self.this_pos and self.other_pos:
-            return f"{this_val} + {other_val} <= {-self.constant}"
+            return f"{this_val} + {other_val} ≤ {-self.constant}"
         elif self.this_pos:
             sign_const = "-" if self.constant > 0 else "+"
             constant = self.constant if self.constant >= 0 else -self.constant
-            return f"{this_val} <= {other_val} {sign_const} {constant}"
+            return f"{this_val} ≤ {other_val} {sign_const} {constant}"
         elif self.other_pos:
             sign_const = "-" if self.constant < 0 else "+"
             constant = self.constant if self.constant >= 0 else -self.constant
-            return f"{this_val} >= {other_val} {sign_const} {constant}"
+            return f"{this_val} ≥ {other_val} {sign_const} {constant}"
         else:
-            return f"{this_val} + {other_val} >= {-self.constant}"
+            return f"{this_val} + {other_val} ≥ {-self.constant}"
 
     def __repr__(self):
         sign_this = "" if self.this_pos else "-"
@@ -135,7 +126,7 @@ class CheckerRelation:
         if self.constant < 0:
             constant = -constant
         left = f"{sign_this}{self.this_id} {sign_other} {self.other_id} {sign_constant} {constant}"
-        return f"{left} <= 0"
+        return f"{left} ≤ 0"
 
 
 class CheckerAssumption:
@@ -183,7 +174,7 @@ class CheckerExpression:
             return self.const
         if self.var not in var_to_val or var_to_val[self.var] is None:
             return None
-        value = var_to_val[self.var][0] + self.const
+        value = var_to_val[self.var].value + self.const
         if not self.var_pos:
             value = -value
         return value

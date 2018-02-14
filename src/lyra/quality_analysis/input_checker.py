@@ -6,10 +6,61 @@ from lyra.quality_analysis.input_assmp_simplification import CheckerExpression, 
     CheckerAssumption, CheckerMultiAssumption, CheckerLengthIdentifier, CheckerZeroIdentifier
 
 
+class InputLocation:
+    """Location of an input value"""
+    def __init__(self, line: int, column, input_id):
+        self._line = line
+        self.column = column
+        self.input_id = input_id
+
+    @property
+    def user_line(self):
+        return self._line+1
+
+    @property
+    def file_line(self):
+        return self._line
+
+    def user_repr(self):
+        """Returns a representation of the input location for the user."""
+        if isinstance(self.input_id, CheckerLengthIdentifier):
+            return f"(number of elements in Line {self.user_line})"
+        else:
+            return f"(value in {self.__repr__()})"
+
+    def __hash__(self):
+        return hash((self._line, self.column, self.input_id))
+
+    def __eq__(self, other):
+        same_loc = self.file_line == other.file_line and self.column == other.column
+        return same_loc and self.input_id == other.input_id
+
+    def __lt__(self, other):
+        if self.file_line < other.file_line:
+            return True
+        return self.file_line == other.file_line and self.column < other.column
+
+    def __repr__(self):
+        rep = f"Line {self.user_line}"
+        if self.column is not None:
+            rep += f", Column {self.column}"
+        return rep
+
+
+class InputInfo:
+    """Information about an input."""
+    def __init__(self, value, location, assmp, prev_line, next_line):
+        self.value = value
+        self.location = location
+        self.assmp = assmp
+        self.prev_line = prev_line
+        self.next_line = next_line
+
+
 class ErrorInformation:
     """Contains information about an error."""
-    def __init__(self, error_location, value, error_message, assumption, error_level):
-        self.location = error_location
+    def __init__(self, location: InputLocation, value, error_message, assumption, error_level):
+        self.location = location
         self.value = value
         self.error_message = error_message
         self.assumption = assumption
@@ -24,19 +75,58 @@ class ErrorInformation:
         self.rel_prev_line = None
         self.rel_next_line = None
 
-    def add_rel_info(self, relation, rel_value: str, rel_loccation: int, rel_assmp):
+    def add_rel_info(self, relation, rel_info: InputInfo):
         """Adds relational info to the error.
 
         :param relation: relation that caused an error
-        :param rel_value: value of the second value
-        :param rel_loccation: location of the second value
-        :param rel_assmp: non relational assumptions of the second value
+        :param rel_info: information about the relation value
         :return:
         """
         self.relation = relation
-        self.rel_val = rel_value
-        self.rel_location = rel_loccation
-        self.rel_assmp = rel_assmp
+        self.rel_val = rel_info.value
+        self.rel_location = rel_info.location
+        self.rel_assmp = rel_info.assmp
+
+    def create_info_msg(self, is_first: bool) -> str:
+        """Creates an info message about the assumptions of the first or second value
+
+        :param is_first: True if a message for the assumptions of the first value should be
+        created, False if a message for the second value's assummptions should be created
+        :return: an info message about the value's assumptions
+        """
+        if is_first and isinstance(self.assumption, CheckerMultiAssumption):
+            if self.assumption.delimiter == "":
+                delm = "whitespaces"
+            else:
+                delm = f"'{self.assumption.delimiter}'"
+            return f"Type: List of values\nseparated by {delm}"
+        if not is_first and isinstance(self.rel_assmp, CheckerMultiAssumption):
+            if self.rel_assmp.delimiter == "":
+                delm = "whitespaces"
+            else:
+                delm = f"'{self.assumption.delimiter}'"
+            return f"Type: List of values\nseparated by {delm}"
+
+        assmp = self.assumption.assmp if is_first else self.rel_assmp.assmp
+        msg = ""
+        if not assmp.type_assumption.is_top():
+            msg = f"Type: {self.type_to_type_name(assmp.type_assumption)}"
+        if not assmp.range_assumption.is_top():
+            msg += f"\nRange: [{assmp.range_assumption.lower}, {assmp.range_assumption.upper}]"
+        return msg
+
+    def type_to_type_name(self, type_assmp: TypeLattice) -> str:
+        """Returns the name of the type, given an element of the TypeLattice
+
+        :param type_assmp: type that should be converted to its name
+        :return: the name of the type
+        """
+        if type_assmp == TypeLattice().integer():
+            return "integer"
+        if type_assmp == TypeLattice().real():
+            return "float"
+        if type_assmp == TypeLattice().top():
+            return "string"
 
     class ErrorLevel(IntEnum):
         """Info about the Level of the error."""
@@ -57,15 +147,15 @@ class InputChecker:
         self.inputs = {}
         self.prev_line = ""
 
-    def write_missing_error(self, num_values_expected, num_values_found, line_num=None, delm=None):
+    def write_missing_error(self, num_values_expected, num_values_found, loc=None, delm=None):
         """Prints an error because there are more assumptions than values
 
         :param num_values_expected: number of values that are exptected
         :param num_values_found: number of values that were found in input file
-        :param line_num: line number if the error occurs on a specific line
+        :param loc: location if the error occurs on a specific line
         :param delm: delimiter if error occured on a single line
         """
-        line_err = f"in line {line_num+1}" if line_num is not None else ""
+        line_err = f"in {loc}" if loc is not None else ""
         delimiter = ""
         if delimiter is not None:
             delimiter = "separated by whitespaces" if delm == "" else f"separated by '{delm}'"
@@ -76,106 +166,56 @@ class InputChecker:
         self.error_file.write('\n')
         return error
 
-    def create_general_error(self, type_assmp, range_assmp, relations) -> str:
-        """Create a general message what is expected from an input value
-
-        :param type_assmp: expected type
-        :param range_assmp: expected range
-        :param relations: expected relations
-        :return: general string with info about expected assumptions
-        """
-        if type_assmp.is_top():
-            return ""
-        error = f"expected one value of type {self.type_to_type_name(type_assmp)}"
-        if not range_assmp.is_top():
-            error += f"\nin range [{range_assmp.lower}, {range_assmp.upper}]"
-        if relations is not None and len(relations) > 0:
-            relations = ", ".join([r.__repr__() for r in relations])
-            error += f"\nwith relation {relations}"
-        return error
-
-    def create_type_error(self, line_num, input_line, type_assmp, range_assmp, relations):
+    def create_type_error(self, loc, input_line, type_assmp):
         """ Creates an error messages because of a wrong type."""
-        expected = self.create_general_error(type_assmp, range_assmp, relations)
-        return f"Type Error in line {line_num+1}: {expected}\ninstead found \'{input_line}\'."
+        return f"Type Error in {loc}:\n" \
+               f"expected: one value of type {self.type_to_type_name(type_assmp)}\n" \
+               f"instead found: \'{input_line}\'."
 
-    def write_type_error(self, line_num, input_line, type_assmp, range_assmp, relations):
+    def write_type_error(self, loc, input_line, type_assmp):
         """Prints an error because an input is not of an expected type
 
-        :param line_num: line number of the input
+        :param loc: location of the input
         :param input_line: input that contains the error
         :param type_assmp: type assumption of the input
-        :param range_assmp: range assumption of the input
-        :param relations: the relational assumptions of the input
         """
-        error = self.create_type_error(line_num, input_line, type_assmp, range_assmp, relations)
+        error = self.create_type_error(loc, input_line, type_assmp)
         self.error_file.write(error)
         self.error_file.write('\n')
         return error
 
-    def create_range_error(self, line_num, input_line, type_assmp, range_assmp, relations):
+    def create_range_error(self, loc, input_line, range_assmp):
         """ Creates an error messages because of a wrong range."""
-        expected = self.create_general_error(type_assmp, range_assmp, relations)
-        return f"Range Error in line {line_num+1}: {expected}\ninstead found '{input_line}'."
+        return f"Range Error in {loc}:\n" \
+               f"expected: one value in range [{range_assmp.lower}, {range_assmp.upper}]\n" \
+               f"instead found: '{input_line}'."
 
-    def write_range_error(self, line_num, input_line, type_assmp, range_assmp, relations):
+    def write_range_error(self, loc, input_line, range_assmp):
         """Prints an error because an input is not in an expected range
 
-        :param line_num: line number of the input
+        :param loc: location of the input
         :param input_line: input that contains the error
-        :param type_assmp: type assumption of the input
         :param range_assmp: range assumption of the input
-        :param relations: the relational assumptions of the input
         """
-        error = self.create_range_error(line_num, input_line, type_assmp, range_assmp, relations)
+        error = self.create_range_error(loc, input_line, range_assmp)
         self.error_file.write(error)
         self.error_file.write('\n')
         return error
 
-    def create_relation_error(self, line_num, assmps1, assmps2, relation, rel_eval):
+    def create_relation_error(self, loc, relation, rel_eval):
         """Creates an error messages because of a wrong relation."""
-        if assmps1 is None:
-            assmp1 = ""
-        elif isinstance(assmps1, CheckerMultiAssumption):
-            if assmps1.delimiter == "":
-                delimiter = "whitespaces"
-            else:
-                delimiter = f"delimiter '{assmps1.delimiter}'"
-            assmp1 = f"expected values separated by {delimiter}"
-        else:
-            type_assmp = assmps1.assmp.type_assumption
-            range_assmp = assmps1.assmp.range_assumption
-            assmp1 = self.create_general_error(type_assmp, range_assmp, [])
-        if assmps2 is None:
-            assmp2 = ""
-        elif isinstance(assmps2, CheckerMultiAssumption):
-            if assmps2.delimiter == "":
-                delimiter = "whitespaces"
-            else:
-                delimiter = f"delimiter '{assmps2.delimiter}'"
-            assmp2 = f"expected values separated by {delimiter}"
-        else:
-            type_assmp = assmps2.assmp.type_assumption
-            range_assmp = assmps2.assmp.range_assumption
-            assmp2 = self.create_general_error(type_assmp, range_assmp, [])
-        assmps_val1 = f"value1: {assmp1}\n" if assmp1 != "" else ""
-        assmps_val2 = f"value2: {assmp2}\n" if assmp2 != "" else ""
-        return f"Relation Error in line {line_num+1}:\n" \
-               f"{assmps_val1}" \
-               f"{assmps_val2}" \
-               f"with relation {relation}\n" \
+        return f"Relation Error in {loc}:\n" \
+               f"expected: {relation}\n" \
                f"instead found: ({rel_eval})."
 
-    def write_relation_error(self, line_num, assmps1, assmps2, relation, rel_eval):
+    def write_relation_error(self, loc, relation, rel_eval):
         """Prints an error because a relation is violated
 
-        :param line_num: line number of the input
-        :param assmps1: assumption of the first relation input
-        :param assmps2: assumption of the second relation input
+        :param loc: location of the input
         :param relation: the relational assumption of the inputs
         :param rel_eval: the violated relation and variables replaced with number
         """
-        error = self.create_relation_error(line_num, assmps1, assmps2, relation, rel_eval)
+        error = self.create_relation_error(loc, relation, rel_eval)
         self.error_file.write(error)
         self.error_file.write('\n')
         return error
@@ -213,7 +253,7 @@ class InputChecker:
         self.prev_line = ""
         for an_input in inputs:
             self.inputs[an_input] = None
-        self.inputs[CheckerZeroIdentifier()] = (0, None, None, None, None)
+        self.inputs[CheckerZeroIdentifier()] = InputInfo(0, None, None, None, None)
         one_iter = CheckerExpression(True, None, 1)
         self.check_assmps(assumptions, one_iter, -1, None, errors)
         if len(errors) == 0:
@@ -249,13 +289,15 @@ class InputChecker:
 
             assmp = assumptions.assmps[0]
             len_id = CheckerLengthIdentifier(assmp.var_id.input_id)
+            loc = InputLocation(line, None, len_id)
             if len_id in self.inputs:
-                self.inputs[len_id] = (len(values), line, assumptions, self.prev_line, None)
+                input_info = InputInfo(len(values), loc, assumptions, self.prev_line, None)
+                self.inputs[len_id] = input_info
 
             if len(values) < num_iter:
-                msg = self.write_missing_error(num_iter, len(values), line, delimiter)
+                msg = self.write_missing_error(num_iter, len(values), loc, delimiter)
                 err_lvl = ErrorInformation.ErrorLevel.Missing
-                new_error = ErrorInformation(line, curr_input, msg, assmp, err_lvl)
+                new_error = ErrorInformation(loc, curr_input, msg, assmp, err_lvl)
                 new_error.prev_line = self.prev_line
                 errors.append(new_error)
                 return line
@@ -265,20 +307,14 @@ class InputChecker:
                 if rel_val is None:
                     continue
                 val1 = (len_id, len(values))
-                val2 = (other_id, rel_val[0])
+                val2 = (other_id, rel_val.value)
                 if not relation.evaluate(val1, val2):
-                    rel_eval = relation.user_friendly_relation(val1, val2)
-                    rel_vars = relation.user_friendly_relation_with_vars()
-                    rel_assmp = rel_val[2]
-                    assmps = assumptions
-                    msg = self.write_relation_error(line, assmps, rel_assmp, rel_vars, rel_eval)
-                    lvl = ErrorInformation.ErrorLevel.Relation
-                    new_error = ErrorInformation(line, curr_input, msg, assumptions, lvl)
-                    new_error.add_rel_info(relation, str(rel_val[0]), rel_val[1], rel_assmp)
-                    new_error.prev_line = self.prev_line
-                    new_error.rel_prev_line = rel_val[3]
-                    new_error.rel_next_line = rel_val[4]
-                    errors.append(new_error)
+                    val = len(values)
+                    in_val = curr_input
+                    rel = relation
+                    mul_assmp = assumptions
+                    e = self.rel_error(len_id, other_id, val, rel_val, rel, loc, mul_assmp, in_val)
+                    errors.append(e)
             self.prev_line = curr_input
         else:
             num_iter = iters.evaluate(self.inputs)
@@ -315,71 +351,65 @@ class InputChecker:
         """
         if len(errors) > 0 and errors[-1].next_line is None:
             errors[-1].next_line = input_line
-        for input_id, input_val in [(i, v) for i, v in self.inputs.items() if v is not None and v[-1] is None]:
-            self.inputs[input_id] = self.inputs[input_id][:-1] + (input_line,)
+        lines = [(i, v) for i, v in self.inputs.items() if v is not None and v.next_line is None]
+        for input_id, input_val in lines:
+            self.inputs[input_id].next_line = input_line
 
     def check_one_assmp(self, assmp: CheckerAssumption, in_val: str, line: int):
         """Checks if the current input fulfils the assumption
 
         :param assmp: current assumption
         :param in_val: current input
-        :param line: current line number of input
+        :param line: line number of the current input
         :return: if an error has been found
         """
         type_assmp = assmp.assmp.type_assumption
         range_assmp = assmp.assmp.range_assumption
         relations = assmp.relations
 
+        input_id = assmp.var_id
+        loc = InputLocation(line, None, input_id)
+
         if type_assmp == TypeLattice().integer():
             try:
                 val = int(in_val)
             except ValueError:
-                message = self.write_type_error(line, in_val, type_assmp, range_assmp, relations)
+                message = self.write_type_error(loc, in_val, type_assmp)
                 err_lvl = ErrorInformation.ErrorLevel.Type
-                new_error = ErrorInformation(line, in_val, message, assmp, err_lvl)
+                new_error = ErrorInformation(loc, in_val, message, assmp, err_lvl)
                 return new_error
         elif type_assmp == TypeLattice().real():
             try:
                 val = float(in_val)
             except ValueError:
-                message = self.write_type_error(line, in_val, type_assmp, range_assmp, relations)
+                message = self.write_type_error(loc, in_val, type_assmp)
                 err_lvl = ErrorInformation.ErrorLevel.Type
-                new_error = ErrorInformation(line, in_val, message, assmp, err_lvl)
+                new_error = ErrorInformation(loc, in_val, message, assmp, err_lvl)
                 return new_error
         else:
             val = in_val
 
-        input_id = assmp.var_id
-
         if input_id in self.inputs:
-            self.inputs[input_id] = (val, line, assmp, self.prev_line, None)
+            input_info = InputInfo(val, loc, assmp, self.prev_line, None)
+            self.inputs[input_id] = input_info
 
         if range_assmp.lower != -inf or range_assmp.upper != inf:
             if val < range_assmp.lower or val > range_assmp.upper:
-                err_msg = self.write_range_error(line, in_val, type_assmp, range_assmp, relations)
+                err_msg = self.write_range_error(loc, in_val, range_assmp)
                 err_lvl = ErrorInformation.ErrorLevel.Type
-                new_error = ErrorInformation(line, in_val, err_msg, assmp, err_lvl)
+                new_error = ErrorInformation(loc, in_val, err_msg, assmp, err_lvl)
                 return new_error
 
         for relation in relations:
             other_id = relation.get_other_id(input_id)
-            rel_val = self.inputs[other_id]
-            if rel_val is None:
+            rel_inf = self.inputs[other_id]
+            if rel_inf is None:
                 continue
             val1 = (input_id, val)
-            val2 = (other_id, rel_val[0])
+            val2 = (other_id, rel_inf.value)
             if not relation.evaluate(val1, val2):
-                rel_eval = relation.user_friendly_relation(val1, val2)
-                msg = self.write_relation_error(line, assmp, rel_val[2], relation, rel_eval)
-                lvl = ErrorInformation.ErrorLevel.Relation
-                new_error = ErrorInformation(line, in_val, msg, assmp, lvl)
-                new_error.add_rel_info(relation, str(rel_val[0]), rel_val[1], rel_val[2])
-                new_error.prev_line = self.prev_line
-                new_error.rel_prev_line = rel_val[3]
-                new_error.rel_next_line = rel_val[4]
-                if isinstance(relation.this_id, CheckerZeroIdentifier):
-                    new_error.is_first_val = False
-                return new_error
+                e = self.rel_error(input_id, other_id, val, rel_inf, relation, loc, assmp, in_val)
+                return e
 
         return None
 
@@ -432,19 +462,51 @@ class InputChecker:
         relation = error.relation
         if not relation.evaluate(eval_value, eval_other_value):
             rel = relation.user_friendly_relation(eval_value, eval_other_value)
-            rel_str = relation.user_friendly_relation_with_vars()
+            first_loc = (eval_value[0], error.location.user_repr())
+            second_loc = (eval_other_value[0], error.rel_location.user_repr())
+            rel_str = relation.user_friendly_relation(first_loc, second_loc)
             loc = error.location
-            assmp1 = error.assumption
-            message = self.create_relation_error(loc, assmp1, error.rel_assmp, rel_str, rel)
+            message = self.create_relation_error(loc, rel_str, rel)
             error.error_message = message
             return error
         return None
+
+    def rel_error(self, input_id, other_id, val, rel_info, relation, loc, assmp, in_val):
+        """Creates a relational error
+
+        :param input_id: input id of the first input
+        :param other_id: input id of the second input
+        :param val: value of the first input
+        :param rel_info: information about the second input
+        :param relation: relation that is violated
+        :param loc: location of the input
+        :param assmp: assumption of the input
+        :param in_val: input line of the input
+        :return: ErrorInformation object that includes all needed information
+        """
+        val1 = (input_id, val)
+        val2 = (other_id, rel_info.value)
+        rel_eval = relation.user_friendly_relation(val1, val2)
+        first_loc = (input_id, loc.user_repr())
+        second_loc = (other_id, rel_info.location.user_repr())
+        rel_str = relation.user_friendly_relation(first_loc, second_loc)
+        msg = self.write_relation_error(loc, rel_str, rel_eval)
+        lvl = ErrorInformation.ErrorLevel.Relation
+        new_error = ErrorInformation(loc, in_val, msg, assmp, lvl)
+        new_error.add_rel_info(relation, rel_info)
+        new_error.prev_line = self.prev_line
+        new_error.rel_prev_line = rel_info.prev_line
+        new_error.rel_next_line = rel_info.next_line
+        if isinstance(relation.this_id, CheckerZeroIdentifier):
+            new_error.is_first_val = False
+        return new_error
 
     def evaluate_value(self, value: str, assmp):
         """Turns a value into the correct type.
 
         :param value: value to be evaluated
         :param assmp: assumption of the input value
+        :param relation: current relation for which inputs are evaluated
         :return: tuple (input id, value) of the evaluated value
         """
         if isinstance(assmp, CheckerMultiAssumption):
@@ -454,14 +516,16 @@ class InputChecker:
                 return var_id, len(value.split(delimiter))
             else:
                 return var_id, len(value.split())
-        if isinstance(assmp.var_id, CheckerZeroIdentifier):
+
+        var_id = assmp.var_id
+        if isinstance(var_id, CheckerZeroIdentifier):
             return CheckerZeroIdentifier(), 0
         type_assmp = assmp.assmp.type_assumption
         if type_assmp == TypeLattice().integer():
-            return assmp.var_id, int(value)
+            return var_id, int(value)
         if type_assmp == TypeLattice().real():
-            return assmp.var_id, float(value)
-        return assmp.var_id, value
+            return var_id, float(value)
+        return var_id, value
 
     def check_non_relational_assmps(self, value: str, assmps, error: ErrorInformation):
         """Checks if an input fulfils the non relational assumptions
@@ -495,11 +559,10 @@ class InputChecker:
             loc = error.location
             new_val = error.value
             error.error_level = error_level
-            relations = assmps.relations
             if error_level == ErrorInformation.ErrorLevel.Type:
-                message = self.create_type_error(loc, new_val, type_assmp, range_assmp, relations)
+                message = self.create_type_error(loc, new_val, type_assmp)
             else:
-                message = self.create_range_error(loc, new_val, type_assmp, range_assmp, relations)
+                message = self.create_range_error(loc, new_val, range_assmp)
             error.error_message = message
             return error_level
 
