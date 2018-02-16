@@ -200,20 +200,19 @@ class InputChecker:
         self.error_file.write('\n')
         return error
 
-    def create_relation_error(self, loc, relation, rel_eval):
+    def create_relation_error(self, relation, rel_eval):
         """Creates an error messages because of a wrong relation."""
-        return f"Relation Error in {loc}:\n" \
+        return f"Relation Error:\n" \
                f"expected: {relation}\n" \
                f"instead found: ({rel_eval})."
 
-    def write_relation_error(self, loc, relation, rel_eval):
+    def write_relation_error(self, relation, rel_eval):
         """Prints an error because a relation is violated
 
-        :param loc: location of the input
         :param relation: the relational assumption of the inputs
         :param rel_eval: the violated relation and variables replaced with number
         """
-        error = self.create_relation_error(loc, relation, rel_eval)
+        error = self.create_relation_error(relation, rel_eval)
         self.error_file.write(error)
         self.error_file.write('\n')
         return error
@@ -471,7 +470,7 @@ class InputChecker:
             second_loc = (eval_other_value[0], rel_input_info.location.user_repr())
             rel_str = relation.user_friendly_relation(first_loc, second_loc)
             loc = input_info.location
-            message = self.create_relation_error(loc, rel_str, rel)
+            message = self.create_relation_error(rel_str, rel)
             error.error_message = message
             return error
         return None
@@ -489,17 +488,28 @@ class InputChecker:
         :param in_val: input line of the input
         :return: ErrorInformation object that includes all needed information
         """
+        inverted = input_id.input_id > other_id.input_id
         val1 = (input_id, val)
         val2 = (other_id, rel_info.value)
-        rel_eval = relation.user_friendly_relation(val1, val2)
+        if not inverted:
+            rel_eval = relation.user_friendly_relation(val1, val2)
+        else:
+            rel_eval = relation.user_friendly_relation(val2, val1)
         first_loc = (input_id, loc.user_repr())
         second_loc = (other_id, rel_info.location.user_repr())
-        rel_str = relation.user_friendly_relation(first_loc, second_loc)
-        msg = self.write_relation_error(loc, rel_str, rel_eval)
+        if not inverted:
+            rel_str = relation.user_friendly_relation(first_loc, second_loc)
+        else:
+            rel_str = relation.user_friendly_relation(second_loc, first_loc)
+        msg = self.write_relation_error(rel_str, rel_eval)
         lvl = ErrorInformation.ErrorLevel.Relation
         input_info = InputInfo(in_val, loc, assmp, self.prev_line)
-        new_error = ErrorInformation(input_info, msg, lvl)
-        new_error.add_rel_info(relation, rel_info)
+        if not inverted:
+            new_error = ErrorInformation(input_info, msg, lvl)
+            new_error.add_rel_info(relation, rel_info)
+        else:
+            new_error = ErrorInformation(rel_info, msg, lvl)
+            new_error.add_rel_info(relation, input_info)
         if isinstance(relation.this_id, CheckerZeroIdentifier):
             new_error.is_first_val = False
         return new_error

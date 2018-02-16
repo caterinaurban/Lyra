@@ -1,6 +1,6 @@
 class CheckerIdentifier:
     """Representation of an input identifier."""
-    def __init__(self, input_id: str, identifier: str=None):
+    def __init__(self, input_id: int, identifier: str=None):
         self.input_id = input_id
         self.identifier = identifier if identifier is not None else f".ID={input_id}"
 
@@ -19,14 +19,14 @@ class CheckerIdentifier:
 
 class CheckerLengthIdentifier(CheckerIdentifier):
     """Representation of an input identifier that represents the length of an input."""
-    def __init__(self, input_id: str):
+    def __init__(self, input_id: int):
         super().__init__(input_id, f"len(.ID={input_id})")
 
 
 class CheckerZeroIdentifier(CheckerIdentifier):
     """Representation of an input identifier that represents the value 0."""
     def __init__(self):
-        super().__init__(".VAR0", f".VAR0")
+        super().__init__(-1, f".VAR0")
 
 
 class CheckerRelation:

@@ -32,7 +32,7 @@ class QualityAnalysisRunner:
 
         self.json_handler.input_assumptions_to_json(input_assmps, inputs)
 
-    def extract_inputs(self, input_assmps: MultiInputAssumptionLattice) -> [str]:
+    def extract_inputs(self, input_assmps) -> [str]:
         """Extracts input ids that are needed for relational constraints
 
         :param input_assmps: assumptions to extract the inputs ids from

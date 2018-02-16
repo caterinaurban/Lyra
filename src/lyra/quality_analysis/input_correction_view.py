@@ -2,6 +2,8 @@ import tkinter as tk
 
 from copy import deepcopy
 
+import re
+
 from lyra.quality_analysis.input_assmp_simplification import CheckerZeroIdentifier
 from lyra.quality_analysis.input_checker import ErrorInformation, InputInfo, InputLocation
 
@@ -108,31 +110,36 @@ class InputCorrectionMain(tk.Frame):
         self.new_val_frame2.grid_rowconfigure(2, weight=1)
         self.new_val_frame2.grid_columnconfigure(2, weight=1)
 
-        self.label_error = tk.Label(self.error_frame, justify=tk.LEFT)
+        self.label_error = tk.Text(self.error_frame, height=3, width=50, wrap="none")
+        self.label_error.configure(bg=self.error_frame.cget('bg'), relief=tk.FLAT)
+        self.label_error.tag_config("normal", font="TkDefaultFont")
+        self.label_error.tag_config("line1", font="TkDefaultFont", foreground="blue")
+        self.label_error.tag_config("line2", font="TkDefaultFont", foreground="dodger blue")
         self.label_error.grid(row=1, column=0, padx=40, sticky=tk.W)
 
         self.label_progress = tk.Label(self.error_frame, borderwidth=2, relief="raised")
         self.label_progress.grid(row=1, column=1, ipady=3, ipadx=3, padx=40, sticky=tk.E)
 
-        label_old_val = tk.Label(self.old_val_frame, text="Old value:")
-        label_old_val.grid(row=0, column=1)
+        label_old = tk.Label(self.old_val_frame, text="Old value:")
+        label_old.grid(row=0, column=1)
 
-        label_new_val = tk.Label(self.new_val_frame1, text="New value:")
-        label_new_val.grid(row=0, column=0)
+        self.label_new_val = tk.Text(self.new_val_frame1, height=1, width=30, wrap="none")
+        self.label_new_val.configure(bg=self.new_val_frame1.cget('bg'), relief=tk.FLAT)
+        self.label_new_val.tag_config("normal", font="TkDefaultFont")
+        self.label_new_val.tag_config("line", font="TkDefaultFont", foreground="blue")
+        self.label_new_val.grid(row=0, column=0)
         self.new_val_var = tk.StringVar()
         self.entry_new_val = tk.Entry(self.new_val_frame1, textvariable=self.new_val_var)
         self.entry_new_val.grid(row=1, column=0)
         self.entry_new_val.bind("<Return>", self.check_new_val)
 
-        self.label_assmp_val = tk.Label(self.new_val_frame1, text="")
-        self.label_assmp_val.grid(row=1, column=1)
-        self.val1_widgets = [label_old_val]
-        self.val1_widgets += [label_new_val, self.entry_new_val, self.label_assmp_val]
+        self.label_assmp = tk.Label(self.new_val_frame1, text="")
+        self.label_assmp.grid(row=1, column=1)
+        self.val1_widgets = [label_old, self.label_new_val, self.entry_new_val, self.label_assmp]
 
-        self.label_old_line_before2 = None
-        self.new_val_var2 = None
         self.entry_new_val2 = None
-        self.label_assmp_val2 = None
+        self.label_assmp2 = None
+        self.label_new_val2 = None
 
         self.old_val_lines = []
 
@@ -140,17 +147,22 @@ class InputCorrectionMain(tk.Frame):
 
     def show_relation_error_widgets(self):
         """Adds the widgets used for displaying a relational error"""
-        label_new_val2 = tk.Label(self.new_val_frame2, text="New value:")
-        label_new_val2.grid(row=0, column=0)
-        self.new_val_var2 = tk.StringVar()
-        self.entry_new_val2 = tk.Entry(self.new_val_frame2, textvariable=self.new_val_var2)
+
+        self.label_new_val2 = tk.Text(self.new_val_frame2, height=1, width=30, wrap="none")
+        self.label_new_val2.configure(bg=self.new_val_frame1.cget('bg'), relief=tk.FLAT)
+        self.label_new_val2.tag_config("normal", font="TkDefaultFont")
+        self.label_new_val2.tag_config("line", font="TkDefaultFont", foreground="dodger blue")
+        self.label_new_val2.grid(row=0, column=0)
+
+        new_val_var2 = tk.StringVar()
+        self.entry_new_val2 = tk.Entry(self.new_val_frame2, textvariable=new_val_var2)
         self.entry_new_val2.grid(row=1, column=0)
         self.entry_new_val2.bind("<Return>", self.check_new_val)
 
-        self.label_assmp_val2 = tk.Label(self.new_val_frame2, text="")
-        self.label_assmp_val2.grid(row=1, column=1)
+        self.label_assmp2 = tk.Label(self.new_val_frame2, text="")
+        self.label_assmp2.grid(row=1, column=1)
 
-        self.relation_widgets = [label_new_val2, self.entry_new_val2, self.label_assmp_val2]
+        self.relation_widgets = [self.label_new_val2, self.entry_new_val2, self.label_assmp2]
 
     def show_error(self):
         """Show information about the current error."""
@@ -173,7 +185,10 @@ class InputCorrectionMain(tk.Frame):
                 widget.grid_forget()
             for widget in self.old_val_lines:
                 widget.grid_forget()
-            self.label_error.config(text="No errors were found.")
+            self.label_error.config(state="normal")
+            self.label_error.delete(1.0, tk.END)
+            self.label_error.insert(tk.END, "No errors were found.", "normal")
+            self.label_error.config(state="disabled")
             self.label_progress.config(text="0/0")
 
     def update_old_val_lines(self):
@@ -185,17 +200,13 @@ class InputCorrectionMain(tk.Frame):
         if error.relation is None:
             location_before = deepcopy(error.infos1.location).sub_lines(1)
             location_after = deepcopy(error.infos1.location).add_lines(1)
-            self.create_old_val_line(1, location_before, error.infos1.prev_line)
-            self.create_old_val_line(2, error.infos1.location, error.infos1.value)
-            self.create_old_val_line(3, location_after, error.infos1.next_line)
+            self.create_old_val_line(1, location_before, error.infos1.prev_line, False)
+            self.create_old_val_line(2, error.infos1.location, error.infos1.value, True)
+            self.create_old_val_line(3, location_after, error.infos1.next_line, False)
             return
 
-        if error.infos1.location.user_line < error.infos2.location.user_line:
-            val_min = error.infos1
-            val_max = error.infos2
-        else:
-            val_min = error.infos2
-            val_max = error.infos1
+        val_min = error.infos1
+        val_max = error.infos2
 
         max_line = self.calculate_max_location(val_min, val_max)
 
@@ -218,7 +229,7 @@ class InputCorrectionMain(tk.Frame):
                 curr_val = (location_after1, val_min.next_line)
             else:
                 continue
-            self.create_old_val_line(i+1, curr_val[0], curr_val[1])
+            self.create_old_val_line(i+1, curr_val[0], curr_val[1], i == max_line)
         if max_line == 5:
             label_empty_line = tk.Label(self.old_val_frame, text="...")
             label_empty_line.grid(row=4, column=0)
@@ -244,18 +255,28 @@ class InputCorrectionMain(tk.Frame):
             old_val_line_max = diff_min_max + 1
         return old_val_line_max
 
-    def create_old_val_line(self, row: int, location: InputLocation, value: str):
+    def create_old_val_line(self, row: int, location: InputLocation, value: str, is_other: bool):
         """Creates a label for the line number and the corresponding value.
 
         :param row: row number in which the label should be displayed
         :param location: location of the input value
         :param value: input value
+        :param is_other: if this label is for the second value
         """
         label_line = tk.Label(self.old_val_frame, text=f"{location}")
+        if row == 2:
+            label_line.config(fg="blue")
+        elif is_other:
+            label_line.config(fg="dodger blue")
         label_line.grid(row=row, column=0)
+
         if value is None:
             value = ""
         label_old_val = tk.Label(self.old_val_frame, text=f"{value}")
+        if row == 2:
+            label_old_val.config(fg="blue")
+        elif is_other:
+            label_old_val.config(fg="dodger blue")
         label_old_val.grid(row=row, column=2, sticky=tk.E)
         self.old_val_lines += [label_line, label_old_val]
 
@@ -264,11 +285,46 @@ class InputCorrectionMain(tk.Frame):
 
         :param error: current error to display
         """
+        self.label_new_val.config(state="normal")
+        self.label_new_val.delete("1.0", tk.END)
+        self.label_new_val.insert(tk.INSERT, "New value (", "normal")
+        self.label_new_val.insert(tk.INSERT, f"{error.infos1.location}", "line")
+        self.label_new_val.insert(tk.INSERT, "):", "normal")
+        self.label_new_val.config(state="disabled")
+
         self.entry_new_val.delete(0, tk.END)
         self.entry_new_val.insert(0, error.infos1.value)
-        self.label_assmp_val.config(text=error.create_info_msg(True))
-        self.label_error.config(text=error.error_message)
+        self.label_assmp.config(text=error.create_info_msg(True))
+
+        self.label_error.config(state="normal")
+        self.label_error.delete("1.0", tk.END)
+        self.label_error.insert(tk.END, error.error_message, "normal")
+        self.color_locations(error.error_message)
+        self.label_error.config(state="disabled")
         self.label_progress.config(text=f"{self.error_index+1}/{len(self.errors)}")
+
+    def color_locations(self, text: str):
+        """Adds colors to the input line references in the text of the error message
+
+        :param text: error message text
+        """
+        num_chars_first_line = re.search("^.*?\\n", text).end()
+        iters = re.finditer("Line \d+?", text)
+        lines = [(m.group(), m.span()) for m in iters]
+        if len(lines) == 2:
+            num_val1 = int(re.search("\d+", lines[0][0]).group())
+            num_val2 = int(re.search("\d+", lines[1][0]).group())
+            val1 = lines[0][1] if num_val1 < num_val2 else lines[1][1]
+            val2 = lines[1][1] if num_val1 < num_val2 else lines[0][1]
+            val1 = (val1[0]-num_chars_first_line, val1[1]-num_chars_first_line)
+            val2 = (val2[0]-num_chars_first_line, val2[1]-num_chars_first_line)
+            self.label_error.tag_add("line1", f"2.{val1[0]}", f"2.{val1[1]}")
+            self.label_error.tag_add("line2", f"2.{val2[0]}", f"2.{val2[1]}")
+        elif len(lines) == 1:
+            val = lines[0][1]
+            self.label_error.tag_add("line1", f"1.{val[0]}", f"1.{val[1]}")
+        else:
+            raise Exception(f"An error message can only mention one or two line numbers: {text}")
 
     def update_relational_error_info(self, error: ErrorInformation):
         """Updates information about the current relational error
@@ -280,7 +336,14 @@ class InputCorrectionMain(tk.Frame):
         if not isinstance(error.relation.other_id, CheckerZeroIdentifier):
             self.show_relation_error_widgets()
 
-            self.label_assmp_val2.config(text=error.create_info_msg(False))
+            self.label_assmp2.config(text=error.create_info_msg(False))
+
+            self.label_new_val2.config(state="normal")
+            self.label_new_val2.delete("1.0", tk.END)
+            self.label_new_val2.insert(tk.INSERT, "New value (", "normal")
+            self.label_new_val2.insert(tk.INSERT, f"{error.infos2.location}", "line")
+            self.label_new_val2.insert(tk.INSERT, "):", "normal")
+            self.label_new_val2.config(state="disabled")
 
             self.entry_new_val2.delete(0, tk.END)
             self.entry_new_val2.insert(0, error.infos2.value)

@@ -135,11 +135,11 @@ class AssumptionDecoder(json.JSONDecoder):
         """
         if input_name.startswith("len("):
             input_id = input_name.split("=")[1][:-1]
-            return CheckerLengthIdentifier(input_id)
+            return CheckerLengthIdentifier(int(input_id))
         elif input_name == ".VAR0":
             return CheckerZeroIdentifier()
         input_id = input_name.split("=")[1]
-        return CheckerIdentifier(input_id)
+        return CheckerIdentifier(int(input_id))
 
 
 class JSONHandler:
