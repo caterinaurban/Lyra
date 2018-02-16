@@ -21,6 +21,14 @@ class InputLocation:
     def file_line(self):
         return self._line
 
+    def add_lines(self, num: int):
+        self._line += num
+        return self
+
+    def sub_lines(self, num: int):
+        self._line -= num
+        return self
+
     def user_repr(self):
         """Returns a representation of the input location for the user."""
         if isinstance(self.input_id, CheckerLengthIdentifier):
@@ -49,7 +57,7 @@ class InputLocation:
 
 class InputInfo:
     """Information about an input."""
-    def __init__(self, value, location, assmp, prev_line, next_line):
+    def __init__(self, value, location: InputLocation, assmp, prev_line=None, next_line=None):
         self.value = value
         self.location = location
         self.assmp = assmp
@@ -59,21 +67,13 @@ class InputInfo:
 
 class ErrorInformation:
     """Contains information about an error."""
-    def __init__(self, location: InputLocation, value, error_message, assumption, error_level):
-        self.location = location
-        self.value = value
+    def __init__(self, input_infos1: InputInfo, error_message, error_level):
+        self.infos1 = input_infos1
+        self.infos2 = None
         self.error_message = error_message
-        self.assumption = assumption
         self.error_level = error_level
         self.relation = None
-        self.rel_val = None
-        self.rel_location = None
-        self.rel_assmp = None
         self.is_first_val = True
-        self.prev_line = None
-        self.next_line = None
-        self.rel_prev_line = None
-        self.rel_next_line = None
 
     def add_rel_info(self, relation, rel_info: InputInfo):
         """Adds relational info to the error.
@@ -83,9 +83,7 @@ class ErrorInformation:
         :return:
         """
         self.relation = relation
-        self.rel_val = rel_info.value
-        self.rel_location = rel_info.location
-        self.rel_assmp = rel_info.assmp
+        self.infos2 = rel_info
 
     def create_info_msg(self, is_first: bool) -> str:
         """Creates an info message about the assumptions of the first or second value
@@ -94,20 +92,20 @@ class ErrorInformation:
         created, False if a message for the second value's assummptions should be created
         :return: an info message about the value's assumptions
         """
-        if is_first and isinstance(self.assumption, CheckerMultiAssumption):
-            if self.assumption.delimiter == "":
+        if is_first and isinstance(self.infos1.assmp, CheckerMultiAssumption):
+            if self.infos1.assmp.delimiter == "":
                 delm = "whitespaces"
             else:
-                delm = f"'{self.assumption.delimiter}'"
+                delm = f"'{self.infos1.assmp.delimiter}'"
             return f"Type: List of values\nseparated by {delm}"
-        if not is_first and isinstance(self.rel_assmp, CheckerMultiAssumption):
-            if self.rel_assmp.delimiter == "":
+        if not is_first and isinstance(self.infos2.assmp, CheckerMultiAssumption):
+            if self.infos2.assmp.delimiter == "":
                 delm = "whitespaces"
             else:
-                delm = f"'{self.assumption.delimiter}'"
+                delm = f"'{self.infos2.assmp.delimiter}'"
             return f"Type: List of values\nseparated by {delm}"
 
-        assmp = self.assumption.assmp if is_first else self.rel_assmp.assmp
+        assmp = self.infos1.assmp.assmp if is_first else self.infos2.assmp.assmp
         msg = ""
         if not assmp.type_assumption.is_top():
             msg = f"Type: {self.type_to_type_name(assmp.type_assumption)}"
@@ -297,8 +295,8 @@ class InputChecker:
             if len(values) < num_iter:
                 msg = self.write_missing_error(num_iter, len(values), loc, delimiter)
                 err_lvl = ErrorInformation.ErrorLevel.Missing
-                new_error = ErrorInformation(loc, curr_input, msg, assmp, err_lvl)
-                new_error.prev_line = self.prev_line
+                input_info = InputInfo(curr_input, loc, assmp, self.prev_line)
+                new_error = ErrorInformation(input_info, msg, err_lvl)
                 errors.append(new_error)
                 return line
             for relation in assmp.relations:
@@ -338,7 +336,7 @@ class InputChecker:
                         self.update_next_line_val(errors, input_line)
                         error = self.check_one_assmp(assmp, input_line, line)
                         if error is not None:
-                            error.prev_line = self.prev_line
+                            error.infos1.prev_line = self.prev_line
                             errors.append(error)
                         self.prev_line = input_line
         return line
@@ -349,8 +347,8 @@ class InputChecker:
         :param errors: current errors
         :param input_line: current input
         """
-        if len(errors) > 0 and errors[-1].next_line is None:
-            errors[-1].next_line = input_line
+        if len(errors) > 0 and errors[-1].infos1.next_line is None:
+            errors[-1].infos1.next_line = input_line
         lines = [(i, v) for i, v in self.inputs.items() if v is not None and v.next_line is None]
         for input_id, input_val in lines:
             self.inputs[input_id].next_line = input_line
@@ -376,7 +374,8 @@ class InputChecker:
             except ValueError:
                 message = self.write_type_error(loc, in_val, type_assmp)
                 err_lvl = ErrorInformation.ErrorLevel.Type
-                new_error = ErrorInformation(loc, in_val, message, assmp, err_lvl)
+                input_info = InputInfo(in_val, loc, assmp)
+                new_error = ErrorInformation(input_info, message, err_lvl)
                 return new_error
         elif type_assmp == TypeLattice().real():
             try:
@@ -384,7 +383,8 @@ class InputChecker:
             except ValueError:
                 message = self.write_type_error(loc, in_val, type_assmp)
                 err_lvl = ErrorInformation.ErrorLevel.Type
-                new_error = ErrorInformation(loc, in_val, message, assmp, err_lvl)
+                input_info = InputInfo(in_val, loc, assmp)
+                new_error = ErrorInformation(input_info, message, err_lvl)
                 return new_error
         else:
             val = in_val
@@ -397,7 +397,8 @@ class InputChecker:
             if val < range_assmp.lower or val > range_assmp.upper:
                 err_msg = self.write_range_error(loc, in_val, range_assmp)
                 err_lvl = ErrorInformation.ErrorLevel.Type
-                new_error = ErrorInformation(loc, in_val, err_msg, assmp, err_lvl)
+                input_info = InputInfo(in_val, loc, assmp)
+                new_error = ErrorInformation(input_info, err_msg, err_lvl)
                 return new_error
 
         for relation in relations:
@@ -419,53 +420,57 @@ class InputChecker:
         :param error: error to check
         :return: a new error if one is found, otherwise None.
         """
+        input_info = error.infos1
         if error.relation is None or error.is_first_val:
-            if isinstance(error.assumption, CheckerMultiAssumption):
-                delimiter = error.assumption.delimiter
+            if isinstance(input_info.assmp, CheckerMultiAssumption):
+                delimiter = input_info.assmp.delimiter
                 if delimiter != "":
-                    values = error.value.split(delimiter)
+                    values = input_info.value.split(delimiter)
                 else:
-                    values = error.value.split()
+                    values = input_info.value.split()
                 for value in values:
-                    assmps = error.assumption.assmps[0]
+                    assmps = input_info.assmp.assmps[0]
                     val = self.check_non_relational_assmps(value, assmps, error)
                     if isinstance(val, ErrorInformation.ErrorLevel):
                         return error
                 error.is_first_val = False
                 return None
-            if isinstance(error.assumption.var_id, CheckerZeroIdentifier):
+            if isinstance(input_info.assmp.var_id, CheckerZeroIdentifier):
                 error.is_first_val = False
                 return None
-            val = self.check_non_relational_assmps(error.value, error.assumption, error)
+            val = self.check_non_relational_assmps(input_info.value, input_info.assmp, error)
             if isinstance(val, ErrorInformation.ErrorLevel):
                 return error
             error.is_first_val = False
             return None
 
-        if isinstance(error.rel_assmp, CheckerMultiAssumption):
-            delimiter = error.rel_assmp.delimiter
+        rel_input_info = error.infos2
+        if isinstance(rel_input_info.assmp, CheckerMultiAssumption):
+            delimiter = rel_input_info.assmp.delimiter
             if delimiter != "":
-                values = error.rel_val.split(delimiter)
+                values = rel_input_info.value.split(delimiter)
             else:
-                values = error.rel_val.split()
+                values = rel_input_info.value.split()
             for value in values:
-                val = self.check_non_relational_assmps(value, error.rel_assmp.assmps[0], error)
+                assmps = rel_input_info.assmp.assmps[0]
+                val = self.check_non_relational_assmps(value, assmps, error)
                 if isinstance(val, ErrorInformation.ErrorLevel):
                     return error
-        elif not isinstance(error.rel_val, CheckerZeroIdentifier):
-            val = self.check_non_relational_assmps(error.rel_val, error.rel_assmp, error)
+        elif not isinstance(rel_input_info.value, CheckerZeroIdentifier):
+            assmp = rel_input_info.assmp
+            val = self.check_non_relational_assmps(rel_input_info.value, assmp, error)
             if isinstance(val, ErrorInformation.ErrorLevel):
                 return error
 
-        eval_value = self.evaluate_value(error.value, error.assumption)
-        eval_other_value = self.evaluate_value(error.rel_val, error.rel_assmp)
+        eval_value = self.evaluate_value(input_info.value, input_info.assmp)
+        eval_other_value = self.evaluate_value(rel_input_info.value, rel_input_info.assmp)
         relation = error.relation
         if not relation.evaluate(eval_value, eval_other_value):
             rel = relation.user_friendly_relation(eval_value, eval_other_value)
-            first_loc = (eval_value[0], error.location.user_repr())
-            second_loc = (eval_other_value[0], error.rel_location.user_repr())
+            first_loc = (eval_value[0], input_info.location.user_repr())
+            second_loc = (eval_other_value[0], rel_input_info.location.user_repr())
             rel_str = relation.user_friendly_relation(first_loc, second_loc)
-            loc = error.location
+            loc = input_info.location
             message = self.create_relation_error(loc, rel_str, rel)
             error.error_message = message
             return error
@@ -492,11 +497,9 @@ class InputChecker:
         rel_str = relation.user_friendly_relation(first_loc, second_loc)
         msg = self.write_relation_error(loc, rel_str, rel_eval)
         lvl = ErrorInformation.ErrorLevel.Relation
-        new_error = ErrorInformation(loc, in_val, msg, assmp, lvl)
+        input_info = InputInfo(in_val, loc, assmp, self.prev_line)
+        new_error = ErrorInformation(input_info, msg, lvl)
         new_error.add_rel_info(relation, rel_info)
-        new_error.prev_line = self.prev_line
-        new_error.rel_prev_line = rel_info.prev_line
-        new_error.rel_next_line = rel_info.next_line
         if isinstance(relation.this_id, CheckerZeroIdentifier):
             new_error.is_first_val = False
         return new_error
@@ -506,7 +509,6 @@ class InputChecker:
 
         :param value: value to be evaluated
         :param assmp: assumption of the input value
-        :param relation: current relation for which inputs are evaluated
         :return: tuple (input id, value) of the evaluated value
         """
         if isinstance(assmp, CheckerMultiAssumption):
@@ -556,8 +558,8 @@ class InputChecker:
             error_level = ErrorInformation.ErrorLevel.Range
 
         if error_level is not None:
-            loc = error.location
-            new_val = error.value
+            loc = error.infos1.location
+            new_val = error.infos1.value
             error.error_level = error_level
             if error_level == ErrorInformation.ErrorLevel.Type:
                 message = self.create_type_error(loc, new_val, type_assmp)

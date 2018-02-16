@@ -60,9 +60,9 @@ class DataQualityController:
         :param error: error with information about new values
         :return: errors found by the input checker
         """
-        new_values = [(error.location, error.value)]
-        if error.rel_val is not None:
-            new_values.append((error.rel_location, error.rel_val))
+        new_values = [(error.infos1.location, error.infos1.value)]
+        if error.infos2 is not None:
+            new_values.append((error.infos2.location, error.infos2.value))
         new_values = sorted(new_values, key=lambda val: val[0])
         self.write_new_values(new_values)
         errors = self.run_checker()
