@@ -166,7 +166,7 @@ class InputCorrectionMain(tk.Frame):
 
     def show_error(self):
         """Show information about the current error."""
-        if len(self.errors) > 0:
+        if len(self.errors) > 0 and isinstance(self.errors[0], ErrorInformation):
             error = self.errors[self.error_index]
             self.update_error_info(error)
             if error.relation is not None:
@@ -187,7 +187,8 @@ class InputCorrectionMain(tk.Frame):
                 widget.grid_forget()
             self.label_error.config(state="normal")
             self.label_error.delete(1.0, tk.END)
-            self.label_error.insert(tk.END, "No errors were found.", "normal")
+            output = self.errors[0] if len(self.errors) > 0 else ""
+            self.label_error.insert(tk.END, f"Output of the program:\n{output}", "normal")
             self.label_error.config(state="disabled")
             self.label_progress.config(text="0/0")
 

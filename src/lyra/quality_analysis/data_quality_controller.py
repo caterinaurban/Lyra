@@ -47,6 +47,9 @@ class DataQualityController:
         self.analysis.run_analysis()
         json_handler = JSONHandler(self.path, self.program_name)
         self.json_info = json_handler.json_to_input_assumptions()
+        errors = self.run_checker()
+        if len(errors) == 0:
+            return self.execute_input_program()
         return self.run_checker()
 
     def run_checker(self):
@@ -67,7 +70,7 @@ class DataQualityController:
         self.write_new_values(new_values)
         errors = self.run_checker()
         if len(errors) == 0:
-            self.execute_input_program()
+            return self.execute_input_program()
         return errors
 
     def write_new_values(self, new_values):
@@ -101,15 +104,15 @@ class DataQualityController:
 
     def execute_input_program(self):
         """Executes the analyzed program."""
-        print("\n --- EXECUTING PROGRAM ---\n")
         with open(self.path + "execute_program.sh", "w") as exec_program:
             exec_program.write(f"python3.6 {self.path}{self.program_name}.py <<EOF\n")
             with open(self.path + self.input_filename, "r") as input_file:
                 for line in input_file:
                     exec_program.write(line)
             exec_program.write(f"\nEOF")
-        subprocess.call("./" + self.path + "execute_program.sh", shell=True)
-        print("")
+        fin = open("example/checker_example.in",'r')
+        output = subprocess.check_output(["python3.6", "example/checker_example.py"], stdin=fin)
+        return [output.decode("utf-8")]
 
 if __name__ == "__main__":
     DataQualityController().run()
