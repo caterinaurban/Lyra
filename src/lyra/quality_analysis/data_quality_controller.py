@@ -63,9 +63,9 @@ class DataQualityController:
         :param error: error with information about new values
         :return: errors found by the input checker
         """
-        new_values = [(error.infos1.location, error.infos1.value)]
+        new_values = [(error.infos1.location, error.infos1.orig_value)]
         if error.infos2 is not None:
-            new_values.append((error.infos2.location, error.infos2.value))
+            new_values.append((error.infos2.location, error.infos2.orig_value))
         new_values = sorted(new_values, key=lambda val: val[0])
         self.write_new_values(new_values)
         errors = self.run_checker()
@@ -84,20 +84,24 @@ class DataQualityController:
             with open(self.path + self.input_filename + ".temp", "w") as input_file_tmp:
                 line_num = 0
                 line = ""
+                last_line_newline = True
                 while curr_val_index < len(new_values) or line:
                     line = input_file.readline()
                     if line_num == curr_loc:
-                        input_file_tmp.write(new_values[curr_val_index][1] + "\n")
+                        if not last_line_newline:
+                            input_file_tmp.write("\n")
+                            last_line_newline = True
+                        input_file_tmp.write(new_values[curr_val_index][1])
+                        input_file_tmp.write("\n")
                         curr_val_index += 1
                         if curr_val_index < len(new_values):
                             curr_loc = new_values[curr_val_index][0].file_line
                         else:
                             curr_loc = -1
                     else:
-                        if not line.endswith("\n"):
-                            input_file_tmp.write(line + "\n")
-                        else:
-                            input_file_tmp.write(line)
+                        input_file_tmp.write(line)
+                        last_line_newline = line.endswith("\n")
+
                     line_num += 1
         copyfile(self.path + self.input_filename + ".temp", self.path + self.input_filename)
         os.remove(self.path + self.input_filename + ".temp")
@@ -110,8 +114,12 @@ class DataQualityController:
                 for line in input_file:
                     exec_program.write(line)
             exec_program.write(f"\nEOF")
-        fin = open("example/checker_example.in",'r')
-        output = subprocess.check_output(["python3.6", "example/checker_example.py"], stdin=fin)
+        fin = open("example/checker_example.in", 'r')
+        try:
+            command = ["python3.6", "example/checker_example.py"]
+            output = subprocess.check_output(command, stdin=fin, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            return [e.output.decode("utf-8")]
         return [output.decode("utf-8")]
 
 if __name__ == "__main__":

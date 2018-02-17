@@ -174,7 +174,7 @@ class CheckerExpression:
             return self.const
         if self.var not in var_to_val or var_to_val[self.var] is None:
             return None
-        value = var_to_val[self.var].value + self.const
+        value = var_to_val[self.var].eval_value + self.const
         if not self.var_pos:
             value = -value
         return value

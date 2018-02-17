@@ -110,7 +110,7 @@ class InputCorrectionMain(tk.Frame):
         self.new_val_frame2.grid_rowconfigure(2, weight=1)
         self.new_val_frame2.grid_columnconfigure(2, weight=1)
 
-        self.label_error = tk.Text(self.error_frame, height=3, width=50, wrap="none")
+        self.label_error = tk.Text(self.error_frame, height=3, width=70, wrap="none")
         self.label_error.configure(bg=self.error_frame.cget('bg'), relief=tk.FLAT)
         self.label_error.tag_config("normal", font="TkDefaultFont")
         self.label_error.tag_config("line1", font="TkDefaultFont", foreground="blue")
@@ -179,17 +179,16 @@ class InputCorrectionMain(tk.Frame):
                 self.entry_new_val.config(state="normal")
                 self.entry_new_val.focus()
         else:
-            for widget in self.relation_widgets:
-                widget.grid_forget()
-            for widget in self.val1_widgets:
-                widget.grid_forget()
-            for widget in self.old_val_lines:
-                widget.grid_forget()
-            self.label_error.config(state="normal")
+            self.old_val_frame.grid_forget()
+            self.new_val_frame1.grid_forget()
+            self.new_val_frame2.grid_forget()
+            self.label_progress.grid_forget()
+            self.label_error.config(state="normal", height=20, width=100)
             self.label_error.delete(1.0, tk.END)
             output = self.errors[0] if len(self.errors) > 0 else ""
-            self.label_error.insert(tk.END, f"Output of the program:\n{output}", "normal")
+            self.label_error.insert(tk.END, f"Output of the program:\n\n{output}", "normal")
             self.label_error.config(state="disabled")
+            self.error_frame.configure(height=400)
             self.label_progress.config(text="0/0")
 
     def update_old_val_lines(self):
@@ -202,7 +201,7 @@ class InputCorrectionMain(tk.Frame):
             location_before = deepcopy(error.infos1.location).sub_lines(1)
             location_after = deepcopy(error.infos1.location).add_lines(1)
             self.create_old_val_line(1, location_before, error.infos1.prev_line, False)
-            self.create_old_val_line(2, error.infos1.location, error.infos1.value, True)
+            self.create_old_val_line(2, error.infos1.location, error.infos1.orig_value, True)
             self.create_old_val_line(3, location_after, error.infos1.next_line, False)
             return
 
@@ -216,9 +215,9 @@ class InputCorrectionMain(tk.Frame):
                 location_before1 = deepcopy(val_min.location).sub_lines(1)
                 curr_val = (location_before1, val_min.prev_line)
             elif i == 1:
-                curr_val = (val_min.location, val_min.value)
+                curr_val = (val_min.location, val_min.orig_value)
             elif i == max_line:
-                curr_val = (val_max.location, val_max.value)
+                curr_val = (val_max.location, val_max.orig_value)
             elif i == max_line - 1:
                 location_before2 = deepcopy(val_max.location).sub_lines(1)
                 curr_val = (location_before2, val_max.prev_line)
@@ -294,7 +293,7 @@ class InputCorrectionMain(tk.Frame):
         self.label_new_val.config(state="disabled")
 
         self.entry_new_val.delete(0, tk.END)
-        self.entry_new_val.insert(0, error.infos1.value)
+        self.entry_new_val.insert(0, error.infos1.orig_value)
         self.label_assmp.config(text=error.create_info_msg(True))
 
         self.label_error.config(state="normal")
@@ -309,8 +308,9 @@ class InputCorrectionMain(tk.Frame):
 
         :param text: error message text
         """
-        num_chars_first_line = re.search("^.*?\\n", text).end()
-        iters = re.finditer("Line \d+?", text)
+        chars_first_line = re.search("^.*?\\n", text)
+        num_chars_first_line = chars_first_line.end() if chars_first_line is not None else 0
+        iters = re.finditer("Line \d+", text)
         lines = [(m.group(), m.span()) for m in iters]
         if len(lines) == 2:
             num_val1 = int(re.search("\d+", lines[0][0]).group())
@@ -347,7 +347,7 @@ class InputCorrectionMain(tk.Frame):
             self.label_new_val2.config(state="disabled")
 
             self.entry_new_val2.delete(0, tk.END)
-            self.entry_new_val2.insert(0, error.infos2.value)
+            self.entry_new_val2.insert(0, error.infos2.orig_value)
             if error.is_first_val:
                 state = "normal"
                 state2 = "readonly"
@@ -368,12 +368,12 @@ class InputCorrectionMain(tk.Frame):
             return
         curr_error = deepcopy(self.errors[self.error_index])
         new_val = self.entry_new_val.get()
-        curr_error.infos1.value = new_val
+        curr_error.infos1.change_orig_value(new_val)
         rel_val = None
         if curr_error.relation is not None:
             if not isinstance(curr_error.relation.other_id, CheckerZeroIdentifier):
                 rel_val = self.entry_new_val2.get()
-                curr_error.infos2.value = rel_val
+                curr_error.infos2.change_orig_value(rel_val)
         new_error = self.controller.check_new_val(curr_error)
         old_error = self.errors[self.error_index]
 
@@ -392,7 +392,7 @@ class InputCorrectionMain(tk.Frame):
                 self.check_corrected_input(new_val, rel_val)
                 self.show_error()
             else:
-                old_error.infos1.value = new_val
+                old_error.infos1.change_orig_value(new_val)
                 old_error.is_first_val = False
                 self.show_error()
         elif new_error is None:
@@ -414,9 +414,9 @@ class InputCorrectionMain(tk.Frame):
         :param new_val: new value of the current error
         :param rel_val: relational value of the current error
         """
-        self.errors[self.error_index].infos1.value = new_val
+        self.errors[self.error_index].infos1.change_orig_value(new_val)
         if self.errors[self.error_index].infos2 is not None:
-            self.errors[self.error_index].infos2.value = rel_val
+            self.errors[self.error_index].infos2.change_orig_value(rel_val)
         self.errors = self.controller.check_corrected_input(self.errors[self.error_index])
         self.error_index = 0
         self.show_error()
@@ -424,9 +424,9 @@ class InputCorrectionMain(tk.Frame):
     def keep_old_value(self):
         """Shows the values that were entered before."""
         self.entry_new_val.delete(0, tk.END)
-        self.entry_new_val.insert(0, self.errors[self.error_index].infos1.value)
+        self.entry_new_val.insert(0, self.errors[self.error_index].infos1.orig_value)
         self.entry_new_val2.delete(0, tk.END)
-        self.entry_new_val2.insert(0, self.errors[self.error_index].info2.value)
+        self.entry_new_val2.insert(0, self.errors[self.error_index].info2.orig_value)
 
     def start_analysis(self):
         """Runs the assumption analysis and shows information about the first error."""
