@@ -127,19 +127,20 @@ class InputCorrectionMain(tk.Frame):
         self.label_new_val.configure(bg=self.new_val_frame1.cget('bg'), relief=tk.FLAT)
         self.label_new_val.tag_config("normal", font="TkDefaultFont")
         self.label_new_val.tag_config("line", font="TkDefaultFont", foreground="blue")
-        self.label_new_val.grid(row=0, column=0)
+        self.label_new_val.grid(row=0, column=0, sticky=tk.W, padx=(26, 0))
 
         on_validate = (self.register(self.validate), '%d', '%P', '%W')
         self.new_val_var = tk.StringVar()
         self.entry_new_val = tk.Entry(self.new_val_frame1, textvariable=self.new_val_var,
                                       validate="key", validatecommand=on_validate)
-        self.entry_new_val.grid(row=1, column=0)
+        self.entry_new_val.grid(row=1, column=0, sticky=tk.W, padx=(30, 0))
         self.entry_new_val.bind("<Return>", self.check_new_val)
 
         self.label_assmp = tk.Label(self.new_val_frame1, text="")
-        self.label_assmp.grid(row=1, column=1)
+        self.label_assmp.grid(row=1, column=1, sticky=tk.W)
         self.val1_widgets = [label_old, self.label_new_val, self.entry_new_val, self.label_assmp]
 
+        self.new_val_var2 = None
         self.entry_new_val2 = None
         self.label_assmp2 = None
         self.label_new_val2 = None
@@ -156,6 +157,8 @@ class InputCorrectionMain(tk.Frame):
         :param widget_name: name of the widget whose content is evaluated
         :return: If the new value has the correct type
         """
+        if not isinstance(self.errors[self.error_index], ErrorInformation):
+            return True
         if widget_name == f"{self.entry_new_val}":
             input_info = self.errors[self.error_index].infos1
         else:
@@ -166,20 +169,20 @@ class InputCorrectionMain(tk.Frame):
         """Adds the widgets used for displaying a relational error"""
 
         self.label_new_val2 = tk.Text(self.new_val_frame2, height=1, width=30, wrap="none")
-        self.label_new_val2.configure(bg=self.new_val_frame1.cget('bg'), relief=tk.FLAT)
+        self.label_new_val2.configure(bg=self.new_val_frame2.cget('bg'), relief=tk.FLAT)
         self.label_new_val2.tag_config("normal", font="TkDefaultFont")
         self.label_new_val2.tag_config("line", font="TkDefaultFont", foreground="dodger blue")
-        self.label_new_val2.grid(row=0, column=0)
+        self.label_new_val2.grid(row=0, column=0, sticky=tk.W, padx=(26, 0))
 
         on_validate = (self.register(self.validate), '%d', '%P', '%W')
-        new_val_var2 = tk.StringVar()
-        self.entry_new_val2 = tk.Entry(self.new_val_frame2, textvariable=new_val_var2,
-                                      validate="key", validatecommand=on_validate)
-        self.entry_new_val2.grid(row=1, column=0)
+        self.new_val_var2 = tk.StringVar()
+        self.entry_new_val2 = tk.Entry(self.new_val_frame2, textvariable=self.new_val_var2,
+                                       validate="key", validatecommand=on_validate)
+        self.entry_new_val2.grid(row=1, column=0, sticky=tk.W, padx=(30, 0))
         self.entry_new_val2.bind("<Return>", self.check_new_val)
 
         self.label_assmp2 = tk.Label(self.new_val_frame2, text="")
-        self.label_assmp2.grid(row=1, column=1)
+        self.label_assmp2.grid(row=1, column=1, sticky=tk.W)
 
         self.relation_widgets = [self.label_new_val2, self.entry_new_val2, self.label_assmp2]
 
@@ -315,9 +318,9 @@ class InputCorrectionMain(tk.Frame):
         self.label_new_val.insert(tk.INSERT, "):", "normal")
         self.label_new_val.config(state="disabled")
 
-        self.entry_new_val.delete(0, tk.END)
+        self.new_val_var.set("")
         if error.error_level != ErrorInformation.ErrorLevel.Type:
-            self.entry_new_val.insert(0, error.infos1.orig_value)
+            self.new_val_var.set(error.infos1.orig_value)
         self.label_assmp.config(text=error.create_info_msg(True))
 
         self.label_error.config(state="normal")
@@ -370,9 +373,8 @@ class InputCorrectionMain(tk.Frame):
             self.label_new_val2.insert(tk.INSERT, "):", "normal")
             self.label_new_val2.config(state="disabled")
 
-            self.entry_new_val2.delete(0, tk.END)
             if error.error_level != ErrorInformation.ErrorLevel.Type:
-                self.entry_new_val2.insert(0, error.infos2.orig_value)
+                self.new_val_var2.set(error.infos2.orig_value)
             if error.is_first_val:
                 state = "normal"
                 state2 = "readonly"
@@ -399,38 +401,27 @@ class InputCorrectionMain(tk.Frame):
             if not isinstance(curr_error.relation.other_id, CheckerZeroIdentifier):
                 rel_val = self.entry_new_val2.get()
                 curr_error.infos2.change_orig_value(rel_val)
-        new_error = self.controller.check_new_val(curr_error)
         old_error = self.errors[self.error_index]
-
-        if old_error.relation is None:
-            if new_error is None:
-                self.check_corrected_input(new_val, rel_val)
-            elif new_error.error_level < self.errors[self.error_index].error_level:
+        if not old_error.is_first_val:
+            self.check_corrected_input(new_val, rel_val)
+        else:
+            new_error = self.controller.check_new_val(curr_error)
+            if old_error.relation is None:
+                if new_error is None:
+                    self.check_corrected_input(new_val, rel_val)
+                elif new_error.error_level < self.errors[self.error_index].error_level:
+                    self.keep_old_value()
+                else:
+                    self.errors[self.error_index] = new_error
+                    self.show_error()
+            elif new_error is not None and new_error.is_first_val:
                 self.keep_old_value()
-            else:
-                self.errors[self.error_index] = new_error
-                self.show_error()
-        elif new_error is not None and new_error.is_first_val:
-            self.keep_old_value()
-        elif old_error.is_first_val:
-            if isinstance(curr_error.relation.other_id, CheckerZeroIdentifier):
+            elif isinstance(curr_error.relation.other_id, CheckerZeroIdentifier):
                 self.check_corrected_input(new_val, rel_val)
                 self.show_error()
             else:
                 old_error.infos1.change_orig_value(new_val)
                 old_error.is_first_val = False
-                self.show_error()
-        elif new_error is None:
-            self.check_corrected_input(new_val, rel_val)
-            self.show_error()
-        elif new_error.is_first_val or new_error.error_level < old_error.error_level:
-            self.keep_old_value()
-        else:
-            if isinstance(new_error.relation.other_id, CheckerZeroIdentifier):
-                self.check_corrected_input(new_val, rel_val)
-                self.show_error()
-            else:
-                self.errors[self.error_index] = new_error
                 self.show_error()
 
     def check_corrected_input(self, new_val: str, rel_val: str):
@@ -444,15 +435,16 @@ class InputCorrectionMain(tk.Frame):
             self.errors[self.error_index].infos2.change_orig_value(rel_val)
         self.errors = self.controller.check_corrected_input(self.errors[self.error_index])
         self.error_index = 0
+        self.new_val_var.set("")
+        if self.new_val_var2 is not None:
+            self.new_val_var2.set("")
         self.show_error()
 
     def keep_old_value(self):
         """Shows the values that were entered before."""
-        self.entry_new_val.delete(0, tk.END)
-        self.entry_new_val.insert(0, self.errors[self.error_index].infos1.orig_value)
-        if self.entry_new_val2 is not None:
-            self.entry_new_val2.delete(0, tk.END)
-            self.entry_new_val2.insert(0, self.errors[self.error_index].info2.orig_value)
+        self.new_val_var.set(self.errors[self.error_index].infos1.orig_value)
+        if self.new_val_var2 is not None:
+            self.new_val_var2.set(self.errors[self.error_index].info2.orig_value)
 
     def start_analysis(self):
         """Runs the assumption analysis and shows information about the first error."""
