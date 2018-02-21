@@ -83,6 +83,23 @@ class InputInfo:
         self._value_orig = new_value
         self.evaluate_value()
 
+    def check_type(self, new_value) -> bool:
+        """Checks if the given value corresponds to the type of the assumption
+
+        :param new_value: new value to be checked
+        :return: True if the the value is of the correct type
+        """
+        if not isinstance(self.assmp, CheckerMultiAssumption):
+            type_assmp = self.assmp.assmp.type_assumption
+            try:
+                if type_assmp == TypeLattice().integer():
+                    int(new_value)
+                elif type_assmp == TypeLattice().real():
+                    float(new_value)
+            except ValueError:
+                return False
+        return True
+
     def evaluate_value(self):
         """Evaluates the input value to the correct type."""
         if isinstance(self.assmp, CheckerMultiAssumption):
@@ -102,7 +119,7 @@ class InputInfo:
             try:
                 if type_assmp == TypeLattice().integer():
                     self._value = int(self._value_orig)
-                if type_assmp == TypeLattice().real():
+                elif type_assmp == TypeLattice().real():
                     self._value = float(self._value_orig)
             except ValueError:
                 self._value = self.orig_value
@@ -335,7 +352,7 @@ class InputChecker:
             if self.eof_reached or curr_input == "":
                 err_lvl = ErrorInformation.ErrorLevel.Missing
                 loc = InputLocation(line, None, assmp.var_id)
-                input_info = InputInfo(curr_input, loc, assmp, self.prev_line)
+                input_info = InputInfo(curr_input, loc, assumptions, self.prev_line)
                 err_msg = self.write_missing_value_error(loc)
                 new_error = ErrorInformation(input_info, err_msg, err_lvl)
                 errors.append(new_error)
@@ -362,7 +379,7 @@ class InputChecker:
                 if len(values) < num_iter:
                     msg = self.write_missing_error(num_iter, len(values), loc, delimiter)
                     err_lvl = ErrorInformation.ErrorLevel.Missing
-                    input_info = InputInfo(curr_input, loc, assmp, self.prev_line)
+                    input_info = InputInfo(curr_input, loc, assumptions, self.prev_line)
                     new_error = ErrorInformation(input_info, msg, err_lvl)
                     errors.append(new_error)
                     return line
