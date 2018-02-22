@@ -250,6 +250,16 @@ class SimpleExpression:
                 var_pos = expr.operator == BinaryArithmeticOperation.Operator.Add and not inverted
                 var_pos |= expr.operator == BinaryArithmeticOperation.Operator.Sub and inverted
                 return cls(var_pos, expr.right, val)
+            elif isinstance(expr.left, Literal) and isinstance(expr.right, Literal):
+                val1 = cls.literal_to_primitive_type(expr.left)
+                val2 = cls.literal_to_primitive_type(expr.right)
+                if expr.operator == BinaryArithmeticOperation.Operator.Add:
+                    val = val1 + val2
+                elif expr.operator == BinaryArithmeticOperation.Operator.Sub:
+                    val = val1 - val2
+                if inverted:
+                    val = -val
+                return cls(const=val)
         return None
 
     @staticmethod
