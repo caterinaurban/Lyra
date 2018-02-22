@@ -1,3 +1,4 @@
+import subprocess
 import tkinter as tk
 
 from copy import deepcopy
@@ -71,7 +72,7 @@ class InputCorrectionMain(tk.Frame):
                                     highlightthickness=2, highlightbackground="Black")
         self.error_frame.grid(row=0, pady=10)
         self.error_frame.grid_propagate(0)
-        values_frame = tk.Frame(self, width=700, height=310)
+        values_frame = tk.Frame(self, width=700, height=800)
         values_frame.grid(row=1, column=0)
         values_frame.grid_propagate(0)
         self.old_val_frame = tk.Frame(values_frame, width=300, height=310,
@@ -139,6 +140,10 @@ class InputCorrectionMain(tk.Frame):
         self.label_assmp = tk.Label(self.new_val_frame1, text="")
         self.label_assmp.grid(row=1, column=1, sticky=tk.W)
         self.val1_widgets = [label_old, self.label_new_val, self.entry_new_val, self.label_assmp]
+
+        show_input_button = tk.Button(values_frame, text="Open input file",
+                                      command=self.open_input_file)
+        show_input_button.grid(row=2, column=0, sticky=tk.W, pady=20)
 
         self.new_val_var2 = None
         self.entry_new_val2 = None
@@ -391,7 +396,7 @@ class InputCorrectionMain(tk.Frame):
 
     def check_new_val(self, _):
         """Check if the current new value given by the user fulfils the assumptions."""
-        if len(self.errors) == 0:
+        if len(self.errors) == 0 or not isinstance(self.errors[0], ErrorInformation):
             return
         curr_error = deepcopy(self.errors[self.error_index])
         new_val = self.entry_new_val.get()
@@ -449,5 +454,12 @@ class InputCorrectionMain(tk.Frame):
     def start_analysis(self):
         """Runs the assumption analysis and shows information about the first error."""
         self.errors = self.controller.start_analysis(self.program_name, self.input_filename)
+        self.error_index = 0
+        self.show_error()
+
+    def open_input_file(self):
+        """Opens an input file for editing and rechecks the assumptions when returning"""
+        subprocess.call(f"kate example/{self.input_filename}", shell=True)
+        self.errors = self.controller.run_checker()
         self.error_index = 0
         self.show_error()

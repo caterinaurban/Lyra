@@ -330,6 +330,7 @@ class InputChecker:
             self.write_no_error()
         self.error_file.close()
         self.input_file.close()
+        errors = sorted(errors, key=lambda err: (err.error_level, err.infos1.location))
         return errors
 
     def check_assmps(self, assumptions, iters: CheckerExpression, line, delimiter, errors):
