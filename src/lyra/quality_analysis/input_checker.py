@@ -538,9 +538,10 @@ class InputChecker:
             if isinstance(val, ErrorInformation.ErrorLevel):
                 return error
             error.is_first_val = False
-            return None
 
         rel_input_info = error.infos2
+        if rel_input_info is None:
+            return None
         if isinstance(rel_input_info.assmp, CheckerMultiAssumption):
             delimiter = rel_input_info.assmp.delimiter
             if delimiter != "":

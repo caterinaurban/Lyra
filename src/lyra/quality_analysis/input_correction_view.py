@@ -114,8 +114,8 @@ class InputCorrectionMain(tk.Frame):
         self.label_error = tk.Text(self.error_frame, height=3, width=70, wrap="none")
         self.label_error.configure(bg=self.error_frame.cget('bg'), relief=tk.FLAT)
         self.label_error.tag_config("normal", font="TkDefaultFont")
-        self.label_error.tag_config("line1", font="TkDefaultFont", foreground="blue")
-        self.label_error.tag_config("line2", font="TkDefaultFont", foreground="dodger blue")
+        self.label_error.tag_config("color_red", font="TkDefaultFont", foreground="red")
+        self.label_error.tag_config("color_blue", font="TkDefaultFont", foreground="blue")
         self.label_error.grid(row=1, column=0, padx=40, sticky=tk.W)
 
         self.label_progress = tk.Label(self.error_frame, borderwidth=2, relief="raised")
@@ -127,7 +127,8 @@ class InputCorrectionMain(tk.Frame):
         self.label_new_val = tk.Text(self.new_val_frame1, height=1, width=30, wrap="none")
         self.label_new_val.configure(bg=self.new_val_frame1.cget('bg'), relief=tk.FLAT)
         self.label_new_val.tag_config("normal", font="TkDefaultFont")
-        self.label_new_val.tag_config("line", font="TkDefaultFont", foreground="blue")
+        self.label_new_val.tag_config("color_blue", font="TkDefaultFont", foreground="blue")
+        self.label_new_val.tag_config("color_red", font="TkDefaultFont", foreground="red")
         self.label_new_val.grid(row=0, column=0, sticky=tk.W, padx=(26, 0))
 
         on_validate = (self.register(self.validate), '%d', '%P', '%W')
@@ -176,7 +177,8 @@ class InputCorrectionMain(tk.Frame):
         self.label_new_val2 = tk.Text(self.new_val_frame2, height=1, width=30, wrap="none")
         self.label_new_val2.configure(bg=self.new_val_frame2.cget('bg'), relief=tk.FLAT)
         self.label_new_val2.tag_config("normal", font="TkDefaultFont")
-        self.label_new_val2.tag_config("line", font="TkDefaultFont", foreground="dodger blue")
+        self.label_new_val2.tag_config("color_blue", font="TkDefaultFont", foreground="blue")
+        self.label_new_val2.tag_config("color_red", font="TkDefaultFont", foreground="red")
         self.label_new_val2.grid(row=0, column=0, sticky=tk.W, padx=(26, 0))
 
         on_validate = (self.register(self.validate), '%d', '%P', '%W')
@@ -291,25 +293,24 @@ class InputCorrectionMain(tk.Frame):
         :param is_other: if this label is for the second value
         """
         label_line = tk.Label(self.old_val_frame, text=f"{location}")
-        if row == 2:
-            label_line.config(fg="blue")
-        elif is_other:
-            label_line.config(fg="dodger blue")
-        else:
-            label_line.config(fg="grey")
         label_line.grid(row=row, column=0)
-
-        if value is None:
-            value = ""
+        value = "" if value is None else value
         label_old_val = tk.Label(self.old_val_frame, text=f"{value}")
-        if row == 2:
-            label_old_val.config(fg="blue")
-        elif is_other:
-            label_old_val.config(fg="dodger blue")
-        else:
-            label_old_val.config(fg="grey")
         label_old_val.grid(row=row, column=2, sticky=tk.E)
         self.old_val_lines += [label_line, label_old_val]
+
+        first_is_error = self.errors[self.error_index].is_first_val
+        if row == 2:
+            color = "red" if first_is_error else "blue"
+            label_line.config(fg=color)
+            label_old_val.config(fg=color)
+        elif is_other:
+            color = "blue" if first_is_error else "red"
+            label_line.config(fg=color)
+            label_old_val.config(fg=color)
+        else:
+            label_line.config(fg="grey")
+            label_old_val.config(fg="grey")
 
     def update_error_info(self, error: ErrorInformation):
         """Updates information about the current error
@@ -319,7 +320,8 @@ class InputCorrectionMain(tk.Frame):
         self.label_new_val.config(state="normal")
         self.label_new_val.delete("1.0", tk.END)
         self.label_new_val.insert(tk.INSERT, "New value (", "normal")
-        self.label_new_val.insert(tk.INSERT, f"{error.infos1.location}", "line")
+        color_config = "color_red" if error.is_first_val else "color_blue"
+        self.label_new_val.insert(tk.INSERT, f"{error.infos1.location}", color_config)
         self.label_new_val.insert(tk.INSERT, "):", "normal")
         self.label_new_val.config(state="disabled")
 
@@ -342,20 +344,27 @@ class InputCorrectionMain(tk.Frame):
         """
         chars_first_line = re.search("^.*?\\n", text)
         num_chars_first_line = chars_first_line.end() if chars_first_line is not None else 0
-        iters = re.finditer("Line \d+", text)
-        lines = [(m.group(), m.span()) for m in iters]
+        found_line_words = re.finditer("Line \d+", text)
+        lines = [(m.group(), m.span()) for m in found_line_words]
         if len(lines) == 2:
-            num_val1 = int(re.search("\d+", lines[0][0]).group())
-            num_val2 = int(re.search("\d+", lines[1][0]).group())
-            val1 = lines[0][1] if num_val1 < num_val2 else lines[1][1]
-            val2 = lines[1][1] if num_val1 < num_val2 else lines[0][1]
-            val1 = (val1[0]-num_chars_first_line, val1[1]-num_chars_first_line)
-            val2 = (val2[0]-num_chars_first_line, val2[1]-num_chars_first_line)
-            self.label_error.tag_add("line1", f"2.{val1[0]}", f"2.{val1[1]}")
-            self.label_error.tag_add("line2", f"2.{val2[0]}", f"2.{val2[1]}")
+            line_rel1 = lines[0]
+            line_rel2 = lines[1]
+            line_number1 = int(re.search("\d+", line_rel1[0]).group())
+            if self.errors[self.error_index].is_first_val:
+                curr_error_loc = self.errors[self.error_index].infos1.location.file_line
+            else:
+                curr_error_loc = self.errors[self.error_index].infos2.location.file_line
+
+            num_red = line_rel1[1] if curr_error_loc + 1 == line_number1 else line_rel2[1]
+            num_blue = line_rel2[1] if curr_error_loc + 1 == line_number1 else line_rel1[1]
+
+            num_red = (num_red[0]-num_chars_first_line, num_red[1]-num_chars_first_line)
+            num_blue = (num_blue[0]-num_chars_first_line, num_blue[1]-num_chars_first_line)
+            self.label_error.tag_add("color_red", f"2.{num_red[0]}", f"2.{num_red[1]}")
+            self.label_error.tag_add("color_blue", f"2.{num_blue[0]}", f"2.{num_blue[1]}")
         elif len(lines) == 1:
             val = lines[0][1]
-            self.label_error.tag_add("line1", f"1.{val[0]}", f"1.{val[1]}")
+            self.label_error.tag_add("color_red", f"1.{val[0]}", f"1.{val[1]}")
         else:
             raise Exception(f"An error message can only mention one or two line numbers: {text}")
 
@@ -374,7 +383,8 @@ class InputCorrectionMain(tk.Frame):
             self.label_new_val2.config(state="normal")
             self.label_new_val2.delete("1.0", tk.END)
             self.label_new_val2.insert(tk.INSERT, "New value (", "normal")
-            self.label_new_val2.insert(tk.INSERT, f"{error.infos2.location}", "line")
+            color_config = "color_red" if not error.is_first_val else "color_blue"
+            self.label_new_val2.insert(tk.INSERT, f"{error.infos2.location}", color_config)
             self.label_new_val2.insert(tk.INSERT, "):", "normal")
             self.label_new_val2.config(state="disabled")
 
@@ -411,10 +421,10 @@ class InputCorrectionMain(tk.Frame):
             self.check_corrected_input(new_val, rel_val)
         else:
             new_error = self.controller.check_new_val(curr_error)
-            if old_error.relation is None:
-                if new_error is None:
-                    self.check_corrected_input(new_val, rel_val)
-                elif new_error.error_level < self.errors[self.error_index].error_level:
+            if new_error is None:
+                self.check_corrected_input(new_val, rel_val)
+            elif old_error.relation is None:
+                if new_error.error_level < self.errors[self.error_index].error_level:
                     self.keep_old_value()
                 else:
                     self.errors[self.error_index] = new_error
