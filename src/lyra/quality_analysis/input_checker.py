@@ -157,18 +157,18 @@ class ErrorInformation:
                 delm = "whitespaces"
             else:
                 delm = f"'{self.infos1.assmp.delimiter}'"
-            return f"Type: List of values\nseparated by {delm}"
+            list_type = self.type_to_type_name(self.infos1.assmp.assmps[0].assmp.type_assumption)
+            return f"Type: List of {list_type}s\nseparated by {delm}"
         if not is_first and isinstance(self.infos2.assmp, CheckerMultiAssumption):
             if self.infos2.assmp.delimiter == "":
                 delm = "whitespaces"
             else:
                 delm = f"'{self.infos2.assmp.delimiter}'"
-            return f"Type: List of values\nseparated by {delm}"
+            list_type = self.type_to_type_name(self.infos1.assmp.assmps[0].assmp.type_assumption)
+            return f"Type: List of {list_type}s\nseparated by {delm}"
 
         assmp = self.infos1.assmp.assmp if is_first else self.infos2.assmp.assmp
-        msg = ""
-        if not assmp.type_assumption.is_top():
-            msg = f"Type: {self.type_to_type_name(assmp.type_assumption)}"
+        msg = f"Type: {self.type_to_type_name(assmp.type_assumption)}"
         if not assmp.range_assumption.is_top():
             msg += f"\nRange: [{assmp.range_assumption.lower}, {assmp.range_assumption.upper}]"
         return msg

@@ -137,7 +137,7 @@ class InputCorrectionMain(tk.Frame):
         self.label_new_val.tag_config("color_red", font="TkDefaultFont", foreground="red")
         self.label_new_val.grid(row=0, column=0, sticky=tk.W, padx=(26, 0))
 
-        on_validate = (self.register(self.validate), '%d', '%P', '%W')
+        on_validate = (self.register(self.validate_input_type), '%d', '%P', '%W')
         self.new_val_var = tk.StringVar()
         self.entry_new_val = tk.Entry(self.new_val_frame1, textvariable=self.new_val_var,
                                       validate="key", validatecommand=on_validate)
@@ -160,7 +160,7 @@ class InputCorrectionMain(tk.Frame):
 
         self.start_analysis()
 
-    def validate(self, action: str, new_value: str, widget_name: str):
+    def validate_input_type(self, action: str, new_value: str, widget_name: str):
         """Checks if a new value is of the correct type
 
         :param action: "1" is insert, "0" is delete
@@ -168,13 +168,17 @@ class InputCorrectionMain(tk.Frame):
         :param widget_name: name of the widget whose content is evaluated
         :return: If the new value has the correct type
         """
-        if not isinstance(self.errors[self.error_index], ErrorInformation):
+        if not isinstance(self.errors[self.error_index], ErrorInformation) or action != "1":
             return True
         if widget_name == f"{self.entry_new_val}":
-            input_info = self.errors[self.error_index].infos1
+            is_correct_type = self.errors[self.error_index].infos1.check_type(new_value)
+            if not is_correct_type:
+                self.label_assmp.config(fg="red")
         else:
-            input_info = self.errors[self.error_index].infos2
-        return action != "1" or input_info.check_type(new_value)
+            is_correct_type = self.errors[self.error_index].infos2.check_type(new_value)
+            if not is_correct_type:
+                self.label_assmp2.config(fg="red")
+        return is_correct_type
 
     def show_relation_error_widgets(self):
         """Adds the widgets used for displaying a relational error"""
@@ -186,7 +190,7 @@ class InputCorrectionMain(tk.Frame):
         self.label_new_val2.tag_config("color_red", font="TkDefaultFont", foreground="red")
         self.label_new_val2.grid(row=0, column=0, sticky=tk.W, padx=(26, 0))
 
-        on_validate = (self.register(self.validate), '%d', '%P', '%W')
+        on_validate = (self.register(self.validate_input_type), '%d', '%P', '%W')
         self.new_val_var2 = tk.StringVar()
         self.entry_new_val2 = tk.Entry(self.new_val_frame2, textvariable=self.new_val_var2,
                                        validate="key", validatecommand=on_validate)
@@ -335,7 +339,7 @@ class InputCorrectionMain(tk.Frame):
         self.new_val_var.set("")
         if error.error_level != ErrorInformation.ErrorLevel.Type:
             self.new_val_var.set(error.infos1.orig_value)
-        self.label_assmp.config(text=error.create_info_msg(True))
+        self.label_assmp.config(text=error.create_info_msg(True), fg="black")
 
         self.label_error.config(state="normal")
         self.label_error.delete("1.0", tk.END)
@@ -385,7 +389,7 @@ class InputCorrectionMain(tk.Frame):
         if not isinstance(error.relation.other_id, CheckerZeroIdentifier):
             self.show_relation_error_widgets()
 
-            self.label_assmp2.config(text=error.create_info_msg(False))
+            self.label_assmp2.config(text=error.create_info_msg(False), fg="black")
 
             self.label_new_val2.config(state="normal")
             self.label_new_val2.delete("1.0", tk.END)
