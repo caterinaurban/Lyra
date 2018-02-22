@@ -398,7 +398,7 @@ class InputChecker:
                         mul_assmp = assumptions
                         e = self.rel_error(len_id, other_id, val, rel_val, rel, loc, mul_assmp, in_val)
                         errors.append(e)
-                self.prev_line = curr_input
+            self.prev_line = curr_input
         else:
             num_iter = iters.evaluate(self.inputs)
             if num_iter is None:
@@ -432,9 +432,10 @@ class InputChecker:
                             self.update_next_line_val(errors, input_line)
                             error = self.check_one_assmp(assmp, input_line, line)
                             if error is not None:
-                                error.infos1.prev_line = self.prev_line
+                                if error.infos1.prev_line is None:
+                                    error.infos1.prev_line = self.prev_line
                                 errors.append(error)
-                            self.prev_line = input_line
+                        self.prev_line = input_line
         return line
 
     def update_next_line_val(self, errors: [ErrorInformation], input_line: str):

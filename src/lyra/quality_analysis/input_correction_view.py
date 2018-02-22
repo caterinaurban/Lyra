@@ -4,6 +4,7 @@ import tkinter as tk
 from copy import deepcopy
 
 import re
+from tkinter import messagebox
 
 from lyra.quality_analysis.input_assmp_simplification import CheckerZeroIdentifier
 from lyra.quality_analysis.input_checker import ErrorInformation, InputInfo, InputLocation
@@ -111,6 +112,11 @@ class InputCorrectionMain(tk.Frame):
         self.new_val_frame2.grid_rowconfigure(2, weight=1)
         self.new_val_frame2.grid_columnconfigure(2, weight=1)
 
+        error_icon = tk.PhotoImage(file="icons/error.png")
+        self.error_icon = tk.Label(self.error_frame, image=error_icon)
+        self.error_icon.photo = error_icon
+        self.error_icon.grid(row=1, column=0, sticky=tk.W, padx=10)
+
         self.label_error = tk.Text(self.error_frame, height=3, width=70, wrap="none")
         self.label_error.configure(bg=self.error_frame.cget('bg'), relief=tk.FLAT)
         self.label_error.tag_config("normal", font="TkDefaultFont")
@@ -140,7 +146,6 @@ class InputCorrectionMain(tk.Frame):
 
         self.label_assmp = tk.Label(self.new_val_frame1, text="")
         self.label_assmp.grid(row=1, column=1, sticky=tk.W)
-        self.val1_widgets = [label_old, self.label_new_val, self.entry_new_val, self.label_assmp]
 
         show_input_button = tk.Button(values_frame, text="Open input file",
                                       command=self.open_input_file)
@@ -212,6 +217,7 @@ class InputCorrectionMain(tk.Frame):
             self.new_val_frame1.grid_forget()
             self.new_val_frame2.grid_forget()
             self.label_progress.grid_forget()
+            self.error_icon.grid_forget()
             self.label_error.config(state="normal", height=20, width=100)
             self.label_error.delete(1.0, tk.END)
             output = self.errors[0] if len(self.errors) > 0 else ""
@@ -292,7 +298,8 @@ class InputCorrectionMain(tk.Frame):
         :param value: input value
         :param is_other: if this label is for the second value
         """
-        label_line = tk.Label(self.old_val_frame, text=f"{location}")
+        location_label = f"{location}" if location.user_line != 0 else ""
+        label_line = tk.Label(self.old_val_frame, text=location_label)
         label_line.grid(row=row, column=0)
         value = "" if value is None else value
         label_old_val = tk.Label(self.old_val_frame, text=f"{value}")
@@ -448,7 +455,15 @@ class InputCorrectionMain(tk.Frame):
         self.errors[self.error_index].infos1.change_orig_value(new_val)
         if self.errors[self.error_index].infos2 is not None:
             self.errors[self.error_index].infos2.change_orig_value(rel_val)
-        self.errors = self.controller.check_corrected_input(self.errors[self.error_index])
+        new_errors = self.controller.check_corrected_input(self.errors[self.error_index])
+        num_new_errors = len(new_errors) - len(self.errors) + 1
+        if num_new_errors > 100:
+            message = f"This value creates {num_new_errors} new errors.\n" \
+                      f"Do you want to proceed?"
+            proceed = messagebox.askokcancel("Python", message)
+            if not proceed:
+                return
+        self.errors = new_errors
         self.error_index = 0
         self.new_val_var.set("")
         if self.new_val_var2 is not None:
