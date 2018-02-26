@@ -11,15 +11,15 @@ Lyra's internal semantics of statements.
 import itertools
 import re
 from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slicing, \
-    LengthIdentifier, VariableIdentifier
+    LengthIdentifier, VariableIdentifier, Range
 from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
 from lyra.core.expressions import UnaryOperation
 from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
 from lyra.core.expressions import BinaryBooleanOperation, Input, ListDisplay, Literal
 from lyra.abstract_domains.state import State
 from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, \
-    ListDisplayAccess, SubscriptionAccess, SlicingAccess
-
+    ListDisplayAccess, SubscriptionAccess, SlicingAccess, Raise
+from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, ListLyraType
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -90,7 +90,7 @@ class ExpressionSemantics(Semantics):
         items = [self.semantics(item, state).result for item in stmt.items]
         result = set()
         for combination in itertools.product(*items):
-            display = ListDisplay(combination[0], list(combination))
+            display = ListDisplay(ListLyraType(combination[0].typ), list(combination))
             result.add(display)
         state.result = result
         return state
@@ -149,7 +149,7 @@ class CallSemantics(Semantics):
 class BuiltInCallSemantics(CallSemantics):
     """Semantics of built-in function/method calls."""
 
-    def _cast_call_semantics(self, stmt: Call, state: State) -> State:
+    def _cast_call_semantics(self, stmt: Call, state: State, typ: LyraType) -> State:
         """Semantics of a call to 'int' or 'bool'.
 
         :param stmt: call to 'int' or 'bool' to be executed
@@ -163,11 +163,13 @@ class BuiltInCallSemantics(CallSemantics):
         result = set()
         for expression in argument:
             if isinstance(expression, Input):
-                result.add(Input(stmt.typ))
+                result.add(Input(typ))
             elif isinstance(expression, Literal):
-                result.add(Literal(stmt.typ, expression.val))
+                result.add(Literal(typ, expression.val))
             elif isinstance(expression, VariableIdentifier):
-                result.add(VariableIdentifier(stmt.typ, expression.name))
+                result.add(VariableIdentifier(typ, expression.name))
+            elif isinstance(expression, Subscription):
+                pass  # TODO
             else:
                 error = f"Argument of type {expression.typ} of {stmt.name} is not yet supported!"
                 raise NotImplementedError(error)
@@ -181,7 +183,7 @@ class BuiltInCallSemantics(CallSemantics):
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        return self._cast_call_semantics(stmt, state)
+        return self._cast_call_semantics(stmt, state, BooleanLyraType())
 
     def int_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'int'.
@@ -190,7 +192,7 @@ class BuiltInCallSemantics(CallSemantics):
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        return self._cast_call_semantics(stmt, state)
+        return self._cast_call_semantics(stmt, state, IntegerLyraType())
 
     def float_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'float'.
@@ -199,7 +201,7 @@ class BuiltInCallSemantics(CallSemantics):
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        return self._cast_call_semantics(stmt, state)
+        return self._cast_call_semantics(stmt, state, FloatLyraType())
 
     # noinspection PyMethodMayBeStatic
     def input_call_semantics(self, stmt: Call, state: State) -> State:
@@ -240,6 +242,33 @@ class BuiltInCallSemantics(CallSemantics):
             raise NotImplementedError(error)
         argument = self.semantics(stmt.arguments[0], state).result
         return state.output(argument)
+
+    def range_call_semantics(self, stmt: Call, state: State) -> State:
+        arguments = [self.semantics(arg, state).result.pop() for arg in stmt.arguments]
+        start = Literal(IntegerLyraType(), "0")
+        step = Literal(IntegerLyraType(), "1")
+        if len(arguments) == 1:
+            end = arguments[0]
+        elif len(arguments) in [2, 3]:
+            start = arguments[0]
+            end = arguments[1]
+            if len(arguments) == 3:
+                step = arguments[2]
+        else:
+            error = f"Semantics for range call with {len(arguments)} arguments is not implemented!"
+            raise NotImplementedError(error)
+        state.result = {Range(stmt.typ, start, end, step)}
+        return state
+
+    def raise_semantics(self, stmt: Raise, state: State) -> State:
+        """Semantics of raising an Error.
+
+        :param stmt: raise statement to be executed
+        :param state: state before executing the raise Error
+        :return: state modified by the raise
+        """
+
+        return state.raise_error()
 
     def _unary_operation(self, stmt: Call, operator: UnaryOperation.Operator, state: State):
         """Semantics of a call to a unary operation.
