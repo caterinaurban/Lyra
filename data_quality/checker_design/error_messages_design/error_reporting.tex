@@ -51,6 +51,38 @@
 
 \pagenumbering{arabic}
 
+\section{Message Design}
+
+\begin{itemize}
+    \item Missing
+    \begin{itemize}
+        \item Missing value\\
+        expected: at least Y values\\
+        found: Z
+        \item Missing value in line X\\
+        expected: Y values separated by ","\\
+        found: Z
+    \end{itemize}
+    \item Type
+    \begin{itemize}
+        \item Type Error in line X\\
+        expected: type Y\\
+        found: type Z
+    \end{itemize}
+    \item Range
+    \begin{itemize}
+        \item Range Error in line X\\
+        expected: [Y, Z]\\
+        found: V
+    \end{itemize}
+    \item Relation
+    \begin{itemize}
+        \item Relation Error\\
+        expected: value in line A $\leq$ number of values in line B + C\\
+        found: M $\leq$ N + P
+    \end{itemize}
+\end{itemize}
+
 \section{Error Checking Algorithm}
 
 \begin{enumerate}

@@ -1,0 +1,126 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, portrait, margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float}
+\usepackage[font={small,it}]{caption}
+
+\usepackage{fancyhdr}
+%\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\newcommand{\bigcell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ 
+\lstdefinelanguage{Python2}{
+  language     = Python,
+  morekeywords = {assert},
+}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{white},   
+    commentstyle=\color{ForestGreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{black},
+    stringstyle=\color{red},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle, language=Python2}
+
+\begin{document}
+
+\title{Evaluation}
+
+\maketitle
+
+\pagenumbering{arabic}
+
+\section{Evaluation Kinds}
+
+\subsection{Evaluation of Analyzer}
+
+\begin{enumerate}
+    \item Choose example programs
+    \item Evaluate strongest assumption by hand
+    \item Show assumption found by analysis
+    \item Compare
+\end{enumerate}
+
+\begin{itemize}
+  \item \textit{What is the goal of the evaluation?} To show how powerful the analysis is. Show what the analysis is able to do and what not.
+  \item \textit{What do you want to be able to decide after the evaluation?} If it makes sense to further investigate this idea of analysis.
+  \item \textit{What is the audience of the evaluation?} Developers that want to use or improve the idea.
+  \item \textit{What kind of information is needed to make a conclusion?} What the analysis can and cannot do.
+  \item \textit{From what sources will the programs be collected?} Online sources
+\end{itemize}
+
+\subsection{Evaluation of Input Checker}
+
+\subsubsection{User Study}
+
+\begin{itemize}
+    \item print Questionnaire Before, Scenario1+2, Task Explanation1+2, Questionnaire1+2
+    \item bring mouse
+    \item bring additional laptop to continue working on thesis
+\end{itemize}
+
+
+\begin{enumerate}
+    \item Choose example programs, introduce errors in their input data
+    \item Explain people what program does (what are inputs, what will be the output), introduce them to the scenario (want to run a program, have some input data, don't know the format of the input data)
+    \item First without tool:
+    \begin{enumerate}
+        \item should try to correct input value by looking at error message
+        \item Ask questions would they would like so that it is easiert (without user seeing our solution, what kind of solution would they expect?)
+    \end{enumerate}
+    \item With the tool:
+    \begin{enumerate}
+        \item should try to correct input value by using the tool
+        \item Ask questions if they think the tool helps to fix the inputs. Ask what they think is good and what they would improve.
+    \end{enumerate}
+\end{enumerate}
+
+Possible Questions:
+\begin{itemize}
+    \item Without tool: Want to show the need of a tool and the expectations people have for such a tool.
+    \begin{itemize}
+        \item What makes it difficult for you to correct the errors in the input data?
+        \item What would make it easier for you to be able to find and fix errors in the input value?
+        \item What kind of tool would you expect that helps you find the errors in the input data?
+    \end{itemize}
+    \item With tool: Want to show that our approach is a useful solution, want to know what improvements could be made.
+    \begin{itemize}
+        \item Do you think the tool is useful for fixing errors in the input data?
+        \item Does the tool meet your expectations of a tool that should help you find and fix errors in the input data?
+        \item What would you improve so that it is easier for you to reach your goal?
+    \end{itemize}
+\end{itemize}
+
+\begin{itemize}
+  \item \textit{What is the goal of the evaluation?} To show the reader how useful the tool is. Show that the tool has advantages over trying to solve problem without the tool.
+  \item \textit{What do you want to be able to decide after the evaluation?} If the tool is useful and if it makes sense to further investigate this idea or to use this tool.
+  \item \textit{What is the audience of the evaluation?} Developers (might want to follow up on this idea if it's useful) and users (might want to invest in this tool).
+  \item \textit{What kind of information is needed to make a conclusion?} Comments from people that use the tool.
+  \item \textit{From what sources will the programs be collected?} Online sources
+\end{itemize}
+
+
+
+\end{document}
+
