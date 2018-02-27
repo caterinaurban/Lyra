@@ -1,3 +1,5 @@
+# Analysis finds: (int, _T x [int, str])
+
 _T: int = int(input())  # inlined a method call
 for _t in range(_T):
     N_str: str = input()  # instead of N, S = input().split(), renamed N to N_str

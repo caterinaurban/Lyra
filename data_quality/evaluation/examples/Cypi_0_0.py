@@ -1,4 +1,7 @@
-# Analysis finds: (int, _T x [int, str])
+# Problem A. Standing Ovation
+# Analysis finds: [int, _T x [int, str]]
+# Manually: [int, _T x [int, str with at least N chars]]
+
 
 _T: int = int(input())  # inlined a method call
 for _t in range(_T):
@@ -12,7 +15,7 @@ for _t in range(_T):
         if i > cur:
             res: float = res + (i - cur)  # rewritten +=
             cur: float = i
-        cur: float = cur + int(S[i])  # rewritten +=
+        cur: int = cur + int(S[i])  # rewritten +=
     print('Case #')  # print without multiple arguments and modulo
     print(_t + 1)
     print(':')
