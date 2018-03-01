@@ -40,6 +40,6 @@ for i in range(len(student_names)):
     print(student_names[i])
     print("Homework average:")
     print(hw_avgs[i])
-    print("Test grade:")
+    print("Final grade:")
     print(test_grades[i])
     print("")
