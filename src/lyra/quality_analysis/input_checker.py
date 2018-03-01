@@ -182,7 +182,7 @@ class ErrorInformation:
         if type_assmp == TypeLattice().integer():
             return "integer"
         if type_assmp == TypeLattice().real():
-            return "float"
+            return "decimal"
         if type_assmp == TypeLattice().top():
             return "string"
 
@@ -444,8 +444,11 @@ class InputChecker:
         :param errors: current errors
         :param input_line: current input
         """
-        if len(errors) > 0 and errors[-1].infos1.next_line is None:
-            errors[-1].infos1.next_line = input_line
+        if len(errors) > 0:
+            if errors[-1].infos1.next_line is None:
+                errors[-1].infos1.next_line = input_line
+            if errors[-1].infos2 is not None and errors[-1].infos2.next_line is None:
+                errors[-1].infos2.next_line = input_line
         lines = [(i, v) for i, v in self.inputs.items() if v is not None and v.next_line is None]
         for input_id, input_val in lines:
             self.inputs[input_id].next_line = input_line
@@ -530,14 +533,10 @@ class InputChecker:
                     val = self.check_non_relational_assmps(value, assmps, error)
                     if isinstance(val, ErrorInformation.ErrorLevel):
                         return error
-                error.is_first_val = False
-                return None
-            if isinstance(input_info.assmp.var_id, CheckerZeroIdentifier):
-                error.is_first_val = False
-                return None
-            val = self.check_non_relational_assmps(input_info.eval_value, input_info.assmp, error)
-            if isinstance(val, ErrorInformation.ErrorLevel):
-                return error
+            elif not isinstance(input_info.assmp.var_id, CheckerZeroIdentifier):
+                val = self.check_non_relational_assmps(input_info.eval_value, input_info.assmp, error)
+                if isinstance(val, ErrorInformation.ErrorLevel):
+                    return error
             error.is_first_val = False
 
         rel_input_info = error.infos2

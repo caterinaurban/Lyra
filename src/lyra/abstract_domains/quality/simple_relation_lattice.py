@@ -7,7 +7,18 @@ from lyra.core.utils import copy_docstring
 
 
 class SimpleRelation:
-    """Stores a relational constraint."""
+    """
+    Stores a relational constraint of the form
+    +/- FIRST +/- SECOND + CONSTANT
+
+    The elements of a SimpleRelation are:
+
+    first_pos: if the first variable is positive
+    first: name of the first variable
+    constant: constant value
+    second_pos: if the second variable is positive
+    second: name of the second variable
+    """
 
     def __init__(self, first_pos, first, constant, second_pos, second):
         self.first_pos = first_pos
@@ -177,8 +188,6 @@ class SimpleRelationsLattice(BottomMixin):
 
     @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'SimpleRelationsLattice') -> bool:
-        if len(self.relations) != len(other.relations):
-            return len(self.relations) < len(other.relations)
         for relation in self.relations:
             if relation not in other.relations:
                 return False

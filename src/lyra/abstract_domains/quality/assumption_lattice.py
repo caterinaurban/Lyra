@@ -324,11 +324,12 @@ class InputAssumptionLattice(BoundedLattice):
 
 class MultiInputAssumptionLattice(BoundedLattice):
     """
-    The Input Assumption Lattice consists of two elements:
+    The Input Assumption Lattice consists of the following elements:
     iterations: for how many values the assumption holds
     assmps: the assumptions that hold
+    delimiter: the delimiter that is used if the assumptions occur on the same line
 
-    The default element is (1, [])
+    The default element is (1, [], None)
 
     .. document private methods
     .. automethod:: MultiInputAssumptionLattice._less_equal
@@ -358,7 +359,7 @@ class MultiInputAssumptionLattice(BoundedLattice):
         if self.is_top():
             return "T"
         delimiter = f" with delimiter \'{self.delimiter}\'" if self.delimiter is not None else ""
-        if self.iterations == SimpleExpression(const=1):
+        if self.iterations is not None and self.iterations == SimpleExpression(const=1):
             return f"{self.assmps}"
         return f"{self.iterations.__repr__()} x {self.assmps}{delimiter}"
 
@@ -439,29 +440,33 @@ class MultiInputAssumptionLattice(BoundedLattice):
                 self._assmps = deepcopy(other.assmps[:1]) + self.assmps
                 return self
         if len(self.assmps) != len(other.assmps) and not self.is_main:
-            self.assmps.clear()
-            self.infoloss = True
+            self.reset_because_infoloss()
             return self
         if self.is_main:
             self.join_cases(other)
         else:
             new_assmps = []
+            if self.iterations != other.iterations:
+                self.reset_because_infoloss()
+                return self
             for assmp1, assmp2 in zip(self.assmps, other.assmps):
                 if type(assmp1) != type(assmp2) or assmp1.infoloss or assmp2.infoloss:
-                    self.assmps.clear()
-                    if not self.is_main:
-                        self.infoloss = True
+                    self.reset_because_infoloss()
                     return self
                 else:
-                    new_assmps.append(deepcopy(assmp1).join(assmp2))
-                    if assmp1.infoloss:
-                        self.assmps.clear()
-                        if not self.is_main:
-                            self.infoloss = True
-                        return self
-
+                    copy_assmp1 = deepcopy(assmp1)
+                    new_assmps.append(copy_assmp1.join(assmp2))
+                    if copy_assmp1.infoloss:
+                        self.reset_because_infoloss()
             self._assmps = new_assmps
         return self
+
+    def reset_because_infoloss(self):
+        """Resets the current object because of an infoloss."""
+        self.assmps.clear()
+        self.infoloss = True
+        self.delimiter = None
+        self.iterations = SimpleExpression(const=0)
 
     def join_cases(self, other: 'MultiInputAssumptionLattice'):
         """Joins two MultiInputAssumptionLattice. It unrolls assumptions in loops if necessary.
@@ -490,6 +495,8 @@ class MultiInputAssumptionLattice(BoundedLattice):
             elif not self_assmp_lattice and not other_assmp_lattice:
                 assert isinstance(curr_self, MultiInputAssumptionLattice)
                 assert isinstance(curr_other, MultiInputAssumptionLattice)
+                if curr_self.delimiter != curr_other.delimiter:
+                    break
                 if curr_self.iterations == curr_other.iterations:
                     for assmp1, assmp2 in zip(curr_self.assmps, curr_other.assmps):
                         assmp1.join(assmp2)
