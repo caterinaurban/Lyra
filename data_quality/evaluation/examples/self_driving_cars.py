@@ -1,7 +1,3 @@
-# Problem A. Steed 2: Cruise Control
-# analysis finds cases x [int, int, int, n x [int, int]]
-# Manually: same
-
 cases: int = int(input())
 for cc in range(cases):
     distance: float = float(input())
