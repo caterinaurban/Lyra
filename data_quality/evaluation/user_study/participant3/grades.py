@@ -1,10 +1,6 @@
 from typing import List
 
-import sys
-
 from data_quality.examples.homeworks.cis192.tadas412 import InvalidFormatException
-
-sys.stdin = open('grades.in', 'r')
 
 student_names: List[str] = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
                             "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
@@ -37,7 +33,7 @@ for i in range(100):
     test_grade: int = int(input())
     student_names[i]: str = student_name
     hw_avgs[i]: float = hw_sum / len(hw_grades)
-    test_grades[i]: int = (test_grade + hw_avgs[i]) / 2
+    test_grades[i]: int = test_grade
 
 for i in range(len(student_names)):
     print("Student name:")
