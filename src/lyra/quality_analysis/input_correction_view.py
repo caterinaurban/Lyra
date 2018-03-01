@@ -6,6 +6,9 @@ from copy import deepcopy
 import re
 from tkinter import messagebox
 
+import time
+from tkinter.scrolledtext import ScrolledText
+
 from lyra.quality_analysis.input_assmp_simplification import CheckerZeroIdentifier
 from lyra.quality_analysis.input_checker import ErrorInformation, InputInfo, InputLocation
 
@@ -17,10 +20,17 @@ class InputCorrection(tk.Tk):
         container = tk.Frame(self)
         container.pack()
         self.geometry('%dx%d+%d+%d' % (800, 600, 300, 100))
+        self.winfo_toplevel().title("Input Checker")
 
-        input_files_view = InputCorrectionFiles(container, controller)
-        input_files_view.grid(row=0, column=0, sticky="nsew")
-        input_files_view.tkraise()
+        #TODO: change back
+        program_name = "checker_example"
+        input_file = "checker_example.in"
+        main_page = InputCorrectionMain(container, controller, program_name, input_file)
+        main_page.grid(row=0, column=0, sticky="nsew")
+        main_page.tkraise()
+        #input_files_view = InputCorrectionFiles(container, controller)
+        #input_files_view.grid(row=0, column=0, sticky="nsew")
+        #input_files_view.tkraise()
 
 
 class InputCorrectionFiles(tk.Frame):
@@ -30,25 +40,30 @@ class InputCorrectionFiles(tk.Frame):
         self.controller = controller
         self.container = container
 
-        label_program = tk.Label(self, text="Program")
-        label_program.grid(row=0, column=0, pady=6)
-        self.container.entry_program = tk.Entry(self)
-        self.container.entry_program.grid(row=0, column=1)
-        self.container.entry_program.insert(0, "checker_example")
-
-        label_input = tk.Label(self, text="Input File")
-        label_input.grid(row=1, column=0, pady=6)
-        self.container.entry_input = tk.Entry(self)
-        self.container.entry_input.grid(row=1, column=1)
-        self.container.entry_input.insert(0, "checker_example.in")
-
-        run_button = tk.Button(self, text='Run', command=self.show_main_screen)
-        run_button.grid(row=3, column=0, pady=10)
+        #TODO: change back
+        #label_program = tk.Label(self, text="Program")
+        #label_program.grid(row=0, column=0, pady=6)
+        #self.container.entry_program = tk.Entry(self)
+        #self.container.entry_program.grid(row=0, column=1)
+        #self.container.entry_program.insert(0, "checker_example")
+#
+        #label_input = tk.Label(self, text="Input File")
+        #label_input.grid(row=1, column=0, pady=6)
+        #self.container.entry_input = tk.Entry(self)
+        #self.container.entry_input.grid(row=1, column=1)
+        #self.container.entry_input.insert(0, "checker_example.in")
+#
+        #run_button = tk.Button(self, text='Run', command=self.show_main_screen)
+        #run_button.grid(row=3, column=0, pady=10)
+        self.show_main_screen()
 
     def show_main_screen(self):
         """Shows the main screen of the application."""
-        program_name = self.container.entry_program.get()
-        input_file = self.container.entry_input.get()
+        # TODO: change back
+        #program_name = self.container.entry_program.get()
+        #input_file = self.container.entry_input.get()
+        program_name = "checker_example"
+        input_file = "checker_example.in"
         main_page = InputCorrectionMain(self.container, self.controller, program_name, input_file)
         main_page.grid(row=0, column=0, sticky="nsew")
         main_page.tkraise()
@@ -73,21 +88,21 @@ class InputCorrectionMain(tk.Frame):
                                     highlightthickness=2, highlightbackground="Black")
         self.error_frame.grid(row=0, pady=10)
         self.error_frame.grid_propagate(0)
-        values_frame = tk.Frame(self, width=700, height=800)
-        values_frame.grid(row=1, column=0)
-        values_frame.grid_propagate(0)
-        self.old_val_frame = tk.Frame(values_frame, width=300, height=310,
+        self.values_frame = tk.Frame(self, width=700, height=800)
+        self.values_frame.grid(row=1, column=0)
+        self.values_frame.grid_propagate(0)
+        self.old_val_frame = tk.Frame(self.values_frame, width=300, height=310,
                                       highlightthickness=2, highlightbackground="Black")
         self.old_val_frame.grid(row=0, column=0)
         self.old_val_frame.grid_propagate(0)
-        values_new_frame = tk.Frame(values_frame, width=400, height=310)
-        values_new_frame.grid(row=0, column=1)
-        values_new_frame.grid_propagate(0)
-        self.new_val_frame1 = tk.Frame(values_new_frame, width=390, height=150,
+        self.values_new_frame = tk.Frame(self.values_frame, width=400, height=310)
+        self.values_new_frame.grid(row=0, column=1)
+        self.values_new_frame.grid_propagate(0)
+        self.new_val_frame1 = tk.Frame(self.values_new_frame, width=390, height=150,
                                        highlightthickness=2, highlightbackground="Black")
         self.new_val_frame1.grid(row=0, column=0, padx=(10, 0))
         self.new_val_frame1.grid_propagate(0)
-        self.new_val_frame2 = tk.Frame(values_new_frame, width=390, height=150,
+        self.new_val_frame2 = tk.Frame(self.values_new_frame, width=390, height=150,
                                        highlightthickness=2, highlightbackground="Black")
         self.new_val_frame2.grid(row=1, column=0, padx=(10, 0), pady=(10, 0))
         self.new_val_frame2.grid_propagate(0)
@@ -117,18 +132,18 @@ class InputCorrectionMain(tk.Frame):
         self.error_icon.photo = error_icon
         self.error_icon.grid(row=1, column=0, sticky=tk.W, padx=10)
 
-        self.label_error = tk.Text(self.error_frame, height=3, width=70, wrap="none")
+        self.label_error = tk.Text(self.error_frame, height=3, width=75, wrap="none")
         self.label_error.configure(bg=self.error_frame.cget('bg'), relief=tk.FLAT)
         self.label_error.tag_config("normal", font="TkDefaultFont")
         self.label_error.tag_config("color_red", font="TkDefaultFont", foreground="red")
         self.label_error.tag_config("color_blue", font="TkDefaultFont", foreground="blue")
-        self.label_error.grid(row=1, column=0, padx=40, sticky=tk.W)
+        self.label_error.grid(row=1, column=0, padx=(40, 0), sticky=tk.W)
 
         self.label_progress = tk.Label(self.error_frame, borderwidth=2, relief="raised")
         self.label_progress.grid(row=1, column=1, ipady=3, ipadx=3, padx=40, sticky=tk.E)
 
-        label_old = tk.Label(self.old_val_frame, text="Old value:")
-        label_old.grid(row=0, column=1)
+        label_old = tk.Label(self.old_val_frame, text="Current values:")
+        label_old.grid(row=0, column=1, sticky=tk.W)
 
         self.label_new_val = tk.Text(self.new_val_frame1, height=1, width=30, wrap="none")
         self.label_new_val.configure(bg=self.new_val_frame1.cget('bg'), relief=tk.FLAT)
@@ -147,9 +162,10 @@ class InputCorrectionMain(tk.Frame):
         self.label_assmp = tk.Label(self.new_val_frame1, text="")
         self.label_assmp.grid(row=1, column=1, sticky=tk.W)
 
-        show_input_button = tk.Button(values_frame, text="Open input file",
-                                      command=self.open_input_file)
-        show_input_button.grid(row=2, column=0, sticky=tk.W, pady=20)
+        # TODO: show again
+        #show_input_button = tk.Button(self.values_frame, text="Open input file",
+        #                              command=self.open_input_file)
+        #show_input_button.grid(row=2, column=0, sticky=tk.W, pady=20)
 
         self.new_val_var2 = None
         self.entry_new_val2 = None
@@ -170,6 +186,10 @@ class InputCorrectionMain(tk.Frame):
         """
         if not isinstance(self.errors[self.error_index], ErrorInformation) or action != "1":
             return True
+        if new_value.startswith("-"):
+            new_value = new_value[1:]
+            if new_value == "":
+                return True
         if widget_name == f"{self.entry_new_val}":
             is_correct_type = self.errors[self.error_index].infos1.check_type(new_value)
             if not is_correct_type:
@@ -217,11 +237,16 @@ class InputCorrectionMain(tk.Frame):
                 self.entry_new_val.config(state="normal")
                 self.entry_new_val.focus()
         else:
+            self.values_new_frame.grid_forget()
             self.old_val_frame.grid_forget()
-            self.new_val_frame1.grid_forget()
-            self.new_val_frame2.grid_forget()
             self.label_progress.grid_forget()
             self.error_icon.grid_forget()
+
+            self.label_error = ScrolledText(self.error_frame, height=3, width=75, wrap="none")
+            self.label_error.configure(bg=self.error_frame.cget('bg'), relief=tk.FLAT)
+            self.label_error.tag_config("normal", font="TkDefaultFont")
+            self.label_error.grid(row=1, column=0, padx=(40, 0), sticky=tk.W)
+
             self.label_error.config(state="normal", height=20, width=100)
             self.label_error.delete(1.0, tk.END)
             output = self.errors[0] if len(self.errors) > 0 else ""
@@ -270,10 +295,10 @@ class InputCorrectionMain(tk.Frame):
                 continue
             self.create_old_val_line(i+1, curr_val[0], curr_val[1], i == max_line)
         if max_line == 5:
-            label_empty_line = tk.Label(self.old_val_frame, text="...")
-            label_empty_line.grid(row=4, column=0)
-            label_empty_old_val = tk.Label(self.old_val_frame, text="")
-            label_empty_old_val.grid(row=4, column=1)
+            label_empty_line = tk.Label(self.old_val_frame, text="...", anchor=tk.W)
+            label_empty_line.grid(row=4, column=0, sticky=tk.W, padx=(10, 0))
+            label_empty_old_val = tk.Label(self.old_val_frame, text="", anchor=tk.W)
+            label_empty_old_val.grid(row=4, column=1, sticky=tk.W)
             self.old_val_lines += [label_empty_line, label_empty_old_val]
         if self.entry_new_val2 is not None:
             self.entry_new_val2.grid_forget()
@@ -303,11 +328,14 @@ class InputCorrectionMain(tk.Frame):
         :param is_other: if this label is for the second value
         """
         location_label = f"{location}" if location.user_line != 0 else ""
-        label_line = tk.Label(self.old_val_frame, text=location_label)
-        label_line.grid(row=row, column=0)
+        label_line = tk.Label(self.old_val_frame, text=location_label, anchor=tk.W)
+        label_line.grid(row=row, column=0, sticky=tk.W, padx=(10, 0))
         value = "" if value is None else value
-        label_old_val = tk.Label(self.old_val_frame, text=f"{value}")
-        label_old_val.grid(row=row, column=2, sticky=tk.E)
+        text = f"{value}"
+        if len(text) > 20:
+            text = f"{text[:17]}..."
+        label_old_val = tk.Label(self.old_val_frame, text=text, width=20, anchor=tk.W)
+        label_old_val.grid(row=row, column=1, sticky=tk.W)
         self.old_val_lines += [label_line, label_old_val]
 
         first_is_error = self.errors[self.error_index].is_first_val
@@ -339,6 +367,7 @@ class InputCorrectionMain(tk.Frame):
         self.new_val_var.set("")
         if error.error_level != ErrorInformation.ErrorLevel.Type:
             self.new_val_var.set(error.infos1.orig_value)
+            self.entry_new_val.icursor(tk.END)
         self.label_assmp.config(text=error.create_info_msg(True), fg="black")
 
         self.label_error.config(state="normal")
@@ -346,7 +375,11 @@ class InputCorrectionMain(tk.Frame):
         self.label_error.insert(tk.END, error.error_message, "normal")
         self.color_locations(error.error_message)
         self.label_error.config(state="disabled")
-        self.label_progress.config(text=f"{self.error_index+1}/{len(self.errors)}")
+        if error.error_level == ErrorInformation.ErrorLevel.Missing:
+            num_errors = len([1 for e in self.errors if e.error_level == error.error_level])
+        else:
+            num_errors = len(self.errors)
+        self.label_progress.config(text=f"{self.error_index+1}/{num_errors}")
 
     def color_locations(self, text: str):
         """Adds colors to the input line references in the text of the error message
@@ -401,6 +434,7 @@ class InputCorrectionMain(tk.Frame):
 
             if error.error_level != ErrorInformation.ErrorLevel.Type:
                 self.new_val_var2.set(error.infos2.orig_value)
+                self.entry_new_val2.icursor(tk.END)
             if error.is_first_val:
                 state = "normal"
                 state2 = "readonly"
@@ -461,7 +495,7 @@ class InputCorrectionMain(tk.Frame):
             self.errors[self.error_index].infos2.change_orig_value(rel_val)
         new_errors = self.controller.check_corrected_input(self.errors[self.error_index])
         num_new_errors = len(new_errors) - len(self.errors) + 1
-        if num_new_errors > 100:
+        if num_new_errors > 20:
             message = f"This value creates {num_new_errors} new errors.\n" \
                       f"Do you want to proceed?"
             proceed = messagebox.askokcancel("Python", message)
@@ -489,6 +523,9 @@ class InputCorrectionMain(tk.Frame):
     def open_input_file(self):
         """Opens an input file for editing and rechecks the assumptions when returning"""
         subprocess.call(f"kate example/{self.input_filename}", shell=True)
+        time.sleep(4)
         self.errors = self.controller.run_checker()
+        if len(self.errors) == 0:
+            self.errors = self.controller.execute_input_program()
         self.error_index = 0
         self.show_error()
