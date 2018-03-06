@@ -359,7 +359,8 @@ class MultiInputAssumptionLattice(BoundedLattice):
         if self.is_top():
             return "T"
         delimiter = f" with delimiter \'{self.delimiter}\'" if self.delimiter is not None else ""
-        if self.iterations is not None and self.iterations == SimpleExpression(const=1):
+        iteration_is_one = self.iterations is not None and self.iterations == SimpleExpression(const=1)
+        if self.is_main and iteration_is_one:
             return f"{self.assmps}"
         return f"{self.iterations.__repr__()} x {self.assmps}{delimiter}"
 
@@ -401,7 +402,7 @@ class MultiInputAssumptionLattice(BoundedLattice):
             return True
         if self.infoloss or other.infoloss:
             return False
-        if self.iterations != other.iterations:
+        if self.iterations != other.iterations or self.delimiter != other.delimiter:
             return False
         if isinstance(self.assmps, list) and isinstance(other.assmps, list):
             if len(self.assmps) == len(other.assmps):
@@ -432,18 +433,21 @@ class MultiInputAssumptionLattice(BoundedLattice):
             self_input_pp = int(self.assmps[0].input_id.name.split("=")[1])
             other_input_pp = int(other.assmps[0].input_id.name.split("=")[1])
             if self_input_pp == other_input_pp:
-                return self
+                if len(self.assmps) > len(other.assmps):
+                    return self
+                else:
+                    return self.replace(other)
             elif self_input_pp < other_input_pp:
                 self._assmps = self.assmps[:1] + other.assmps
                 return self
             else:
                 self._assmps = deepcopy(other.assmps[:1]) + self.assmps
                 return self
-        if len(self.assmps) != len(other.assmps) and not self.is_main:
-            self.reset_because_infoloss()
-            return self
         if self.is_main:
             self.join_cases(other)
+        elif len(self.assmps) != len(other.assmps) or self.delimiter != other.delimiter:
+            self.reset_because_infoloss()
+            return self
         else:
             new_assmps = []
             if self.iterations != other.iterations:

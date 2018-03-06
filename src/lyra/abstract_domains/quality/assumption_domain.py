@@ -129,6 +129,9 @@ class AssumptionState(Store, State):
         self.store[self.relationship_var] = SimpleRelationsLattice()
         for var in [v for v in variables if v.typ == BooleanLyraType()]:
             self.store[var].range_assumption.meet(IntervalLattice(0, 1))
+        for var in [v for v in variables if isinstance(v, LengthIdentifier)]:
+            self.store[var].type_assumption.meet(TypeLattice().integer())
+            self.store[var].range_assumption.meet(IntervalLattice(0))
         self.new_input = None
 
     @copy_docstring(State._assign)
@@ -198,6 +201,12 @@ class AssumptionState(Store, State):
             interval_store = self.substitute_range_info(left, right)
             self.store[left].top()
             self._refinement.visit(right, left_assumption, self)
+            if LengthIdentifier(left) in self.store and isinstance(right, VariableIdentifier):
+                len_id_left = LengthIdentifier(left)
+                left_assumption = deepcopy(self.store[len_id_left])
+                self.store[len_id_left].top()
+                len_id_right = LengthIdentifier(right)
+                self._refinement.visit(len_id_right, left_assumption, self)
             if interval_store is not None:
                 self.apply_range_info_to_assmps(interval_store)
             if self.new_input is not None:
@@ -212,6 +221,7 @@ class AssumptionState(Store, State):
                     iters = SimpleExpression(const=max(0, len_assmp))
                     assmps = [input_assmp]
                     input_assmp = MultiInputAssumptionLattice(iters, assmps, self.pp, delimiter)
+                    self.store[len_var].top()
                 self.stack_top.add_assumption_front(input_assmp)
                 self.substitute_relationships_in_input(left, input_id)
             else:
@@ -228,7 +238,7 @@ class AssumptionState(Store, State):
             self._refinement.visit(left, self.store[left.target], self)
             self._refinement.visit(right, self.store[left.target], self)
             return self
-        error = f'Substitution for {left} not yet implemented!'
+        error = f'Substitution for {left} = {right} not yet implemented!'
         raise NotImplementedError(error)
 
     def apply_range_info_to_assmps(self, ranges: dict):
@@ -358,6 +368,7 @@ class AssumptionState(Store, State):
             target = expr.target
             if isinstance(target, VariableIdentifier):
                 length_target = LengthIdentifier(target)
+                state.store[length_target].range_assumption.meet(IntervalLattice(1))
                 if isinstance(key, VariableIdentifier):
                     length_relation = SimpleRelation(True, key, 1, False, length_target)
                     state.relationships.add(length_relation)
@@ -445,6 +456,7 @@ class AssumptionState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
         def visit_LengthIdentifier(self, expr, assumption=None, state=None):
+            state.store[expr].meet(assumption)
             return state
 
     _refinement = AssumptionRefinement()
