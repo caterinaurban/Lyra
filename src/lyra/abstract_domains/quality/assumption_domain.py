@@ -218,6 +218,7 @@ class AssumptionState(Store, State):
                 if delimiter is not None:
                     len_var = LengthIdentifier(left)
                     len_assmp = self.store[len_var].range_assumption.lower
+                    len_assmp = len_assmp if len_assmp is not None else 0
                     iters = SimpleExpression(const=max(0, len_assmp))
                     assmps = [input_assmp]
                     input_assmp = MultiInputAssumptionLattice(iters, assmps, self.pp, delimiter)
