@@ -1,0 +1,289 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, portrait, margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float}
+\usepackage[font={small,it}]{caption}
+
+\usepackage{fancyhdr}
+%\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\newcommand{\bigcell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ 
+\lstdefinelanguage{Python2}{
+  language     = Python,
+  morekeywords = {assert},
+}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{white},   
+    commentstyle=\color{ForestGreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{black},
+    stringstyle=\color{red},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle, language=Python2}
+
+\begin{document}
+
+\title{Operations for Relationships}
+
+\maketitle
+
+\pagenumbering{arabic}
+
+\section{Operations with MultiInputAssumption}
+
+\subsection{MultiInputAssumption}
+
+MultiInputAssumption = N x [InputAssumption] (with delimiter D)
+\begin{itemize}
+  \item \textit{N} How many times the assumptions appear.
+  \item \textit{[InputAssumption]} A list of input assumptions.
+  \item \textit{(with delimiter D)} If the assumptions appear on the same line, what is the delimiter.
+\end{itemize}
+
+\subsection{InputAssumption}
+
+InputAssumption = (var, assumption, relation, inputinfo)
+\begin{itemize}
+  \item \textit{var} Variable name of the input.
+  \item \textit{assumption} AssumptionLattice of the input.
+  \item \textit{relation} Relational constraints for the input.
+  \item \textit{inputinfo} Where in the input collection are the related values.
+\end{itemize}
+
+Problem: How to deal with different variable names in if/else?\\
+The problem is, that after the if/else case we don't know what variable is the input and what variable can be later substituted. So if we join InputAssumptions with different variable names we have to invalidate all information about a and b:\\
+$[(a, (int), a > b, a:2)] \sqcup [(b, (int), a > b, b:4)] = [(None, (int), \_, {}]$\\
+
+\subsection{Join Cases}
+
+$[(a, (int), a > b, a{:}0)] \sqcup [(a, (float), a > b, a{:}0)] = [(a, (float), a > b, a{:}0)]$\\
+
+\begin{lstlisting}
+a = 2
+b = 3
+# [({a,b}, (int), _, {a,b}: 0)] (Invalidate all relations involving a and b together)
+if cond:
+  # [(a, _, a: 4), (c, a < c, c: 8, a: 4)]
+  a = int(input())
+else:
+  # [(b, _, b: 6), (c, a < c, c: 8, b: 6)]
+  b = int(input())
+# [(c, a < c, c: 8)]
+c = int(input())
+if a >= c:
+  raise ValueError
+\end{lstlisting}
+
+
+Goal: $[(a, \_, a: 4), (c, a < c, c: 8, a: 4)] \sqcup [(b, \_, b: 6), (c, a < c, c: 8, b: 6)]$
+
+\subsection{Join Loops}
+
+How to know what value/loop came before another?\\
+Solution: Keep information about pp. If the current pp is smaller than the other it must come before.\\
+Always push information about pp up to next MultiInputAssumption so that we only have to scan the highest layer for the current included assmps.\\
+$[(a, (int), a > b, a{:}0)] \sqcup [(a, (float), a > b, a{:}0)] = [(a, (float), a > b, a{:}0)]$\\
+$[(a, (int), a > d, a{:}0)] \sqcup [(b, (float), b > e, b{:}2)] = [(a, (float), a > d, a{:}0), (b, (float), b > e, b{:}2)]$\\
+
+
+\subsection{Examples}
+
+\begin{lstlisting}
+a = 0
+b = 0
+# [({a,b}, (int), _, {a,b}: 0)] (Invalidate all relations involving a and b together)
+if cond:
+  # [(a, (int), a <= b, a: 0)]
+  a = int(input())
+else:
+  # [(b, (int), a <= b, b: 0)]
+  b = int(input())
+if a > b:
+  raise ValueError
+\end{lstlisting}
+
+\begin{lstlisting}
+x = 0
+# [({a,b}, (int), x >= a, x >= b, {a,b}: 0)] (Invalidate all relations involving a and b together)
+if cond:
+  # [(a, (int), x >= a, a: 0)]
+  a: int = int(input())
+  x = a
+else:
+  # [(b, (int), x >= b, b: 0)]
+  b: int = int(input())
+  x = b
+if x < d:
+  raise ValueError
+\end{lstlisting}
+
+\begin{lstlisting}
+# final: [((int), _), .IN[2] x [(int), _), ((int), .IN[1] <= .IN[0])]]
+# [(N, (int), _, {N: 2}), N x [(a, (int), _, {a: 1}), (b, (int), a <= b, {b: 0, a: 1})]]
+N = int(input())
+# [N x [(a, (int), _, {a: 1}), (b, (int), a <= b, {b: 0, a: 1})]]
+for i in range(N):
+  # [(a, (int), _, {a: 1}), (b, (int), a <= b, {b: 0, a: 1})]
+  a = int(input())
+  # [(b, (int), a <= b, {b: 0})]
+  b = int(input())
+  if a > b:
+    raise ValueError
+\end{lstlisting}
+
+\begin{lstlisting}
+# final: [10 x [(.IN[1].len x [(int), _] with delimiter " "), ((int), .IN[0] < .IN[1].len)]]
+# [10 x [(a, (int), _, {a: 1}), (b, (int), b < len_a, {b: 0, a: 1})]]
+for i in range(10):
+  # [len_a x [(a, (int), _, {a: 1})] with delimiter " ", (b, (int), b < len_a, {b: 0, a: 1})]
+  a = map(int, input().split())
+  # [(b, (int), b < len_a, {b: 0})]
+  b = int(input())
+  # b < len_a
+  x = a[b]
+\end{lstlisting}
+
+\begin{lstlisting}
+# final: [((int), _), ((int), 0 < .IN[0].len, .IN[1] < .IN[0].len) x [((int), _)] with delimiter " "]]
+# [(N, (int), _, {N: 1}), (len_values, (int), 0 < len_values and N-1 < len_values, {len_values: 0, N: 1}) x [(values, (int), _, {values: 0, N: 1})] with delimiter " "]
+N = int(input())
+# [(len_values, (int), 0 < len_values and N-1 < len_values, {len_values: 0}) x [(values, (int), 0 < len_values and N-1 < len_values, {values: 0})]]
+values = map(int, input().split())
+# 0 < len_values and N - 1 < len_values
+# i >= 0, i < N
+for i in range(N):
+  # i < len_values
+  x = values[i]
+\end{lstlisting}
+
+\begin{lstlisting}
+a = 0
+i = 0
+# [(x, (int), _, {x: 0})]
+while i < 10:
+  # [(x, (int), x <= a - 2, {x: 0})]
+  a = a + 2
+  i = i + 1
+# [(x, (int), x <= a, {x: 0})]
+x = int(input())
+# x <= a
+if x > a:
+  raise ValueError
+\end{lstlisting}
+
+
+\section{Operations}
+
+\subsection{Initialization}
+
+
+\begin{itemize}
+  \item $variable \rightarrow (Any)$
+  \item $len_{somelist} \rightarrow (Int)$
+  \item $somelist \rightarrow len_{somelist} \times [(Any)]$
+  \item octagon with variables and list lengths and $len_{somelist} \geq 0$
+\end{itemize}
+
+\subsection{Substitute}
+
+Approach:
+\begin{enumerate}
+  \item Do the substitute in a separate octagon object.
+  \item Save assumption and octagon of left hand side.
+  \item Set the assumption and octagon information of the left hand side to TOP.
+  \item Visit expression on right hand side with knowledge that the whole expression has the assumption from above.
+  \item Meet the information from assumption and octagon.
+\end{enumerate}
+
+Question: What should be done first: Substitute in octagon or substitute in assumption?\\
+Substitute in octagon first: bad if a = input() because it would just reset information from a.\\
+Substitute in assumption first: if we do a = a + 1 we would lose information about a because we will get that information in octagon.\\
+Solution: Do both separately and join.
+
+\begin{itemize}
+  \item $a = a + 1$\\
+  octagon substitute with arithmetic
+  \item $a = b$\\
+  octagon substitute (propagate info from a to b)
+  \item $a = 2$\\
+  substitute all relations containing a (ex: $a < b$ gets $2 < b$, or $len_{vals} > a$ gets $len_{vals} > 2)$
+  \item $somelist = line.split(",")$\\ with $somelist \rightarrow len_{somelist} \times [(Int)]$ and $len_{somelist} > 3$
+  \begin{itemize}
+    \item substitute list info: $line \rightarrow len_{line} \times [(Int)]\ with\ delimiter\ ","$ 
+    \item reset info about $somelist$: $somelist \rightarrow len_{somelist} \times [(Any)]$
+    \item substitute info about $len_{somelist}$: $len_{line} > 3$
+    \item reset info about $len_{somelist}$: $len_{somelist} \geq -\infty$ and $len_{somelist} \leq \infty$
+  \end{itemize}
+  \item $somelist = otherlist$\\ with $len_{somelist} > 4$\\
+  substitute relations with $len_{somelist}$: $len_{otherlist} > 4$ and reset $somelist$
+\end{itemize}
+
+\subsection{Substitute with input}
+
+\begin{itemize}
+  \item $a = input()$\\ with $a < b$
+  \begin{itemize}
+    \item update input: $.IN \rightarrow [IN_1]$
+    \item substitute all relations containing a with new input variable (ex: $a < b$ gets $IN_1 < b$, or $len_{vals} > a)$ gets $len_{vals} > IN_1)$
+  \end{itemize}
+  \item $somelist = input()$\\ with $somelist \rightarrow len_{somelist} \times [(Int)]\ with\ delimiter\ ","$ and $len_{somelist} > 3$
+  \begin{itemize}
+    \item update input: $.IN \rightarrow [LEN_2 \times [(Int)]\ with\ delimiter\ ","]$
+    \item substitute octagon containing $len_{somelist}$: $LEN_2 > 3$
+  \end{itemize}
+\end{itemize}
+
+\subsection{Assume}
+
+\begin{itemize}
+  \item $for\ i\ in\ range(N)$ or $if a > b:$\\
+  We call assume for the octagon domain with ($i \geq 0$ and $i < N$) or ($a > b:$)
+  \item joining loop with else: $for\ i\ in\ range(N)$\\
+  We only know that this loop is entered if $N > 0$. We therefore have to keep around two octagon domains:\\
+  One with the assumptions of the inside of the loop with an annotation that they only hold if $N > 0$. One with the assumptions from the else branch with the annotation if $N \leq 0$.
+  \item joining if/else: $if a > b:$\\
+  Similar to loop. Keep two octagon domains
+\end{itemize}
+
+
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

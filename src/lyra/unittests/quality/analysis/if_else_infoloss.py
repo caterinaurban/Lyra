@@ -1,4 +1,4 @@
-# INITIAL i -> (Any, [-inf, inf]), a -> (Any, [-inf, inf]), b -> (Any, [-inf, inf]), c -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, inf]), (Int, [-inf, inf]), (Float, [-inf, inf])]
+# INITIAL [3:(Int, [-inf, inf]), 5:(Int, [-inf, inf]), 8:(Float, [-inf, inf])]
 i: int = 0
 a: int = int(input())
 if a > 10:
@@ -6,5 +6,5 @@ if a > 10:
 else:
     c: int = int(input())
     c: int = int(input())
-b: int = float(input())
+b: float = float(input())
 

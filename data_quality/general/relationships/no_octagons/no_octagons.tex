@@ -1,0 +1,267 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, portrait, margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float}
+\usepackage[font={small,it}]{caption}
+
+\usepackage{fancyhdr}
+%\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\newcommand{\bigcell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ 
+\lstdefinelanguage{Python2}{
+  language     = Python,
+  morekeywords = {assert},
+}
+ 
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{white},   
+    commentstyle=\color{ForestGreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{black},
+    stringstyle=\color{red},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle, language=Python2}
+
+\begin{document}
+
+\title{Relationships without octagons}
+
+\maketitle
+
+\pagenumbering{arabic}
+
+\section{General Design}
+
+We want information about:
+\begin{itemize}
+    \item Number of inputs (list of inputs)
+    \item Type of inputs (type assumption lattice)
+    \item Range of inputs
+    \item Relationship of inputs (separate list of relations)
+\end{itemize}
+
+\subsection{Separate relationship list?}
+
+We need assumptions for: type, range and relationship.\\
+Idea: All in one assumption object: $a \rightarrow (int), [3, 10], > b$\\
+Disadvantage: everytime b is involved in a statement the whole store has to be searched for relationships.\\
+Idea2: Keep all relations separated in a list. Only need to look through all relationships.\\
+Does this really solve the disadvantage? Because we still have to search the whole list.\\
+Idea3: To make it faster we could just have a map for every involved variable.\\
+
+\subsection{Separate interval state?}
+
+Idea1.1: A separate object of type IntervalState that includes all the range assumptions.\\
+Advantage: We keep the same IntervalState object and use it to gather knowledge about the range of values.\\
+Disadvantage: Need to include range information later in input assumption collection (move from interval state to range assumption that will be empty during analysis) So to be correct range info should only be included in InputAssumptionLattice (like relations) and not in AssumptionLattice). \\
+\\
+Idea1.2: Range assumptions in assumption lattice together with type.\\
+Advantage: Range info close to variable, don't need to keep a second IntervalState object around.\\
+Disadvantage: Have to create an IntervalState or at least an IntervalStore every time we want to pull information. If I already keep around an IntervalState object why not already have an IntervalStore?\\
+\\
+But in the end it is much nicer to have the assumptions close together and not everywhere (separate type, range and relationship)\\
+
+\section{Relationship Design}
+
+A relationship consists of one var, another var and a constant so that they are $\leq 0$. So $a > b + 10$ gets $b + 11 - a \leq 0$\\
+
+\subsection{Relationship object}
+
+In order to have the relationships in the Store we need a lattice object. We cannot just have a list of relationships in the store because we need to have implementations for join, meet etc.\\
+
+
+\section{Analysis Design}
+
+
+\begin{itemize}
+    \item If we encounter a type/range assumption we add it to the store.
+    \item If we encounter a relationship assumption we add it to the List of relations:\\
+    $a > b$ gets $(+, b, -1, -, a)$
+    \item If we encounter a substitution without input we remove all relationships using this variable.
+    \item If we encounter an input we move the relationships using the variable to substitue to the input assumption list:\\
+    $a = input()$ gets $InputAssumption((int), [3, 10], [(+, b, -1, -, a)])$
+\end{itemize}
+
+\subsection{SimpleObjects}
+
+\begin{itemize}
+    \item SimpleExpression: stores a simple expression of the form +/- VAR + CONSTANT
+    \item SimpleRelation: stores a simple relation of the form +/- VAR1 +/- VAR2 + CONSTANT
+    \item SimpleRelationsLattice: lattice to store a number of relations
+    \item SimpleAssumption: stores assumptions in a simple way for the JSON encoding
+\end{itemize}
+
+\subsection{Substitute with input}
+
+\begin{itemize}
+    \item State before:
+    \begin{itemize}
+        \item var name: VAR
+        \item Assumption: VAR $\rightarrow$ (Type1, Range1)
+        \item Relationship: [(rel1, (+, VAR, 10, +, other), rel3)]
+        \item Input: []
+    \end{itemize}
+    \item $VAR = input()$
+    \item State after:
+    \begin{itemize}
+        \item var name: VAR
+        \item Assumption: VAR $\rightarrow$ TOP
+        \item Relationship: [(rel1, rel3)]
+        \item Input: [(1, (Type1, Range1), (+, id:1, 10, +, other))]
+    \end{itemize}
+\end{itemize}
+
+
+Tasks:
+\begin{itemize}
+    \item substitute type of variabe:\\
+    $(float, [-\infty, \infty]) \rightarrow (int, [-\infty, \infty])$\\
+    $\rightarrow$ by visiting in assumption state
+    \item substitute range of variable:\\
+    $(int, [5, 10]) \rightarrow (int, [4, 9])$\\
+    $\rightarrow$ by pulling info from IntervalState: check if variables are ok for IntervalState, simultaneously gather range information about variables used, get info from IntervalState, put info into assumptions of variables
+    \item substitute variable in relations with expression:\\
+    $[(a < b)] \rightarrow [(a + 1 < b)]$\\
+    $\rightarrow$ by iterating through list and check for same var as left hand side
+    \item add a new input:\\
+    $[] \rightarrow [(1, (int, [-5, 20]), (+, id{:}1, 10, +, b))]$\\
+    $\rightarrow$ by adding it to the front of the list
+    \item substitute a variable in the input collection with an expression:\\
+    $[(1, (int, [-5, 20]), (+, id{:}1, 10, +, b))] \rightarrow$\\
+    $[(1, (int, [-5, 20]), (+, id{:}1, 10, +, b+1))]$\\
+    $\rightarrow$ by iterating through list and check for same var as left hand side
+    \item substitute a variable in a relationship in the input collection with a new input id:\\
+    $[(1, (int, [-5, 20]), (+, id{:}1, 10, +, b))] \rightarrow$\\
+    $[(2, (int, [-1, 2]), \_), (1, (int, [-5, 20]), (+, id{:}1, 10, +, id{:}2))]$\\
+    $\rightarrow$ by adding the new input and iterating through list and check for same var as left hand side
+\end{itemize}
+
+
+\subsection{Input Assumption Join}
+
+Problem: if I join an if and else where we have different inputs (a = input() and b = input()) We need to invalidate all relationships further down the stack that have a relation with a or b.\\
+Solution: If i join a = input() and b = input() it means that I already substituted the input\_ids for all relations containing a and b. When I then join them later I see that one has info, one does not, and can handle that problem there.
+
+\subsection{IterNum - Design of Loop iteration number}
+
+Most common: for i in range(N), for i in range(N + 1), for item in list\\
+Num of iterations: N, N+1, len(list)\\
+Support: $VAR \pm constant$
+
+\subsection{SimpleRelation}
+
+Idea: support simplified version of relations: $\pm VAR1 + constant \pm VAR2 \leq 0$
+
+\section{JSON Design}
+
+\begin{itemize}
+  \item TYPE: "bool" or "int" or "float" or "any"
+  \item EXPRESSION: $\{id_pos: BOOL, id: CONSTANT, const: CONSTANT\}$
+  \item RELATION:  $\{id1_pos: BOOL, id1: CONSTANT, id2_pos: BOOL, id2: CONSTANT, const: CONSTANT\}$
+  \item ASSUMPTION: $\{id: CONSTANT, type: TYPE, relations: [RELATION, ...]\}$
+  \item MULTIASSUMPTION: $\{repetition: EXPRESSION, assumptions: [ASSUMPTION, ...]$
+\end{itemize}
+
+\section{Input Checker Design}
+
+\begin{enumerate}
+  \item Get JSON assumptions, run analysis, run checker, get errors, display first error
+  \item After return hit: Check if correct:
+    \begin{itemize}
+        \item If again type error: update error message
+        \item If error < error before -> not allowed! show old value
+        \item If error > error before: show new error
+        \item If relational error: show second entry. First need to approve first entry, then second
+    \begin{itemize}
+  \item If correct: rerun checks, get new errors, present first one
+\end{enumerate}
+
+\subsection{Relational Errors}
+
+\begin{enumerate}
+  \item Get JSON assumptions, run analysis, run checker, get errors, display relational error
+  \item Current entry is locked, other entry is enabled
+  \item User hits return (on other entry):
+  \begin{enumerate}
+    \item Check if other entry still correct type and range
+    \item If not correct type: don't allow new value
+    \item If correct: disable other entry, enable current entry
+  \end{enumerate}
+  \item User hits return (on current entry):
+  \begin{enumerate}
+    \item Check if current entry still correct type and range
+    \item If not correct type: don't allow new value
+    \item If correct: write entries down and recheck assumptions
+  \end{enumerate}
+\end{enumerate}
+
+\subsection{Algorithm}
+
+\begin{enumerate}
+    \item check one input after the other
+    \item if assumption is multi-input assumption:
+    \begin{enumerate}
+        \item evaluate the expression using the input dictionary if necessary
+        \item if value in input dictionary is None: stop checking because don't know how many iterations there are
+        \item else: check assumptions
+        \begin{enumerate}
+            \item if input is missing: remove all current errors and add an error concerning the missing values, tell user that expected at least (missin in loop + after) inputs
+        \end{enumerate}
+    \end{enumerate}
+    \item else:
+    \begin{enumerate}
+        \item if type is not any: check if type correct
+        \item if type is not correct: check if value is missing (input value = ''), if true remove all current errors and add an error concerning the missing values, tell user that expected at least x inputs
+        \item if type is correct: check if value in range
+        \item check if value needed for other relation: add value to input dictionary
+        \item if value is in range: check if relations are correct:
+        \begin{enumerate}
+            \item if relationship partner is None (because there was an error with that value): ignore relation
+            \item if relationship is false: show two entry fields to change first/second value. first user needs to check in first value, only then is second value available for changing. the first value can only be changed in the range (it was already checked for that) so that the first value canno be wrong again. if the first value changes the amount of assumption (because N x [assmps]) then we might jump back some errors.
+        \end{enumerate}
+    \end{enumerate}
+\end{enumerate}
+
+\section{Example}
+
+\subsection{Simple}
+
+\begin{lstlisting}
+# .IN -> [(2, ((int), [-inf 10]), _) (1, ((int), [20, inf]), (+, id:1, -1, -, id:2))]
+a = int(input())
+# .IN -> [(1, ((int), [20, inf]), (+, id:1, -1, -, a))]
+b = int(input())
+# relationships: [(+, b, -1, -, a)]
+if a > b:
+  raise ValueError
+# a -> [-inf, 10]
+if a > 10:
+  raise ValueError
+# b -> [20, inf]
+if b < 20:
+  raise ValueError
+\end{lstlisting}
+
+\end{document}
+

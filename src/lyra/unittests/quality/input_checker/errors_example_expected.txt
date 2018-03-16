@@ -1,0 +1,28 @@
+Type Error in Line 1:
+expected: one value of type integer
+instead found: 'a'.
+Type Error in Line 2:
+expected: one value of type float
+instead found: 'b'.
+Type Error in Line 3:
+expected: one value of type integer
+instead found: 'c'.
+Missing value in Line 4
+Missing value in Line 5
+Missing value in Line 6
+Missing value in Line 7
+Missing value in Line 8
+Missing value in Line 9
+Missing value in Line 10
+Missing value in Line 11
+Missing value in Line 12
+Missing value in Line 13
+Missing value in Line 14
+Missing value in Line 15
+Missing value in Line 16
+Missing value in Line 17
+Missing value in Line 18
+Missing value in Line 19
+Missing value in Line 20
+Missing value in Line 21
+Missing value in Line 22

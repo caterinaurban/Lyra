@@ -1,0 +1,3 @@
+Type Error in Line 1:
+expected: one value of type integer
+instead found: 'a'.

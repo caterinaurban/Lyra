@@ -1,0 +1,30 @@
+read at beginning:
+- Quali15 - Cypi00
+- Quali16 - cgy4ever20
+- Quali16 - Endagorion20
+- Quali16 - h4tguy20
+- github - RuiqingQiu - oja
+- homeworks - 1516b - ex10_soln
+- homeworks - dat8 - homework3_chipotle
+- homeworks - dnaAnalyzer
+- homeworks - mcb112 - sandmice_Harleen
+- homeworks - mcb112 - sandmice_Nathan
+- tutorials - jadianes - kddcup99spark
+
+read in each iteration:
+- Quali16 - claramm00
+- Quali16 - rowdark20
+- Quali17 - JasperH00
+- Quali17 - Nore00
+- Quali17 - Nore20
+- Y16Round1A - alkjash10
+- Y16Round1A - alkjash20
+- Y16Round1A - dp.20
+- Y17Round1A - Nore10
+- Y17Round1B - JongMan00
+
+read throughout code:
+- homeworks - 1516b - ex5_soln
+
+read once in middle:
+- homeworks - tau2016 - solution4

@@ -1,0 +1,7 @@
+Range Error in Line 1:
+expected: one value in range [0, inf]
+instead found: '-10.5'.
+Type Error in Line 3:
+expected: one value of type integer
+instead found: '5.5'.
+Missing value in Line 5
