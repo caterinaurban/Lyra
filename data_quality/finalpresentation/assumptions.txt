@@ -1,1 +1,0 @@
-[ ID1=4*(Any, T, {}, with delimiter “,”), ID2=(Int, [-∞, ∞], {ID2 < len(ID1)}) ]
