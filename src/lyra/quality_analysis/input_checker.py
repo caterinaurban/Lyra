@@ -396,7 +396,8 @@ class InputChecker:
                         in_val = curr_input
                         rel = relation
                         mul_assmp = assumptions
-                        e = self.rel_error(len_id, other_id, val, rel_val, rel, loc, mul_assmp, in_val)
+                        e = self.rel_error(len_id, other_id, val, rel_val, rel, loc, mul_assmp,
+                                           in_val)
                         errors.append(e)
             self.prev_line = curr_input
         else:
@@ -534,7 +535,8 @@ class InputChecker:
                     if isinstance(val, ErrorInformation.ErrorLevel):
                         return error
             elif not isinstance(input_info.assmp.var_id, CheckerZeroIdentifier):
-                val = self.check_non_relational_assmps(input_info.eval_value, input_info.assmp, error)
+                val = self.check_non_relational_assmps(input_info.eval_value, input_info.assmp,
+                                                       error)
                 if isinstance(val, ErrorInformation.ErrorLevel):
                     return error
             error.is_first_val = False
@@ -585,7 +587,8 @@ class InputChecker:
         :param in_val: input line of the input
         :return: ErrorInformation object that includes all needed information
         """
-        inverted = input_id.input_id > other_id.input_id
+        inverted = not isinstance(other_id, CheckerZeroIdentifier) \
+            and input_id.input_id > other_id.input_id
         val1 = (input_id, val)
         val2 = (other_id, rel_info.eval_value)
         if not inverted:
@@ -593,7 +596,10 @@ class InputChecker:
         else:
             rel_eval = relation.user_friendly_relation(val2, val1)
         first_loc = (input_id, loc.user_repr())
-        second_loc = (other_id, rel_info.location.user_repr())
+        if isinstance(rel_info.var_id, CheckerZeroIdentifier):
+            second_loc = (other_id, other_id)
+        else:
+            second_loc = (other_id, rel_info.location.user_repr())
         if not inverted:
             rel_str = relation.user_friendly_relation(first_loc, second_loc)
         else:

@@ -4,9 +4,9 @@ import tkinter as tk
 from copy import deepcopy
 
 import re
+from sys import platform
 from tkinter import messagebox
 
-import time
 from tkinter.scrolledtext import ScrolledText
 
 from lyra.quality_analysis.input_assmp_simplification import CheckerZeroIdentifier
@@ -22,15 +22,9 @@ class InputCorrection(tk.Tk):
         self.geometry('%dx%d+%d+%d' % (800, 600, 300, 100))
         self.winfo_toplevel().title("Input Checker")
 
-        #TODO: change back
-        program_name = "checker_example"
-        input_file = "checker_example.in"
-        main_page = InputCorrectionMain(container, controller, program_name, input_file)
-        main_page.grid(row=0, column=0, sticky="nsew")
-        main_page.tkraise()
-        #input_files_view = InputCorrectionFiles(container, controller)
-        #input_files_view.grid(row=0, column=0, sticky="nsew")
-        #input_files_view.tkraise()
+        input_files_view = InputCorrectionFiles(container, controller)
+        input_files_view.grid(row=0, column=0, sticky="nsew")
+        input_files_view.tkraise()
 
 
 class InputCorrectionFiles(tk.Frame):
@@ -40,30 +34,25 @@ class InputCorrectionFiles(tk.Frame):
         self.controller = controller
         self.container = container
 
-        #TODO: change back
-        #label_program = tk.Label(self, text="Program")
-        #label_program.grid(row=0, column=0, pady=6)
-        #self.container.entry_program = tk.Entry(self)
-        #self.container.entry_program.grid(row=0, column=1)
-        #self.container.entry_program.insert(0, "checker_example")
-#
-        #label_input = tk.Label(self, text="Input File")
-        #label_input.grid(row=1, column=0, pady=6)
-        #self.container.entry_input = tk.Entry(self)
-        #self.container.entry_input.grid(row=1, column=1)
-        #self.container.entry_input.insert(0, "checker_example.in")
-#
-        #run_button = tk.Button(self, text='Run', command=self.show_main_screen)
-        #run_button.grid(row=3, column=0, pady=10)
-        self.show_main_screen()
+        label_program = tk.Label(self, text="Program")
+        label_program.grid(row=0, column=0, pady=6)
+        self.container.entry_program = tk.Entry(self)
+        self.container.entry_program.grid(row=0, column=1)
+        self.container.entry_program.insert(0, "checker_example")
+
+        label_input = tk.Label(self, text="Input File")
+        label_input.grid(row=1, column=0, pady=6)
+        self.container.entry_input = tk.Entry(self)
+        self.container.entry_input.grid(row=1, column=1)
+        self.container.entry_input.insert(0, "checker_example.in")
+
+        run_button = tk.Button(self, text='Run', command=self.show_main_screen)
+        run_button.grid(row=3, column=0, pady=10)
 
     def show_main_screen(self):
         """Shows the main screen of the application."""
-        # TODO: change back
-        #program_name = self.container.entry_program.get()
-        #input_file = self.container.entry_input.get()
-        program_name = "checker_example"
-        input_file = "checker_example.in"
+        program_name = self.container.entry_program.get()
+        input_file = self.container.entry_input.get()
         main_page = InputCorrectionMain(self.container, self.controller, program_name, input_file)
         main_page.grid(row=0, column=0, sticky="nsew")
         main_page.tkraise()
@@ -162,10 +151,9 @@ class InputCorrectionMain(tk.Frame):
         self.label_assmp = tk.Label(self.new_val_frame1, text="")
         self.label_assmp.grid(row=1, column=1, sticky=tk.W)
 
-        # TODO: show again
-        #show_input_button = tk.Button(self.values_frame, text="Open input file",
-        #                              command=self.open_input_file)
-        #show_input_button.grid(row=2, column=0, sticky=tk.W, pady=20)
+        show_input_button = tk.Button(self.values_frame, text="Open input file",
+                                      command=self.open_input_file)
+        show_input_button.grid(row=2, column=0, sticky=tk.W, pady=20)
 
         self.new_val_var2 = None
         self.entry_new_val2 = None
@@ -522,8 +510,13 @@ class InputCorrectionMain(tk.Frame):
 
     def open_input_file(self):
         """Opens an input file for editing and rechecks the assumptions when returning"""
-        subprocess.call(f"kate example/{self.input_filename}", shell=True)
-        time.sleep(4)
+        if platform in ["linux", "linux2"]:
+            process = subprocess.Popen(("gedit", f"example/{self.input_filename}"))
+            process.wait()
+        elif platform == "darwin":
+            subprocess.call(['open', '-W', f"example/{self.input_filename}"])
+        else:
+            print(f"Opening a file for os {platform} is not supported.")
         self.errors = self.controller.run_checker()
         if len(self.errors) == 0:
             self.errors = self.controller.execute_input_program()

@@ -107,20 +107,13 @@ class DataQualityController:
         os.remove(self.path + self.input_filename + ".temp")
 
     def execute_input_program(self):
-        """Executes the analyzed program."""
-        with open(self.path + "execute_program.sh", "w") as exec_program:
-            exec_program.write(f"python3.6 {self.path}{self.program_name}.py <<EOF\n")
-            with open(self.path + self.input_filename, "r") as input_file:
-                for line in input_file:
-                    exec_program.write(line)
-            exec_program.write(f"\nEOF")
-        fin = open("example/checker_example.in", 'r')
-        try:
-            command = ["python3.6", "example/checker_example.py"]
-            output = subprocess.check_output(command, stdin=fin, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as e:
-            return [e.output.decode("utf-8")]
-        return [output.decode("utf-8")]
+        """Executes the analyzed program using the input data."""
+        run_command = ["python", f"{self.path}{self.program_name}.py"]
+        input_file = open(self.path + self.input_filename, "r")
+        input_data = "".join(input_file.readlines())
+        input_file.close()
+        p = subprocess.run(run_command, stdout=subprocess.PIPE, input=input_data, encoding="utf-8")
+        return [p.stdout]
 
 if __name__ == "__main__":
     DataQualityController().run()

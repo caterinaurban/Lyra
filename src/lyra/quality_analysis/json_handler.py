@@ -49,7 +49,7 @@ class AssumptionEncoder(json.JSONEncoder):
                     IdJSON.range_assmp: obj.assmp.range_assumption,
                     IdJSON.relations: obj.relations, IdJSON.id: obj.input_id}
         if isinstance(obj, SimpleRelationsLattice):
-            return obj.relations
+            return [r for r in obj.relations]
         if isinstance(obj, SimpleRelation):
             return {IdJSON.rel_this_pos: obj.first_pos, IdJSON.rel_this_id: obj.first,
                     IdJSON.rel_other_pos: obj.second_pos, IdJSON.rel_other_id: obj.second,

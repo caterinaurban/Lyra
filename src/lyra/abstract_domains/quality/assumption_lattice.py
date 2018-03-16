@@ -319,7 +319,7 @@ class InputAssumptionLattice(BoundedLattice):
 
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'InputAssumptionLattice'):
-        raise NotImplementedError(f"Widening for {self} and {other} is not implemented.")
+        return self._join(other)
 
 
 class MultiInputAssumptionLattice(BoundedLattice):
@@ -359,8 +359,8 @@ class MultiInputAssumptionLattice(BoundedLattice):
         if self.is_top():
             return "T"
         delimiter = f" with delimiter \'{self.delimiter}\'" if self.delimiter is not None else ""
-        iteration_is_one = self.iterations is not None and self.iterations == SimpleExpression(const=1)
-        if self.is_main and iteration_is_one:
+        iter_is_one = self.iterations is not None and self.iterations == SimpleExpression(const=1)
+        if self.is_main and iter_is_one:
             return f"{self.assmps}"
         return f"{self.iterations.__repr__()} x {self.assmps}{delimiter}"
 
@@ -559,4 +559,4 @@ class MultiInputAssumptionLattice(BoundedLattice):
 
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'MultiInputAssumptionLattice'):
-        raise NotImplementedError(f"Widening for {self} and {other} is not implemented.")
+        return self._join(other)

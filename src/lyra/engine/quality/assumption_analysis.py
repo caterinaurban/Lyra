@@ -1,7 +1,7 @@
 from typing import List
 
 from lyra.abstract_domains.quality.assumption_domain import AssumptionState
-from lyra.core.expressions import VariableIdentifier, LengthIdentifier, Identifier
+from lyra.core.expressions import LengthIdentifier, Identifier
 from lyra.core.types import ListLyraType, StringLyraType
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.runner import Runner
@@ -19,7 +19,7 @@ class AssumptionAnalysis(Runner):
     def variables(self) -> List[Identifier]:
         all_vars = super().variables
         for var in all_vars:
-            if isinstance(var.typ, (ListLyraType, StringLyraType)):
+            if isinstance(var.typ, ListLyraType):
                 length_var = LengthIdentifier(var)
                 if length_var in all_vars:
                     continue

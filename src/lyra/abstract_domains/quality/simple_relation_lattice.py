@@ -94,11 +94,18 @@ class SimpleRelation:
             self.constant -= expr.const
         return self
 
+    def __hash__(self):
+        first_hash = hash((self.first_pos, self.first))
+        second_hash = hash((self.second_pos, self.second))
+        return first_hash + second_hash + hash(self.constant)
+
     def __eq__(self, other: 'SimpleRelation'):
         same_first = self.first_pos == other.first_pos and self.first == other.first
         same_second = self.second_pos == other.second_pos and self.second == other.second
+        same_first_sec = self.first_pos == other.second_pos and self.first == other.second
+        same_second_first = self.second_pos == other.first_pos and self.second == other.first
         same_const = self.constant == other.constant
-        return same_first and same_second and same_const
+        return (same_first and same_second or same_first_sec and same_second_first) and same_const
 
     def __repr__(self):
         sign_first = "" if self.first_pos else "-"
@@ -111,9 +118,9 @@ class SimpleRelation:
 
 class SimpleRelationsLattice(BottomMixin):
     """
-    The Simple Relations Lattice consists of a list of SimpleRelations
+    The Simple Relations Lattice consists of a set of SimpleRelations
 
-    The default element is an empty list.
+    The default element is an empty set.
 
     .. document private methods
     .. automethod:: SimpleRelationsLattice._less_equal
@@ -122,9 +129,9 @@ class SimpleRelationsLattice(BottomMixin):
     .. automethod:: SimpleRelationsLattice._widening
     """
 
-    def __init__(self, relations: [SimpleRelation] = None):
+    def __init__(self, relations: {SimpleRelation} = None):
         super().__init__()
-        self.relations = relations if relations is not None else []
+        self.relations = relations if relations is not None else set()
 
     def remove_relations_for_input(self, var: VariableIdentifier, input_id: VariableIdentifier):
         """Removes relations that contain a certain variable from the list and returns a new
@@ -136,9 +143,9 @@ class SimpleRelationsLattice(BottomMixin):
         :return: a new SimpleRelationsLattice object with the relations that contain the given
         variable
         """
-        relations = [r for r in self.relations if r.contains(var)]
+        relations = {r for r in self.relations if r.contains(var)}
         if len(relations) > 0:
-            self.relations[:] = [r for r in self.relations if not r.contains(var)]
+            self.relations -= relations
         for relation in relations:
             input_id_simple_expr = SimpleExpression.from_expression(input_id)
             relation.substitute(var, input_id_simple_expr)
@@ -150,25 +157,25 @@ class SimpleRelationsLattice(BottomMixin):
         :param var: variable that is substituted
         :param expr: expression the variable is substituted with
         """
-        new_relations = []
+        new_relations = set()
         for relation in self.relations:
             if isinstance(expr, ListDisplay):
                 if relation.contains(var):
                     len_var = LengthIdentifier(var)
                     relation.substitute(len_var, SimpleExpression(const=len(expr.items)))
-                    new_relations.append(relation)
+                    new_relations.add(relation)
                 else:
-                    new_relations.append(relation)
+                    new_relations.add(relation)
             elif relation.contains(var):
                 expr_simple = SimpleExpression.from_expression(expr)
                 if expr_simple is None:
                     if not relation.contains(var):
-                        new_relations.append(relation)
+                        new_relations.add(relation)
                     continue
                 new_relation = relation.substitute(var, expr_simple)
-                new_relations.append(new_relation)
+                new_relations.add(new_relation)
             else:
-                new_relations.append(relation)
+                new_relations.add(relation)
         self.relations = new_relations
 
     def add(self, relation: SimpleRelation):
@@ -176,11 +183,11 @@ class SimpleRelationsLattice(BottomMixin):
 
         :param relation: relation to add
         """
-        self.relations.append(relation)
+        self.relations.add(relation)
 
     @copy_docstring(Lattice.top)
     def top(self):
-        self.relations = []
+        self.relations = set()
 
     @copy_docstring(Lattice.is_top)
     def is_top(self) -> bool:
@@ -188,30 +195,28 @@ class SimpleRelationsLattice(BottomMixin):
 
     @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'SimpleRelationsLattice') -> bool:
-        for relation in self.relations:
-            if relation not in other.relations:
-                return False
-        return True
+        return self.relations.issubset(other.relations)
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'SimpleRelationsLattice') -> 'SimpleRelationsLattice':
-        new_relations = []
-        for relation in self.relations:
-            if relation in other.relations:
-                new_relations.append(relation)
-        self.relations = new_relations
+        self.relations = self.relations.intersection(other.relations)
         return self
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'SimpleRelationsLattice'):
-        raise NotImplementedError
+        self.relations = self.relations.union(other.relations)
+        return self
 
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'SimpleRelationsLattice'):
-        raise NotImplementedError
+        return self._join(other)
 
     def __repr__(self):
-        return self.relations.__repr__()
+        if len(self.relations) == 0:
+            return "{}"
+        ordered = sorted([r.__repr__() for r in self.relations])
+        comma_separated = ", ".join(ordered)
+        return "{" + comma_separated + "}"
 
 
 class SimpleExpression:
