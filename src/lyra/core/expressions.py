@@ -146,7 +146,7 @@ class ExpressionVisitor(metaclass=ABCMeta):
 
     @abstractmethod
     def visit_Split(self, expr: 'Split'):
-        """Visit of a spli call."""
+        """Visit of a split call."""
 
     @abstractmethod
     def visit_AttributeReference(self, expr: 'AttributeReference'):
