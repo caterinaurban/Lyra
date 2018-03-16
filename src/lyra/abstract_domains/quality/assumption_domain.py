@@ -222,6 +222,7 @@ class AssumptionState(Store, State):
                     iters = SimpleExpression(const=max(0, len_assmp))
                     assmps = [input_assmp]
                     input_assmp = MultiInputAssumptionLattice(iters, assmps, self.pp, delimiter)
+                    input_assmp.input_id = input_id
                     self.store[len_var].top()
                 self.stack_top.add_assumption_front(input_assmp)
                 self.substitute_relationships_in_input(left, input_id)
