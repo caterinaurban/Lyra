@@ -1,4 +1,3 @@
-Type Error in line 1: expected one value of type integer
-instead found ''.
-Type Error in line 3: expected one value of type integer
-instead found ''.
+Missing value in Line 1
+Missing value in Line 2
+Missing value in Line 3
