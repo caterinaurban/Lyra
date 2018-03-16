@@ -606,6 +606,8 @@ class CFGVisitor(ast.NodeVisitor):
                     pass
                 else:
                     cfg_factory.append_cfg(_dummy_cfg(self._id_gen))
+            elif isinstance(child, ast.ImportFrom):
+                pass
             else:
                 raise NotImplementedError(f"The statement {str(type(child))} is not yet translatable to CFG!")
         cfg_factory.complete_basic_block()
