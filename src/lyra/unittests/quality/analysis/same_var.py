@@ -1,8 +1,11 @@
-# INITIAL a -> (Any, [-inf, inf]), .IN -> [(Any, [-inf, inf]), (Int, [-inf, inf]), (Int, [-inf, inf])]
-a: str = input()
-# STATE a -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, inf]), (Int, [-inf, inf])]
+# INITIAL [2:(Float, [-inf, 10]), 5:(Int, [5, inf]), 8:(Int, [2, 2])]
+a: float = float(input())
+if a > 10:
+    raise ValueError
 a: int = int(input())
-# STATE a -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, inf])]
-a: str = input()
+if a < 5:
+    raise ValueError
+a: float = float(input())
+if a != 2:
+    raise ValueError
 a: int = int(a)
-# FINAL a -> (Any, [-inf, inf]), .IN -> []

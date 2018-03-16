@@ -7,7 +7,7 @@ fout = open("p3.out", "w")
 # MAD: input has to exist as integer
 T = int(fin.readline())
 # MAD: T >= 1, otherwise no output
-for tt in xrange(T):
+for tt in range(T):
     N = int(fin.readline())
     # MAD: input has to exist as integers separated by whitespace
     out = map(int, fin.readline().split())
@@ -15,10 +15,10 @@ for tt in xrange(T):
 
     ans = 0
 
-    best = [0 for j in xrange(N)]
-    for i in xrange(N):
+    best = [0 for j in range(N)]
+    for i in range(N):
         cur = i
-        vis = [0 for j in xrange(N)]
+        vis = [0 for j in range(N)]
         vis[cur] = 1
         # MAD: len(out) > max(cur) => len(out) > N - 1
         # MAD: len(vis) > max(out[cur]) => N > any value in out (until out[N-1])
@@ -33,7 +33,7 @@ for tt in xrange(T):
             best[cur] = max(best[cur], sum(vis))
 
     tot = 0
-    for i in xrange(N):
+    for i in range(N):
         # MAD: len(out) > max(i) => len(out) > N - 1
         # MAD: len(out) > max(out[i]) => len(out) > any value in out (until out[N-1])
         if out[out[i]] == i:

@@ -1,83 +1,176 @@
-{
-    "0": [
+[
+    [
         {
             "type_assmp": "Int",
-            "range_assmp": "[1, 1]"
+            "range_assmp": [
+                1,
+                1
+            ],
+            "relations": [],
+            "id": ".ID=1"
         },
         {
-            "iterations": 5,
+            "iterations": {
+                "expr_var_pos": true,
+                "expr_var": ".VAR0",
+                "expr_const": 5
+            },
             "assmps": [
                 {
                     "type_assmp": "Int",
-                    "range_assmp": "[50, 50]"
+                    "range_assmp": [
+                        50,
+                        50
+                    ],
+                    "relations": [],
+                    "id": ".ID=2"
                 },
                 {
-                    "iterations": 3,
+                    "iterations": {
+                        "expr_var_pos": true,
+                        "expr_var": ".VAR0",
+                        "expr_const": 3
+                    },
                     "assmps": [
                         {
                             "type_assmp": "Int",
-                            "range_assmp": "[30, 30]"
+                            "range_assmp": [
+                                30,
+                                30
+                            ],
+                            "relations": [],
+                            "id": ".ID=3"
                         }
-                    ]
+                    ],
+                    "delimiter": null
                 }
-            ]
+            ],
+            "delimiter": null
         },
         {
-            "iterations": 7,
+            "iterations": {
+                "expr_var_pos": true,
+                "expr_var": ".VAR0",
+                "expr_const": 7
+            },
             "assmps": [
                 {
                     "type_assmp": "Int",
-                    "range_assmp": "[70, 70]"
+                    "range_assmp": [
+                        70,
+                        70
+                    ],
+                    "relations": [],
+                    "id": ".ID=4"
                 },
                 {
-                    "iterations": 2,
+                    "iterations": {
+                        "expr_var_pos": true,
+                        "expr_var": ".VAR0",
+                        "expr_const": 2
+                    },
                     "assmps": [
                         {
                             "type_assmp": "Int",
-                            "range_assmp": "[20, 20]"
+                            "range_assmp": [
+                                20,
+                                20
+                            ],
+                            "relations": [],
+                            "id": ".ID=5"
                         },
                         {
-                            "iterations": 8,
+                            "iterations": {
+                                "expr_var_pos": true,
+                                "expr_var": ".VAR0",
+                                "expr_const": 8
+                            },
                             "assmps": [
                                 {
                                     "type_assmp": "Int",
-                                    "range_assmp": "[80, 80]"
+                                    "range_assmp": [
+                                        80,
+                                        80
+                                    ],
+                                    "relations": [],
+                                    "id": ".ID=6"
                                 }
-                            ]
+                            ],
+                            "delimiter": null
                         },
                         {
                             "type_assmp": "Int",
-                            "range_assmp": "[2, 2]"
+                            "range_assmp": [
+                                2,
+                                2
+                            ],
+                            "relations": [],
+                            "id": ".ID=7"
                         }
-                    ]
+                    ],
+                    "delimiter": null
                 },
                 {
                     "type_assmp": "Int",
-                    "range_assmp": "[3, 3]"
+                    "range_assmp": [
+                        3,
+                        3
+                    ],
+                    "relations": [],
+                    "id": ".ID=8"
                 },
                 {
-                    "iterations": 5,
+                    "iterations": {
+                        "expr_var_pos": true,
+                        "expr_var": ".VAR0",
+                        "expr_const": 5
+                    },
                     "assmps": [
                         {
                             "type_assmp": "Int",
-                            "range_assmp": "[50, 50]"
+                            "range_assmp": [
+                                50,
+                                50
+                            ],
+                            "relations": [],
+                            "id": ".ID=9"
                         }
-                    ]
+                    ],
+                    "delimiter": null
                 },
                 {
-                    "iterations": 4,
+                    "iterations": {
+                        "expr_var_pos": true,
+                        "expr_var": ".VAR0",
+                        "expr_const": 4
+                    },
                     "assmps": [
                         {
                             "type_assmp": "Int",
-                            "range_assmp": "[40, 40]"
+                            "range_assmp": [
+                                40,
+                                40
+                            ],
+                            "relations": [],
+                            "id": ".ID=10"
                         }
-                    ]
+                    ],
+                    "delimiter": null
                 }
-            ]
+            ],
+            "delimiter": null
         },
         {
             "type_assmp": "Int",
-            "range_assmp": "[5, 5 ]"
+            "range_assmp": [
+                5,
+                5
+            ],
+            "relations": [],
+            "id": ".ID=11"
         }
-    ]
-}
+    ],
+    {
+        "inputs": []
+    }
+]

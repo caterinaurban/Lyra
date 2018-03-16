@@ -1,23 +1,28 @@
-Missing value: expected at least 22 values instead found 3.
-Type Error in line 1: expected one value of type integer instead found 'a'.
-Type Error in line 2: expected one value of type float instead found 'b'.
-Type Error in line 3: expected one value of type integer instead found 'c'.
-Type Error in line 4: expected one value of type integer instead found ''.
-Type Error in line 5: expected one value of type integer instead found ''.
-Type Error in line 6: expected one value of type float instead found ''.
-Type Error in line 7: expected one value of type integer instead found ''.
-Type Error in line 8: expected one value of type integer instead found ''.
-Type Error in line 9: expected one value of type integer instead found ''.
-Type Error in line 10: expected one value of type float instead found ''.
-Type Error in line 11: expected one value of type integer instead found ''.
-Type Error in line 12: expected one value of type integer instead found ''.
-Type Error in line 13: expected one value of type integer instead found ''.
-Type Error in line 14: expected one value of type float instead found ''.
-Type Error in line 15: expected one value of type integer instead found ''.
-Type Error in line 16: expected one value of type integer instead found ''.
-Type Error in line 17: expected one value of type integer instead found ''.
-Type Error in line 18: expected one value of type float instead found ''.
-Type Error in line 19: expected one value of type integer instead found ''.
-Type Error in line 20: expected one value of type integer instead found ''.
-Type Error in line 21: expected one value of type integer instead found ''.
-Type Error in line 22: expected one value of type float instead found ''.
+Type Error in Line 1:
+expected: one value of type integer
+instead found: 'a'.
+Type Error in Line 2:
+expected: one value of type float
+instead found: 'b'.
+Type Error in Line 3:
+expected: one value of type integer
+instead found: 'c'.
+Missing value in Line 4
+Missing value in Line 5
+Missing value in Line 6
+Missing value in Line 7
+Missing value in Line 8
+Missing value in Line 9
+Missing value in Line 10
+Missing value in Line 11
+Missing value in Line 12
+Missing value in Line 13
+Missing value in Line 14
+Missing value in Line 15
+Missing value in Line 16
+Missing value in Line 17
+Missing value in Line 18
+Missing value in Line 19
+Missing value in Line 20
+Missing value in Line 21
+Missing value in Line 22

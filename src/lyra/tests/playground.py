@@ -16,4 +16,4 @@ from lyra.engine.usage.usage_analysis import UsageAnalysis
 
 # ForwardIntervalAnalysis().main("quality/example.py")
 
-AssumptionAnalysis().main("quality/example.py")
+AssumptionAnalysis(show_simple=True).main("quality/example.py")

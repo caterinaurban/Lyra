@@ -52,6 +52,26 @@
 
 \pagenumbering{arabic}
 
+\section{Main Idea}
+
+\begin{itemize}
+\item \textit{AssumptionState}: The main idea of the assumption state is to find and save assumptions that are made by the code.
+\item \textit{IntervalState/OctagonState}: The idea of the Interval- or OctagonState is to pull information about the semantics. An IntervalState know how to handle assignment like $a = b + 1$ so that information for $a$ will be propagated to $b$. 
+\item \textit{AssumptionStack} The stack is used to keep track of assumptions made at different case/loop levels. This ways we can keep information about assumptions in a loop if we know that the loop will be entered for sure (ex. for i in range(10)).
+\end{itemize}
+
+\subsection{Problem IntervalState and AssumptionState}
+
+We have information about ranges from IntervalState: $a = b + 1$ with $a = 5$ therefore $a = TOP, b = 4$. We want to use exactly this information. From the AssumptionState we come back with the same information as before: $a = 5, b = TOP$.\\
+On the other hand we might get information from Assumption state: $a = list[1] + 1$ therefore $len_{list} > 1$. From the IntervalState we get $a = TOP$. Here we want to use the information from Assumption State.\\
+One possible idea is to meet the assumption from both states. This would not work: We would get $a = a + 1$ with $a = [5, 10}$ therefore $a = [4, 9]$ from the IntervalState and $a = [5, 10]$ from the AssumptionState and end up with $[4, 9] \sqcap [5, 10] = [5, 9]$. In reality we want to keep the information from the IntervalState.\\
+An other idea is to first get assumption from the AssumptionState and use that information to substitute in the IntervalState. The problem is that the IntervalState now uses information that might already be too "new".\\
+IntervalState just gives information about transitions of values. Whereas the AssumptionState tries to add new assumptions. So the IntervalState shows what really is happening and the AssumptionState tries to find new assumptions. So it should be possible to first get information from the IntervalState and then use that information and try to apply possible new assumptions.
+
+\subsection{Problem AssumptionStack for non-Input assumptions}
+
+
+
 \section{Lattice - Type}
 
 BOTTOM - Bool (0) - Int (1) - Float (2) - Any (3)

@@ -1,4 +1,4 @@
-# INITIAL a -> (Any, [-inf, inf]), i -> (Int, [-inf, inf]), b -> (Any, [-inf, inf]), .IN -> [(Int, [-inf, inf]), 4 x [(Float, [-inf, inf])]]
+# INITIAL [2:(Int, [-inf, inf]), 4 x [5:(Float, [-inf, inf])]]
 a: int = int(input())
 if a > 10:
     for i in range(4):
