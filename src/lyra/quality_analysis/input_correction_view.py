@@ -162,7 +162,7 @@ class InputCorrectionMain(tk.Frame):
 
         self.old_val_lines = []
 
-        self.start_analysis()
+        self.start_checking()
 
     def validate_input_type(self, action: str, new_value: str, widget_name: str):
         """Checks if a new value is of the correct type
@@ -502,9 +502,9 @@ class InputCorrectionMain(tk.Frame):
         if self.new_val_var2 is not None:
             self.new_val_var2.set(self.errors[self.error_index].info2.orig_value)
 
-    def start_analysis(self):
-        """Runs the assumption analysis and shows information about the first error."""
-        self.errors = self.controller.start_analysis(self.program_name, self.input_filename)
+    def start_checking(self):
+        """Starts checking the input and shows information about the first error."""
+        self.errors = self.controller.start_checking(self.program_name, self.input_filename)
         self.error_index = 0
         self.show_error()
 

@@ -12,7 +12,6 @@ from lyra.quality_analysis.run_analysis import QualityAnalysisRunner
 class DataQualityController:
     """Controller for the input correction application."""
     def __init__(self):
-        self.analysis = None
         self.input_checker = None
         self.input_correction = None
         self.program_name = None
@@ -33,8 +32,9 @@ class DataQualityController:
         """
         return self.input_checker.check_new_value(error)
 
-    def start_analysis(self, program_name: str, input_filename: str) -> [ErrorInformation]:
-        """Runs the assumption analysis, creates a json file and runs the input checker.
+    def start_checking(self, program_name: str, input_filename: str) -> [ErrorInformation]:
+        """Starts the input checking. If a JSON file already exists it will be used to do the
+        checking, otherwise the analysis will run first.
 
         :param program_name: name of the python program that will be analyzed
         :param input_filename: name of the input file
@@ -43,8 +43,9 @@ class DataQualityController:
         self.program_name = program_name
         self.input_filename = input_filename
         self.input_checker = InputChecker(self.path, self.input_filename, self.program_name)
-        self.analysis = QualityAnalysisRunner(self.path, self.program_name, self.input_filename)
-        self.analysis.run_analysis()
+        if not os.path.isfile(f"{self.path}{program_name}.json"):
+            analysis = QualityAnalysisRunner(self.path, self.program_name, self.input_filename)
+            analysis.run_analysis()
         json_handler = JSONHandler(self.path, self.program_name)
         self.json_info = json_handler.json_to_input_assumptions()
         errors = self.run_checker()
