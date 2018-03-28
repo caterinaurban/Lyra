@@ -12,8 +12,8 @@ from lyra.engine.usage.usage_analysis import UsageAnalysis
 
 # BoolTracesAnalysis().main("traces/example.py")
 
-# BackwardIntervalAnalysis().main("quality/example.py")
+# BackwardIntervalAnalysis().main("numerical/example.py")
 
-# ForwardIntervalAnalysis().main("numerical/example.py")
+ForwardIntervalAnalysis().main("numerical/example.py")
 
-AssumptionAnalysis().main("quality/example.py")
+# AssumptionAnalysis(show_simple=True).main("quality/example.py")

@@ -413,18 +413,26 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_For(self, node, types=None, typ=None):
         header_node = Loop(self._id_gen.next)
 
+        iteration = self.visit(node.iter, types, ListLyraType(IntegerLyraType()))
+        if isinstance(iteration, Call) and iteration.name == "range":
+            target_type = IntegerLyraType()
+        elif isinstance(iteration, VariableAccess):
+            iter_type = iteration.variable.typ
+            if isinstance(iter_type, ListLyraType):
+                target_type = iter_type.typ
+            else:
+                error = f"Loop iteration for type {iter_type} is not yet translatable to CFG!"
+                raise NotImplementedError(error)
+        else:
+            error = f"The for loop iteration statment {node.iter} is not yet translatable to CFG!"
+            raise NotImplementedError(error)
+        target = self.visit(node.target, types, target_type)
+
         cfg = self._translate_body(node.body, types, typ)
         body_in_node = cfg.in_node
         body_out_node = cfg.out_node
 
         pp = ProgramPoint(node.target.lineno, node.target.col_offset)
-        iteration = self.visit(node.iter, types, ListLyraType(IntegerLyraType()))
-        if isinstance(iteration, Call) and iteration.name == "range":
-            target_type = IntegerLyraType()
-        else:
-            error = f"The for loop iteration statment {node.iter} is not yet translatable to CFG!"
-            raise NotImplementedError(error)
-        target = self.visit(node.target, types, target_type)
 
         test = Call(pp, "in", [target, iteration], BooleanLyraType())
         neg_test = Call(pp, "not", [test], BooleanLyraType())
@@ -521,7 +529,18 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        return Call(pp, node.func.id, [self.visit(arg, types, typ) for arg in node.args], typ)
+        func = self.visit(node.func, types, typ)
+        if isinstance(func, VariableAccess):
+            return Call(pp, func.variable.name, [self.visit(arg, types, typ) for arg in node.args], typ)
+        elif isinstance(func, AttributeReference):
+            target = self.visit(func.target, types, typ)
+            args = [target] + [self.visit(arg, types, typ) for arg in node.args]
+            return Call(pp, func.attribute, args, typ)
+        error = f"Call with function type {func.__class__.__name__} is not yet supported!"
+        raise NotImplementedError(error)
+
+    def visit_Attribute(self, node, types=None, typ=None):
+        return AttributeReference(typ, node.value, node.attr)
 
     def visit_List(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
@@ -587,6 +606,8 @@ class CFGVisitor(ast.NodeVisitor):
                     pass
                 else:
                     cfg_factory.append_cfg(_dummy_cfg(self._id_gen))
+            elif isinstance(child, ast.ImportFrom):
+                pass
             else:
                 raise NotImplementedError(f"The statement {str(type(child))} is not yet translatable to CFG!")
         cfg_factory.complete_basic_block()

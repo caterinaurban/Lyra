@@ -1,0 +1,34 @@
+[
+    [
+        {
+            "type_assmp": "Int",
+            "range_assmp": [
+                -Infinity,
+                Infinity
+            ],
+            "relations": [],
+            "id": ".ID=1"
+        },
+        {
+            "type_assmp": "Any",
+            "range_assmp": [
+                -Infinity,
+                Infinity
+            ],
+            "relations": [],
+            "id": ".ID=2"
+        },
+        {
+            "type_assmp": "Int",
+            "range_assmp": [
+                -Infinity,
+                Infinity
+            ],
+            "relations": [],
+            "id": ".ID=3"
+        }
+    ],
+    {
+        "inputs": []
+    }
+]

@@ -1,4 +1,16 @@
+import subprocess
 import tkinter as tk
+
+from copy import deepcopy
+
+import re
+from sys import platform
+from tkinter import messagebox
+
+from tkinter.scrolledtext import ScrolledText
+
+from lyra.quality_analysis.input_assmp_simplification import CheckerZeroIdentifier
+from lyra.quality_analysis.input_checker import ErrorInformation, InputInfo, InputLocation
 
 
 class InputCorrection(tk.Tk):
@@ -7,7 +19,8 @@ class InputCorrection(tk.Tk):
         super().__init__()
         container = tk.Frame(self)
         container.pack()
-        self.geometry('%dx%d+%d+%d' % (600, 300, 300, 100))
+        self.geometry('%dx%d+%d+%d' % (800, 600, 300, 100))
+        self.winfo_toplevel().title("Input Checker")
 
         input_files_view = InputCorrectionFiles(container, controller)
         input_files_view.grid(row=0, column=0, sticky="nsew")
@@ -56,110 +69,456 @@ class InputCorrectionMain(tk.Frame):
         self.input_filename = input_filename
         self.errors = []
         self.error_index = 0
+        self.relation_widgets = []
 
         self.container = parent
 
-        border_error = tk.Label(self, width=65, borderwidth=2, relief="solid")
-        border_error.grid(row=0, column=0, columnspan=10, ipady=15, pady=10, ipadx=30, sticky=tk.W)
+        self.error_frame = tk.Frame(self, width=700, height=100,
+                                    highlightthickness=2, highlightbackground="Black")
+        self.error_frame.grid(row=0, pady=10)
+        self.error_frame.grid_propagate(0)
+        self.values_frame = tk.Frame(self, width=700, height=800)
+        self.values_frame.grid(row=1, column=0)
+        self.values_frame.grid_propagate(0)
+        self.old_val_frame = tk.Frame(self.values_frame, width=300, height=310,
+                                      highlightthickness=2, highlightbackground="Black")
+        self.old_val_frame.grid(row=0, column=0)
+        self.old_val_frame.grid_propagate(0)
+        self.values_new_frame = tk.Frame(self.values_frame, width=400, height=310)
+        self.values_new_frame.grid(row=0, column=1)
+        self.values_new_frame.grid_propagate(0)
+        self.new_val_frame1 = tk.Frame(self.values_new_frame, width=390, height=150,
+                                       highlightthickness=2, highlightbackground="Black")
+        self.new_val_frame1.grid(row=0, column=0, padx=(10, 0))
+        self.new_val_frame1.grid_propagate(0)
+        self.new_val_frame2 = tk.Frame(self.values_new_frame, width=390, height=150,
+                                       highlightthickness=2, highlightbackground="Black")
+        self.new_val_frame2.grid(row=1, column=0, padx=(10, 0), pady=(10, 0))
+        self.new_val_frame2.grid_propagate(0)
 
-        self.label_error = tk.Label(self, text="ERROR", width=70, anchor=tk.W)
-        self.label_error.grid(row=0, column=0, columnspan=10)
+        self.error_frame.grid_rowconfigure(0, weight=1)
+        self.error_frame.grid_columnconfigure(0, weight=1)
+        self.error_frame.grid_rowconfigure(3, weight=1)
+        self.error_frame.grid_columnconfigure(1, weight=1)
 
-        self.label_progress = tk.Label(self, text="PROGRESS", borderwidth=2, relief="raised")
-        self.label_progress.grid(row=0, column=9, pady=10, ipady=3, ipadx=3)
+        self.old_val_frame.grid_rowconfigure(0, weight=1)
+        self.old_val_frame.grid_columnconfigure(0, weight=1)
+        self.old_val_frame.grid_rowconfigure(8, weight=1)
+        self.old_val_frame.grid_columnconfigure(3, weight=2)
 
-        border_old_val = tk.Label(self, width=20, height=6, borderwidth=2, relief="solid")
-        border_old_val.grid(row=1, column=1, columnspan=2, rowspan=2)
+        self.new_val_frame1.grid_rowconfigure(0, weight=1)
+        self.new_val_frame1.grid_columnconfigure(0, weight=1)
+        self.new_val_frame1.grid_rowconfigure(2, weight=1)
+        self.new_val_frame1.grid_columnconfigure(2, weight=1)
 
-        label_old_val = tk.Label(self, text="Old value:")
-        label_old_val.grid(row=1, column=1, columnspan=2)
-        self.old_val = tk.Label(self, text="")
-        self.old_val.grid(row=2, column=1, columnspan=2, ipady=10)
+        self.new_val_frame2.grid_rowconfigure(0, weight=1)
+        self.new_val_frame2.grid_columnconfigure(0, weight=1)
+        self.new_val_frame2.grid_rowconfigure(2, weight=1)
+        self.new_val_frame2.grid_columnconfigure(2, weight=1)
 
-        border_new_val = tk.Label(self, width=35, height=6, borderwidth=2, relief="solid")
-        border_new_val.grid(row=1, column=4, columnspan=4, rowspan=2, padx=3, pady=8, sticky=tk.W)
+        error_icon = tk.PhotoImage(file="icons/error.png")
+        self.error_icon = tk.Label(self.error_frame, image=error_icon)
+        self.error_icon.photo = error_icon
+        self.error_icon.grid(row=1, column=0, sticky=tk.W, padx=10)
 
-        label_new_val = tk.Label(self, text="New value:")
-        label_new_val.grid(row=1, column=4, columnspan=4)
+        self.label_error = tk.Text(self.error_frame, height=3, width=75, wrap="none")
+        self.label_error.configure(bg=self.error_frame.cget('bg'), relief=tk.FLAT)
+        self.label_error.tag_config("normal", font="TkDefaultFont")
+        self.label_error.tag_config("color_red", font="TkDefaultFont", foreground="red")
+        self.label_error.tag_config("color_blue", font="TkDefaultFont", foreground="blue")
+        self.label_error.grid(row=1, column=0, padx=(40, 0), sticky=tk.W)
+
+        self.label_progress = tk.Label(self.error_frame, borderwidth=2, relief="raised")
+        self.label_progress.grid(row=1, column=1, ipady=3, ipadx=3, padx=40, sticky=tk.E)
+
+        label_old = tk.Label(self.old_val_frame, text="Current values:")
+        label_old.grid(row=0, column=1, sticky=tk.W)
+
+        self.label_new_val = tk.Text(self.new_val_frame1, height=1, width=30, wrap="none")
+        self.label_new_val.configure(bg=self.new_val_frame1.cget('bg'), relief=tk.FLAT)
+        self.label_new_val.tag_config("normal", font="TkDefaultFont")
+        self.label_new_val.tag_config("color_blue", font="TkDefaultFont", foreground="blue")
+        self.label_new_val.tag_config("color_red", font="TkDefaultFont", foreground="red")
+        self.label_new_val.grid(row=0, column=0, sticky=tk.W, padx=(26, 0))
+
+        on_validate = (self.register(self.validate_input_type), '%d', '%P', '%W')
         self.new_val_var = tk.StringVar()
-        self.entry_new_val = tk.Entry(self, textvariable=self.new_val_var)
-        self.entry_new_val.grid(row=2, column=4, columnspan=4, padx=5)
-        self.entry_new_val.bind("<KeyRelease>", self.check_new_val)
-        error_image = tk.PhotoImage(file="icons/error.png")
-        self.label_new_val_ok = tk.Label(self, image=error_image)
-        self.label_new_val_ok.image = error_image
-        self.label_new_val_ok.grid(row=2, column=7)
+        self.entry_new_val = tk.Entry(self.new_val_frame1, textvariable=self.new_val_var,
+                                      validate="key", validatecommand=on_validate)
+        self.entry_new_val.grid(row=1, column=0, sticky=tk.W, padx=(30, 0))
+        self.entry_new_val.bind("<Return>", self.check_new_val)
 
-        prev_image = tk.PhotoImage(file="icons/prev.png")
-        prev_button = tk.Button(self, image=prev_image, command=self.show_prev_error)
-        prev_button.image = prev_image
-        prev_button.grid(row=3, column=5, sticky=tk.E)
+        self.label_assmp = tk.Label(self.new_val_frame1, text="")
+        self.label_assmp.grid(row=1, column=1, sticky=tk.W)
 
-        next_image = tk.PhotoImage(file="icons/next.png")
-        next_button = tk.Button(self, image=next_image, command=self.show_next_error)
-        next_button.image = next_image
-        next_button.grid(row=3, column=6, sticky=tk.W, padx=20)
+        show_input_button = tk.Button(self.values_frame, text="Open input file",
+                                      command=self.open_input_file)
+        show_input_button.grid(row=2, column=0, sticky=tk.W, pady=20)
 
-        run_button = tk.Button(self, text="Check", command=self.check_corrected_input, anchor=tk.W)
-        run_button.grid(row=4, column=0, pady=10)
+        self.new_val_var2 = None
+        self.entry_new_val2 = None
+        self.label_assmp2 = None
+        self.label_new_val2 = None
 
-        self.start_analysis()
+        self.old_val_lines = []
 
-    def show_prev_error(self):
-        """Show the previous error in the list."""
-        if self.error_index > 0:
-            self.error_index -= 1
-            self.show_error()
+        self.start_checking()
 
-    def show_next_error(self):
-        """Show the next error in the list."""
-        if self.error_index < len(self.errors) - 1:
-            self.error_index += 1
-            self.show_error()
+    def validate_input_type(self, action: str, new_value: str, widget_name: str):
+        """Checks if a new value is of the correct type
+
+        :param action: "1" is insert, "0" is delete
+        :param new_value: new value to check
+        :param widget_name: name of the widget whose content is evaluated
+        :return: If the new value has the correct type
+        """
+        if not isinstance(self.errors[self.error_index], ErrorInformation) or action != "1":
+            return True
+        if new_value.startswith("-"):
+            new_value = new_value[1:]
+            if new_value == "":
+                return True
+        if widget_name == f"{self.entry_new_val}":
+            is_correct_type = self.errors[self.error_index].infos1.check_type(new_value)
+            if not is_correct_type:
+                self.label_assmp.config(fg="red")
+        else:
+            is_correct_type = self.errors[self.error_index].infos2.check_type(new_value)
+            if not is_correct_type:
+                self.label_assmp2.config(fg="red")
+        return is_correct_type
+
+    def show_relation_error_widgets(self):
+        """Adds the widgets used for displaying a relational error"""
+
+        self.label_new_val2 = tk.Text(self.new_val_frame2, height=1, width=30, wrap="none")
+        self.label_new_val2.configure(bg=self.new_val_frame2.cget('bg'), relief=tk.FLAT)
+        self.label_new_val2.tag_config("normal", font="TkDefaultFont")
+        self.label_new_val2.tag_config("color_blue", font="TkDefaultFont", foreground="blue")
+        self.label_new_val2.tag_config("color_red", font="TkDefaultFont", foreground="red")
+        self.label_new_val2.grid(row=0, column=0, sticky=tk.W, padx=(26, 0))
+
+        on_validate = (self.register(self.validate_input_type), '%d', '%P', '%W')
+        self.new_val_var2 = tk.StringVar()
+        self.entry_new_val2 = tk.Entry(self.new_val_frame2, textvariable=self.new_val_var2,
+                                       validate="key", validatecommand=on_validate)
+        self.entry_new_val2.grid(row=1, column=0, sticky=tk.W, padx=(30, 0))
+        self.entry_new_val2.bind("<Return>", self.check_new_val)
+
+        self.label_assmp2 = tk.Label(self.new_val_frame2, text="")
+        self.label_assmp2.grid(row=1, column=1, sticky=tk.W)
+
+        self.relation_widgets = [self.label_new_val2, self.entry_new_val2, self.label_assmp2]
 
     def show_error(self):
         """Show information about the current error."""
-        if len(self.errors) > 0:
+        if len(self.errors) > 0 and isinstance(self.errors[0], ErrorInformation):
             error = self.errors[self.error_index]
-            self.old_val.config(text=error.old_value)
-            self.entry_new_val.delete(0, tk.END)
-            self.entry_new_val.insert(0, error.new_value)
-            self.label_error.config(text=error.error_message)
-            self.label_progress.config(text=f"{self.error_index+1}/{len(self.errors)}")
-            self.check_new_val(None)
+            self.update_error_info(error)
+            if error.relation is not None:
+                self.update_old_val_lines()
+                self.update_relational_error_info(error)
+            else:
+                self.update_old_val_lines()
+                for widget in self.relation_widgets:
+                    widget.grid_forget()
+                self.entry_new_val.config(state="normal")
+                self.entry_new_val.focus()
         else:
-            self.old_val.config(text="")
-            self.entry_new_val.delete(0, tk.END)
-            self.label_error.config(text="No errors were found.")
+            self.values_new_frame.grid_forget()
+            self.old_val_frame.grid_forget()
+            self.label_progress.grid_forget()
+            self.error_icon.grid_forget()
+
+            self.label_error = ScrolledText(self.error_frame, height=3, width=75, wrap="none")
+            self.label_error.configure(bg=self.error_frame.cget('bg'), relief=tk.FLAT)
+            self.label_error.tag_config("normal", font="TkDefaultFont")
+            self.label_error.grid(row=1, column=0, padx=(40, 0), sticky=tk.W)
+
+            self.label_error.config(state="normal", height=20, width=100)
+            self.label_error.delete(1.0, tk.END)
+            output = self.errors[0] if len(self.errors) > 0 else ""
+            self.label_error.insert(tk.END, f"Output of the program:\n\n{output}", "normal")
+            self.label_error.config(state="disabled")
+            self.error_frame.configure(height=400)
             self.label_progress.config(text="0/0")
-            self.label_new_val_ok.config(text="")
 
-    def check_new_val(self, event):
-        """Check if the current new value given by the user fulfils the assumptions."""
-        if len(self.errors) == 0:
+    def update_old_val_lines(self):
+        """Updates the display of the old values."""
+        for widget in self.old_val_lines:
+            widget.grid_forget()
+        self.old_val_lines = []
+        error = self.errors[self.error_index]
+        if error.relation is None:
+            location_before = deepcopy(error.infos1.location).sub_lines(1)
+            location_after = deepcopy(error.infos1.location).add_lines(1)
+            self.create_old_val_line(1, location_before, error.infos1.prev_line, False)
+            self.create_old_val_line(2, error.infos1.location, error.infos1.orig_value, True)
+            self.create_old_val_line(3, location_after, error.infos1.next_line, False)
             return
-        new_val = self.entry_new_val.get()
-        self.errors[self.error_index].new_value = new_val
-        assmp = self.errors[self.error_index].assumption
-        is_ok = self.controller.check_new_val(new_val, assmp)
-        if is_ok:
-            error_image = tk.PhotoImage(file="icons/checkmark.png")
-            self.label_new_val_ok.config(image=error_image)
-            self.label_new_val_ok.image = error_image
+
+        val_min = error.infos1
+        val_max = error.infos2
+
+        max_line = self.calculate_max_location(val_min, val_max)
+
+        for i in range(max_line+2):
+            if i == 0:
+                location_before1 = deepcopy(val_min.location).sub_lines(1)
+                curr_val = (location_before1, val_min.prev_line)
+            elif i == 1:
+                curr_val = (val_min.location, val_min.orig_value)
+            elif i == max_line:
+                curr_val = (val_max.location, val_max.orig_value)
+            elif i == max_line - 1:
+                location_before2 = deepcopy(val_max.location).sub_lines(1)
+                curr_val = (location_before2, val_max.prev_line)
+            elif i == max_line + 1:
+                location_after2 = deepcopy(val_max.location).add_lines(1)
+                curr_val = (location_after2, val_max.next_line)
+            elif i == 2:
+                location_after1 = deepcopy(val_min.location).add_lines(1)
+                curr_val = (location_after1, val_min.next_line)
+            else:
+                continue
+            self.create_old_val_line(i+1, curr_val[0], curr_val[1], i == max_line)
+        if max_line == 5:
+            label_empty_line = tk.Label(self.old_val_frame, text="...", anchor=tk.W)
+            label_empty_line.grid(row=4, column=0, sticky=tk.W, padx=(10, 0))
+            label_empty_old_val = tk.Label(self.old_val_frame, text="", anchor=tk.W)
+            label_empty_old_val.grid(row=4, column=1, sticky=tk.W)
+            self.old_val_lines += [label_empty_line, label_empty_old_val]
+        if self.entry_new_val2 is not None:
+            self.entry_new_val2.grid_forget()
+            self.entry_new_val2.grid(row=max_line, column=4)
+
+    def calculate_max_location(self, val_min: InputInfo, val_max: InputInfo):
+        """Calculates the row number of the second value depending on how far away the values
+        are in the input file.
+
+        :param val_min: information about the first value
+        :param val_max: information about the second value
+        """
+        line_min = val_min.location.file_line
+        line_max = val_max.location.file_line
+        old_val_line_max = 5
+        diff_min_max = line_max - line_min
+        if diff_min_max < 5:
+            old_val_line_max = diff_min_max + 1
+        return old_val_line_max
+
+    def create_old_val_line(self, row: int, location: InputLocation, value: str, is_other: bool):
+        """Creates a label for the line number and the corresponding value.
+
+        :param row: row number in which the label should be displayed
+        :param location: location of the input value
+        :param value: input value
+        :param is_other: if this label is for the second value
+        """
+        location_label = f"{location}" if location.user_line != 0 else ""
+        label_line = tk.Label(self.old_val_frame, text=location_label, anchor=tk.W)
+        label_line.grid(row=row, column=0, sticky=tk.W, padx=(10, 0))
+        value = "" if value is None else value
+        text = f"{value}"
+        if len(text) > 20:
+            text = f"{text[:17]}..."
+        label_old_val = tk.Label(self.old_val_frame, text=text, width=20, anchor=tk.W)
+        label_old_val.grid(row=row, column=1, sticky=tk.W)
+        self.old_val_lines += [label_line, label_old_val]
+
+        first_is_error = self.errors[self.error_index].is_first_val
+        if row == 2:
+            color = "red" if first_is_error else "blue"
+            label_line.config(fg=color)
+            label_old_val.config(fg=color)
+        elif is_other:
+            color = "blue" if first_is_error else "red"
+            label_line.config(fg=color)
+            label_old_val.config(fg=color)
         else:
-            error_image = tk.PhotoImage(file="icons/error.png")
-            self.label_new_val_ok.config(image=error_image)
-            self.label_new_val_ok.image = error_image
+            label_line.config(fg="grey")
+            label_old_val.config(fg="grey")
 
-    def start_analysis(self):
-        """Runs the assumption analysis and shows information about the first error."""
-        self.errors = self.controller.start_analysis(self.program_name, self.input_filename)
+    def update_error_info(self, error: ErrorInformation):
+        """Updates information about the current error
+
+        :param error: current error to display
+        """
+        self.label_new_val.config(state="normal")
+        self.label_new_val.delete("1.0", tk.END)
+        self.label_new_val.insert(tk.INSERT, "New value (", "normal")
+        color_config = "color_red" if error.is_first_val else "color_blue"
+        self.label_new_val.insert(tk.INSERT, f"{error.infos1.location}", color_config)
+        self.label_new_val.insert(tk.INSERT, "):", "normal")
+        self.label_new_val.config(state="disabled")
+
+        self.new_val_var.set("")
+        if error.error_level != ErrorInformation.ErrorLevel.Type:
+            self.new_val_var.set(error.infos1.orig_value)
+            self.entry_new_val.icursor(tk.END)
+        self.label_assmp.config(text=error.create_info_msg(True), fg="black")
+
+        self.label_error.config(state="normal")
+        self.label_error.delete("1.0", tk.END)
+        self.label_error.insert(tk.END, error.error_message, "normal")
+        self.color_locations(error.error_message)
+        self.label_error.config(state="disabled")
+        if error.error_level == ErrorInformation.ErrorLevel.Missing:
+            num_errors = len([1 for e in self.errors if e.error_level == error.error_level])
+        else:
+            num_errors = len(self.errors)
+        self.label_progress.config(text=f"{self.error_index+1}/{num_errors}")
+
+    def color_locations(self, text: str):
+        """Adds colors to the input line references in the text of the error message
+
+        :param text: error message text
+        """
+        chars_first_line = re.search("^.*?\\n", text)
+        num_chars_first_line = chars_first_line.end() if chars_first_line is not None else 0
+        found_line_words = re.finditer("Line \d+", text)
+        lines = [(m.group(), m.span()) for m in found_line_words]
+        if len(lines) == 2:
+            line_rel1 = lines[0]
+            line_rel2 = lines[1]
+            line_number1 = int(re.search("\d+", line_rel1[0]).group())
+            if self.errors[self.error_index].is_first_val:
+                curr_error_loc = self.errors[self.error_index].infos1.location.file_line
+            else:
+                curr_error_loc = self.errors[self.error_index].infos2.location.file_line
+
+            num_red = line_rel1[1] if curr_error_loc + 1 == line_number1 else line_rel2[1]
+            num_blue = line_rel2[1] if curr_error_loc + 1 == line_number1 else line_rel1[1]
+
+            num_red = (num_red[0]-num_chars_first_line, num_red[1]-num_chars_first_line)
+            num_blue = (num_blue[0]-num_chars_first_line, num_blue[1]-num_chars_first_line)
+            self.label_error.tag_add("color_red", f"2.{num_red[0]}", f"2.{num_red[1]}")
+            self.label_error.tag_add("color_blue", f"2.{num_blue[0]}", f"2.{num_blue[1]}")
+        elif len(lines) == 1:
+            val = lines[0][1]
+            self.label_error.tag_add("color_red", f"1.{val[0]}", f"1.{val[1]}")
+        else:
+            raise Exception(f"An error message can only mention one or two line numbers: {text}")
+
+    def update_relational_error_info(self, error: ErrorInformation):
+        """Updates information about the current relational error
+
+        :param error: current relational error to display
+        """
+        for widget in self.relation_widgets:
+            widget.grid_forget()
+        if not isinstance(error.relation.other_id, CheckerZeroIdentifier):
+            self.show_relation_error_widgets()
+
+            self.label_assmp2.config(text=error.create_info_msg(False), fg="black")
+
+            self.label_new_val2.config(state="normal")
+            self.label_new_val2.delete("1.0", tk.END)
+            self.label_new_val2.insert(tk.INSERT, "New value (", "normal")
+            color_config = "color_red" if not error.is_first_val else "color_blue"
+            self.label_new_val2.insert(tk.INSERT, f"{error.infos2.location}", color_config)
+            self.label_new_val2.insert(tk.INSERT, "):", "normal")
+            self.label_new_val2.config(state="disabled")
+
+            if error.error_level != ErrorInformation.ErrorLevel.Type:
+                self.new_val_var2.set(error.infos2.orig_value)
+                self.entry_new_val2.icursor(tk.END)
+            if error.is_first_val:
+                state = "normal"
+                state2 = "readonly"
+                self.entry_new_val.focus()
+            else:
+                state = "readonly"
+                state2 = "normal"
+                self.entry_new_val2.focus()
+            self.entry_new_val.config(state=state)
+            self.entry_new_val2.config(state=state2)
+        else:
+            self.entry_new_val.focus()
+            self.entry_new_val.config(state="normal")
+
+    def check_new_val(self, _):
+        """Check if the current new value given by the user fulfils the assumptions."""
+        if len(self.errors) == 0 or not isinstance(self.errors[0], ErrorInformation):
+            return
+        curr_error = deepcopy(self.errors[self.error_index])
+        new_val = self.entry_new_val.get()
+        curr_error.infos1.change_orig_value(new_val)
+        rel_val = None
+        if curr_error.relation is not None:
+            if not isinstance(curr_error.relation.other_id, CheckerZeroIdentifier):
+                rel_val = self.entry_new_val2.get()
+                curr_error.infos2.change_orig_value(rel_val)
+        old_error = self.errors[self.error_index]
+        if not old_error.is_first_val:
+            self.check_corrected_input(new_val, rel_val)
+        else:
+            new_error = self.controller.check_new_val(curr_error)
+            if new_error is None:
+                self.check_corrected_input(new_val, rel_val)
+            elif old_error.relation is None:
+                if new_error.error_level < self.errors[self.error_index].error_level:
+                    self.keep_old_value()
+                else:
+                    self.errors[self.error_index] = new_error
+                    self.show_error()
+            elif new_error is not None and new_error.is_first_val:
+                self.keep_old_value()
+            elif isinstance(curr_error.relation.other_id, CheckerZeroIdentifier):
+                self.check_corrected_input(new_val, rel_val)
+                self.show_error()
+            else:
+                old_error.infos1.change_orig_value(new_val)
+                old_error.is_first_val = False
+                self.show_error()
+
+    def check_corrected_input(self, new_val: str, rel_val: str):
+        """Writes the new values to the file and checks the input
+
+        :param new_val: new value of the current error
+        :param rel_val: relational value of the current error
+        """
+        self.errors[self.error_index].infos1.change_orig_value(new_val)
+        if self.errors[self.error_index].infos2 is not None:
+            self.errors[self.error_index].infos2.change_orig_value(rel_val)
+        new_errors = self.controller.check_corrected_input(self.errors[self.error_index])
+        num_new_errors = len(new_errors) - len(self.errors) + 1
+        if num_new_errors > 20:
+            message = f"This value creates {num_new_errors} new errors.\n" \
+                      f"Do you want to proceed?"
+            proceed = messagebox.askokcancel("Python", message)
+            if not proceed:
+                return
+        self.errors = new_errors
+        self.error_index = 0
+        self.new_val_var.set("")
+        if self.new_val_var2 is not None:
+            self.new_val_var2.set("")
+        self.show_error()
+
+    def keep_old_value(self):
+        """Shows the values that were entered before."""
+        self.new_val_var.set(self.errors[self.error_index].infos1.orig_value)
+        if self.new_val_var2 is not None:
+            self.new_val_var2.set(self.errors[self.error_index].info2.orig_value)
+
+    def start_checking(self):
+        """Starts checking the input and shows information about the first error."""
+        self.errors = self.controller.start_checking(self.program_name, self.input_filename)
         self.error_index = 0
         self.show_error()
 
-    def check_corrected_input(self):
-        """Writes the new values back to the input file and runs the input checker."""
-        self.errors = self.controller.check_corrected_input(self.errors)
+    def open_input_file(self):
+        """Opens an input file for editing and rechecks the assumptions when returning"""
+        if platform in ["linux", "linux2"]:
+            process = subprocess.Popen(("gedit", f"example/{self.input_filename}"))
+            process.wait()
+        elif platform == "darwin":
+            subprocess.call(['open', '-W', f"example/{self.input_filename}"])
+        else:
+            print(f"Opening a file for os {platform} is not supported.")
+        self.errors = self.controller.run_checker()
+        if len(self.errors) == 0:
+            self.errors = self.controller.execute_input_program()
         self.error_index = 0
         self.show_error()
-
