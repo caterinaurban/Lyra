@@ -15,11 +15,11 @@ from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slici
 from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
 from lyra.core.expressions import UnaryOperation
 from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
-from lyra.core.expressions import BinaryBooleanOperation, Input, ListDisplay, Literal
+from lyra.core.expressions import BinaryBooleanOperation, Input, ListDisplay, Literal, DictDisplay
 from lyra.abstract_domains.state import State
 from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, \
-    ListDisplayAccess, SubscriptionAccess, SlicingAccess, Raise
-from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, ListLyraType
+    ListDisplayAccess, DictDisplayAccess, SubscriptionAccess, SlicingAccess, Raise
+from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, ListLyraType, DictLyraType
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -89,8 +89,24 @@ class ExpressionSemantics(Semantics):
         """
         items = [self.semantics(item, state).result for item in stmt.items]
         result = set()
-        for combination in itertools.product(*items):
+        for combination in itertools.product(*items):   # why?
             display = ListDisplay(ListLyraType(combination[0].typ), list(combination))
+            result.add(display)
+        state.result = result
+        return state
+
+    def dict_display_access_semantics(self, stmt: DictDisplayAccess, state: State) -> State:
+        """Semantics of a list display access.
+
+        :param stmt: list display access statement to be executed
+        :param state: state before executing the list display access
+        :return: state modified by the list display access
+        """
+        keys = [self.semantics(key, state).result for key in stmt.keys]
+        values = [self.semantics(value, state).result for value in stmt.values]
+        result = set()
+        for key_combination in itertools.product(*keys):
+            display = DictDisplay(DictLyraType(keys[0].typ, values[0].typ), keys, values)
             result.add(display)
         state.result = result
         return state

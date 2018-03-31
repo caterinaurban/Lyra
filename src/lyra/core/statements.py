@@ -140,6 +140,32 @@ class ListDisplayAccess(ExpressionAccess):
     def __repr__(self):
         return str(self.items)
 
+# TODO: DictDisplayAccess?
+class DictDisplayAccess(ExpressionAccess):
+    """Dictionary display access representation."""
+    def __init__(self, pp: ProgramPoint, keys: List[Statement], values: List[Statement]):    # List[Statements]?
+        """Dictionary display access construction.
+
+        :param pp: program point associated with the list display access
+        :param keys: list of keys being displayed
+        """
+        super().__init__(pp)
+        self._keys = keys
+        self._values = values
+
+    @property
+    def keys(self):
+        return self._keys
+
+    @property
+    def values(self):
+        return self._values
+
+    def __repr__(self):
+        str_keys = map(str, self.keys)
+        str_values = map(str, self.values)
+        return '{' + ', '.join(' : '.join(x) for x in zip(str_keys, str_values)) + '}'
+
 
 class SubscriptionAccess(ExpressionAccess):
     """Subscription access representation."""

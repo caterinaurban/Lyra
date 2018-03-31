@@ -9,7 +9,7 @@ Lyra's internal representation of Python expressions.
 
 from abc import ABCMeta, abstractmethod
 from enum import IntEnum
-from typing import Set, List
+from typing import Set, List, Tuple
 
 from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType
 from lyra.core.utils import copy_docstring
@@ -137,6 +137,10 @@ class ExpressionVisitor(metaclass=ABCMeta):
         """Visit of a list display."""
 
     @abstractmethod
+    def visit_DictDisplay(self, expr: 'DictDisplay'):
+        """Visit of dictionary display."""
+
+    @abstractmethod
     def visit_Range(self, expr: 'Range'):
         """Visit of a range call."""
 
@@ -206,6 +210,10 @@ class NegationFreeNormalExpression(ExpressionVisitor):
     @copy_docstring(ExpressionVisitor.visit_ListDisplay)
     def visit_ListDisplay(self, expr: 'ListDisplay', invert=False):
         return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+    def visit_DictDisplay(self, expr: 'DictDisplay', invert=False):
+        return expr  # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_Range)
     def visit_Range(self, expr: 'Range', invert=False):
@@ -450,6 +458,41 @@ class ListDisplay(Expression):
     def __str__(self):
         return str(self.items)
 
+# TODO: DictDisplay?
+class DictDisplay(Expression):
+    """Dictionary display representation.
+
+    https://docs.python.org/3/reference/expressions.html#dictionary-displays
+    """
+
+    def __init__(self, typ: LyraType, keys: List[Expression] = None, values: List[Expression] = None):
+        """Dictionary display construction.
+
+        :param typ: type of the dictionary
+        :param items: list of items being displayed (in the form key:value)
+        """
+        super().__init__(typ)
+        self._keys = keys or []
+        self._values = values or []
+
+    @property
+    def keys(self):
+        return self._keys
+
+    @property
+    def values(self):
+        return self._values
+
+    def __eq__(self, other):
+        return (self.typ, self.keys, self.values) == (other.typ, other.keys, other.items)
+
+    def __hash__(self):
+        return hash((self.typ, str(self.keys), str(self.values)))
+
+    def __str__(self):
+        str_keys = map(str, self.keys)
+        str_values = map(str, self.values)
+        return '{' + ', '.join(' : '.join(x) for x in zip(str_keys, str_values)) + '}'
 
 class Input(Expression):
     """Input expression representation."""

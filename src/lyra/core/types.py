@@ -79,6 +79,33 @@ class ListLyraType(LyraType):
         return f"List[{repr(self.typ)}]"
 
 
+# TODO: DictLyraType?
+class DictLyraType(LyraType):
+    """Dictionary type representation."""
+
+    def __init__(self, key_type: LyraType, value_type: LyraType):
+        """Dictionary type creation.
+
+        :param key_type: type of the dictionary keys
+        :param value_type: type of the dictionary values
+        """
+        self._key_type = key_type
+        self._value_type = value_type
+
+    @property
+    def key_type(self):
+        """Type of the dictionary keys."""
+        return self._key_type
+
+    @property
+    def value_type(self):
+        """Type of the dictionary values."""
+        return self._value_type
+
+    def __repr__(self):
+        return f"Dict[{repr(self.key_type)}, {repr(self.value_type)}]"
+
+
 def resolve_type_annotation(annotation):
     """Type annotation resolution."""
 
@@ -96,5 +123,9 @@ def resolve_type_annotation(annotation):
         if annotation.value.id == 'List':
             value = resolve_type_annotation(annotation.slice.value)
             return ListLyraType(value)
+        elif annotation.value.id == 'Dict':
+            key = resolve_type_annotation(annotation.slice.value.elts[0])
+            value = resolve_type_annotation(annotation.slice.value.elts[1])
+            return DictLyraType(key, value)
 
     raise NotImplementedError(f"Type annotation {annotation} is not yet supported!")

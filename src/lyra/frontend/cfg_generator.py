@@ -527,6 +527,10 @@ class CFGVisitor(ast.NodeVisitor):
         pp = ProgramPoint(node.lineno, node.col_offset)
         return ListDisplayAccess(pp, [self.visit(e, types, typ) for e in node.elts])
 
+    def visit_Dict(self, node, types=None, typ=None):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        return DictDisplayAccess(pp, [self.visit(k, types, typ) for k in node.keys], [self.visit(v, types, typ) for v in node.values])
+
     def visit_Raise(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         exception_call = self.visit(node.exc, types, typ)
