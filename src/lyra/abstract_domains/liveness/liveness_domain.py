@@ -147,7 +147,7 @@ class LivenessState(Store, State):
 
     @copy_docstring(State.enter_loop)
     def enter_loop(self) -> 'LivenessState':
-        return self  # nothing to be donle
+        return self  # nothing to be done
 
     @copy_docstring(State.exit_loop)
     def exit_loop(self) -> 'LivenessState':

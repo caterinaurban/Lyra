@@ -10,7 +10,7 @@ import glob
 import os
 import unittest
 
-from lyra.abstract_domains.usage.usage_domain import UsageState
+from lyra.abstract_domains.usage.usage_domain import SimpleUsageState
 from lyra.engine.backward import BackwardInterpreter
 from lyra.semantics.backward import DefaultBackwardSemantics
 from lyra.unittests.runner import TestRunner
@@ -22,7 +22,7 @@ class UsageTest(TestRunner):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        return UsageState(self.variables)
+        return SimpleUsageState(self.variables)
 
 
 def test_suite():

@@ -7,8 +7,7 @@ Usage Lattice - Unit Tests
 
 
 import unittest
-from lyra.abstract_domains.usage.usage_domain import UsageLattice
-
+from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 
 U = UsageLattice.Status.U
 S = UsageLattice.Status.S
