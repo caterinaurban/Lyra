@@ -6,7 +6,7 @@ Lyra Static Program Analyzer
 import argparse
 from lyra.engine.liveness.liveness_analysis import StrongLivenessAnalysis
 from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
-from lyra.engine.usage.usage_analysis import UsageAnalysis
+from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
 
 
 def main():
@@ -26,7 +26,7 @@ def main():
     if args.analysis == 'liveness':
         StrongLivenessAnalysis().main(args.python_file)
     if args.analysis == 'usage':
-        UsageAnalysis().main(args.python_file)
+        SimpleUsageAnalysis().main(args.python_file)
 
 
 if __name__ == '__main__':

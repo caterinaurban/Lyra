@@ -329,12 +329,18 @@ class NegationFreeNormalExpression(ExpressionVisitor):
         ins = [BinaryComparisonOperation.Operator.In, BinaryComparisonOperation.Operator.NotIn]
         if not isinstance(expr, BinaryComparisonOperation) or expr.operator not in ins:
             return expression
-        if isinstance(expr.right, Range):
+        right_expr = expr.right
+        if isinstance(right_expr, Range):
             iter_var = expr.left
-            start = expr.right.start
-            end = expr.right.end
+            start = right_expr.start
+            end = right_expr.end
+            step = right_expr.step
             op_iter_start = BinaryComparisonOperation.Operator.GtE
             op_iter_end = BinaryComparisonOperation.Operator.Lt
+            if isinstance(step, UnaryArithmeticOperation):
+                if step.operator == UnaryArithmeticOperation.Operator.Sub:
+                    op_iter_start = BinaryComparisonOperation.Operator.LtE
+                    op_iter_end = BinaryComparisonOperation.Operator.Gt
             op_connection = BinaryBooleanOperation.Operator.And
             if inverted:
                 op_iter_start = op_iter_start.reverse_operator()

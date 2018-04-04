@@ -2,13 +2,13 @@ from lyra.engine.liveness.liveness_analysis import LivenessAnalysis, StrongLiven
 from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
 from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis
 from lyra.engine.quality.assumption_analysis import AssumptionAnalysis
-from lyra.engine.usage.usage_analysis import UsageAnalysis
+from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
 
 # LivenessAnalysis().main("liveness/example.py")
 
 # StrongLivenessAnalysis().main("liveness/example.py")
 
-# UsageAnalysis().main("usage/example.py")
+SimpleUsageAnalysis().main("usage/example.py")
 
 # BoolTracesAnalysis().main("traces/example.py")
 
@@ -16,4 +16,4 @@ from lyra.engine.usage.usage_analysis import UsageAnalysis
 
 # ForwardIntervalAnalysis().main("numerical/example.py")
 
-AssumptionAnalysis().main("quality/example.py")
+# AssumptionAnalysis().main("quality/example.py")

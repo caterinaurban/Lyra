@@ -17,7 +17,7 @@ from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor, \
-    BinaryComparisonOperation, Literal, Range
+    BinaryComparisonOperation, Literal, Range, UnaryArithmeticOperation
 from lyra.core.types import ListLyraType, IntegerLyraType, BooleanLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -37,25 +37,41 @@ class InputAssumptionStack(Stack):
     def pop(self):
         if len(self.stack) > 1:
             element = self.stack.pop()
-            if element.is_top():
-                if len(self.stack) > 1:
-                    self.lattice.top()
-                return
-            if element.is_loop:
+            if element.infoloss:
+                self.lattice.assmps.clear()
+                self.lattice.infoloss = True
+            elif element.is_loop:
                 if len(element.assmps) > 0:
                     num_iter = self.get_num_iter_from_condition(element.condition)
                     if num_iter is None:
-                        self.lattice.top()
-                    else:
-                        self.lattice.bottom()
-                        self.stack.append(InputAssumptionLattice())
-                        self.lattice.add_assumptions_with_iter(num_iter, element.assmps)
-                        self.lattice.join_as_loop = True
+                        self.lattice.assmps.clear()
+                        self.lattice.infoloss = True
+                        return
+                    if self.check_second_iteration(element):
+                        self.lattice.assmps.pop(0)
+                    pp = element.assmps[0].pp
+                    self.lattice.add_assmps_with_iter(num_iter, element.assmps, pp)
+                    self.lattice.join_as_loop = True
                 else:
                     self.lattice.join_as_loop = True
             elif len(element.assmps) > 0:
                 self.lattice.add_assumptions_front(element.assmps)
                 self.lattice.join_as_loop = False
+
+    def check_second_iteration(self, element):
+        """Checks if the assumption in front of the current stack top is from the same program
+        point than the front assumption of the element that we pop.
+
+        :param element: The element that is currently popped
+        :return: f the assumption in front of the current stack top is from the same program
+        point than the parameter element.
+        """
+        if len(self.lattice.assmps) == 0:
+            return False
+        prev_element = self.lattice.assmps[0]
+        if not isinstance(prev_element, InputAssumptionLattice):
+            return False
+        return prev_element.pp == element.assmps[0].pp
 
     def get_num_iter_from_condition(self, condition):
         """Extracts the number of iterations from a condition
@@ -67,54 +83,35 @@ class InputAssumptionStack(Stack):
             if condition.operator == BinaryComparisonOperation.Operator.In:
                 in_element = condition.right
                 if isinstance(in_element, Range):
-                    start_literal = isinstance(in_element.start, Literal)
-                    end_literal = isinstance(in_element.end, Literal)
-                    step_literal = isinstance(in_element.step, Literal)
-                    if start_literal and end_literal and step_literal:
-                        start = int(in_element.start.val)
-                        end = int(in_element.end.val)
-                        step = int(in_element.step.val)
+                    start = self.get_value_for_iteration(in_element.start)
+                    end = self.get_value_for_iteration(in_element.end)
+                    step = self.get_value_for_iteration(in_element.step)
+                    if start is not None and end is not None and step is not None:
                         return math.ceil((end - start) / step)
-                    else:
-                        error = f"Analysis of range() is only implemented for Literal arguments."
-                        raise NotImplementedError(error)
+                    error = f"Analysis of range() is only implemented for Literal arguments."
+                    raise NotImplementedError(error)
+        return None
+
+    def get_value_for_iteration(self, iter_expr):
+        """Gets the value from an expression. Works for Literals or UnaryOperations of a Literal.
+
+        :param iter_expr: expression to extract the value from
+        :return: The value of the evaluated expression or None
+        """
+        if isinstance(iter_expr, Literal):
+            return int(iter_expr.val)
+        elif isinstance(iter_expr, UnaryArithmeticOperation):
+            is_minus = iter_expr.operator == UnaryArithmeticOperation.Operator.Sub
+            if isinstance(iter_expr.expression, Literal):
+                val = int(iter_expr.expression.val)
+                if is_minus:
+                    val = -val
+                return val
         return None
 
     @copy_docstring(Stack.push)
     def push(self):
         self.stack.append(InputAssumptionLattice())
-
-    @copy_docstring(Stack.join)
-    def join(self, other):
-        if self.lattice.is_bottom():
-            self.lattice.replace(other.lattice)
-            return self
-        elif other.lattice.is_bottom():
-            return self
-        if self.lattice.is_top():
-            return self
-        if self.lattice.join_as_loop or other.lattice.join_as_loop:
-            if len(self.stack) == len(other.stack):
-                for i, item in enumerate(self.stack):
-                    if len(item.assmps) == len(other.stack[i].assmps):
-                        item.join(other.stack[i])
-                    elif len(item.assmps) < len(other.stack[i].assmps):
-                        item.replace(other.stack[i])
-            elif len(self.stack) > len(other.stack):
-                loop = self.stack.pop()
-                self.join(other)
-                self.lattice.add_assumptions_front(loop.assmps)
-            else:
-                other_copy = deepcopy(other)
-                loop = other_copy.stack.pop()
-                self.join(other_copy)
-                self.lattice.add_assumptions_front(loop.assmps)
-            self.lattice.join_as_loop = False
-            return self
-        if len(self.stack) > 1 and len(self.lattice.assmps) != len(other.lattice.assmps):
-            self.lattice.top()
-            return self
-        return self.lattice.join(other.lattice)
 
 
 class AssumptionState(Store, State):
@@ -135,6 +132,7 @@ class AssumptionState(Store, State):
         lattices = {typ: AssumptionLattice for typ in types}
         super().__init__(variables, lattices)
         self.store[self.input_var] = InputAssumptionStack()
+        self.store[self.input_var].lattice.is_main = True
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
@@ -288,9 +286,10 @@ class AssumptionState(Store, State):
         def visit_Input(self, expr, assumption=None, state=None):
             type_assumption = TypeLattice.from_lyra_type(expr.typ)
             input_assumption = AssumptionLattice(type_assumption).meet(assumption)
-            if state.store[state.input_var].lattice.is_top():
+            input_assumption.pp = state.pp
+            if state.store[state.input_var].lattice.infoloss:
                 if len(state.store[state.input_var].stack) == 1:
-                    state.current_stack_top.meet(InputAssumptionLattice())
+                    state.store[state.input_var].lattice.infoloss = False
             state.store[state.input_var].lattice.add_assumption_front(input_assumption)
             return state
 
