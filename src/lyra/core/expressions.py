@@ -9,7 +9,7 @@ Lyra's internal representation of Python expressions.
 
 from abc import ABCMeta, abstractmethod
 from enum import IntEnum
-from typing import Set, List, Tuple
+from typing import Set, List
 
 from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType
 from lyra.core.utils import copy_docstring
