@@ -458,7 +458,7 @@ class ListDisplay(Expression):
     def __str__(self):
         return str(self.items)
 
-# TODO: DictDisplay?
+
 class DictDisplay(Expression):
     """Dictionary display representation.
 

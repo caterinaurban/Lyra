@@ -19,7 +19,8 @@ from lyra.core.expressions import BinaryBooleanOperation, Input, ListDisplay, Li
 from lyra.abstract_domains.state import State
 from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, \
     ListDisplayAccess, DictDisplayAccess, SubscriptionAccess, SlicingAccess, Raise
-from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, ListLyraType, DictLyraType
+from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
+    ListLyraType, DictLyraType
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -95,18 +96,22 @@ class ExpressionSemantics(Semantics):
         state.result = result
         return state
 
-    def dict_display_access_semantics(self, stmt: DictDisplayAccess, state: State) -> State:
+    def dict_display_access_semantics(self, stmt: DictDisplayAccess, state: State) -> State:  # TODO: ugly
         """Semantics of a list display access.
 
-        :param stmt: list display access statement to be executed
-        :param state: state before executing the list display access
-        :return: state modified by the list display access
+        :param stmt: dictionary display access statement to be executed
+        :param state: state before executing the dictionary display access
+        :return: state modified by the dictionary display access
         """
-        keys = [self.semantics(key, state).result for key in stmt.keys]
-        values = [self.semantics(value, state).result for value in stmt.values]
+        k_exprs = [self.semantics(k, state).result for k in stmt.keys]      # List[Set[Expression]]
+        v_exprs = [self.semantics(v, state).result for v in stmt.values]
+
+        k_v_tuples = [{(k,v) for k, v in zip(k_set, v_set)} for k_set, v_set in zip(k_exprs, v_exprs)]  # List[Set[Tuple[Expression, Expression]]
+
         result = set()
-        for key_combination in itertools.product(*keys):
-            display = DictDisplay(DictLyraType(keys[0].typ, values[0].typ), keys, values)
+        for combination in itertools.product(*k_v_tuples):  # necessary?
+            unzip = list(zip(*combination))
+            display = DictDisplay(DictLyraType(combination[0][0].typ, combination[0][1].typ), list(unzip[0]), list(unzip[1]))
             result.add(display)
         state.result = result
         return state

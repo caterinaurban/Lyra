@@ -43,15 +43,15 @@ class LooseControlFlowGraph:
         BREAK = 1
         CONTINUE = 2
 
-    def __init__(self, nodes: Set[Node] = None, in_node: Node = None, out_node: Node = None, edges: Set[Edge] = None,
-                 loose_in_edges=None,
+    def __init__(self, nodes: Set[Node] = None, in_node: Node = None, out_node: Node = None,
+                 edges: Set[Edge] = None, loose_in_edges=None,
                  loose_out_edges=None, both_loose_edges=None):
         """Loose control flow graph representation.
 
-        This representation uses a complete (non-loose) control flow graph via aggregation and adds loose edges and
-        some transformations methods to combine, prepend and append loose control flow graphs. This class
-        intentionally does not provide access to the linked CFG. The completed CFG can be retrieved finally with
-        `eject()`.
+        This representation uses a complete (non-loose) control flow graph via aggregation
+        and adds loose edges and some transformations methods to combine, prepend
+        and append loose control flow graphs. This class intentionally does not provide
+        access to the linked CFG. The completed CFG can be retrieved finally with `eject()`.
 
         :param nodes: optional set of nodes of the control flow graph
         :param in_node: optional entry node of the control flow graph
@@ -114,8 +114,8 @@ class LooseControlFlowGraph:
         return self._special_edges
 
     def loose(self):
-        return len(self.loose_in_edges) or len(self.loose_out_edges) or len(self.both_loose_edges) or len(
-            self.special_edges)
+        return len(self.loose_in_edges) or len(self.loose_out_edges) or len(self.both_loose_edges)\
+               or len(self.special_edges)
 
     def add_node(self, node):
         self.nodes[node.identifier] = node
@@ -242,8 +242,8 @@ class CFGFactory:
     A helper class that encapsulates a partial CFG and possibly some statements not yet attached to CFG.
 
     Whenever the
-    method `complete_basic_block()` is called, it is ensured that all unattached statements are properly attached to
-    partial CFG. The partial CFG can be retrieved at any time by property `cfg`.
+    method `complete_basic_block()` is called, it is ensured that all unattached statements are
+    properly attached to partial CFG. The partial CFG can be retrieved at any time by property `cfg`.
     """
 
     def __init__(self, id_gen):
@@ -529,7 +529,9 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_Dict(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        return DictDisplayAccess(pp, [self.visit(k, types, typ) for k in node.keys], [self.visit(v, types, typ) for v in node.values])
+        k_stmts = [self.visit(k, types, typ) for k in node.keys]
+        v_stmts = [self.visit(v, types, typ) for v in node.values]
+        return DictDisplayAccess(pp, k_stmts, v_stmts)
 
     def visit_Raise(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
@@ -591,6 +593,8 @@ class CFGVisitor(ast.NodeVisitor):
                     pass
                 else:
                     cfg_factory.append_cfg(_dummy_cfg(self._id_gen))
+            # elif isinstance(child, ast.Assign): # TODO
+            #     raise NotAnnotatedError(f"The Assignment in line {str(child.lineno)} is not type annotated")
             else:
                 raise NotImplementedError(f"The statement {str(type(child))} is not yet translatable to CFG!")
         cfg_factory.complete_basic_block()

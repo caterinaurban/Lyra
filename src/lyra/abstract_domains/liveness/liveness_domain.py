@@ -19,10 +19,11 @@ from typing import List
 
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.state import State
-from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing
+from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing, Literal
 
 from lyra.abstract_domains.store import Store
-from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType
+from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType, StringLyraType, \
+    DictLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -117,7 +118,7 @@ class LivenessState(Store, State):
 
         :param variables: list of program variables
         """
-        types = [BooleanLyraType, IntegerLyraType, ListLyraType]
+        types = [BooleanLyraType, IntegerLyraType, StringLyraType, ListLyraType, DictLyraType]
         lattices = {typ: LivenessLattice for typ in types}
         super().__init__(variables, lattices)
 
@@ -205,7 +206,7 @@ class StrongLivenessState(LivenessState):
             if self.store[left].is_top():   # the assigned variable is strongly-live
                 self.store[left].bottom()
                 for identifier in right.ids():
-                    if isinstance(identifier, VariableIdentifier):
+                    if isinstance(identifier, VariableIdentifier):  # needed? ids = VariableIdentifier?
                         self.store[identifier].top()
                     else:
                         error = f"Substitution with {right} is not implemented!"
@@ -213,14 +214,20 @@ class StrongLivenessState(LivenessState):
             return self
         elif isinstance(left, Subscription) or isinstance(left, Slicing):
             target = left.target
-            if self.store[target].is_top():  # the assigned variable is strongly-live
-                # summarization abstraction
+            if self.store[target].is_top():  # the assigned variable (list, dict,...) is strongly-live
+                # summarization abstraction (weak update)
                 for identifier in right.ids():
                     if isinstance(identifier, VariableIdentifier):
                         self.store[identifier].top()
                     else:
                         error = f"Substitution with {right} is not implemented!"
                         raise NotImplementedError(error)
+                key = left.key      # TODO: Slicing?
+                if isinstance(key, VariableIdentifier):    # make subscript strongly-live
+                    self.store[key].top()                   # TODO: other key objects
+                elif not isinstance(key, Literal):
+                    error = f"Subscript {key} is not an identifier or literal!"
+                    raise NotImplementedError(error)
             return self
         error = f"Substitution for {left} is not yet implemented!"
         raise NotImplementedError(error)

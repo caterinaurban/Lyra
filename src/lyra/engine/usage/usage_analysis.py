@@ -16,5 +16,5 @@ class UsageAnalysis(Runner):
     def interpreter(self):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
-    def state(self):
+    def state(self):  # initial state
         return UsageState(self.variables)

@@ -324,6 +324,11 @@ class IntervalState(Store, State):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
+        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+        def visit_DictDisplay(self, expr: DictDisplay, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
         @copy_docstring(ExpressionVisitor.visit_Range)
         def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
@@ -437,6 +442,11 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
+            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+        def visit_DictDisplay(self, expr: DictDisplay, evaluation=None, value=None, state=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 

@@ -140,7 +140,7 @@ class ListDisplayAccess(ExpressionAccess):
     def __repr__(self):
         return str(self.items)
 
-# TODO: DictDisplayAccess?
+
 class DictDisplayAccess(ExpressionAccess):
     """Dictionary display access representation."""
     def __init__(self, pp: ProgramPoint, keys: List[Statement], values: List[Statement]):    # List[Statements]?

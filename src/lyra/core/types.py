@@ -79,7 +79,6 @@ class ListLyraType(LyraType):
         return f"List[{repr(self.typ)}]"
 
 
-# TODO: DictLyraType?
 class DictLyraType(LyraType):
     """Dictionary type representation."""
 
