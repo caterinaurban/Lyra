@@ -90,7 +90,7 @@ class ExpressionSemantics(Semantics):
         """
         items = [self.semantics(item, state).result for item in stmt.items]
         result = set()
-        for combination in itertools.product(*items):   # why?
+        for combination in itertools.product(*items):
             display = ListDisplay(ListLyraType(combination[0].typ), list(combination))
             result.add(display)
         state.result = result
