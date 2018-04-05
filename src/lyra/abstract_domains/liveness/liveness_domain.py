@@ -19,7 +19,7 @@ from typing import List
 
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.state import State
-from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing, Literal
+from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing
 
 from lyra.abstract_domains.store import Store
 from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType, StringLyraType, \
@@ -222,12 +222,17 @@ class StrongLivenessState(LivenessState):
                     else:
                         error = f"Substitution with {right} is not implemented!"
                         raise NotImplementedError(error)
-                key = left.key      # TODO: Slicing?
-                if isinstance(key, VariableIdentifier):    # make subscript strongly-live
-                    self.store[key].top()                   # TODO: other key objects
-                elif not isinstance(key, Literal):
-                    error = f"Subscript {key} is not an identifier or literal!"
-                    raise NotImplementedError(error)
+
+                if (isinstance(left, Subscription)):
+                    ids = left.key.ids()
+                else:  # Slicing
+                    ids = left.lower.ids() | left.upper.ids()
+                for identifier in ids:  # make ids in subscript strongly live
+                    if isinstance(identifier, VariableIdentifier):
+                        self.store[identifier].top()
+                    else:
+                        error = f"Identifier {identifier} in subscript is not yet supported!"
+                        raise NotImplementedError(error)
             return self
         error = f"Substitution for {left} is not yet implemented!"
         raise NotImplementedError(error)

@@ -521,7 +521,11 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        return Call(pp, node.func.id, [self.visit(arg, types, typ) for arg in node.args], typ)
+        if isinstance(node.func, ast.Attribute):  # function called on variable
+            name = node.func.attr
+        else:       # ast.Name
+            name = node.func.id
+        return Call(pp, name, [self.visit(arg, types, typ) for arg in node.args], typ)
 
     def visit_List(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
