@@ -96,7 +96,7 @@ class ExpressionSemantics(Semantics):
         state.result = result
         return state
 
-    def dict_display_access_semantics(self, stmt: DictDisplayAccess, state: State) -> State:  # TODO: ugly
+    def dict_display_access_semantics(self, stmt: DictDisplayAccess, state: State) -> State:
         """Semantics of a list display access.
 
         :param stmt: dictionary display access statement to be executed
@@ -106,12 +106,15 @@ class ExpressionSemantics(Semantics):
         k_exprs = [self.semantics(k, state).result for k in stmt.keys]      # List[Set[Expression]]
         v_exprs = [self.semantics(v, state).result for v in stmt.values]
 
-        k_v_tuples = [{(k,v) for k, v in zip(k_set, v_set)} for k_set, v_set in zip(k_exprs, v_exprs)]  # List[Set[Tuple[Expression, Expression]]
+        k_v_tuples = map(itertools.product, k_exprs, v_exprs)       #One "Set" of Tuples of possible key-value pairs per actual k-v-pair
 
+        k_typ = next(iter(k_exprs[0])).typ      # Is there a better way to retrieve the types?
+        v_typ = next(iter(v_exprs[0])).typ
         result = set()
-        for combination in itertools.product(*k_v_tuples):  # necessary?
-            unzip = list(zip(*combination))
-            display = DictDisplay(DictLyraType(combination[0][0].typ, combination[0][1].typ), list(unzip[0]), list(unzip[1]))
+
+        for combination in itertools.product(*k_v_tuples):
+            unzip = list(zip(*combination))     # to create two separate lists for keys and values
+            display = DictDisplay(DictLyraType(k_typ, v_typ), list(unzip[0]), list(unzip[1]))
             result.add(display)
         state.result = result
         return state
