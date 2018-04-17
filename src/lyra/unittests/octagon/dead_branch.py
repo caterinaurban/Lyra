@@ -5,7 +5,7 @@ a = a - 1
 
 if a > 0:
     a = x
-    # RESULT: ⊥
+    # STATE: ⊥
 else:
     x = a
 
