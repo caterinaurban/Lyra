@@ -200,7 +200,7 @@ class IntervalState(Store, State):
                     if isinstance(expression.typ, BooleanLyraType):
                         evaluation = self._evaluation.visit(normal, self, dict())
                         false = IntervalLattice(0, 0)
-                        return self._refinement.visit(normal, evaluation, false, self)
+                        return self._refinement.visit(expression, evaluation, false, self)
         elif isinstance(normal, BinaryBooleanOperation):
             if normal.operator == BinaryBooleanOperation.Operator.And:
                 right = deepcopy(self)._assume(normal.right)
