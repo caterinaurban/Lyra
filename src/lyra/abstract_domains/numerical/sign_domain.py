@@ -357,8 +357,17 @@ class SignState(Store, State):
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
         def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation',
                                            state: 'SignState' = None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            if expr.operator == UnaryArithmeticOperation.Operator.Add:
+                evaluated = self.visit(expr.expression, state, evaluation)
+                evaluated[expr] = evaluated[expr.expression]
+                return evaluated
+            if expr.operator == UnaryArithmeticOperation.Operator.Sub:
+                evaluated = self.visit(expr.expression, state, evaluation)
+                evaluated[expr] = evaluated[expr.expression].neg()
+                return evaluated
+            raise ValueError(f"Unary operator {expr.operator} is not supported!")
 
         @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
         def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation',
@@ -400,8 +409,17 @@ class SignState(Store, State):
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
         def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation',
                                          state: 'SignState' = None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            if expr in evaluation:
+                return evaluation
+            evaluation1 = self.visit(expr.left, state, evaluation)
+            evaluation2 = self.visit(expr.right, state, evaluation1)
+            if expr.operator == BinaryBooleanOperation.Operator.And:
+                evaluation2[expr] = deepcopy(evaluation2[expr.left]).mult(evaluation2[expr.right])
+                return evaluation2
+            if expr.operator == BinaryBooleanOperation.Operator.Or:
+                evaluation2[expr] = deepcopy(evaluation2[expr.left]).add(evaluation2[expr.right])
+                return evaluation2
+            raise ValueError("Binary operator {expr.operator} is not supported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
         def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation',
