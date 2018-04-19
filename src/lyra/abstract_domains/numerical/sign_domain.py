@@ -15,7 +15,7 @@ from lyra.abstract_domains.lattice import ArithmeticMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import *
-from lyra.core.types import FloatLyraType
+from lyra.core.types import FloatLyraType, ListLyraType
 
 from lyra.core.utils import copy_docstring
 
@@ -203,24 +203,24 @@ class SignState(Store, State):
 
         :param variables: the list of program variables
         """
-        lattices = {BooleanLyraType: SignLattice,
-                    IntegerLyraType: SignLattice,
-                    FloatLyraType: SignLattice}
+        types = [BooleanLyraType, IntegerLyraType, FloatLyraType, ListLyraType]
+        lattices = {typ: SignLattice for typ in types}
         super().__init__(variables, lattices)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'SignState':
         if isinstance(left, VariableIdentifier):
-            if isinstance(left.typ, BooleanLyraType) or \
-                    isinstance(left.typ, IntegerLyraType) or \
-                    isinstance(left.typ, FloatLyraType):
+            if isinstance(left.typ, BooleanLyraType) or isinstance(left.typ, IntegerLyraType) or \
+                    isinstance(left.typ, FloatLyraType) or isinstance(left.typ, ListLyraType):
                 evaluation = self._evaluation.visit(right, self, dict())
                 self.store[left] = evaluation[right]
                 return self
-            else:
-                raise ValueError(f"Variable type {left.typ} is not supported!")
-        else:
-            raise NotImplementedError(f"Assignment to {left.__class__.__name__} is not supported!")
+            raise ValueError(f"Variable type {left.typ} is not supported!")
+        if isinstance(left, Subscription):
+            evaluation = self._evaluation.visit(right, self, dict())
+            self.store[left.target].join(evaluation[right])
+            return self
+        raise NotImplementedError(f"Assignment to {left.__class__.__name__} is not supported!")
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'SignState':
@@ -320,17 +320,20 @@ class SignState(Store, State):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType) or \
-                    isinstance(expr.typ, FloatLyraType):
+                    isinstance(expr.typ, FloatLyraType) or isinstance(expr.typ, ListLyraType):
                 evaluation[expr] = deepcopy(state.store[expr])
                 return evaluation
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            ValueError(f"Variable type {expr.typ} is not supported!")
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: 'ListDisplay', state: 'SignState' = None,
                               evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            for item in expr.items:
+                evaluation = self.visit(item, state, evaluation)
+            evaluation[expr] = SignLattice().big_join([evaluation[item] for item in expr.items])
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Range)
         def visit_Range(self, expr: 'Range', state: 'SignState' = None, evaluation=None):
@@ -346,8 +349,11 @@ class SignState(Store, State):
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: 'Subscription', state: 'SignState' = None,
                                evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            self.visit(expr.target, state, evaluation)
+            evaluation[expr] = evaluation[expr.target]
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: 'Slicing', state: 'SignState' = None, evaluation=None):
