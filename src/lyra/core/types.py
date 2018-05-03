@@ -24,14 +24,14 @@ class LyraType(metaclass=ABCMeta):
     def __hash__(self):
         return hash(repr(self))
 
-    @abstractmethod
+    # @abstractmethod
     def __repr__(self):
         """Unambiguous string representation of the type.
 
         :return: unambiguous string representation
 
         """
-
+        return "Any"
 
 class BooleanLyraType(LyraType):
     """Boolean type representation."""
