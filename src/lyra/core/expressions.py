@@ -11,7 +11,8 @@ from abc import ABCMeta, abstractmethod
 from enum import IntEnum
 from typing import Set, List
 
-from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType
+from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType, \
+    DictLyraType, SetLyraType, ListLyraType, TupleLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -23,7 +24,7 @@ class Expression(metaclass=ABCMeta):
     def __init__(self, typ: LyraType):
         """Expression construction.
 
-        :param typ: type of the expression
+        :param typ: (return) type of the expression
         """
         self._typ = typ
 
@@ -442,7 +443,7 @@ class ListDisplay(Expression):
     https://docs.python.org/3/reference/expressions.html#list-displays
     """
 
-    def __init__(self, typ: LyraType, items: List[Expression] = None):
+    def __init__(self, typ: ListLyraType, items: List[Expression] = None):
         """List display construction.
         
         :param typ: type of the list
@@ -465,17 +466,77 @@ class ListDisplay(Expression):
         return str(self.items)
 
 
+class TupleDisplay(Expression):
+    """Tuple display (= expression list with comma, or ()) representation.      # TODO: what about expression list without comma?
+
+    https://docs.python.org/3/reference/expressions.html#expression-lists
+    """
+
+    def __init__(self, typ: TupleLyraType, items: List[Expression] = None):
+        """Tuple construction.
+
+        :param typ: type of the tuple
+        :param items: list of items being displayed
+        """
+        super().__init__(typ)
+        self._items = items or []
+
+    @property
+    def items(self):
+        return self._items
+
+    def __eq__(self, other):
+        return (self.typ, self.items) == (other.typ, other.items)
+
+    def __hash__(self):
+        return hash((self.typ, str(self.items)))
+
+    def __str__(self):
+        str_items = map(str, self.items)
+        return '(' + ', '.join(str_items) + ')'
+
+
+class SetDisplay(Expression):
+    """Set display representation.
+
+    https://docs.python.org/3/reference/expressions.html#set-displays
+    """
+
+    def __init__(self, typ: SetLyraType, items: List[Expression] = None):      # TODO: represent elements as set?
+        """Set display construction.
+
+        :param typ: type of the set
+        :param items: list of items being displayed
+        """
+        super().__init__(typ)
+        self._items = items or []
+
+    @property
+    def items(self):
+        return self._items
+
+    def __eq__(self, other):
+        return (self.typ, self.items) == (other.typ, other.items)
+
+    def __hash__(self):
+        return hash((self.typ, str(self.items)))
+
+    def __str__(self):
+        str_items = map(str, self.items)
+        return '{' + ', '.join(str_items) + '}'
+
+
 class DictDisplay(Expression):
     """Dictionary display representation.
 
     https://docs.python.org/3/reference/expressions.html#dictionary-displays
     """
 
-    def __init__(self, typ: LyraType, keys: List[Expression] = None, values: List[Expression] = None):
+    def __init__(self, typ: DictLyraType, keys: List[Expression] = None, values: List[Expression] = None):
         """Dictionary display construction.
 
         :param typ: type of the dictionary
-        :param items: list of items being displayed (in the form key:value)
+        :param keys, values: list of items being displayed (in the form key:value)
         """
         super().__init__(typ)
         self._keys = keys or []
@@ -499,6 +560,7 @@ class DictDisplay(Expression):
         str_keys = map(str, self.keys)
         str_values = map(str, self.values)
         return '{' + ', '.join(' : '.join(x) for x in zip(str_keys, str_values)) + '}'
+
 
 class Input(Expression):
     """Input expression representation."""
@@ -558,6 +620,33 @@ class Range(Expression):
 
     def __str__(self):
         return f"range({self.start}, {self.end}, {self.step})"
+
+
+class Items(Expression):        # TODO: remove?
+    """Items call representation"""
+
+    def __init__(self, typ: LyraType, target_dict: Expression):
+        """Items call expression construction.
+
+        :param typ: type that items() returns
+        :param target_dict: target of the items() call
+        """
+
+        super().__init__(typ)
+        self._target_dict = target_dict
+
+    @property
+    def target_dict(self):
+        return self._target_dict
+
+    def __eq__(self, other):
+        return (self.typ == other.typ) and (self.target_dict == other.target_dict)
+
+    def __hash__(self):
+        return hash((self.typ, str(self.target_dict)))
+
+    def __str__(self):
+        return f"{self.target_dict}.items()"
 
 
 """

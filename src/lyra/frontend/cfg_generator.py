@@ -7,7 +7,7 @@ from lyra.core.expressions import *
 
 from lyra.core.statements import *
 from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
-    FloatLyraType, ListLyraType
+    FloatLyraType, ListLyraType, TupleLyraType
 from lyra.visualization.graph_renderer import CfgRenderer
 
 
@@ -333,9 +333,13 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_AnnAssign(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         annotated = resolve_type_annotation(node.annotation)
+        # if node.value != None:        # TODO: implement annotation without assignment https://greentreesnakes.readthedocs.io/en/latest/nodes.html#statements
         value = self.visit(node.value, types, annotated)
         target = self.visit(node.target, types, annotated)
         return Assignment(pp, target, value)
+        # else:     # just a type annotation without assignment
+        #     target = target = self.visit(node.target, types, annotated)
+        #     return ?
 
     def visit_Module(self, node, types=None, typ=None):
         start_cfg = _dummy_cfg(self._id_gen)
@@ -417,13 +421,35 @@ class CFGVisitor(ast.NodeVisitor):
         body_in_node = cfg.in_node
         body_out_node = cfg.out_node
 
-        pp = ProgramPoint(node.target.lineno, node.target.col_offset)
-        iteration = self.visit(node.iter, types, ListLyraType(IntegerLyraType()))
+        pp = ProgramPoint(node.target.lineno, node.target.col_offset)       #TODO: key iteration
+
+        # if isinstance(node.iter, ast.Name):
+        #     iter_type = types[node.iter.id]         # type of the variable
+        # elif (isinstance(node.iter, ast.Call) and node.iter.func.attr == 'items'):
+        #     iter_type = types[node.iter.func.value.id]       # items() actually returns 'view' object, but here for simplificity: Dict (type of caller)
+        # elif (isinstance(node.iter, ast.Call) and node.iter.func.att):
+        #     iter_type = ListLyraType(IntegerLyraType())  # default, leave here?
+
+        # don't provide result type (should be set before by a type annotation for variables/will be set later for calls)
+        iteration = self.visit(node.iter, types)
+
+        # set types: iter_type = type of object being iterated over,
+        #           target_type = type of iteration variable (i.e. element type of iter_type)
         if isinstance(iteration, Call) and iteration.name == "range":
             target_type = IntegerLyraType()
+            iteration._typ = ListLyraType(IntegerLyraType())    # TODO: necessary?
+        elif isinstance(iteration, Call) and iteration.name == "items" \
+                and isinstance(iteration.target, VariableAccess):
+            called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
+            target_type = TupleLyraType([called_on_type.key_type, called_on_type.value_type])
+            iteration._typ = called_on_type     # items() actually returns 'view' object, but here for simplificity: Dict # TODO: necessary?
+        elif isinstance(iteration, VariableAccess) \
+                and isinstance(iteration.variable.typ, ListLyraType):      # iteration over list items
+            target_type = iteration.variable.typ.typ        # element type
         else:
             error = f"The for loop iteration statment {node.iter} is not yet translatable to CFG!"
             raise NotImplementedError(error)
+
         target = self.visit(node.target, types, target_type)
 
         test = Call(pp, "in", [target, iteration], BooleanLyraType())
@@ -521,20 +547,31 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        if isinstance(node.func, ast.Attribute):  # function called on variable
+        if isinstance(node.func, ast.Attribute):  # function called on a target
             name = node.func.attr
-        else:       # ast.Name
+            target = self.visit(node.func.value, types)
+        else:       # func : ast.Name
             name = node.func.id
-        return Call(pp, name, [self.visit(arg, types, typ) for arg in node.args], typ)
+            target = None
+        return Call(pp, name, [self.visit(arg, types, typ) for arg in node.args], typ, target)
+
+    def visit_Tuple(self, node, types=None, typ = None):    # same as list
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        return TupleDisplayAccess(pp, [self.visit(node.elts[i], types, typ.types[i])
+                                       for i in range(len(node.elts))])
 
     def visit_List(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        return ListDisplayAccess(pp, [self.visit(e, types, typ) for e in node.elts])
+        return ListDisplayAccess(pp, [self.visit(e, types, typ.typ) for e in node.elts])
+
+    def visit_Set(self, node, types=None, typ=None):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        return SetDisplayAccess(pp, [self.visit(e, types, typ.typ) for e in node.elts])
 
     def visit_Dict(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        k_stmts = [self.visit(k, types, typ) for k in node.keys]
-        v_stmts = [self.visit(v, types, typ) for v in node.values]
+        k_stmts = [self.visit(k, types, typ.key_type) for k in node.keys]
+        v_stmts = [self.visit(v, types, typ.value_type) for v in node.values]
         return DictDisplayAccess(pp, k_stmts, v_stmts)
 
     def visit_Raise(self, node, types=None, typ=None):
@@ -549,10 +586,11 @@ class CFGVisitor(ast.NodeVisitor):
             key = self.visit(node.slice.value, types, typ)
             return SubscriptionAccess(pp, target, key)
         elif isinstance(node.slice, ast.Slice):
-            return SliceStmt(pp, self._ensure_stmt_visit(node.value, pp, *args, **kwargs),
+            return SlicingAccess(pp, self._ensure_stmt_visit(node.value, pp, *args, **kwargs),
                              self._ensure_stmt_visit(node.slice.lower, pp, *args, **kwargs),
-                             self._ensure_stmt_visit(node.slice.step, pp, *args, **kwargs) if node.slice.step else None,
-                             self._ensure_stmt_visit(node.slice.upper, pp, *args, **kwargs))
+                             self._ensure_stmt_visit(node.slice.upper, pp, *args, **kwargs),
+                             self._ensure_stmt_visit(node.slice.step, pp, *args, **kwargs)
+                                 if node.slice.step else None,    )
         else:
             raise NotImplementedError(f"The statement {str(type(node.slice))} is not yet translatable to CFG!")
 
@@ -576,7 +614,7 @@ class CFGVisitor(ast.NodeVisitor):
                 cfg_factory.complete_basic_block()
                 if_cfg = self.visit(child, types)
                 cfg_factory.append_cfg(if_cfg)
-            elif isinstance(child, ast.While):
+            elif isinstance(child, ast.While):          # TODO: true for For?
                 cfg_factory.complete_basic_block()
                 while_cfg = self.visit(child, types)
                 cfg_factory.append_cfg(while_cfg)
