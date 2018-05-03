@@ -531,6 +531,12 @@ class CFGVisitor(ast.NodeVisitor):
         pp = ProgramPoint(node.lineno, node.col_offset)
         exception_call = self.visit(node.exc, types, typ)
         return Raise(pp, exception_call)
+    
+    def visit_ImportFrom(self, node, types=None, typ=None):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        function_name_aliases = node.names
+        return ImportFrom(pp, node.module, function_name_aliases)
+
 
     def visit_Subscript(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
@@ -560,7 +566,7 @@ class CFGVisitor(ast.NodeVisitor):
         cfg_factory = CFGFactory(self._id_gen)
 
         for child in body:
-            if isinstance(child, (ast.AnnAssign, ast.Expr, ast.Raise)):
+            if isinstance(child, (ast.AnnAssign, ast.Expr, ast.Raise, ast.ImportFrom)):
                 cfg_factory.add_stmts(self.visit(child, types))
             elif isinstance(child, ast.If):
                 cfg_factory.complete_basic_block()
@@ -588,7 +594,7 @@ class CFGVisitor(ast.NodeVisitor):
                 else:
                     cfg_factory.append_cfg(_dummy_cfg(self._id_gen))
             else:
-                raise NotImplementedError(f"The statement {str(type(child))} is not yet translatable to CFG!")
+                raise NotImplementedError("The statement \"%s\" is not yet translatable to CFG!" % str(type(child)) )
         cfg_factory.complete_basic_block()
 
         if not allow_loose_in_edges and cfg_factory.cfg and cfg_factory.cfg.loose_in_edges:
