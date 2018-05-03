@@ -626,7 +626,7 @@ class Items(Expression):        # TODO: remove?
     """Items call representation"""
 
     def __init__(self, typ: LyraType, target_dict: Expression):
-        """Items call expression construction.
+        """Items() call expression construction.
 
         :param typ: type that items() returns
         :param target_dict: target of the items() call
@@ -647,6 +647,60 @@ class Items(Expression):        # TODO: remove?
 
     def __str__(self):
         return f"{self.target_dict}.items()"
+
+
+class Keys(Expression):        # TODO: remove?
+    """Items call representation"""
+
+    def __init__(self, typ: LyraType, target_dict: Expression):
+        """Keys() call expression construction.
+
+        :param typ: type that keys() returns
+        :param target_dict: target of the keys() call
+        """
+
+        super().__init__(typ)
+        self._target_dict = target_dict
+
+    @property
+    def target_dict(self):
+        return self._target_dict
+
+    def __eq__(self, other):
+        return (self.typ == other.typ) and (self.target_dict == other.target_dict)
+
+    def __hash__(self):
+        return hash((self.typ, str(self.target_dict)))
+
+    def __str__(self):
+        return f"{self.target_dict}.keys()"
+
+
+class Values(Expression):        # TODO: remove?
+    """Values() call representation"""
+
+    def __init__(self, typ: LyraType, target_dict: Expression):
+        """Values() call expression construction.
+
+        :param typ: type that values() returns
+        :param target_dict: target of the values() call
+        """
+
+        super().__init__(typ)
+        self._target_dict = target_dict
+
+    @property
+    def target_dict(self):
+        return self._target_dict
+
+    def __eq__(self, other):
+        return (self.typ == other.typ) and (self.target_dict == other.target_dict)
+
+    def __hash__(self):
+        return hash((self.typ, str(self.target_dict)))
+
+    def __str__(self):
+        return f"{self.target_dict}.values()"
 
 
 """

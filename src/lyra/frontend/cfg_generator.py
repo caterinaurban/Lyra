@@ -435,7 +435,12 @@ class CFGVisitor(ast.NodeVisitor):
 
         # set types: iter_type = type of object being iterated over,
         #           target_type = type of iteration variable (i.e. element type of iter_type)
-        if isinstance(iteration, Call) and iteration.name == "range":
+        if isinstance(iteration, VariableAccess):
+            if isinstance(iteration.variable.typ, ListLyraType):  # iteration over list items
+                target_type = iteration.variable.typ.typ  # element type
+            if isinstance(iteration.variable.typ, DictLyraType):
+                target_type = iteration.variable.typ.key_type
+        elif isinstance(iteration, Call) and iteration.name == "range":
             target_type = IntegerLyraType()
             iteration._typ = ListLyraType(IntegerLyraType())    # TODO: necessary?
         elif isinstance(iteration, Call) and iteration.name == "items" \
@@ -443,11 +448,18 @@ class CFGVisitor(ast.NodeVisitor):
             called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
             target_type = TupleLyraType([called_on_type.key_type, called_on_type.value_type])
             iteration._typ = called_on_type     # items() actually returns 'view' object, but here for simplificity: Dict # TODO: necessary?
-        elif isinstance(iteration, VariableAccess) \
-                and isinstance(iteration.variable.typ, ListLyraType):      # iteration over list items
-            target_type = iteration.variable.typ.typ        # element type
+        elif isinstance(iteration, Call) and iteration.name == "keys" \
+                and isinstance(iteration.target, VariableAccess):
+            called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
+            target_type = called_on_type.key_type
+            iteration._typ = SetLyraType(target_type)     # TODO: necessary?
+        elif isinstance(iteration, Call) and iteration.name == "values" \
+                and isinstance(iteration.target, VariableAccess):
+            called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
+            target_type = called_on_type.value_type
+            iteration._typ = SetLyraType(target_type)     # TODO: necessary?
         else:
-            error = f"The for loop iteration statment {node.iter} is not yet translatable to CFG!"
+            error = f"The for loop iteration statment {iteration} is not yet translatable to CFG!"
             raise NotImplementedError(error)
 
         target = self.visit(node.target, types, target_type)
