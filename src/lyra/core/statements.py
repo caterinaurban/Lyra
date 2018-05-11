@@ -248,6 +248,37 @@ class Raise(Statement):
     @property
     def exception(self):
         return self._exception
+    
+class ImportFrom(Statement):
+    def __init__(self, pp: ProgramPoint, module_name: str, function_name_aliases: list):
+        """Call statement representation.
+
+        :param pp: program point associated with the call
+        :param module_name: name of the module to import
+        :param function_name_aliases: imported function names and their aliases as a list
+        """
+        super().__init__(pp)
+        self._module_name = module_name
+        self._function_name_aliases = function_name_aliases
+
+    def __repr__(self):
+        imports_str = ''
+        for identifier in list(self._function_name_aliases):
+            if identifier.asname is None:
+                imports_str += "%s, " % identifier.name
+            else:
+                imports_str += "%s as %s, " % (identifier.name, identifier.asname) 
+        return "from %s import %s" % (self._module_name, imports_str[:-2])
+
+    @property
+    def module_name(self):
+        return self._module_name
+    
+    @property
+    def function_name_aliases(self):
+        return self._function_name_aliases
+    
+    
 
 
 """

@@ -22,7 +22,7 @@ from lyra.abstract_domains.state import State
 from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing
 
 from lyra.abstract_domains.store import Store
-from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType
+from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType, NdarrayLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -117,7 +117,7 @@ class LivenessState(Store, State):
 
         :param variables: list of program variables
         """
-        types = [BooleanLyraType, IntegerLyraType, ListLyraType]
+        types = [BooleanLyraType, IntegerLyraType, ListLyraType, NdarrayLyraType]
         lattices = {typ: LivenessLattice for typ in types}
         super().__init__(variables, lattices)
 

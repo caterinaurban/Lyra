@@ -10,7 +10,6 @@ Lyra's internal representation of Python types.
 import ast
 from abc import ABCMeta, abstractmethod
 
-
 class LyraType(metaclass=ABCMeta):
     """Type representation."""
 
@@ -77,7 +76,27 @@ class ListLyraType(LyraType):
 
     def __repr__(self):
         return f"List[{repr(self.typ)}]"
+    
+class NumpyLyraType(LyraType):
+    pass
 
+class NdarrayLyraType(NumpyLyraType):
+    """Numpy ndarray type representation."""
+
+    def __init__(self, typ: NumpyLyraType):
+        """Ndarray type creation.
+
+        :param typ: dtype of the array elements
+        """
+        self._typ = typ
+
+    @property
+    def typ(self):
+        """Type of the array elements."""
+        return self._typ
+
+    def __repr__(self):
+        return f"Array[{repr(self.typ)}]"
 
 def resolve_type_annotation(annotation):
     """Type annotation resolution."""
@@ -91,10 +110,15 @@ def resolve_type_annotation(annotation):
             return FloatLyraType()
         elif annotation.id == 'str':
             return StringLyraType()
+        elif annotation.id == 'ndarray':
+            return NdarrayLyraType(None)
 
     if isinstance(annotation, ast.Subscript):
         if annotation.value.id == 'List':
             value = resolve_type_annotation(annotation.slice.value)
             return ListLyraType(value)
+#        elif annotation.value.id == 'Ndarray':
+#            value = resolve_type_annotation(annotation.slice.value)
+#            return NdarrayLyraType(value)
 
     raise NotImplementedError(f"Type annotation {annotation} is not yet supported!")
