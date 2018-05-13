@@ -623,7 +623,7 @@ class CFGVisitor(ast.NodeVisitor):
                 cfg_factory.complete_basic_block()
                 if_cfg = self.visit(child, types)
                 cfg_factory.append_cfg(if_cfg)
-            elif isinstance(child, ast.While):          # TODO: true for For?
+            elif isinstance(child, ast.While):
                 cfg_factory.complete_basic_block()
                 while_cfg = self.visit(child, types)
                 cfg_factory.append_cfg(while_cfg)

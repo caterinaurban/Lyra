@@ -80,8 +80,9 @@ class ListLyraType(LyraType):
         return f"List[{repr(self.typ)}]"
 
 
-class TupleLyraType(LyraType):          # TODO: maybe support tuples of variable length To specify a variable-length, esp. empty tuple?:
-    """Tuple type representation."""    # To specify a variable-length tuple of homogeneous type, use literal ellipsis, e.g. Tuple[int, ...]. A plain Tuple is equivalent to Tuple[Any, ...], and in turn to tuple.
+class TupleLyraType(LyraType):          # TODO: maybe support tuples of variable length, esp. empty tuple?:
+    """Tuple type representation."""    # To specify a variable-length tuple of homogeneous type, use literal ellipsis, e.g. Tuple[int, ...].
+                                        # A plain Tuple is equivalent to Tuple[Any, ...], and in turn to tuple.
 
     def __init__(self, types: List[LyraType]):
         """Tuple type creation.
@@ -169,7 +170,7 @@ def resolve_type_annotation(annotation):
         elif annotation.value.id == 'Set':
             value = resolve_type_annotation(annotation.slice.value)
             return SetLyraType(value)
-        elif annotation.value.id == 'Tuple':        # TODO: test with multiple types
+        elif annotation.value.id == 'Tuple':
             values = [resolve_type_annotation(v) for v in annotation.slice.value.elts] # value types
             return TupleLyraType(values)
 

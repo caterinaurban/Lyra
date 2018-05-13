@@ -502,7 +502,7 @@ class SetDisplay(Expression):
     https://docs.python.org/3/reference/expressions.html#set-displays
     """
 
-    def __init__(self, typ: SetLyraType, items: List[Expression] = None):      # TODO: represent elements as set?
+    def __init__(self, typ: SetLyraType, items: List[Expression] = None):
         """Set display construction.
 
         :param typ: type of the set
