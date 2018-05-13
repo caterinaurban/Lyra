@@ -266,18 +266,21 @@ class SlicingAccess(ExpressionAccess):
 
 
 class Call(Statement):
-    def __init__(self, pp: ProgramPoint, name: str, arguments: List[Statement], typ: LyraType):
+    def __init__(self, pp: ProgramPoint, name: str, arguments: List[Statement], typ: LyraType,
+                 target: Statement = None):
         """Call statement representation.
         
         :param pp: program point associated with the call
         :param name: name of the function/method being called
         :param arguments: list of arguments of the call
         :param typ: return type of the call
+        :param target: instance on which the method is called
         """
         super().__init__(pp)
         self._name = name
         self._arguments = arguments
         self._typ = typ
+        self._target = target
 
     @property
     def name(self):
@@ -291,9 +294,16 @@ class Call(Statement):
     def typ(self):
         return self._typ
 
+    @property
+    def target(self):
+        return self._target
+
     def __repr__(self):
         arguments = ", ".join("{}".format(argument) for argument in self.arguments)
-        return "{}({})".format(self.name, arguments)
+        target_str = ""
+        if self.target:
+            target_str = "{}.".format(self.target)
+        return target_str + "{}({})".format(self.name, arguments)
 
 
 class Raise(Statement):

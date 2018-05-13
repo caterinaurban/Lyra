@@ -524,9 +524,16 @@ class CFGVisitor(ast.NodeVisitor):
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.func, ast.Attribute):  # function called on a target
             name = node.func.attr
-        else:       # ast.Name
+            target = self.visit(node.func.value, types)
+        else:       # func : ast.Name
             name = node.func.id
-        return Call(pp, name, [self.visit(arg, types, typ) for arg in node.args], typ)
+            target = None
+        return Call(pp, name, [self.visit(arg, types, typ) for arg in node.args], typ, target)
+
+    def visit_Tuple(self, node, types=None, typ = None):    # same as list
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        return TupleDisplayAccess(pp, [self.visit(node.elts[i], types, typ.types[i])
+                                       for i in range(len(node.elts))])
 
     def visit_List(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
