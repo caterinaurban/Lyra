@@ -267,7 +267,7 @@ class SlicingAccess(ExpressionAccess):
 
 class Call(Statement):
     def __init__(self, pp: ProgramPoint, name: str, arguments: List[Statement], typ: LyraType,
-                 target: LyraType = None):
+                 target: Statement = None):
         """Call statement representation.
         
         :param pp: program point associated with the call

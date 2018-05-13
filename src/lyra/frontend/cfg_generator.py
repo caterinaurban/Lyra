@@ -438,26 +438,30 @@ class CFGVisitor(ast.NodeVisitor):
         if isinstance(iteration, VariableAccess):
             if isinstance(iteration.variable.typ, ListLyraType):  # iteration over list items
                 target_type = iteration.variable.typ.typ  # element type
-            if isinstance(iteration.variable.typ, DictLyraType):
+            if isinstance(iteration.variable.typ, DictLyraType):   # iteration over dictionary keys
                 target_type = iteration.variable.typ.key_type
+                # conversion to .keys() call to be consistent:
+                iteration = Call(iteration.pp, "keys", [], SetLyraType(target_type), iteration)
+                    # TODO: return type necessary & correct?
         elif isinstance(iteration, Call) and iteration.name == "range":
             target_type = IntegerLyraType()
             iteration._typ = ListLyraType(IntegerLyraType())    # TODO: necessary?
         elif isinstance(iteration, Call) and iteration.name == "items" \
-                and isinstance(iteration.target, VariableAccess):
+                and isinstance(iteration.target, VariableAccess):   # right now only handle single variables as target
             called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
             target_type = TupleLyraType([called_on_type.key_type, called_on_type.value_type])
-            iteration._typ = called_on_type     # items() actually returns 'view' object, but here for simplificity: Dict # TODO: necessary?
+            # items() actually returns 'view' object, but here for simplicity: Dict
+            iteration._typ = called_on_type      # TODO: necessary & correct ?
         elif isinstance(iteration, Call) and iteration.name == "keys" \
-                and isinstance(iteration.target, VariableAccess):
+                and isinstance(iteration.target, VariableAccess):   # right now only handle single variables as target
             called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
             target_type = called_on_type.key_type
-            iteration._typ = SetLyraType(target_type)     # TODO: necessary?
+            iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
         elif isinstance(iteration, Call) and iteration.name == "values" \
-                and isinstance(iteration.target, VariableAccess):
+                and isinstance(iteration.target, VariableAccess):   # right now only handle single variables as target
             called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
             target_type = called_on_type.value_type
-            iteration._typ = SetLyraType(target_type)     # TODO: necessary?
+            iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
         else:
             error = f"The for loop iteration statment {iteration} is not yet translatable to CFG!"
             raise NotImplementedError(error)

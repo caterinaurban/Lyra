@@ -381,8 +381,10 @@ class BuiltInCallSemantics(CallSemantics):
                         :param state: state before executing the call statement
                         :return: state modified by the call statement
                         """
-        # treat as just the target expression (forget about call) # TODO: default call semantics?
+        # treat as just the target expression (forget about call)
         return self.semantics(stmt.target, state)
+
+    # TODO: define default call semantics instead?
 
     def lower_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of calls to 'split'.
