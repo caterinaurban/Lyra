@@ -622,7 +622,7 @@ class Range(Expression):
         return f"range({self.start}, {self.end}, {self.step})"
 
 
-class Items(Expression):        # TODO: remove?
+class Items(Expression):
     """Items call representation"""
 
     def __init__(self, typ: LyraType, target_dict: Expression):
@@ -649,7 +649,7 @@ class Items(Expression):        # TODO: remove?
         return f"{self.target_dict}.items()"
 
 
-class Keys(Expression):        # TODO: remove?
+class Keys(Expression):
     """Items call representation"""
 
     def __init__(self, typ: LyraType, target_dict: Expression):
@@ -676,7 +676,7 @@ class Keys(Expression):        # TODO: remove?
         return f"{self.target_dict}.keys()"
 
 
-class Values(Expression):        # TODO: remove?
+class Values(Expression):
     """Values() call representation"""
 
     def __init__(self, typ: LyraType, target_dict: Expression):
