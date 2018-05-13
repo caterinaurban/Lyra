@@ -120,11 +120,11 @@ def resolve_type_annotation(annotation):
 
     if isinstance(annotation, ast.Subscript):
         if annotation.value.id == 'List':
-            value = resolve_type_annotation(annotation.slice.value)
+            value = resolve_type_annotation(annotation.slice.value)     # element type
             return ListLyraType(value)
         elif annotation.value.id == 'Dict':
-            key = resolve_type_annotation(annotation.slice.value.elts[0])
-            value = resolve_type_annotation(annotation.slice.value.elts[1])
+            key = resolve_type_annotation(annotation.slice.value.elts[0])       # key type
+            value = resolve_type_annotation(annotation.slice.value.elts[1])     # value type
             return DictLyraType(key, value)
 
     raise NotImplementedError(f"Type annotation {annotation} is not yet supported!")

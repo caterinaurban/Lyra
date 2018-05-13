@@ -11,6 +11,7 @@ for a, b in texts.items():
     else:
         weight: int = 1
         words: List[str] = a.split()      #Bug A: Should be `b' (values)
+        word: str = ""
         for word in words:     #and Bug B: Wrong indentation
             word: str = word.lower()
             freqdict[word]: int = freqdict[word] + weight

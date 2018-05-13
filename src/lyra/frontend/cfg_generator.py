@@ -424,6 +424,7 @@ class CFGVisitor(ast.NodeVisitor):
         else:
             error = f"The for loop iteration statment {node.iter} is not yet translatable to CFG!"
             raise NotImplementedError(error)
+
         target = self.visit(node.target, types, target_type)
 
         test = Call(pp, "in", [target, iteration], BooleanLyraType())
@@ -521,7 +522,7 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        if isinstance(node.func, ast.Attribute):  # function called on variable
+        if isinstance(node.func, ast.Attribute):  # function called on a target
             name = node.func.attr
         else:       # ast.Name
             name = node.func.id
@@ -529,12 +530,12 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_List(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        return ListDisplayAccess(pp, [self.visit(e, types, typ) for e in node.elts])
+        return ListDisplayAccess(pp, [self.visit(e, types, typ.typ) for e in node.elts])
 
     def visit_Dict(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        k_stmts = [self.visit(k, types, typ) for k in node.keys]
-        v_stmts = [self.visit(v, types, typ) for v in node.values]
+        k_stmts = [self.visit(k, types, typ.key_type) for k in node.keys]
+        v_stmts = [self.visit(v, types, typ.value_type) for v in node.values]
         return DictDisplayAccess(pp, k_stmts, v_stmts)
 
     def visit_Raise(self, node, types=None, typ=None):

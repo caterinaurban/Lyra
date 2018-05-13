@@ -11,7 +11,8 @@ from abc import ABCMeta, abstractmethod
 from enum import IntEnum
 from typing import Set, List
 
-from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType
+from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType, \
+    ListLyraType, DictLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -23,7 +24,7 @@ class Expression(metaclass=ABCMeta):
     def __init__(self, typ: LyraType):
         """Expression construction.
 
-        :param typ: type of the expression
+        :param typ: (result) type of the expression
         """
         self._typ = typ
 
@@ -442,7 +443,7 @@ class ListDisplay(Expression):
     https://docs.python.org/3/reference/expressions.html#list-displays
     """
 
-    def __init__(self, typ: LyraType, items: List[Expression] = None):
+    def __init__(self, typ: ListLyraType, items: List[Expression] = None):
         """List display construction.
         
         :param typ: type of the list
@@ -471,11 +472,11 @@ class DictDisplay(Expression):
     https://docs.python.org/3/reference/expressions.html#dictionary-displays
     """
 
-    def __init__(self, typ: LyraType, keys: List[Expression] = None, values: List[Expression] = None):
+    def __init__(self, typ: DictLyraType, keys: List[Expression] = None, values: List[Expression] = None):
         """Dictionary display construction.
 
         :param typ: type of the dictionary
-        :param items: list of items being displayed (in the form key:value)
+        :param keys, values: list of items being displayed (in the form key:value)
         """
         super().__init__(typ)
         self._keys = keys or []
@@ -499,6 +500,7 @@ class DictDisplay(Expression):
         str_keys = map(str, self.keys)
         str_values = map(str, self.values)
         return '{' + ', '.join(' : '.join(x) for x in zip(str_keys, str_values)) + '}'
+
 
 class Input(Expression):
     """Input expression representation."""

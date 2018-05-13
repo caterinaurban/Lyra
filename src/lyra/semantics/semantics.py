@@ -106,7 +106,7 @@ class ExpressionSemantics(Semantics):
         k_exprs = [self.semantics(k, state).result for k in stmt.keys]      # List[Set[Expression]]
         v_exprs = [self.semantics(v, state).result for v in stmt.values]
 
-        k_v_tuples = map(itertools.product, k_exprs, v_exprs)       #One "Set" of Tuples of possible key-value pairs per actual k-v-pair
+        k_v_tuples = map(itertools.product, k_exprs, v_exprs)       # One "Set" of Tuples of possible key-value pairs per actual k-v-pair
 
         k_typ = next(iter(k_exprs[0])).typ      # Is there a better way to retrieve the types?
         v_typ = next(iter(v_exprs[0])).typ
@@ -269,6 +269,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def range_call_semantics(self, stmt: Call, state: State) -> State:
         arguments = [self.semantics(arg, state).result.pop() for arg in stmt.arguments]
+        # default:
         start = Literal(IntegerLyraType(), "0")
         step = Literal(IntegerLyraType(), "1")
         if len(arguments) == 1:
@@ -486,7 +487,7 @@ class BuiltInCallSemantics(CallSemantics):
     def in_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'in' (membership).
         
-        :param stmt: call to 'is' to be executed
+        :param stmt: call to 'in' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
