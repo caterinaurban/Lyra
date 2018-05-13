@@ -7,7 +7,7 @@ from lyra.core.expressions import *
 
 from lyra.core.statements import *
 from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
-    FloatLyraType, ListLyraType
+    FloatLyraType, ListLyraType, TupleLyraType
 from lyra.visualization.graph_renderer import CfgRenderer
 
 
@@ -531,6 +531,10 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_List(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         return ListDisplayAccess(pp, [self.visit(e, types, typ.typ) for e in node.elts])
+
+    def visit_Set(self, node, types=None, typ=None):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        return SetDisplayAccess(pp, [self.visit(e, types, typ.typ) for e in node.elts])
 
     def visit_Dict(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)

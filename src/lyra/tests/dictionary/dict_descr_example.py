@@ -3,7 +3,7 @@ important: Set[str] = {"Albert Einstein" , "Alan Turing"}
 texts: Dict[str, str] = input() # {"<author >" : "<t e x t >"}
 
 freqdict: Dict[str, int] = {}     # defaultdict(int)  err: int recognized as varId  #initialized to 0
-a: str = ""     #necessary?
+a: str = ""    #necessary?
 b: str = ""
 for a, b in texts.items():
     if a in important:     #texts of important authors weighted twice

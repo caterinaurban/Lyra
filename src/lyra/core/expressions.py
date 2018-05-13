@@ -12,7 +12,7 @@ from enum import IntEnum
 from typing import Set, List
 
 from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType, \
-    ListLyraType, DictLyraType
+    DictLyraType, SetLyraType, ListLyraType, TupleLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -464,6 +464,66 @@ class ListDisplay(Expression):
 
     def __str__(self):
         return str(self.items)
+
+
+class TupleDisplay(Expression):
+    """Tuple display (= expression list with comma, or ()) representation.      # TODO: what about expression list without comma?
+
+    https://docs.python.org/3/reference/expressions.html#expression-lists
+    """
+
+    def __init__(self, typ: TupleLyraType, items: List[Expression] = None):
+        """Tuple construction.
+
+        :param typ: type of the tuple
+        :param items: list of items being displayed
+        """
+        super().__init__(typ)
+        self._items = items or []
+
+    @property
+    def items(self):
+        return self._items
+
+    def __eq__(self, other):
+        return (self.typ, self.items) == (other.typ, other.items)
+
+    def __hash__(self):
+        return hash((self.typ, str(self.items)))
+
+    def __str__(self):
+        str_items = map(str, self.items)
+        return '(' + ', '.join(str_items) + ')'
+
+
+class SetDisplay(Expression):
+    """Set display representation.
+
+    https://docs.python.org/3/reference/expressions.html#set-displays
+    """
+
+    def __init__(self, typ: SetLyraType, items: List[Expression] = None):
+        """Set display construction.
+
+        :param typ: type of the set
+        :param items: list of items being displayed
+        """
+        super().__init__(typ)
+        self._items = items or []
+
+    @property
+    def items(self):
+        return self._items
+
+    def __eq__(self, other):
+        return (self.typ, self.items) == (other.typ, other.items)
+
+    def __hash__(self):
+        return hash((self.typ, str(self.items)))
+
+    def __str__(self):
+        str_items = map(str, self.items)
+        return '{' + ', '.join(str_items) + '}'
 
 
 class DictDisplay(Expression):

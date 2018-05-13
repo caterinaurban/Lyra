@@ -141,6 +141,47 @@ class ListDisplayAccess(ExpressionAccess):
         return str(self.items)
 
 
+class TupleDisplayAccess(ExpressionAccess):
+    """Tuple display (= expression list with comma, or ()) access representation."""
+
+    def __init__(self, pp: ProgramPoint, items: List[Statement]):
+        """tuple access construction.
+
+        :param pp: program point associated with the tuple access
+        :param items: list of items being displayed
+        """
+        super().__init__(pp)
+        self._items = items
+
+    @property
+    def items(self):
+        return self._items
+
+    def __repr__(self):
+        str_items = map(str, self.items)
+        return '(' + ', '.join(str_items) + ')'
+
+
+class SetDisplayAccess(ExpressionAccess):
+    """Set display access representation."""
+    def __init__(self, pp: ProgramPoint, items: List[Statement]):
+        """Set display access construction.
+
+        :param pp: program point associated with the set display access
+        :param items: list of items being displayed
+        """
+        super().__init__(pp)
+        self._items = items
+
+    @property
+    def items(self):
+        return self._items
+
+    def __repr__(self):
+        str_items = map(str, self.items)
+        return '{' + ', '.join(str_items) + '}'
+
+
 class DictDisplayAccess(ExpressionAccess):
     """Dictionary display access representation. ({k:v, ...})"""
     def __init__(self, pp: ProgramPoint, keys: List[Statement], values: List[Statement]):    # List[Statements]?

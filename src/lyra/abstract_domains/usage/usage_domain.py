@@ -18,7 +18,7 @@ from lyra.abstract_domains.store import Store
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing
 from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType, StringLyraType, \
-    DictLyraType
+    DictLyraType, SetLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -86,7 +86,7 @@ class SimpleUsageStore(UsageStore):
 
         :param variables: list of program variables
         """
-        types = [BooleanLyraType, IntegerLyraType, StringLyraType, ListLyraType, DictLyraType]
+        types = [BooleanLyraType, IntegerLyraType, StringLyraType, ListLyraType, DictLyraType, SetLyraType]
         lattices = {typ: UsageLattice for typ in types}
         super().__init__(variables, lattices)
 
