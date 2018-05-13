@@ -426,7 +426,7 @@ class CFGVisitor(ast.NodeVisitor):
         # don't provide result type (should be set before by a type annotation for variables/will be set later for calls)
         iteration = self.visit(node.iter, types)
 
-        # set types: iter_type = type of object being iterated over,
+        # set types: iteration._typ = type of object being iterated over,
         #           target_type = type of iteration variable (i.e. element type of iter_type)
         if isinstance(iteration, VariableAccess):
             if isinstance(iteration.variable.typ, ListLyraType):  # iteration over list items

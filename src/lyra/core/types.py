@@ -161,17 +161,17 @@ def resolve_type_annotation(annotation):
 
     if isinstance(annotation, ast.Subscript):
         if annotation.value.id == 'List':
-            value = resolve_type_annotation(annotation.slice.value)         # value type
+            value = resolve_type_annotation(annotation.slice.value)     # element type
             return ListLyraType(value)
         elif annotation.value.id == 'Dict':
             key = resolve_type_annotation(annotation.slice.value.elts[0])       # key type
             value = resolve_type_annotation(annotation.slice.value.elts[1])     # value type
             return DictLyraType(key, value)
         elif annotation.value.id == 'Set':
-            value = resolve_type_annotation(annotation.slice.value)     # value type
+            value = resolve_type_annotation(annotation.slice.value)     # element type
             return SetLyraType(value)
         elif annotation.value.id == 'Tuple':
-            values = [resolve_type_annotation(v) for v in annotation.slice.value.elts] # value types
+            values = [resolve_type_annotation(v) for v in annotation.slice.value.elts] # element types
             return TupleLyraType(values)
 
     raise NotImplementedError(f"Type annotation {annotation} is not yet supported!")

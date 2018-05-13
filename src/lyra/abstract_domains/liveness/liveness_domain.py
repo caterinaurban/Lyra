@@ -207,7 +207,7 @@ class StrongLivenessState(LivenessState):
             if self.store[left].is_top():   # the assigned variable is strongly-live
                 self.store[left].bottom()
                 for identifier in right.ids():
-                    if isinstance(identifier, VariableIdentifier):  # needed? ids = VariableIdentifier?
+                    if isinstance(identifier, VariableIdentifier):
                         self.store[identifier].top()
                     else:
                         error = f"Substitution with {right} is not implemented!"
@@ -229,7 +229,7 @@ class StrongLivenessState(LivenessState):
                 else:  # Slicing
                     ids = left.lower.ids() | left.upper.ids()
                 for identifier in ids:  # make ids in subscript strongly live
-                    if isinstance(identifier, VariableIdentifier):
+                    if isinstance(identifier, VariableIdentifier):  # needed? ids = VariableIdentifier?
                         self.store[identifier].top()
                     else:
                         error = f"Identifier {identifier} in subscript is not yet supported!"
