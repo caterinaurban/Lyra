@@ -137,9 +137,9 @@ class ExpressionVisitor(metaclass=ABCMeta):
     def visit_ListDisplay(self, expr: 'ListDisplay'):
         """Visit of a list display."""
 
-    @abstractmethod
-    def visit_DictDisplay(self, expr: 'DictDisplay'):
-        """Visit of dictionary display."""
+    # @abstractmethod
+    # def visit_DictDisplay(self, expr: 'DictDisplay'):
+    #     """Visit of dictionary display."""
 
     @abstractmethod
     def visit_Range(self, expr: 'Range'):
@@ -211,10 +211,6 @@ class NegationFreeNormalExpression(ExpressionVisitor):
     @copy_docstring(ExpressionVisitor.visit_ListDisplay)
     def visit_ListDisplay(self, expr: 'ListDisplay', invert=False):
         return expr     # nothing to be done
-
-    @copy_docstring(ExpressionVisitor.visit_DictDisplay)
-    def visit_DictDisplay(self, expr: 'DictDisplay', invert=False):
-        return expr  # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_Range)
     def visit_Range(self, expr: 'Range', invert=False):

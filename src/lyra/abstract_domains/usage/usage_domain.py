@@ -198,7 +198,7 @@ class SimpleUsageState(Stack, State):
                 else: # Slicing
                     ids = left.lower.ids() | left.upper.ids()
                 for identifier in ids:  # make ids in subscript used
-                    if isinstance(identifier, VariableIdentifier):
+                    if isinstance(identifier, VariableIdentifier):  # needed? ids = VariableIdentifier?
                         self.lattice.store[identifier].top()
                     else:
                         error = f"Identifier {identifier} in subscript is not yet supported!"
