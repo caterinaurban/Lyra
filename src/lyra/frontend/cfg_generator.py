@@ -421,14 +421,7 @@ class CFGVisitor(ast.NodeVisitor):
         body_in_node = cfg.in_node
         body_out_node = cfg.out_node
 
-        pp = ProgramPoint(node.target.lineno, node.target.col_offset)       #TODO: key iteration
-
-        # if isinstance(node.iter, ast.Name):
-        #     iter_type = types[node.iter.id]         # type of the variable
-        # elif (isinstance(node.iter, ast.Call) and node.iter.func.attr == 'items'):
-        #     iter_type = types[node.iter.func.value.id]       # items() actually returns 'view' object, but here for simplificity: Dict (type of caller)
-        # elif (isinstance(node.iter, ast.Call) and node.iter.func.att):
-        #     iter_type = ListLyraType(IntegerLyraType())  # default, leave here?
+        pp = ProgramPoint(node.target.lineno, node.target.col_offset)
 
         # don't provide result type (should be set before by a type annotation for variables/will be set later for calls)
         iteration = self.visit(node.iter, types)
