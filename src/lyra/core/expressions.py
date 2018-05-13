@@ -24,7 +24,7 @@ class Expression(metaclass=ABCMeta):
     def __init__(self, typ: LyraType):
         """Expression construction.
 
-        :param typ: (return) type of the expression
+        :param typ: (result) type of the expression
         """
         self._typ = typ
 
