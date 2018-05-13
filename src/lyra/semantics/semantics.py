@@ -135,7 +135,7 @@ class ExpressionSemantics(Semantics):
                 display = SetDisplay(SetLyraType(combination[0].typ), list(combination))
                 result.add(display)
         else:
-            result.add(SetDisplay(SetLyraType(LyraType())))     # empty list of generic type TODO: way to get specific type?
+            result.add(SetDisplay(SetLyraType(LyraType())))     # empty set of generic type TODO: way to get specific type?
         state.result = result
         return state
 
@@ -149,11 +149,12 @@ class ExpressionSemantics(Semantics):
         k_exprs = [self.semantics(k, state).result for k in stmt.keys]      # List[Set[Expression]]
         v_exprs = [self.semantics(v, state).result for v in stmt.values]
 
-        k_v_tuples = map(itertools.product, k_exprs, v_exprs)       #One "Set" of Tuples of possible key-value pairs per actual k-v-pair
-
         result = set()
 
         if k_exprs:     # not empty
+            k_v_tuples = map(itertools.product, k_exprs, v_exprs)
+                # One "Set" of Tuples of possible key-value pairs per actual k-v-pair
+
             k_typ = next(iter(k_exprs[0])).typ      # Is there a better way to retrieve the types?
             v_typ = next(iter(v_exprs[0])).typ
 
