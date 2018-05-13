@@ -333,6 +333,70 @@ class BuiltInCallSemantics(CallSemantics):
         state.result = {Range(stmt.typ, start, end, step)}
         return state
 
+    def items_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of calls to 'items'.
+
+                :param stmt: call to 'items' to be executed
+                :param state: state before executing the call statement
+                :return: state modified by the call statement
+                """
+        if (isinstance(stmt.target, VariableAccess)):
+            state.result = {Items(stmt.typ, stmt.target.variable)}
+        else:
+            error = f"Semantics for items() call on non-variable {stmt.target} is not yet implemented!"
+            raise NotImplementedError(error)
+        return state
+
+    def keys_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of calls to 'keys'.
+
+                        :param stmt: call to 'keys' to be executed
+                        :param state: state before executing the call statement
+                        :return: state modified by the call statement
+                        """
+        if (isinstance(stmt.target, VariableAccess)):
+            state.result = {Keys(stmt.typ, stmt.target.variable)}
+        else:
+            error = f"Semantics for keys() call on non-variable {stmt.target} is not yet implemented!"
+            raise NotImplementedError(error)
+        return state
+
+    def values_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of calls to 'values'.
+
+                        :param stmt: call to 'values' to be executed
+                        :param state: state before executing the call statement
+                        :return: state modified by the call statement
+                        """
+        if (isinstance(stmt.target, VariableAccess)):
+            state.result = {Values(stmt.typ, stmt.target.variable)}
+        else:
+            error = f"Semantics for values() call on non-variable {stmt.target} is not yet implemented!"
+            raise NotImplementedError(error)
+        return state
+
+    def split_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of calls to 'split'.
+
+                        :param stmt: call to 'split' to be executed
+                        :param state: state before executing the call statement
+                        :return: state modified by the call statement
+                        """
+        # treat as just the target expression (forget about call)
+        return self.semantics(stmt.target, state)
+
+    # TODO: define default call semantics instead?
+
+    def lower_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of calls to 'split'.
+
+                        :param stmt: call to 'split' to be executed
+                        :param state: state before executing the call statement
+                        :return: state modified by the call statement
+                        """
+        # treat as just the target expression (forget about call)
+        return self.semantics(stmt.target, state)
+
     def raise_semantics(self, stmt: Raise, state: State) -> State:
         """Semantics of raising an Error.
 

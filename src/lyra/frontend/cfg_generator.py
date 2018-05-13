@@ -418,11 +418,41 @@ class CFGVisitor(ast.NodeVisitor):
         body_out_node = cfg.out_node
 
         pp = ProgramPoint(node.target.lineno, node.target.col_offset)
-        iteration = self.visit(node.iter, types, ListLyraType(IntegerLyraType()))
-        if isinstance(iteration, Call) and iteration.name == "range":
+
+        # don't provide result type (should be set before by a type annotation for variables/will be set later for calls)
+        iteration = self.visit(node.iter, types)
+
+        # set types: iteration._typ = type of object being iterated over,
+        #           target_type = type of iteration variable (i.e. element type of iter_type)
+        if isinstance(iteration, VariableAccess):
+            if isinstance(iteration.variable.typ, ListLyraType):  # iteration over list items
+                target_type = iteration.variable.typ.typ  # element type
+            if isinstance(iteration.variable.typ, DictLyraType):   # iteration over dictionary keys
+                target_type = iteration.variable.typ.key_type
+                # conversion to .keys() call to be consistent:
+                iteration = Call(iteration.pp, "keys", [], SetLyraType(target_type), iteration)
+                    # TODO: return type necessary & correct?
+        elif isinstance(iteration, Call) and iteration.name == "range":
             target_type = IntegerLyraType()
+            iteration._typ = ListLyraType(IntegerLyraType())    # TODO: necessary?
+        elif isinstance(iteration, Call) and iteration.name == "items" \
+                and isinstance(iteration.target, VariableAccess):   # right now only handle single variables as target
+            called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
+            target_type = TupleLyraType([called_on_type.key_type, called_on_type.value_type])
+            # items() actually returns 'view' object, but here for simplicity: Dict
+            iteration._typ = called_on_type      # TODO: necessary & correct ?
+        elif isinstance(iteration, Call) and iteration.name == "keys" \
+                and isinstance(iteration.target, VariableAccess):   # right now only handle single variables as target
+            called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
+            target_type = called_on_type.key_type
+            iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
+        elif isinstance(iteration, Call) and iteration.name == "values" \
+                and isinstance(iteration.target, VariableAccess):   # right now only handle single variables as target
+            called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
+            target_type = called_on_type.value_type
+            iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
         else:
-            error = f"The for loop iteration statment {node.iter} is not yet translatable to CFG!"
+            error = f"The for loop iteration statment {iteration} is not yet translatable to CFG!"
             raise NotImplementedError(error)
 
         target = self.visit(node.target, types, target_type)
@@ -561,7 +591,7 @@ class CFGVisitor(ast.NodeVisitor):
             key = self.visit(node.slice.value, types, typ)
             return SubscriptionAccess(pp, target, key)
         elif isinstance(node.slice, ast.Slice):
-            return SliceStmt(pp, self._ensure_stmt_visit(node.value, pp, *args, **kwargs),
+            return SlicingAccess(pp, self._ensure_stmt_visit(node.value, pp, *args, **kwargs),
                              self._ensure_stmt_visit(node.slice.lower, pp, *args, **kwargs),
                              self._ensure_stmt_visit(node.slice.step, pp, *args, **kwargs) if node.slice.step else None,
                              self._ensure_stmt_visit(node.slice.upper, pp, *args, **kwargs))
