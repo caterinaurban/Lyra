@@ -297,10 +297,6 @@ class AssumptionState(Store, State):
         def visit_ListDisplay(self, expr, assumption=None, state=None):
             return state  # nothing to be done
 
-        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
-        def visit_DictDisplay(self, expr, assumption=None, state=None):
-            return state  # nothing to be done
-
         @copy_docstring(ExpressionVisitor.visit_Range)
         def visit_Range(self, expr, assumption=None, state=None):
             return state  # nothing to be done
