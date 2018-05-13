@@ -333,9 +333,13 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_AnnAssign(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         annotated = resolve_type_annotation(node.annotation)
+        # if node.value != None:        # TODO: implement annotation without assignment https://greentreesnakes.readthedocs.io/en/latest/nodes.html#statements
         value = self.visit(node.value, types, annotated)
         target = self.visit(node.target, types, annotated)
         return Assignment(pp, target, value)
+        # else:     # just a type annotation without assignment
+        #     target = target = self.visit(node.target, types, annotated)
+        #     return ?
 
     def visit_Module(self, node, types=None, typ=None):
         start_cfg = _dummy_cfg(self._id_gen)
@@ -593,8 +597,9 @@ class CFGVisitor(ast.NodeVisitor):
         elif isinstance(node.slice, ast.Slice):
             return SlicingAccess(pp, self._ensure_stmt_visit(node.value, pp, *args, **kwargs),
                              self._ensure_stmt_visit(node.slice.lower, pp, *args, **kwargs),
-                             self._ensure_stmt_visit(node.slice.step, pp, *args, **kwargs) if node.slice.step else None,
-                             self._ensure_stmt_visit(node.slice.upper, pp, *args, **kwargs))
+                             self._ensure_stmt_visit(node.slice.upper, pp, *args, **kwargs),
+                             self._ensure_stmt_visit(node.slice.step, pp, *args, **kwargs)
+                                 if node.slice.step else None,    )
         else:
             raise NotImplementedError(f"The statement {str(type(node.slice))} is not yet translatable to CFG!")
 
