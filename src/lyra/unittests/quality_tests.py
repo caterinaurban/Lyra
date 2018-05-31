@@ -20,10 +20,8 @@ from lyra.unittests.runner import TestRunner
 class QualityTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
-
-    def state(self):
-        return AssumptionState(self.variables)
+        state = AssumptionState(self.variables)
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3, state)
 
 
 def test_suite():

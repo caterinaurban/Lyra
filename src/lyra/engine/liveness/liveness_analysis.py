@@ -15,13 +15,12 @@ from lyra.abstract_domains.liveness.liveness_domain import LivenessState, Strong
 class LivenessAnalysis(Runner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
-
-    def state(self):
-        return LivenessState(self.variables)
+        state = LivenessState(self.variables)
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3, state)
 
 
-class StrongLivenessAnalysis(LivenessAnalysis):
+class StrongLivenessAnalysis(Runner):
 
-    def state(self):
-        return StrongLivenessState(self.variables)
+    def interpreter(self):
+        state = StrongLivenessState(self.variables)
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3, state)

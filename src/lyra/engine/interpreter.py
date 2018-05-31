@@ -15,15 +15,18 @@ from lyra.semantics.semantics import Semantics
 
 
 class Interpreter(metaclass=ABCMeta):
-    def __init__(self, cfg: ControlFlowGraph, semantics: Semantics, widening: int):
+    def __init__(self, cfg: ControlFlowGraph, semantics, widening, initial):
         """Control flow graph interpreter.
         
         :param cfg: control flow graph to analyze
-        :param widening: number of iterations before widening 
+        :param semantics: semantics of statements in the control flow graph
+        :param widening: number of iterations before widening
+        :param initial: initial analysis state
         """
         self._result = AnalysisResult(cfg)
-        self._semantics = semantics
-        self._widening = widening
+        self._semantics: Semantics = semantics
+        self._widening: int = widening
+        self._initial: State = initial
 
     @property
     def result(self):
@@ -41,10 +44,13 @@ class Interpreter(metaclass=ABCMeta):
     def widening(self):
         return self._widening
 
+    @property
+    def initial(self):
+        return self._initial
+
     @abstractmethod
-    def analyze(self, initial: State) -> AnalysisResult:
+    def analyze(self) -> AnalysisResult:
         """Run the analysis.
-        
-        :param initial: initial analysis state
+
         :return: result of the analysis
         """

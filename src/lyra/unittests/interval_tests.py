@@ -22,19 +22,15 @@ from lyra.unittests.runner import TestRunner
 class ForwardIntervalTest(TestRunner):
 
     def interpreter(self):
-        return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
-
-    def state(self):
-        return IntervalState(self.variables)
+        state = IntervalState(self.variables)
+        return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3, state)
 
 
 class BackwardIntervalTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
-
-    def state(self):
-        return IntervalState(self.variables)
+        state = IntervalState(self.variables)
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3, state)
 
 
 def test_suite():

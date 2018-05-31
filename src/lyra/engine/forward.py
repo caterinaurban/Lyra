@@ -19,15 +19,17 @@ from lyra.core.cfg import Basic, Loop, Conditional, ControlFlowGraph, Edge
 
 class ForwardInterpreter(Interpreter):
     """Forward control flow graph interpreter."""
-    def __init__(self, cfg: ControlFlowGraph, semantics: ForwardSemantics, widening: int):
+    def __init__(self, cfg: ControlFlowGraph, semantics: ForwardSemantics, widening, initial):
         """Forward control flow graph interpreter construction.
 
-        :param cfg: control flow graph to analyze 
-        :param widening: number of iterations before widening 
+        :param cfg: control flow graph to analyze
+        :param semantics: semantics of statements in the control flow graph
+        :param widening: number of iterations before widening
+        :param initial: initial analysis state
         """
-        super().__init__(cfg, semantics, widening)
+        super().__init__(cfg, semantics, widening, initial)
 
-    def analyze(self, initial: State) -> AnalysisResult:
+    def analyze(self) -> AnalysisResult:
 
         # prepare the worklist and iteration counts
         worklist = Queue()
@@ -46,7 +48,7 @@ class ForwardInterpreter(Interpreter):
                 previous = None
 
             # compute the current entry state of the current node
-            entry = deepcopy(initial)
+            entry = deepcopy(self.initial)
             if current.identifier != self.cfg.in_node.identifier:
                 entry.bottom()
                 # join incoming states
@@ -55,7 +57,7 @@ class ForwardInterpreter(Interpreter):
                     if edge.source in self.result.result:
                         predecessor = deepcopy(self.result.get_node_result(edge.source)[-1])
                     else:
-                        predecessor = deepcopy(initial).bottom()
+                        predecessor = deepcopy(self.initial).bottom()
                     # handle conditional edges
                     if isinstance(edge, Conditional) and edge.kind == Edge.Kind.DEFAULT:
                         neighbors = self.cfg.out_edges(edge.source)

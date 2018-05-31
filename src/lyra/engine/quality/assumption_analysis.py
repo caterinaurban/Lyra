@@ -11,10 +11,8 @@ class AssumptionAnalysis(Runner):
         self.do_render = do_render
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
-
-    def state(self):
-        return AssumptionState(self.variables)
+        state = AssumptionState(self.variables)
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3, state)
 
     def render(self, result):
         if self.do_render:
