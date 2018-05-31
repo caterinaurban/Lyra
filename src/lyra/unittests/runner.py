@@ -50,7 +50,7 @@ class TestRunner(unittest.TestCase, Runner, metaclass=ABCMeta):
             self.cfg = ast_to_cfg(self.tree)
 
     def runTest(self):
-        result = self.interpreter().analyze()
+        result = self.interpreter().analyze(self.state())
         self.render(result)
         self.check(result)
 

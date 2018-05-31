@@ -17,12 +17,16 @@ from lyra.abstract_domains.numerical.interval_domain import IntervalState
 class ForwardIntervalAnalysis(Runner):
 
     def interpreter(self):
-        state = IntervalState(self.variables)
-        return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3, state)
+        return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
+
+    def state(self):
+        return IntervalState(self.variables)
 
 
 class BackwardIntervalAnalysis(Runner):
 
     def interpreter(self):
-        state = IntervalState(self.variables)
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3, state)
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return IntervalState(self.variables)

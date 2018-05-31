@@ -19,21 +19,19 @@ from lyra.core.cfg import Basic, Loop, Conditional, ControlFlowGraph, Edge
 
 class BackwardInterpreter(Interpreter):
     """Backward control flow graph interpreter."""
-    def __init__(self, cfg: ControlFlowGraph, semantics: BackwardSemantics, widening, initial):
+    def __init__(self, cfg: ControlFlowGraph, semantics: BackwardSemantics, widening: int):
         """Backward control flow graph interpreter construction.
 
         :param cfg: control flow graph to analyze
-        :param semantics: semantics of statements in the control flow graph
-        :param widening: number of iterations before widening
-        :param initial: initial analysis state
+        :param widening: number of iterations before widening 
         """
-        super().__init__(cfg, semantics, widening, initial)
+        super().__init__(cfg, semantics, widening)
 
     @property
     def semantics(self):
         return self._semantics
 
-    def analyze(self) -> AnalysisResult:
+    def analyze(self, initial: State) -> AnalysisResult:
 
         # prepare the worklist and iteration counts
         worklist = Queue()
@@ -52,7 +50,7 @@ class BackwardInterpreter(Interpreter):
                 previous = None
 
             # compute the current exit state of the current node
-            entry = deepcopy(self.initial)
+            entry = deepcopy(initial)
             if current.identifier != self.cfg.out_node.identifier:
                 entry.bottom()
                 # join incoming states
@@ -61,7 +59,7 @@ class BackwardInterpreter(Interpreter):
                     if edge.target in self.result.result:
                         successor = deepcopy(self.result.get_node_result(edge.target)[0])
                     else:
-                        successor = deepcopy(self.initial).bottom()
+                        successor = deepcopy(initial).bottom()
                     # handle unconditional non-default edges
                     if edge.kind == Edge.Kind.IF_OUT:
                         successor = successor.enter_if()

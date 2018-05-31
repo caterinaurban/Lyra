@@ -19,8 +19,10 @@ from lyra.unittests.runner import TestRunner
 class UsageTest(TestRunner):
 
     def interpreter(self):
-        state = SimpleUsageState(self.variables)
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3, state)
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return SimpleUsageState(self.variables)
 
 
 def test_suite():

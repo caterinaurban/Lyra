@@ -65,6 +65,10 @@ class Runner:
     def interpreter(self):
         """Control flow graph interpreter."""
 
+    @abstractmethod
+    def state(self):
+        """Initial analysis state."""
+
     @property
     def variables(self) -> List[VariableIdentifier]:
         variables = list()
@@ -96,7 +100,7 @@ class Runner:
         return self.run()
 
     def run(self) -> AnalysisResult:
-        result = self.interpreter().analyze()
+        result = self.interpreter().analyze(self.state())
         self.render(result)
         return result
 
