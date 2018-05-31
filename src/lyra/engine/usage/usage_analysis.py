@@ -14,5 +14,7 @@ from lyra.semantics.backward import DefaultBackwardSemantics
 class SimpleUsageAnalysis(Runner):
 
     def interpreter(self):
-        state = SimpleUsageState(self.variables)
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3, state)
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+ 
+    def state(self):
+        return SimpleUsageState(self.variables)
