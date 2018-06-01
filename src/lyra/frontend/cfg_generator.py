@@ -7,7 +7,7 @@ from lyra.core.expressions import *
 
 from lyra.core.statements import *
 from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
-    FloatLyraType, ListLyraType
+    FloatLyraType, ListLyraType, TupleLyraType
 from lyra.visualization.graph_renderer import CfgRenderer
 
 
@@ -43,15 +43,15 @@ class LooseControlFlowGraph:
         BREAK = 1
         CONTINUE = 2
 
-    def __init__(self, nodes: Set[Node] = None, in_node: Node = None, out_node: Node = None, edges: Set[Edge] = None,
-                 loose_in_edges=None,
+    def __init__(self, nodes: Set[Node] = None, in_node: Node = None, out_node: Node = None,
+                 edges: Set[Edge] = None, loose_in_edges=None,
                  loose_out_edges=None, both_loose_edges=None):
         """Loose control flow graph representation.
 
-        This representation uses a complete (non-loose) control flow graph via aggregation and adds loose edges and
-        some transformations methods to combine, prepend and append loose control flow graphs. This class
-        intentionally does not provide access to the linked CFG. The completed CFG can be retrieved finally with
-        `eject()`.
+        This representation uses a complete (non-loose) control flow graph via aggregation
+        and adds loose edges and some transformations methods to combine, prepend
+        and append loose control flow graphs. This class intentionally does not provide
+        access to the linked CFG. The completed CFG can be retrieved finally with `eject()`.
 
         :param nodes: optional set of nodes of the control flow graph
         :param in_node: optional entry node of the control flow graph
@@ -114,8 +114,8 @@ class LooseControlFlowGraph:
         return self._special_edges
 
     def loose(self):
-        return len(self.loose_in_edges) or len(self.loose_out_edges) or len(self.both_loose_edges) or len(
-            self.special_edges)
+        return len(self.loose_in_edges) or len(self.loose_out_edges) or len(self.both_loose_edges)\
+               or len(self.special_edges)
 
     def add_node(self, node):
         self.nodes[node.identifier] = node
@@ -242,8 +242,8 @@ class CFGFactory:
     A helper class that encapsulates a partial CFG and possibly some statements not yet attached to CFG.
 
     Whenever the
-    method `complete_basic_block()` is called, it is ensured that all unattached statements are properly attached to
-    partial CFG. The partial CFG can be retrieved at any time by property `cfg`.
+    method `complete_basic_block()` is called, it is ensured that all unattached statements are
+    properly attached to partial CFG. The partial CFG can be retrieved at any time by property `cfg`.
     """
 
     def __init__(self, id_gen):
@@ -333,9 +333,13 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_AnnAssign(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         annotated = resolve_type_annotation(node.annotation)
+        # if node.value != None:        # TODO: implement annotation without assignment https://greentreesnakes.readthedocs.io/en/latest/nodes.html#statements
         value = self.visit(node.value, types, annotated)
         target = self.visit(node.target, types, annotated)
         return Assignment(pp, target, value)
+        # else:     # just a type annotation without assignment
+        #     target = target = self.visit(node.target, types, annotated)
+        #     return ?
 
     def visit_Module(self, node, types=None, typ=None):
         start_cfg = _dummy_cfg(self._id_gen)
@@ -418,12 +422,43 @@ class CFGVisitor(ast.NodeVisitor):
         body_out_node = cfg.out_node
 
         pp = ProgramPoint(node.target.lineno, node.target.col_offset)
-        iteration = self.visit(node.iter, types, ListLyraType(IntegerLyraType()))
-        if isinstance(iteration, Call) and iteration.name == "range":
+
+        # don't provide result type (should be set before by a type annotation for variables/will be set later for calls)
+        iteration = self.visit(node.iter, types)
+
+        # set types: iteration._typ = type of object being iterated over,
+        #           target_type = type of iteration variable (i.e. element type of iter_type)
+        if isinstance(iteration, VariableAccess):
+            if isinstance(iteration.variable.typ, ListLyraType):  # iteration over list items
+                target_type = iteration.variable.typ.typ  # element type
+            if isinstance(iteration.variable.typ, DictLyraType):   # iteration over dictionary keys
+                target_type = iteration.variable.typ.key_type
+                # conversion to .keys() call to be consistent:
+                iteration = Call(iteration.pp, "keys", [], SetLyraType(target_type), iteration)
+                    # TODO: return type necessary & correct?
+        elif isinstance(iteration, Call) and iteration.name == "range":
             target_type = IntegerLyraType()
+            iteration._typ = ListLyraType(IntegerLyraType())    # TODO: necessary?
+        elif isinstance(iteration, Call) and iteration.name == "items" \
+                and isinstance(iteration.target, VariableAccess):   # right now only handle single variables as target
+            called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
+            target_type = TupleLyraType([called_on_type.key_type, called_on_type.value_type])
+            # items() actually returns 'view' object, but here for simplicity: Dict
+            iteration._typ = called_on_type      # TODO: necessary & correct ?
+        elif isinstance(iteration, Call) and iteration.name == "keys" \
+                and isinstance(iteration.target, VariableAccess):   # right now only handle single variables as target
+            called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
+            target_type = called_on_type.key_type
+            iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
+        elif isinstance(iteration, Call) and iteration.name == "values" \
+                and isinstance(iteration.target, VariableAccess):   # right now only handle single variables as target
+            called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
+            target_type = called_on_type.value_type
+            iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
         else:
-            error = f"The for loop iteration statment {node.iter} is not yet translatable to CFG!"
+            error = f"The for loop iteration statment {iteration} is not yet translatable to CFG!"
             raise NotImplementedError(error)
+
         target = self.visit(node.target, types, target_type)
 
         test = Call(pp, "in", [target, iteration], BooleanLyraType())
@@ -521,11 +556,32 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        return Call(pp, node.func.id, [self.visit(arg, types, typ) for arg in node.args], typ)
+        if isinstance(node.func, ast.Attribute):  # function called on a target
+            name = node.func.attr
+            target = self.visit(node.func.value, types)
+        else:       # func : ast.Name
+            name = node.func.id
+            target = None
+        return Call(pp, name, [self.visit(arg, types, typ) for arg in node.args], typ, target)
+
+    def visit_Tuple(self, node, types=None, typ = None):    # same as list
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        return TupleDisplayAccess(pp, [self.visit(node.elts[i], types, typ.types[i])
+                                       for i in range(len(node.elts))])
 
     def visit_List(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        return ListDisplayAccess(pp, [self.visit(e, types, typ) for e in node.elts])
+        return ListDisplayAccess(pp, [self.visit(e, types, typ.typ) for e in node.elts])
+
+    def visit_Set(self, node, types=None, typ=None):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        return SetDisplayAccess(pp, [self.visit(e, types, typ.typ) for e in node.elts])
+
+    def visit_Dict(self, node, types=None, typ=None):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        k_stmts = [self.visit(k, types, typ.key_type) for k in node.keys]
+        v_stmts = [self.visit(v, types, typ.value_type) for v in node.values]
+        return DictDisplayAccess(pp, k_stmts, v_stmts)
 
     def visit_Raise(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
@@ -539,10 +595,11 @@ class CFGVisitor(ast.NodeVisitor):
             key = self.visit(node.slice.value, types, typ)
             return SubscriptionAccess(pp, target, key)
         elif isinstance(node.slice, ast.Slice):
-            return SliceStmt(pp, self._ensure_stmt_visit(node.value, pp, *args, **kwargs),
+            return SlicingAccess(pp, self._ensure_stmt_visit(node.value, pp, *args, **kwargs),
                              self._ensure_stmt_visit(node.slice.lower, pp, *args, **kwargs),
-                             self._ensure_stmt_visit(node.slice.step, pp, *args, **kwargs) if node.slice.step else None,
-                             self._ensure_stmt_visit(node.slice.upper, pp, *args, **kwargs))
+                             self._ensure_stmt_visit(node.slice.upper, pp, *args, **kwargs),
+                             self._ensure_stmt_visit(node.slice.step, pp, *args, **kwargs)
+                                 if node.slice.step else None,    )
         else:
             raise NotImplementedError(f"The statement {str(type(node.slice))} is not yet translatable to CFG!")
 
@@ -587,6 +644,8 @@ class CFGVisitor(ast.NodeVisitor):
                     pass
                 else:
                     cfg_factory.append_cfg(_dummy_cfg(self._id_gen))
+            # elif isinstance(child, ast.Assign): # TODO
+            #     raise NotAnnotatedError(f"The Assignment in line {str(child.lineno)} is not type annotated")
             else:
                 raise NotImplementedError(f"The statement {str(type(child))} is not yet translatable to CFG!")
         cfg_factory.complete_basic_block()

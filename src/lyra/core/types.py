@@ -9,6 +9,7 @@ Lyra's internal representation of Python types.
 
 import ast
 from abc import ABCMeta, abstractmethod
+from typing import List
 
 
 class LyraType(metaclass=ABCMeta):
@@ -23,14 +24,14 @@ class LyraType(metaclass=ABCMeta):
     def __hash__(self):
         return hash(repr(self))
 
-    @abstractmethod
+    # @abstractmethod
     def __repr__(self):
         """Unambiguous string representation of the type.
 
         :return: unambiguous string representation
 
         """
-
+        return "Any"
 
 class BooleanLyraType(LyraType):
     """Boolean type representation."""
@@ -79,6 +80,72 @@ class ListLyraType(LyraType):
         return f"List[{repr(self.typ)}]"
 
 
+class TupleLyraType(LyraType):          # TODO: maybe support tuples of variable length, esp. empty tuple?:
+    """Tuple type representation."""    # To specify a variable-length tuple of homogeneous type, use literal ellipsis, e.g. Tuple[int, ...].
+                                        # A plain Tuple is equivalent to Tuple[Any, ...], and in turn to tuple.
+
+    def __init__(self, types: List[LyraType]):
+        """Tuple type creation.
+
+        :param types: types of the tuple elements (can be different)
+        """
+        self._types = types
+
+    @property
+    def types(self):
+        """Types of the tuple elements."""
+        return self._types
+
+    def __repr__(self):
+        str_types = map(repr, self.types)
+        return "Tuple[" + ', '.join(str_types) + "]"
+
+
+class SetLyraType(LyraType):
+    """Set type representation."""
+
+    def __init__(self, typ: LyraType):
+        """Set type creation.
+
+        :param typ: type of the set elements
+        """
+        self._typ = typ
+
+    @property
+    def typ(self):
+        """Type of the set elements."""
+        return self._typ
+
+    def __repr__(self):
+        return f"Set[{repr(self.typ)}]"
+
+
+class DictLyraType(LyraType):
+    """Dictionary type representation."""
+
+    def __init__(self, key_type: LyraType, value_type: LyraType):
+        """Dictionary type creation.
+
+        :param key_type: type of the dictionary keys
+        :param value_type: type of the dictionary values
+        """
+        self._key_type = key_type
+        self._value_type = value_type
+
+    @property
+    def key_type(self):
+        """Type of the dictionary keys."""
+        return self._key_type
+
+    @property
+    def value_type(self):
+        """Type of the dictionary values."""
+        return self._value_type
+
+    def __repr__(self):
+        return f"Dict[{repr(self.key_type)}, {repr(self.value_type)}]"
+
+
 def resolve_type_annotation(annotation):
     """Type annotation resolution."""
 
@@ -94,7 +161,17 @@ def resolve_type_annotation(annotation):
 
     if isinstance(annotation, ast.Subscript):
         if annotation.value.id == 'List':
-            value = resolve_type_annotation(annotation.slice.value)
+            value = resolve_type_annotation(annotation.slice.value)     # element type
             return ListLyraType(value)
+        elif annotation.value.id == 'Dict':
+            key = resolve_type_annotation(annotation.slice.value.elts[0])       # key type
+            value = resolve_type_annotation(annotation.slice.value.elts[1])     # value type
+            return DictLyraType(key, value)
+        elif annotation.value.id == 'Set':
+            value = resolve_type_annotation(annotation.slice.value)     # element type
+            return SetLyraType(value)
+        elif annotation.value.id == 'Tuple':
+            values = [resolve_type_annotation(v) for v in annotation.slice.value.elts] # element types
+            return TupleLyraType(values)
 
     raise NotImplementedError(f"Type annotation {annotation} is not yet supported!")

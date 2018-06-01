@@ -17,7 +17,8 @@ from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing
-from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType
+from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType, StringLyraType, \
+    DictLyraType, SetLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -85,7 +86,7 @@ class SimpleUsageStore(UsageStore):
 
         :param variables: list of program variables
         """
-        types = [BooleanLyraType, IntegerLyraType, ListLyraType]
+        types = [BooleanLyraType, IntegerLyraType, StringLyraType, ListLyraType, DictLyraType, SetLyraType]
         lattices = {typ: UsageLattice for typ in types}
         super().__init__(variables, lattices)
 
@@ -135,7 +136,7 @@ class SimpleUsageState(Stack, State):
             if value.is_written() or value.is_top():
                 effect = True
         if effect:      # the current nesting level has an effect on the outcome of the program
-            for identifier in condition.ids():
+            for identifier in condition.ids():              # TODO: handle "in .items()" here!?
                 if isinstance(identifier, VariableIdentifier):
                     self.lattice.store[identifier].top()
         return self
@@ -180,12 +181,23 @@ class SimpleUsageState(Stack, State):
             target = left.target
             if self.lattice.store[target].is_top() or self.lattice.store[target].is_scoped():
                 # the assigned variable is used or scoped
-                self.lattice.store[target].top()      # summarization abstraction
+                self.lattice.store[target].top()      # summarization abstraction (join of U/S with W)
                 for identifier in right.ids():
                     if isinstance(identifier, VariableIdentifier):
                         self.lattice.store[identifier].top()
                     else:
                         error = f"Substitution with {right} is not implemented!"
+                        raise NotImplementedError(error)
+
+                if (isinstance(left,Subscription)):
+                    ids = left.key.ids()
+                else: # Slicing
+                    ids = left.lower.ids() | left.upper.ids()
+                for identifier in ids:  # make ids in subscript used
+                    if isinstance(identifier, VariableIdentifier):  # needed? ids = VariableIdentifier?
+                        self.lattice.store[identifier].top()
+                    else:
+                        error = f"Identifier {identifier} in subscript is not yet supported!"
                         raise NotImplementedError(error)
             return self
         error = f"Substitution for {left} is not yet implemented!"
