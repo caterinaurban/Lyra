@@ -175,14 +175,13 @@ class IntervalState(Store, State):
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
         if isinstance(left, VariableIdentifier):
-            if isinstance(left.typ, BooleanLyraType) or isinstance(left.typ, IntegerLyraType)\
-                    or isinstance(left.typ, FloatLyraType):
+            if isinstance(left.typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
                 evaluation = self._evaluation.visit(right, self, dict())
                 self.store[left] = evaluation[right]
             else:
-                raise ValueError(f"Variable type {left.typ} is not supported!")
+                raise ValueError(f"Variable type {left.typ} is unsupported!")
         else:
-            raise NotImplementedError(f"Assignment to {left.__class__.__name__} is not supported!")
+            raise NotImplementedError(f"Assignment to {left.__class__.__name__} is unsupported!")
         return self
 
     @copy_docstring(State._assume)
@@ -211,7 +210,7 @@ class IntervalState(Store, State):
         elif isinstance(normal, BinaryComparisonOperation):
             evaluation = self._evaluation.visit(normal.left, self, dict())
             return self._refinement.visit(normal.left, evaluation, IntervalLattice(upper=0), self)
-        error = f"Assumption of a {normal.__class__.__name__} expression is not supported!"
+        error = f"Assumption of a {normal.__class__.__name__} expression is unsupported!"
         raise ValueError(error)
 
     @copy_docstring(State.enter_if)
@@ -234,43 +233,20 @@ class IntervalState(Store, State):
     def _output(self, output: Expression) -> 'IntervalState':
         return self  # nothing to be done
 
-    @copy_docstring(State.raise_error)
-    def raise_error(self) -> 'IntervalState':
-        return self  # nothing to be done
-
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression):
-        interval_left = deepcopy(self.store[left])
-        self.store[left].top()
         if isinstance(left, VariableIdentifier):
-            if isinstance(right, VariableIdentifier):
-                self.store[right] = interval_left
-                return self
-            if isinstance(right, BinaryArithmeticOperation):
-                eval_left = self._evaluation.visit(right.left, self, dict())[right.left]
-                eval_right = self._evaluation.visit(right.right, self, dict())[right.right]
-                if right.operator == BinaryArithmeticOperation.Operator.Add:
-                    if isinstance(right.left, VariableIdentifier):
-                        self.store[right.left] = interval_left.sub(eval_right)
-                        return self
-                    if isinstance(right.right, VariableIdentifier):
-                        self.store[right.right] = interval_left.sub(eval_left)
-                        return self
-                if right.operator == BinaryArithmeticOperation.Operator.Sub:
-                    if isinstance(right.left, VariableIdentifier):
-                        self.store[right.left] = interval_left.add(eval_right)
-                    elif isinstance(right.right, VariableIdentifier):
-                        self.store[right.right] = eval_left.sub(interval_left)
-                    else:
-                        error = f"Substitution for {left} = {right} is not yet implemented!"
-                        raise NotImplementedError(error)
-                    return self
-            if isinstance(right, Literal):
-                return self
-            if isinstance(right, Input):
-                self.store[left].top()
-                return self
-        raise NotImplementedError(f"Substitution for {left} = {right} is not yet implemented!")
+            if isinstance(left.typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
+                value: IntervalLattice = deepcopy(self.store[left])
+                self.store[left].top()  # forget the current value of the substituted variable
+                evaluation = self._evaluation.visit(right, self, dict())
+                refinement = evaluation[right].meet(value)
+                self._refinement.visit(right, evaluation, refinement, self)
+            else:
+                raise ValueError(f"Variable type {left.typ} is unsupported!")
+        else:
+            raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
+        return self
 
     # expression evaluation
 
@@ -295,7 +271,7 @@ class IntervalState(Store, State):
                 val = float(expr.val)
                 evaluation[expr] = IntervalLattice(val, val)
                 return evaluation
-            raise ValueError(f"Literal type {expr.typ} is not supported!")
+            raise ValueError(f"Literal type {expr.typ} is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr: Input, state=None, evaluation=None):
@@ -307,7 +283,7 @@ class IntervalState(Store, State):
             elif isinstance(expr.typ, IntegerLyraType) or isinstance(expr.typ, FloatLyraType):
                 evaluation[expr] = IntervalLattice()
                 return evaluation
-            raise ValueError(f"Input type {expr.typ} is not supported!")
+            raise ValueError(f"Input type {expr.typ} is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
@@ -317,7 +293,7 @@ class IntervalState(Store, State):
                     or isinstance(expr.typ, FloatLyraType):
                 evaluation[expr] = deepcopy(state.store[expr])
                 return evaluation
-            raise ValueError(f"Variable type {expr.typ} is not supported!")
+            raise ValueError(f"Variable type {expr.typ} is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
@@ -354,7 +330,7 @@ class IntervalState(Store, State):
             elif expr.operator == UnaryArithmeticOperation.Operator.Sub:
                 evaluated[expr] = deepcopy(evaluated[expr.expression]).neg()
                 return evaluated
-            raise ValueError(f"Unary operator '{expr.operator}' is not supported!")
+            raise ValueError(f"Unary operator '{expr.operator}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
         def visit_UnaryBooleanOperation(self, expr, state=None, evaluation=None):
@@ -391,7 +367,7 @@ class IntervalState(Store, State):
             elif expr.operator == BinaryArithmeticOperation.Operator.Mult:
                 evaluated2[expr] = deepcopy(evaluated2[expr.left]).mult(evaluated2[expr.right])
                 return evaluated2
-            raise ValueError(f"Binary operator '{str(expr.operator)}' is not supported!")
+            raise ValueError(f"Binary operator '{str(expr.operator)}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
         def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
@@ -433,7 +409,7 @@ class IntervalState(Store, State):
                     or isinstance(expr.typ, FloatLyraType):
                 state.store[expr] = evaluation[expr].meet(value)
                 return state
-            raise ValueError(f"Variable type {expr.typ} is not supported!")
+            raise ValueError(f"Variable type {expr.typ} is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
@@ -468,7 +444,7 @@ class IntervalState(Store, State):
                 refined = evaluation[expr].meet(value)
                 val = IntervalLattice(0, 0).sub(refined)
                 return self.visit(expr.expression, evaluation, val, state)
-            raise ValueError(f"Unary operator '{expr.operator}' is not supported!")
+            raise ValueError(f"Unary operator '{expr.operator}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
         def visit_UnaryBooleanOperation(self, expr, evaluation=None, value=None, state=None):
@@ -484,7 +460,7 @@ class IntervalState(Store, State):
                     elif refined == IntervalLattice(0, 0):
                         refinement = IntervalLattice(1, 1)
                         return self.visit(expr.expression, evaluation, refinement, state)
-            error = f"Refinement for a {expr.__class__.__name__} expression is not supported!"
+            error = f"Refinement for a {expr.__class__.__name__} expression is unsupported!"
             raise ValueError(error)
 
         @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
@@ -503,16 +479,16 @@ class IntervalState(Store, State):
                 refinement2 = deepcopy(evaluation[expr.left]).sub(refined)
                 right = self.visit(expr.right, evaluation, refinement2, left)
                 return right
-            raise ValueError(f"Binary operator '{expr.operator}' is not supported!")
+            raise ValueError(f"Binary operator '{expr.operator}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
         def visit_BinaryBooleanOperation(self, expr, evaluation=None, value=None, state=None):
-            error = f"Refinement for a {expr.__class__.__name__} expression is not supported!"
+            error = f"Refinement for a {expr.__class__.__name__} expression is unsupported!"
             raise ValueError(error)
 
         @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
         def visit_BinaryComparisonOperation(self, expr, evaluation=None, value=None, state=None):
-            error = f"Refinement for a {expr.__class__.__name__} expression is not supported!"
+            error = f"Refinement for a {expr.__class__.__name__} expression is unsupported!"
             raise ValueError(error)
 
     _refinement = ArithmeticExpressionRefinement()  # static class member shared between instances

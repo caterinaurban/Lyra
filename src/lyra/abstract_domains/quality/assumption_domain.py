@@ -136,7 +136,7 @@ class AssumptionState(Store, State):
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
-        error = 'AssumptionState for forward assign statement analysis is not supported!'
+        error = 'AssumptionState for forward assign statement analysis is unsupported!'
         raise NotImplementedError(error)
 
     @copy_docstring(State._assume)
@@ -180,10 +180,6 @@ class AssumptionState(Store, State):
     @copy_docstring(State._output)
     def _output(self, output: Expression) -> 'AssumptionState':
         return self._refinement.visit(output, AssumptionLattice(), self)
-
-    @copy_docstring(State.raise_error)
-    def raise_error(self) -> 'AssumptionState':
-        return self.bottom()
 
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'AssumptionState':
@@ -279,7 +275,7 @@ class AssumptionState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
         def visit_AttributeReference(self, expr, assumption=None, state=None):
-            error = f'Refinement for a {expr.__class__.__name__} is not supported!'
+            error = f'Refinement for a {expr.__class__.__name__} is unsupported!'
             raise NotImplementedError(error)
 
         @copy_docstring(ExpressionVisitor.visit_Input)
