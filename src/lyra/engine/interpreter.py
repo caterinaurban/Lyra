@@ -19,7 +19,8 @@ class Interpreter(metaclass=ABCMeta):
         """Control flow graph interpreter.
         
         :param cfg: control flow graph to analyze
-        :param widening: number of iterations before widening 
+        :param semantics: semantics of statements in the control flow graph
+        :param widening: number of iterations before widening
         """
         self._result = AnalysisResult(cfg)
         self._semantics = semantics

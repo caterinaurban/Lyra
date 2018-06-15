@@ -7,8 +7,6 @@ The set of possible values of a program variable in a state is represented as an
 
 :Authors: Caterina Urban and Simon Wehrli
 """
-
-
 from copy import deepcopy
 from math import inf
 
@@ -237,10 +235,15 @@ class IntervalState(Store, State):
     def _substitute(self, left: Expression, right: Expression):
         if isinstance(left, VariableIdentifier):
             if isinstance(left.typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
+                # record the current value of the substituted variable
                 value: IntervalLattice = deepcopy(self.store[left])
-                self.store[left].top()  # forget the current value of the substituted variable
+                # forget the current value of the substituted variable
+                self.store[left].top()
+                # evaluate the right-hand side proceeding bottom-up using the updated store
                 evaluation = self._evaluation.visit(right, self, dict())
+                # restrict the value of the right-hand side using that of the substituted variable
                 refinement = evaluation[right].meet(value)
+                # refine the updated store proceeding top-down on the right-hand side
                 self._refinement.visit(right, evaluation, refinement, self)
             else:
                 raise ValueError(f"Variable type {left.typ} is unsupported!")

@@ -23,7 +23,8 @@ class BackwardInterpreter(Interpreter):
         """Backward control flow graph interpreter construction.
 
         :param cfg: control flow graph to analyze
-        :param widening: number of iterations before widening 
+        :param semantics: semantics of statements in the control flow graph
+        :param widening: number of iterations before widening
         """
         super().__init__(cfg, semantics, widening)
 
