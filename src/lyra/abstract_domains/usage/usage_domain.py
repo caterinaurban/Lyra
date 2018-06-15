@@ -100,10 +100,10 @@ class SimpleUsageState(Stack, State):
     .. note:: Program variables storing lists are abstracted via summarization.
 
     .. document private methods
-    .. automethod:: UsageState._assign
-    .. automethod:: UsageState._assume
-    .. automethod:: UsageState._output
-    .. automethod:: UsageState._substitute
+    .. automethod:: SimpleUsageState._assign
+    .. automethod:: SimpleUsageState._assume
+    .. automethod:: SimpleUsageState._output
+    .. automethod:: SimpleUsageState._substitute
     """
     def __init__(self, variables: List[VariableIdentifier]):
         super().__init__(SimpleUsageStore, {'variables': variables})

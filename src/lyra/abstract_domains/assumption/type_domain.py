@@ -7,9 +7,10 @@ The set of possible values of a program variable in a state is represented as a 
 
 :Authors: Caterina Urban and Madelin Schumacher
 """
+from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum
-from typing import List
+from typing import List, Dict
 
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin
 from lyra.abstract_domains.state import State
@@ -17,6 +18,7 @@ from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
     Input, ListDisplay, Range, AttributeReference, Subscription, Slicing, \
     UnaryArithmeticOperation, BinaryArithmeticOperation
+from lyra.core.statements import ProgramPoint
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -35,7 +37,7 @@ class TypeLattice(BottomMixin, ArithmeticMixin):
           |
           ⊥
 
-    The default lattice element is ``string``.
+    The default lattice element is ``String``.
 
     Let S be the set of all possible strings. We define F ⊆ S, I ⊆ F, B ⊆ I to be the sets of
     all possible strings that can be interpreted as floating-point numbers
@@ -298,6 +300,10 @@ class TypeState(Store, State):
         This means that, for any map m: VariableIdentifier -> TypeLattice and variable x,
         we should always have m(x) ≤ TypeLattice.from_lyra_type(x.typ)
 
+    When reading input data, the corresponding type assumptions
+    are stored in the static class member ``inputs``, which is a map shared by all instances
+    from each program point to the list of type assumptions on the inputs read at that point.
+
     .. document private methods
     .. automethod:: TypeState._assume
     .. automethod:: TypeState._substitute
@@ -316,6 +322,8 @@ class TypeState(Store, State):
                      FloatLyraType: {'type_status': TypeLattice.Status.Float},
                      StringLyraType: {'type_status': TypeLattice.Status.String}}
         super().__init__(variables, lattices, arguments)
+
+    inputs: Dict[ProgramPoint, List[TypeLattice]] = defaultdict(list)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'TypeState':
@@ -540,6 +548,7 @@ class TypeState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
+            TypeState.inputs[state.pp].append(value)
             return state    # nothing to be done
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
