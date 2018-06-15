@@ -577,11 +577,11 @@ class TypeState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
         def visit_UnaryArithmeticOperation(self, expr, evaluation=None, value=None, state=None):
-            if expr.operator == UnaryArithmeticOperation.Operator.Add:
-                return self.visit(expr.expression, evaluation, value, state)
-            elif expr.operator == UnaryArithmeticOperation.Operator.Sub:
+            add = UnaryArithmeticOperation.Operator.Add
+            sub = UnaryArithmeticOperation.Operator.Sub
+            if expr.operator == add or expr.operator == sub:
                 refined = evaluation[expr].meet(value)
-                val = TypeLattice(TypeLattice.Status.Integer).sub(refined)
+                val = TypeLattice(TypeLattice.Status.Integer).meet(refined)
                 return self.visit(expr.expression, evaluation, val, state)
             raise ValueError(f"Unary operator '{expr.operator}' is unsupported!")
 
@@ -592,18 +592,14 @@ class TypeState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
         def visit_BinaryArithmeticOperation(self, expr, evaluation=None, value=None, state=None):
-            if expr.operator == BinaryArithmeticOperation.Operator.Add:
+            add = BinaryArithmeticOperation.Operator.Add
+            sub = BinaryArithmeticOperation.Operator.Sub
+            mult = BinaryArithmeticOperation.Operator.Mult
+            if expr.operator == add or expr.operator == sub or expr.operator == mult:
                 refined = evaluation[expr].meet(value)
-                refinement1 = deepcopy(refined).sub(evaluation[expr.right])
+                refinement1 = deepcopy(refined).meet(evaluation[expr.right])
                 left = self.visit(expr.left, evaluation, refinement1, state)
-                refinement2 = deepcopy(refined).sub(evaluation[expr.left])
-                right = self.visit(expr.right, evaluation, refinement2, left)
-                return right
-            elif expr.operator == BinaryArithmeticOperation.Operator.Sub:
-                refined = evaluation[expr].meet(value)
-                refinement1 = deepcopy(refined).add(evaluation[expr.right])
-                left = self.visit(expr.left, evaluation, refinement1, state)
-                refinement2 = deepcopy(evaluation[expr.left]).sub(refined)
+                refinement2 = deepcopy(refined).meet(evaluation[expr.left])
                 right = self.visit(expr.right, evaluation, refinement2, left)
                 return right
             raise ValueError(f"Binary operator '{expr.operator}' is unsupported!")
