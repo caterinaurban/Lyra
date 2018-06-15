@@ -1,4 +1,4 @@
-from lyra.abstract_domains.quality.assumption_lattice import TypeLattice, AssumptionLattice, \
+from lyra.quality_analysis.assumption_lattice import TypeLattice, AssumptionLattice, \
     InputAssumptionLattice
 
 
