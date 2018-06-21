@@ -7,7 +7,7 @@ A program variable can have value *U* (used), *S* (scoped), *W* (written), and *
 
 :Authors: Caterina Urban and Simon Wehrli
 """
-
+from collections import defaultdict
 from copy import deepcopy
 from typing import List, Dict, Type
 
@@ -85,8 +85,7 @@ class SimpleUsageStore(UsageStore):
 
         :param variables: list of program variables
         """
-        types = [BooleanLyraType, IntegerLyraType, ListLyraType]
-        lattices = {typ: UsageLattice for typ in types}
+        lattices = defaultdict(lambda: UsageLattice)
         super().__init__(variables, lattices)
 
 

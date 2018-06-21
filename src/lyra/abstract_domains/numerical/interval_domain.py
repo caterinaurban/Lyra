@@ -7,6 +7,7 @@ The set of possible values of a program variable in a state is represented as an
 
 :Authors: Caterina Urban and Simon Wehrli
 """
+from collections import defaultdict
 from copy import deepcopy
 from math import inf
 
@@ -165,9 +166,7 @@ class IntervalState(Store, State):
 
         :param variables: list of program variables
         """
-        lattices = {BooleanLyraType: IntervalLattice,
-                    IntegerLyraType: IntervalLattice,
-                    FloatLyraType: IntervalLattice}
+        lattices = defaultdict(lambda: IntervalLattice)
         super().__init__(variables, lattices)
 
     @copy_docstring(State._assign)
@@ -292,8 +291,7 @@ class IntervalState(Store, State):
         def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType)\
-                    or isinstance(expr.typ, FloatLyraType):
+            if isinstance(expr.typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
                 evaluation[expr] = deepcopy(state.store[expr])
                 return evaluation
             raise ValueError(f"Variable type {expr.typ} is unsupported!")
@@ -408,8 +406,7 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):
-            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType)\
-                    or isinstance(expr.typ, FloatLyraType):
+            if isinstance(expr.typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
                 state.store[expr] = evaluation[expr].meet(value)
                 return state
             raise ValueError(f"Variable type {expr.typ} is unsupported!")
