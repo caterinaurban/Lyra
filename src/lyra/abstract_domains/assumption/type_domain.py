@@ -10,15 +10,15 @@ The set of possible values of a program variable in a state is represented as a 
 from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum
-from typing import List, Dict
+from typing import List
 
+from lyra.abstract_domains.assumption.assumption_domain import InputMixin
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
     Input, ListDisplay, Range, AttributeReference, Subscription, Slicing, \
     UnaryArithmeticOperation, BinaryArithmeticOperation
-from lyra.core.statements import ProgramPoint
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -290,7 +290,7 @@ class TypeLattice(BottomMixin, ArithmeticMixin):
         return self.replace(TypeLattice(max(self.element, other.element)))
 
 
-class TypeState(Store, State):
+class TypeState(Store, InputMixin):
     """Type assumption analysis state. An element of the type assumption abstract domain.
 
     Map from each program variable to the type representing its value.
@@ -301,7 +301,7 @@ class TypeState(Store, State):
         we should always have m(x) ≤ TypeLattice.from_lyra_type(x.typ)
 
     When reading input data, the corresponding type assumptions
-    are stored in the static class member ``inputs``, which is a map shared by all instances
+    are stored in the class member ``inputs``, which is a map
     from each program point to the list of type assumptions on the inputs read at that point.
 
     .. document private methods
@@ -313,17 +313,12 @@ class TypeState(Store, State):
 
         :param variables: list of program variables
         """
-        lattices = {BooleanLyraType: TypeLattice,
-                    IntegerLyraType: TypeLattice,
-                    FloatLyraType: TypeLattice,
-                    StringLyraType: TypeLattice}
-        arguments = {BooleanLyraType: {'type_status': TypeLattice.Status.Boolean},
-                     IntegerLyraType: {'type_status': TypeLattice.Status.Integer},
-                     FloatLyraType: {'type_status': TypeLattice.Status.Float},
-                     StringLyraType: {'type_status': TypeLattice.Status.String}}
+        lattices = defaultdict(lambda: TypeLattice)
+        arguments = defaultdict(lambda: {'type_status': TypeLattice.Status.String})
+        arguments[BooleanLyraType] = {'type_status': TypeLattice.Status.Boolean}
+        arguments[IntegerLyraType] = {'type_status': TypeLattice.Status.Integer}
+        arguments[FloatLyraType] = {'type_status': TypeLattice.Status.Float}
         super().__init__(variables, lattices, arguments)
-
-    inputs: Dict[ProgramPoint, List[TypeLattice]] = defaultdict(list)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'TypeState':
@@ -548,7 +543,7 @@ class TypeState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
-            TypeState.inputs[state.pp].append(value)
+            state.record(value)
             return state    # nothing to be done
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)

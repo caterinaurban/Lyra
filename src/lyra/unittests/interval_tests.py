@@ -39,11 +39,11 @@ class BackwardIntervalTest(TestRunner):
 
 def test_suite():
     suite = unittest.TestSuite()
-    name = os.getcwd() + 'numerical/interval/forward/**.py'
+    name = os.getcwd() + '/numerical/interval/forward/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             suite.addTest(ForwardIntervalTest(path))
-    name = os.getcwd() + 'numerical/interval/backward/**.py'
+    name = os.getcwd() + '/numerical/interval/backward/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             suite.addTest(BackwardIntervalTest(path))
