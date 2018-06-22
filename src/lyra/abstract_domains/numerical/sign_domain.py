@@ -32,7 +32,6 @@ class SignLattice(ArithmeticMixin):
         self._positive = positive
         self._zero = zero
 
-    @property
     def is_negative(self) -> bool:
         """ Indicates whether the element is certainly negative.
 
@@ -40,7 +39,6 @@ class SignLattice(ArithmeticMixin):
         """
         return self._negative and not self._positive and not self._zero
 
-    @property
     def is_positive(self) -> bool:
         """ Indicates whether the element is certainly positive.
 
@@ -48,7 +46,6 @@ class SignLattice(ArithmeticMixin):
         """
         return not self._negative and self._positive and not self._zero
 
-    @property
     def is_zero(self) -> bool:
         """ Indicates whether the element is certainly zero.
 
@@ -56,7 +53,6 @@ class SignLattice(ArithmeticMixin):
         """
         return not self._negative and not self._positive and self._zero
 
-    @property
     def maybe_negative(self) -> bool:
         """ Indicates whether the element may be negative.
 
@@ -64,7 +60,6 @@ class SignLattice(ArithmeticMixin):
         """
         return self._negative
 
-    @property
     def maybe_positive(self) -> bool:
         """ Indicates whether the element may be positive.
 
@@ -72,7 +67,6 @@ class SignLattice(ArithmeticMixin):
         """
         return self._positive
 
-    @property
     def maybe_zero(self) -> bool:
         """ Indicates whether the element may be zero.
 
@@ -80,7 +74,6 @@ class SignLattice(ArithmeticMixin):
         """
         return self._zero
 
-    @property
     def maybe_non_negative(self) -> bool:
         """ Indicates whether the element may be non-negative.
 
@@ -88,7 +81,6 @@ class SignLattice(ArithmeticMixin):
         """
         return self._zero or self._positive
 
-    @property
     def maybe_non_positive(self) -> bool:
         """ Indicates whether the element may be non-positive.
 
@@ -96,7 +88,6 @@ class SignLattice(ArithmeticMixin):
         """
         return self._negative or self._zero
 
-    @property
     def maybe_non_zero(self) -> bool:
         """ Indicates whether the element may be non-zero.
 
@@ -107,19 +98,19 @@ class SignLattice(ArithmeticMixin):
     def __repr__(self):
         if self.is_top():
             return "⊤"
-        elif self.maybe_negative and self.maybe_zero:
+        elif self.maybe_negative() and self.maybe_zero():
             return "≤0"
-        elif self.maybe_zero and self.maybe_positive:
+        elif self.maybe_zero() and self.maybe_positive():
             return "≥0"
-        elif self.maybe_negative and self.maybe_positive:
+        elif self.maybe_negative() and self.maybe_positive():
             return "≠0"
-        elif self.maybe_negative:
+        elif self.maybe_negative():
             return "<0"
-        elif self.maybe_positive:
+        elif self.maybe_positive():
             return ">0"
-        elif self.maybe_zero:
+        elif self.maybe_zero():
             return "=0"
-        else:
+        else:  # self.is_bottom()
             return "⊥"
 
     @copy_docstring(ArithmeticMixin.bottom)
@@ -140,22 +131,22 @@ class SignLattice(ArithmeticMixin):
 
     @copy_docstring(ArithmeticMixin._less_equal)
     def _less_equal(self, other: 'SignLattice') -> bool:
-        return (not self.maybe_negative or other.maybe_negative) and \
-               (not self.maybe_positive or other.maybe_positive) and \
-               (not self.maybe_zero or other.maybe_zero)
+        return (not self.maybe_negative() or other.maybe_negative()) and \
+               (not self.maybe_positive() or other.maybe_positive()) and \
+               (not self.maybe_zero() or other.maybe_zero())
 
     @copy_docstring(ArithmeticMixin._join)
     def _join(self, other: 'SignLattice') -> 'SignLattice':
-        negative = self.maybe_negative or other.maybe_negative
-        positive = self.maybe_positive or other.maybe_positive
-        zero = self.maybe_zero or other.maybe_zero
+        negative = self.maybe_negative() or other.maybe_negative()
+        positive = self.maybe_positive() or other.maybe_positive()
+        zero = self.maybe_zero() or other.maybe_zero()
         return self.replace(SignLattice(negative, positive, zero))
 
     @copy_docstring(ArithmeticMixin._meet)
     def _meet(self, other: 'SignLattice') -> 'SignLattice':
-        negative = self.maybe_negative and other.maybe_negative
-        positive = self.maybe_positive and other.maybe_positive
-        zero = self.maybe_zero and other.maybe_zero
+        negative = self.maybe_negative() and other.maybe_negative()
+        positive = self.maybe_positive() and other.maybe_positive()
+        zero = self.maybe_zero() and other.maybe_zero()
         return self.replace(SignLattice(negative, positive, zero))
 
     @copy_docstring(ArithmeticMixin._widening)
@@ -164,37 +155,37 @@ class SignLattice(ArithmeticMixin):
 
     @copy_docstring(ArithmeticMixin._neg)
     def _neg(self) -> 'SignLattice':
-        negative = self.maybe_positive
-        positive = self.maybe_negative
-        zero = self.maybe_zero
+        negative = self.maybe_positive()
+        positive = self.maybe_negative()
+        zero = self.maybe_zero()
         return self.replace(SignLattice(negative, positive, zero))
 
     def _add(self, other: 'SignLattice') -> 'SignLattice':
-        negative = (self.maybe_negative and not other.is_bottom()) or \
-                   (self.maybe_non_negative and other.maybe_negative)
-        positive = (self.maybe_positive and not other.is_bottom()) or \
-                   (self.maybe_non_positive and other.maybe_positive)
-        zero = (self.maybe_zero and other.maybe_zero) or \
-               (self.maybe_negative and other.maybe_positive) or \
-               (self.maybe_positive and other.maybe_negative)
+        negative = (self.maybe_negative() and not other.is_bottom()) or \
+                   (self.maybe_non_negative() and other.maybe_negative())
+        positive = (self.maybe_positive() and not other.is_bottom()) or \
+                   (self.maybe_non_positive() and other.maybe_positive())
+        zero = (self.maybe_zero() and other.maybe_zero()) or \
+               (self.maybe_negative() and other.maybe_positive()) or \
+               (self.maybe_positive() and other.maybe_negative())
         return self.replace(SignLattice(negative, positive, zero))
 
     def _sub(self, other: 'SignLattice') -> 'SignLattice':
-        negative = (self.maybe_negative and not other.is_bottom()) or \
-                   (self.maybe_non_negative and other.maybe_positive)
-        positive = (self.maybe_positive and not other.is_bottom()) or \
-                   (self.maybe_non_positive and other.maybe_negative)
-        zero = (self.maybe_zero and other.maybe_zero) or \
-               (self.maybe_negative and other.maybe_negative) or \
-               (self.maybe_positive and other.maybe_positive)
+        negative = (self.maybe_negative() and not other.is_bottom()) or \
+                   (self.maybe_non_negative() and other.maybe_positive())
+        positive = (self.maybe_positive() and not other.is_bottom()) or \
+                   (self.maybe_non_positive() and other.maybe_negative())
+        zero = (self.maybe_zero() and other.maybe_zero()) or \
+               (self.maybe_negative() and other.maybe_negative()) or \
+               (self.maybe_positive() and other.maybe_positive())
         return self.replace(SignLattice(negative, positive, zero))
 
     def _mult(self, other: 'SignLattice') -> 'SignLattice':
-        negative = (self.maybe_negative and other.maybe_positive) or \
-                   (self.maybe_positive and other.maybe_negative)
-        positive = (self.maybe_negative and other.maybe_negative) or \
-                   (self.maybe_positive and other.maybe_positive)
-        zero = self.maybe_zero or other.maybe_zero
+        negative = (self.maybe_negative() and other.maybe_positive()) or \
+                   (self.maybe_positive() and other.maybe_negative())
+        positive = (self.maybe_negative() and other.maybe_negative()) or \
+                   (self.maybe_positive() and other.maybe_positive())
+        zero = self.maybe_zero() or other.maybe_zero()
         return self.replace(SignLattice(negative, positive, zero))
 
 
