@@ -8,7 +8,7 @@ negative, positive, or zero.
 
 :Author: Jérôme Dohrau
 """
-
+from collections import defaultdict
 from copy import deepcopy
 
 from lyra.abstract_domains.lattice import ArithmeticMixin
@@ -203,19 +203,15 @@ class SignState(Store, State):
 
         :param variables: the list of program variables
         """
-        types = [BooleanLyraType, IntegerLyraType, FloatLyraType, ListLyraType]
-        lattices = {typ: SignLattice for typ in types}
+        lattices = defaultdict(lambda: SignLattice)
         super().__init__(variables, lattices)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'SignState':
         if isinstance(left, VariableIdentifier):
-            if isinstance(left.typ, BooleanLyraType) or isinstance(left.typ, IntegerLyraType) or \
-                    isinstance(left.typ, FloatLyraType) or isinstance(left.typ, ListLyraType):
-                evaluation = self._evaluation.visit(right, self, dict())
-                self.store[left] = evaluation[right]
-                return self
-            raise ValueError(f"Variable type {left.typ} is not supported!")
+            evaluation = self._evaluation.visit(right, self, dict())
+            self.store[left] = evaluation[right]
+            return self
         if isinstance(left, Subscription):
             evaluation = self._evaluation.visit(right, self, dict())
             self.store[left.target].join(evaluation[right])
@@ -278,7 +274,7 @@ class SignState(Store, State):
 
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'SignState':
-        error = f"Substitution for {left}is not yet implemented!"
+        error = f"Substitution for {left} is not yet implemented!"
         raise NotImplementedError(error)
 
     class ExpressionEvaluation(ExpressionVisitor):
@@ -300,7 +296,9 @@ class SignState(Store, State):
                 value = float(expr.val)
                 evaluation[expr] = SignLattice(value < 0.0, value > 0.0, value == 0.0)
                 return evaluation
-            raise ValueError(f"Literal type {expr.typ} is not supported!")
+            # return top by default
+            evaluation[expr] = SignLattice()
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr: 'Input', state: 'SignState' = None, evaluation=None):
@@ -312,18 +310,17 @@ class SignState(Store, State):
             if isinstance(expr.typ, IntegerLyraType) or isinstance(expr.typ, FloatLyraType):
                 evaluation[expr] = SignLattice()
                 return evaluation
-            ValueError(f"Input type {expr.typ} is not supported!")
+            # return top by default
+            evaluation[expr] = SignLattice()
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr: 'VariableIdentifier', state: 'SignState' = None,
                                      evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType) or \
-                    isinstance(expr.typ, FloatLyraType) or isinstance(expr.typ, ListLyraType):
-                evaluation[expr] = deepcopy(state.store[expr])
-                return evaluation
-            ValueError(f"Variable type {expr.typ} is not supported!")
+            evaluation[expr] = deepcopy(state.store[expr])
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: 'ListDisplay', state: 'SignState' = None,
@@ -449,11 +446,8 @@ class SignState(Store, State):
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr: 'VariableIdentifier', evaluation=None,
                                      value: 'SignLattice' = None, state: 'SignState' = None):
-            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType) or \
-                    isinstance(expr.typ, FloatLyraType):
-                state.store[expr] = evaluation[expr].meet(value)
-                return state
-            raise ValueError(f"Variable typ {expr.typ} is not supported!")
+            state.store[expr] = evaluation[expr].meet(value)
+            return state
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: 'ListDisplay', evaluation=None,
