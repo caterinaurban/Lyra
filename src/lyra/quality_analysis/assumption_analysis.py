@@ -1,4 +1,4 @@
-from lyra.abstract_domains.quality.assumption_domain import AssumptionState
+from lyra.quality_analysis.assumption_domain import AssumptionState
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.runner import Runner
 from lyra.semantics.backward import DefaultBackwardSemantics

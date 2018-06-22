@@ -7,8 +7,7 @@ The set of possible values of a program variable in a state is represented as an
 
 :Authors: Caterina Urban and Simon Wehrli
 """
-
-
+from collections import defaultdict
 from copy import deepcopy
 from math import inf
 
@@ -167,19 +166,14 @@ class IntervalState(Store, State):
 
         :param variables: list of program variables
         """
-        lattices = {BooleanLyraType: IntervalLattice,
-                    IntegerLyraType: IntervalLattice,
-                    FloatLyraType: IntervalLattice}
+        lattices = defaultdict(lambda: IntervalLattice)
         super().__init__(variables, lattices)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
         if isinstance(left, VariableIdentifier):
-            if isinstance(left.typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
-                evaluation = self._evaluation.visit(right, self, dict())
-                self.store[left] = evaluation[right]
-            else:
-                raise ValueError(f"Variable type {left.typ} is unsupported!")
+            evaluation = self._evaluation.visit(right, self, dict())
+            self.store[left] = evaluation[right]
         else:
             raise NotImplementedError(f"Assignment to {left.__class__.__name__} is unsupported!")
         return self
@@ -236,14 +230,16 @@ class IntervalState(Store, State):
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression):
         if isinstance(left, VariableIdentifier):
-            if isinstance(left.typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
-                value: IntervalLattice = deepcopy(self.store[left])
-                self.store[left].top()  # forget the current value of the substituted variable
-                evaluation = self._evaluation.visit(right, self, dict())
-                refinement = evaluation[right].meet(value)
-                self._refinement.visit(right, evaluation, refinement, self)
-            else:
-                raise ValueError(f"Variable type {left.typ} is unsupported!")
+            # record the current value of the substituted variable
+            value: IntervalLattice = deepcopy(self.store[left])
+            # forget the current value of the substituted variable
+            self.store[left].top()
+            # evaluate the right-hand side proceeding bottom-up using the updated store
+            evaluation = self._evaluation.visit(right, self, dict())
+            # restrict the value of the right-hand side using that of the substituted variable
+            refinement = evaluation[right].meet(value)
+            # refine the updated store proceeding top-down on the right-hand side
+            self._refinement.visit(right, evaluation, refinement, self)
         else:
             raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
         return self
@@ -271,7 +267,8 @@ class IntervalState(Store, State):
                 val = float(expr.val)
                 evaluation[expr] = IntervalLattice(val, val)
                 return evaluation
-            raise ValueError(f"Literal type {expr.typ} is unsupported!")
+            evaluation[expr] = IntervalLattice()
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr: Input, state=None, evaluation=None):
@@ -280,20 +277,15 @@ class IntervalState(Store, State):
             if isinstance(expr.typ, BooleanLyraType):
                 evaluation[expr] = IntervalLattice(0, 1)
                 return evaluation
-            elif isinstance(expr.typ, IntegerLyraType) or isinstance(expr.typ, FloatLyraType):
-                evaluation[expr] = IntervalLattice()
-                return evaluation
-            raise ValueError(f"Input type {expr.typ} is unsupported!")
+            evaluation[expr] = IntervalLattice()
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType)\
-                    or isinstance(expr.typ, FloatLyraType):
-                evaluation[expr] = deepcopy(state.store[expr])
-                return evaluation
-            raise ValueError(f"Variable type {expr.typ} is unsupported!")
+            evaluation[expr] = deepcopy(state.store[expr])
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
@@ -405,11 +397,8 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):
-            if isinstance(expr.typ, BooleanLyraType) or isinstance(expr.typ, IntegerLyraType)\
-                    or isinstance(expr.typ, FloatLyraType):
-                state.store[expr] = evaluation[expr].meet(value)
-                return state
-            raise ValueError(f"Variable type {expr.typ} is unsupported!")
+            state.store[expr] = evaluation[expr].meet(value)
+            return state
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):

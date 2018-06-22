@@ -11,7 +11,7 @@ from copy import deepcopy
 import math
 
 from lyra.abstract_domains.numerical.interval_domain import IntervalState
-from lyra.abstract_domains.quality.assumption_lattice import TypeLattice, AssumptionLattice, \
+from lyra.quality_analysis.assumption_lattice import TypeLattice, AssumptionLattice, \
     InputAssumptionLattice
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State

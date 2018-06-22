@@ -1,37 +1,34 @@
 """
 Assumption Analysis - Unit Tests
-==============================
+================================
 
 :Authors: Caterina Urban and Madelin Schumacher
 """
-
-
 import glob
 import os
 import unittest
 
-from lyra.abstract_domains.quality.assumption_domain import AssumptionState
+from lyra.abstract_domains.assumption.type_domain import TypeState
 from lyra.engine.backward import BackwardInterpreter
 from lyra.semantics.backward import DefaultBackwardSemantics
-
 from lyra.unittests.runner import TestRunner
 
 
-class QualityTest(TestRunner):
+class TypeTest(TestRunner):
 
     def interpreter(self):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        return AssumptionState(self.variables)
+        return TypeState(self.variables)
 
 
 def test_suite():
     suite = unittest.TestSuite()
-    name = os.getcwd() + '/quality/analysis/**.py'
+    name = os.getcwd() + '/assumption/type/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
-            suite.addTest(QualityTest(path))
+            suite.addTest(TypeTest(path))
     return suite
 
 
