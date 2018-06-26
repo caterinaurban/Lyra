@@ -15,11 +15,12 @@ from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slici
 from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
 from lyra.core.expressions import UnaryOperation
 from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
-from lyra.core.expressions import BinaryBooleanOperation, Input, ListDisplay, Literal
+from lyra.core.expressions import BinaryBooleanOperation, Input, ListDisplay, Literal, DictDisplay
 from lyra.abstract_domains.state import State
 from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, \
-    ListDisplayAccess, SubscriptionAccess, SlicingAccess, Raise
-from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, ListLyraType
+    ListDisplayAccess, DictDisplayAccess, SubscriptionAccess, SlicingAccess, Raise
+from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
+    ListLyraType, DictLyraType
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -91,6 +92,29 @@ class ExpressionSemantics(Semantics):
         result = set()
         for combination in itertools.product(*items):
             display = ListDisplay(ListLyraType(combination[0].typ), list(combination))
+            result.add(display)
+        state.result = result
+        return state
+
+    def dict_display_access_semantics(self, stmt: DictDisplayAccess, state: State) -> State:
+        """Semantics of a list display access.
+
+        :param stmt: dictionary display access statement to be executed
+        :param state: state before executing the dictionary display access
+        :return: state modified by the dictionary display access
+        """
+        k_exprs = [self.semantics(k, state).result for k in stmt.keys]      # List[Set[Expression]]
+        v_exprs = [self.semantics(v, state).result for v in stmt.values]
+
+        k_v_tuples = map(itertools.product, k_exprs, v_exprs)       # One "Set" of Tuples of possible key-value pairs per actual k-v-pair
+
+        k_typ = next(iter(k_exprs[0])).typ      # Is there a better way to retrieve the types?
+        v_typ = next(iter(v_exprs[0])).typ
+        result = set()
+
+        for combination in itertools.product(*k_v_tuples):
+            unzip = list(zip(*combination))     # to create two separate lists for keys and values
+            display = DictDisplay(DictLyraType(k_typ, v_typ), list(unzip[0]), list(unzip[1]))
             result.add(display)
         state.result = result
         return state
@@ -245,6 +269,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def range_call_semantics(self, stmt: Call, state: State) -> State:
         arguments = [self.semantics(arg, state).result.pop() for arg in stmt.arguments]
+        # default:
         start = Literal(IntegerLyraType(), "0")
         step = Literal(IntegerLyraType(), "1")
         if len(arguments) == 1:
@@ -462,7 +487,7 @@ class BuiltInCallSemantics(CallSemantics):
     def in_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'in' (membership).
         
-        :param stmt: call to 'is' to be executed
+        :param stmt: call to 'in' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """

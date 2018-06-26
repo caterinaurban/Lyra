@@ -11,7 +11,8 @@ from abc import ABCMeta, abstractmethod
 from enum import IntEnum
 from typing import Set, List
 
-from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType
+from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType, \
+    ListLyraType, DictLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -23,7 +24,7 @@ class Expression(metaclass=ABCMeta):
     def __init__(self, typ: LyraType):
         """Expression construction.
 
-        :param typ: type of the expression
+        :param typ: (result) type of the expression
         """
         self._typ = typ
 
@@ -135,6 +136,10 @@ class ExpressionVisitor(metaclass=ABCMeta):
     @abstractmethod
     def visit_ListDisplay(self, expr: 'ListDisplay'):
         """Visit of a list display."""
+
+    # @abstractmethod
+    # def visit_DictDisplay(self, expr: 'DictDisplay'):
+    #     """Visit of dictionary display."""
 
     @abstractmethod
     def visit_Range(self, expr: 'Range'):
@@ -434,7 +439,7 @@ class ListDisplay(Expression):
     https://docs.python.org/3/reference/expressions.html#list-displays
     """
 
-    def __init__(self, typ: LyraType, items: List[Expression] = None):
+    def __init__(self, typ: ListLyraType, items: List[Expression] = None):
         """List display construction.
         
         :param typ: type of the list
@@ -455,6 +460,42 @@ class ListDisplay(Expression):
 
     def __str__(self):
         return str(self.items)
+
+
+class DictDisplay(Expression):
+    """Dictionary display representation.
+
+    https://docs.python.org/3/reference/expressions.html#dictionary-displays
+    """
+
+    def __init__(self, typ: DictLyraType, keys: List[Expression] = None, values: List[Expression] = None):
+        """Dictionary display construction.
+
+        :param typ: type of the dictionary
+        :param keys, values: list of items being displayed (in the form key:value)
+        """
+        super().__init__(typ)
+        self._keys = keys or []
+        self._values = values or []
+
+    @property
+    def keys(self):
+        return self._keys
+
+    @property
+    def values(self):
+        return self._values
+
+    def __eq__(self, other):
+        return (self.typ, self.keys, self.values) == (other.typ, other.keys, other.items)
+
+    def __hash__(self):
+        return hash((self.typ, str(self.keys), str(self.values)))
+
+    def __str__(self):
+        str_keys = map(str, self.keys)
+        str_values = map(str, self.values)
+        return '{' + ', '.join(' : '.join(x) for x in zip(str_keys, str_values)) + '}'
 
 
 class Input(Expression):

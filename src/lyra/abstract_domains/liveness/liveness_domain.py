@@ -22,7 +22,8 @@ from lyra.abstract_domains.state import State
 from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing
 
 from lyra.abstract_domains.store import Store
-from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType
+from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType, StringLyraType, \
+    DictLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -208,13 +209,24 @@ class StrongLivenessState(LivenessState):
             return self
         elif isinstance(left, Subscription) or isinstance(left, Slicing):
             target = left.target
-            if self.store[target].is_top():  # the assigned variable is strongly-live
-                # summarization abstraction
+            if self.store[target].is_top():  # the assigned variable (list, dict,...) is strongly-live
+                # summarization abstraction (weak update)
                 for identifier in right.ids():
                     if isinstance(identifier, VariableIdentifier):
                         self.store[identifier].top()
                     else:
                         error = f"Substitution with {right} is not implemented!"
+                        raise NotImplementedError(error)
+
+                if (isinstance(left, Subscription)):
+                    ids = left.key.ids()
+                else:  # Slicing
+                    ids = left.lower.ids() | left.upper.ids()
+                for identifier in ids:  # make ids in subscript strongly live
+                    if isinstance(identifier, VariableIdentifier):  # needed? ids = VariableIdentifier?
+                        self.store[identifier].top()
+                    else:
+                        error = f"Identifier {identifier} in subscript is not yet supported!"
                         raise NotImplementedError(error)
             return self
         error = f"Substitution for {left} is not yet implemented!"

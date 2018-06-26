@@ -15,6 +15,6 @@ class SimpleUsageAnalysis(Runner):
 
     def interpreter(self):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
-
+ 
     def state(self):
         return SimpleUsageState(self.variables)
