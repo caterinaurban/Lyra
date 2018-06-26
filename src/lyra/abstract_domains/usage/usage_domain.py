@@ -7,7 +7,7 @@ A program variable can have value *U* (used), *S* (scoped), *W* (written), and *
 
 :Authors: Caterina Urban and Simon Wehrli
 """
-
+from collections import defaultdict
 from copy import deepcopy
 from typing import List, Dict, Type
 
@@ -86,8 +86,7 @@ class SimpleUsageStore(UsageStore):
 
         :param variables: list of program variables
         """
-        types = [BooleanLyraType, IntegerLyraType, StringLyraType, ListLyraType, DictLyraType]
-        lattices = {typ: UsageLattice for typ in types}
+        lattices = defaultdict(lambda: UsageLattice)
         super().__init__(variables, lattices)
 
 
@@ -101,10 +100,10 @@ class SimpleUsageState(Stack, State):
     .. note:: Program variables storing lists are abstracted via summarization.
 
     .. document private methods
-    .. automethod:: UsageState._assign
-    .. automethod:: UsageState._assume
-    .. automethod:: UsageState._output
-    .. automethod:: UsageState._substitute
+    .. automethod:: SimpleUsageState._assign
+    .. automethod:: SimpleUsageState._assume
+    .. automethod:: SimpleUsageState._output
+    .. automethod:: SimpleUsageState._substitute
     """
     def __init__(self, variables: List[VariableIdentifier]):
         super().__init__(SimpleUsageStore, {'variables': variables})
@@ -162,10 +161,6 @@ class SimpleUsageState(Stack, State):
         for identifier in output.ids():
             if isinstance(identifier, VariableIdentifier):
                 self.lattice.store[identifier].top()
-        return self
-
-    @copy_docstring(State.raise_error)
-    def raise_error(self):
         return self
 
     @copy_docstring(State._substitute)

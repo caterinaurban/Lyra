@@ -13,7 +13,7 @@ or if is used in a statement other than an assignment.
 
 :Author: Caterina Urban
 """
-
+from collections import defaultdict
 from enum import IntEnum
 from typing import List
 
@@ -118,8 +118,7 @@ class LivenessState(Store, State):
 
         :param variables: list of program variables
         """
-        types = [BooleanLyraType, IntegerLyraType, StringLyraType, ListLyraType, DictLyraType]
-        lattices = {typ: LivenessLattice for typ in types}
+        lattices = defaultdict(lambda: LivenessLattice)
         super().__init__(variables, lattices)
 
     @copy_docstring(Store.is_bottom)
@@ -195,10 +194,6 @@ class StrongLivenessState(LivenessState):
             if isinstance(identifier, VariableIdentifier):
                 self.store[identifier] = LivenessLattice(LivenessLattice.Status.Live)
         return self
-
-    @copy_docstring(LivenessState.raise_error)
-    def raise_error(self) -> 'StrongLivenessState':
-        return self.bottom()
 
     @copy_docstring(LivenessState._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'StrongLivenessState':

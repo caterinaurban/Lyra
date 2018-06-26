@@ -3,7 +3,7 @@ from json import JSONDecoder
 from math import inf
 
 from lyra.abstract_domains.numerical.interval_domain import IntervalLattice
-from lyra.abstract_domains.quality.assumption_lattice import AssumptionLattice, TypeLattice, \
+from lyra.quality_analysis.assumption_lattice import AssumptionLattice, TypeLattice, \
     InputAssumptionLattice
 
 
