@@ -13,7 +13,7 @@ or if is used in a statement other than an assignment.
 
 :Author: Caterina Urban
 """
-
+from collections import defaultdict
 from enum import IntEnum
 from typing import List
 
@@ -22,8 +22,6 @@ from lyra.abstract_domains.state import State
 from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing
 
 from lyra.abstract_domains.store import Store
-from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType, StringLyraType, \
-    DictLyraType, SetLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -118,9 +116,7 @@ class LivenessState(Store, State):
 
         :param variables: list of program variables
         """
-        types = [BooleanLyraType, IntegerLyraType, StringLyraType, ListLyraType, DictLyraType,
-                 SetLyraType]
-        lattices = {typ: LivenessLattice for typ in types}
+        lattices = defaultdict(lambda: LivenessLattice)
         super().__init__(variables, lattices)
 
     @copy_docstring(Store.is_bottom)
@@ -196,10 +192,6 @@ class StrongLivenessState(LivenessState):
             if isinstance(identifier, VariableIdentifier):
                 self.store[identifier] = LivenessLattice(LivenessLattice.Status.Live)
         return self
-
-    @copy_docstring(LivenessState.raise_error)
-    def raise_error(self) -> 'StrongLivenessState':
-        return self.bottom()
 
     @copy_docstring(LivenessState._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'StrongLivenessState':

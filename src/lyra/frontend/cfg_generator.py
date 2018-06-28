@@ -345,7 +345,10 @@ class CFGVisitor(ast.NodeVisitor):
         start_cfg = _dummy_cfg(self._id_gen)
         body_cfg = self._translate_body(node.body, types, allow_loose_in_edges=True, allow_loose_out_edges=True)
         end_cfg = _dummy_cfg(self._id_gen)
-        return start_cfg.append(body_cfg).append(end_cfg)
+        if body_cfg is None:
+            return start_cfg.append(end_cfg)
+        else:
+            return start_cfg.append(body_cfg).append(end_cfg)
 
     def visit_If(self, node, types=None, typ=None):
         body_cfg = self._translate_body(node.body, types)
