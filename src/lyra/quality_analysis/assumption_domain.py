@@ -128,7 +128,7 @@ class AssumptionState(Store, State):
     """
 
     def __init__(self, variables: List[VariableIdentifier]):
-        types = [BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType, ListLyraType]
+        types = [BooleanLyraType(), IntegerLyraType(), FloatLyraType(), StringLyraType(), ListLyraType()]
         lattices = {typ: AssumptionLattice for typ in types}
         super().__init__(variables, lattices)
         self.store[self.input_var] = InputAssumptionStack()

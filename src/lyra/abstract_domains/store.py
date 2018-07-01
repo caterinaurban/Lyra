@@ -13,6 +13,7 @@ from typing import List, Dict, Any, Type
 
 from lyra.core.expressions import VariableIdentifier
 from lyra.abstract_domains.lattice import Lattice
+from lyra.core.types import LyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -28,8 +29,8 @@ class Store(Lattice):
     .. automethod:: Store._meet
     .. automethod:: Store._join
     """
-    def __init__(self, variables: List[VariableIdentifier], lattices: Dict[Type, Type[Lattice]],
-                 arguments: Dict[Type, Dict[str, Any]] = defaultdict(lambda: dict())):
+    def __init__(self, variables: List[VariableIdentifier], lattices: Dict[LyraType, Type[Lattice]],    #TODO: make LyraType? -> no, need class
+                 arguments: Dict[LyraType, Dict[str, Any]] = defaultdict(lambda: dict())):
         """Create a mapping Var -> L from each variable in Var to the corresponding element in L.
 
         :param variables: list of program variables
@@ -41,7 +42,7 @@ class Store(Lattice):
         self._lattices = lattices
         self._arguments = arguments
         try:
-            self._store = {v: lattices[type(v.typ)](**arguments[type(v.typ)]) for v in variables}           # TODO: why duplicates in variables (from loop variable?)
+            self._store = {v: lattices[v.typ](**arguments[v.typ]) for v in variables}           # TODO: why duplicates in variables (from loop variable?)
         except KeyError as key:
             error = f"Missing lattice for variable type {repr(key.args[0])}!"
             raise ValueError(error)
