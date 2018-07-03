@@ -259,10 +259,16 @@ class DictContentState(State):
     """Dictionary content analysis state.
     An element of the dictionary content abstract domain.
 
-    Map from each program variable to its liveness status.
-    All program variables are *dead* by default.
+    It consists of the following 3 elements:
+    - Abstract state from a given domain A over all scalar variables,
+        abstracting their values
+    - Map from all dictionary variables to a DictSegmentLattice-element with a given key domain K
+        and value domain V, abstracting the contents of the dictionaries
+    - Map from all dictionary variables to a DictSegmentLattice-element with a given key domain K and the Booleans as value domain,
+        abstracting the initialization info of the dictionary elements
+        (True = may be uninitialized, False/Not present = def. initialized)
 
-    .. note:: Program variables storing lists are abstracted via summarization.
+    Everything is Top by default        # TODO
 
     .. document private methods
     .. automethod:: LivenessState._assign
@@ -270,22 +276,167 @@ class DictContentState(State):
     .. automethod:: LivenessState._output
     .. automethod:: LivenessState._substitute
     """
-    def __init__(self, variables: List[VariableIdentifier]):
+
+    # here the Union type means a logical AND: the domain should inherit from both RelationalStore and State
+    def __init__(self, scalar_domain: Type[Union[RelationalStore, State]],
+                 key_domain: Type[Union[RelationalStore, State]], value_domain: Type[Union[RelationalStore, State]],
+                 scalar_vars: List[VariableIdentifier] = None, dict_vars: List[VariableIdentifier] = None,
+                 scalar_k_conv: Callable[[State], State] = lambda x: x,
+                 k_scalar_conv: Callable[[State], State] = lambda x: x,
+                 scalar_v_conv: Callable[[State], State] = lambda x: x,
+                 v_scalar_conv: Callable[[State], State] = lambda x: x):
         """Map each program variable to its liveness status.
 
-        :param variables: list of program variables
+        :param scalar_domain: domain for abstraction of scalar variable values, ranges over the scalar variables #TODO: separate per type?
+        :param key_domain: domain for abstraction of dictionary keys; (possibly) ranges over scalar variables and definetly has a special key variable v_k
+        :param value_domain: domain for abstraction of dictionary values; (possibly) ranges over scalar variables and definetly has a special value variable
+        :param scalar_vars: list of scalar variables, whose values should be abstracted
+        :param dict_vars: list of dictionary variables, whose values should be abstracted
+        :param scalar_k_conv: conversion function to convert from scalar domain elements to key domain elements (can be omitted, if the domains are the same)
+        :param k_scalar_conv: conversion function to convert from key domain elements to scalar domain elements (can be omitted, if the domains are the same)
+        :param scalar_v_conv: conversion function to convert from scalar domain elements to value domain elements (can be omitted, if the domains are the same)
+        :param v_scalar_conv: conversion function to convert from value domain elements to scalar domain elements (can be omitted, if the domains are the same)
         """
-        lattices = defaultdict(lambda: LivenessLattice)
-        super().__init__(variables, lattices)
+        super().__init__()      #TODO: handle None
+        # self._s_domain = scalar_domain
+        self._scalar_state = scalar_domain(scalar_vars)         #TODO: require as input?
 
-    @copy_docstring(Store.is_bottom)
+        # special variable names:
+        self._k_name = "0v_key"
+        self._v_name = "0v_value"
+
+        arguments = {}
+        for dv in dict_vars:
+            typ = dv.typ()
+            if isinstance(typ, DictLyraType):  # should be true
+                if typ not in arguments:
+                    k_var = VariableIdentifier(typ.key_type, self._k_name)
+                    key_vars = scalar_vars.copy().append(k_var)
+                    v_var = VariableIdentifier(typ.value_type, self._v_name)
+                    value_vars = scalar_vars.copy().append(v_var)
+
+                    arguments[typ] = {'key_domain': key_domain, 'value_domain': value_domain,
+                                    'key_d_args': key_vars, 'value_d_args': value_vars}
+            else:
+                raise TypeError("Dictionary variables should be of DictLyraType")
+
+        lattices = defaultdict(lambda: DictSegmentLattice)
+        self._dict_store = Store(dict_vars, lattices, arguments)
+
+        for k in arguments.keys():
+            arguments[k]['value_domain'] = BoolLattice
+            del arguments[k]['value_d_args']
+        self._init_store = Store(dict_vars, lattices, arguments)
+
+        self._s_k_conv = scalar_k_conv
+        self._k_s_conv = k_scalar_conv
+        self._s_v_conv = scalar_v_conv
+        self._v_s_conv = v_scalar_conv
+
+    @property
+    def scalar_state(self) -> Union[RelationalStore, State]:
+        """Abstract state of scalar variable values."""
+        return self._scalar_state
+
+    @property
+    def dict_store(self) -> Store:
+        """Abstract store of dictionary variable contents."""
+        return self._dict_store
+
+    @property
+    def init_store(self) -> Store:
+        """Abstract store of dictionary variable initialization info."""
+        return self._init_store
+
+    @copy_docstring(Lattice.bottom)
+    def bottom(self) -> 'DictContentState':
+        """The bottom lattice element is defined point-wise."""
+        self.scalar_state.bottom()
+        self.dict_store.bottom()
+        self.init_store.bottom()
+        return self
+
+    @copy_docstring(Lattice.top)
+    def top(self) -> 'DictContentState':
+        """The top lattice element is defined point-wise."""
+        self.scalar_state.top()
+        self.dict_store.top()
+        self.init_store.top()
+        return self
+
+    @copy_docstring(Lattice.is_bottom)
     def is_bottom(self) -> bool:
-        """The current store is bottom if `all` of its variables map to a bottom element."""
-        return all(element.is_bottom() for element in self.store.values())
+        """The current state is bottom if `all` of its three elements are bottom"""
+        return self.scalar_state.is_bottom() and self.dict_store.is_bottom() and self.init_store.is_bottom()
+    # TODO: store = bottom if any element bottom -> correct?
+
+    @copy_docstring(Lattice.is_top)
+    def is_top(self) -> bool:
+        """The current state is bottom if `all` of its three elements are top"""
+        return self.scalar_state.is_top() and self.dict_store.is_top() and self.init_store.is_top()
+
+    @copy_docstring(Lattice._less_equal)
+    def _less_equal(self, other: 'DictContentState') -> bool:
+        """Defined point-wise"""
+        scaler_le = self.scalar_state.less_equal(other.scalar_state)
+        dict_le = self.dict_store.less_equal(other.dict_store)
+        init_le = self.init_store.less_equal(other.init_store)
+        return scaler_le and dict_le and init_le
+
+    @copy_docstring(Lattice._join)
+    def _join(self, other: 'DictContentState') -> 'DictContentState':
+        """Defined point-wise"""
+        self.scalar_state.join(other.scalar_state)
+        self.dict_store.join(other.dict_store)
+        self.init_store.join(other.init_store)
+        return self
+
+    @copy_docstring(Lattice._meet)
+    def _meet(self, other: 'DictContentState'):
+        """Defined point-wise"""
+        self.scalar_state.meet(other.scalar_state)
+        self.dict_store.meet(other.dict_store)
+        self.init_store.meet(other.init_store)
+        return self
+
+    @copy_docstring(Lattice._widening)
+    def _widening(self, other: 'DictContentState'):
+        """To avoid imprecise widening of DictSegmentLattice, first widen the scalar state"""
+        old_scalar = deepcopy(self.scalar_state)
+        self.scalar_state.widening(other.scalar_state)
+        if old_scalar != self.scalar_state:        # TODO: comparison working?
+            self.dict_store.join(other.dict_store)
+            self.init_store.join(other.init_store)
+        else:
+            self.dict_store.widening(other.dict_store)
+            self.init_store.widening(other.init_store)
+        return self
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
-        raise RuntimeError("Unexpected assignment in a backward analysis!")
+        all_ids = left.ids().union(right.ids())
+        scalar_types = {BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType}# /immutable TODO: make module-global?/ put function in types?
+
+        if all(type(id.typ()) in scalar_types for id in all_ids):   # completely scalar stmt TODO: not any?
+            self.scalar_state.assign({left}, {right})      # update scalar part
+
+            for d_lattice in self.dict_store.store.values():
+                for (k,v) in d_lattice.segments:
+                    k.assign({left}, {right})
+                    v.assign({left}, {right})
+                d_lattice.segments = d_lattice.d_norm(d_lattice.segments)       # TODO: legal assignment?
+
+
+        # if isinstance(left, VariableIdentifier):
+        #     self.store[left].bottom()
+        #     for identifier in right.ids():
+        #         if isinstance(identifier, VariableIdentifier):
+        #             self.store[identifier].top()
+        #         else:
+        #             error = f"Substitution with {right} is not implemented!"
+        #             raise NotImplementedError(error)
+        #     return self
+        # error = f"Substitution for {left} is not yet implemented!"
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'LivenessState':
@@ -316,14 +467,4 @@ class DictContentState(State):
 
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'LivenessState':
-        if isinstance(left, VariableIdentifier):
-            self.store[left].bottom()
-            for identifier in right.ids():
-                if isinstance(identifier, VariableIdentifier):
-                    self.store[identifier].top()
-                else:
-                    error = f"Substitution with {right} is not implemented!"
-                    raise NotImplementedError(error)
-            return self
-        error = f"Substitution for {left} is not yet implemented!"
-        raise NotImplementedError(error)
+        raise RuntimeError("Unexpected substitute in a forward analysis!")
