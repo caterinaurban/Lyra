@@ -1,8 +1,14 @@
+from collections import defaultdict
 from copy import deepcopy
-from typing import List, Tuple, Set, Type
+from typing import List, Tuple, Set, Type, Callable, Dict, Any, Union
 
 from lyra.abstract_domains.lattice import Lattice
+from lyra.abstract_domains.relational_store import RelationalStore
 from lyra.abstract_domains.state import State
+from lyra.abstract_domains.store import Store
+from lyra.core.expressions import VariableIdentifier, Expression
+from lyra.core.types import DictLyraType, LyraType, BooleanLyraType, IntegerLyraType, \
+    FloatLyraType, StringLyraType
 
 from lyra.core.utils import copy_docstring
 
@@ -27,14 +33,18 @@ class DictSegmentLattice(Lattice):
     .. automethod:: DictSegmentLattice._join
     .. automethod:: DictSegmentLattice._widening
     """
-    def __init__(self, key_domain: Type[State], value_domain: Type[State],      # TODO: use typing.Generic
-                 segments: Set[Tuple[State, State]] = set()):       # TODO: Set?
+    def __init__(self, key_domain: Type[Lattice], value_domain: Type[Lattice],      # TODO: use typing.Generic
+                 key_d_args: Dict[str, Any] = {}, value_d_args: Dict[str, Any] = {},
+                 segments: Set[Tuple[Lattice, Lattice]] = None):       # TODO: Set?
         # TODO: document
         super().__init__()
         self._k_domain = key_domain
+        self._k_d_args = key_d_args
         self._v_domain = value_domain
+        self._v_d_args = value_d_args
+
         if segments is None:    # default element
-            self._segments = {(key_domain().top(), value_domain().top())}   #TODO: correct, constructor without arg?
+            self._segments = {(key_domain(**key_d_args).top(), value_domain(**value_d_args).top())}   #TODO: correct, constructor without arg?
         else:
             for s in segments:      # TODO: remove?
                 if len(s) != 2:
@@ -46,33 +56,33 @@ class DictSegmentLattice(Lattice):
             self._segments = segments
 
     @property
-    def k_domain(self) -> Type[State]:
+    def k_domain(self) -> Type[Lattice]:
         """Domain for the abstract keys."""
         return self._k_domain
 
     @property
-    def v_domain(self) -> Type[State]:
+    def v_domain(self) -> Type[Lattice]:
         """Domain for the abstract values."""
         return self._v_domain
 
     @property
-    def segments(self) -> Set[Tuple[State, State]]:
+    def segments(self) -> Set[Tuple[Lattice, Lattice]]:
         """List of all abstract segments."""
         return self._segments
 
     def __repr__(self):
-        return str(self.segments)
+        return repr(self.segments)
 
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'DictSegmentLattice':
         """The bottom lattice element is ``{}``."""
-        self.replace(DictSegmentLattice(self.k_domain, self.v_domain, set()))
+        self.replace(DictSegmentLattice(self.k_domain, self.v_domain, self._k_d_args, self._v_d_args, set()))
         return self
 
     @copy_docstring(Lattice.top)
     def top(self) -> 'DictSegmentLattice':
         """The top lattice element is ``{(top, top)}``."""
-        self.replace(DictSegmentLattice(self.k_domain, self.v_domain))
+        self.replace(DictSegmentLattice(self.k_domain, self.v_domain, self._k_d_args, self._v_d_args))
         return self
 
     @copy_docstring(Lattice.is_bottom)
@@ -87,7 +97,7 @@ class DictSegmentLattice(Lattice):
         else:
             return False
 
-    @copy_docstring(Lattice.less_equal)
+    @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'DictSegmentLattice') -> bool:
         if self.k_domain != other.k_domain:
             raise TypeError(f"Cannot compare dictionary abstractions with different key abstractions ({self.k_domain}, {other.k_domain})")
@@ -114,11 +124,11 @@ class DictSegmentLattice(Lattice):
                     if not v_meet.is_bottom():
                         new_segments.add((k_meet, v_meet))
 
-        self.replace(DictSegmentLattice(self.k_domain, self.v_domain, new_segments))
+        self.replace(DictSegmentLattice(self.k_domain, self.v_domain, self._k_d_args, self._v_d_args, new_segments))
         return self
 
-    def d_norm(self, segment_set: Set[Tuple[State, State]],
-               known_disjoint: Set[Tuple[State, State]] = set()) -> Set[Tuple[State, State]]:
+    def d_norm(self, segment_set: Set[Tuple[Lattice, Lattice]],
+               known_disjoint: Set[Tuple[Lattice, Lattice]] = set()) -> Set[Tuple[Lattice, Lattice]]:
         """disjoint normalization function:
         Computes a partition such that no two abstract keys overlap (i.e. their meet is bottom)
         (and the keys are minimal)"""
@@ -142,7 +152,7 @@ class DictSegmentLattice(Lattice):
             new_segments = self.d_norm(other.segments, self.segments)
         else:
             new_segments = self.d_norm(self.segments, other.segments)
-        self.replace(DictSegmentLattice(self.k_domain, self.v_domain, new_segments))
+        self.replace(DictSegmentLattice(self.k_domain, self.v_domain, self._k_d_args, self._v_d_args, new_segments))
         return self
 
     @copy_docstring(Lattice._widening)
@@ -175,7 +185,7 @@ class DictSegmentLattice(Lattice):
         else:  # o does not have an additional non-overlapping segment
             result_set = self.d_norm(segment_set)
 
-        self.replace(DictSegmentLattice(self.k_domain, self.v_domain, result_set))
+        self.replace(DictSegmentLattice(self.k_domain, self.v_domain, self.v_domain, self._k_d_args, self._v_d_args, result_set))
         return self
 
 
