@@ -1,15 +1,15 @@
 
-# INITIAL: x -> [-inf, inf], y -> [-inf, inf], a -> [-inf, inf]
+# INITIAL: a -> [-inf, inf], x -> [-inf, inf], y -> [-inf, inf]
 x: int = 3
-# STATE: x -> [3, 3], y -> [-inf, inf], a -> [-inf, inf]
+# STATE: a -> [-inf, inf], x -> [3, 3], y -> [-inf, inf]
 y: int = 5
-# STATE: x -> [3, 3], y -> [5, 5], a -> [-inf, inf]
+# STATE: a -> [-inf, inf], x -> [3, 3], y -> [5, 5]
 a: int = x + y
-# STATE: x -> [3, 3], y -> [5, 5], a -> [8, 8]
+# STATE: a -> [8, 8], x -> [3, 3], y -> [5, 5]
 if a > 0:
-    # STATE: x -> [3, 3], y -> [5, 5], a -> [8, 8]
+    # STATE: a -> [8, 8], x -> [3, 3], y -> [5, 5]
     a: int = 2 * a
-    # STATE: x -> [3, 3], y -> [5, 5], a -> [16, 16]
-# STATE: x -> [3, 3], y -> [5, 5], a -> [16, 16]
+    # STATE: a -> [16, 16], x -> [3, 3], y -> [5, 5]
+# STATE: a -> [16, 16], x -> [3, 3], y -> [5, 5]
 print(a)
-# FINAL: x -> [3, 3], y -> [5, 5], a -> [16, 16]
+# FINAL: a -> [16, 16], x -> [3, 3], y -> [5, 5]

@@ -71,7 +71,7 @@ class Runner:
 
     @property
     def variables(self) -> List[VariableIdentifier]:
-        variables = list()
+        variables = set()
         visited, worklist = set(), Queue()
         worklist.put(self.cfg.in_node)
         while not worklist.empty():
@@ -80,16 +80,16 @@ class Runner:
                 visited.add(current.identifier)
                 for stmt in current.stmts:
                     if isinstance(stmt, Assignment) and isinstance(stmt.left, VariableAccess):
-                        variables.append(stmt.left.variable)
+                        variables.add(stmt.left.variable)
                 if isinstance(current, Loop):
                     edges = self.cfg.edges.items()
                     conds = [edge.condition for nodes, edge in edges if nodes[0] == current]
                     for cond in [c for c in conds if isinstance(c, Call)]:
                         for arg in [a for a in cond.arguments if isinstance(a, VariableAccess)]:
-                            variables.append(arg.variable)
+                            variables.add(arg.variable)
                 for node in self.cfg.successors(current):
                     worklist.put(node)
-        return variables
+        return sorted(variables, key=lambda x: x.name)
 
     def main(self, path):
         self.path = path

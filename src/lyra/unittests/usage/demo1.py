@@ -1,6 +1,6 @@
 x: int = int(input())
 
-# STATE: x -> U, a -> W
+# STATE: a -> W, x -> U
 
 a: int = x
 print(a)
