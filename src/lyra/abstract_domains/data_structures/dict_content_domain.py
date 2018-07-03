@@ -189,6 +189,72 @@ class DictSegmentLattice(Lattice):
         return self
 
 
+class BoolLattice(Lattice):
+    """Boolean lattice element (True/False),
+        where True overapproximates concrete True values
+        (so True -> may be True in the concrete
+
+    (Maybe) True
+          |
+        False
+
+    The default element is True (top)
+
+    .. document private methods
+    .. automethod:: DictSegmentLattice._less_equal
+    .. automethod:: DictSegmentLattice._meet
+    .. automethod:: DictSegmentLattice._join
+    .. automethod:: DictSegmentLattice._widening
+    """
+    def __init__(self, value: bool = True):
+        super().__init__()
+        self._value = value
+
+    @property
+    def value(self):
+        """Current boolean value."""
+        return self._value
+
+    def __repr__(self):
+        return repr(self._value)
+
+    @copy_docstring(Lattice.bottom)
+    def bottom(self):
+        """The bottom lattice element is ``False``."""
+        self.replace(BoolLattice(False))
+        return self
+
+    @copy_docstring(Lattice.top)
+    def top(self):
+        """The top lattice element is ``True``."""
+        self.replace(BoolLattice())
+        return self
+
+    @copy_docstring(Lattice.is_bottom)
+    def is_bottom(self) -> bool:
+        return not self._value
+
+    @copy_docstring(Lattice.is_top)
+    def is_top(self) -> bool:
+        return self._value
+
+    @copy_docstring(Lattice._less_equal)
+    def _less_equal(self, other: 'BoolLattice') -> bool:
+        pass    # already handled by less_equal (only false for self = top, other = bottom)
+
+    @copy_docstring(Lattice._join)
+    def _join(self, other: 'BoolLattice') -> 'BoolLattice':
+        pass    # already handled by join
+
+    @copy_docstring(Lattice._meet)
+    def _meet(self, other: 'BoolLattice'):
+        pass    # already handled by meet
+
+    @copy_docstring(Lattice._widening)
+    def _widening(self, other: 'BoolLattice'):
+        pass    # already handled by widening
+
+
 class DictContentState(State):
     """Dictionary content analysis state.
     An element of the dictionary content abstract domain.
