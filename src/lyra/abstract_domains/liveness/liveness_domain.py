@@ -77,7 +77,7 @@ class LivenessLattice(Lattice):
     def is_top(self) -> bool:
         return self.element == LivenessLattice.Status.Live
 
-    @copy_docstring(Lattice.less_equal)
+    @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'LivenessLattice') -> bool:
         return self.element <= other.element
 
