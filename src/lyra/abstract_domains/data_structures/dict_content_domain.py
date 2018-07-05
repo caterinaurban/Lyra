@@ -624,6 +624,21 @@ class DictContentState(State):
                     else:
                         raise NotImplementedError(
                             f"Assignment '{left} = {right}' is not yet supported")
+                elif isinstance(right, DictDisplay):
+                    # "NEW DICT"
+                    left_lattice = self.dict_store.store[left]
+                    left_i_lattice = self.init_store.store[left]
+                    # erase all dict contents before:
+                    left_lattice.bottom()
+                    left_i_lattice.top()        # everything uninitialized
+                    for i in range(len(right.keys)):    # similar to write
+                        k_abs = self.eval_key(right.keys[i])
+                        v_abs = self.eval_value(right.values[i])
+
+                        # k_abs must be a singleton -> 'strong update'
+                        left_lattice.partition_add(k_abs, v_abs)
+                        left_i_lattice.partition_add(k_abs, BoolLattice(False))
+
                 else:
                     raise NotImplementedError(
                         f"Assignment '{left} = {right}' is not yet supported")
