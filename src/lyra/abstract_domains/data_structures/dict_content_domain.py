@@ -6,7 +6,8 @@ from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.relational_store import RelationalStore
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
-from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing
+from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing, \
+    DictDisplay
 from lyra.core.types import DictLyraType, LyraType, BooleanLyraType, IntegerLyraType, \
     FloatLyraType, StringLyraType
 
@@ -79,8 +80,17 @@ class DictSegmentLattice(Lattice):
         that does not contain/overlap with the key given in the second argument."""
         return self._k_decomp
 
-    def __repr__(self):
-        return repr(self.segments)
+    def __repr__(self):     # TODO: use join?
+        result = "{"
+        first = True
+        for (k,v) in self.segments:
+            if first:
+                first = False
+            else:
+                result += ", "
+            result += f"({k};  {v})"
+        result += "}"
+        return result
 
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'DictSegmentLattice':
@@ -137,22 +147,31 @@ class DictSegmentLattice(Lattice):
         return self
 
     def d_norm(self, segment_set: Set[Tuple[Lattice, Lattice]],
-               known_disjoint: Set[Tuple[Lattice, Lattice]] = set()) -> Set[Tuple[Lattice, Lattice]]:
+               known_disjoint: Set[Tuple[Lattice, Lattice]] = None) -> Set[Tuple[Lattice, Lattice]]:
         """disjoint normalization function:
         Computes a partition such that no two abstract keys overlap (i.e. their meet is bottom)
         (and the keys are minimal)"""
         # TODO: make faster? (sorted segments?)
         # TODO: assert same domains?
-        result_set = known_disjoint
+        if known_disjoint is None:
+            result_set = set()
+        else:
+            result_set = known_disjoint
         for s in segment_set:
+            remove_set = set()
             for r in result_set:
                 s_meet_r = deepcopy(s[0]).meet(r[0])
                 if not s_meet_r.is_bottom():  # not disjoint -> join segments
-                    result_set.remove(r)
+                    remove_set.add(r)
                     s = (s[0].join(r[0]), s[1].join(r[1]))  # TODO: don't assign s?
+            result_set.difference_update(remove_set)
             result_set.add(s)
 
         return result_set
+
+    def d_norm_own(self):
+        """Applies d_norm to own segment set"""
+        self._segments = self.d_norm(self.segments)
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'DictSegmentLattice') -> 'DictSegmentLattice':
@@ -204,10 +223,20 @@ class DictSegmentLattice(Lattice):
             s_meet_key = deepcopy(s[0]).meet(key)
             if not s_meet_key.is_bottom():  # segments overlap -> partition, s.t. overlapping part is removed
                 self.segments.remove(s)
-                non_overlapping = {(m, s[1]) for m in self.k_decomp(s[0], key)}       # TODO: add decomp in init
-                self.segments.union(non_overlapping)
+                non_overlapping = {(m, s[1]) for m in self.k_decomp(s[0], key) if not m.is_bottom()}       # TODO: add decomp in init
+                self.segments.update(non_overlapping)
         if not (key.is_bottom() or value.is_bottom()):  # TODO: at more places?
             self.segments.add((key, value))
+
+    # helper for weak updates without partitioning
+    def normalized_add(self, key: Lattice, value: Lattice):
+        self._segments = self.d_norm({(key, value)}, self.segments)
+
+
+    def forget_var(self, var: VariableIdentifier):
+        for (k,v) in self.segments:
+            k.forget_var(var)
+            v.forget_var(var)
 
 
 class BoolLattice(Lattice):
@@ -275,6 +304,9 @@ class BoolLattice(Lattice):
     def _widening(self, other: 'BoolLattice'):
         pass    # already handled by widening
 
+    def forget_var(self, var: VariableIdentifier):
+        pass    # no variables stored
+
 
 class DictContentState(State):
     """Dictionary content analysis state.
@@ -301,6 +333,7 @@ class DictContentState(State):
     # here the Union type means a logical AND: the domain should inherit from both RelationalStore and State
     def __init__(self, scalar_domain: Type[Union[RelationalStore, State]],
                  key_domain: Type[Union[RelationalStore, State]], value_domain: Type[Union[RelationalStore, State]],
+                 key_decomp_function: Callable[[Lattice, Lattice], Set[Lattice]],
                  scalar_vars: List[VariableIdentifier] = None, dict_vars: List[VariableIdentifier] = None,
                  scalar_k_conv: Callable[[Union[RelationalStore, State]], Union[RelationalStore, State]] = lambda x: x,
                  k_scalar_conv: Callable[[Union[RelationalStore, State]], Union[RelationalStore, State]] = lambda x: x,
@@ -311,6 +344,7 @@ class DictContentState(State):
         :param scalar_domain: domain for abstraction of scalar variable values, ranges over the scalar variables #TODO: separate per type?
         :param key_domain: domain for abstraction of dictionary keys; (possibly) ranges over scalar variables and definetly has a special key variable v_k
         :param value_domain: domain for abstraction of dictionary values; (possibly) ranges over scalar variables and definetly has a special value variable
+        :param key_decomp_function:
         :param scalar_vars: list of scalar variables, whose values should be abstracted
         :param dict_vars: list of dictionary variables, whose values should be abstracted
         :param scalar_k_conv: conversion function to convert from scalar domain elements to key domain elements (can be omitted, if the domains are the same)
@@ -318,12 +352,15 @@ class DictContentState(State):
         :param scalar_v_conv: conversion function to convert from scalar domain elements to value domain elements (can be omitted, if the domains are the same)
         :param v_scalar_conv: conversion function to convert from value domain elements to scalar domain elements (can be omitted, if the domains are the same)
         """
-        super().__init__()      #TODO: handle None
+        super().__init__()
 
         if scalar_vars is None:
             scalar_vars = []
         if dict_vars is None:
             dict_vars = []
+
+        self._s_vars = scalar_vars
+        self._d_vars = dict_vars
 
         self._k_domain = key_domain
         self._v_domain = value_domain
@@ -332,21 +369,29 @@ class DictContentState(State):
         self._scalar_state = scalar_domain(scalar_vars)         #TODO: require as input?
 
         # special variable names:
-        self._k_name = "0v_key"
-        self._v_name = "0v_value"
+        self._k_name = "0v_k"
+        self._v_name = "0v_v"
 
         arguments = {}
         for dv in dict_vars:
-            typ = dv.typ()
+            typ = dv.typ
             if isinstance(typ, DictLyraType):  # should be true
                 if typ not in arguments:
+                    if issubclass(key_domain, Store):   # not relational -> don't need scalar vars # TODO: also for op? Or only for repr?
+                        key_vars = []
+                    else:
+                        key_vars = scalar_vars.copy()
+                    if issubclass(value_domain, Store):
+                        value_vars = []
+                    else:
+                        value_vars = scalar_vars.copy()
                     k_var = VariableIdentifier(typ.key_type, self._k_name)
-                    key_vars = scalar_vars.copy().append(k_var)
+                    key_vars.append(k_var)
                     v_var = VariableIdentifier(typ.value_type, self._v_name)
-                    value_vars = scalar_vars.copy().append(v_var)
+                    value_vars.append(v_var)
 
-                    arguments[typ] = {'key_domain': key_domain, 'value_domain': value_domain,
-                                    'key_d_args': key_vars, 'value_d_args': value_vars}
+                    arguments[typ] = {'key_decomp_function': key_decomp_function, 'key_domain': key_domain, 'value_domain': value_domain,
+                                    'key_d_args': {'variables':key_vars}, 'value_d_args': {'variables':value_vars}}
             else:
                 raise TypeError("Dictionary variables should be of DictLyraType")
 
@@ -377,6 +422,57 @@ class DictContentState(State):
     def init_store(self) -> Store:
         """Abstract store of dictionary variable initialization info."""
         return self._init_store
+
+    def __repr__(self):
+        k_is_store = issubclass(self._k_domain, Store)
+        v_is_store = issubclass(self._v_domain, Store)
+        if k_is_store or v_is_store:
+            v_k = VariableIdentifier(LyraType(), self._k_name)  # type does not matter, because eq in terms of name
+            v_v = VariableIdentifier(LyraType(), self._v_name)
+            result = repr(self.scalar_state)
+            for d, d_lattice in self.dict_store.store.items():
+                result += f", {d} -> {{"
+                first = True
+                for (k, v) in d_lattice.segments:
+                    if first:
+                        first = False
+                    else:
+                        result += ", "
+                    result += "("
+                    if k_is_store:
+                        result += repr(k.store[v_k])      # only print value of v_k
+                    else:
+                        result += repr(k)
+                    result += ", "
+                    if v_is_store:
+                        result += repr(v.store[v_v])  # only print value of v_v
+                    else:
+                        result += repr(v)
+                    result += ")"
+                result += "}"
+
+            result += ", "
+
+            for d, i_lattice in self.init_store.store.items():
+                result += f", {d} -> {{"
+                first = True
+                for (k, v) in i_lattice.segments:
+                    if first:
+                        first = False
+                    else:
+                        result += ", "
+                    result += "("
+                    if k_is_store:
+                        result += repr(k.store[v_k])  # only print value of v_k
+                    else:
+                        result += repr(k)
+                    result += ", "
+                    result += repr(v)
+                    result += ")"
+                result += "}"
+            return result
+        else:
+            return f"{self.scalar_state}, {self.dict_store}, {self.init_store}"
 
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'DictContentState':
@@ -443,22 +539,22 @@ class DictContentState(State):
         return self
 
     # helper
-    def eval_key(self, key_var: VariableIdentifier) \
-            -> Union[RelationalStore, State]: # (returns key_domain element)      # TODO: key expression
+    def eval_key(self, key_expr: Expression) \
+            -> Union[RelationalStore, State]: # (returns key_domain element)
         scalar_copy = deepcopy(self.scalar_state)
-        v_k = VariableIdentifier(key_var.typ, self._k_name)       # TODO: type?
+        v_k = VariableIdentifier(key_expr.typ, self._k_name)       # TODO: type?
         scalar_copy.add_var(v_k)# scalar_copy.variables.append() ?  # TODO: add function
-        scalar_copy.assign({v_k},{key_var})
+        scalar_copy.assign({v_k},{key_expr})
 
         return self._s_k_conv(scalar_copy)
 
     # helper
-    def eval_value(self, value_var: VariableIdentifier) \
+    def eval_value(self, value_expr: Expression) \
             -> Union[RelationalStore, State]:  # (returns value_domain element)      # TODO: value expression
         scalar_copy = deepcopy(self.scalar_state)
-        v_v = VariableIdentifier(value_var.typ, self._v_name)  # TODO: type?
+        v_v = VariableIdentifier(value_expr.typ, self._v_name)  # TODO: type?
         scalar_copy.add_var(v_v)  # scalar_copy.variables.append() ?  # TODO: add function
-        scalar_copy.assign({v_v}, {value_var})
+        scalar_copy.assign({v_v}, {value_expr})
 
         return self._s_v_conv(scalar_copy)
 
@@ -467,7 +563,14 @@ class DictContentState(State):
             -> Union[RelationalStore, State]:  # (returns value_domain element)
         # returns the join of all value abstraction of segments of dictionary dict,
         #  whose key overlaps with key_abs
-        result = self._v_domain().bottom()       # TODO: correct?
+        if issubclass(self._v_domain, Store):
+            value_vars = []
+        else:
+            value_vars = self._s_vars.copy()
+        v_var = VariableIdentifier(dict.typ.value_type, self._v_name)
+        value_vars.append(v_var)
+
+        result = self._v_domain(variables=value_vars).bottom()       # TODO: correct?
         for (k,v) in self.dict_store.store[dict].segments:
             key_meet_s = deepcopy(key_abs).meet(k)
             if not key_meet_s.is_bottom():  # overlap/key may be contained in this segment
@@ -481,7 +584,7 @@ class DictContentState(State):
         all_ids = left.ids().union(right.ids())
         scalar_types = {BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType}# /immutable TODO: make module-global?/ put function in types?
 
-        if all(type(id.typ()) in scalar_types for id in all_ids):   # TODO: not any?
+        if all(type(id.typ) in scalar_types for id in all_ids):   # TODO: not any?
 
             # completely SCALAR STMT
             # update scalar part
@@ -489,22 +592,21 @@ class DictContentState(State):
 
             # update relations with scalar variables
             for d_lattice in self.dict_store.store.values():
-                for (k,v) in d_lattice.segments:
-                    k.assign({left}, {right})
+                for (k1,v) in d_lattice.segments:
+                    k1.assign({left}, {right})
                     v.assign({left}, {right})
-                d_lattice.segments = d_lattice.d_norm(d_lattice.segments)       # TODO: legal assignment?
-
+                d_lattice.d_norm_own()
             for i_lattice in self.init_store.store.values():
-                for (k,v) in i_lattice.segments:        # v must be True
-                    k.assign({left}, {right})
-                i_lattice.segments = i_lattice.d_norm(i_lattice.segments)
+                for (k2,b) in i_lattice.segments:        # b must be True
+                    k2.assign({left}, {right})
+                i_lattice.d_norm_own()
 
 
-        else:
+        else:   # TODO: visitor?
             if isinstance(left, VariableIdentifier):
                 if isinstance(right, Subscription):   # TODO: Slicing?
                     # DICT READ
-                    if isinstance(right.key, VariableIdentifier):   # TODO: expr as key?
+                    if isinstance(right.key, Expression):   # TODO: expr as key?
                         k_abs = self.eval_key(right.key)
                         v_abs = self.eval_value_at(right.target, k_abs)
 
@@ -528,13 +630,14 @@ class DictContentState(State):
 
             elif isinstance(left, Subscription):      # TODO: Slicing?
                 # DICT WRITE
-                if isinstance(right, VariableIdentifier):        # TODO: other expr
-                    if isinstance(left.key, VariableIdentifier):  # TODO: expr as key?
+                if isinstance(right, Expression):        # TODO: other expr
+                    if isinstance(left.key, Expression):  # TODO: expr as key?
                         k_abs = self.eval_key(left.key)
                         v_abs = self.eval_value(right)
 
+                        v_k = VariableIdentifier(left.key.typ, self._k_name)  # TODO: type?
                         d_lattice: 'DictSegmentLattice' = self.dict_store.store[left.target]
-                        if k_abs.is_singleton():       # TODO: implement (or provide predicate as arg for init
+                        if k_abs.is_singleton(v_k):       # TODO: implement (or provide predicate as arg for init
                             # STRONG UPDATE
                             d_lattice.partition_add(k_abs, v_abs)
                             i_lattice: 'DictSegmentLattice' = self.init_store.store[left.target]
@@ -542,7 +645,7 @@ class DictContentState(State):
                         else:
                             # WEAK UPDATE
                             # add segment & normalize
-                            d_lattice.segments = d_lattice.d_norm({(k_abs, v_abs)}, d_lattice.segments)
+                            d_lattice.normalized_add(k_abs, v_abs)
                     else:
                         raise NotImplementedError(
                             f"Assignment '{left} = {right}' is not yet supported")
@@ -550,33 +653,35 @@ class DictContentState(State):
                 raise NotImplementedError(f"Assignment '{left} = {right}' is not yet supported")
             # TODO: other stmts
 
+        return self
+
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression) -> 'LivenessState':
-        for identifier in condition.ids():
-            if isinstance(identifier, VariableIdentifier):
-                self.store[identifier].top()
+    def _assume(self, condition: Expression) -> 'DictContentState':
+        # for identifier in condition.ids():
+        #     if isinstance(identifier, VariableIdentifier):
+        #         self.store[identifier].top()
         return self
 
     @copy_docstring(State.enter_if)
-    def enter_if(self) -> 'LivenessState':
+    def enter_if(self) -> 'DictContentState':
         return self  # nothing to be done
 
     @copy_docstring(State.exit_if)
-    def exit_if(self) -> 'LivenessState':
+    def exit_if(self) -> 'DictContentState':
         return self  # nothing to be done
 
     @copy_docstring(State.enter_loop)
-    def enter_loop(self) -> 'LivenessState':
+    def enter_loop(self) -> 'DictContentState':
         return self  # nothing to be done
 
     @copy_docstring(State.exit_loop)
-    def exit_loop(self) -> 'LivenessState':
+    def exit_loop(self) -> 'DictContentState':
         return self  # nothing to be done
 
     @copy_docstring(State._output)
-    def _output(self, output: Expression) -> 'LivenessState':
+    def _output(self, output: Expression) -> 'DictContentState':
         return self  # nothing to be done
 
     @copy_docstring(State._substitute)
-    def _substitute(self, left: Expression, right: Expression) -> 'LivenessState':
+    def _substitute(self, left: Expression, right: Expression) -> 'DictContentState':
         raise RuntimeError("Unexpected substitute in a forward analysis!")
