@@ -11,13 +11,14 @@ Lifting of a lattice to a set of program variables.
 from collections import defaultdict
 from typing import List, Dict, Any, Type
 
+from lyra.abstract_domains.relational_store import RelationalStore
 from lyra.core.expressions import VariableIdentifier
 from lyra.abstract_domains.lattice import Lattice
 from lyra.core.types import LyraType
 from lyra.core.utils import copy_docstring
 
 
-class Store(Lattice):
+class Store(RelationalStore):
     """Mutable element of a store ``Var -> L``,
     lifting a lattice ``L`` to a set of program variables ``Var``.
 
@@ -37,8 +38,7 @@ class Store(Lattice):
         :param lattices: dictionary from variable types to the corresponding lattice types
         :param arguments: dictionary from variable types to arguments of the corresponding lattices
         """
-        super().__init__()
-        self._variables = variables
+        super().__init__(variables)
         self._lattices = lattices
         self._arguments = arguments
         try:
@@ -46,11 +46,6 @@ class Store(Lattice):
         except KeyError as key:
             error = f"Missing lattice for variable type {repr(key.args[0])}!"
             raise ValueError(error)
-
-    @property
-    def variables(self):
-        """Variables of the current store."""
-        return self._variables
 
     @property
     def store(self):
@@ -108,3 +103,21 @@ class Store(Lattice):
         for var in self.store:
             self.store[var].widening(other.store[var])
         return self
+
+    @copy_docstring(RelationalStore.add_var)
+    def add_var(self, var: VariableIdentifier):
+        if var not in self.store.keys():
+            self.store[var] = self._lattices[var.typ](**self._arguments[var.typ])
+        else:
+            raise ValueError(f"Variable can only be added to a store if it is not already present")
+
+    @copy_docstring(RelationalStore.remove_var)
+    def remove_var(self, var: VariableIdentifier):
+        if var in self.store.keys():
+            del self.store[var]
+        # else:
+        #     raise ValueError(f"Variable can only be removed from a store if it is already present")
+
+    @copy_docstring(RelationalStore.forget_var)
+    def forget_var(self, var: VariableIdentifier):
+        self.remove_var(var)
