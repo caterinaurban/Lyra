@@ -113,6 +113,9 @@ class IntervalLattice(BottomMixin, ArithmeticMixin):
             upper = inf
         return self.replace(IntervalLattice(lower, upper))
 
+    def is_singleton(self) -> bool:
+        return (not self.is_bottom()) and (self.lower == self.upper)
+
     # arithmetic operations
 
     @copy_docstring(ArithmeticMixin._neg)
@@ -243,6 +246,9 @@ class IntervalState(Store, State):
         else:
             raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
         return self
+
+    def is_singleton(self, var: VariableIdentifier) -> bool:
+        return self.store[var].is_singleton()
 
     # expression evaluation
 

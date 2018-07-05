@@ -36,3 +36,14 @@ class RelationalStore(Lattice, metaclass=ABCMeta):
     def variables(self):
         """Variables of the current store."""
         return self._variables
+
+    def add_var(self, var: VariableIdentifier):
+        """adds a new variable to the state"""
+
+    def remove_var(self, var: VariableIdentifier):
+        """Removes a variable from the state"""
+
+    def forget_var(self, var: VariableIdentifier):
+        """Forgets everything about var"""
+
+    # TODO: add variable, remove , ... add_var, remove_var, forget_var
