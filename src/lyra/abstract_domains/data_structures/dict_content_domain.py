@@ -235,6 +235,10 @@ class DictSegmentLattice(Lattice):
     def normalized_add(self, key: Lattice, value: Lattice):
         self._segments = self.d_norm({(key, value)}, self.segments)
 
+    def invalidate_var(self, var: VariableIdentifier):
+        for (k,v) in self.segments:
+            k.invalidate_var(var)
+            v.invalidate_var(var)
 
     def forget_var(self, var: VariableIdentifier):
         for (k,v) in self.segments:
@@ -307,7 +311,7 @@ class BoolLattice(Lattice):
     def _widening(self, other: 'BoolLattice') -> 'BoolLattice':
         pass    # already handled by widening
 
-    def forget_var(self, var: VariableIdentifier):
+    def invalidate_var(self, var: VariableIdentifier):
         pass    # no variables stored
 
 
@@ -622,9 +626,9 @@ class DictContentState(State):
 
                         # invalidate old left
                         for d_lattice in self.dict_store.store.values():
-                            d_lattice.forget_var(left)
+                            d_lattice.invalidate_var(left)
                         for i_lattice in self.init_store.store.values():
-                            i_lattice.forget_var(left)
+                            i_lattice.invalidate_var(left)
                     else:
                         raise NotImplementedError(
                             f"Assignment '{left} = {right}' is not yet supported")

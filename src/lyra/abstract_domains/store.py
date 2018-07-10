@@ -118,6 +118,6 @@ class Store(RelationalStore):
         # else:
         #     raise ValueError(f"Variable can only be removed from a store if it is already present")
 
-    @copy_docstring(RelationalStore.forget_var)
-    def forget_var(self, var: VariableIdentifier):
-        self.remove_var(var)
+    @copy_docstring(RelationalStore.invalidate_var)
+    def invalidate_var(self, var: VariableIdentifier):
+        self.store[var].top()
