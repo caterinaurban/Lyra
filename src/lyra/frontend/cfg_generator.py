@@ -600,8 +600,8 @@ class CFGVisitor(ast.NodeVisitor):
         elif isinstance(node.slice, ast.Slice):
             return SlicingAccess(pp, self.visit(node.value, types, typ),
                              self.visit(node.slice.lower, types, typ),
-                             self.visit(node.slice.upper, types, typ) if node.slice.step else None,
-                             self.visit(node.slice.step, types, typ))
+                             self.visit(node.slice.upper, types, typ),
+                             self.visit(node.slice.step, types, typ) if node.slice.step else None)
         else:
             raise NotImplementedError(f"The statement {str(type(node.slice))} is not yet translatable to CFG!")
 
