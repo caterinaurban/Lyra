@@ -646,7 +646,7 @@ class Items(Expression):
 
 
 class Keys(Expression):
-    """Items call representation"""
+    """Keys call representation"""
 
     def __init__(self, typ: LyraType, target_dict: Expression):
         """Keys() call expression construction.
@@ -673,7 +673,7 @@ class Keys(Expression):
 
 
 class Values(Expression):
-    """Values() call representation"""
+    """Values call representation"""
 
     def __init__(self, typ: LyraType, target_dict: Expression):
         """Values() call expression construction.
