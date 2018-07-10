@@ -1,13 +1,14 @@
 from collections import defaultdict
 from copy import deepcopy, copy
-from typing import List, Tuple, Set, Type, Callable, Dict, Any, Union
+from typing import List, Tuple, Set, Type, Callable, Dict, Any, Union, Iterator
 
-from lyra.abstract_domains.lattice import Lattice
+from lyra.abstract_domains.lattice import Lattice, BottomMixin
 from lyra.abstract_domains.relational_store import RelationalStore
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing, \
-    DictDisplay
+    DictDisplay, BinaryComparisonOperation, Keys, Items, Values, TupleDisplay, ExpressionVisitor, \
+    Literal, Input, ListDisplay, Range, AttributeReference
 from lyra.core.types import DictLyraType, LyraType, BooleanLyraType, IntegerLyraType, \
     FloatLyraType, StringLyraType
 
@@ -48,7 +49,7 @@ class DictSegmentLattice(Lattice):
         self._k_decomp = key_decomp_function
 
         if segments is None:    # default element
-            self._segments = {(key_domain(**key_d_args).top(), value_domain(**value_d_args).top())}   #TODO: correct, constructor without arg?
+            self._segments = {(key_domain(**key_d_args).top(), value_domain(**value_d_args).top())}
         else:
             for s in segments:      # TODO: remove?
                 if len(s) != 2:
@@ -208,7 +209,7 @@ class DictSegmentLattice(Lattice):
         if o_add_segment:   # cond. 3, not using d_norm for efficiency
             # join everything to one top segment (extreme widening)
             value_list = [s[1] for s in segment_set]
-            top_segment = (self.k_domain().top(), self.v_domain().big_join(value_list))             # TODO: wrong usage of top?
+            top_segment = (self.k_domain(**self._k_d_args).top(), self.v_domain().big_join(value_list))             # TODO: wrong usage of top?
             result_set.add(top_segment)
         else:  # o does not have an additional non-overlapping segment
             result_set = self.d_norm(segment_set)
@@ -251,10 +252,10 @@ class BoolLattice(Lattice):
     The default element is True (top)
 
     .. document private methods
-    .. automethod:: DictSegmentLattice._less_equal
-    .. automethod:: DictSegmentLattice._meet
-    .. automethod:: DictSegmentLattice._join
-    .. automethod:: DictSegmentLattice._widening
+    .. automethod:: BoolLattice._less_equal
+    .. automethod:: BoolLattice._meet
+    .. automethod:: BoolLattice._join
+    .. automethod:: BoolLattice._widening
     """
     def __init__(self, value: bool = True):
         super().__init__()
@@ -266,7 +267,7 @@ class BoolLattice(Lattice):
         return self._value
 
     def __repr__(self):
-        return repr(self._value)
+        return repr(self.value)
 
     @copy_docstring(Lattice.bottom)
     def bottom(self):
@@ -297,11 +298,11 @@ class BoolLattice(Lattice):
         pass    # already handled by join
 
     @copy_docstring(Lattice._meet)
-    def _meet(self, other: 'BoolLattice'):
+    def _meet(self, other: 'BoolLattice') -> 'BoolLattice':
         pass    # already handled by meet
 
     @copy_docstring(Lattice._widening)
-    def _widening(self, other: 'BoolLattice'):
+    def _widening(self, other: 'BoolLattice') -> 'BoolLattice':
         pass    # already handled by widening
 
     def forget_var(self, var: VariableIdentifier):
@@ -344,7 +345,8 @@ class DictContentState(State):
         :param scalar_domain: domain for abstraction of scalar variable values, ranges over the scalar variables #TODO: separate per type?
         :param key_domain: domain for abstraction of dictionary keys; (possibly) ranges over scalar variables and definetly has a special key variable v_k
         :param value_domain: domain for abstraction of dictionary values; (possibly) ranges over scalar variables and definetly has a special value variable
-        :param key_decomp_function:
+        :param key_decomp_function: Function to compute a new partitioning when a new segment is added (via strong update),
+                computes the (partial keys) after 'subtracting' the new key
         :param scalar_vars: list of scalar variables, whose values should be abstracted
         :param dict_vars: list of dictionary variables, whose values should be abstracted
         :param scalar_k_conv: conversion function to convert from scalar domain elements to key domain elements (can be omitted, if the domains are the same)
@@ -377,14 +379,14 @@ class DictContentState(State):
             typ = dv.typ
             if isinstance(typ, DictLyraType):  # should be true
                 if typ not in arguments:
-                    if issubclass(key_domain, Store):   # not relational -> don't need scalar vars # TODO: also for op? Or only for repr?
-                        key_vars = []
-                    else:
-                        key_vars = scalar_vars.copy()
-                    if issubclass(value_domain, Store):
-                        value_vars = []
-                    else:
-                        value_vars = scalar_vars.copy()
+                    # if issubclass(key_domain, Store):   # not relational -> don't need scalar vars # TODO: also for op? Or only for repr?
+                    #     key_vars = []
+                    # else:
+                    key_vars = scalar_vars.copy()
+                    # if issubclass(value_domain, Store):
+                    #     value_vars = []
+                    # else:
+                    value_vars = scalar_vars.copy()
                     k_var = VariableIdentifier(typ.key_type, self._k_name)
                     key_vars.append(k_var)
                     v_var = VariableIdentifier(typ.value_type, self._v_name)
@@ -403,6 +405,9 @@ class DictContentState(State):
             del arguments[k]['value_d_args']
         self._init_store = Store(dict_vars, lattices, arguments)
 
+        # if issubclass(key_domain, Store):
+        #     self._s_k_conv = lambda s: scalar_k_conv(s) # TODO: remove all other variables
+        # else:
         self._s_k_conv = scalar_k_conv
         self._k_s_conv = k_scalar_conv
         self._s_v_conv = scalar_v_conv
@@ -563,10 +568,10 @@ class DictContentState(State):
             -> Union[RelationalStore, State]:  # (returns value_domain element)
         # returns the join of all value abstraction of segments of dictionary dict,
         #  whose key overlaps with key_abs
-        if issubclass(self._v_domain, Store):
-            value_vars = []
-        else:
-            value_vars = self._s_vars.copy()
+        # if issubclass(self._v_domain, Store):
+        #     value_vars = []
+        # else:
+        value_vars = self._s_vars.copy()
         v_var = VariableIdentifier(dict.typ.value_type, self._v_name)
         value_vars.append(v_var)
 
@@ -578,14 +583,12 @@ class DictContentState(State):
 
         return result
 
-
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
         all_ids = left.ids().union(right.ids())
         scalar_types = {BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType}# /immutable TODO: make module-global?/ put function in types?
 
         if all(type(id.typ) in scalar_types for id in all_ids):   # TODO: not any?
-
             # completely SCALAR STMT
             # update scalar part
             self.scalar_state.assign({left}, {right})
@@ -600,7 +603,6 @@ class DictContentState(State):
                 for (k2,b) in i_lattice.segments:        # b must be True
                     k2.assign({left}, {right})
                 i_lattice.d_norm_own()
-
 
         else:   # TODO: visitor?
             if isinstance(left, VariableIdentifier):
