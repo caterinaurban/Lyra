@@ -1,13 +1,13 @@
 
-# INITIAL: x -> [-inf, inf], a -> [-inf, inf]
+# INITIAL: a -> [-inf, inf], x -> [-inf, inf]
 x: int = int(input())
-# STATE: x -> [-inf, inf], a -> [-inf, inf]
+# STATE: a -> [-inf, inf], x -> [-inf, inf]
 a: int = 0
-# STATE: x -> [-inf, inf], a -> [0, 0]
+# STATE: a -> [0, 0], x -> [-inf, inf]
 if 3 > x:
-    # STATE: x -> [-inf, 2], a -> [0, 0]
+    # STATE: a -> [0, 0], x -> [-inf, 2]
     a: int = x
-    # STATE: x -> [-inf, 2], a -> [-inf, 2]
-# STATE: x -> [-inf, inf], a -> [-inf, 2]
+    # STATE: a -> [-inf, 2], x -> [-inf, 2]
+# STATE: a -> [-inf, 2], x -> [-inf, inf]
 print(a)
-# FINAL: x -> [-inf, inf], a -> [-inf, 2]
+# FINAL: a -> [-inf, 2], x -> [-inf, inf]

@@ -1,6 +1,6 @@
 x: bool = bool(input())
 y: bool = bool(input())
-# STATE: x -> N, y -> U, t -> N
+# STATE: t -> N, x -> N, y -> U
 if x:
     t: bool = True
 else:

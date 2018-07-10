@@ -1,12 +1,12 @@
 
-# INITIAL: english -> N, math -> W, science -> N, bonus -> W, passing -> W
+# INITIAL: bonus -> W, english -> N, math -> W, passing -> W, science -> N
 english: bool = bool(input())
 math: bool = bool(input())
 science: bool = bool(input())
 bonus: bool = bool(input())
-# STATE: english -> N, math -> U, science -> N, bonus -> U, passing -> W
+# STATE: bonus -> U, english -> N, math -> U, passing -> W, science -> N
 passing: bool = True
-# STATE: english -> N, math -> U, science -> N, bonus -> U, passing -> U
+# STATE: bonus -> U, english -> N, math -> U, passing -> U, science -> N
 if not english:
     english: bool = False         # error: *english* should be *passing*
 if not math:
@@ -14,4 +14,4 @@ if not math:
 if not math:
     passing: bool = False or bonus   # error: *math* should be *science*
 print(passing)
-# FINAL: english -> N, math -> N, science -> N, bonus -> N, passing -> N
+# FINAL: bonus -> N, english -> N, math -> N, passing -> N, science -> N

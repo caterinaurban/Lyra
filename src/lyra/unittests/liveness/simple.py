@@ -1,23 +1,23 @@
 
-# INITIAL: english -> Dead, math -> Dead, science -> Dead, bonus -> Dead, passing -> Dead
+# INITIAL: bonus -> Dead, english -> Dead, math -> Dead, passing -> Dead, science -> Dead
 english: bool = bool(input())
 math: bool = bool(input())
 science: bool = bool(input())
 bonus: bool = bool(input())
-# STATE: english -> Live, math -> Live, science -> Dead, bonus -> Live, passing -> Dead
+# STATE: bonus -> Live, english -> Live, math -> Live, passing -> Dead, science -> Dead
 passing: bool = True
-# STATE: english -> Live, math -> Live, science -> Dead, bonus -> Live, passing -> Live
+# STATE: bonus -> Live, english -> Live, math -> Live, passing -> Live, science -> Dead
 if not english:
-    # STATE:  english -> Dead, math -> Live, science -> Dead, bonus -> Live, passing -> Live
+    # STATE:  bonus -> Live, english -> Dead, math -> Live, passing -> Live, science -> Dead
     english: bool = False         # error: *english* should be *passing*
-# STATE:  english -> Dead, math -> Live, science -> Dead, bonus -> Live, passing -> Live
+# STATE:  bonus -> Live, english -> Dead, math -> Live, passing -> Live, science -> Dead
 if not math:
-    # STATE:  english -> Dead, math -> Live, science -> Dead, bonus -> Live, passing -> Dead
+    # STATE:  bonus -> Live, english -> Dead, math -> Live, passing -> Dead, science -> Dead
     passing: bool = False or bonus
-# STATE:  english -> Dead, math -> Live, science -> Dead, bonus -> Live, passing -> Live
+# STATE:  bonus -> Live, english -> Dead, math -> Live, passing -> Live, science -> Dead
 if not math:
-    # STATE: english -> Dead, math -> Dead, science -> Dead, bonus -> Live, passing -> Dead
+    # STATE: bonus -> Live, english -> Dead, math -> Dead, passing -> Dead, science -> Dead
     passing: bool = False or bonus   # error: *math* should be *science*
-# STATE: english -> Dead, math -> Dead, science -> Dead, bonus -> Dead, passing -> Live
+# STATE: bonus -> Dead, english -> Dead, math -> Dead, passing -> Live, science -> Dead
 print(passing)
-# FINAL: english -> Dead, math -> Dead, science -> Dead, bonus -> Dead, passing -> Dead
+# FINAL: bonus -> Dead, english -> Dead, math -> Dead, passing -> Dead, science -> Dead

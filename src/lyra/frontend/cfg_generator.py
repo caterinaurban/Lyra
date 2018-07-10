@@ -598,11 +598,10 @@ class CFGVisitor(ast.NodeVisitor):
             key = self.visit(node.slice.value, types, typ)
             return SubscriptionAccess(pp, target, key)
         elif isinstance(node.slice, ast.Slice):
-            return SlicingAccess(pp, self._ensure_stmt_visit(node.value, pp, *args, **kwargs),
-                             self._ensure_stmt_visit(node.slice.lower, pp, *args, **kwargs),
-                             self._ensure_stmt_visit(node.slice.upper, pp, *args, **kwargs),
-                             self._ensure_stmt_visit(node.slice.step, pp, *args, **kwargs)
-                                 if node.slice.step else None,    )
+            return SlicingAccess(pp, self.visit(node.value, types, typ),
+                             self.visit(node.slice.lower, types, typ),
+                             self.visit(node.slice.upper, types, typ) if node.slice.step else None,
+                             self.visit(node.slice.step, types, typ))
         else:
             raise NotImplementedError(f"The statement {str(type(node.slice))} is not yet translatable to CFG!")
 
