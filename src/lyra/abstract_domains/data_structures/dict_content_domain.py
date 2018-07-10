@@ -240,10 +240,184 @@ class DictSegmentLattice(Lattice):
             k.invalidate_var(var)
             v.invalidate_var(var)
 
-    def forget_var(self, var: VariableIdentifier):
+    def get_keys(self) -> Set[Lattice]:
+        result = set()
         for (k,v) in self.segments:
-            k.forget_var(var)
-            v.forget_var(var)
+            result.add(k)
+        return result
+
+    def get_values(self) -> Set[Lattice]:
+        result = set()
+        for (k,v) in self.segments:
+            result.add(v)
+        return result
+
+
+
+class InRelationState(State, BottomMixin):
+    """'In' lattice element
+    i.e. a set of 3-tuples, covering the in-relationship between variables
+    and the corresponding dictionary and between the variables introduced by loop or if conditions
+    The tuples consist of a dictionary variable, a key variable and a value variable,
+    where either the key or value variable can possibly be None.
+
+    (dict, key, value), (dict, key, None), (dict, None, value)
+
+    The default element is the empty set (top)
+
+    .. document private methods
+    .. automethod:: InRelationState._less_equal
+    .. automethod:: InRelationState._meet
+    .. automethod:: InRelationState._join
+    .. automethod:: InRelationState._widening
+    """
+    def __init__(self, tuple_set: Set[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]] = None):
+        super().__init__()
+        if tuple_set is None:
+            tuple_set = set()
+        self._tuple_set = tuple_set
+
+    @property
+    def tuple_set(self):
+        """Current tuple set."""
+        return self._tuple_set
+
+    def __repr__(self):
+        result = "{"
+        for t in self.tuple_set:
+            result += f"({t[0]},{t[1]},{t[2]})"
+        result += "}"
+        return result
+
+    @copy_docstring(Lattice.top)
+    def top(self):
+        """The top lattice element is ``{}``."""
+        self.replace(InRelationState())
+        return self
+
+    @copy_docstring(Lattice.is_top)
+    def is_top(self) -> bool:
+        return not self.is_bottom and self.tuple_set == set() # TODO: is_bottom needed?
+
+    @copy_docstring(Lattice._less_equal)
+    def _less_equal(self, other: 'InRelationState') -> bool:
+        """A element is less_equal another, if its tuple set is a superset of the tuple set of the other"""
+        return self.tuple_set.issuperset(other.tuple_set)
+
+    @copy_docstring(Lattice._join)
+    def _join(self, other: 'InRelationState') -> 'InRelationState':
+        """Intersection of the tuple sets"""
+        new_set = self.tuple_set.intersection(other.tuple_set)      # TODO: update?
+        return self.replace(InRelationState(new_set))
+
+    @copy_docstring(Lattice._meet)
+    def _meet(self, other: 'InRelationState') -> 'InRelationState':
+        """Union of the tuple sets"""
+        new_set = self.tuple_set.union(other.tuple_set)
+        return self.replace(InRelationState(new_set))
+
+    #helpers
+    def find_key(self, k: VariableIdentifier) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:     # TODO: multiplle such tuples
+        """Returns the tuples from the set that have k at the key position"""
+        return filter(lambda t: (t[1] and t[1] == k), self.tuple_set)
+
+    def find_value(self, v: VariableIdentifier) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
+        """Returns the tuples from the set that have v at the value position"""
+        return filter(lambda t: (t[2] and t[2] == v), self.tuple_set)
+
+    def find_var(self, v: VariableIdentifier) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
+        """Returns the tuples from the set that have v at the key OR value position"""
+        return filter(lambda t: (t[1] and t[1] == v) or (t[2] and t[2] == v), self.tuple_set)
+
+    def invalidate_var(self, v: VariableIdentifier):
+        """Removes v from its tuple """
+        for v_tuple in self.find_var(v):
+            self.tuple_set.remove(v_tuple)
+
+            if (v_tuple[1] is not None) and (v_tuple[2] is not None):
+                # must keep relationship with other variable
+                if v_tuple[1] == v:
+                    new_tuple = (v_tuple[0], None, v_tuple[2])
+                else:  # left_tuple[2] == v
+                    new_tuple = (v_tuple[0], v_tuple[1], None)
+                self.tuple_set.add(new_tuple)
+
+
+    @copy_docstring(Lattice._widening)
+    def _widening(self, other: 'InRelationState') -> 'InRelationState':
+        # only finitely many variable combinations -> widening not needed?
+        return self._join(other)        # TODO:?
+
+    @copy_docstring(State._assign)
+    def _assign(self, left: Expression, right: Expression):
+        if isinstance(left, VariableIdentifier):
+            # invalidate left, since overwritten
+            self.invalidate_var(left)
+
+            if isinstance(right, VariableIdentifier):    # TODO: are there other relevant cases?
+                for right_tuple in self.find_var(right):
+                    if right_tuple[1] == right:
+                        new_tuple = (right_tuple[0], left, right_tuple[2])
+                    else: # right_tuple[2] == right
+                        new_tuple = (right_tuple[0], right_tuple[1], left)
+                    self.tuple_set.add(new_tuple)
+
+        return self
+
+    @copy_docstring(State._assume)
+    def _assume(self, condition: Expression) -> 'InRelationState':
+        if isinstance(condition, BinaryComparisonOperation):    # TODO: boolean conjunctions of them?
+            if condition.operator == 9:  # op 9 == In
+                if isinstance(condition.left, VariableIdentifier):  # just for safety
+                    #TODO: don't invalidate for ifs?
+                    self.invalidate_var(condition.left)
+
+                    if isinstance(condition.right, Keys):
+                        new_tuple = (condition.right.target_dict, condition.left, None)
+                        self.tuple_set.add(new_tuple)
+                    elif isinstance(condition.right, Values):
+                        new_tuple = (condition.right.target_dict, None, condition.left)
+                        self.tuple_set.add(new_tuple)
+                elif isinstance(condition.left, TupleDisplay) and isinstance(condition.right, Items):
+                    # TODO: don't invalidate for ifs?
+                    self.invalidate_var(condition.left.items[0])
+                    self.invalidate_var(condition.left.items[1])
+
+                    left_items = condition.left.items
+                    new_tuple = (condition.right.target_dict, left_items[0], left_items[1])
+                    self.tuple_set.add(new_tuple)
+            elif condition.operator == 10:       # NotIn
+                if isinstance(condition.left, VariableIdentifier):
+                    self.invalidate_var(condition.left)
+                elif isinstance(condition.left, TupleDisplay) and isinstance(condition.right, Items):
+                    self.invalidate_var(condition.left.items[0])
+                    self.invalidate_var(condition.left.items[1])
+
+        return self
+
+    @copy_docstring(State.enter_if)
+    def enter_if(self) -> 'InRelationState':
+        return self  # nothing to be done ?
+
+    @copy_docstring(State.exit_if)
+    def exit_if(self) -> 'InRelationState':
+        return self  # nothing to be done
+
+    @copy_docstring(State.enter_loop)
+    def enter_loop(self) -> 'InRelationState':
+        return self  # nothing to be done ?
+
+    @copy_docstring(State.exit_loop)
+    def exit_loop(self) -> 'InRelationState':
+        return self  # nothing to be done
+
+    @copy_docstring(State._output)
+    def _output(self, output: Expression) -> 'InRelationState':
+        return self  # nothing to be done
+
+    @copy_docstring(State._substitute)
+    def _substitute(self, left: Expression, right: Expression) -> 'InRelationState':
+        raise RuntimeError("Unexpected substitute in a forward analysis!")
 
 
 class BoolLattice(Lattice):
@@ -319,7 +493,7 @@ class DictContentState(State):
     """Dictionary content analysis state.
     An element of the dictionary content abstract domain.
 
-    It consists of the following 3 elements:
+    It consists of the following 4 elements:
     - Abstract state from a given domain A over all scalar variables,
         abstracting their values
     - Map from all dictionary variables to a DictSegmentLattice-element with a given key domain K
@@ -327,6 +501,7 @@ class DictContentState(State):
     - Map from all dictionary variables to a DictSegmentLattice-element with a given key domain K and the Booleans as value domain,
         abstracting the initialization info of the dictionary elements
         (True = may be uninitialized, False/Not present = def. initialized)
+    - Relational InRelationState to cover relations to dictionaries introduced by 'in' conditions
 
     Everything is Top by default        # TODO
 
@@ -419,6 +594,8 @@ class DictContentState(State):
         self._s_v_conv = scalar_v_conv
         self._v_s_conv = v_scalar_conv
 
+        self._in_relations = InRelationState()
+
     @property
     def scalar_state(self) -> Union[RelationalStore, State]:
         """Abstract state of scalar variable values."""
@@ -433,6 +610,11 @@ class DictContentState(State):
     def init_store(self) -> Store:
         """Abstract store of dictionary variable initialization info."""
         return self._init_store
+
+    @property
+    def in_relations(self) -> Union[State, BottomMixin]:
+        """Relational state storing relationships introduced by 'in'-conditions."""
+        return self._in_relations
 
     def __repr__(self):
         k_is_store = issubclass(self._k_domain, Store)
@@ -481,6 +663,8 @@ class DictContentState(State):
                     result += repr(v)
                     result += ")"
                 result += "}"
+
+            result += ", " + repr(self.in_relations)
             return result
         else:
             return f"{self.scalar_state}, {self.dict_store}, {self.init_store}"
@@ -491,6 +675,7 @@ class DictContentState(State):
         self.scalar_state.bottom()
         self.dict_store.bottom()
         self.init_store.bottom()
+        self.in_relations.bottom()
         return self
 
     @copy_docstring(Lattice.top)
@@ -499,26 +684,36 @@ class DictContentState(State):
         self.scalar_state.top()
         self.dict_store.top()
         self.init_store.top()
+        self.in_relations.top()
         return self
 
     @copy_docstring(Lattice.is_bottom)
     def is_bottom(self) -> bool:
         """The current state is bottom if `all` of its three elements are bottom"""
-        return self.scalar_state.is_bottom() and self.dict_store.is_bottom() and self.init_store.is_bottom()
+        scalar_b = self.scalar_state.is_bottom()
+        dict_b = self.dict_store.is_bottom()
+        init_b = self.init_store.is_bottom()
+        in_b = self.in_relations.is_bottom()
+        return scalar_b and dict_b and init_b and in_b
     # TODO: store = bottom if any element bottom -> correct?
 
     @copy_docstring(Lattice.is_top)
     def is_top(self) -> bool:
         """The current state is bottom if `all` of its three elements are top"""
-        return self.scalar_state.is_top() and self.dict_store.is_top() and self.init_store.is_top()
+        scalar_t = self.scalar_state.is_top()
+        dict_t = self.dict_store.is_top()
+        init_t = self.init_store.is_top()
+        in_t = self.in_relations.is_top()
+        return scalar_t and dict_t and init_t and in_t
 
     @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'DictContentState') -> bool:
         """Defined point-wise"""
-        scaler_le = self.scalar_state.less_equal(other.scalar_state)
+        scalar_le = self.scalar_state.less_equal(other.scalar_state)
         dict_le = self.dict_store.less_equal(other.dict_store)
         init_le = self.init_store.less_equal(other.init_store)
-        return scaler_le and dict_le and init_le
+        in_le = self.in_relations.less_equal(other.in_relations)
+        return scalar_le and dict_le and init_le
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'DictContentState') -> 'DictContentState':
@@ -526,6 +721,7 @@ class DictContentState(State):
         self.scalar_state.join(other.scalar_state)
         self.dict_store.join(other.dict_store)
         self.init_store.join(other.init_store)
+        self.in_relations.join(other.in_relations)
         return self
 
     @copy_docstring(Lattice._meet)
@@ -534,6 +730,7 @@ class DictContentState(State):
         self.scalar_state.meet(other.scalar_state)
         self.dict_store.meet(other.dict_store)
         self.init_store.meet(other.init_store)
+        self.in_relations.meet(other.in_relations)
         return self
 
     @copy_docstring(Lattice._widening)
@@ -544,9 +741,11 @@ class DictContentState(State):
         if old_scalar != self.scalar_state:        # TODO: comparison working?
             self.dict_store.join(other.dict_store)
             self.init_store.join(other.init_store)
+            self.in_relations.join(other.in_relations)
         else:
             self.dict_store.widening(other.dict_store)
             self.init_store.widening(other.init_store)
+            self.in_relations.widening(other.in_relations)
         return self
 
     # helper
@@ -675,6 +874,9 @@ class DictContentState(State):
             else:
                 raise NotImplementedError(f"Assignment '{left} = {right}' is not yet supported")
             # TODO: other stmts
+
+        # update relations
+        self.in_relations.assign({left}, {right})
 
         return self
 
