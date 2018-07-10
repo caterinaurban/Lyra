@@ -4,6 +4,7 @@ Assumption Domain
 
 :Author: Caterina Urban and Madelin Schumacher
 """
+from collections import defaultdict
 from typing import List
 
 from copy import deepcopy
@@ -128,8 +129,7 @@ class AssumptionState(Store, State):
     """
 
     def __init__(self, variables: List[VariableIdentifier]):
-        types = [BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType, ListLyraType]
-        lattices = {typ: AssumptionLattice for typ in types}
+        lattices = defaultdict(lambda: AssumptionLattice)
         super().__init__(variables, lattices)
         self.store[self.input_var] = InputAssumptionStack()
         self.store[self.input_var].lattice.is_main = True
