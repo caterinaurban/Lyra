@@ -882,9 +882,59 @@ class DictContentState(State):
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'DictContentState':
-        # for identifier in condition.ids():
-        #     if isinstance(identifier, VariableIdentifier):
-        #         self.store[identifier].top()
+        scalar_types = {BooleanLyraType, IntegerLyraType, FloatLyraType,
+                        StringLyraType}  # /immutable TODO: make module-global?/ put function in types?
+
+        if all(type(id.typ) in scalar_types for id in condition.ids()):  # TODO: not any?
+            # completely SCALAR STMT
+            # update scalar part
+            self.scalar_state.assume({condition})
+
+            # update relations with scalar variables
+            for d_lattice in self.dict_store.store.values():
+                for (k1, v) in d_lattice.segments:
+                    k1.assume({condition})
+                    v.assume({condition})
+                d_lattice.d_norm_own()
+            for i_lattice in self.init_store.store.values():
+                for (k2, b) in i_lattice.segments:  # b must be True
+                    k2.assume({condition})
+                i_lattice.d_norm_own()
+
+            #no 'in'-condition -> no need to update in_relations
+        else:
+            if isinstance(condition, BinaryComparisonOperation):
+                if condition.operator == 9:      #In
+                    # refine variable:
+                    if isinstance(condition.right, Keys) and isinstance(condition.left, VariableIdentifier):
+                        d = condition.right.target_dict
+                        d_lattice = self.dict_store.store[d]
+                        keys: Set[Lattice] = d_lattice.get_keys()
+                        k_list = list(deepcopy(keys))
+                        k_abs = k_list[0].big_join(k_list)
+                        assigned_state = self._k_s_conv(k_abs)
+                        v_k = VariableIdentifier(d.typ.key_type, self._k_name)
+                        assigned_state.assign({condition.left}, {v_k})
+                        self.scalar_state.meet(assigned_state)
+                    if isinstance(condition.right, Values) and isinstance(condition.left, VariableIdentifier):
+                        d = condition.right.target_dict
+                        d_lattice = self.dict_store.store[d]
+                        values: Set[Lattice] = d_lattice.get_values()
+                        v_list = list(deepcopy(keys))
+                        v_abs = k_list[0].big_join(k_list)
+                        assigned_state = self._v_s_conv(v_abs)
+                        v_v = VariableIdentifier(d.typ.value_type, self._v_name)
+                        assigned_state.assign({condition.left}, {v_v})
+                        self.scalar_state.meet(assigned_state)
+                    # refine in_relations
+                    self.in_relations.assume({condition})
+                elif condition.operator == 10:
+                    # if isinstance(condition.right, Keys) and isinstance(condition.left,
+                    #                                                     VariableIdentifier):
+                        # - meet
+                    self.in_relations.assume({condition})
+
+
         return self
 
     @copy_docstring(State.enter_if)
@@ -910,3 +960,84 @@ class DictContentState(State):
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'DictContentState':
         raise RuntimeError("Unexpected substitute in a forward analysis!")
+
+        # expression evaluation
+
+    # class DictReadEvaluation(ExpressionVisitor):
+    #     """Visitor that performs the evaluation of dictionary read in the DictContentDomain lattice."""
+    #
+    #     @copy_docstring(ExpressionVisitor.visit_Literal)
+    #     def visit_Literal(self, expr: Literal, state=None, evaluation=None):
+    #         return expr
+    #
+    #     @copy_docstring(ExpressionVisitor.visit_Input)
+    #     def visit_Input(self, expr: Input, state=None, evaluation=None):
+    #         return expr
+    #
+    #     @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+    #     def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None,
+    #                                  evaluation=None):
+    #         return expr
+    #
+    #     @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+    #     def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
+    #         for i in range(len(expr.items)):
+    #             expr.items[i] = self.visit(expr.items[i], state, evaluation)
+    #         return expr
+    #
+    #     @copy_docstring(ExpressionVisitor.visit_Range)
+    #     def visit_Range(self, expr: Range, state=None, evaluation=None):
+    #         new_start = self.visit(expr.start, state, evaluation)
+    #         new_stop = self.visit(expr.stop, state, evaluation)
+    #         new_step = self.visit(expr.step, state, evaluation)
+    #         return Range(expr.typ, new_start, new_stop, new_step)
+    #
+    #     @copy_docstring(ExpressionVisitor.visit_AttributeReference)
+    #     def visit_AttributeReference(self, expr: AttributeReference, state=None,
+    #                                  evaluation=None):
+    #         return expr
+    #
+    #     @copy_docstring(ExpressionVisitor.visit_Subscription)
+    #     def visit_Subscription(self, expr: Subscription, state=None, evaluation=None):
+    #
+    #
+    #     @copy_docstring(ExpressionVisitor.visit_Slicing)
+    #     def visit_Slicing(self, expr: Slicing, state=None, evaluation=None):
+    #         return expr
+    #
+    #     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
+    #     def visit_UnaryArithmeticOperation(self, expr, state=None, evaluation=None):
+    #         return expr
+    #
+    #     @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
+    #     def visit_UnaryBooleanOperation(self, expr, state=None, evaluation=None):
+    #         return expr
+    #
+    #     @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
+    #     def visit_BinaryArithmeticOperation(self, expr, state=None, evaluation=None):
+    #         if expr in evaluation:
+    #             return evaluation  # nothing to be done
+    #         evaluated1 = self.visit(expr.left, state, evaluation)
+    #         evaluated2 = self.visit(expr.right, state, evaluated1)
+    #         if expr.operator == BinaryArithmeticOperation.Operator.Add:
+    #             evaluated2[expr] = deepcopy(evaluated2[expr.left]).add(evaluated2[expr.right])
+    #             return evaluated2
+    #         elif expr.operator == BinaryArithmeticOperation.Operator.Sub:
+    #             evaluated2[expr] = deepcopy(evaluated2[expr.left]).sub(evaluated2[expr.right])
+    #             return evaluated2
+    #         elif expr.operator == BinaryArithmeticOperation.Operator.Mult:
+    #             evaluated2[expr] = deepcopy(evaluated2[expr.left]).mult(evaluated2[expr.right])
+    #             return evaluated2
+    #         raise ValueError(f"Binary operator '{str(expr.operator)}' is unsupported!")
+    #
+    #     @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
+    #     def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
+    #         error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+    #         raise ValueError(error)
+    #
+    #     @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
+    #     def visit_BinaryComparisonOperation(self, expr, state=None, evaluation=None):
+    #         error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+    #         raise ValueError(error)
+    #
+    # _read_eval = DictReadEvaluation()  # static class member shared between all instances
