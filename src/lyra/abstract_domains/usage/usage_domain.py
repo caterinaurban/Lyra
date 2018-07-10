@@ -17,7 +17,7 @@ from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing
-from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType
+from lyra.core.types import LyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -31,7 +31,7 @@ class UsageStore(Store):
     .. automethod:: UsageStore._meet
     .. automethod:: UsageStore._join
     """
-    def __init__(self, variables: List[VariableIdentifier], lattices: Dict[Type, Type[Lattice]]):
+    def __init__(self, variables: List[VariableIdentifier], lattices: Dict[LyraType, Type[Lattice]]):
         """Map each program variable to its usage status.
 
         :param variables: list of program variables
