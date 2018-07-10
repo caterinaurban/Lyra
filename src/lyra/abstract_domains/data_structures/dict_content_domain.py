@@ -130,7 +130,9 @@ class DictSegmentLattice(Lattice):
         if len(self.segments) > len(other.segments):  # more segments => more 'boundaries'
             return True
         else:
-            raise NotImplementedError("The comparison between dictionary abstractions with the same number of segments is not yet implemented")
+            # fallback     # TODO: do more efficiently?
+            return deepcopy(self).join(other) == other
+            # raise NotImplementedError("The comparison between dictionary abstractions with the same number of segments is not yet implemented")
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'DictSegmentLattice') -> 'DictSegmentLattice':
