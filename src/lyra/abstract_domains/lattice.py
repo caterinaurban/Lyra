@@ -114,7 +114,7 @@ class Lattice(metaclass=ABCMeta):
 
         """
         if self.is_bottom() or other.is_top():
-            return self.replace(other)
+            return self._replace(other)
         elif other.is_bottom() or self.is_top():
             return self
         else:
@@ -146,7 +146,7 @@ class Lattice(metaclass=ABCMeta):
 
         """
         if self.is_top() or other.is_bottom():
-            return self.replace(other)
+            return self._replace(other)
         elif other.is_top() or self.is_bottom():
             return self
         else:
@@ -178,13 +178,13 @@ class Lattice(metaclass=ABCMeta):
 
         """
         if self.is_bottom() or other.is_top():
-            return self.replace(other)
+            return self._replace(other)
         elif other.is_bottom() or self.is_top():
             return self
         else:
             return self._widening(other)
 
-    def replace(self, other: 'Lattice') -> 'Lattice':
+    def _replace(self, other: 'Lattice') -> 'Lattice':
         """Replace this instance with another lattice element.
 
         :param other: other lattice element
@@ -321,7 +321,7 @@ class ArithmeticMixin(Lattice, metaclass=ABCMeta):
         if self.is_bottom():
             return self
         elif other.is_bottom():
-            return self.replace(other)
+            return self._replace(other)
         else:
             return self._add(other)
 
@@ -344,7 +344,7 @@ class ArithmeticMixin(Lattice, metaclass=ABCMeta):
         if self.is_bottom():
             return self
         elif other.is_bottom():
-            return self.replace(other)
+            return self._replace(other)
         else:
             return self._sub(other)
 
@@ -367,6 +367,6 @@ class ArithmeticMixin(Lattice, metaclass=ABCMeta):
         if self.is_bottom():
             return self
         elif other.is_bottom():
-            return self.replace(other)
+            return self._replace(other)
         else:
             return self._mult(other)

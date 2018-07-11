@@ -79,7 +79,7 @@ class TypeLattice(BottomMixin):
 
     @copy_docstring(Lattice.top)
     def top(self) -> 'TypeLattice':
-        self.replace(TypeLattice(TypeLattice.Status.Any))
+        self._replace(TypeLattice(TypeLattice.Status.Any))
         return self
 
     def real(self) -> 'TypeLattice':
@@ -87,7 +87,7 @@ class TypeLattice(BottomMixin):
 
         :return: current lattice element modified to be the Float lattice element
         """
-        self.replace(TypeLattice(TypeLattice.Status.Float))
+        self._replace(TypeLattice(TypeLattice.Status.Float))
         return self
 
     def integer(self) -> 'TypeLattice':
@@ -95,7 +95,7 @@ class TypeLattice(BottomMixin):
 
         :return: current lattice element modified to be the Int lattice element
         """
-        self.replace(TypeLattice(TypeLattice.Status.Int))
+        self._replace(TypeLattice(TypeLattice.Status.Int))
         return self
 
     def boolean(self) -> 'TypeLattice':
@@ -103,7 +103,7 @@ class TypeLattice(BottomMixin):
 
         :return: current lattice element modified to be the Bool lattice element
         """
-        self.replace(TypeLattice(TypeLattice.Status.Bool))
+        self._replace(TypeLattice(TypeLattice.Status.Bool))
         return self
 
     def is_real(self) -> 'bool':
@@ -134,12 +134,12 @@ class TypeLattice(BottomMixin):
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'TypeLattice') -> 'TypeLattice':
-        self.replace(TypeLattice(max(self.element, other.element)))
+        self._replace(TypeLattice(max(self.element, other.element)))
         return self
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'TypeLattice') -> 'TypeLattice':
-        self.replace(TypeLattice(min(self.element, other.element)))
+        self._replace(TypeLattice(min(self.element, other.element)))
         return self
 
     @copy_docstring(Lattice._widening)
@@ -338,7 +338,7 @@ class InputAssumptionLattice(BoundedLattice):
         if self.infoloss:
             return self
         if other.infoloss:
-            return self.replace(other)
+            return self._replace(other)
         if len(self.assmps) == len(other.assmps) == 0:
             return self
         if self.join_as_loop:
@@ -346,7 +346,7 @@ class InputAssumptionLattice(BoundedLattice):
             if len(self.assmps) > len(other.assmps):
                 return self
             else:
-                return self.replace(other)
+                return self._replace(other)
         if len(self.assmps) != len(other.assmps) and not self.is_main:
             self.assmps.clear()
             self.infoloss = True

@@ -61,13 +61,13 @@ class LivenessLattice(Lattice):
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'LivenessLattice':
         """The bottom lattice element is ``Dead``."""
-        self.replace(LivenessLattice(LivenessLattice.Status.Dead))
+        self._replace(LivenessLattice(LivenessLattice.Status.Dead))
         return self
 
     @copy_docstring(Lattice.top)
     def top(self) -> 'LivenessLattice':
         """The top lattice element is ``Live``."""
-        self.replace(LivenessLattice(LivenessLattice.Status.Live))
+        self._replace(LivenessLattice(LivenessLattice.Status.Live))
         return self
 
     @copy_docstring(Lattice.is_bottom)
@@ -84,12 +84,12 @@ class LivenessLattice(Lattice):
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'LivenessLattice') -> 'LivenessLattice':
-        self.replace(LivenessLattice(min(self.element, other.element)))
+        self._replace(LivenessLattice(min(self.element, other.element)))
         return self
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'LivenessLattice') -> 'LivenessLattice':
-        self.replace(LivenessLattice(max(self.element, other.element)))
+        self._replace(LivenessLattice(max(self.element, other.element)))
         return self
 
     @copy_docstring(Lattice._widening)

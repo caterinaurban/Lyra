@@ -73,7 +73,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin):
     @copy_docstring(BottomMixin.top)
     def top(self) -> 'IntervalLattice':
         """The top lattice element is ``[-oo,+oo]``."""
-        self.replace(IntervalLattice())
+        self._replace(IntervalLattice())
         return self
 
     @copy_docstring(BottomMixin.is_top)
@@ -90,7 +90,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin):
         """``[a, b] \/ [c, d] = [min(a,c), max(b,d)]``."""
         lower = min(self.lower, other.lower)
         upper = max(self.upper, other.upper)
-        return self.replace(IntervalLattice(lower, upper))
+        return self._replace(IntervalLattice(lower, upper))
 
     @copy_docstring(BottomMixin._meet)
     def _meet(self, other: 'IntervalLattice') -> 'IntervalLattice':
@@ -98,7 +98,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin):
         lower = max(self.lower, other.lower)
         upper = min(self.upper, other.upper)
         if lower <= upper:
-            return self.replace(IntervalLattice(lower, upper))
+            return self._replace(IntervalLattice(lower, upper))
         else:
             return self.bottom()
 
@@ -111,7 +111,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin):
             lower = -inf
         if self.upper < other.upper:
             upper = inf
-        return self.replace(IntervalLattice(lower, upper))
+        return self._replace(IntervalLattice(lower, upper))
 
     # arithmetic operations
 
@@ -120,21 +120,21 @@ class IntervalLattice(BottomMixin, ArithmeticMixin):
         """``- [a, b] = [-b, -a]``."""
         lower = 0 - self.upper
         upper = 0 - self.lower
-        return self.replace(IntervalLattice(lower, upper))
+        return self._replace(IntervalLattice(lower, upper))
 
     @copy_docstring(ArithmeticMixin._add)
     def _add(self, other: 'IntervalLattice') -> 'IntervalLattice':
         """``[a, b] + [c, d] = [a + c, b + d]``."""
         lower = 0 + self.lower + other.lower
         upper = 0 + self.upper + other.upper
-        return self.replace(IntervalLattice(lower, upper))
+        return self._replace(IntervalLattice(lower, upper))
 
     @copy_docstring(ArithmeticMixin._sub)
     def _sub(self, other: 'IntervalLattice') -> 'IntervalLattice':
         """``[a, b] - [c, d] = [a - d, b - c]``."""
         lower = 0 + self.lower - other.upper
         upper = 0 + self.upper - other.lower
-        return self.replace(IntervalLattice(lower, upper))
+        return self._replace(IntervalLattice(lower, upper))
 
     @copy_docstring(ArithmeticMixin._mult)
     def _mult(self, other: 'IntervalLattice') -> 'IntervalLattice':
@@ -145,7 +145,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin):
         bd = 0 if self.upper == 0 or other.upper == 0 else 1 * self.upper * other.upper
         lower = min(ac, ad, bc, bd)
         upper = max(ac, ad, bc, bd)
-        return self.replace(IntervalLattice(lower, upper))
+        return self._replace(IntervalLattice(lower, upper))
 
 
 class IntervalState(Store, State):

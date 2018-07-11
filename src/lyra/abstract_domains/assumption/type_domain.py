@@ -125,7 +125,7 @@ class TypeLattice(BottomMixin, ArithmeticMixin):
 
         The integer lattice element is ``Boolean``
         """
-        return self.replace(TypeLattice(TypeLattice.Status.Boolean))
+        return self._replace(TypeLattice(TypeLattice.Status.Boolean))
 
     def integer(self) -> 'TypeLattice':
         """Integer lattice element.
@@ -134,7 +134,7 @@ class TypeLattice(BottomMixin, ArithmeticMixin):
 
         The integer lattice element is ``Integer``
         """
-        return self.replace(TypeLattice(TypeLattice.Status.Integer))
+        return self._replace(TypeLattice(TypeLattice.Status.Integer))
 
     def float(self) -> 'TypeLattice':
         """Float lattice element.
@@ -143,12 +143,12 @@ class TypeLattice(BottomMixin, ArithmeticMixin):
 
         The float lattice element is ``Float``.
         """
-        return self.replace(TypeLattice(TypeLattice.Status.Float))
+        return self._replace(TypeLattice(TypeLattice.Status.Float))
 
     @copy_docstring(BottomMixin.top)
     def top(self) -> 'TypeLattice':
         """The top lattice element is ``String``."""
-        return self.replace(TypeLattice())
+        return self._replace(TypeLattice())
 
     def is_boolean(self) -> bool:
         """Test whether the lattice element is boolean.
@@ -181,11 +181,11 @@ class TypeLattice(BottomMixin, ArithmeticMixin):
 
     @copy_docstring(BottomMixin._join)
     def _join(self, other: 'TypeLattice') -> 'TypeLattice':
-        return self.replace(TypeLattice(max(self.element, other.element)))
+        return self._replace(TypeLattice(max(self.element, other.element)))
 
     @copy_docstring(BottomMixin._meet)
     def _meet(self, other: 'TypeLattice'):
-        return self.replace(TypeLattice(min(self.element, other.element)))
+        return self._replace(TypeLattice(min(self.element, other.element)))
 
     @copy_docstring(BottomMixin._widening)
     def _widening(self, other: 'TypeLattice'):
@@ -202,7 +202,7 @@ class TypeLattice(BottomMixin, ArithmeticMixin):
         - String = ⊥
         """
         if self.is_boolean():
-            return self.replace(TypeLattice(TypeLattice.Status.Integer))
+            return self._replace(TypeLattice(TypeLattice.Status.Integer))
         elif self.is_top():
             return self.bottom()
         return self   # nothing to be done
@@ -228,12 +228,12 @@ class TypeLattice(BottomMixin, ArithmeticMixin):
         String + String = String
         """
         if self.is_boolean() and other.is_boolean():
-            return self.replace(TypeLattice(TypeLattice.Status.Integer))
+            return self._replace(TypeLattice(TypeLattice.Status.Integer))
         elif self.is_top() and other.is_top():
             return self
         elif self.is_top() or other.is_top():
             return self.bottom()
-        return self.replace(TypeLattice(max(self.element, other.element)))
+        return self._replace(TypeLattice(max(self.element, other.element)))
 
     @copy_docstring(ArithmeticMixin._sub)
     def _sub(self, other: 'TypeLattice') -> 'TypeLattice':
@@ -256,10 +256,10 @@ class TypeLattice(BottomMixin, ArithmeticMixin):
         String - String = ⊥
         """
         if self.is_boolean() and other.is_boolean():
-            return self.replace(TypeLattice(TypeLattice.Status.Integer))
+            return self._replace(TypeLattice(TypeLattice.Status.Integer))
         elif self.is_top() or other.is_top():
             return self.bottom()
-        return self.replace(TypeLattice(max(self.element, other.element)))
+        return self._replace(TypeLattice(max(self.element, other.element)))
 
     @copy_docstring(ArithmeticMixin._mult)
     def _mult(self, other: 'TypeLattice') -> 'TypeLattice':
@@ -282,12 +282,12 @@ class TypeLattice(BottomMixin, ArithmeticMixin):
         String * String = ⊥
         """
         if self.is_boolean() and other.is_boolean():
-            return self.replace(TypeLattice(TypeLattice.Status.Integer))
+            return self._replace(TypeLattice(TypeLattice.Status.Integer))
         elif self.is_top() and (other.is_float() or other.is_top()):
             return self.bottom()
         elif other.is_top() and (self.is_float() or self.is_top()):
             return self.bottom()
-        return self.replace(TypeLattice(max(self.element, other.element)))
+        return self._replace(TypeLattice(max(self.element, other.element)))
 
 
 class TypeState(Store, InputMixin):
