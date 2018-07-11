@@ -297,7 +297,7 @@ class InRelationState(State, BottomMixin):
 
     @copy_docstring(Lattice.is_top)
     def is_top(self) -> bool:
-        return not self.is_bottom and self.tuple_set == set() # TODO: is_bottom needed?
+        return self.tuple_set == set() # TODO: is_bottom needed?
 
     @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'InRelationState') -> bool:
