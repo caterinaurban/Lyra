@@ -44,7 +44,7 @@ class Stack(BoundedLattice, metaclass=ABCMeta):
         return self.stack[-1]
 
     def __repr__(self):
-        return " | ".join(map(repr, self.stack))
+        return " | ".join(map(repr, reversed(self.stack)))
 
     @abstractmethod
     def push(self):

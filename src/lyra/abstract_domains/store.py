@@ -9,7 +9,7 @@ Lifting of a lattice to a set of program variables.
 
 
 from collections import defaultdict
-from typing import List, Dict, Any, Type
+from typing import Dict, Any, Type, Set
 
 from lyra.core.expressions import VariableIdentifier
 from lyra.abstract_domains.lattice import Lattice
@@ -29,8 +29,8 @@ class Store(Lattice):
     .. automethod:: Store._meet
     .. automethod:: Store._join
     """
-    def __init__(self, variables: List[VariableIdentifier], lattices: Dict[LyraType, Type[Lattice]],
-                 arguments: Dict[LyraType, Dict[str, Any]] = defaultdict(lambda: dict())):
+    def __init__(self, variables: Set[VariableIdentifier], lattices: Dict[Type, Type[Lattice]],
+                 arguments: Dict[Type, Dict[str, Any]] = defaultdict(lambda: dict())):
         """Create a mapping Var -> L from each variable in Var to the corresponding element in L.
 
         :param variables: list of program variables
@@ -53,12 +53,22 @@ class Store(Lattice):
         return self._variables
 
     @property
+    def lattices(self):
+        """Current dictionary fro variable types to the corresponding lattice types."""
+        return self._lattices
+
+    @property
+    def arguments(self):
+        """Current dictionary from variable types to argument of the corresponding lattices."""
+        return self._arguments
+
+    @property
     def store(self):
         """Current mapping from variables to their corresponding lattice element."""
         return self._store
 
     def __repr__(self):
-        items = self.store.items()
+        items = sorted(self.store.items(), key=lambda x: x[0].name)
         return ", ".join("{} -> {}".format(variable, value) for variable, value in items)
 
     @copy_docstring(Lattice.bottom)

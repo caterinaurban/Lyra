@@ -64,7 +64,7 @@ class UsageLattice(Lattice):
     @copy_docstring(Lattice.bottom)
     def bottom(self):
         """The bottom lattice element is ``N`` (not used)."""
-        self.replace(UsageLattice(UsageLattice.Status.N))
+        self._replace(UsageLattice(UsageLattice.Status.N))
         return self
 
     def scoped(self):
@@ -74,7 +74,7 @@ class UsageLattice(Lattice):
 
         The scoped lattice element is ``S`` (scoped).
         """
-        self.replace(UsageLattice(UsageLattice.Status.S))
+        self._replace(UsageLattice(UsageLattice.Status.S))
         return self
 
     def written(self):
@@ -84,13 +84,13 @@ class UsageLattice(Lattice):
 
         The written lattice element is ``W`` (written).
         """
-        self.replace(UsageLattice(UsageLattice.Status.W))
+        self._replace(UsageLattice(UsageLattice.Status.W))
         return self
 
     @copy_docstring(Lattice.top)
     def top(self):
         """The top lattice element is ``U`` (used)."""
-        self.replace(UsageLattice(UsageLattice.Status.U))
+        self._replace(UsageLattice(UsageLattice.Status.U))
         return self
 
     @copy_docstring(Lattice.is_bottom)
@@ -140,7 +140,7 @@ class UsageLattice(Lattice):
         """
         assert not self.is_written() or not other.is_scoped()
         if self.is_bottom() or other.is_written() or other.is_top():
-            self.replace(other)
+            self._replace(other)
         return self
 
     @copy_docstring(Lattice.less_equal)
@@ -149,12 +149,12 @@ class UsageLattice(Lattice):
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'UsageLattice') -> 'UsageLattice':
-        self.replace(UsageLattice(self.element & other.element))
+        self._replace(UsageLattice(self.element & other.element))
         return self
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'UsageLattice') -> 'UsageLattice':
-        self.replace(UsageLattice(self.element | other.element))
+        self._replace(UsageLattice(self.element | other.element))
         return self
 
     @copy_docstring(Lattice._widening)
