@@ -322,13 +322,15 @@ class AssumptionState(State):
 
                 .. note::
                     The constraint is effectively not recorded if
-                    it is identical to the previously recorded constraint.
+                    it is a repeated assumption identical
+                    to the previously recorded repeated assumption.
                     This situation only happens when leaving the body of a loop.
 
                 :param constraint: constraint to be recorded
                 :return: current lattice element modified to record the constraint
                 """
-                if not self.constraints or constraint != self.constraints[0]:
+                repeated = isinstance(constraint, AssumptionState.InputStack.InputLattice)
+                if not repeated or not self.constraints or constraint != self.constraints[0]:
                     self.constraints.insert(0, constraint)
                 return self
 
