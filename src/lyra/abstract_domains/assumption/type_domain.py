@@ -10,7 +10,7 @@ The set of possible values of a program variable in a state is represented as a 
 from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum
-from typing import List
+from typing import List, Set
 
 from lyra.abstract_domains.assumption.assumption_domain import InputMixin
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin
@@ -405,6 +405,43 @@ class TypeState(Store, InputMixin):
 
         return self
 
+    @copy_docstring(InputMixin.replace)
+    def replace(self, variable: VariableIdentifier, expression: Expression) -> 'TypeState':
+        # collect the new variables appearing in the replacing expression
+        variables: Set[VariableIdentifier] = set()
+        for identifier in expression.ids():
+            if isinstance(identifier, VariableIdentifier):
+                variables.add(identifier)
+        variables: Set[VariableIdentifier] = variables.difference(set(self.variables))
+        if variables:  # if there are new variables appearing in the replacing expression...
+            # add the new variables to the current state
+            for fresh in variables:
+                self.variables.append(fresh)
+                self.store[fresh] = self.lattices[type(fresh.typ)](
+                    **self.arguments[type(fresh.typ)])
+            # replace the given variable with the given expression
+            self._substitute(variable, expression)
+        return self
+
+    @copy_docstring(InputMixin.unify)
+    def unify(self, other: 'TypeState') -> 'TypeState':
+        # collect the variables that differ in the current and other state
+        mine = sorted(set(self.variables).difference(set(other.variables)), key=lambda x: x.name)
+        theirs = sorted(set(other.variables).difference(set(self.variables)), key=lambda x: x.name)
+        # replace the variables in the current state that match those in the other state
+        for my_var, their_var in zip(mine, theirs):
+            # the replacement only occurs when the matching variables in the other state
+            # depend on a program point that is smaller than the program point on which
+            # the variables in the current state depend
+            if their_var.name < my_var.name:
+                self.variables[self.variables.index(my_var)] = their_var
+                self.store[their_var] = self.store.pop(my_var)
+        # add variables only present in the other state
+        for var in theirs[len(mine):]:
+            self.variables.append(var)
+            self.store[var] = self.lattices[type(var.typ)](**self.arguments[type(var.typ)])
+        return self
+
     # expression evaluation
 
     class ExpressionEvaluation(ExpressionVisitor):
@@ -522,6 +559,8 @@ class TypeState(Store, InputMixin):
             raise ValueError(error)
 
     _evaluation = ExpressionEvaluation()  # static class member shared between all instances
+
+    # expression refinement
 
     class ArithmeticExpressionRefinement(ExpressionVisitor):
         """Visitor that:

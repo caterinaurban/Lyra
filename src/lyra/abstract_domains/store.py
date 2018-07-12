@@ -52,12 +52,22 @@ class Store(Lattice):
         return self._variables
 
     @property
+    def lattices(self):
+        """Current dictionary fro variable types to the corresponding lattice types."""
+        return self._lattices
+
+    @property
+    def arguments(self):
+        """Current dictionary from variable types to argument of the corresponding lattices."""
+        return self._arguments
+
+    @property
     def store(self):
         """Current mapping from variables to their corresponding lattice element."""
         return self._store
 
     def __repr__(self):
-        items = self.store.items()
+        items = sorted(self.store.items(), key=lambda x: x[0].name)
         return ", ".join("{} -> {}".format(variable, value) for variable, value in items)
 
     @copy_docstring(Lattice.bottom)
