@@ -9,7 +9,7 @@ import ast
 import os
 from abc import abstractmethod
 from queue import Queue
-from typing import List
+from typing import Set
 
 from lyra.core.cfg import Loop
 from lyra.core.expressions import VariableIdentifier
@@ -70,7 +70,7 @@ class Runner:
         """Initial analysis state."""
 
     @property
-    def variables(self) -> List[VariableIdentifier]:
+    def variables(self) -> Set[VariableIdentifier]:
         variables = set()
         visited, worklist = set(), Queue()
         worklist.put(self.cfg.in_node)
@@ -89,7 +89,7 @@ class Runner:
                             variables.add(arg.variable)
                 for node in self.cfg.successors(current):
                     worklist.put(node)
-        return sorted(variables, key=lambda x: x.name)
+        return variables
 
     def main(self, path):
         self.path = path

@@ -9,7 +9,7 @@ Abstract domains to be used for **input data assumption analysis**.
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from enum import Enum
-from typing import List, Dict, Type, Any, Union, Tuple
+from typing import List, Dict, Type, Any, Union, Tuple, Set
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
@@ -713,7 +713,7 @@ class TypeRangeAssumptionState(AssumptionState):
     .. automethod:: AssumptionState._assume
     .. automethod:: AssumptionState._substitute
     """
-    def __init__(self, variables: List[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier]):
         from lyra.abstract_domains.assumption.type_domain import TypeState
         from lyra.abstract_domains.assumption.range_domain import RangeState
         states = [TypeState, RangeState]

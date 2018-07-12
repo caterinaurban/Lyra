@@ -312,36 +312,7 @@ class NegationFreeNormalExpression(ExpressionVisitor):
             return BinaryComparisonOperation(expr.typ, left, operator, right)
         raise ValueError(f"Boolean comparison operator {expr} is unsupported!")
 
-    def preprocess(self, expression):
-        inverted = False
-        expr = expression
-        if isinstance(expr, UnaryBooleanOperation):
-            inverted = expr.operator == UnaryBooleanOperation.Operator.Neg
-            expr = expr.expression
-        ins = [BinaryComparisonOperation.Operator.In, BinaryComparisonOperation.Operator.NotIn]
-        if not isinstance(expr, BinaryComparisonOperation) or expr.operator not in ins:
-            return expression
-        right_expr = expr.right
-        if isinstance(right_expr, Range):
-            iter_var = expr.left
-            start = right_expr.start
-            end = right_expr.end
-            step = right_expr.step
-            op_iter_start = BinaryComparisonOperation.Operator.GtE
-            op_iter_end = BinaryComparisonOperation.Operator.Lt
-            if isinstance(step, UnaryArithmeticOperation):
-                if step.operator == UnaryArithmeticOperation.Operator.Sub:
-                    op_iter_start = BinaryComparisonOperation.Operator.LtE
-                    op_iter_end = BinaryComparisonOperation.Operator.Gt
-            op_connection = BinaryBooleanOperation.Operator.And
-            if inverted:
-                op_iter_start = op_iter_start.reverse_operator()
-                op_iter_end = op_iter_end.reverse_operator()
-                op_connection = op_connection.reverse_operator()
-            gte_start = BinaryComparisonOperation(expr.typ, iter_var, op_iter_start, start)
-            lt_end = BinaryComparisonOperation(expr.typ, iter_var, op_iter_end, end)
-            return BinaryBooleanOperation(expr.typ, gte_start, op_connection, lt_end)
-        return expression
+
 """
 Atomic Expressions
 https://docs.python.org/3.4/reference/expressions.html#atoms
@@ -649,6 +620,7 @@ class Slicing(Expression):
         if self.stride:
             return "{0.target}[{0.lower}:{0.upper}:{0.stride}]".format(self)
         return "{0.target}[{0.lower}:{0.upper}]".format(self)
+
 
 """
 Operation Expressions

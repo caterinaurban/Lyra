@@ -9,7 +9,7 @@ Lifting of a lattice to a set of program variables.
 
 
 from collections import defaultdict
-from typing import List, Dict, Any, Type
+from typing import Dict, Any, Type, Set
 
 from lyra.core.expressions import VariableIdentifier
 from lyra.abstract_domains.lattice import Lattice
@@ -28,7 +28,7 @@ class Store(Lattice):
     .. automethod:: Store._meet
     .. automethod:: Store._join
     """
-    def __init__(self, variables: List[VariableIdentifier], lattices: Dict[Type, Type[Lattice]],
+    def __init__(self, variables: Set[VariableIdentifier], lattices: Dict[Type, Type[Lattice]],
                  arguments: Dict[Type, Dict[str, Any]] = defaultdict(lambda: dict())):
         """Create a mapping Var -> L from each variable in Var to the corresponding element in L.
 

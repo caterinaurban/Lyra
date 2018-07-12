@@ -10,7 +10,7 @@ The set of possible values of a program variable in a state is represented as a 
 from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum
-from typing import List, Set
+from typing import Set
 
 from lyra.abstract_domains.assumption.assumption_domain import InputMixin
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin
@@ -308,7 +308,7 @@ class TypeState(Store, InputMixin):
     .. automethod:: TypeState._assume
     .. automethod:: TypeState._substitute
     """
-    def __init__(self, variables: List[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier]):
         """Map each program variable to the type representing its value.
 
         :param variables: list of program variables

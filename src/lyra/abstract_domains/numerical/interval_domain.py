@@ -161,7 +161,7 @@ class IntervalState(Store, State):
     .. automethod:: IntervalState._substitute
 
     """
-    def __init__(self, variables: List[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier]):
         """Map each program variable to the interval representing its value.
 
         :param variables: list of program variables
@@ -180,9 +180,7 @@ class IntervalState(Store, State):
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'IntervalState':
-        negation_free_normal_expr = NegationFreeNormalExpression()
-        converted_condition = negation_free_normal_expr.preprocess(condition)
-        normal = negation_free_normal_expr.visit(converted_condition)
+        normal = NegationFreeNormalExpression().visit(condition)
         if isinstance(normal, VariableIdentifier) and isinstance(normal.typ, BooleanLyraType):
             evaluation = self._evaluation.visit(normal, self, dict())
             return self._refinement.visit(normal, evaluation, IntervalLattice(1, 1), self)

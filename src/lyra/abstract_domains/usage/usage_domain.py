@@ -9,7 +9,7 @@ A program variable can have value *U* (used), *S* (scoped), *W* (written), and *
 """
 from collections import defaultdict
 from copy import deepcopy
-from typing import List, Dict, Type
+from typing import Dict, Type, Set
 
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.stack import Stack
@@ -17,7 +17,6 @@ from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing
-from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -31,7 +30,7 @@ class UsageStore(Store):
     .. automethod:: UsageStore._meet
     .. automethod:: UsageStore._join
     """
-    def __init__(self, variables: List[VariableIdentifier], lattices: Dict[Type, Type[Lattice]]):
+    def __init__(self, variables: Set[VariableIdentifier], lattices: Dict[Type, Type[Lattice]]):
         """Map each program variable to its usage status.
 
         :param variables: list of program variables
@@ -80,7 +79,7 @@ class SimpleUsageStore(UsageStore):
     .. automethod:: SimpleUsageStore._meet
     .. automethod:: SimpleUsageStore._join
     """
-    def __init__(self, variables: List[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier]):
         """Map each program variable to its usage status.
 
         :param variables: list of program variables
@@ -104,7 +103,7 @@ class SimpleUsageState(Stack, State):
     .. automethod:: SimpleUsageState._output
     .. automethod:: SimpleUsageState._substitute
     """
-    def __init__(self, variables: List[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier]):
         super().__init__(SimpleUsageStore, {'variables': variables})
 
     @copy_docstring(Stack.push)

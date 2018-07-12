@@ -15,14 +15,13 @@ or if is used in a statement other than an assignment.
 """
 from collections import defaultdict
 from enum import IntEnum
-from typing import List
+from typing import Set
 
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing
 
 from lyra.abstract_domains.store import Store
-from lyra.core.types import IntegerLyraType, BooleanLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -112,7 +111,7 @@ class LivenessState(Store, State):
     .. automethod:: LivenessState._output
     .. automethod:: LivenessState._substitute
     """
-    def __init__(self, variables: List[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier]):
         """Map each program variable to its liveness status.
 
         :param variables: list of program variables
