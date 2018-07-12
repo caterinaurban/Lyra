@@ -315,9 +315,9 @@ class TypeState(Store, InputMixin):
         """
         lattices = defaultdict(lambda: TypeLattice)
         arguments = defaultdict(lambda: {'type_status': TypeLattice.Status.String})
-        arguments[BooleanLyraType] = {'type_status': TypeLattice.Status.Boolean}
-        arguments[IntegerLyraType] = {'type_status': TypeLattice.Status.Integer}
-        arguments[FloatLyraType] = {'type_status': TypeLattice.Status.Float}
+        arguments[BooleanLyraType()] = {'type_status': TypeLattice.Status.Boolean}
+        arguments[IntegerLyraType()] = {'type_status': TypeLattice.Status.Integer}
+        arguments[FloatLyraType()] = {'type_status': TypeLattice.Status.Float}
         super().__init__(variables, lattices, arguments)
 
     @copy_docstring(State._assign)

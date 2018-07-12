@@ -13,6 +13,7 @@ from typing import Dict, Any, Type, Set
 
 from lyra.core.expressions import VariableIdentifier
 from lyra.abstract_domains.lattice import Lattice
+from lyra.core.types import LyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -41,7 +42,7 @@ class Store(Lattice):
         self._lattices = lattices
         self._arguments = arguments
         try:
-            self._store = {v: lattices[type(v.typ)](**arguments[type(v.typ)]) for v in variables}
+            self._store = {v: lattices[v.typ](**arguments[v.typ]) for v in variables}
         except KeyError as key:
             error = f"Missing lattice for variable type {repr(key.args[0])}!"
             raise ValueError(error)

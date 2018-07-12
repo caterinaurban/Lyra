@@ -17,6 +17,7 @@ from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing
+from lyra.core.types import LyraType
 from lyra.core.utils import copy_docstring
 
 
