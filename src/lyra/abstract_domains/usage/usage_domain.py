@@ -31,7 +31,7 @@ class UsageStore(Store):
     .. automethod:: UsageStore._meet
     .. automethod:: UsageStore._join
     """
-    def __init__(self, variables: Set[VariableIdentifier], lattices: Dict[Type, Type[Lattice]]):
+    def __init__(self, variables: Set[VariableIdentifier], lattices: Dict[LyraType, Type[Lattice]]):
         """Map each program variable to its usage status.
 
         :param variables: list of program variables
