@@ -9,7 +9,7 @@ TODO
 import sys
 from copy import deepcopy
 from ctypes import util
-from typing import List
+from typing import List, Set
 
 from elina.python_interface.elina_abstract0 import *
 from elina.python_interface.elina_coeff import *
@@ -88,12 +88,12 @@ class OctagonLattice(Lattice):
     @copy_docstring(Lattice.bottom)
     def bottom(self):
         bottom = elina_abstract0_bottom(_elina_manager, 0, self.dimensions)
-        return self.replace(OctagonLattice(self.variable_names, self.indexes, self.dimensions, bottom))
+        return self._replace(OctagonLattice(self.variable_names, self.indexes, self.dimensions, bottom))
 
     @copy_docstring(Lattice.top)
     def top(self):
         top = elina_abstract0_top(_elina_manager, 0, self.dimensions)
-        return self.replace(OctagonLattice(self.variable_names, self.indexes, self.dimensions, top))
+        return self._replace(OctagonLattice(self.variable_names, self.indexes, self.dimensions, top))
 
     @copy_docstring(Lattice.is_bottom)
     def is_bottom(self) -> bool:
@@ -110,12 +110,12 @@ class OctagonLattice(Lattice):
     @copy_docstring(Lattice._join)
     def _join(self, other: 'OctagonLattice') -> 'OctagonLattice':
         elina_abstract = elina_abstract0_join(_elina_manager, False, self.elina_abstract, other.elina_abstract)
-        return self.replace(OctagonLattice(self.variable_names, self.indexes, self.dimensions, elina_abstract))
+        return self._replace(OctagonLattice(self.variable_names, self.indexes, self.dimensions, elina_abstract))
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'OctagonLattice'):
         elina_abstract = elina_abstract0_meet(_elina_manager, False, self.elina_abstract, other.elina_abstract)
-        return self.replace(OctagonLattice(self.variable_names, self.indexes, self.dimensions, elina_abstract))
+        return self._replace(OctagonLattice(self.variable_names, self.indexes, self.dimensions, elina_abstract))
 
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'OctagonLattice'):
@@ -130,9 +130,19 @@ class OctagonLattice(Lattice):
         pass
 
     @copy_docstring(Lattice.copy)
-    def copy(self):
+    def __deepcopy__(self, memo={}):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            print(type(k), type(v))
+            print(k, v)
+            if type(v) is not POINTER(ElinaAbstract0):
+                setattr(result, k, deepcopy(v, memo))
         abstract = elina_abstract0_copy(_elina_manager, self.elina_abstract)
-        return OctagonLattice(deepcopy(self.variable_names), deepcopy(self.indexes), self.dimensions, abstract)
+        setattr(result, 'elina_abstract', abstract)
+        print(isinstance(result, Lattice))
+        return result
 
     def to_json(self):
         js = dict()
@@ -173,7 +183,7 @@ class OctagonLattice(Lattice):
         abstract = elina_abstract0_forget_array(_elina_manager, False, self.elina_abstract, ElinaDim(dim), 1, False)
         print("AFTER PROJECTION")
         elina_abstract0_fprint(cstdout, _elina_manager, abstract, None)
-        return self.replace(OctagonLattice(deepcopy(self.variable_names), deepcopy(self.indexes), self.dimensions, abstract))
+        return self._replace(OctagonLattice(deepcopy(self.variable_names), deepcopy(self.indexes), self.dimensions, abstract))
 
     def add_dimension(self, variable_name: str):
         dimchange = elina_dimchange_alloc(0, 1)
@@ -187,7 +197,7 @@ class OctagonLattice(Lattice):
         indexes[variable_name] = self.dimensions
         # update the number of dimensions of Elina
         dimensions = self.dimensions + 1
-        return self.replace(OctagonLattice(variable_names, indexes, dimensions, abstract))
+        return self._replace(OctagonLattice(variable_names, indexes, dimensions, abstract))
 
     def handle_input(self, dim:int, pp: int):
         print("OCTAGON HANDLE INPUT", dim, pp)
@@ -204,7 +214,7 @@ class OctagonLattice(Lattice):
         dimperm.contents.dim[dim] = input_index
         dimperm.contents.dim[input_index] = dim
         abstract = elina_abstract0_permute_dimensions(_elina_manager, False, new_lattice.elina_abstract, dimperm)
-        new_lattice.replace(OctagonLattice(deepcopy(new_lattice.variable_names), deepcopy(new_lattice.indexes), new_lattice.dimensions, abstract))
+        new_lattice._replace(OctagonLattice(deepcopy(new_lattice.variable_names), deepcopy(new_lattice.indexes), new_lattice.dimensions, abstract))
         # new_lattice.project(dim)
         return new_lattice
 
@@ -326,7 +336,7 @@ class OctagonLattice(Lattice):
         indexes = [self.indexes[var] for var in variables]
         linexpr = OctagonLattice.create_linear_expression(indexes, coefficients, constant)
         abstract = elina_abstract0_substitute_linexpr(_elina_manager, False, self.elina_abstract, ElinaDim(subs_index), linexpr, None)
-        return self.replace(OctagonLattice(deepcopy(self.variable_names), deepcopy(self.indexes), self.dimensions, abstract))
+        return self._replace(OctagonLattice(deepcopy(self.variable_names), deepcopy(self.indexes), self.dimensions, abstract))
 
 
 _normalizer = NegationFreeNormalExpression()  # puts comparison expressions in the form expr <= 0
@@ -347,47 +357,48 @@ class ConditionEvaluator(ExpressionVisitor):
             return [], [], type_cast[str(expr.typ)](expr.val)
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_Input(self, expr: 'Input', *args):
-        raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
+    def visit_Input(self, expr: 'Input', lattice_element=None, state=None):
+        state.record(lattice_element)
+        return [], [], None
 
-    def visit_VariableIdentifier(self, expr: 'VariableIdentifier', *args):
+    def visit_VariableIdentifier(self, expr: 'VariableIdentifier', lattice_element=None, state=None):
         if expr.typ in [FloatLyraType(), IntegerLyraType(), BooleanLyraType()]:
             return [expr.name], [1], 0
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_LengthIdentifier(self, expr: 'VariableIdentifier', *args):
+    def visit_LengthIdentifier(self, expr: 'VariableIdentifier', lattice_element=None, state=None):
         if expr.typ in [FloatLyraType(), IntegerLyraType(), BooleanLyraType()]:
             return [expr.name], [1], 0
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_ListDisplay(self, expr: 'ListDisplay'):
+    def visit_ListDisplay(self, expr: 'ListDisplay', lattice_element=None, state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
 
-    def visit_Range(self, expr: 'Range'):
+    def visit_Range(self, expr: 'Range', lattice_element=None, state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
 
-    def visit_Split(self, expr: 'Split'):
+    def visit_Split(self, expr: 'Split', lattice_element=None, state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_AttributeReference(self, expr: 'AttributeReference'):
+    def visit_AttributeReference(self, expr: 'AttributeReference', lattice_element=None, state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_Subscription(self, expr: 'Subscription'):
+    def visit_Subscription(self, expr: 'Subscription', lattice_element=None, state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_Slicing(self, expr: 'Slicing'):
+    def visit_Slicing(self, expr: 'Slicing', lattice_element=None, state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
 
-    def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation'):
+    def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', lattice_element=None, state=None):
         coeff = 1 if expr.operator == UnaryArithmeticOperation.Operator.Add else -1
         expr = expr.expression
         variables, coefficients, constant = self.visit(expr)
         return variables, list(map(lambda x: coeff * x), coefficients), coeff * constant
 
-    def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', lattice_element: 'OctagonLattice'):
+    def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', lattice_element=None, state=None):
         operator = expr.operator
         expr = expr.expression
         if operator == UnaryBooleanOperation.Operator.Neg:
@@ -406,7 +417,7 @@ class ConditionEvaluator(ExpressionVisitor):
                     return self.visit(expr.expression, lattice_element)
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', lattice_element: 'OctagonLattice'):
+    def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', lattice_element=None, state=None):
         coeff = None
         variables1, coefficients1, constant1 = self.visit(expr.left, lattice_element)
         variables2, coefficients2, constant2 = self.visit(expr.right, lattice_element)
@@ -443,7 +454,7 @@ class ConditionEvaluator(ExpressionVisitor):
                 self.visit(denominator, lattice_element)
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation', lattice_element: 'OctagonLattice'):
+    def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation', lattice_element=None, state=None):
         normal_expr = _normalizer.visit(expr)  # in the form expr <= 0
         if expr.operator in [BinaryComparisonOperation.Operator.NotEq, BinaryComparisonOperation.Operator.LtE, BinaryComparisonOperation.Operator.Lt, BinaryComparisonOperation.Operator.Eq, BinaryComparisonOperation.Operator.GtE, BinaryComparisonOperation.Operator.Gt]:
             if isinstance(normal_expr, BinaryComparisonOperation):
@@ -458,16 +469,16 @@ class ConditionEvaluator(ExpressionVisitor):
                 return copy
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation', lattice_element: 'OctagonLattice'):
+    def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation', lattice_element=None, state=None):
         # modifies element itself
         lattice_left = lattice_element.copy()
         lattice_right = lattice_element.copy()
         self.visit(expr.left, lattice_left)
         self.visit(expr.right, lattice_right)
         if expr.operator == BinaryBooleanOperation.Operator.Or:
-            return lattice_element.replace(lattice_left.join(lattice_right))
+            return lattice_element._replace(lattice_left.join(lattice_right))
         elif expr.operator == BinaryBooleanOperation.Operator.And:
-            return lattice_element.replace(lattice_left.meet(lattice_right))
+            return lattice_element._replace(lattice_left.meet(lattice_right))
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
 
@@ -479,15 +490,31 @@ class OctagonState(InputMixin):
     def replace(self, variable: VariableIdentifier, expression: Expression) -> 'InputMixin':
         pass
 
-    def unify(self, other: 'InputMixin') -> 'InputMixin':
-        pass
+    def unify(self, other: 'OctagonState') -> 'InputMixin':
+        variable_names = dict()
+        idx = 0
+        for (_, varname1), (_, varname2) in zip(self.variable_names.items(), other.variable_names.items()):
+            if varname1 < varname2:
+                self.variable_names[idx] = varname1
+                self.indexes[varname1] = idx
+            else:
+                self.variable_names[idx] = varname2
+                self.indexes[varname2] = idx
+            idx += 1
+        longer = self.variable_names if len(self.variable_names) >= len(
+            other.variable_names) else other.variable_names
+        print("LONGER", longer)
+        for v, k in longer.items():
+            if v >= idx:
+                self.lattice_element.add_dimension(k.name)
+        return self
 
-    def __init__(self, variables: List[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier]):
         super().__init__()
         self.variables = variables
-        self.variables_names = {i: var.name for i, var in enumerate(self.variables)}
+        self.variable_names = {i: var.name for i, var in enumerate(self.variables)}
         self.indexes = {var.name: i for i, var in enumerate(self.variables)}
-        self.lattice_element = OctagonLattice(self.variables_names, self.indexes, len(self.variables))
+        self.lattice_element = OctagonLattice(self.variable_names, self.indexes, len(self.variables))
 
     def __repr__(self):
         return repr(self.lattice_element)
@@ -529,8 +556,8 @@ class OctagonState(InputMixin):
 
     def _assume(self, condition: Expression) -> 'OctagonState':
         try:
-            element = _evaluator.visit(condition, self.lattice_element.copy())
-            self.lattice_element.replace(element)
+            element = _evaluator.visit(condition, self.lattice_element.copy(), self)
+            self.lattice_element._replace(element)
         # print(self)
         except NotImplementedError:
             self.top()
@@ -556,7 +583,7 @@ class OctagonState(InputMixin):
 
     def _substitute(self, left: Expression, right: Expression) -> 'OctagonState':
         # try:
-        variables, coefficients, constant = _evaluator.visit(right, self.lattice_element.copy().top())
+        variables, coefficients, constant = _evaluator.visit(right, self.lattice_element.copy().top(), self)
         self.lattice_element.substitution(left.name, variables, coefficients, constant)
         return self
         # except NotImplementedError:
@@ -576,12 +603,12 @@ class OctagonState(InputMixin):
     def remove_variable(self, variable: VariableIdentifier):
         pass
 
-    def copy(self):
-        copy = OctagonState(self.variables)
-        copy.variables_names = deepcopy(self.variables_names)
-        copy.indexes = deepcopy(self.indexes)
-        copy.lattice_element = self.lattice_element.copy()
-        return copy
+    # def copy(self):
+    #     copy = OctagonState(self.variables)
+    #     copy.variables_names = deepcopy(self.variables_names)
+    #     copy.indexes = deepcopy(self.indexes)
+    #     copy.lattice_element = self.lattice_element.copy()
+    #     return copy
 
     @staticmethod
     def from_json(js):

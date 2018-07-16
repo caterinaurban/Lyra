@@ -362,20 +362,20 @@ class AssumptionState(State):
                 replaced = AssumptionState.InputStack.InputLattice(multiplier, constraints)
                 return self._replace(replaced)
 
-            def copy(self):
-                def do(constraint):
-                    if isinstance(constraint, tuple):
-                        # the constraint is a StarConstraint or a BasicConstraint
-                        if not constraint:  # the constraint is a StarConstraint
-                            return None
-                        else:  # the constraint is a BasicConstraint
-                            return (deepcopy(constraint[0]), constraint[1].copy)
-                    else:  # the constraint is an InputLattice
-                        return constraint.copy()
-                multiplier = deepcopy(self.multiplier)
-                constraints = [do(constraint) for constraint in self.constraints]
-                return AssumptionState.InputStack.InputLattice(multiplier, constraints)
-
+            # def copy(self):
+            #     def do(constraint):
+            #         if isinstance(constraint, tuple):
+            #             # the constraint is a StarConstraint or a BasicConstraint
+            #             if not constraint:  # the constraint is a StarConstraint
+            #                 return None
+            #             else:  # the constraint is a BasicConstraint
+            #                 return (deepcopy(constraint[0]), constraint[1].copy)
+            #         else:  # the constraint is an InputLattice
+            #             return constraint.copy()
+            #     multiplier = deepcopy(self.multiplier)
+            #     constraints = [do(constraint) for constraint in self.constraints]
+            #     return AssumptionState.InputStack.InputLattice(multiplier, constraints)
+            #
 
         class Scope(Enum):
             """Scope type. Either ``Branch`` or ``Loop``."""
@@ -385,7 +385,7 @@ class AssumptionState(State):
         def __init__(self):
             super().__init__(AssumptionState.InputStack.InputLattice, dict())
             self._scopes = list()   # stack of scope types
-            self._pp = None
+
         @property
         def stack(self):
             return super().stack
@@ -408,13 +408,13 @@ class AssumptionState(State):
             """Current scope type."""
             return self._scopes[-1]
 
-        @property
-        def pp (self):
-            return self._pp
-
-        @pp.setter
-        def pp(self, pp):
-            self._pp = pp
+        # @property
+        # def pp(self):
+        #     return self._pp
+        #
+        # @pp.setter
+        # def pp(self, pp):
+        #     self._pp = pp
 
         def __repr__(self):
             return "\n---\n".join(map(repr, reversed(self.stack)))
@@ -502,12 +502,12 @@ class AssumptionState(State):
             self.lattice.record(constraint)
             return self
 
-        def copy(self):
-            stack = [element.copy() for element in self.stack]
-            copy = AssumptionState.InputStack()
-            copy.stack = stack
-            copy.scopes = deepcopy(self.scopes)
-            return copy
+        # def copy(self):
+        #     stack = [element.copy() for element in self.stack]
+        #     copy = AssumptionState.InputStack()
+        #     copy.stack = stack
+        #     copy.scopes = deepcopy(self.scopes)
+        #     return copy
 
         # input replacement
 
@@ -613,7 +613,6 @@ class AssumptionState(State):
         super().__init__()
         self._states = [state(**arguments[state]) for state in states]
         self._stack = AssumptionState.InputStack()
-        self.stack.pp = self.pp
         self._arguments = arguments
 
     @property
@@ -754,13 +753,13 @@ class AssumptionState(State):
         self.stack.substitute({left}, {right})
         return self
 
-    def copy(self):
-        arguments = deepcopy(self._arguments)
-        states = [state.__class__ for state in self.states]
-        copy = AssumptionState(states, arguments)
-        copy.stack = self.stack.copy()
-        copy.states = [state.copy() for state in self.states]
-        return copy
+    # def copy(self):
+    #     arguments = deepcopy(self._arguments)
+    #     states = [state.__class__ for state in self.states]
+    #     copy = AssumptionState(states, arguments)
+    #     copy.stack = self.stack.copy()
+    #     copy.states = [state.copy() for state in self.states]
+    #     return copy
 
 class TypeRangeAssumptionState(AssumptionState):
     """Type+range assumption analysis state.

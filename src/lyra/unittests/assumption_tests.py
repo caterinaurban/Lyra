@@ -22,7 +22,7 @@ class TypeTest(TestRunner):
 
     def state(self):
         # return TypeState(self.variables)
-        return TypeRangeAssumptionState(self.variables)
+        return OctagonStringAssumptionState(self.variables)
 
 def test_suite():
     suite = unittest.TestSuite()
