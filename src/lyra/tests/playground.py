@@ -5,16 +5,16 @@ from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
 from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis
 from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
 
-# LivenessAnalysis().main("liveness/example.py")
+LivenessAnalysis().main("liveness/example.py")
 
-# StrongLivenessAnalysis().main("liveness/example.py")
+StrongLivenessAnalysis().main("liveness/example.py")
 
-# SimpleUsageAnalysis().main("usage/example.py")
+SimpleUsageAnalysis().main("usage/example.py")
 
-# ForwardIntervalAnalysis().main("numerical/example.py")
+ForwardIntervalAnalysis().main("numerical/forward/example.py")
 
-# BackwardIntervalAnalysis().main("quality/example.py")
+BackwardIntervalAnalysis().main("numerical/backward/example.py")
 
-# TypeAnalysis().main("assumption/example.py")
-# RangeAnalysis().main("assumption/example.py")
+TypeAnalysis().main("assumption/example.py")
+RangeAnalysis().main("assumption/example.py")
 TypeRangeAssumptionAnalysis().main("assumption/example.py")

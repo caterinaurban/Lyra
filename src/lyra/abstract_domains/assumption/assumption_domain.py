@@ -9,7 +9,7 @@ Abstract domains to be used for **input data assumption analysis**.
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from enum import Enum
-from typing import List, Dict, Type, Any, Union, Tuple, Set
+from typing import List, Dict, Type, Any, Union, Tuple, Set, Optional
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
@@ -30,8 +30,8 @@ class InputMixin(State, metaclass=ABCMeta):
     """
     inputs: Dict[ProgramPoint, List[Lattice]]
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, precursory: State = None):
+        super().__init__(precursory)
         type(self).inputs = defaultdict(list)
 
     @abstractmethod
@@ -366,8 +366,9 @@ class AssumptionState(State):
             Branch = 0
             Loop = 1
 
-        def __init__(self):
+        def __init__(self, precursory: State = None):
             super().__init__(AssumptionState.InputStack.InputLattice, dict())
+            State.__init__(self, precursory)
             self._scopes = list()   # stack of scope types
 
         @property
@@ -566,8 +567,9 @@ class AssumptionState(State):
                 return BinaryComparisonOperation(expr.typ, left, expr.operator, right)
 
     def __init__(self, states: List[Type[InputMixin]],
-                 arguments: Dict[Type, Dict[str, Any]] = defaultdict(lambda: dict())):
-        super().__init__()
+                 arguments: Dict[Type, Dict[str, Any]] = defaultdict(lambda: dict()),
+                 precursory: State = None):
+        super().__init__(precursory)
         self._states = [state(**arguments[state]) for state in states]
         self._stack = AssumptionState.InputStack()
 
@@ -645,11 +647,11 @@ class AssumptionState(State):
         return self
 
     @copy_docstring(State.before)
-    def before(self, pp: ProgramPoint) -> 'AssumptionState':
-        super().before(pp)
+    def before(self, pp: ProgramPoint, precursory: Optional['State']) -> 'AssumptionState':
+        super().before(pp, precursory)
         for i, state in enumerate(self.states):
-            self.states[i] = state.before(pp)
-        self.stack.before(pp)
+            self.states[i] = state.before(pp, precursory)
+        self.stack.before(pp, precursory)
         return self
 
     @copy_docstring(State.enter_if)
@@ -715,9 +717,9 @@ class TypeRangeAssumptionState(AssumptionState):
     .. automethod:: AssumptionState._assume
     .. automethod:: AssumptionState._substitute
     """
-    def __init__(self, variables: Set[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         from lyra.abstract_domains.assumption.type_domain import TypeState
         from lyra.abstract_domains.assumption.range_domain import RangeState
         states = [TypeState, RangeState]
         arguments = defaultdict(lambda: {'variables': variables})
-        super().__init__(states, arguments)
+        super().__init__(states, arguments, precursory)

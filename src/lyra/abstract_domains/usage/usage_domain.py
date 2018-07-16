@@ -104,8 +104,9 @@ class SimpleUsageState(Stack, State):
     .. automethod:: SimpleUsageState._output
     .. automethod:: SimpleUsageState._substitute
     """
-    def __init__(self, variables: Set[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         super().__init__(SimpleUsageStore, {'variables': variables})
+        State.__init__(self, precursory)
 
     @copy_docstring(Stack.push)
     def push(self):

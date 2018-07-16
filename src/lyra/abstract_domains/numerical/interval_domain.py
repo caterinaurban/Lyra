@@ -161,13 +161,14 @@ class IntervalState(Store, State):
     .. automethod:: IntervalState._substitute
 
     """
-    def __init__(self, variables: Set[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to the interval representing its value.
 
         :param variables: list of program variables
         """
         lattices = defaultdict(lambda: IntervalLattice)
         super().__init__(variables, lattices)
+        State.__init__(self, precursory)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':

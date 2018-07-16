@@ -8,31 +8,39 @@ Backward Analysis Engine
 from collections import deque
 from copy import deepcopy
 from queue import Queue
+from typing import List, Optional
 
+from lyra.core.statements import Statement
 from lyra.engine.interpreter import Interpreter
 from lyra.engine.result import AnalysisResult
 from lyra.semantics.backward import BackwardSemantics
 
 from lyra.abstract_domains.state import State
-from lyra.core.cfg import Basic, Loop, Conditional, ControlFlowGraph, Edge
+from lyra.core.cfg import Basic, Loop, Conditional, ControlFlowGraph, Edge, Node
 
 
 class BackwardInterpreter(Interpreter):
     """Backward control flow graph interpreter."""
-    def __init__(self, cfg: ControlFlowGraph, semantics: BackwardSemantics, widening: int):
+    def __init__(self, cfg, semantics: BackwardSemantics, widening, precursory = None):
         """Backward control flow graph interpreter construction.
 
         :param cfg: control flow graph to analyze
         :param semantics: semantics of statements in the control flow graph
         :param widening: number of iterations before widening
+        :param precursory: precursory control flow graph interpreter
         """
-        super().__init__(cfg, semantics, widening)
+        super().__init__(cfg, semantics, widening, precursory)
 
     @property
     def semantics(self):
         return self._semantics
 
     def analyze(self, initial: State) -> AnalysisResult:
+        # run the precursory analysis (if any)
+        if self.precursory:     # there is a precursory analysis to be run
+            pre_result: Optional[AnalysisResult] = self.precursory.analyze(initial.precursory)
+        else:                   # there is no precursory analysis to be run
+            pre_result: Optional[AnalysisResult] = None
 
         # prepare the worklist and iteration counts
         worklist = Queue()
@@ -40,7 +48,7 @@ class BackwardInterpreter(Interpreter):
         iterations = {node: 0 for node in self.cfg.nodes}
 
         while not worklist.empty():
-            current = worklist.get()  # retrieve the current node
+            current: Node = worklist.get()  # retrieve the current node
 
             iteration = iterations[current.identifier]
 
@@ -73,18 +81,36 @@ class BackwardInterpreter(Interpreter):
                         assert (branch or loop) and not (branch and loop)
                         successor = successor.enter_if() if branch else successor
                         successor = successor.enter_loop() if loop else successor
-                        successor = successor.before(edge.condition.pp)
+
+                        if pre_result:  # a precursory analysis was run
+                            precursory = pre_result.get_node_result(edge.target)[0]
+                        else:           # no precursory analysis was run
+                            precursory = None
+
+                        successor = successor.before(edge.condition.pp, precursory)
                         successor = self.semantics.semantics(edge.condition, successor).filter()
                         successor = successor.exit_if() if branch else successor
                         successor = successor.exit_loop() if loop else successor
                     elif edge.kind == Edge.Kind.IF_IN:
                         assert isinstance(edge, Conditional)
-                        successor = successor.before(edge.condition.pp)
+
+                        if pre_result:  # a precursory analysis was run
+                            precursory = pre_result.get_node_result(edge.target)[0]
+                        else:           # no precursory analysis was run
+                            precursory = None
+
+                        successor = successor.before(edge.condition.pp, precursory)
                         successor = self.semantics.semantics(edge.condition, successor).filter()
                         successor = successor.exit_if()
                     elif edge.kind == Edge.Kind.LOOP_IN:
                         assert isinstance(edge, Conditional)
-                        successor = successor.before(edge.condition.pp)
+
+                        if pre_result:  # a precursory analysis was run
+                            precursory = pre_result.get_node_result(edge.target)[0]
+                        else:           # no precursory analysis was run
+                            precursory = None
+
+                        successor = successor.before(edge.condition.pp, precursory)
                         successor = self.semantics.semantics(edge.condition, successor).filter()
                         successor = successor.exit_loop()
                     entry = entry.join(successor)
@@ -97,8 +123,14 @@ class BackwardInterpreter(Interpreter):
                 states = deque([entry])
                 if isinstance(current, Basic):
                     successor = entry
-                    for stmt in reversed(current.stmts):
-                        successor = successor.before(stmt.pp)
+
+                    if pre_result:     # a precursory analysis was run
+                        pre_states: List[Optional[State]] = pre_result.get_node_result(current)
+                    else:              # no precursory analysis was run
+                        pre_states: List[Optional[State]] = [None] * len(current.stmts)
+
+                    for precursory, stmt in zip(reversed(pre_states), reversed(current.stmts)):
+                        successor = successor.before(stmt.pp, precursory)
                         successor = self.semantics.semantics(stmt, deepcopy(successor))
                         states.appendleft(successor)
                 elif isinstance(current, Loop):

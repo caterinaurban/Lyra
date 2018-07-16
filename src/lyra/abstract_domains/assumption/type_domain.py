@@ -308,7 +308,7 @@ class TypeState(Store, InputMixin):
     .. automethod:: TypeState._assume
     .. automethod:: TypeState._substitute
     """
-    def __init__(self, variables: Set[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to the type representing its value.
 
         :param variables: list of program variables
@@ -319,6 +319,7 @@ class TypeState(Store, InputMixin):
         arguments[IntegerLyraType()] = {'type_status': TypeLattice.Status.Integer}
         arguments[FloatLyraType()] = {'type_status': TypeLattice.Status.Float}
         super().__init__(variables, lattices, arguments)
+        InputMixin.__init__(self, precursory)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'TypeState':
