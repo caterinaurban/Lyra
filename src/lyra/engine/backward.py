@@ -6,15 +6,13 @@ Backward Analysis Engine
 """
 
 from collections import deque
-from copy import deepcopy
 from queue import Queue
-
-from lyra.engine.interpreter import Interpreter
-from lyra.engine.result import AnalysisResult
-from lyra.semantics.backward import BackwardSemantics
 
 from lyra.abstract_domains.state import State
 from lyra.core.cfg import Basic, Loop, Conditional, ControlFlowGraph, Edge
+from lyra.engine.interpreter import Interpreter
+from lyra.engine.result import AnalysisResult
+from lyra.semantics.backward import BackwardSemantics
 
 
 class BackwardInterpreter(Interpreter):
@@ -46,21 +44,21 @@ class BackwardInterpreter(Interpreter):
 
             # retrieve the previous exit state of the node
             if current in self.result.result:
-                previous = deepcopy(self.result.get_node_result(current)[-1])
+                previous = self.result.get_node_result(current)[-1].copy()
             else:
                 previous = None
 
             # compute the current exit state of the current node
-            entry = deepcopy(initial)
+            entry = initial.copy()
             if current.identifier != self.cfg.out_node.identifier:
                 entry.bottom()
                 # join incoming states
                 edges = self.cfg.out_edges(current)
                 for edge in edges:
                     if edge.target in self.result.result:
-                        successor = deepcopy(self.result.get_node_result(edge.target)[0])
+                        successor = self.result.get_node_result(edge.target)[0].copy()
                     else:
-                        successor = deepcopy(initial).bottom()
+                        successor = initial.copy().bottom()
                     # handle unconditional non-default edges
                     if edge.kind == Edge.Kind.IF_OUT:
                         successor = successor.enter_if()
@@ -90,7 +88,7 @@ class BackwardInterpreter(Interpreter):
                     entry = entry.join(successor)
                 # widening
                 if isinstance(current, Loop) and self.widening < iteration:
-                    entry = deepcopy(previous).widening(entry)
+                    entry = previous.copy().widening(entry)
 
             # check for termination and execute block
             if previous is None or not entry.less_equal(previous):
@@ -99,7 +97,7 @@ class BackwardInterpreter(Interpreter):
                     successor = entry
                     for stmt in reversed(current.stmts):
                         successor = successor.before(stmt.pp)
-                        successor = self.semantics.semantics(stmt, deepcopy(successor))
+                        successor = self.semantics.semantics(stmt, successor.copy())
                         states.appendleft(successor)
                 elif isinstance(current, Loop):
                     # nothing to be done

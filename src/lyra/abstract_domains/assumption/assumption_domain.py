@@ -8,6 +8,7 @@ Abstract domains to be used for **input data assumption analysis**.
 """
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
+from copy import deepcopy
 from enum import Enum
 from typing import List, Dict, Type, Any, Union, Tuple, Set
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
@@ -361,6 +362,21 @@ class AssumptionState(State):
                 replaced = AssumptionState.InputStack.InputLattice(multiplier, constraints)
                 return self._replace(replaced)
 
+            def copy(self):
+                def do(constraint):
+                    if isinstance(constraint, tuple):
+                        # the constraint is a StarConstraint or a BasicConstraint
+                        if not constraint:  # the constraint is a StarConstraint
+                            return None
+                        else:  # the constraint is a BasicConstraint
+                            return (deepcopy(constraint[0]), constraint[1].copy)
+                    else:  # the constraint is an InputLattice
+                        return constraint.copy()
+                multiplier = deepcopy(self.multiplier)
+                constraints = [do(constraint) for constraint in self.constraints]
+                return AssumptionState.InputStack.InputLattice(multiplier, constraints)
+
+
         class Scope(Enum):
             """Scope type. Either ``Branch`` or ``Loop``."""
             Branch = 0
@@ -369,16 +385,36 @@ class AssumptionState(State):
         def __init__(self):
             super().__init__(AssumptionState.InputStack.InputLattice, dict())
             self._scopes = list()   # stack of scope types
+            self._pp = None
+        @property
+        def stack(self):
+            return super().stack
+
+        @stack.setter
+        def stack(self, stack):
+            self._stack = stack
 
         @property
         def scopes(self):
             """Current stack of scope types."""
             return self._scopes
 
+        @scopes.setter
+        def scopes(self, scopes):
+            self._scopes = scopes
+
         @property
         def scope(self):
             """Current scope type."""
             return self._scopes[-1]
+
+        @property
+        def pp (self):
+            return self._pp
+
+        @pp.setter
+        def pp(self, pp):
+            self._pp = pp
 
         def __repr__(self):
             return "\n---\n".join(map(repr, reversed(self.stack)))
@@ -465,6 +501,13 @@ class AssumptionState(State):
             """
             self.lattice.record(constraint)
             return self
+
+        def copy(self):
+            stack = [element.copy() for element in self.stack]
+            copy = AssumptionState.InputStack()
+            copy.stack = stack
+            copy.scopes = deepcopy(self.scopes)
+            return copy
 
         # input replacement
 
@@ -570,16 +613,26 @@ class AssumptionState(State):
         super().__init__()
         self._states = [state(**arguments[state]) for state in states]
         self._stack = AssumptionState.InputStack()
+        self.stack.pp = self.pp
+        self._arguments = arguments
 
     @property
     def states(self):
         """Current list of constraining states."""
         return self._states
 
+    @states.setter
+    def states(self, states):
+        self._states = states
+
     @property
     def stack(self):
         """Current stack of assumptions on the input data."""
         return self._stack
+
+    @stack.setter
+    def stack(self, stack):
+        self._stack = stack
 
     def __repr__(self):
         states = "\n".join("{}".format(state) for state in self.states)
@@ -701,6 +754,13 @@ class AssumptionState(State):
         self.stack.substitute({left}, {right})
         return self
 
+    def copy(self):
+        arguments = deepcopy(self._arguments)
+        states = [state.__class__ for state in self.states]
+        copy = AssumptionState(states, arguments)
+        copy.stack = self.stack.copy()
+        copy.states = [state.copy() for state in self.states]
+        return copy
 
 class TypeRangeAssumptionState(AssumptionState):
     """Type+range assumption analysis state.
@@ -716,8 +776,18 @@ class TypeRangeAssumptionState(AssumptionState):
     .. automethod:: AssumptionState._substitute
     """
     def __init__(self, variables: Set[VariableIdentifier]):
-        from lyra.abstract_domains.assumption.type_domain import TypeState
+        # from lyra.abstract_domains.assumption.type_domain import TypeState
         from lyra.abstract_domains.assumption.range_domain import RangeState
-        states = [TypeState, RangeState]
+        states = [RangeState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments)
+
+
+class OctagonStringAssumptionState(AssumptionState):
+
+    def __init__(self, variables: Set[VariableIdentifier]):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.octagons_domain import OctagonState
+        states = [TypeState, OctagonState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments)

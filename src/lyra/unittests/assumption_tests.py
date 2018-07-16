@@ -8,6 +8,7 @@ import glob
 import os
 import unittest
 
+from lyra.abstract_domains.assumption.assumption_domain import OctagonStringAssumptionState, TypeRangeAssumptionState
 from lyra.abstract_domains.assumption.type_domain import TypeState
 from lyra.engine.backward import BackwardInterpreter
 from lyra.semantics.backward import DefaultBackwardSemantics
@@ -20,12 +21,12 @@ class TypeTest(TestRunner):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        return TypeState(self.variables)
-
+        # return TypeState(self.variables)
+        return TypeRangeAssumptionState(self.variables)
 
 def test_suite():
     suite = unittest.TestSuite()
-    name = os.getcwd() + '/assumption/type/**.py'
+    name = os.getcwd() + '/assumption/octagons/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             suite.addTest(TypeTest(path))
