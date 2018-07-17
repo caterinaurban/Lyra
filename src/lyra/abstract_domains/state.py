@@ -11,7 +11,7 @@ Abstract domain elements support lattice operations and program statements.
 
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
-from typing import Set
+from typing import Set, Optional
 
 from lyra.abstract_domains.lattice import Lattice
 from lyra.core.expressions import Expression
@@ -24,10 +24,11 @@ class State(Lattice, metaclass=ABCMeta):
     .. warning::
         Lattice operations and statements modify the current state.
     """
-    def __init__(self):
+    def __init__(self, precursory: 'State' = None):
         super().__init__()
         self._result = set()
         self._pp = None
+        self._precursory = precursory
 
     @property
     def result(self):
@@ -46,6 +47,15 @@ class State(Lattice, metaclass=ABCMeta):
     @pp.setter
     def pp(self, pp: ProgramPoint):
         self._pp = pp
+
+    @property
+    def precursory(self):
+        """Current precursory analysis state."""
+        return self._precursory
+
+    @precursory.setter
+    def precursory(self, precursory: 'State'):
+        self._precursory = precursory
 
     def __repr__(self):
         return ", ".join("{}".format(expression) for expression in self.result)
@@ -91,13 +101,16 @@ class State(Lattice, metaclass=ABCMeta):
         self.big_join([deepcopy(self)._assume(expr) for expr in condition])
         return self
 
-    def before(self, pp: ProgramPoint) -> 'State':
-        """Set the program point of the currently analyzed statement.
+    def before(self, pp: ProgramPoint, precursory: Optional['State']) -> 'State':
+        """Set the program point of the currently analyzed statement
+        and the current precursory analysis state.
 
         :param pp: current program point
-        :return: current state modified to set the current program point
+        :param precursory: current precursory analysis state
+        :return: current state modified to set the current program point and precursory state
         """
         self.pp = pp
+        self.precursory = precursory
         return self
 
     @abstractmethod

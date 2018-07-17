@@ -7,9 +7,11 @@ The set of possible values of a program variable in a state is represented as a 
 
 :Authors: Caterina Urban and Madelin Schumacher
 """
+from typing import Set
 from lyra.abstract_domains.assumption.assumption_domain import InputMixin
 from lyra.abstract_domains.numerical.interval_domain import IntervalState, \
     copy_docstring, Input
+from lyra.core.expressions import VariableIdentifier, Expression
 
 
 class RangeState(IntervalState, InputMixin):
@@ -26,6 +28,43 @@ class RangeState(IntervalState, InputMixin):
     .. automethod:: RangeState._assume
     .. automethod:: RangeState._substitute
     """
+    @copy_docstring(InputMixin.replace)
+    def replace(self, variable: VariableIdentifier, expression: Expression) -> 'RangeState':
+        # collect the new variables appearing in the replacing expression
+        variables: Set[VariableIdentifier] = set()
+        for identifier in expression.ids():
+            if isinstance(identifier, VariableIdentifier):
+                variables.add(identifier)
+        variables: Set[VariableIdentifier] = variables.difference(set(self.variables))
+        if variables:   # if there are new variables appearing in the replacing expression...
+            # add the new variables to the current state
+            for var in variables:
+                self.variables.append(var)
+                self.store[var] = self.lattices[type(var.typ)](**self.arguments[type(var.typ)])
+            # replace the given variable with the given expression
+            self._substitute(variable, expression)
+        return self
+
+    @copy_docstring(InputMixin.unify)
+    def unify(self, other: 'RangeState') -> 'RangeState':
+        # collect the variables that differ in the current and other state
+        mine = sorted(set(self.variables).difference(set(other.variables)), key=lambda x: x.name)
+        theirs = sorted(set(other.variables).difference(set(self.variables)), key=lambda x: x.name)
+        # replace the variables in the current state that match those in the other state
+        for my_var, their_var in zip(mine, theirs):
+            # the replacement only occurs when the matching variables in the other state
+            # depend on a program point that is smaller than the program point on which
+            # the variables in the current state depend
+            if their_var.name < my_var.name:
+                self.variables[self.variables.index(my_var)] = their_var
+                self.store[their_var] = self.store.pop(my_var)
+        # add variables only present in the other state
+        for var in theirs[len(mine):]:
+            self.variables.append(var)
+            self.store[var] = self.lattices[type(var.typ)](**self.arguments[type(var.typ)])
+        return self
+
+    # expression refinement
 
     class ArithmeticExpressionRefinement(IntervalState.ArithmeticExpressionRefinement):
 

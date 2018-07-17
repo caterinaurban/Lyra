@@ -15,7 +15,7 @@ or if is used in a statement other than an assignment.
 """
 from collections import defaultdict
 from enum import IntEnum
-from typing import List
+from typing import Set
 
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.state import State
@@ -60,13 +60,13 @@ class LivenessLattice(Lattice):
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'LivenessLattice':
         """The bottom lattice element is ``Dead``."""
-        self.replace(LivenessLattice(LivenessLattice.Status.Dead))
+        self._replace(LivenessLattice(LivenessLattice.Status.Dead))
         return self
 
     @copy_docstring(Lattice.top)
     def top(self) -> 'LivenessLattice':
         """The top lattice element is ``Live``."""
-        self.replace(LivenessLattice(LivenessLattice.Status.Live))
+        self._replace(LivenessLattice(LivenessLattice.Status.Live))
         return self
 
     @copy_docstring(Lattice.is_bottom)
@@ -83,12 +83,12 @@ class LivenessLattice(Lattice):
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'LivenessLattice') -> 'LivenessLattice':
-        self.replace(LivenessLattice(min(self.element, other.element)))
+        self._replace(LivenessLattice(min(self.element, other.element)))
         return self
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'LivenessLattice') -> 'LivenessLattice':
-        self.replace(LivenessLattice(max(self.element, other.element)))
+        self._replace(LivenessLattice(max(self.element, other.element)))
         return self
 
     @copy_docstring(Lattice._widening)
@@ -111,13 +111,14 @@ class LivenessState(Store, State):
     .. automethod:: LivenessState._output
     .. automethod:: LivenessState._substitute
     """
-    def __init__(self, variables: List[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to its liveness status.
 
         :param variables: list of program variables
         """
         lattices = defaultdict(lambda: LivenessLattice)
         super().__init__(variables, lattices)
+        State.__init__(self, precursory)
 
     @copy_docstring(Store.is_bottom)
     def is_bottom(self) -> bool:

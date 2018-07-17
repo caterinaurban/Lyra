@@ -9,16 +9,15 @@ Lifting of a lattice to a set of program variables.
 
 
 from collections import defaultdict
-from typing import List, Dict, Any, Type
+from typing import Dict, Any, Type, Set
 
-from lyra.abstract_domains.relational_store import RelationalStore
 from lyra.core.expressions import VariableIdentifier
 from lyra.abstract_domains.lattice import Lattice
 from lyra.core.types import LyraType
 from lyra.core.utils import copy_docstring
 
 
-class Store(RelationalStore):
+class Store(Lattice):
     """Mutable element of a store ``Var -> L``,
     lifting a lattice ``L`` to a set of program variables ``Var``.
 
@@ -30,7 +29,7 @@ class Store(RelationalStore):
     .. automethod:: Store._meet
     .. automethod:: Store._join
     """
-    def __init__(self, variables: List[VariableIdentifier], lattices: Dict[LyraType, Type[Lattice]],    #TODO: make LyraType? -> no, need class
+    def __init__(self, variables: Set[VariableIdentifier], lattices: Dict[LyraType, Type[Lattice]],
                  arguments: Dict[LyraType, Dict[str, Any]] = defaultdict(lambda: dict())):
         """Create a mapping Var -> L from each variable in Var to the corresponding element in L.
 
@@ -38,7 +37,8 @@ class Store(RelationalStore):
         :param lattices: dictionary from variable types to the corresponding lattice types
         :param arguments: dictionary from variable types to arguments of the corresponding lattices
         """
-        super().__init__(variables)
+        super().__init__()
+        self._variables = variables
         self._lattices = lattices
         self._arguments = arguments
         try:
@@ -48,12 +48,27 @@ class Store(RelationalStore):
             raise ValueError(error)
 
     @property
+    def variables(self):
+        """Variables of the current store."""
+        return self._variables
+
+    @property
+    def lattices(self):
+        """Current dictionary fro variable types to the corresponding lattice types."""
+        return self._lattices
+
+    @property
+    def arguments(self):
+        """Current dictionary from variable types to argument of the corresponding lattices."""
+        return self._arguments
+
+    @property
     def store(self):
         """Current mapping from variables to their corresponding lattice element."""
         return self._store
 
     def __repr__(self):
-        items = self.store.items()
+        items = sorted(self.store.items(), key=lambda x: x[0].name)
         return ", ".join("{} -> {}".format(variable, value) for variable, value in items)
 
     @copy_docstring(Lattice.bottom)
@@ -103,21 +118,3 @@ class Store(RelationalStore):
         for var in self.store:
             self.store[var].widening(other.store[var])
         return self
-
-    @copy_docstring(RelationalStore.add_var)
-    def add_var(self, var: VariableIdentifier):
-        if var not in self.store.keys():
-            self.store[var] = self._lattices[var.typ](**self._arguments[var.typ])
-        else:
-            raise ValueError(f"Variable can only be added to a store if it is not already present")
-
-    @copy_docstring(RelationalStore.remove_var)
-    def remove_var(self, var: VariableIdentifier):
-        if var in self.store.keys():
-            del self.store[var]
-        # else:
-        #     raise ValueError(f"Variable can only be removed from a store if it is already present")
-
-    @copy_docstring(RelationalStore.invalidate_var)
-    def invalidate_var(self, var: VariableIdentifier):
-        self.store[var].top()
