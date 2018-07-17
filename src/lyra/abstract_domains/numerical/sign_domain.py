@@ -15,7 +15,7 @@ from lyra.abstract_domains.lattice import ArithmeticMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import *
-from lyra.core.types import FloatLyraType, ListLyraType
+from lyra.core.types import FloatLyraType
 
 from lyra.core.utils import copy_docstring
 

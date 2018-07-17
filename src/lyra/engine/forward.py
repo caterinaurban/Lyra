@@ -15,12 +15,12 @@ from lyra.engine.result import AnalysisResult
 from lyra.semantics.forward import ForwardSemantics
 
 from lyra.abstract_domains.state import State
-from lyra.core.cfg import Basic, Loop, Conditional, ControlFlowGraph, Edge, Node
+from lyra.core.cfg import Basic, Loop, Conditional, Edge, Node
 
 
 class ForwardInterpreter(Interpreter):
     """Forward control flow graph interpreter."""
-    def __init__(self, cfg, semantics: ForwardSemantics, widening, precursory = None):
+    def __init__(self, cfg, semantics: ForwardSemantics, widening, precursory=None):
         """Forward control flow graph interpreter construction.
 
         :param cfg: control flow graph to analyze 

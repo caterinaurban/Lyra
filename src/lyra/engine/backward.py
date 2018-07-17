@@ -10,18 +10,17 @@ from copy import deepcopy
 from queue import Queue
 from typing import List, Optional
 
-from lyra.core.statements import Statement
 from lyra.engine.interpreter import Interpreter
 from lyra.engine.result import AnalysisResult
 from lyra.semantics.backward import BackwardSemantics
 
 from lyra.abstract_domains.state import State
-from lyra.core.cfg import Basic, Loop, Conditional, ControlFlowGraph, Edge, Node
+from lyra.core.cfg import Basic, Loop, Conditional, Edge, Node
 
 
 class BackwardInterpreter(Interpreter):
     """Backward control flow graph interpreter."""
-    def __init__(self, cfg, semantics: BackwardSemantics, widening, precursory = None):
+    def __init__(self, cfg, semantics: BackwardSemantics, widening, precursory=None):
         """Backward control flow graph interpreter construction.
 
         :param cfg: control flow graph to analyze
