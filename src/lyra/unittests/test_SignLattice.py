@@ -8,47 +8,43 @@ import unittest
 from typing import List
 
 from lyra.abstract_domains.numerical.sign_domain import SignLattice
-from lyra.unittests.abstract_tests import ArithmeticLatticeTest
+from lyra.unittests.abstract_tests import AbstractTest
 
 
-class TestSignLattice(unittest.TestCase, ArithmeticLatticeTest):
+class TestSignLattice(AbstractTest.ArithmeticLatticeTest):
 
     def default(self):
         return SignLattice()
 
     @staticmethod
-    def negative() -> 'SignLattice':
+    def negative() -> SignLattice:
         return SignLattice(True, False, False)
 
     @staticmethod
-    def positive() -> 'SignLattice':
+    def positive() -> SignLattice:
         return SignLattice(False, True, False)
 
     @staticmethod
-    def zero() -> 'SignLattice':
+    def zero() -> SignLattice:
         return SignLattice(False, False, True)
 
     @staticmethod
-    def non_negative() -> 'SignLattice':
+    def non_negative() -> SignLattice:
         return SignLattice(False, True, True)
 
     @staticmethod
-    def non_positive() -> 'SignLattice':
+    def non_positive() -> SignLattice:
         return SignLattice(True, False, True)
 
     @staticmethod
-    def non_zero() -> 'SignLattice':
+    def non_zero() -> SignLattice:
         return SignLattice(True, True, False)
 
-    def elements(self) -> List['SignLattice']:
+    def elements(self) -> List[SignLattice]:
         return [self.bottom(),
-                self.top(),
-                self.negative(),
-                self.positive(),
-                self.zero(),
-                self.non_negative(),
-                self.non_positive(),
-                self.non_zero()]
+                self.negative(), self.zero(), self.positive(),
+                self.non_negative(), self.non_zero(), self.non_positive(),
+                self.top()]
 
     def test_less_equal(self):
         super().test_less_equal()
