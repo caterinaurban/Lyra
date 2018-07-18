@@ -21,8 +21,8 @@ class TypeTest(TestRunner):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        # return TypeState(self.variables)
-        return OctagonStringAssumptionState(self.variables)
+        return TypeRangeAssumptionState(self.variables)
+        # return OctagonStringAssumptionState(self.variables)
 
 def test_suite():
     suite = unittest.TestSuite()

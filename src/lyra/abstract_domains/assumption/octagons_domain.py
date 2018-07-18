@@ -35,15 +35,14 @@ _elina_manager = opt_oct_manager_alloc()
 
 class OctagonLattice(Lattice):
 
-    def __init__(self, variable_names: dict, indexes: dict, dimensions: int, elina_abstract = None):
+    def __init__(self, variables: List[VariableIdentifier], elina_abstract = None):
         super().__init__()
-        self._dimensions = dimensions
-        self._variable_names = variable_names
-        self._indexes = indexes
-        dict_symmetry(variable_names, indexes)
+        self._variables = deepcopy(variables)  # type cast to a list to maintain order
+        self._dimensions = len(variables)
+        self._indexes = {var.name: i for i, var in enumerate(self.variables)}
         self._elina_abstract = None
         self._elina_linear_constraints = None
-        top = elina_abstract0_top(_elina_manager, 0, dimensions)
+        top = elina_abstract0_top(_elina_manager, 0, self.dimensions)
         # setting property sets both the elina abstract element and elina lincons array
         self.elina_abstract = top if elina_abstract is None else elina_abstract
 
@@ -52,8 +51,8 @@ class OctagonLattice(Lattice):
         return self._dimensions
 
     @property
-    def variable_names(self):
-        return self._variable_names
+    def variables(self):
+        return self._variables
 
     @property
     def indexes(self):
@@ -88,12 +87,12 @@ class OctagonLattice(Lattice):
     @copy_docstring(Lattice.bottom)
     def bottom(self):
         bottom = elina_abstract0_bottom(_elina_manager, 0, self.dimensions)
-        return self._replace(OctagonLattice(self.variable_names, self.indexes, self.dimensions, bottom))
+        return self._replace(OctagonLattice(self.variables, bottom))
 
     @copy_docstring(Lattice.top)
     def top(self):
         top = elina_abstract0_top(_elina_manager, 0, self.dimensions)
-        return self._replace(OctagonLattice(self.variable_names, self.indexes, self.dimensions, top))
+        return self._replace(OctagonLattice(self.variables, top))
 
     @copy_docstring(Lattice.is_bottom)
     def is_bottom(self) -> bool:
@@ -110,24 +109,16 @@ class OctagonLattice(Lattice):
     @copy_docstring(Lattice._join)
     def _join(self, other: 'OctagonLattice') -> 'OctagonLattice':
         elina_abstract = elina_abstract0_join(_elina_manager, False, self.elina_abstract, other.elina_abstract)
-        return self._replace(OctagonLattice(self.variable_names, self.indexes, self.dimensions, elina_abstract))
+        return self._replace(OctagonLattice(self.variables, elina_abstract))
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'OctagonLattice'):
         elina_abstract = elina_abstract0_meet(_elina_manager, False, self.elina_abstract, other.elina_abstract)
-        return self._replace(OctagonLattice(self.variable_names, self.indexes, self.dimensions, elina_abstract))
+        return self._replace(OctagonLattice(self.variables, elina_abstract))
 
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'OctagonLattice'):
         return self._join(other)
-
-    def replace_variable(self, variable: Identifier, pp: ProgramPoint):
-        # input_varname = f"id{pp.line}"
-        # for idx, varname in self.variable_names.items():
-        #     if varname == variable.name:
-        #         self.variable_names[idx] = input_varname
-        #         self.indexes[input_varname] = idx
-        pass
 
     @copy_docstring(Lattice.copy)
     def __deepcopy__(self, memo={}):
@@ -135,19 +126,16 @@ class OctagonLattice(Lattice):
         result = cls.__new__(cls)
         memo[id(self)] = result
         for k, v in self.__dict__.items():
-            print(type(k), type(v))
-            print(k, v)
             if type(v) is not POINTER(ElinaAbstract0):
                 setattr(result, k, deepcopy(v, memo))
         abstract = elina_abstract0_copy(_elina_manager, self.elina_abstract)
         setattr(result, 'elina_abstract', abstract)
-        print(isinstance(result, Lattice))
         return result
 
     def to_json(self):
         js = dict()
         js["dimensions"] = self.dimensions
-        js["variable_names"] = self.variable_names
+        js["variables"] = self.variables
         js["indexes"] = self.indexes
         if self.is_bottom():
             js["lincons_array"] = "⊥"
@@ -171,33 +159,31 @@ class OctagonLattice(Lattice):
         return js
 
     # ================ HELPER FUNCTIONS ====================
-    def project(self, dim: int):
+    def project(self, variable: VariableIdentifier):
         """
         Performs the project/forget operation of the given dimension
         :param
         """
+        dim = self.indexes[variable.name]
         libc = CDLL(util.find_library('c'))
         cstdout = c_void_p.in_dll(libc, 'stdout')
-        print("BEFORE PROJECTION", dim)
+        # print("BEFORE PROJECTION", dim)
         elina_abstract0_fprint(cstdout, _elina_manager, self.elina_abstract, None)
         abstract = elina_abstract0_forget_array(_elina_manager, False, self.elina_abstract, ElinaDim(dim), 1, False)
-        print("AFTER PROJECTION")
+        # print("AFTER PROJECTION")
         elina_abstract0_fprint(cstdout, _elina_manager, abstract, None)
-        return self._replace(OctagonLattice(deepcopy(self.variable_names), deepcopy(self.indexes), self.dimensions, abstract))
+        return self._replace(OctagonLattice(self.variables, abstract))
 
-    def add_dimension(self, variable_name: str):
+    def add_dimension(self, variable: VariableIdentifier):
+        if variable in self.variables:
+            return self
         dimchange = elina_dimchange_alloc(0, 1)
         dimchange.contents.dim[0] = self.dimensions
         # add the new dimension to Elina
         abstract = elina_abstract0_add_dimensions(_elina_manager, False, self.elina_abstract, dimchange, False)
         # update dictionary of Elina with the new variable
-        variable_names = deepcopy(self.variable_names)
-        indexes = deepcopy(self.indexes)
-        variable_names[self.dimensions] = variable_name
-        indexes[variable_name] = self.dimensions
-        # update the number of dimensions of Elina
-        dimensions = self.dimensions + 1
-        return self._replace(OctagonLattice(variable_names, indexes, dimensions, abstract))
+        self.variables.append(variable)
+        return self._replace(OctagonLattice(self.variables, abstract))
 
     def handle_input(self, dim:int, pp: int):
         print("OCTAGON HANDLE INPUT", dim, pp)
@@ -214,7 +200,7 @@ class OctagonLattice(Lattice):
         dimperm.contents.dim[dim] = input_index
         dimperm.contents.dim[input_index] = dim
         abstract = elina_abstract0_permute_dimensions(_elina_manager, False, new_lattice.elina_abstract, dimperm)
-        new_lattice._replace(OctagonLattice(deepcopy(new_lattice.variable_names), deepcopy(new_lattice.indexes), new_lattice.dimensions, abstract))
+        new_lattice._replace(OctagonLattice(new_lattice.variables, abstract))
         # new_lattice.project(dim)
         return new_lattice
 
@@ -223,13 +209,9 @@ class OctagonLattice(Lattice):
         Forms a string representation of an Elina linear constraint
         :param lincons: Linear constraint to be
         represented.
-        :param id_input_line: optional dictionary to use for mapping indexes to input lines. Default is
-        self.variable_names.
+        :param id_input_line: optional dictionary to use for mapping indexes to input lines.
         :return:
         """
-        # print("LINEAR CONSTRAINT")
-        # elina_lincons0_print(lincons, None)
-        # print()
         string = ""
         for i in range(lincons.linexpr0.contents.size):
             linterm = lincons.linexpr0.contents.p.linterm[i]
@@ -241,9 +223,9 @@ class OctagonLattice(Lattice):
             if coeff_val not in [1, -1]:
                 string += str(coeff_val) + "*"
             if id_input_line is None:
-                string += (self.variable_names[linterm.dim])
+                string += str(self.variables[linterm.dim])
             else:
-                varname = self.variable_names[linterm.dim]
+                varname = self.variables[linterm.dim].name
                 string += f"line {id_input_line[int(varname[2:])]}"
         const_dbl = lincons.linexpr0.contents.cst.val.scalar.contents.val.dbl
         if const_dbl >= 0:
@@ -293,41 +275,21 @@ class OctagonLattice(Lattice):
         :param constant:
         :return:
         """
-        # assert constraint_type == BinaryComparisonOperation.Operator.LtE, f"Linear constraint was not normalized " \
-        #                                                                   "properly. "
+
         # create elina linear expression
         linexpr = OctagonLattice.create_linear_expression(indexes, coefficients, constant)
-        # print("LINEAR EXPRESSION")
-        # elina_linexpr0_print(linexpr, None)
-        # print()
+
         # create elina linear constraint array of size
         lincons_array = elina_lincons0_array_make(1)
         # the constraint uses the linear expression with constraint type of '>=' always
         lincons_array.p[0].constyp = ElinaConstyp.ELINA_CONS_SUPEQ
         lincons_array.p[0].linexpr0 = linexpr
-        # print("LINEAR CONSTRAINT TO MEET WITH TOP")
-        # elina_lincons0_array_print(lincons_array, None)
-
-        # print(self.lincons_to_string(lincons_array.p[0]))
         libc = CDLL(util.find_library('c'))
         cstdout = c_void_p.in_dll(libc, 'stdout')
         # create lattice element representing the linear constraint
         top = elina_abstract0_top(_elina_manager, 0, self.dimensions)
-        # print('****')
-        # print("ABSTRACT ELEMENT TOP")
-        # elina_abstract0_fprint(cstdout, _elina_manager, top, None)
-        # print('****')
-        # abstract = elina_abstract0_meet_lincons_array(_elina_manager, False, top, lincons_array)
         abstract = elina_abstract0_meet_lincons_array(_elina_manager, False, top, lincons_array)
-        # print("****")
-        # print("ABSTRACT ELEMENT AFTER MEET")
-        # elina_abstract0_fprint(cstdout, _elina_manager, abstract, None)
-        # print('****')
-        linear_constraint_element = OctagonLattice(deepcopy(self.variable_names), deepcopy(self.indexes), self.dimensions, abstract)
-        # print("CONSTRAINT LATTICE")
-        # print(linear_constraint_element)
-        # print('------------------------')
-
+        linear_constraint_element = OctagonLattice(self.variables, abstract)
         # perform meet between the linear constraint and the already existing constraints
         return self.meet(linear_constraint_element)
 
@@ -336,15 +298,24 @@ class OctagonLattice(Lattice):
         indexes = [self.indexes[var] for var in variables]
         linexpr = OctagonLattice.create_linear_expression(indexes, coefficients, constant)
         abstract = elina_abstract0_substitute_linexpr(_elina_manager, False, self.elina_abstract, ElinaDim(subs_index), linexpr, None)
-        return self._replace(OctagonLattice(deepcopy(self.variable_names), deepcopy(self.indexes), self.dimensions, abstract))
+        return self._replace(OctagonLattice(self.variables, abstract))
+
+    def unify(self, other: 'OctagonLattice') -> List[VariableIdentifier]:
+        i = 0
+        for var1, var2 in zip(self.variables, other.variables):
+            if var1.name < var2.name:
+                self.variables[i] = var1
+            else:
+                self.variables[i] = var2
+            i += 1
+        self._replace(OctagonLattice(self.variables, elina_abstract0_copy(_elina_manager, self.elina_abstract)))
+        return deepcopy(self.variables)
 
 
 _normalizer = NegationFreeNormalExpression()  # puts comparison expressions in the form expr <= 0
 
 
 class ConditionEvaluator(ExpressionVisitor):
-    """
-    """
 
     def visit_Literal(self, expr: 'Literal', *args):
         if expr.typ == IntegerLyraType() or expr.typ is FloatLyraType() or expr.typ is BooleanLyraType():
@@ -395,7 +366,7 @@ class ConditionEvaluator(ExpressionVisitor):
     def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', lattice_element=None, state=None):
         coeff = 1 if expr.operator == UnaryArithmeticOperation.Operator.Add else -1
         expr = expr.expression
-        variables, coefficients, constant = self.visit(expr)
+        variables, coefficients, constant = self.visit(expr, lattice_element, state)
         return variables, list(map(lambda x: coeff * x), coefficients), coeff * constant
 
     def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', lattice_element=None, state=None):
@@ -407,20 +378,22 @@ class ConditionEvaluator(ExpressionVisitor):
                 operator = expr.operator.reverse_operator()
                 right = UnaryBooleanOperation(expr.right, UnaryBooleanOperation.Operator.Neg, expr.right)
                 expr = BinaryBooleanOperation(expr.typ, left, operator, right)
-                return self.visit(expr, lattice_element)
+                return self.visit(expr, lattice_element, state)
             elif isinstance(expr, BinaryComparisonOperation):
                 operator = expr.operator.reverse_operator()
                 expr = BinaryComparisonOperation(expr.typ, expr.left, operator, expr.right)
-                return self.visit(expr, lattice_element)
+                return self.visit(expr, lattice_element, state)
             elif isinstance(expr, UnaryBooleanOperation):
                 if expr.operator == UnaryBooleanOperation.Operator.Neg:
-                    return self.visit(expr.expression, lattice_element)
+                    return self.visit(expr.expression, lattice_element, state)
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
     def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', lattice_element=None, state=None):
         coeff = None
-        variables1, coefficients1, constant1 = self.visit(expr.left, lattice_element)
-        variables2, coefficients2, constant2 = self.visit(expr.right, lattice_element)
+        variables1, coefficients1, constant1 = self.visit(expr.left, lattice_element, state)
+        variables2, coefficients2, constant2 = self.visit(expr.right, lattice_element, state)
+        if  constant1 is None or constant2 is None:
+            return [], [], None
         if expr.operator == BinaryArithmeticOperation.Operator.Add:
             coeff = 1
         elif expr.operator == BinaryArithmeticOperation.Operator.Sub:
@@ -451,21 +424,21 @@ class ConditionEvaluator(ExpressionVisitor):
                 raise ZeroDivisionError
             elif len(variables2) > 0:
                 denominator = BinaryComparisonOperation(expr.left.typ, expr.left, BinaryComparisonOperation.Operator.NotEq, Literal(IntegerLyraType, "0"))
-                self.visit(denominator, lattice_element)
+                self.visit(denominator, lattice_element, state)
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
     def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation', lattice_element=None, state=None):
         normal_expr = _normalizer.visit(expr)  # in the form expr <= 0
         if expr.operator in [BinaryComparisonOperation.Operator.NotEq, BinaryComparisonOperation.Operator.LtE, BinaryComparisonOperation.Operator.Lt, BinaryComparisonOperation.Operator.Eq, BinaryComparisonOperation.Operator.GtE, BinaryComparisonOperation.Operator.Gt]:
             if isinstance(normal_expr, BinaryComparisonOperation):
-                variables, coefficients, constant = self.visit(normal_expr.left, lattice_element)
+                variables, coefficients, constant = self.visit(normal_expr.left, lattice_element, state)
                 indexes = [lattice_element.indexes[var] for var in variables]
                 coefficients = list(map(lambda x: -x, coefficients))
                 constant *= -1
                 return lattice_element.add_linear_constraint(indexes, coefficients, constant, normal_expr.operator)
             else:
                 copy = lattice_element.copy()
-                self.visit(normal_expr, copy)
+                self.visit(normal_expr, copy, state)
                 return copy
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
@@ -473,8 +446,8 @@ class ConditionEvaluator(ExpressionVisitor):
         # modifies element itself
         lattice_left = lattice_element.copy()
         lattice_right = lattice_element.copy()
-        self.visit(expr.left, lattice_left)
-        self.visit(expr.right, lattice_right)
+        self.visit(expr.left, lattice_left, state)
+        self.visit(expr.right, lattice_right, state)
         if expr.operator == BinaryBooleanOperation.Operator.Or:
             return lattice_element._replace(lattice_left.join(lattice_right))
         elif expr.operator == BinaryBooleanOperation.Operator.And:
@@ -487,34 +460,18 @@ _evaluator = ConditionEvaluator()
 
 class OctagonState(InputMixin):
 
-    def replace(self, variable: VariableIdentifier, expression: Expression) -> 'InputMixin':
-        pass
-
-    def unify(self, other: 'OctagonState') -> 'InputMixin':
-        variable_names = dict()
-        idx = 0
-        for (_, varname1), (_, varname2) in zip(self.variable_names.items(), other.variable_names.items()):
-            if varname1 < varname2:
-                self.variable_names[idx] = varname1
-                self.indexes[varname1] = idx
-            else:
-                self.variable_names[idx] = varname2
-                self.indexes[varname2] = idx
-            idx += 1
-        longer = self.variable_names if len(self.variable_names) >= len(
-            other.variable_names) else other.variable_names
-        print("LONGER", longer)
-        for v, k in longer.items():
-            if v >= idx:
-                self.lattice_element.add_dimension(k.name)
-        return self
-
     def __init__(self, variables: Set[VariableIdentifier]):
         super().__init__()
-        self.variables = variables
-        self.variable_names = {i: var.name for i, var in enumerate(self.variables)}
-        self.indexes = {var.name: i for i, var in enumerate(self.variables)}
-        self.lattice_element = OctagonLattice(self.variable_names, self.indexes, len(self.variables))
+        self._variables = variables
+        self.lattice_element = OctagonLattice(list(self.variables))
+
+    @property
+    def variables(self):
+        return self._variables
+
+    @variables.setter
+    def variables(self, variables: Set[VariableIdentifier]):
+        self._variables = variables
 
     def __repr__(self):
         return repr(self.lattice_element)
@@ -548,9 +505,6 @@ class OctagonState(InputMixin):
         self.lattice_element.widening(other.lattice_element)
         return self
 
-    def replace_variable(self, variable: Identifier, pp: ProgramPoint):
-        pass
-
     def _assign(self, left: Expression, right: Expression) -> 'State':
         raise Exception("Assignment should not be called in backward analysis.")
 
@@ -558,7 +512,6 @@ class OctagonState(InputMixin):
         try:
             element = _evaluator.visit(condition, self.lattice_element.copy(), self)
             self.lattice_element._replace(element)
-        # print(self)
         except NotImplementedError:
             self.top()
         return self
@@ -582,40 +535,35 @@ class OctagonState(InputMixin):
         return self.bottom()
 
     def _substitute(self, left: Expression, right: Expression) -> 'OctagonState':
-        # try:
-        variables, coefficients, constant = _evaluator.visit(right, self.lattice_element.copy().top(), self)
-        self.lattice_element.substitution(left.name, variables, coefficients, constant)
+        if isinstance(left, VariableIdentifier):
+            variables, coefficients, constant = _evaluator.visit(right, self.lattice_element.copy(), self)
+            if constant: # non-input expression
+                self.lattice_element.substitution(left.name, variables, coefficients, constant)
+            else:
+                self.lattice_element.project(left)
         return self
-        # except NotImplementedError:
-        #     self.lattice_element.project(self.indexes[left.name])
-        #     return self
 
-    def forget_variable(self, variable: VariableIdentifier, pp: int) -> 'OctagonLattice':
-        dim = self.indexes[variable.name]
-        print("IN FORGET", variable, dim)
-        element = self.lattice_element.handle_input(dim, pp)
-        # print("ELEMENT", element)
-        return element
+    def replace(self, variable: VariableIdentifier, expression: Expression) -> 'InputMixin':
+        # collect the new variables appearing in the replacing expression
+        variables: Set[VariableIdentifier] = set()
+        for identifier in expression.ids():
+            if isinstance(identifier, VariableIdentifier):
+                variables.add(identifier)
+        variables: Set[VariableIdentifier] = variables.difference(set(self.variables))
+        if variables:  # if there are new variables appearing in the replacing expression...
+            # add the new variables to the current state
+            for var in variables:
+                self.lattice_element.add_dimension(var)
+        self._substitute(variable, expression)
+        return self
 
-    def add_variable(self, variable: VariableIdentifier):
-        pass
-
-    def remove_variable(self, variable: VariableIdentifier):
-        pass
-
-    # def copy(self):
-    #     copy = OctagonState(self.variables)
-    #     copy.variables_names = deepcopy(self.variables_names)
-    #     copy.indexes = deepcopy(self.indexes)
-    #     copy.lattice_element = self.lattice_element.copy()
-    #     return copy
+    def unify(self, other: 'OctagonState') -> 'InputMixin':
+        self.variables = self.lattice_element.unify(other.lattice_element)
+        return self
 
     @staticmethod
     def from_json(js):
-        variable_names = dict()
-        for k, v in js["variable_names"].items():
-            variable_names[int(k)] = v
-        lattice_element = OctagonLattice(variable_names, js["indexes"], js["dimensions"])
+        lattice_element = OctagonLattice(js['variables'])
         if js["lincons_array"] == "T":
             return lattice_element.top()
         if js["lincons_array"] == "⊥":
@@ -626,6 +574,3 @@ class OctagonState(InputMixin):
         return lattice_element
 
 
-def dict_symmetry(a: dict, b:dict):
-    for k, v in a.items():
-        assert k == b[v] and v == a[k], f"{a},{b}"

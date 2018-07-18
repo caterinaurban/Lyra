@@ -1,4 +1,5 @@
-x: int = int(input())
+x: int = int(input()) + 2 * int(input())
 y: int = int(input())
-if x + y > 200:
+a: int = x + 1
+if y + a > 200:
     raise ValueError

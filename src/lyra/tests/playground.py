@@ -13,7 +13,7 @@ from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
 
 # ForwardIntervalAnalysis().main("numerical/example.py")
 
-# BackwardIntervalAnalysis().main("quality/example.py")
+# BackwardIntervalAnalysis().main("assumption/example.py")
 
 # TypeAnalysis().main("assumption/example.py")
 # RangeAnalysis().main("assumption/example.py")
