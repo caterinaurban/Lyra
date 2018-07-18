@@ -7,11 +7,45 @@ The set of possible values of a program variable in a state is represented as a 
 
 :Authors: Caterina Urban and Madelin Schumacher
 """
+from collections import defaultdict
+from math import inf
 from typing import Set
-from lyra.abstract_domains.assumption.assumption_domain import InputMixin
+from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONMixin
 from lyra.abstract_domains.numerical.interval_domain import IntervalState, \
-    copy_docstring, Input
+    copy_docstring, Input, IntervalLattice
 from lyra.core.expressions import VariableIdentifier, Expression
+
+
+class RangeLattice(IntervalLattice, JSONMixin):
+    """Range lattice. The bottom range represents an empty set of values.
+
+    .. image:: _static/interval.jpg
+
+    The default abstraction is the unbounded range ``[-oo, +oo]``.
+
+    .. document private methods
+    .. automethod:: RangeLattice._less_equal
+    .. automethod:: RangeLattice._meet
+    .. automethod:: RangeLattice._join
+    .. automethod:: RangeLattice._widening
+    .. automethod:: RangeLattice._neg
+    .. automethod:: RangeLattice._add
+    .. automethod:: RangeLattice._sub
+    .. automethod:: RangeLattice._mult
+    """
+    @copy_docstring(JSONMixin.to_json)
+    def to_json(self) -> str:
+        return str(self)
+
+    @staticmethod
+    @copy_docstring(JSONMixin.from_json)
+    def from_json(json: str) -> 'JSONMixin':
+        if json == '⊥':
+            return RangeLattice().bottom()
+        lower, upper = json[1:-1].split(',')
+        lower = int(lower) if lower != '-inf' else -inf
+        upper = int(upper) if upper != 'inf' else inf
+        return RangeLattice(lower, upper)
 
 
 class RangeState(IntervalState, InputMixin):
@@ -28,6 +62,15 @@ class RangeState(IntervalState, InputMixin):
     .. automethod:: RangeState._assume
     .. automethod:: RangeState._substitute
     """
+    def __init__(self, variables: Set[VariableIdentifier], precursory: InputMixin = None):
+        """Map each program variable to the interval representing its value.
+
+        :param variables: set of program variables
+        """
+        lattices = defaultdict(lambda: RangeLattice)
+        super(IntervalState, self).__init__(variables, lattices)
+        InputMixin.__init__(self, precursory)
+
     @copy_docstring(InputMixin.replace)
     def replace(self, variable: VariableIdentifier, expression: Expression) -> 'RangeState':
         # collect the new variables appearing in the replacing expression

@@ -238,7 +238,7 @@ class SignState(Store, State):
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to the sign representing its value.
 
-        :param variables: the list of program variables
+        :param variables: set of program variables
         """
         lattices = defaultdict(lambda: SignLattice)
         super().__init__(variables, lattices)

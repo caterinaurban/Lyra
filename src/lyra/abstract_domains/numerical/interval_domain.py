@@ -164,7 +164,7 @@ class IntervalState(Store, State):
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to the interval representing its value.
 
-        :param variables: list of program variables
+        :param variables: set of program variables
         """
         lattices = defaultdict(lambda: IntervalLattice)
         super().__init__(variables, lattices)

@@ -22,13 +22,33 @@ from lyra.core.types import IntegerLyraType
 from lyra.core.utils import copy_docstring
 
 
+class JSONMixin(Lattice, metaclass=ABCMeta):
+    """Mixin to add a mechanism for converting a lattice to and from JSON format."""
+
+    @abstractmethod
+    def to_json(self) -> str:
+        """Convert the current lattice element to JSON format.
+
+        :return: JSON format of the current lattice element
+        """
+
+    @staticmethod
+    @abstractmethod
+    def from_json(json: str) -> 'JSONMixin':
+        """Reconstruct a lattice element from its JSON format.
+
+        :param json: JSON format of a lattice element
+        :return: reconstructed lattice element from its JSON format
+        """
+
+
 class InputMixin(State, metaclass=ABCMeta):
     """Mixin to add a mechanism for recording and retrieving constraints on the input data.
 
     Constraints are recorded in the class member ``inputs``, which is a map
     from each program point to the list of constraints on the input data read at that point.
     """
-    inputs: Dict[ProgramPoint, List[Lattice]]
+    inputs: Dict[ProgramPoint, List[JSONMixin]]
 
     def __init__(self, precursory: State = None):
         super().__init__(precursory)
@@ -79,7 +99,7 @@ class InputMixin(State, metaclass=ABCMeta):
         self.unify(other)
         return super().widening(other.unify(self))
 
-    def record(self, constraint: Lattice) -> 'InputMixin':
+    def record(self, constraint: JSONMixin) -> 'InputMixin':
         """Record an constraint.
 
         :param constraint: constraint to be recorded
@@ -88,7 +108,7 @@ class InputMixin(State, metaclass=ABCMeta):
         type(self).inputs[self.pp].append(constraint)
         return self
 
-    def retrieve(self) -> List[Lattice]:
+    def retrieve(self) -> List[JSONMixin]:
         """Retrieve and forget the constraints corresponding to the current program point.
 
         .. warning::
@@ -150,7 +170,7 @@ class AssumptionState(State):
             """
             InputLattice = 'AssumptionState.InputStack.InputLattice'
             StarConstraint = Tuple[ProgramPoint, ...]
-            BasicConstraint = Tuple[ProgramPoint, Tuple[Lattice, ...]]
+            BasicConstraint = Tuple[ProgramPoint, Tuple[JSONMixin, ...]]
             InputConstraint = Union[StarConstraint, BasicConstraint, InputLattice]
 
             def __init__(self, multiplier: Expression = Literal(IntegerLyraType(), "1"),
@@ -214,8 +234,8 @@ class AssumptionState(State):
                             # the constraints are StarConstraints
                             return True
                         else:   # the constraints are BasicConstraints
-                            l1: Tuple[Lattice, ...] = constraint1[1]
-                            l2: Tuple[Lattice, ...] = constraint2[1]
+                            l1: Tuple[JSONMixin, ...] = constraint1[1]
+                            l2: Tuple[JSONMixin, ...] = constraint2[1]
                             return all(x.less_equal(y) for x, y in zip(l1, l2))
                     else:   # the constraints are InputLattices
                         m1: Expression = constraint1.multiplier
@@ -251,8 +271,8 @@ class AssumptionState(State):
                             pp1: ProgramPoint = constraint1[0]
                             pp2: ProgramPoint = constraint2[0]
                             pp: ProgramPoint = pp1 if pp1.line <= pp2.line else pp2
-                            l1: Tuple[Lattice, ...] = constraint1[1]
-                            l2: Tuple[Lattice, ...] = constraint2[1]
+                            l1: Tuple[JSONMixin, ...] = constraint1[1]
+                            l2: Tuple[JSONMixin, ...] = constraint2[1]
                             return pp, tuple(x.join(y) for x, y in zip(l1, l2))
                     else:   # the constraints are InputLattices
                         m1: Expression = constraint1.multiplier

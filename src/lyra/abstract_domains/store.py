@@ -33,7 +33,7 @@ class Store(Lattice):
                  arguments: Dict[LyraType, Dict[str, Any]] = defaultdict(lambda: dict())):
         """Create a mapping Var -> L from each variable in Var to the corresponding element in L.
 
-        :param variables: list of program variables
+        :param variables: set of program variables
         :param lattices: dictionary from variable types to the corresponding lattice types
         :param arguments: dictionary from variable types to arguments of the corresponding lattices
         """
