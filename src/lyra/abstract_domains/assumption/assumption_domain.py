@@ -604,8 +604,7 @@ class AssumptionState(State):
         return self._stack
 
     def __repr__(self):
-        states = "\n".join("{}".format(state) for state in self.states)
-        return states + "\n \n{}".format(self.stack)
+        return "{}".format(self.stack)
 
     @copy_docstring(State.bottom)
     def bottom(self) -> 'AssumptionState':
