@@ -20,7 +20,7 @@ from elina.python_interface.elina_linexpr0_h import *
 from elina.python_interface.elina_scalar import *
 from elina.python_interface.elina_scalar_h import *
 from elina.python_interface.opt_oct import *
-from lyra.abstract_domains.assumption.assumption_domain import InputMixin
+from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONMixin
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import Identifier, VariableIdentifier, Expression, ExpressionVisitor, Literal, \
@@ -118,7 +118,8 @@ class OctagonLattice(Lattice):
 
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'OctagonLattice'):
-        return self._join(other)
+        elina_abstract = elina_abstract0_widening(_elina_manager, self.elina_abstract, other.elina_abstract)
+        return self._replace(OctagonLattice(self.variables, elina_abstract))
 
     @copy_docstring(Lattice.copy)
     def __deepcopy__(self, memo={}):
@@ -168,10 +169,10 @@ class OctagonLattice(Lattice):
         libc = CDLL(util.find_library('c'))
         cstdout = c_void_p.in_dll(libc, 'stdout')
         # print("BEFORE PROJECTION", dim)
-        elina_abstract0_fprint(cstdout, _elina_manager, self.elina_abstract, None)
+        # elina_abstract0_fprint(cstdout, _elina_manager, self.elina_abstract, None)
         abstract = elina_abstract0_forget_array(_elina_manager, False, self.elina_abstract, ElinaDim(dim), 1, False)
         # print("AFTER PROJECTION")
-        elina_abstract0_fprint(cstdout, _elina_manager, abstract, None)
+        # elina_abstract0_fprint(cstdout, _elina_manager, abstract, None)
         return self._replace(OctagonLattice(self.variables, abstract))
 
     def add_dimension(self, variable: VariableIdentifier):
@@ -458,7 +459,7 @@ class ConditionEvaluator(ExpressionVisitor):
 _evaluator = ConditionEvaluator()
 
 
-class OctagonState(InputMixin):
+class OctagonState(InputMixin, JSONMixin):
 
     def __init__(self, variables: Set[VariableIdentifier]):
         super().__init__()
@@ -560,6 +561,10 @@ class OctagonState(InputMixin):
     def unify(self, other: 'OctagonState') -> 'InputMixin':
         self.variables = self.lattice_element.unify(other.lattice_element)
         return self
+
+    @copy_docstring(JSONMixin.to_json)
+    def to_json(self) -> str:
+        return self.lattice_element.to_json()
 
     @staticmethod
     def from_json(js):

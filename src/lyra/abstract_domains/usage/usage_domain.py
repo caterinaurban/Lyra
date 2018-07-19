@@ -31,10 +31,10 @@ class UsageStore(Store):
     .. automethod:: UsageStore._meet
     .. automethod:: UsageStore._join
     """
-    def __init__(self, variables: Set[VariableIdentifier], lattices: Dict[LyraType, Type[Lattice]]):
+    def __init__(self, variables, lattices: Dict[LyraType, Type[Lattice]]):
         """Map each program variable to its usage status.
 
-        :param variables: list of program variables
+        :param variables: set of program variables
         :param lattices: dictionary from variable types to the corresponding lattice types
         """
         super().__init__(variables, lattices)
@@ -83,7 +83,7 @@ class SimpleUsageStore(UsageStore):
     def __init__(self, variables: Set[VariableIdentifier]):
         """Map each program variable to its usage status.
 
-        :param variables: list of program variables
+        :param variables: set of program variables
         """
         lattices = defaultdict(lambda: UsageLattice)
         super().__init__(variables, lattices)
@@ -104,8 +104,9 @@ class SimpleUsageState(Stack, State):
     .. automethod:: SimpleUsageState._output
     .. automethod:: SimpleUsageState._substitute
     """
-    def __init__(self, variables: Set[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         super().__init__(SimpleUsageStore, {'variables': variables})
+        State.__init__(self, precursory)
 
     @copy_docstring(Stack.push)
     def push(self):

@@ -161,22 +161,22 @@ class IntervalState(Store, State):
     .. automethod:: IntervalState._substitute
 
     """
-    def __init__(self, variables: Set[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to the interval representing its value.
 
-        :param variables: list of program variables
+        :param variables: set of program variables
         """
         lattices = defaultdict(lambda: IntervalLattice)
         super().__init__(variables, lattices)
+        State.__init__(self, precursory)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
         if isinstance(left, VariableIdentifier):
             evaluation = self._evaluation.visit(right, self, dict())
             self.store[left] = evaluation[right]
-        else:
-            raise NotImplementedError(f"Assignment to {left.__class__.__name__} is unsupported!")
-        return self
+            return self
+        raise NotImplementedError(f"Assignment to {left.__class__.__name__} is unsupported!")
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'IntervalState':
@@ -238,9 +238,8 @@ class IntervalState(Store, State):
             refinement = evaluation[right].meet(value)
             # refine the updated store proceeding top-down on the right-hand side
             self._refinement.visit(right, evaluation, refinement, self)
-        else:
-            raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
-        return self
+            return self
+        raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
 
     # expression evaluation
 
@@ -316,11 +315,12 @@ class IntervalState(Store, State):
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.expression, state, evaluation)
             if expr.operator == UnaryArithmeticOperation.Operator.Add:
+                evaluated[expr] = evaluated[expr.expression]
                 return evaluated
             elif expr.operator == UnaryArithmeticOperation.Operator.Sub:
                 evaluated[expr] = deepcopy(evaluated[expr.expression]).neg()
                 return evaluated
-            raise ValueError(f"Unary operator '{expr.operator}' is unsupported!")
+            raise ValueError(f"Unary arithmetic operator '{expr.operator}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
         def visit_UnaryBooleanOperation(self, expr, state=None, evaluation=None):
@@ -339,8 +339,7 @@ class IntervalState(Store, State):
                     elif value == IntervalLattice(0, 0):
                         evaluated[expr] = IntervalLattice(1, 1)
                         return evaluated
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            raise ValueError(f"Unary boolean operator '{expr.operator}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
         def visit_BinaryArithmeticOperation(self, expr, state=None, evaluation=None):
@@ -357,7 +356,7 @@ class IntervalState(Store, State):
             elif expr.operator == BinaryArithmeticOperation.Operator.Mult:
                 evaluated2[expr] = deepcopy(evaluated2[expr.left]).mult(evaluated2[expr.right])
                 return evaluated2
-            raise ValueError(f"Binary operator '{str(expr.operator)}' is unsupported!")
+            raise ValueError(f"Binary arithmetic operator '{str(expr.operator)}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
         def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
@@ -371,19 +370,14 @@ class IntervalState(Store, State):
 
     _evaluation = ExpressionEvaluation()    # static class member shared between all instances
 
+    # expression refinement
+
     class ArithmeticExpressionRefinement(ExpressionVisitor):
         """Visitor that:
 
         (1) refines the value of an evaluated arithmetic expression based on a given interval; and
         (2) modifies the current state based on the refined value of the arithmetic expression.
         """
-        def visit(self, expr: Expression, *args, **kwargs):
-            """Visit of an evaluated expression."""
-            method = 'visit_' + expr.__class__.__name__
-            if hasattr(self, method):
-                return getattr(self, method)(expr, *args, **kwargs)
-            raise NotImplementedError(
-                f"Missing visitor for {expr.__class__.__name__} in {self.__class__.__qualname__}!")
 
         @copy_docstring(ExpressionVisitor.visit_Literal)
         def visit_Literal(self, expr: Literal, evaluation=None, value=None, state=None):

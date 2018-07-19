@@ -111,13 +111,14 @@ class LivenessState(Store, State):
     .. automethod:: LivenessState._output
     .. automethod:: LivenessState._substitute
     """
-    def __init__(self, variables: Set[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to its liveness status.
 
-        :param variables: list of program variables
+        :param variables: set of program variables
         """
         lattices = defaultdict(lambda: LivenessLattice)
         super().__init__(variables, lattices)
+        State.__init__(self, precursory)
 
     @copy_docstring(Store.is_bottom)
     def is_bottom(self) -> bool:

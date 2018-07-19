@@ -12,7 +12,7 @@ from copy import deepcopy
 from enum import IntEnum
 from typing import Set
 
-from lyra.abstract_domains.assumption.assumption_domain import InputMixin
+from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONMixin
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
@@ -24,7 +24,7 @@ from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyr
 from lyra.core.utils import copy_docstring
 
 
-class TypeLattice(BottomMixin, ArithmeticMixin):
+class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
     """Type Lattice::
 
         String
@@ -289,6 +289,23 @@ class TypeLattice(BottomMixin, ArithmeticMixin):
             return self.bottom()
         return self._replace(TypeLattice(max(self.element, other.element)))
 
+    @copy_docstring(JSONMixin.to_json)
+    def to_json(self) -> str:
+        return str(self)
+
+    @staticmethod
+    @copy_docstring(JSONMixin.from_json)
+    def from_json(json: str) -> 'JSONMixin':
+        if json == '⊥':
+            return TypeLattice().bottom()
+        if json == 'Boolean':
+            return TypeLattice(TypeLattice.Status.Boolean)
+        elif json == 'Integer':
+            return TypeLattice(TypeLattice.Status.Integer)
+        elif json == 'Float':
+            return TypeLattice(TypeLattice.Status.Float)
+        return TypeLattice()
+
 
 class TypeState(Store, InputMixin):
     """Type assumption analysis state. An element of the type assumption abstract domain.
@@ -308,10 +325,10 @@ class TypeState(Store, InputMixin):
     .. automethod:: TypeState._assume
     .. automethod:: TypeState._substitute
     """
-    def __init__(self, variables: Set[VariableIdentifier]):
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to the type representing its value.
 
-        :param variables: list of program variables
+        :param variables: set of program variables
         """
         lattices = defaultdict(lambda: TypeLattice)
         arguments = defaultdict(lambda: {'type_status': TypeLattice.Status.String})
@@ -319,6 +336,7 @@ class TypeState(Store, InputMixin):
         arguments[IntegerLyraType()] = {'type_status': TypeLattice.Status.Integer}
         arguments[FloatLyraType()] = {'type_status': TypeLattice.Status.Float}
         super().__init__(variables, lattices, arguments)
+        InputMixin.__init__(self, precursory)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'TypeState':

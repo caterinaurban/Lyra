@@ -109,16 +109,16 @@ class CharacterDomain(Store, InputMixin):
         pass
 
     def enter_if(self) -> 'State':
-        pass
+        return self
 
     def exit_if(self) -> 'State':
-        pass
+        return self
 
     def enter_loop(self) -> 'State':
-        pass
+        return self
 
     def exit_loop(self) -> 'State':
-        pass
+        return self
 
     def _output(self, output: Expression) -> 'State':
         return self
