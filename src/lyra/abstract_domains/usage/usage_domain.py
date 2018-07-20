@@ -31,10 +31,10 @@ class UsageStore(Store):
     .. automethod:: UsageStore._meet
     .. automethod:: UsageStore._join
     """
-    def __init__(self, variables: Set[VariableIdentifier], lattices: Dict[LyraType, Type[Lattice]]):
+    def __init__(self, variables, lattices: Dict[LyraType, Type[Lattice]]):
         """Map each program variable to its usage status.
 
-        :param variables: list of program variables
+        :param variables: set of program variables
         :param lattices: dictionary from variable types to the corresponding lattice types
         """
         super().__init__(variables, lattices)
@@ -83,7 +83,7 @@ class SimpleUsageStore(UsageStore):
     def __init__(self, variables: Set[VariableIdentifier]):
         """Map each program variable to its usage status.
 
-        :param variables: list of program variables
+        :param variables: set of program variables
         """
         lattices = defaultdict(lambda: UsageLattice)
         super().__init__(variables, lattices)

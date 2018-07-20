@@ -6,6 +6,6 @@ if x < 3:
 
 pass  # without this, comment is interpreted to be inside if :(
 
-# RESULT: a≤2, -x+a≤0
+# STATE: a≤2, -x+a≤0
 
 print(a)

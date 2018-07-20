@@ -114,7 +114,7 @@ class LivenessState(Store, State):
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to its liveness status.
 
-        :param variables: list of program variables
+        :param variables: set of program variables
         """
         lattices = defaultdict(lambda: LivenessLattice)
         super().__init__(variables, lattices)

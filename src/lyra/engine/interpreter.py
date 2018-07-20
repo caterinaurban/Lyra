@@ -15,7 +15,7 @@ from lyra.semantics.semantics import Semantics
 
 
 class Interpreter(metaclass=ABCMeta):
-    def __init__(self, cfg: ControlFlowGraph, semantics, widening, precursory = None):
+    def __init__(self, cfg: ControlFlowGraph, semantics, widening, precursory=None):
         """Control flow graph interpreter.
         
         :param cfg: control flow graph to analyze

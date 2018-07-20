@@ -189,8 +189,8 @@ class NegationFreeNormalExpression(ExpressionVisitor):
 
     1. removes negations using De Morgan's law, and
 
-    2. puts in the normal form ``expr <= 0``
-    all boolean comparison operations with ``=``, ``!=``, ``<``, ``<=``, ``>``, and ``>=`` .
+    2. puts all boolean comparison operations with ``=``, ``!=``, ``<``, ``<=``, ``>``, and ``>=``
+       in the normal form ``expr <= 0``.
     """
 
     @copy_docstring(ExpressionVisitor.visit_Literal)
