@@ -446,7 +446,7 @@ class SignState(Store, State):
             raise ValueError(f"Binary arithmetic operator {expr.operator} is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
-        def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
+        def visit_BinaryBooleanOperation(self, expr: BinaryBooleanOperation, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation
             evaluation1 = self.visit(expr.left, state, evaluation)
