@@ -29,4 +29,4 @@ jobs:
       name: "PEP 8 Coding Style"
       script:
         - cd ../../
-        - pycodestyle
+        - pycodestyle --filename=*.py .
