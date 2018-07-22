@@ -377,7 +377,8 @@ class CFGVisitor(ast.NodeVisitor):
             dummy = _dummy(self._id_gen)
             body_cfg.add_node(dummy)
 
-            # add a new IF_OUT edge where the special edge is at the moment, ending in new dummy node
+            # add a new IF_OUT edge where the special edge is at the moment, ending in
+            # new dummy node
             body_cfg.add_edge(Unconditional(special_edge.source, dummy, Edge.Kind.IF_OUT))
 
             # change position of special edge to be AFTER the new dummy
@@ -570,7 +571,8 @@ class CFGVisitor(ast.NodeVisitor):
         print(type(node).__name__)
         super().generic_visit(node)
 
-    def _translate_body(self, body, types, allow_loose_in_edges=False, allow_loose_out_edges=False):
+    def _translate_body(self, body, types, allow_loose_in_edges=False,
+                        allow_loose_out_edges=False):
         cfg_factory = CFGFactory(self._id_gen)
 
         for child in body:
