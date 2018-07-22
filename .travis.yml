@@ -29,4 +29,4 @@ jobs:
       name: "PEP 8 Coding Style"
       script:
         - cd ../../
-        - pycodestyle --filename=*.py .
+        - pycodestyle --count --filename=*.py --exclude=lyra/unittests/assumption/repeat.py --ignore=W605 --max-line-length=99 --show-source .
