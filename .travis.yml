@@ -2,19 +2,19 @@
 language: python
 python:
   - "3.6"
-# command to install dependencies
+before_install:
+  - sudo apt-get install graphviz
 install:
   - pip install -r requirements.txt
-# command to run tests
 script:
   - cd src/lyra/unittests/
   - PYTHONPATH="${PYTHONPATH}:../../"
   - export PYTHONPATH
-  - python3 test_SignLattice.py
-  - python3 test_IntervalLattice.py
-  - python3 test_UsageLattice.py
-  - python3 sign_tests.py
-  - python3 interval_tests.py
-  - python3 liveness_tests.py
-  - python3 usage_tests.py
-  - python3 assumption_tests.py
+  - python test_SignLattice.py
+  - python test_IntervalLattice.py
+  - python test_UsageLattice.py
+  - python sign_tests.py
+  - python interval_tests.py
+  - python liveness_tests.py
+  - python usage_tests.py
+  - python assumption_tests.py
