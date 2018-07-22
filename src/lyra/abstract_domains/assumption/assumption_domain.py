@@ -218,7 +218,8 @@ class AssumptionState(State):
 
             @copy_docstring(BottomMixin.is_top)
             def is_top(self) -> bool:
-                def is_star(constraint): return isinstance(constraint, tuple) and not constraint
+                def is_star(constraint):
+                    return isinstance(constraint, tuple) and not constraint
                 multiplier = self.multiplier
                 one = isinstance(multiplier, Literal) and multiplier.val == "1"
                 single = len(self.constraints) == 1

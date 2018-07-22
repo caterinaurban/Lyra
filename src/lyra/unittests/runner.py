@@ -114,7 +114,7 @@ class TestRunner(unittest.TestCase, Runner, metaclass=ABCMeta):
             for i, stmt in enumerate(node.stmts):
                 current = stmt.pp.line - line
                 if abs(current) < distance:
-                    actual = states[i+1] if current < 0 else states[i]
+                    actual = states[i + 1] if current < 0 else states[i]
                     distance = abs(current)
         return actual
 

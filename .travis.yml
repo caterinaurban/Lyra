@@ -8,6 +8,7 @@ install:
   - pip install -r requirements.txt
 stages:
   - unittests
+  - linter
 jobs:
   include:
     - stage: unittests
@@ -24,3 +25,8 @@ jobs:
         - python liveness_tests.py
         - python usage_tests.py
         - python assumption_tests.py
+    - stage: linter
+      name: "PEP 8 Coding Style"
+      script:
+        - cd ../../
+        - pycodestyle

@@ -460,7 +460,7 @@ class SignState(Store, State):
             raise ValueError("Binary operator {expr.operator} is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
-        def visit_BinaryComparisonOperation(self,  expr, state=None, evaluation=None):
+        def visit_BinaryComparisonOperation(self, expr, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 

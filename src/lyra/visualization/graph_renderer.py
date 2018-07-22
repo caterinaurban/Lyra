@@ -42,7 +42,11 @@ class GraphRenderer(metaclass=ABCMeta):
     @staticmethod
     def _escape_label(label):
         """Escape special characters in DOT label."""
-        return label.replace("\\", "\\\\").replace("|", "\\|").replace("<", "\\<").replace(">", "\\>")
+        escaped = label.replace("\\", "\\\\")
+        escaped = escaped.replace("|", "\\|")
+        escaped = escaped.replace("<", "\\<")
+        escaped = escaped.replace(">", "\\>")
+        return escaped
 
     def _shorten_label(self, label):
         """Shorten long labels."""
@@ -57,7 +61,8 @@ class GraphRenderer(metaclass=ABCMeta):
         table = '<<table border="0" cellborder="0">{}</table>>'     # table HTML format
         row = '<tr><td align="center">{}</td></tr>'                 # row HTML format
         escape_function = html.escape if escape else lambda x: x
-        return table.format("\n".join(map(row.format, map(lambda x: escape_function(str(x)), lst or [""]))))
+        rows = "\n".join(map(row.format, map(lambda x: escape_function(str(x)), lst or [""])))
+        return table.format(rows)
 
     @abstractmethod
     def _render(self, data):
