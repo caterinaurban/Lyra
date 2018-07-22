@@ -28,5 +28,5 @@ jobs:
     - stage: linter
       name: "PEP 8 Coding Style"
       script:
-        - cd ../../
-        - pycodestyle --count --filename=*.py --exclude=lyra/unittests/assumption/repeat.py --ignore=W605 --max-line-length=99 --show-source .
+        - cd src/
+        - pycodestyle --filename=*.py .
