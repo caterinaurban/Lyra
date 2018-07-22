@@ -47,13 +47,13 @@ class Node(metaclass=ABCMeta):
     @abstractmethod
     def __str__(self):
         """Node string representation.  
-        
+
         :return: string representing the node
         """
 
     def size(self):
         """Number of statements stored in the node.
-        
+
         :return: number of statements stored in the node 
         """
         return len(self.stmts)
@@ -62,7 +62,7 @@ class Node(metaclass=ABCMeta):
 class Basic(Node):
     def __init__(self, identifier: int, stmts: List[Statement] = None):
         """Basic node of a control flow graph.
-        
+
         :param identifier: identifier associated with the node  
         :param stmts: list of statements stored in the node 
         """
@@ -96,7 +96,7 @@ class Edge(metaclass=ABCMeta):
 
     def __init__(self, source: Node, target: Node, kind: Kind = Kind.DEFAULT):
         """Edge of a control flow graph.
-        
+
         :param source: source node of the edge
         :param target: target node of the edge
         :param kind: kind of the edge
@@ -154,7 +154,7 @@ class Unconditional(Edge):
 class Conditional(Edge):
     def __init__(self, source: Union[Node, None], condition: Statement, target: Union[Node, None], kind=Edge.Kind.DEFAULT):
         """Conditional edge of a control flow graph.
-        
+
         :param source: source node of the edge
         :param target: target node of the edge
         :param condition: condition associated with the edge
@@ -174,7 +174,7 @@ class Conditional(Edge):
 class ControlFlowGraph:
     def __init__(self, nodes: Set[Node], in_node: Node, out_node: Node, edges: Set[Edge]):
         """Control flow graph representation.
-        
+
         :param nodes: set of nodes of the control flow graph
         :param in_node: entry node of the control flow graph
         :param out_node: exit node of the control flow graph
@@ -203,7 +203,7 @@ class ControlFlowGraph:
 
     def in_edges(self, node: Node) -> Set[Edge]:
         """Ingoing edges of a given node.
-        
+
         :param node: given node
         :return: set of ingoing edges of the node
         """
@@ -227,7 +227,7 @@ class ControlFlowGraph:
 
     def successors(self, node: Node) -> Set[Node]:
         """Successors of a given node.
-        
+
         :param node: given node
         :return: set of successors of the node
         """

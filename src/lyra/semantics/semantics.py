@@ -43,7 +43,7 @@ class Semantics:
 
     def semantics(self, stmt: Statement, state: State) -> State:
         """Semantics of a statement.
-        
+
         :param stmt: statement to be executed
         :param state: state before executing the statement
         :return: state modified by the statement execution
@@ -61,7 +61,7 @@ class ExpressionSemantics(Semantics):
     # noinspection PyMethodMayBeStatic
     def literal_evaluation_semantics(self, stmt: LiteralEvaluation, state: State) -> State:
         """Semantics of a literal evaluation.
-        
+
         :param stmt: literal evaluation statement to be executed
         :param state: state before executing the literal evaluation
         :return: stated modified by the literal evaluation
@@ -72,7 +72,7 @@ class ExpressionSemantics(Semantics):
     # noinspection PyMethodMayBeStatic
     def variable_access_semantics(self, stmt: VariableAccess, state: State) -> State:
         """Semantics of a variable access.
-        
+
         :param stmt: variable access statement to be executed
         :param state: state before executing the variable access
         :return: state modified by the variable access
@@ -135,7 +135,7 @@ class CallSemantics(Semantics):
 
     def call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a function/method call.
-        
+
         :param stmt: call statement to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -232,7 +232,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def print_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'print'.
-        
+
         :param stmt: call to 'print' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -297,7 +297,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def not_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to '!' (negation).
-        
+
         :param stmt: call to '!' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -354,7 +354,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def add_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to '+' (addition, not concatenation).
-        
+
         :param stmt: call to '+' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -363,7 +363,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def sub_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to '-' (subtraction).
-        
+
         :param stmt: call to '-' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -381,7 +381,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def div_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to '/' (division).
-        
+
         :param stmt: call to '/' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -390,7 +390,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def eq_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to '==' (equality).
-        
+
         :param stmt: call to '==' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -399,7 +399,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def noteq_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to '!=' (inequality).
-        
+
         :param stmt: call to '!=' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement 
@@ -408,7 +408,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def lt_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to '<' (less than).
-        
+
         :param stmt: call to '<' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -417,7 +417,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def lte_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to '<=' (less than or equal to).
-        
+
         :param stmt: call to '<=' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -426,7 +426,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def gt_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to '>' (greater than).
-        
+
         :param stmt: call to '>' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -435,7 +435,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def gte_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to '>=' (greater than or equal to).
-        
+
         :param stmt: call to '>=' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement"""
@@ -443,7 +443,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def is_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'is' (identity).
-        
+
         :param stmt: call to 'is' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -452,7 +452,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def isnot_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'is not' (mismatch).
-        
+
         :param stmt: call to 'is not' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -461,7 +461,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def in_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'in' (membership).
-        
+
         :param stmt: call to 'is' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -470,7 +470,7 @@ class BuiltInCallSemantics(CallSemantics):
 
     def notin_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'not in' (non-membership).
-        
+
         :param stmt: call to 'not in' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement

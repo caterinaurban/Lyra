@@ -17,7 +17,7 @@ from lyra.core.types import LyraType
 class ProgramPoint:
     def __init__(self, line: int, column: int):
         """Program point representation.
-        
+
         :param line: line of the program
         :param column: column of the program
         """
@@ -54,9 +54,10 @@ class Statement(metaclass=ABCMeta):
 
     https://docs.python.org/3.4/reference/simple_stmts.html
     """
+
     def __init__(self, pp: ProgramPoint):
         """Statement construction.
-        
+
         :param pp: program point associated with the statement  
         """
         self._pp = pp
@@ -68,7 +69,7 @@ class Statement(metaclass=ABCMeta):
     @abstractmethod
     def __repr__(self):
         """Unambiguous string representation of the statement.
-        
+
         :return: string representing the statement
         """
 
@@ -81,6 +82,7 @@ https://docs.python.org/3.4/reference/simple_stmts.html#expression-statements
 
 class LiteralEvaluation(Statement):
     """Literal evaluation expression."""
+
     def __init__(self, pp: ProgramPoint, literal: Expression):
         """Literal evaluation construction.
 
@@ -105,6 +107,7 @@ class ExpressionAccess(Statement, metaclass=ABCMeta):
 
 class VariableAccess(ExpressionAccess):
     """Variable access representation."""
+
     def __init__(self, pp: ProgramPoint, variable: VariableIdentifier):
         """Variable access construction.
 
@@ -124,6 +127,7 @@ class VariableAccess(ExpressionAccess):
 
 class ListDisplayAccess(ExpressionAccess):
     """List display access representation."""
+
     def __init__(self, pp: ProgramPoint, items: List[Statement]):
         """List display access construction.
 
@@ -143,6 +147,7 @@ class ListDisplayAccess(ExpressionAccess):
 
 class SubscriptionAccess(ExpressionAccess):
     """Subscription access representation."""
+
     def __init__(self, pp: ProgramPoint, target: Statement, key: Statement):
         """Subscription access construction.
 
@@ -168,6 +173,7 @@ class SubscriptionAccess(ExpressionAccess):
 
 class SlicingAccess(ExpressionAccess):
     """Slicing access representation."""
+
     def __init__(self, pp: ProgramPoint, target: Statement,
                  lower: Statement, upper: Statement, stride: Statement = None):
         super().__init__(pp)
@@ -201,7 +207,7 @@ class SlicingAccess(ExpressionAccess):
 class Call(Statement):
     def __init__(self, pp: ProgramPoint, name: str, arguments: List[Statement], typ: LyraType):
         """Call statement representation.
-        
+
         :param pp: program point associated with the call
         :param name: name of the function/method being called
         :param arguments: list of arguments of the call
@@ -258,7 +264,7 @@ https://docs.python.org/3.4/reference/simple_stmts.html#assignment-statements
 
 class Assignment(Statement):
     """Assignment Statements.
-    
+
     https://docs.python.org/3.4/reference/simple_stmts.html#assignment-statements
     """
 

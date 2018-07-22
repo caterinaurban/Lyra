@@ -25,7 +25,7 @@ class UserDefinedCallSemantics(BackwardSemantics):
     # noinspection PyUnusedLocal
     def user_defined_call_semantics(self, stmt: Call, state: State):
         """Backward semantics of a user-defined function/method call.
-        
+
         :param stmt: call statement to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement

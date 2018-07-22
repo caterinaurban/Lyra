@@ -41,6 +41,7 @@ class TestRunner(unittest.TestCase, Runner, metaclass=ABCMeta):
 
     These will be checked after the analysis.
     """
+
     def __init__(self, path):
         super().__init__()
         self.path = path

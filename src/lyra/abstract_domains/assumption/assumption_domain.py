@@ -501,6 +501,7 @@ class AssumptionState(State):
 
                 L.1 - 3 * L.2
             """
+
             def __init__(self, pp: ProgramPoint):
                 self._pp = pp
                 self._nonce = 0
@@ -736,6 +737,7 @@ class TypeRangeAssumptionState(AssumptionState):
     .. automethod:: AssumptionState._assume
     .. automethod:: AssumptionState._substitute
     """
+
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         from lyra.abstract_domains.assumption.type_domain import TypeState
         from lyra.abstract_domains.assumption.range_domain import RangeState

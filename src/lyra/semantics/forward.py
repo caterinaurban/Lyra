@@ -39,7 +39,7 @@ class AssignmentSemantics(ForwardSemantics):
 
     def assignment_semantics(self, stmt: Assignment, state: State) -> State:
         """Forward semantics of an assignment. 
-        
+
         :param stmt: assignment statement to be executed
         :param state: state before executing the assignment
         :return: state modified by the assignment

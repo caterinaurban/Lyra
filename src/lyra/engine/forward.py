@@ -20,6 +20,7 @@ from lyra.core.cfg import Basic, Loop, Conditional, Edge, Node
 
 class ForwardInterpreter(Interpreter):
     """Forward control flow graph interpreter."""
+
     def __init__(self, cfg, semantics: ForwardSemantics, widening, precursory=None):
         """Forward control flow graph interpreter construction.
 

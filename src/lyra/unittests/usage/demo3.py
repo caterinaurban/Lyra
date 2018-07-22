@@ -13,4 +13,3 @@ if 3 > x:  # x decision
 else:
     a: int = 20
 print(a)
-

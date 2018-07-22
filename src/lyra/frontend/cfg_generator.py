@@ -12,7 +12,8 @@ from lyra.visualization.graph_renderer import CfgRenderer
 
 
 def main(args):
-    optparser = optparse.OptionParser(usage="python3.6 -m frontend.cfg_generator [options] [string]")
+    optparser = optparse.OptionParser(
+        usage="python3.6 -m frontend.cfg_generator [options] [string]")
     optparser.add_option("-f", "--file",
                          help="Read a code snippet from the specified file")
     optparser.add_option("-l", "--label",
@@ -155,7 +156,8 @@ class LooseControlFlowGraph:
 
     def append(self, other):
         assert not (self.loose_out_edges and other.loose_in_edges)
-        assert not self.both_loose_edges or (not other.loose_in_edges and not other.both_loose_edges)
+        assert not self.both_loose_edges or (
+            not other.loose_in_edges and not other.both_loose_edges)
 
         self.nodes.update(other.nodes)
         self.edges.update(other.edges)
@@ -165,14 +167,16 @@ class LooseControlFlowGraph:
             edge_added = True
             for e in self.loose_out_edges:
                 e._target = other.in_node
-                self.edges[(e.source, e.target)] = e  # updated/created edge is not yet in edge dict -> add
+                # updated/created edge is not yet in edge dict -> add
+                self.edges[(e.source, e.target)] = e
             # clear loose edge sets
             self._loose_out_edges = set()
         elif other.loose_in_edges:
             edge_added = True
             for e in other.loose_in_edges:
                 e._source = self.out_node
-                self.edges[(e.source, e.target)] = e  # updated/created edge is not yet in edge dict -> add
+                # updated/created edge is not yet in edge dict -> add
+                self.edges[(e.source, e.target)] = e
             # clear loose edge set
             other._loose_in_edges = set()
 
@@ -193,7 +197,8 @@ class LooseControlFlowGraph:
         if not edge_added:
             # neither of the CFGs has loose ends -> add unconditional edge
             e = Unconditional(self.out_node, other.in_node)
-            self.edges[(e.source, e.target)] = e  # updated/created edge is not yet in edge dict -> add
+            # updated/created edge is not yet in edge dict -> add
+            self.edges[(e.source, e.target)] = e
 
         # in any case, transfer loose_out_edges of other to self
         self.loose_out_edges.update(other.loose_out_edges)
@@ -204,7 +209,8 @@ class LooseControlFlowGraph:
 
     def eject(self) -> ControlFlowGraph:
         if self.loose():
-            raise TypeError('This control flow graph is still loose and can not eject a complete control flow graph!')
+            raise TypeError(
+                'This control flow graph is still loose and can not eject a complete control flow graph!')
         return self._cfg
 
     def replace(self, other):
@@ -339,7 +345,8 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_Module(self, node, types=None, typ=None):
         start_cfg = _dummy_cfg(self._id_gen)
-        body_cfg = self._translate_body(node.body, types, allow_loose_in_edges=True, allow_loose_out_edges=True)
+        body_cfg = self._translate_body(
+            node.body, types, allow_loose_in_edges=True, allow_loose_out_edges=True)
         end_cfg = _dummy_cfg(self._id_gen)
         if body_cfg is None:
             return start_cfg.append(end_cfg)
@@ -461,7 +468,8 @@ class CFGVisitor(ast.NodeVisitor):
         # the type of the special edge is not yet known, may be also an IF_OUT first, before LOOP_OUT
         # so set type to DEFAULT for now but remember the special type of this edge separately
         cfg.special_edges.append(
-            (Unconditional(dummy, None, Edge.Kind.DEFAULT), LooseControlFlowGraph.SpecialEdgeType.BREAK)
+            (Unconditional(dummy, None, Edge.Kind.DEFAULT),
+             LooseControlFlowGraph.SpecialEdgeType.BREAK)
         )
         return cfg
 
@@ -471,7 +479,8 @@ class CFGVisitor(ast.NodeVisitor):
         # the type of the special edge is not yet known, may be also an IF_OUT first, before LOOP_OUT
         # so set type to DEFAULT for now but remember the special type of this edge separately
         cfg.special_edges.append(
-            (Unconditional(dummy, None, Edge.Kind.DEFAULT), LooseControlFlowGraph.SpecialEdgeType.CONTINUE)
+            (Unconditional(dummy, None, Edge.Kind.DEFAULT),
+             LooseControlFlowGraph.SpecialEdgeType.CONTINUE)
         )
         return cfg
 
@@ -517,10 +526,11 @@ class CFGVisitor(ast.NodeVisitor):
             pp = ProgramPoint(node.lineno, node.col_offset)
             expr = Literal(BooleanLyraType(), str(node.value))
             return LiteralEvaluation(pp, expr)
-        raise NotImplementedError(f"Name constant {node.value.__class__.__name__} is not yet supported!")
+        raise NotImplementedError(
+            f"Name constant {node.value.__class__.__name__} is not yet supported!")
 
     def visit_Expr(self, node, types=None, typ=None):
-            return self.visit(node.value, types, typ)
+        return self.visit(node.value, types, typ)
 
     def visit_Call(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
@@ -543,11 +553,12 @@ class CFGVisitor(ast.NodeVisitor):
             return SubscriptionAccess(pp, target, key)
         elif isinstance(node.slice, ast.Slice):
             return SlicingAccess(pp, self.visit(node.value, types, typ),
-                             self.visit(node.slice.lower, types, typ),
-                             self.visit(node.slice.upper, types, typ),
-                             self.visit(node.slice.step, types, typ) if node.slice.step else None)
+                                 self.visit(node.slice.lower, types, typ),
+                                 self.visit(node.slice.upper, types, typ),
+                                 self.visit(node.slice.step, types, typ) if node.slice.step else None)
         else:
-            raise NotImplementedError(f"The statement {str(type(node.slice))} is not yet translatable to CFG!")
+            raise NotImplementedError(
+                f"The statement {str(type(node.slice))} is not yet translatable to CFG!")
 
     def visit(self, node, *args, **kwargs):
         """Visit a node."""
@@ -591,7 +602,8 @@ class CFGVisitor(ast.NodeVisitor):
                 else:
                     cfg_factory.append_cfg(_dummy_cfg(self._id_gen))
             else:
-                raise NotImplementedError(f"The statement {str(type(child))} is not yet translatable to CFG!")
+                raise NotImplementedError(
+                    f"The statement {str(type(child))} is not yet translatable to CFG!")
         cfg_factory.complete_basic_block()
 
         if not allow_loose_in_edges and cfg_factory.cfg and cfg_factory.cfg.loose_in_edges:
