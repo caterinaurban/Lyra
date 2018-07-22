@@ -19,7 +19,7 @@ class Node(metaclass=ABCMeta):
         """Node of a control flow graph.
 
         :param identifier: identifier associated with the node
-        :param stmts: list of statements stored in the node 
+        :param stmts: list of statements stored in the node
         """
         self._identifier = identifier
         self._stmts = stmts
@@ -46,7 +46,7 @@ class Node(metaclass=ABCMeta):
 
     @abstractmethod
     def __str__(self):
-        """Node string representation.  
+        """Node string representation.
 
         :return: string representing the node
         """
@@ -54,7 +54,7 @@ class Node(metaclass=ABCMeta):
     def size(self):
         """Number of statements stored in the node.
 
-        :return: number of statements stored in the node 
+        :return: number of statements stored in the node
         """
         return len(self.stmts)
 
@@ -63,8 +63,8 @@ class Basic(Node):
     def __init__(self, identifier: int, stmts: List[Statement] = None):
         """Basic node of a control flow graph.
 
-        :param identifier: identifier associated with the node  
-        :param stmts: list of statements stored in the node 
+        :param identifier: identifier associated with the node
+        :param stmts: list of statements stored in the node
         """
         super().__init__(identifier, stmts or [])
 
@@ -76,8 +76,8 @@ class Loop(Node):
     def __init__(self, identifier: int, stmts: List[Statement] = None):
         """Loop head node of a control flow graph.
 
-        :param identifier: identifier associated with the block  
-        :param stmts: list of statements stored in the block 
+        :param identifier: identifier associated with the block
+        :param stmts: list of statements stored in the block
         """
         super().__init__(identifier, stmts or [])
 
@@ -131,7 +131,7 @@ class Edge(metaclass=ABCMeta):
 
     @abstractmethod
     def __str__(self):
-        """Edge string representation.  
+        """Edge string representation.
 
         :return: string representing the edge
         """

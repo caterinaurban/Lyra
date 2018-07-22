@@ -24,7 +24,7 @@ class ForwardInterpreter(Interpreter):
     def __init__(self, cfg, semantics: ForwardSemantics, widening, precursory=None):
         """Forward control flow graph interpreter construction.
 
-        :param cfg: control flow graph to analyze 
+        :param cfg: control flow graph to analyze
         :param semantics: semantics of statements in the control flow graph
         :param widening: number of iterations before widening
         :param precursory: precursory control flow graph interpreter

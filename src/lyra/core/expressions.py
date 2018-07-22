@@ -664,7 +664,7 @@ class UnaryOperation(Operation):
 
         :param typ: type of the operation
         :param operator: operator of the operation
-        :param expression: expression of the operation 
+        :param expression: expression of the operation
         """
         super().__init__(typ)
         self._operator = operator
@@ -716,7 +716,7 @@ class UnaryArithmeticOperation(UnaryOperation):
 
         :param typ: type of the operation
         :param operator: operator of the operation
-        :param expression: expression of the operation 
+        :param expression: expression of the operation
         """
         super().__init__(typ, operator, expression)
 
@@ -740,7 +740,7 @@ class UnaryBooleanOperation(UnaryOperation):
 
         :param typ: type of the operation
         :param operator: operator of the operation
-        :param expression: expression of the operation 
+        :param expression: expression of the operation
         """
         super().__init__(typ, operator, expression)
 

@@ -28,7 +28,7 @@ _all2 = re.compile('([a-z0-9])([A-Z])')
 def camel_to_snake(name: str) -> str:
     """Convert CamelCase to snake_case
 
-    :param name: name in CamelCase 
+    :param name: name in CamelCase
     :return: name in snake_case
     """
     subbed = _first1.sub(r'\1_\2', name)
@@ -402,7 +402,7 @@ class BuiltInCallSemantics(CallSemantics):
 
         :param stmt: call to '!=' to be executed
         :param state: state before executing the call statement
-        :return: state modified by the call statement 
+        :return: state modified by the call statement
         """
         return self._binary_operation(stmt, BinaryComparisonOperation.Operator.NotEq, state)
 

@@ -38,7 +38,7 @@ class AssignmentSemantics(BackwardSemantics):
     """Backward semantics of assignments."""
 
     def assignment_semantics(self, stmt: Assignment, state: State) -> State:
-        """Backward semantics of an assignment. 
+        """Backward semantics of an assignment.
 
         :param stmt: assignment statement to be executed
         :param state: state before executing the assignment

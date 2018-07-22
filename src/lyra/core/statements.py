@@ -58,7 +58,7 @@ class Statement(metaclass=ABCMeta):
     def __init__(self, pp: ProgramPoint):
         """Statement construction.
 
-        :param pp: program point associated with the statement  
+        :param pp: program point associated with the statement
         """
         self._pp = pp
 
