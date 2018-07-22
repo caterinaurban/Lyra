@@ -325,6 +325,7 @@ class TypeState(Store, InputMixin):
     .. automethod:: TypeState._assume
     .. automethod:: TypeState._substitute
     """
+
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to the type representing its value.
 
@@ -586,6 +587,7 @@ class TypeState(Store, InputMixin):
         (1) refines the value of an evaluated arithmetic expression based on a given interval; and
         (2) modifies the current state based on the refined value of the arithmetic expression.
         """
+
         def visit(self, expr: Expression, *args, **kwargs):
             """Visit of an evaluated expression."""
             method = 'visit_' + expr.__class__.__name__

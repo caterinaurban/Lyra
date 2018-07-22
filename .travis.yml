@@ -8,7 +8,7 @@ install:
   - pip install -r requirements.txt
 stages:
   - unittests
-  - dummy
+  - linter
 jobs:
   include:
     - stage: unittests
@@ -25,9 +25,8 @@ jobs:
         - python liveness_tests.py
         - python usage_tests.py
         - python assumption_tests.py
-    - stage: dummy
+    - stage: linter
+      name: "PEP 8 Coding Style"
       script:
-        - cd src/lyra/unittests/
-        - PYTHONPATH="${PYTHONPATH}:../../"
-        - export PYTHONPATH
-
+        - cd ../../
+        - pycodestyle

@@ -6,7 +6,8 @@ from lyra.visualization.graph_renderer import ListDictTreeRenderer
 
 
 def main(args):
-    optparser = optparse.OptionParser(usage="python3.6 -m visualization.ast_visualizer [options] [string]")
+    optparser = optparse.OptionParser(
+        usage="python3.6 -m visualization.ast_visualizer [options] [string]")
     optparser.add_option("-f", "--file",
                          help="Read a code snippet from the specified file")
     optparser.add_option("-l", "--label",
