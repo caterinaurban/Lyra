@@ -10,9 +10,9 @@ script:
   - cd src/lyra/unittests/
   - PYTHONPATH="${PYTHONPATH}:../../"
   - export PYTHONPATH
-  - python test_SignLattice.py
-  - python test_IntervalLattice.py
-  - python test_UsageLattice.py
+  - python -m unittest test_SignLattice.py
+  - python -m unittest test_IntervalLattice.py
+  - python -m unittest test_UsageLattice.py
   - python sign_tests.py
   - python interval_tests.py
   - python liveness_tests.py
