@@ -20,4 +20,4 @@ if not math:
     passing: bool = False or bonus   # error: *math* should be *science*
 # STATE: bonus -> Dead, english -> Dead, math -> Dead, passing -> Live, science -> Dead
 print(passing)
-# FINAL: bonus -> Dead, english -> Dead, math -> Dead, passing -> Dead, science -> Dead
+# FINAL: bonus -> Dead, english -> Dead, math -> Dead, passing -> Dead, science -> Live
