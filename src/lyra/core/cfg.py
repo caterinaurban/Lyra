@@ -138,8 +138,7 @@ class Edge(metaclass=ABCMeta):
 
 
 class Unconditional(Edge):
-    def __init__(self, source: Union[Node, None],
-                 target: Union[Node, None], kind=Edge.Kind.DEFAULT):
+    def __init__(self, source: Union[Node, None], target: Union[Node, None], kind=Edge.Kind.DEFAULT):
         """Unconditional edge of a control flow graph.
 
         :param source: source node of the edge
@@ -153,8 +152,7 @@ class Unconditional(Edge):
 
 
 class Conditional(Edge):
-    def __init__(self, source: Union[Node, None], condition: Statement,
-                 target: Union[Node, None], kind=Edge.Kind.DEFAULT):
+    def __init__(self, source: Union[Node, None], condition: Statement, target: Union[Node, None], kind=Edge.Kind.DEFAULT):
         """Conditional edge of a control flow graph.
 
         :param source: source node of the edge
