@@ -4,6 +4,8 @@
   <img src ="https://raw.githubusercontent.com/caterinaurban/Lyra/master/lyra.png" width="25%"/>
 </p>
 
+[![Build Status](https://travis-ci.org/caterinaurban/Lyra.svg?branch=master)](https://travis-ci.org/caterinaurban/Lyra)
+
 Lyra is a prototype static analyzer for data science applications written in **Python**. 
 The purpose of Lyra is to provide confidence in the behavior of these applications,
 which nowadays play an increasingly important role 
@@ -118,3 +120,6 @@ Lyra's documentation is available online: http://caterinaurban.github.io/Lyra/
 ## Contributors
 
 * **Simon Wehrli**, ETH Zurich, Switzerland
+* **Madelin Schumacher**, ETH Zurich, Switzerland
+* **Jérôme Dohrau**, ETH Zurich, Switzerland
+* **Lowis Engel**, ETH Zurich, Switzerland
