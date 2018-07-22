@@ -7,7 +7,7 @@ install:
   - pip install -r requirements.txt
 # command to run tests
 script:
-  - cd lyra/unittests/
+  - cd src/lyra/unittests/
   - PYTHONPATH="${PYTHONPATH}:../../"
   - export PYTHONPATH
   - python3 test_SignLattice.py
