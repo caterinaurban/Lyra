@@ -6,15 +6,21 @@ before_install:
   - sudo apt-get install graphviz
 install:
   - pip install -r requirements.txt
-script:
-  - cd src/lyra/unittests/
-  - PYTHONPATH="${PYTHONPATH}:../../"
-  - export PYTHONPATH
-  - python -m unittest test_SignLattice.py
-  - python -m unittest test_IntervalLattice.py
-  - python -m unittest test_UsageLattice.py
-  - python sign_tests.py
-  - python interval_tests.py
-  - python liveness_tests.py
-  - python usage_tests.py
-  - python assumption_tests.py
+stages:
+  - unittests
+jobs:
+  include:
+    - stage: unittests
+      name: "Unit Tests"
+      script:
+        - cd src/lyra/unittests/
+        - PYTHONPATH="${PYTHONPATH}:../../"
+        - export PYTHONPATH
+        - python -m unittest test_SignLattice.py
+        - python -m unittest test_IntervalLattice.py
+        - python -m unittest test_UsageLattice.py
+        - python sign_tests.py
+        - python interval_tests.py
+        - python liveness_tests.py
+        - python usage_tests.py
+        - python assumption_tests.py
