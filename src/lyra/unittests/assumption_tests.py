@@ -8,6 +8,8 @@ import glob
 import os
 import unittest
 
+import sys
+
 from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
@@ -62,4 +64,6 @@ def test_suite():
 
 if __name__ == '__main__':
     runner = unittest.TextTestRunner()
-    runner.run(test_suite())
+    result = runner.run(test_suite())
+    if not result.wasSuccessful():
+        sys.exit(1)

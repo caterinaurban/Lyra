@@ -10,6 +10,8 @@ import glob
 import os
 import unittest
 
+import sys
+
 from lyra.abstract_domains.liveness.liveness_domain import StrongLivenessState
 from lyra.engine.backward import BackwardInterpreter
 from lyra.semantics.backward import DefaultBackwardSemantics
@@ -37,4 +39,6 @@ def test_suite():
 
 if __name__ == '__main__':
     runner = unittest.TextTestRunner()
-    runner.run(test_suite())
+    result = runner.run(test_suite())
+    if not result.wasSuccessful():
+        sys.exit(1)
