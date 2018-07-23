@@ -44,7 +44,8 @@ class TestRunner(unittest.TestCase, Runner, metaclass=ABCMeta):
     def __init__(self, path):
         super().__init__()
         self.path = path
-        with open(self.path, 'r') as source:
+        self.maxDiff = None     # to allow large diff displays in error messages
+        with open(self.path, 'r', encoding="utf-8") as source:
             self.source = source.read()
             self.tree = ast.parse(self.source)
             self.cfg = ast_to_cfg(self.tree)
