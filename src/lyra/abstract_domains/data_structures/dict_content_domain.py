@@ -571,7 +571,7 @@ class DictContentState(State):
         dict_le = self.dict_store.less_equal(other.dict_store)
         init_le = self.init_store.less_equal(other.init_store)
         in_le = self.in_relations.less_equal(other.in_relations)
-        return scalar_le and dict_le and init_le
+        return scalar_le and dict_le and init_le and in_le
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'DictContentState') -> 'DictContentState':
