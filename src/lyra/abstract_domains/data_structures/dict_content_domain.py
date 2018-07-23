@@ -617,24 +617,74 @@ class DictContentState(State):
         return self._s_v_conv(scalar_copy)
 
     # helper
-    def eval_value_at(self, dict: VariableIdentifier, key_abs: Union[RelationalStore, State]) \
-            -> Union[RelationalStore, State]:  # (returns value_domain element)
-        # returns the join of all value abstraction of segments of dictionary dict,
-        #  whose key overlaps with key_abs
-        # if issubclass(self._v_domain, Store):
-        #     value_vars = []
-        # else:
-        value_vars = self._s_vars.copy()
-        v_var = VariableIdentifier(dict.typ.value_type, self._v_name)
-        value_vars.append(v_var)
+    def _temp_cleanup(self, evaluation: Dict[Subscription, VariableIdentifier]):
+        """Deletes all temporary variables of evaluation and assigns them back to the dictionary subscription before that"""
+        current_temps = set(evaluation.values())
 
-        result = self._v_domain(variables=value_vars).bottom()       # TODO: correct?
-        for (k,v) in self.dict_store.store[dict].segments:
-            key_meet_s = deepcopy(key_abs).meet(k)
-            if not key_meet_s.is_bottom():  # overlap/key may be contained in this segment
-                result.join(v)
+        for expr, var in evaluation.items():
+            # 'assign expr = var' to update relationships
+            d = expr.target
 
-        return result
+            k_abs = self.eval_key(expr.key)
+            v_abs = self.eval_value(var)
+
+            #temporary variables not needed in dict abstractions
+            for temp in current_temps:     # TODO: better way?
+                k_abs.remove_var(temp)
+                v_abs.remove_var(temp)
+
+            d_lattice: 'DictSegmentLattice' = self.dict_store.store[d]
+
+            if k_abs.is_singleton():
+                # STRONG UPDATE
+                d_lattice.partition_add(k_abs, v_abs)
+                i_lattice: 'DictSegmentLattice' = self.init_store.store[d]
+                i_lattice.partition_add(k_abs, BoolLattice(False))
+            else:
+                # WEAK UPDATE
+                # -> meet
+                assign_lattice = deepcopy(d_lattice)
+                assign_lattice.normalized_add(k_abs, v_abs)
+                d_lattice.meet(assign_lattice)
+
+            # remove temporary var
+            self.scalar_state.remove_var(var)
+            current_temps.remove(var)
+
+    def _update_dict_from_refined_scalar(self):
+        """update scalar variables in dictionary stores to conform with a refined scalar state"""  # TODO: too slow?
+        d_store = self.dict_store.store
+        d_lattice: DictSegmentLattice
+        for d, d_lattice in d_store.items():
+            v_k = VariableIdentifier(d.typ.key_type, k_name)
+            v_v = VariableIdentifier(d.typ.value_type, v_name)
+            new_segments = set()
+            for (k, v) in d_lattice.segments:
+                k_s_state = deepcopy(self.scalar_state)
+                k_s_state.add_var(v_k)
+                s_k_state = self.s_k_conv(k_s_state)
+                new_k = deepcopy(k).meet(s_k_state)
+
+                v_s_state = deepcopy(self.scalar_state)
+                v_s_state.add_var(v_v)
+                s_v_state = self.s_v_conv(v_s_state)
+                new_v = deepcopy(v).meet(s_v_state)
+                new_segments.add((new_k, new_v))
+            d_store[d] = DictSegmentLattice(d_lattice.k_domain, d_lattice.v_domain, d_lattice.k_d_args, d_lattice.v_d_args, new_segments)
+
+        i_store = self.init_store.store
+        i_lattice: DictSegmentLattice
+        for d, i_lattice in i_store.items():
+            v_k = VariableIdentifier(d.typ.key_type, k_name)
+
+            new_segments = set()
+            for (k, b) in i_lattice.segments:
+                k_s_state = deepcopy(self.scalar_state)
+                k_s_state.add_var(v_k)
+                s_k_state = self.s_k_conv(k_s_state)
+                new_k = deepcopy(k).meet(s_k_state)
+                new_segments.add((new_k, b))
+            i_store[d] = DictSegmentLattice(i_lattice.k_domain, i_lattice.v_domain, i_lattice.k_d_args, i_lattice.v_d_args, new_segments)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
@@ -656,71 +706,80 @@ class DictContentState(State):
                     k2.assign({left}, {right})
                 i_lattice.d_norm_own()
 
-        else:   # TODO: visitor?
-            if isinstance(left, VariableIdentifier):
-                if isinstance(right, Subscription):   # TODO: Slicing?
-                    # DICT READ
-                    if isinstance(right.key, Expression):   # TODO: expr as key?
-                        k_abs = self.eval_key(right.key)
-                        v_abs = self.eval_value_at(right.target, k_abs)
+        if isinstance(left, VariableIdentifier):
+            if type(left.typ) in scalar_types:  # assignment to scalar variable
+                evaluation = dict()
+                scalar_right = self._read_eval.visit(right, self, evaluation)
+                self.scalar_state.assign({left}, {scalar_right})
 
-                        v_v = VariableIdentifier(left.typ, self._v_name)        # TODO: type?
-                        self.scalar_state.add_var(v_v)
-                        self.scalar_state.meet(self._v_s_conv(v_abs))
-                        self.scalar_state.assign({left},{v_v})
-                        self.scalar_state.remove_var(v_v)
+                self._temp_cleanup(evaluation)
 
-                        # invalidate old left
-                        for d_lattice in self.dict_store.store.values():
-                            d_lattice.invalidate_var(left)
-                        for i_lattice in self.init_store.store.values():
-                            i_lattice.invalidate_var(left)
-                    else:
-                        raise NotImplementedError(
-                            f"Assignment '{left} = {right}' is not yet supported")
+                # invalidate old left in dict stores                      # IMPRECISION!!
+                for d_lattice in self.dict_store.store.values():
+                    d_lattice.invalidate_var(left)
+                for i_lattice in self.init_store.store.values():
+                    i_lattice.invalidate_var(left)
+
+            elif isinstance(left.typ, DictLyraType):    # overwrite dictionary
+                if isinstance(right, VariableIdentifier):
+                    self.dict_store.store[left] = deepcopy(self.dict_store.store[right])
+                    self.init_store.store[left] = deepcopy(self.init_store.store[right])
                 elif isinstance(right, DictDisplay):
                     # "NEW DICT"
-                    left_lattice = self.dict_store.store[left]
-                    left_i_lattice = self.init_store.store[left]
+                    left_lattice: DictSegmentLattice = self.dict_store.store[left]
+                    left_i_lattice: DictSegmentLattice = self.init_store.store[left]
                     # erase all dict contents before:
                     left_lattice.bottom()
-                    left_i_lattice.top()        # everything uninitialized
-                    for i in range(len(right.keys)):    # similar to write
+                    # everything uninitialized, but scalars conform with scalar state -> copy from scalar state:        # TODO: use invalidate_var?
+                    v_k = VariableIdentifier(left.typ.key_type, k_name)
+                    s_state = deepcopy(self.scalar_state)
+                    s_state.add_var(v_k)
+                    top_state = self.s_k_conv(s_state)
+                    top_segment = (top_state, BoolLattice(True))
+                    left_i_lattice.segments.clear()
+                    left_i_lattice.segments.add(top_segment)
+
+                    for i in range(len(right.keys)):  # similar to write
                         k_abs = self.eval_key(right.keys[i])
                         v_abs = self.eval_value(right.values[i])
 
                         # k_abs must be a singleton -> 'strong update'
                         left_lattice.partition_add(k_abs, v_abs)
                         left_i_lattice.partition_add(k_abs, BoolLattice(False))
-
                 else:
                     raise NotImplementedError(
                         f"Assignment '{left} = {right}' is not yet supported")
-
-            elif isinstance(left, Subscription):      # TODO: Slicing?
-                # DICT WRITE
-                if isinstance(right, Expression):        # TODO: other expr
-                    if isinstance(left.key, Expression):  # TODO: expr as key?
-                        k_abs = self.eval_key(left.key)
-                        v_abs = self.eval_value(right)
-
-                        v_k = VariableIdentifier(left.key.typ, self._k_name)  # TODO: type?
-                        d_lattice: 'DictSegmentLattice' = self.dict_store.store[left.target]
-                        if k_abs.is_singleton(v_k):       # TODO: implement (or provide predicate as arg for init
-                            # STRONG UPDATE
-                            d_lattice.partition_add(k_abs, v_abs)
-                            i_lattice: 'DictSegmentLattice' = self.init_store.store[left.target]
-                            i_lattice.partition_add(k_abs, BoolLattice(False))
-                        else:
-                            # WEAK UPDATE
-                            # add segment & normalize
-                            d_lattice.normalized_add(k_abs, v_abs)
-                    else:
-                        raise NotImplementedError(
-                            f"Assignment '{left} = {right}' is not yet supported")
             else:
-                raise NotImplementedError(f"Assignment '{left} = {right}' is not yet supported")
-            # TODO: other stmts
+                raise NotImplementedError(
+                    f"Assignment '{left} = {right}' is not yet supported")
+
+        elif isinstance(left, Subscription) and isinstance(left.target.typ, DictLyraType):
+            # DICT WRITE
+            d = left.target
+
+            k_abs = self.eval_key(left.key)
+
+            evaluation = dict()
+            scalar_right = self._read_eval.visit(right, self, evaluation)
+            v_abs = self.eval_value(scalar_right)
+            for temp in evaluation.values():
+                v_abs.remove_var(temp)
+            self._temp_cleanup(evaluation)      # TODO: no assign needed?
+
+            d_lattice: 'DictSegmentLattice' = self.dict_store.store[d]
+
+            if k_abs.is_singleton():
+                # STRONG UPDATE
+                d_lattice.partition_add(k_abs, v_abs)
+                i_lattice: 'DictSegmentLattice' = self.init_store.store[d]
+                i_lattice.partition_add(k_abs, BoolLattice(False))
+            else:
+                # WEAK UPDATE
+                # add segment & normalize
+                d_lattice.normalized_add(k_abs, v_abs)
+        else:
+            raise NotImplementedError(f"Assignment '{left} = {right}' is not yet supported")
+        # TODO: other stmts
 
         # update relations
         self.in_relations.assign({left}, {right})
@@ -812,81 +871,81 @@ class DictContentState(State):
 
         # expression evaluation
 
-    # class DictReadEvaluation(ExpressionVisitor):
-    #     """Visitor that performs the evaluation of dictionary read in the DictContentDomain lattice."""
-    #
-    #     @copy_docstring(ExpressionVisitor.visit_Literal)
-    #     def visit_Literal(self, expr: Literal, state=None, evaluation=None):
-    #         return expr
-    #
-    #     @copy_docstring(ExpressionVisitor.visit_Input)
-    #     def visit_Input(self, expr: Input, state=None, evaluation=None):
-    #         return expr
-    #
-    #     @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
-    #     def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None,
-    #                                  evaluation=None):
-    #         return expr
-    #
-    #     @copy_docstring(ExpressionVisitor.visit_ListDisplay)
-    #     def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
-    #         for i in range(len(expr.items)):
-    #             expr.items[i] = self.visit(expr.items[i], state, evaluation)
-    #         return expr
-    #
-    #     @copy_docstring(ExpressionVisitor.visit_Range)
-    #     def visit_Range(self, expr: Range, state=None, evaluation=None):
-    #         new_start = self.visit(expr.start, state, evaluation)
-    #         new_stop = self.visit(expr.stop, state, evaluation)
-    #         new_step = self.visit(expr.step, state, evaluation)
-    #         return Range(expr.typ, new_start, new_stop, new_step)
-    #
-    #     @copy_docstring(ExpressionVisitor.visit_AttributeReference)
-    #     def visit_AttributeReference(self, expr: AttributeReference, state=None,
-    #                                  evaluation=None):
-    #         return expr
-    #
-    #     @copy_docstring(ExpressionVisitor.visit_Subscription)
-    #     def visit_Subscription(self, expr: Subscription, state=None, evaluation=None):
-    #
-    #
-    #     @copy_docstring(ExpressionVisitor.visit_Slicing)
-    #     def visit_Slicing(self, expr: Slicing, state=None, evaluation=None):
-    #         return expr
-    #
-    #     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
-    #     def visit_UnaryArithmeticOperation(self, expr, state=None, evaluation=None):
-    #         return expr
-    #
-    #     @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
-    #     def visit_UnaryBooleanOperation(self, expr, state=None, evaluation=None):
-    #         return expr
-    #
-    #     @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
-    #     def visit_BinaryArithmeticOperation(self, expr, state=None, evaluation=None):
-    #         if expr in evaluation:
-    #             return evaluation  # nothing to be done
-    #         evaluated1 = self.visit(expr.left, state, evaluation)
-    #         evaluated2 = self.visit(expr.right, state, evaluated1)
-    #         if expr.operator == BinaryArithmeticOperation.Operator.Add:
-    #             evaluated2[expr] = deepcopy(evaluated2[expr.left]).add(evaluated2[expr.right])
-    #             return evaluated2
-    #         elif expr.operator == BinaryArithmeticOperation.Operator.Sub:
-    #             evaluated2[expr] = deepcopy(evaluated2[expr.left]).sub(evaluated2[expr.right])
-    #             return evaluated2
-    #         elif expr.operator == BinaryArithmeticOperation.Operator.Mult:
-    #             evaluated2[expr] = deepcopy(evaluated2[expr.left]).mult(evaluated2[expr.right])
-    #             return evaluated2
-    #         raise ValueError(f"Binary operator '{str(expr.operator)}' is unsupported!")
-    #
-    #     @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
-    #     def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
-    #         error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-    #         raise ValueError(error)
-    #
-    #     @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
-    #     def visit_BinaryComparisonOperation(self, expr, state=None, evaluation=None):
-    #         error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-    #         raise ValueError(error)
-    #
-    # _read_eval = DictReadEvaluation()  # static class member shared between all instances
+    class DictReadEvaluation:
+        """Visitor that performs the evaluation of dictionary reads in the DictContentDomain lattice
+        by replacing them with a temporary (scalar) variable holding the corresponding value
+        in the scalar state.
+
+        Adapted from `ExpressionVisitor`.
+        """
+
+        @copy_docstring(ExpressionVisitor.visit)
+        def visit(self, expr, *args, **kwargs):
+            """
+            :param expr: current expression
+            :param state: current DictContentState
+            :param evaluation: dictionary mapping from dictionary read expressions,
+                that already got evaluated to temporary variables (VariableIdentifier)
+            :return expression with replaced dictionary reads
+            """
+            method = 'visit_' + expr.__class__.__name__
+            if hasattr(self, method):
+                return getattr(self, method)(expr, *args, **kwargs)
+
+            else:
+                return self.default_visit(expr, *args, **kwargs)
+
+        @copy_docstring(ExpressionVisitor.visit_Subscription)
+        def visit_Subscription(self, expr: Subscription, state: 'DictContentState'=None, evaluation=None):
+            if isinstance(expr.target.typ, DictLyraType):
+                if expr in evaluation:  # already evaluated
+                    return evaluation[expr]
+                else:
+                    d = expr.target
+                    d_lattice: DictSegmentLattice = state.dict_store.store[d]
+
+                    k_abs = state.eval_key(expr.key)
+
+                    for old_temp in evaluation.values():    # remove already added temp vars
+                        k_abs.remove_var(old_temp)
+
+                    scalar_vars = state._s_vars.copy()
+                    v_var = VariableIdentifier(d.typ.value_type, v_name)
+                    v_abs = d_lattice.v_domain(scalar_vars, v_var).bottom()
+                    for (k, v) in d_lattice.segments:
+                        key_meet_k = deepcopy(k_abs).meet(k)
+                        if not key_meet_k.is_bottom():  # overlap/key may be contained in this segment
+                            v_abs.join(deepcopy(v))
+
+                    for old_temp in evaluation.values():    # add already added temp vars
+                        v_abs.add_var(old_temp)
+
+                    state.scalar_state.add_var(v_var)
+                    state.scalar_state.meet(state.v_s_conv(v_abs))
+
+                    temp_var = VariableIdentifier(d.typ.value_type, str(len(evaluation)) + "v")  # use increasing numbers for temp_var names
+                    state.scalar_state.add_var(temp_var)
+
+                    state.scalar_state.assign({temp_var}, {v_var})
+                    state.scalar_state.remove_var(v_var)
+
+                    evaluation[expr] = temp_var
+                    return temp_var
+            else:
+                return self.default_visit(expr, state, evaluation)
+
+        # TODO: Slicing?
+
+        def default_visit(self, expr: Expression, state: 'DictContentState'=None, evaluation=None):
+            # default: visit & replace children (adapted from expressions._iter_child_exprs)
+            new_expr = copy(expr)
+            for name, field in new_expr.__dict__.items():
+                if isinstance(field, Expression):
+                    new_expr.__dict__[name] = self.visit(field, state, evaluation)  # replace
+                elif isinstance(field, list):
+                    for idx, item in enumerate(field):
+                        if isinstance(item, Expression):
+                            field[idx] = self.visit(item, state, evaluation)
+            return new_expr
+
+    _read_eval = DictReadEvaluation()  # static class member shared between all instances
