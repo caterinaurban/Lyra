@@ -370,11 +370,7 @@ class DictContentState(State):
         self._v_domain = value_domain
 
         self._s_domain = scalar_domain
-        self._scalar_state = scalar_domain(scalar_vars)         #TODO: require as input?
-
-        # special variable names:
-        self._k_name = "0v_k"
-        self._v_name = "0v_v"
+        self._scalar_state = scalar_domain(scalar_vars)         # require as input?
 
         arguments = {}
         for dv in dict_vars:
@@ -415,6 +411,9 @@ class DictContentState(State):
         self._v_s_conv = v_scalar_conv
 
         self._in_relations = InRelationState()
+
+        self._loop_flag = False
+
 
     @property
     def scalar_state(self) -> Union[ScalarWrapper, State]:
@@ -787,7 +786,8 @@ class DictContentState(State):
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'DictContentState':
-        return self  # nothing to be done
+        self._loop_flag = False
+        return self  # nothing else to be done
 
     @copy_docstring(State.exit_if)
     def exit_if(self) -> 'DictContentState':
@@ -795,7 +795,8 @@ class DictContentState(State):
 
     @copy_docstring(State.enter_loop)
     def enter_loop(self) -> 'DictContentState':
-        return self  # nothing to be done
+        self._loop_flag = True
+        return self  # nothing else to be done
 
     @copy_docstring(State.exit_loop)
     def exit_loop(self) -> 'DictContentState':
