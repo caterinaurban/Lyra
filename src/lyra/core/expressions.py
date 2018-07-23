@@ -21,6 +21,7 @@ class Expression(metaclass=ABCMeta):
 
     https://docs.python.org/3.4/reference/expressions.html
     """
+
     def __init__(self, typ: LyraType):
         """Expression construction.
 
@@ -35,7 +36,7 @@ class Expression(metaclass=ABCMeta):
     @abstractmethod
     def __eq__(self, other: 'Expression'):
         """Expression equality.
-        
+
         :param other: other expression to compare
         :return: whether the expression equality holds
         """
@@ -43,7 +44,7 @@ class Expression(metaclass=ABCMeta):
     @abstractmethod
     def __hash__(self):
         """Expression hash representation.
-        
+
         :return: hash value representing the expression
         """
 
@@ -53,13 +54,13 @@ class Expression(metaclass=ABCMeta):
     @abstractmethod
     def __str__(self):
         """Expression string representation.
-        
+
         :return: string representing the expression
         """
 
     def ids(self) -> Set['VariableIdentifier']:
         """Identifiers that appear in the expression.
-        
+
         :return: set of identifiers that appear in the expression
         """
         ids = set()
@@ -113,6 +114,7 @@ class ExpressionVisitor(metaclass=ABCMeta):
 
     Adapted from `ast.py`.
     """
+
     def visit(self, expr, *args, **kwargs):
         """Visit of an expression."""
         method = 'visit_' + expr.__class__.__name__
@@ -329,6 +331,7 @@ class Literal(Expression):
 
     https://docs.python.org/3.4/reference/expressions.html#literals
     """
+
     def __init__(self, typ: LyraType, val: str):
         """Literal construction.
 
@@ -359,6 +362,7 @@ class Identifier(Expression):
 
     https://docs.python.org/3.4/reference/expressions.html#atom-identifiers
     """
+
     def __init__(self, typ: LyraType, name: str):
         """Identifier construction.
 
@@ -384,9 +388,10 @@ class Identifier(Expression):
 
 class VariableIdentifier(Identifier):
     """Variable identifier representation."""
+
     def __init__(self, typ: LyraType, name: str):
         """Variable identifier construction.
-        
+
         :param typ: type of the identifier
         :param name: name of the identifier
         """
@@ -395,6 +400,7 @@ class VariableIdentifier(Identifier):
 
 class LengthIdentifier(Identifier):
     """Sequence or collection length representation."""
+
     def __init__(self, variable: VariableIdentifier):
         """Sequence or collection length construction.
 
@@ -406,13 +412,13 @@ class LengthIdentifier(Identifier):
 
 class ListDisplay(Expression):
     """List display representation.
-    
+
     https://docs.python.org/3/reference/expressions.html#list-displays
     """
 
     def __init__(self, typ: ListLyraType, items: List[Expression] = None):
         """List display construction.
-        
+
         :param typ: type of the list
         :param items: list of items being displayed
         """
@@ -531,6 +537,7 @@ class DictDisplay(Expression):
 
 class Input(Expression):
     """Input expression representation."""
+
     def __init__(self, typ: LyraType):
         """Input expression construction.
 
@@ -550,6 +557,7 @@ class Input(Expression):
 
 class Range(Expression):
     """Range Call representation."""
+
     def __init__(self, typ: LyraType, start: Expression, end: Expression, step: Expression):
         """Range call expression construction.
 
@@ -681,9 +689,10 @@ class AttributeReference(Expression):
 
     https://docs.python.org/3.4/reference/expressions.html#attribute-references
     """
+
     def __init__(self, typ: LyraType, target: Expression, attribute: Identifier):
         """Attribute reference construction.
-        
+
         :param typ: type of the attribute
         :param target: object the attribute of which is being referenced
         :param attribute: attribute being referenced
@@ -718,6 +727,7 @@ class Subscription(Expression):
 
     https://docs.python.org/3.4/reference/expressions.html#subscriptions
     """
+
     def __init__(self, typ: LyraType, target: Expression, key: Expression):
         """Subscription construction.
 
@@ -755,6 +765,7 @@ class Slicing(Expression):
 
     https://docs.python.org/3.4/reference/expressions.html#slicings
     """
+
     def __init__(self, typ: LyraType, target: Expression,
                  lower: Expression, upper: Expression, stride: Expression = None):
         """Slicing construction.
@@ -826,16 +837,16 @@ class UnaryOperation(Operation):
         @abstractmethod
         def __str__(self):
             """Unary operator string representation.
-            
+
             :return: string representing the operator
             """
 
     def __init__(self, typ: LyraType, operator: Operator, expression: Expression):
         """Unary operation construction.
-        
+
         :param typ: type of the operation
         :param operator: operator of the operation
-        :param expression: expression of the operation 
+        :param expression: expression of the operation
         """
         super().__init__(typ)
         self._operator = operator
@@ -867,7 +878,7 @@ class UnaryOperation(Operation):
 
 class UnaryArithmeticOperation(UnaryOperation):
     """Unary arithmetic operation expression representation.
-    
+
     https://docs.python.org/3.4/reference/expressions.html#unary-arithmetic-and-bitwise-operations
     """
 
@@ -884,17 +895,17 @@ class UnaryArithmeticOperation(UnaryOperation):
 
     def __init__(self, typ: LyraType, operator: Operator, expression: Expression):
         """Unary arithmetic operation expression representation.
-        
+
         :param typ: type of the operation
         :param operator: operator of the operation
-        :param expression: expression of the operation 
+        :param expression: expression of the operation
         """
         super().__init__(typ, operator, expression)
 
 
 class UnaryBooleanOperation(UnaryOperation):
     """Unary boolean operation expression representation.
-    
+
     https://docs.python.org/3.4/reference/expressions.html#boolean-operations
     """
 
@@ -908,10 +919,10 @@ class UnaryBooleanOperation(UnaryOperation):
 
     def __init__(self, typ: LyraType, operator: Operator, expression: Expression):
         """Unary boolean operation expression representation.
-        
+
         :param typ: type of the operation
         :param operator: operator of the operation
-        :param expression: expression of the operation 
+        :param expression: expression of the operation
         """
         super().__init__(typ, operator, expression)
 
@@ -935,7 +946,7 @@ class BinaryOperation(Operation):
 
     def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
         """Binary operation construction.
-        
+
         :param typ: type of the operation
         :param left: left expression of the operation
         :param operator: operator of the operation
@@ -980,7 +991,7 @@ class BinaryOperation(Operation):
 
 class BinaryArithmeticOperation(BinaryOperation):
     """Binary arithmetic operation expression representation.
-    
+
     https://docs.python.org/3.4/reference/expressions.html#binary-arithmetic-operations
     """
 
@@ -1003,7 +1014,7 @@ class BinaryArithmeticOperation(BinaryOperation):
 
     def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
         """Binary arithmetic operation expression representation.
-        
+
         :param typ: type of the operation
         :param left: left expression of the operation
         :param operator: operator of the operation
@@ -1014,7 +1025,7 @@ class BinaryArithmeticOperation(BinaryOperation):
 
 class BinaryBooleanOperation(BinaryOperation):
     """Binary boolean operation expression representation.
-    
+
     https://docs.python.org/3.6/reference/expressions.html#boolean-operations
     """
 
@@ -1046,7 +1057,7 @@ class BinaryBooleanOperation(BinaryOperation):
 
 class BinaryComparisonOperation(BinaryOperation):
     """Binary comparison operation expression representation.
-    
+
     https://docs.python.org/3.4/reference/expressions.html#comparisons
     """
 

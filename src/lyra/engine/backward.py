@@ -20,6 +20,7 @@ from lyra.core.cfg import Basic, Loop, Conditional, Edge, Node
 
 class BackwardInterpreter(Interpreter):
     """Backward control flow graph interpreter."""
+
     def __init__(self, cfg, semantics: BackwardSemantics, widening, precursory=None):
         """Backward control flow graph interpreter construction.
 

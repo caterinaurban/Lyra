@@ -111,6 +111,7 @@ class LivenessState(Store, State):
     .. automethod:: LivenessState._output
     .. automethod:: LivenessState._substitute
     """
+
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to its liveness status.
 

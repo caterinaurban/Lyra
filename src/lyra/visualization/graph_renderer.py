@@ -42,7 +42,11 @@ class GraphRenderer(metaclass=ABCMeta):
     @staticmethod
     def _escape_label(label):
         """Escape special characters in DOT label."""
-        return label.replace("\\", "\\\\").replace("|", "\\|").replace("<", "\\<").replace(">", "\\>")
+        escaped = label.replace("\\", "\\\\")
+        escaped = escaped.replace("|", "\\|")
+        escaped = escaped.replace("<", "\\<")
+        escaped = escaped.replace(">", "\\>")
+        return escaped
 
     def _shorten_label(self, label):
         """Shorten long labels."""
@@ -57,7 +61,8 @@ class GraphRenderer(metaclass=ABCMeta):
         table = '<<table border="0" cellborder="0">{}</table>>'     # table HTML format
         row = '<tr><td align="center">{}</td></tr>'                 # row HTML format
         escape_function = html.escape if escape else lambda x: x
-        return table.format("\n".join(map(row.format, map(lambda x: escape_function(str(x)), lst or [""]))))
+        rows = "\n".join(map(row.format, map(lambda x: escape_function(str(x)), lst or [""])))
+        return table.format(rows)
 
     @abstractmethod
     def _render(self, data):
@@ -73,7 +78,8 @@ class GraphRenderer(metaclass=ABCMeta):
         graph_attr = self.graph_attr.copy()
         if label is not None:
             graph_attr['label'] = self._escape_label(label)
-        graph = gv.Digraph(graph_attr=graph_attr, node_attr=self.node_attr, edge_attr=self.edge_attr)
+        graph = gv.Digraph(graph_attr=graph_attr, node_attr=self.node_attr,
+                           edge_attr=self.edge_attr)
 
         # draw nodes and edges of the Graphviz graph
         self._graph = graph
@@ -112,7 +118,8 @@ class ListDictTreeRenderer(GraphRenderer):
             elif isinstance(node, list):
                 self._render_list(node, node_id)
             else:
-                self._graph.node(node_id, label=self._escape_label(self._shorten_label(repr(node))))
+                self._graph.node(node_id, label=self._escape_label(
+                    self._shorten_label(repr(node))))
 
         return node_id
 
@@ -146,9 +153,11 @@ class CfgRenderer(GraphRenderer):
 
     def _render_node(self, node, label, fillcolor):
         if isinstance(node, (Basic, Loop)):
-            self._graph.node(str(node), label=label, xlabel=str(node.identifier), fillcolor=fillcolor, shape='box')
+            self._graph.node(str(node), label=label, xlabel=str(
+                node.identifier), fillcolor=fillcolor, shape='box')
         else:
-            self._graph.node(str(node), label=label, xlabel=str(node.identifier), fillcolor=fillcolor, shape='circle')
+            self._graph.node(str(node), label=label, xlabel=str(
+                node.identifier), fillcolor=fillcolor, shape='circle')
 
     def _render_edge(self, edge):
         kind = edge.kind.name if edge.kind != Edge.Kind.DEFAULT else ""
@@ -184,10 +193,12 @@ class AnalysisResultRenderer(CfgRenderer):
 
     def _basic_node_label(self, node, result):
         state = '<font point-size="9">{} </font>'
-        states = map(lambda x: state.format(html.escape(str(x)).replace('\n', '<br />')), result.get_node_result(node))
+        states = map(lambda x: state.format(html.escape(str(x)).replace(
+            '\n', '<br />')), result.get_node_result(node))
         stmt = '<font color="#ffffff" point-size="11">{}</font>'
         stmts = map(lambda x: stmt.format(html.escape(str(x))), node.stmts)
-        node_result = [item for items in zip_longest(states, stmts) for item in items if item is not None]
+        node_result = [item for items in zip_longest(
+            states, stmts) for item in items if item is not None]
         return self._list2table(node_result, escape=False)
 
     def _render(self, data):

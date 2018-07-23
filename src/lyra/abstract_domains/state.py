@@ -24,6 +24,7 @@ class State(Lattice, metaclass=ABCMeta):
     .. warning::
         Lattice operations and statements modify the current state.
     """
+
     def __init__(self, precursory: 'State' = None):
         super().__init__()
         self._result = set()
@@ -63,7 +64,7 @@ class State(Lattice, metaclass=ABCMeta):
     @abstractmethod
     def _assign(self, left: Expression, right: Expression) -> 'State':
         """Assign an expression to another expression.
-        
+
         :param left: expression to be assigned to
         :param right: expression to assign
         :return: current state modified by the assignment
@@ -72,7 +73,7 @@ class State(Lattice, metaclass=ABCMeta):
 
     def assign(self, left: Set[Expression], right: Set[Expression]) -> 'State':
         """Assign an expression to another expression.
-        
+
         :param left: set of expressions representing the expression to be assigned to
         :param right: set of expressions representing the expression to assign
         :return: current state modified by the assignment
@@ -85,7 +86,7 @@ class State(Lattice, metaclass=ABCMeta):
     @abstractmethod
     def _assume(self, condition: Expression) -> 'State':
         """Assume that some condition holds in the current state.
-        
+
         :param condition: expression representing the assumed condition
         :return: current state modified to satisfy the assumption
 
@@ -93,7 +94,7 @@ class State(Lattice, metaclass=ABCMeta):
 
     def assume(self, condition: Set[Expression]) -> 'State':
         """Assume that some condition holds in the current state.
-        
+
         :param condition: set of expressions representing the assumed condition
         :return: current state modified to satisfy the assumption
 
@@ -194,7 +195,7 @@ class State(Lattice, metaclass=ABCMeta):
 
     def substitute(self, left: Set[Expression], right: Set[Expression]) -> 'State':
         """Substitute an expression to another expression.
-        
+
         :param left: set of expressions representing the expression to be substituted
         :param right: set of expressions representing the expression to substitute
         :return: current state modified by the substitution

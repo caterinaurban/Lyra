@@ -8,7 +8,7 @@ from lyra.core.cfg import Node, ControlFlowGraph, Edge
 class AnalysisResult:
     def __init__(self, cfg: ControlFlowGraph):
         """Analysis result representation.
-        
+
         :param cfg: analyzed control flow graph
         """
         self._cfg = cfg
@@ -24,7 +24,7 @@ class AnalysisResult:
 
     def get_node_result(self, node: Node) -> List[State]:
         """Get the analysis result for a node.
-        
+
         :param node: analyzed node
         :return: list of states representing the result of the analysis for the block
         """
@@ -32,7 +32,7 @@ class AnalysisResult:
 
     def set_node_result(self, node: Node, states: List[State]) -> None:
         """Set the analysis result for a node.
-        
+
         :param node: analyzed node
         :param states: list of states representing the result of the analysis for the block
         """
@@ -40,7 +40,7 @@ class AnalysisResult:
 
     def __str__(self):
         """Analysis result string representation.
-        
+
         :return: string representing the result of the analysis
         """
         visited, pending = set(), list()
