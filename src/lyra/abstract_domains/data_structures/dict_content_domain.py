@@ -398,7 +398,7 @@ class DictContentState(State):
                     # if issubclass(value_domain, Store):
                     #     value_vars = []
                     # else:
-                    value_vars = scalar_vars.copy()
+                    # value_vars = scalar_vars.copy()
                     k_var = VariableIdentifier(typ.key_type, k_name)
                     v_var = VariableIdentifier(typ.value_type, v_name)
 
