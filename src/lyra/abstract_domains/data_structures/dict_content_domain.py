@@ -356,8 +356,7 @@ class DictContentState(State):
                  k_scalar_conv: Callable[[Union[KeyWrapper, State]], Union[ScalarWrapper, State]] = lambda x: deepcopy(x),
                  scalar_v_conv: Callable[[Union[ScalarWrapper, State]], Union[ValueWrapper, State]] = lambda x: deepcopy(x),
                  v_scalar_conv: Callable[[Union[ValueWrapper, State]], Union[ScalarWrapper, State]] = lambda x: deepcopy(x)):
-        """Map each program variable to its liveness status.
-
+        """
         :param scalar_domain: domain for abstraction of scalar variable values, ranges over the scalar variables
             (may have different abstract domains for different types)
         :param key_domain: domain for abstraction of dictionary keys,
