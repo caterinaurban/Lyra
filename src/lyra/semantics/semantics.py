@@ -10,14 +10,15 @@ Lyra's internal semantics of statements.
 
 import itertools
 import re
+
+from lyra.abstract_domains.state import State
 from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slicing, \
     LengthIdentifier, VariableIdentifier, Range
-from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
-from lyra.core.expressions import UnaryOperation
-from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
 from lyra.core.expressions import BinaryBooleanOperation, Input, TupleDisplay, ListDisplay, \
     Literal, SetDisplay, DictDisplay, Items, Keys, Values
-from lyra.abstract_domains.state import State
+from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
+from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
+from lyra.core.expressions import UnaryOperation
 from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, \
     TupleDisplayAccess, ListDisplayAccess, SetDisplayAccess, DictDisplayAccess, \
     SubscriptionAccess, SlicingAccess, Raise
