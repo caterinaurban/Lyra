@@ -1,3 +1,13 @@
+"""
+Dictionary Content Abstract Domain
+========================
+
+Generic abstract domain to abstract scalar variables and dictionary contents.
+Dictionaries are abstracted by a set of abstract segments.
+
+:Authors: Lowis Engel
+"""
+
 from collections import defaultdict
 from copy import deepcopy, copy
 from typing import Tuple, Set, Type, Callable, Dict, Union, Iterator
@@ -293,7 +303,7 @@ class BoolLattice(Lattice):
 
     @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'BoolLattice') -> bool:
-        pass    # already handled by less_equal (only false for self = top, other = bottom)
+        pass    # already handled by less_equal
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'BoolLattice') -> 'BoolLattice':
@@ -318,20 +328,24 @@ class DictContentState(State):
     It consists of the following 4 elements:
     - Abstract state from a given domain A over all scalar variables,
         abstracting their values
-    - Map from all dictionary variables to a DictSegmentLattice-element with a given key domain K
+    - Map from each dictionary variables to a DictSegmentLattice-element with a given key domain K
         and value domain V, abstracting the contents of the dictionaries
-    - Map from all dictionary variables to a DictSegmentLattice-element with a given key domain K and the Booleans as value domain,
+    - Map from each dictionary variables to a DictSegmentLattice-element with a given key domain K
+        and the BoolLattice as value domain,
         abstracting the initialization info of the dictionary elements
-        (True = may be uninitialized, False/Not present = def. initialized)
-    - Relational InRelationState to cover relations to dictionaries introduced by 'in' conditions
+        (True = may be uninitialized, False/Not present = definitely initialized)
+    - Relational InRelationState to cover relations between variables and dictionaries
+        introduced by 'in' conditions
 
-    Everything is Top by default        # TODO
+    Everything is Top by default
 
     .. document private methods
-    .. automethod:: LivenessState._assign
-    .. automethod:: LivenessState._assume
-    .. automethod:: LivenessState._output
-    .. automethod:: LivenessState._substitute
+    .. automethod:: DictContentState._assign
+    .. automethod:: DictContentState._assume
+    .. automethod:: DictContentState._output
+    .. automethod:: DictContentState._substitute
+    .. automethod:: DictContentState._temp_cleanup
+    .. automethod:: DictContentState._update_dict_from_refined_scalar
     """
 
     # here the Union type means a logical AND: the domain should inherit from both the Wrapper and State
@@ -344,17 +358,18 @@ class DictContentState(State):
                  v_scalar_conv: Callable[[Union[ValueWrapper, State]], Union[ScalarWrapper, State]] = lambda x: deepcopy(x)):
         """Map each program variable to its liveness status.
 
-        :param scalar_domain: domain for abstraction of scalar variable values, ranges over the scalar variables #TODO: separate per type?
-        :param key_domain: domain for abstraction of dictionary keys; (possibly) ranges over scalar variables and definetly has a special key variable v_k
-        :param value_domain: domain for abstraction of dictionary values; (possibly) ranges over scalar variables and definetly has a special value variable
-        :param key_decomp_function: Function to compute a new partitioning when a new segment is added (via strong update),
-                computes the (partial keys) after 'subtracting' the new key
+        :param scalar_domain: domain for abstraction of scalar variable values, ranges over the scalar variables
+            (may have different abstract domains for different types)
+        :param key_domain: domain for abstraction of dictionary keys,
+            ranges over the scalar variables and the special key variable v_k
+        :param value_domain: domain for abstraction of dictionary values,
+            ranges over the scalar variables and the special value variable v_v
         :param scalar_vars: list of scalar variables, whose values should be abstracted
         :param dict_vars: list of dictionary variables, whose values should be abstracted
-        :param scalar_k_conv: conversion function to convert from scalar domain elements to key domain elements (can be omitted, if the domains are the same)
-        :param k_scalar_conv: conversion function to convert from key domain elements to scalar domain elements (can be omitted, if the domains are the same)
-        :param scalar_v_conv: conversion function to convert from scalar domain elements to value domain elements (can be omitted, if the domains are the same)
-        :param v_scalar_conv: conversion function to convert from value domain elements to scalar domain elements (can be omitted, if the domains are the same)
+        :param scalar_k_conv: conversion function to convert from scalar domain elements to key domain elements
+        :param k_scalar_conv: conversion function to convert from key domain elements to scalar domain elements
+        :param scalar_v_conv: conversion function to convert from scalar domain elements to value domain elements
+        :param v_scalar_conv: conversion function to convert from value domain elements to scalar domain elements
         """
         super().__init__()
 
@@ -377,7 +392,7 @@ class DictContentState(State):
             typ = dv.typ
             if isinstance(typ, DictLyraType):  # should be true
                 if typ not in arguments:
-                    # if issubclass(key_domain, Store):   # not relational -> don't need scalar vars # TODO: also for op? Or only for repr?
+                    # if issubclass(key_domain, Store):   # not relational -> don't need scalar vars
                     #     key_vars = []
                     # else:
                     #key_vars = scalar_vars.copy()
@@ -402,9 +417,6 @@ class DictContentState(State):
             del arguments[k]['value_d_args']
         self._init_store = Store(dict_vars, lattices, arguments)
 
-        # if issubclass(key_domain, Store):
-        #     self._s_k_conv = lambda s: scalar_k_conv(s) # TODO: remove all other variables
-        # else:
         self._s_k_conv = scalar_k_conv
         self._k_s_conv = k_scalar_conv
         self._s_v_conv = scalar_v_conv
@@ -431,7 +443,7 @@ class DictContentState(State):
         return self._init_store
 
     @property
-    def in_relations(self) -> Union[State, BottomMixin]:
+    def in_relations(self) -> InRelationState:
         """Relational state storing relationships introduced by 'in'-conditions."""
         return self._in_relations
 
@@ -537,17 +549,16 @@ class DictContentState(State):
 
     @copy_docstring(Lattice.is_bottom)
     def is_bottom(self) -> bool:
-        """The current state is bottom if `all` of its three elements are bottom"""
+        """The current state is bottom if `all` of its four elements are bottom"""
         scalar_b = self.scalar_state.is_bottom()
         dict_b = self.dict_store.is_bottom()
         init_b = self.init_store.is_bottom()
         in_b = self.in_relations.is_bottom()
         return scalar_b and dict_b and init_b and in_b
-    # TODO: store = bottom if any element bottom -> correct?
 
     @copy_docstring(Lattice.is_top)
     def is_top(self) -> bool:
-        """The current state is bottom if `all` of its three elements are top"""
+        """The current state is bottom if `all` of its four elements are top"""
         scalar_t = self.scalar_state.is_top()
         dict_t = self.dict_store.is_top()
         init_t = self.init_store.is_top()
@@ -583,10 +594,10 @@ class DictContentState(State):
 
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'DictContentState'):
-        """To avoid imprecise widening of DictSegmentLattice, first widen the scalar state"""
+        """To avoid imprecise widening of DictSegmentLattice, first widens the scalar state"""
         old_scalar = deepcopy(self.scalar_state)
         self.scalar_state.widening(other.scalar_state)
-        if old_scalar != self.scalar_state:        # TODO: comparison working?
+        if old_scalar != self.scalar_state:
             self.dict_store.join(other.dict_store)
             self.init_store.join(other.init_store)
             self.in_relations.join(other.in_relations)
@@ -695,7 +706,7 @@ class DictContentState(State):
             # update scalar part
             self.scalar_state.assign({left}, {right})
 
-            # update relations with scalar variables
+            # update relations with scalar variables in dict stores
             for d_lattice in self.dict_store.store.values():
                 for (k1,v) in d_lattice.segments:
                     k1.assign({left}, {right})
