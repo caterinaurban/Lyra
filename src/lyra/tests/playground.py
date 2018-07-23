@@ -21,4 +21,4 @@ from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
 # RangeAnalysis().main("assumption/example.py")
 # TypeRangeAssumptionAnalysis().main("assumption/example.py")
 
-DictContentAnalysis().main("numerical/dict_example.py")
+DictContentAnalysis().main("numerical/larger_expressions.py")
