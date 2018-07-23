@@ -300,7 +300,7 @@ class InRelationState(State, BottomMixin):
     @copy_docstring(Lattice.top)
     def top(self):
         """The top lattice element is ``{}``."""
-        self.replace(InRelationState())
+        self._replace(InRelationState())
         return self
 
     @copy_docstring(Lattice.is_top)
@@ -316,16 +316,16 @@ class InRelationState(State, BottomMixin):
     def _join(self, other: 'InRelationState') -> 'InRelationState':
         """Intersection of the tuple sets"""
         new_set = self.tuple_set.intersection(other.tuple_set)      # TODO: update?
-        return self.replace(InRelationState(new_set))
+        return self._replace(InRelationState(new_set))
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'InRelationState') -> 'InRelationState':
         """Union of the tuple sets"""
         new_set = self.tuple_set.union(other.tuple_set)
-        return self.replace(InRelationState(new_set))
+        return self._replace(InRelationState(new_set))
 
     #helpers
-    def find_key(self, k: VariableIdentifier) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:     # TODO: multiplle such tuples
+    def find_key(self, k: VariableIdentifier) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
         """Returns the tuples from the set that have k at the key position"""
         if self.is_bottom():
             return iter(())  # empty iterator
@@ -340,7 +340,7 @@ class InRelationState(State, BottomMixin):
         return filter(lambda t: (t[2] and t[2] == v), self.tuple_set)
 
     def find_var(self, v: VariableIdentifier) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
-        """Returns the tuples from the set that have v at the key OR value position"""
+        """Returns the tuples from the set that have v at the dict OR key OR value position"""
         if self.is_bottom():
             return iter(())     # empty iterator
 
@@ -501,13 +501,13 @@ class BoolLattice(Lattice):
     @copy_docstring(Lattice.bottom)
     def bottom(self):
         """The bottom lattice element is ``False``."""
-        self.replace(BoolLattice(False))
+        self._replace(BoolLattice(False))
         return self
 
     @copy_docstring(Lattice.top)
     def top(self):
         """The top lattice element is ``True``."""
-        self.replace(BoolLattice())
+        self._replace(BoolLattice())
         return self
 
     @copy_docstring(Lattice.is_bottom)
