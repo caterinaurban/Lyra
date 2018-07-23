@@ -13,7 +13,7 @@ from typing import Set
 
 from lyra.core.cfg import Loop
 from lyra.core.expressions import VariableIdentifier
-from lyra.core.statements import Assignment, VariableAccess, Call
+from lyra.core.statements import Assignment, VariableAccess, Call, TupleDisplayAccess
 from lyra.engine.result import AnalysisResult
 
 from lyra.frontend.cfg_generator import ast_to_cfg
@@ -84,9 +84,13 @@ class Runner:
                 if isinstance(current, Loop):
                     edges = self.cfg.edges.items()
                     conds = [edge.condition for nodes, edge in edges if nodes[0] == current]
-                    for cond in [c for c in conds if isinstance(c, Call)]:
-                        for arg in [a for a in cond.arguments if isinstance(a, VariableAccess)]:
-                            variables.add(arg.variable)
+                    for cond in [c for c in conds if isinstance(c, Call)]:      # TODO: use .ids()?
+                        for arg in cond.arguments:
+                            if isinstance(arg, VariableAccess):
+                                variables.add(arg.variable)
+                            elif isinstance(arg, TupleDisplayAccess):
+                                for i in arg.items:
+                                    variables.add(i.variable)
                 for node in self.cfg.successors(current):
                     worklist.put(node)
         return variables
