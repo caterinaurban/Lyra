@@ -418,12 +418,6 @@ class CFGVisitor(ast.NodeVisitor):
         return cfg
 
     def visit_For(self, node, types=None, typ=None):
-        header_node = Loop(self._id_gen.next)
-
-        cfg = self._translate_body(node.body, types, typ)
-        body_in_node = cfg.in_node
-        body_out_node = cfg.out_node
-
         pp = ProgramPoint(node.target.lineno, node.target.col_offset)
 
         # don't provide result type (should be set before by a type annotation for variables/will be set later for calls)
@@ -466,6 +460,12 @@ class CFGVisitor(ast.NodeVisitor):
 
         test = Call(pp, "in", [target, iteration], BooleanLyraType())
         neg_test = Call(pp, "not", [test], BooleanLyraType())
+
+        header_node = Loop(self._id_gen.next)
+
+        cfg = self._translate_body(node.body, types, typ)
+        body_in_node = cfg.in_node
+        body_out_node = cfg.out_node
 
         cfg.add_node(header_node)
         cfg.in_node = header_node
