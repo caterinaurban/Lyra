@@ -1,13 +1,13 @@
-# INITIAL: value -> Dead, example -> Dead, key -> Dead, i -> Dead
+# INITIAL: example -> Dead, i -> Dead, key -> Dead, value -> Dead
 value: int = input()
-# STATE: value -> Live, example -> Dead, key -> Dead, i -> Dead
+# STATE: example -> Dead, i -> Dead, key -> Dead, value -> Live
 example: Dict[str, int] = {"a": 0, "b": 1, "c": 2}
-# STATE: value -> Live, example -> Live, key -> Dead, i -> Dead
+# STATE: example -> Live, i -> Dead, key -> Dead, value -> Live
 key: str = "b"
-# STATE: value -> Live, example -> Live, key -> Live, i -> Dead
+# STATE: example -> Live, i -> Dead, key -> Live, value -> Live
 example[key]: int = value
-# STATE: value -> Dead, example -> Live, key -> Dead, i -> Dead
+# STATE: example -> Live, i -> Dead, key -> Dead, value -> Dead
 i: int = example["a"]
-# STATE: value -> Dead, example -> Dead, key -> Dead, i -> Live
+# STATE: example -> Dead, i -> Live, key -> Dead, value -> Dead
 print(i)
-# FINAL: value -> Dead, example -> Dead, key -> Dead, i -> Dead
+# FINAL: example -> Dead, i -> Dead, key -> Dead, value -> Dead
