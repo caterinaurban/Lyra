@@ -12,7 +12,8 @@ from lyra.visualization.graph_renderer import CfgRenderer
 
 
 def main(args):
-    optparser = optparse.OptionParser(usage="python3.6 -m frontend.cfg_generator [options] [string]")
+    optparser = optparse.OptionParser(
+        usage="python3.6 -m frontend.cfg_generator [options] [string]")
     optparser.add_option("-f", "--file",
                          help="Read a code snippet from the specified file")
     optparser.add_option("-l", "--label",
@@ -44,21 +45,26 @@ class LooseControlFlowGraph:
         CONTINUE = 2
 
     def __init__(self, nodes: Set[Node] = None, in_node: Node = None, out_node: Node = None,
-                 edges: Set[Edge] = None, loose_in_edges=None,
-                 loose_out_edges=None, both_loose_edges=None):
+                 edges: Set[Edge] = None,
+                 loose_in_edges=None, loose_out_edges=None, both_loose_edges=None):
         """Loose control flow graph representation.
 
         This representation uses a complete (non-loose) control flow graph via aggregation
-        and adds loose edges and some transformations methods to combine, prepend
-        and append loose control flow graphs. This class intentionally does not provide
-        access to the linked CFG. The completed CFG can be retrieved finally with `eject()`.
+        and adds loose edges and
+        some transformations methods to combine, prepend and append loose control flow graphs.
+        This class
+        intentionally does not provide access to the linked CFG.
+        The completed CFG can be retrieved finally with
+        `eject()`.
 
         :param nodes: optional set of nodes of the control flow graph
         :param in_node: optional entry node of the control flow graph
         :param out_node: optional exit node of the control flow graph
         :param edges: optional set of edges of the control flow graph
-        :param loose_in_edges: optional set of loose edges that have no start yet and end inside this CFG
-        :param loose_out_edges: optional set of loose edges that start inside this CFG and have no end yet
+        :param loose_in_edges: optional set of loose edges
+        that have no start yet and end inside this CFG
+        :param loose_out_edges: optional set of loose edges
+        that start inside this CFG and have no end yet
         :param both_loose_edges: optional set of loose edges, loose on both ends
         """
         assert not in_node or not (loose_in_edges or both_loose_edges)
@@ -114,8 +120,8 @@ class LooseControlFlowGraph:
         return self._special_edges
 
     def loose(self):
-        return len(self.loose_in_edges) or len(self.loose_out_edges) or len(self.both_loose_edges)\
-               or len(self.special_edges)
+        loose = len(self.loose_in_edges) or len(self.loose_out_edges) or len(self.both_loose_edges)
+        return loose or len(self.special_edges)
 
     def add_node(self, node):
         self.nodes[node.identifier] = node
@@ -155,7 +161,8 @@ class LooseControlFlowGraph:
 
     def append(self, other):
         assert not (self.loose_out_edges and other.loose_in_edges)
-        assert not self.both_loose_edges or (not other.loose_in_edges and not other.both_loose_edges)
+        assert not self.both_loose_edges or (
+            not other.loose_in_edges and not other.both_loose_edges)
 
         self.nodes.update(other.nodes)
         self.edges.update(other.edges)
@@ -165,14 +172,16 @@ class LooseControlFlowGraph:
             edge_added = True
             for e in self.loose_out_edges:
                 e._target = other.in_node
-                self.edges[(e.source, e.target)] = e  # updated/created edge is not yet in edge dict -> add
+                # updated/created edge is not yet in edge dict -> add
+                self.edges[(e.source, e.target)] = e
             # clear loose edge sets
             self._loose_out_edges = set()
         elif other.loose_in_edges:
             edge_added = True
             for e in other.loose_in_edges:
                 e._source = self.out_node
-                self.edges[(e.source, e.target)] = e  # updated/created edge is not yet in edge dict -> add
+                # updated/created edge is not yet in edge dict -> add
+                self.edges[(e.source, e.target)] = e
             # clear loose edge set
             other._loose_in_edges = set()
 
@@ -193,7 +202,8 @@ class LooseControlFlowGraph:
         if not edge_added:
             # neither of the CFGs has loose ends -> add unconditional edge
             e = Unconditional(self.out_node, other.in_node)
-            self.edges[(e.source, e.target)] = e  # updated/created edge is not yet in edge dict -> add
+            # updated/created edge is not yet in edge dict -> add
+            self.edges[(e.source, e.target)] = e
 
         # in any case, transfer loose_out_edges of other to self
         self.loose_out_edges.update(other.loose_out_edges)
@@ -204,7 +214,9 @@ class LooseControlFlowGraph:
 
     def eject(self) -> ControlFlowGraph:
         if self.loose():
-            raise TypeError('This control flow graph is still loose and can not eject a complete control flow graph!')
+            error = 'This control flow graph is still loose'
+            error = error + ' and cannot eject a complete control flow graph!'
+            raise TypeError(error)
         return self._cfg
 
     def replace(self, other):
@@ -239,11 +251,13 @@ class NodeIdentifierGenerator:
 
 class CFGFactory:
     """
-    A helper class that encapsulates a partial CFG and possibly some statements not yet attached to CFG.
+    A helper class that encapsulates a partial CFG
+    and possibly some statements not yet attached to CFG.
 
     Whenever the
-    method `complete_basic_block()` is called, it is ensured that all unattached statements are
-    properly attached to partial CFG. The partial CFG can be retrieved at any time by property `cfg`.
+    method `complete_basic_block()` is called,
+    it is ensured that all unattached statements are properly attached to
+    partial CFG. The partial CFG can be retrieved at any time by property `cfg`.
     """
 
     def __init__(self, id_gen):
@@ -297,7 +311,8 @@ class CFGVisitor(ast.NodeVisitor):
     """
     This AST visitor generates a CFG recursively.
 
-    Overwritten methods return either a partial CFG or a statement/expression, depending on the type of node.
+    Overwritten methods return either a partial CFG or a statement/expression,
+    depending on the type of node.
     """
 
     def __init__(self):
@@ -343,7 +358,8 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_Module(self, node, types=None, typ=None):
         start_cfg = _dummy_cfg(self._id_gen)
-        body_cfg = self._translate_body(node.body, types, allow_loose_in_edges=True, allow_loose_out_edges=True)
+        body_cfg = self._translate_body(
+            node.body, types, allow_loose_in_edges=True, allow_loose_out_edges=True)
         end_cfg = _dummy_cfg(self._id_gen)
         if body_cfg is None:
             return start_cfg.append(end_cfg)
@@ -358,12 +374,14 @@ class CFGVisitor(ast.NodeVisitor):
         neg_test = Call(pp, "not", [test], BooleanLyraType())
 
         body_cfg.add_edge(Conditional(None, test, body_cfg.in_node, Edge.Kind.IF_IN))
-        if body_cfg.out_node:  # if control flow can exit the body at all, add an unconditional IF_OUT edge
+        if body_cfg.out_node:
+            # if control flow can exit the body at all, add an unconditional IF_OUT edge
             body_cfg.add_edge(Unconditional(body_cfg.out_node, None, Edge.Kind.IF_OUT))
         if node.orelse:  # if there is else branch
             orelse_cfg = self._translate_body(node.orelse, types)
             orelse_cfg.add_edge(Conditional(None, neg_test, orelse_cfg.in_node, Edge.Kind.IF_IN))
-            if orelse_cfg.out_node:  # if control flow can exit the else at all, add an unconditional IF_OUT edge
+            if orelse_cfg.out_node:
+                # if control flow can exit the else at all, add an unconditional IF_OUT edge
                 orelse_cfg.add_edge(Unconditional(orelse_cfg.out_node, None, Edge.Kind.IF_OUT))
         else:
             orelse_cfg = LooseControlFlowGraph()
@@ -374,7 +392,8 @@ class CFGVisitor(ast.NodeVisitor):
             dummy = _dummy(self._id_gen)
             body_cfg.add_node(dummy)
 
-            # add a new IF_OUT edge where the special edge is at the moment, ending in new dummy node
+            # add a new IF_OUT edge where the special edge is at the moment,
+            # ending in new dummy node
             body_cfg.add_edge(Unconditional(special_edge.source, dummy, Edge.Kind.IF_OUT))
 
             # change position of special edge to be AFTER the new dummy
@@ -399,12 +418,14 @@ class CFGVisitor(ast.NodeVisitor):
 
         cfg.add_edge(Conditional(header_node, test, body_in_node, Edge.Kind.LOOP_IN))
         cfg.add_edge(Conditional(header_node, neg_test, None))
-        if body_out_node:  # if control flow can exit the body at all, add an unconditional LOOP_OUT edge
+        if body_out_node:
+            # if control flow can exit the body at all, add an unconditional LOOP_OUT edge
             cfg.add_edge(Unconditional(body_out_node, header_node, Edge.Kind.LOOP_OUT))
 
         if node.orelse:  # if there is else branch
             orelse_cfg = self._translate_body(node.orelse, types)
-            if orelse_cfg.out_node:  # if control flow can exit the else at all, add an unconditional DEFAULT edge
+            if orelse_cfg.out_node:
+                # if control flow can exit the else at all, add an unconditional DEFAULT edge
                 orelse_cfg.add_edge(Unconditional(orelse_cfg.out_node, None, Edge.Kind.DEFAULT))
             cfg.append(orelse_cfg)
 
@@ -472,12 +493,14 @@ class CFGVisitor(ast.NodeVisitor):
 
         cfg.add_edge(Conditional(header_node, test, body_in_node, Edge.Kind.LOOP_IN))
         cfg.add_edge(Conditional(header_node, neg_test, None))
-        if body_out_node:  # if control flow can exit the body at all, add an unconditional LOOP_OUT edge
+        if body_out_node:
+            # if control flow can exit the body at all, add an unconditional LOOP_OUT edge
             cfg.add_edge(Unconditional(body_out_node, header_node, Edge.Kind.LOOP_OUT))
 
         if node.orelse:  # if there is else branch
             orelse_cfg = self._translate_body(node.orelse, types)
-            if orelse_cfg.out_node:  # if control flow can exit the else at all, add an unconditional DEFAULT edge
+            if orelse_cfg.out_node:
+                # if control flow can exit the else at all, add an unconditional DEFAULT edge
                 orelse_cfg.add_edge(Unconditional(orelse_cfg.out_node, None, Edge.Kind.DEFAULT))
             cfg.append(orelse_cfg)
 
@@ -493,20 +516,24 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_Break(self, _, types=None, typ=None):
         dummy = _dummy(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
-        # the type of the special edge is not yet known, may be also an IF_OUT first, before LOOP_OUT
+        # the type of the special edge is not yet known, may be also an IF_OUT first,
+        # before LOOP_OUT
         # so set type to DEFAULT for now but remember the special type of this edge separately
         cfg.special_edges.append(
-            (Unconditional(dummy, None, Edge.Kind.DEFAULT), LooseControlFlowGraph.SpecialEdgeType.BREAK)
+            (Unconditional(dummy, None, Edge.Kind.DEFAULT),
+             LooseControlFlowGraph.SpecialEdgeType.BREAK)
         )
         return cfg
 
     def visit_Continue(self, _, types=None, typ=None):
         dummy = _dummy(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
-        # the type of the special edge is not yet known, may be also an IF_OUT first, before LOOP_OUT
+        # the type of the special edge is not yet known, may be also an IF_OUT first,
+        # before LOOP_OUT
         # so set type to DEFAULT for now but remember the special type of this edge separately
         cfg.special_edges.append(
-            (Unconditional(dummy, None, Edge.Kind.DEFAULT), LooseControlFlowGraph.SpecialEdgeType.CONTINUE)
+            (Unconditional(dummy, None, Edge.Kind.DEFAULT),
+             LooseControlFlowGraph.SpecialEdgeType.CONTINUE)
         )
         return cfg
 
@@ -552,10 +579,11 @@ class CFGVisitor(ast.NodeVisitor):
             pp = ProgramPoint(node.lineno, node.col_offset)
             expr = Literal(BooleanLyraType(), str(node.value))
             return LiteralEvaluation(pp, expr)
-        raise NotImplementedError(f"Name constant {node.value.__class__.__name__} is not yet supported!")
+        raise NotImplementedError(
+            f"Name constant {node.value.__class__.__name__} is not yet supported!")
 
     def visit_Expr(self, node, types=None, typ=None):
-            return self.visit(node.value, types, typ)
+        return self.visit(node.value, types, typ)
 
     def visit_Call(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
@@ -598,12 +626,14 @@ class CFGVisitor(ast.NodeVisitor):
             key = self.visit(node.slice.value, types, typ)
             return SubscriptionAccess(pp, target, key)
         elif isinstance(node.slice, ast.Slice):
-            return SlicingAccess(pp, self.visit(node.value, types, typ),
-                             self.visit(node.slice.lower, types, typ),
-                             self.visit(node.slice.upper, types, typ),
-                             self.visit(node.slice.step, types, typ) if node.slice.step else None)
+            value = self.visit(node.value, types, typ)
+            lower = self.visit(node.slice.lower, types, typ)
+            upper = self.visit(node.slice.upper, types, typ)
+            step = self.visit(node.slice.step, types, typ) if node.slice.step else None
+            return SlicingAccess(pp, value, lower, upper, step)
         else:
-            raise NotImplementedError(f"The statement {str(type(node.slice))} is not yet translatable to CFG!")
+            raise NotImplementedError(
+                f"The statement {str(type(node.slice))} is not yet translatable to CFG!")
 
     def visit(self, node, *args, **kwargs):
         """Visit a node."""
@@ -615,7 +645,8 @@ class CFGVisitor(ast.NodeVisitor):
         print(type(node).__name__)
         super().generic_visit(node)
 
-    def _translate_body(self, body, types, allow_loose_in_edges=False, allow_loose_out_edges=False):
+    def _translate_body(self, body, types,
+                        allow_loose_in_edges=False, allow_loose_out_edges=False):
         cfg_factory = CFGFactory(self._id_gen)
 
         for child in body:
@@ -649,7 +680,8 @@ class CFGVisitor(ast.NodeVisitor):
             # elif isinstance(child, ast.Assign): # TODO
             #     raise NotAnnotatedError(f"The Assignment in line {str(child.lineno)} is not type annotated")
             else:
-                raise NotImplementedError(f"The statement {str(type(child))} is not yet translatable to CFG!")
+                raise NotImplementedError(
+                    f"The statement {str(type(child))} is not yet translatable to CFG!")
         cfg_factory.complete_basic_block()
 
         if not allow_loose_in_edges and cfg_factory.cfg and cfg_factory.cfg.loose_in_edges:

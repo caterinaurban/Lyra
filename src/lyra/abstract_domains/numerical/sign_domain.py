@@ -35,32 +35,33 @@ class SignLattice(ArithmeticMixin):
     .. automethod:: SignLattice._sub
     .. automethod:: SignLattice._mult
     """
+
     def __init__(self, negative=True, positive=True, zero=True):
         super().__init__()
         self._negative = negative
         self._zero = zero
         self._positive = positive
-        
+
     @property
     def negative(self):
         """Current negative flag.
-        
+
         :return: the current negative flag
         """
         return self._negative
-    
+
     @property
     def zero(self):
         """Current zero flag.
-        
+
         :return: the current zero flag
         """
         return self._zero
-    
+
     @property
     def positive(self):
         """Current positive flag.
-        
+
         :return: the current positive flag
         """
         return self._positive
@@ -235,6 +236,7 @@ class SignState(Store, State):
     .. automethod:: SignState._substitute
 
     """
+
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to the sign representing its value.
 
@@ -458,7 +460,7 @@ class SignState(Store, State):
             raise ValueError("Binary operator {expr.operator} is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
-        def visit_BinaryComparisonOperation(self,  expr, state=None, evaluation=None):
+        def visit_BinaryComparisonOperation(self, expr, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 

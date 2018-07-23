@@ -29,6 +29,7 @@ class Store(Lattice):
     .. automethod:: Store._meet
     .. automethod:: Store._join
     """
+
     def __init__(self, variables: Set[VariableIdentifier], lattices: Dict[LyraType, Type[Lattice]],
                  arguments: Dict[LyraType, Dict[str, Any]] = defaultdict(lambda: dict())):
         """Create a mapping Var -> L from each variable in Var to the corresponding element in L.

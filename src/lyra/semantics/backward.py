@@ -25,7 +25,7 @@ class UserDefinedCallSemantics(BackwardSemantics):
     # noinspection PyUnusedLocal
     def user_defined_call_semantics(self, stmt: Call, state: State):
         """Backward semantics of a user-defined function/method call.
-        
+
         :param stmt: call statement to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
@@ -38,7 +38,7 @@ class AssignmentSemantics(BackwardSemantics):
     """Backward semantics of assignments."""
 
     def assignment_semantics(self, stmt: Assignment, state: State) -> State:
-        """Backward semantics of an assignment. 
+        """Backward semantics of an assignment.
 
         :param stmt: assignment statement to be executed
         :param state: state before executing the assignment

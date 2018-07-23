@@ -17,7 +17,7 @@ from lyra.semantics.semantics import Semantics
 class Interpreter(metaclass=ABCMeta):
     def __init__(self, cfg: ControlFlowGraph, semantics, widening, precursory=None):
         """Control flow graph interpreter.
-        
+
         :param cfg: control flow graph to analyze
         :param semantics: semantics of statements in the control flow graph
         :param widening: number of iterations before widening
@@ -51,7 +51,7 @@ class Interpreter(metaclass=ABCMeta):
     @abstractmethod
     def analyze(self, initial: State) -> AnalysisResult:
         """Run the analysis.
-        
+
         :param initial: initial analysis state
         :return: result of the analysis
         """

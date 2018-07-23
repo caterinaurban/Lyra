@@ -37,6 +37,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin):
     .. automethod:: IntervalLattice._sub
     .. automethod:: IntervalLattice._mult
     """
+
     def __init__(self, lower=-inf, upper=inf):
         super().__init__()
         if lower <= upper:      # the interval is not empty
@@ -161,6 +162,7 @@ class IntervalState(Store, State):
     .. automethod:: IntervalState._substitute
 
     """
+
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to the interval representing its value.
 
