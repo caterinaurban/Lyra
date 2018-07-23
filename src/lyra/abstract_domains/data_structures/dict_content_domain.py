@@ -566,15 +566,14 @@ class DictContentState(State):
     .. automethod:: LivenessState._substitute
     """
 
-    # here the Union type means a logical AND: the domain should inherit from both RelationalStore and State
-    def __init__(self, scalar_domain: Type[Union[RelationalStore, State]],
-                 key_domain: Type[Union[RelationalStore, State]], value_domain: Type[Union[RelationalStore, State]],
-                 key_decomp_function: Callable[[Lattice, Lattice], Set[Lattice]],
-                 scalar_vars: List[VariableIdentifier] = None, dict_vars: List[VariableIdentifier] = None,
-                 scalar_k_conv: Callable[[Union[RelationalStore, State]], Union[RelationalStore, State]] = lambda x: x,
-                 k_scalar_conv: Callable[[Union[RelationalStore, State]], Union[RelationalStore, State]] = lambda x: x,
-                 scalar_v_conv: Callable[[Union[RelationalStore, State]], Union[RelationalStore, State]] = lambda x: x,
-                 v_scalar_conv: Callable[[Union[RelationalStore, State]], Union[RelationalStore, State]] = lambda x: x):
+    # here the Union type means a logical AND: the domain should inherit from both the Wrapper and State
+    def __init__(self, scalar_domain: Type[Union[ScalarWrapper, State]],
+                 key_domain: Type[Union[KeyWrapper, State]], value_domain: Type[Union[ScalarWrapper, State]],
+                 scalar_vars: Set[VariableIdentifier] = None, dict_vars: Set[VariableIdentifier] = None,
+                 scalar_k_conv: Callable[[Union[ScalarWrapper, State]], Union[KeyWrapper, State]] = lambda x: deepcopy(x),
+                 k_scalar_conv: Callable[[Union[KeyWrapper, State]], Union[ScalarWrapper, State]] = lambda x: deepcopy(x),
+                 scalar_v_conv: Callable[[Union[ScalarWrapper, State]], Union[ValueWrapper, State]] = lambda x: deepcopy(x),
+                 v_scalar_conv: Callable[[Union[ValueWrapper, State]], Union[ScalarWrapper, State]] = lambda x: deepcopy(x)):
         """Map each program variable to its liveness status.
 
         :param scalar_domain: domain for abstraction of scalar variable values, ranges over the scalar variables #TODO: separate per type?
@@ -592,9 +591,9 @@ class DictContentState(State):
         super().__init__()
 
         if scalar_vars is None:
-            scalar_vars = []
+            scalar_vars = set()
         if dict_vars is None:
-            dict_vars = []
+            dict_vars = set()
 
         self._s_vars = scalar_vars
         self._d_vars = dict_vars
@@ -617,18 +616,17 @@ class DictContentState(State):
                     # if issubclass(key_domain, Store):   # not relational -> don't need scalar vars # TODO: also for op? Or only for repr?
                     #     key_vars = []
                     # else:
-                    key_vars = scalar_vars.copy()
+                    #key_vars = scalar_vars.copy()
                     # if issubclass(value_domain, Store):
                     #     value_vars = []
                     # else:
                     value_vars = scalar_vars.copy()
-                    k_var = VariableIdentifier(typ.key_type, self._k_name)
-                    key_vars.append(k_var)
-                    v_var = VariableIdentifier(typ.value_type, self._v_name)
-                    value_vars.append(v_var)
+                    k_var = VariableIdentifier(typ.key_type, k_name)
+                    v_var = VariableIdentifier(typ.value_type, v_name)
 
-                    arguments[typ] = {'key_decomp_function': key_decomp_function, 'key_domain': key_domain, 'value_domain': value_domain,
-                                    'key_d_args': {'variables':key_vars}, 'value_d_args': {'variables':value_vars}}
+                    arguments[typ] = {'key_domain': key_domain, 'value_domain': value_domain,
+                                    'key_d_args': {'scalar_variables': scalar_vars, 'k_var': k_var},
+                                    'value_d_args': {'scalar_variables': scalar_vars, 'v_var': v_var}}
             else:
                 raise TypeError("Dictionary variables should be of DictLyraType")
 
@@ -651,7 +649,7 @@ class DictContentState(State):
         self._in_relations = InRelationState()
 
     @property
-    def scalar_state(self) -> Union[RelationalStore, State]:
+    def scalar_state(self) -> Union[ScalarWrapper, State]:
         """Abstract state of scalar variable values."""
         return self._scalar_state
 
@@ -670,9 +668,40 @@ class DictContentState(State):
         """Relational state storing relationships introduced by 'in'-conditions."""
         return self._in_relations
 
-    def __repr__(self):
-        k_is_store = issubclass(self._k_domain, Store)
-        v_is_store = issubclass(self._v_domain, Store)
+    @property
+    def v_domain(self) -> Type[Union[ValueWrapper, State]]:
+        """Domain for dictionary values"""
+        return self._v_domain
+
+    @property
+    def k_domain(self) -> Type[Union[KeyWrapper, State]]:
+        """Domain for dictionary keys"""
+        return self._k_domain
+
+    @property
+    def s_k_conv(self):
+        """Function to convert from scalar domain elements to key domain elements"""
+        return self._s_k_conv
+
+    @property
+    def k_s_conv(self):
+        """Function to convert from key domain elements to scalar domain elements"""
+        return self._k_s_conv
+
+    @property
+    def s_v_conv(self):
+        """Function to convert from scalar domain elements to value domain elements"""
+        return self._s_v_conv
+
+    @property
+    def v_s_conv(self):
+        """Function to convert from value domain elements to scalar domain elements"""
+        return self._v_s_conv
+
+
+    def __repr__(self):             # TODO: use join
+        k_is_store = issubclass(self.k_domain, Store)
+        v_is_store = issubclass(self.v_domain, Store)
         if k_is_store or v_is_store:
             v_k = VariableIdentifier(LyraType(), self._k_name)  # type does not matter, because eq in terms of name
             v_v = VariableIdentifier(LyraType(), self._v_name)
@@ -801,8 +830,8 @@ class DictContentState(State):
         return self
 
     # helper
-    def eval_key(self, key_expr: Expression) \
-            -> Union[RelationalStore, State]: # (returns key_domain element)
+    def eval_key(self, key_expr: Expression) -> Union[KeyWrapper, State]:
+        """evaluates key_expr in the scalar_state and assigns it to v_k in a key state"""
         scalar_copy = deepcopy(self.scalar_state)
         v_k = VariableIdentifier(key_expr.typ, self._k_name)       # TODO: type?
         scalar_copy.add_var(v_k)# scalar_copy.variables.append() ?  # TODO: add function
@@ -811,8 +840,8 @@ class DictContentState(State):
         return self._s_k_conv(scalar_copy)
 
     # helper
-    def eval_value(self, value_expr: Expression) \
-            -> Union[RelationalStore, State]:  # (returns value_domain element)      # TODO: value expression
+    def eval_value(self, value_expr: Expression) -> Union[ValueWrapper, State]:
+        """evaluates value_expr in the scalar_state and assigns it to v_v in a value state"""
         scalar_copy = deepcopy(self.scalar_state)
         v_v = VariableIdentifier(value_expr.typ, self._v_name)  # TODO: type?
         scalar_copy.add_var(v_v)  # scalar_copy.variables.append() ?  # TODO: add function
