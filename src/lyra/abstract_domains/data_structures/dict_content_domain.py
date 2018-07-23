@@ -788,59 +788,276 @@ class DictContentState(State):
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'DictContentState':
-        scalar_types = {BooleanLyraType, IntegerLyraType, FloatLyraType,
-                        StringLyraType}  # /immutable TODO: make module-global?/ put function in types?
+        condition = NegationFreeNormalExpression().visit(condition)     # eliminate negations
 
-        if all(type(id.typ) in scalar_types for id in condition.ids()):  # TODO: not any?
-            # completely SCALAR STMT
-            # update scalar part
-            self.scalar_state.assume({condition})
+        if isinstance(condition, BinaryComparisonOperation):
+            if condition.operator == BinaryComparisonOperation.Operator.In:
+                # refine variable:
+                if isinstance(condition.right, Keys) and isinstance(condition.left, VariableIdentifier):
+                    d = condition.right.target_dict
+                    d_lattice: DictSegmentLattice = self.dict_store.store[d]
+                    k_abs: Union[KeyWrapper, State] = d_lattice.get_keys_joined()
+                    v_k = k_abs.k_var
 
-            # update relations with scalar variables
-            for d_lattice in self.dict_store.store.values():
-                for (k1, v) in d_lattice.segments:
-                    k1.assume({condition})
-                    v.assume({condition})
-                d_lattice.d_norm_own()
-            for i_lattice in self.init_store.store.values():
-                for (k2, b) in i_lattice.segments:  # b must be True
-                    k2.assume({condition})
-                i_lattice.d_norm_own()
+                    if self._loop_flag: # loop condition -> overwrite old value
+                        self.scalar_state.add_var(v_k)
+                        self.scalar_state.meet(self._k_s_conv(k_abs))
+                        self.scalar_state.assign({condition.left}, {v_k})
+                        self.scalar_state.remove_var(v_k)
 
-            #no 'in'-condition -> no need to update in_relations
-        else:
-            if isinstance(condition, BinaryComparisonOperation):
-                if condition.operator == 9:      #In
-                    # refine variable:
-                    if isinstance(condition.right, Keys) and isinstance(condition.left, VariableIdentifier):
-                        d = condition.right.target_dict
-                        d_lattice = self.dict_store.store[d]
-                        keys: Set[Lattice] = d_lattice.get_keys()
-                        k_list = list(deepcopy(keys))
-                        k_abs = k_list[0].big_join(k_list)
-                        assigned_state = self._k_s_conv(k_abs)
-                        v_k = VariableIdentifier(d.typ.key_type, self._k_name)
-                        assigned_state.assign({condition.left}, {v_k})
-                        self.scalar_state.meet(assigned_state)
-                    if isinstance(condition.right, Values) and isinstance(condition.left, VariableIdentifier):
-                        d = condition.right.target_dict
-                        d_lattice = self.dict_store.store[d]
-                        values: Set[Lattice] = d_lattice.get_values()
-                        v_list = list(deepcopy(keys))
-                        v_abs = k_list[0].big_join(k_list)
-                        assigned_state = self._v_s_conv(v_abs)
-                        v_v = VariableIdentifier(d.typ.value_type, self._v_name)
-                        assigned_state.assign({condition.left}, {v_v})
-                        self.scalar_state.meet(assigned_state)
+                        # invalidate old left in dict stores                      # IMPRECISION!!
+                        for d_lattice in self.dict_store.store.values():
+                            d_lattice.invalidate_var(condition.left)
+                        for i_lattice in self.init_store.store.values():
+                            i_lattice.invalidate_var(condition.left)
+                    else:   # meet after assignment -> only refine old value
+                        assign_state = self._k_s_conv(k_abs)
+                        assign_state.assign({condition.left}, {v_k})
+                        assign_state.remove_var(v_k)
+                        self.scalar_state.meet(assign_state)
+                        if self.scalar_state.is_bottom():   # not reachable
+                            return self.bottom()
+                        self._update_dict_from_refined_scalar()
+
                     # refine in_relations
                     self.in_relations.assume({condition})
-                elif condition.operator == 10:
-                    # if isinstance(condition.right, Keys) and isinstance(condition.left,
-                    #                                                     VariableIdentifier):
-                        # - meet
+                    return self
+                elif isinstance(condition.right, Values) and isinstance(condition.left, VariableIdentifier):
+                    d = condition.right.target_dict
+                    d_lattice: DictSegmentLattice = self.dict_store.store[d]
+                    v_abs: Union[ValueWrapper, State] = d_lattice.get_values_joined()
+                    v_v = v_abs.v_var
+
+                    if self._loop_flag: # loop condition -> overwrite old value
+                        self.scalar_state.add_var(v_v)
+                        self.scalar_state.meet(self._v_s_conv(v_abs))
+                        self.scalar_state.assign({condition.left}, {v_v})
+                        self.scalar_state.remove_var(v_v)
+
+                        # invalidate old left in dict stores                      # IMPRECISION!!
+                        for d_lattice in self.dict_store.store.values():
+                            d_lattice.invalidate_var(condition.left)
+                        for i_lattice in self.init_store.store.values():
+                            i_lattice.invalidate_var(condition.left)
+                    else:   # meet after assignment -> only refine old value
+                        assign_state = self._v_s_conv(v_abs)
+                        assign_state.assign({condition.left}, {v_v})
+                        assign_state.remove_var(v_v)
+                        self.scalar_state.meet(assign_state)
+                        if self.scalar_state.is_bottom():   # not reachable
+                            return self.bottom()
+                        self._update_dict_from_refined_scalar()
+
+                    # refine in_relations
+                    self.in_relations.assume({condition})
+                    return self
+                elif isinstance(condition.right, Items) and isinstance(condition.left, TupleDisplay):
+                    d = condition.right.target_dict
+                    d_lattice: DictSegmentLattice = self.dict_store.store[d]
+
+                    k_abs: Union[KeyWrapper, State] = d_lattice.get_keys_joined()
+                    v_k = k_abs.k_var
+
+                    v_abs = d_lattice.get_values_joined()
+                    v_v = v_abs.v_var
+
+                    if self._loop_flag: # loop condition -> overwrite old value
+                        self.scalar_state.add_var(v_k)
+                        self.scalar_state.meet(self._k_s_conv(k_abs))
+                        self.scalar_state.assign({condition.left.items[0]}, {v_k})
+                        self.scalar_state.remove_var(v_k)
+
+                        self.scalar_state.add_var(v_v)
+                        self.scalar_state.meet(self._v_s_conv(v_abs))
+                        self.scalar_state.assign({condition.left.items[1]}, {v_v})
+                        self.scalar_state.remove_var(v_v)
+
+                        # invalidate old left in dict stores                      # IMPRECISION!!
+                        for d_lattice in self.dict_store.store.values():
+                            d_lattice.invalidate_var(condition.left.items[0])
+                            d_lattice.invalidate_var(condition.left.items[1])
+                        for i_lattice in self.init_store.store.values():
+                            i_lattice.invalidate_var(condition.left.items[0])
+                            i_lattice.invalidate_var(condition.left.items[1])
+                    else:
+                        k_s_state = self.k_s_conv(k_abs)
+                        k_s_state.assign({condition.left.items[0]}, {v_k})
+                        k_s_state.remove_var(v_k)
+
+                        v_s_state = self.v_s_conv(v_abs)
+                        v_s_state.assign({condition.left.items[1]}, {v_v})
+                        v_s_state.remove_var(v_v)
+
+                        assign_state = k_s_state
+                        assign_state.meet(v_s_state)
+                        self.scalar_state.meet(assign_state)
+                        if self.scalar_state.is_bottom():   # not reachable
+                            return self.bottom()
+                        self._update_dict_from_refined_scalar()
+
+                    # refine in_relations
+                    self.in_relations.assume({condition})
+                    return self
+                else:
+                    # refine in_relations
+                    self.in_relations.assume({condition})
+            elif condition.operator == BinaryComparisonOperation.Operator.NotIn:
+                if isinstance(condition.right, Keys):
+                    d = condition.right.target_dict
+                    d_lattice: DictSegmentLattice = self.dict_store.store[d]
+                    k_abs: Union[KeyWrapper, State] = d_lattice.get_keys_joined()
+                    v_k = k_abs.k_var
+
+                    s_current = deepcopy(self.scalar_state)
+                    s_current.add_var(v_k)
+                    s_current.assign({v_k}, {condition.left})
+                    k_current = self.s_k_conv(s_current)
+                    key_complement = k_current.decomp(k_current, k_abs)
+                    joined_complement = k_current.big_join(list(key_complement))
+
+                    if self._loop_flag: # loop condition -> overwrite old value
+                        self.scalar_state.add_var(v_k)
+                        self.scalar_state.meet(self._k_s_conv(joined_complement))
+                        self.scalar_state.assign({condition.left}, {v_k})
+                        self.scalar_state.remove_var(v_k)
+
+                        # invalidate old left in dict stores                      # imprecision
+                        for d_lattice in self.dict_store.store.values():
+                            d_lattice.invalidate_var(condition.left)
+                        for i_lattice in self.init_store.store.values():
+                            i_lattice.invalidate_var(condition.left)
+                    else:
+                        assign_state = self._k_s_conv(joined_complement)
+                        assign_state.assign({condition.left}, {v_k})
+                        assign_state.remove_var(v_k)
+                        self.scalar_state.meet(assign_state)
+                        if self.scalar_state.is_bottom():   # not reachable
+                            return self.bottom()
+                        self._update_dict_from_refined_scalar()
+
+                    # refine in_relations
+                    self.in_relations.assume({condition})
+                    return self
+                elif isinstance(condition.right, Values):
+                    # TODO
+                    if self._loop_flag:
+                        self.scalar_state.invalidate_var(condition.left)
+
+                        # invalidate old left in dict stores                      # imprecision
+                        for d_lattice in self.dict_store.store.values():
+                            d_lattice.invalidate_var(condition.left)
+                        for i_lattice in self.init_store.store.values():
+                            i_lattice.invalidate_var(condition.left)
+
+                    # refine in_relations
+                    self.in_relations.assume({condition})
+                    return self
+                elif isinstance(condition.right, Items):
+                    d = condition.right.target_dict
+                    d_lattice: DictSegmentLattice = self.dict_store.store[d]
+                    k_abs: Union[KeyWrapper, State] = d_lattice.get_keys_joined()
+                    v_k = k_abs.k_var
+
+                    s_current = deepcopy(self.scalar_state)
+                    s_current.add_var(v_k)
+                    s_current.assign({v_k}, {condition.left.items[0]})
+                    k_current = self.s_k_conv(s_current)
+                    key_complement = k_current.decomp(k_current, k_abs)
+                    joined_complement = k_current.big_join(list(key_complement))
+
+                    if self._loop_flag: # loop condition -> overwrite old value
+                        self.scalar_state.add_var(v_k)
+                        self.scalar_state.meet(self._k_s_conv(joined_complement))
+                        self.scalar_state.assign({condition.left.items[0]}, {v_k})
+                        self.scalar_state.remove_var(v_k)
+
+                        # invalidate old left in dict stores                      # imprecision
+                        for d_lattice in self.dict_store.store.values():
+                            d_lattice.invalidate_var(condition.left.items[0])
+                            d_lattice.invalidate_var(condition.left.items[1])
+                        for i_lattice in self.init_store.store.values():
+                            i_lattice.invalidate_var(condition.left.items[0])
+                            i_lattice.invalidate_var(condition.left.items[1])
+                    else:
+                        assign_state = self._k_s_conv(joined_complement)
+                        assign_state.assign({condition.left.items[0]}, {v_k})
+                        assign_state.remove_var(v_k)
+                        self.scalar_state.meet(assign_state)
+                        if self.scalar_state.is_bottom():   # not reachable
+                            return self.bottom()
+                        self._update_dict_from_refined_scalar()
+
+                    # refine in_relations
+                    self.in_relations.assume({condition})
+                    return self
+                else:
+                    # refine in_relations
                     self.in_relations.assume({condition})
 
+        # default: try in scalar domain
+        evaluation = dict()
+        scalar_condition = self._read_eval.visit(condition, self, evaluation)
 
+        self.scalar_state.assume({scalar_condition})
+
+        self._temp_cleanup(evaluation)
+
+        # check if coupled loop variables (from items-loops) get refined to refine their counterpart
+        cond_vars = condition.ids()
+        for (d_var, k_var, v_var) in self.in_relations.k_v_tuples():
+            if k_var in cond_vars:
+                if v_var in cond_vars:
+                    raise NotImplementedError(
+                        f"Conditions like {condition} containing both the key and value loop variable of a .items()-loop are not yet supported!")
+                else:
+                    # refine v_var according to refined k_var -> re-evaluate: v_var meet d_var[k_var]
+                    d_lattice: DictSegmentLattice = self.dict_store.store[d_var]
+
+                    k_abs = self.eval_key(k_var)
+
+                    if not k_abs.is_top():          # TODO: check for less_equal old?
+                        scalar_vars = self._s_vars.copy()
+                        v_v = VariableIdentifier(d_var.typ.value_type, v_name)
+                        v_abs = d_lattice.v_domain(scalar_vars, v_v).bottom()
+                        for (k, v) in d_lattice.segments:
+                            key_meet_k = deepcopy(k_abs).meet(k)
+                            if not key_meet_k.is_bottom():  # overlap/key may be contained in this segment
+                                v_abs.join(deepcopy(v))
+
+                        scalar_copy = deepcopy(self.scalar_state)
+                        scalar_copy.add_var(v_v)
+                        scalar_copy.meet(self.v_s_conv(v_abs))
+                        scalar_copy.assign({v_var}, {v_v})
+                        scalar_copy.remove_var(v_v)
+
+                        self.scalar_state.meet(scalar_copy)
+            elif v_var in cond_vars:
+                # refine k_var according to refined v_bar -> k_var, s.t. d_var[k_var] = v_var
+                d_lattice: DictSegmentLattice = self.dict_store.store[d_var]
+
+                v_abs = self.eval_key(v_var)
+
+                if not v_abs.is_top():  # TODO: check for less_equal old?
+                    scalar_vars = self._s_vars.copy()
+                    v_k = VariableIdentifier(d_var.typ.key_type, k_name)
+                    k_abs = d_lattice.k_domain(scalar_vars, v_k).bottom()
+                    for (k, v) in d_lattice.segments:
+                        value_meet_v = deepcopy(v_abs).meet(v)
+                        if not value_meet_v.is_bottom():  # overlap/value may be contained in this segment
+                            k_abs.join(deepcopy(k))
+
+                    scalar_copy = deepcopy(self.scalar_state)
+                    scalar_copy.add_var(v_k)
+                    scalar_copy.meet(self.k_s_conv(k_abs))
+                    scalar_copy.assign({k_var}, {v_k})
+                    scalar_copy.remove_var(v_k)
+
+                    self.scalar_state.meet(scalar_copy)
+
+
+        self._update_dict_from_refined_scalar()
+
+        # no 'in'-condition -> no need to update in_relations
         return self
 
     @copy_docstring(State.enter_if)
