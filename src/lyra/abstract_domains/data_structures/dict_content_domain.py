@@ -292,8 +292,13 @@ class InRelationState(State, BottomMixin):
             return "⊥"
 
         result = "{"
-        for t in self.tuple_set:
-            result += f"({t[0]},{t[1]},{t[2]})"
+        first = True
+        for t in sorted(self.tuple_set, key = lambda t: (t[0].name, t[1] and t[1].name, t[2] and t[2].name)):   # sort according to their names
+            if first:
+                result += f"({t[0]}, {t[1]}, {t[2]})"
+                first = False
+            else:
+                result += f", ({t[0]}, {t[1]}, {t[2]})"
         result += "}"
         return result
 
@@ -672,10 +677,10 @@ class DictContentState(State):
             v_k = VariableIdentifier(LyraType(), self._k_name)  # type does not matter, because eq in terms of name
             v_v = VariableIdentifier(LyraType(), self._v_name)
             result = repr(self.scalar_state)
-            for d, d_lattice in self.dict_store.store.items():
+            for d, d_lattice in sorted(self.dict_store.store.items(), key = lambda t: t[0].name):
                 result += f", {d} -> {{"
                 first = True
-                for (k, v) in d_lattice.segments:
+                for (k, v) in d_lattice.sorted_segments():
                     if first:
                         first = False
                     else:
@@ -693,12 +698,10 @@ class DictContentState(State):
                     result += ")"
                 result += "}"
 
-            result += ", "
-
-            for d, i_lattice in self.init_store.store.items():
+            for d, i_lattice in sorted(self.init_store.store.items(), key = lambda t: t[0].name):
                 result += f", {d} -> {{"
                 first = True
-                for (k, v) in i_lattice.segments:
+                for (k, v) in i_lattice.sorted_segments():
                     if first:
                         first = False
                     else:
