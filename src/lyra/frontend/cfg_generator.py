@@ -4,7 +4,6 @@ import sys
 
 from lyra.core.cfg import *
 from lyra.core.expressions import *
-
 from lyra.core.statements import *
 from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
     FloatLyraType, ListLyraType, TupleLyraType
