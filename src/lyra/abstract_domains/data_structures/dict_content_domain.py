@@ -1,17 +1,19 @@
 from collections import defaultdict
 from copy import deepcopy, copy
-from typing import List, Tuple, Set, Type, Callable, Dict, Any, Union, Iterator
+from typing import Tuple, Set, Type, Callable, Dict, Union, Iterator
 
+from lyra.abstract_domains.data_structures.dict_segment_lattice import DictSegmentLattice
+from lyra.abstract_domains.data_structures.key_wrapper import KeyWrapper
+from lyra.abstract_domains.data_structures.scalar_wrapper import ScalarWrapper
+from lyra.abstract_domains.data_structures.value_wrapper import ValueWrapper
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
-from lyra.abstract_domains.relational_store import RelationalStore
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
-from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing, \
-    DictDisplay, BinaryComparisonOperation, Keys, Items, Values, TupleDisplay, ExpressionVisitor, \
-    Literal, Input, ListDisplay, Range, AttributeReference
+from lyra.core.expressions import VariableIdentifier, Expression, Subscription, DictDisplay, \
+    BinaryComparisonOperation, Keys, Items, Values, TupleDisplay, ExpressionVisitor, \
+    NegationFreeNormalExpression
 from lyra.core.types import DictLyraType, LyraType, BooleanLyraType, IntegerLyraType, \
     FloatLyraType, StringLyraType
-
 from lyra.core.utils import copy_docstring
 
 
@@ -280,9 +282,15 @@ class InRelationState(State, BottomMixin):
     @property
     def tuple_set(self):
         """Current tuple set."""
+        if self.is_bottom():
+            return set()
+
         return self._tuple_set
 
-    def __repr__(self):
+    def __repr__(self):         # TODO: use join?
+        if self.is_bottom():
+            return "⊥"
+
         result = "{"
         for t in self.tuple_set:
             result += f"({t[0]},{t[1]},{t[2]})"
@@ -319,22 +327,52 @@ class InRelationState(State, BottomMixin):
     #helpers
     def find_key(self, k: VariableIdentifier) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:     # TODO: multiplle such tuples
         """Returns the tuples from the set that have k at the key position"""
+        if self.is_bottom():
+            return iter(())  # empty iterator
+
         return filter(lambda t: (t[1] and t[1] == k), self.tuple_set)
 
     def find_value(self, v: VariableIdentifier) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
         """Returns the tuples from the set that have v at the value position"""
+        if self.is_bottom():
+            return iter(())  # empty iterator
+
         return filter(lambda t: (t[2] and t[2] == v), self.tuple_set)
 
     def find_var(self, v: VariableIdentifier) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
         """Returns the tuples from the set that have v at the key OR value position"""
-        return filter(lambda t: (t[1] and t[1] == v) or (t[2] and t[2] == v), self.tuple_set)
+        if self.is_bottom():
+            return iter(())     # empty iterator
+
+        return filter(lambda t: (t[0] and t[0] == v) or (t[1] and t[1] == v) or (t[2] and t[2] == v), self.tuple_set)
+
+    def loop_vars(self) -> Set[VariableIdentifier]:
+        """Returns the set of all key/value variables"""
+        if self.is_bottom():
+            return set()
+
+        result = set()
+        for t in self.tuple_set:
+            result.add(t[1])
+            result.add(t[2])
+        return result
+
+    def k_v_tuples(self) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
+        """Returns all tuples without a None (i.e. with a key & a value variable)"""
+        if self.is_bottom():
+            return iter(())     # empty iterator
+
+        return filter(lambda t: (t[1] is not None) and (t[2] is not None), self.tuple_set)
 
     def invalidate_var(self, v: VariableIdentifier):
-        """Removes v from its tuple """
+        """Removes v from its tuple(s)"""
+        if self.is_bottom():
+            return
+
         for v_tuple in self.find_var(v):
             self.tuple_set.remove(v_tuple)
 
-            if (v_tuple[1] is not None) and (v_tuple[2] is not None):
+            if (v != v_tuple[0]) and (v_tuple[1] is not None) and (v_tuple[2] is not None):
                 # must keep relationship with other variable
                 if v_tuple[1] == v:
                     new_tuple = (v_tuple[0], None, v_tuple[2])
@@ -346,29 +384,40 @@ class InRelationState(State, BottomMixin):
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'InRelationState') -> 'InRelationState':
         # only finitely many variable combinations -> widening not needed?
-        return self._join(other)        # TODO:?
+        return self._join(other)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
+        if self.is_bottom():
+            return self
+
         if isinstance(left, VariableIdentifier):
             # invalidate left, since overwritten
             self.invalidate_var(left)
 
+            # copy tuples of 'right'
             if isinstance(right, VariableIdentifier):    # TODO: are there other relevant cases?
+                new_tuples = set()
                 for right_tuple in self.find_var(right):
-                    if right_tuple[1] == right:
-                        new_tuple = (right_tuple[0], left, right_tuple[2])
+                    if right_tuple[0] == right:
+                        new_tuples.add((left, right_tuple[1], right_tuple[2]))
+                    elif right_tuple[1] and right_tuple[1] == right:
+                        new_tuples.add((right_tuple[0], left, right_tuple[2]))
                     else: # right_tuple[2] == right
-                        new_tuple = (right_tuple[0], right_tuple[1], left)
-                    self.tuple_set.add(new_tuple)
+                        new_tuples.add((right_tuple[0], right_tuple[1], left))
+
+                self.tuple_set.update(new_tuples)
 
         return self
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'InRelationState':
+        if self.is_bottom():
+            return self
+
         if isinstance(condition, BinaryComparisonOperation):    # TODO: boolean conjunctions of them?
             if condition.operator == 9:  # op 9 == In
-                if isinstance(condition.left, VariableIdentifier):  # just for safety
+                if isinstance(condition.left, VariableIdentifier):
                     #TODO: don't invalidate for ifs?
                     self.invalidate_var(condition.left)
 
@@ -397,7 +446,7 @@ class InRelationState(State, BottomMixin):
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'InRelationState':
-        return self  # nothing to be done ?
+        return self  # nothing to be done
 
     @copy_docstring(State.exit_if)
     def exit_if(self) -> 'InRelationState':
@@ -405,7 +454,7 @@ class InRelationState(State, BottomMixin):
 
     @copy_docstring(State.enter_loop)
     def enter_loop(self) -> 'InRelationState':
-        return self  # nothing to be done ?
+        return self  # nothing to be done
 
     @copy_docstring(State.exit_loop)
     def exit_loop(self) -> 'InRelationState':
