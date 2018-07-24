@@ -1149,7 +1149,7 @@ class DictContentState(State):
 
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: Subscription, state: 'DictContentState' = None,
-                               evaluation = None):
+                               evaluation=None):
             if isinstance(expr.target.typ, DictLyraType):
                 if expr in evaluation:  # already evaluated
                     return evaluation[expr]
@@ -1189,7 +1189,7 @@ class DictContentState(State):
                 return self.default_visit(expr, state, evaluation)
 
         def default_visit(self, expr: Expression, state: 'DictContentState' = None,
-                          evaluation = None):
+                          evaluation=None):
             # default: visit & replace children (adapted from expressions._iter_child_exprs)
             new_expr = copy(expr)
             for name, field in new_expr.__dict__.items():
