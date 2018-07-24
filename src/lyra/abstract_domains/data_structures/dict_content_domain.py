@@ -51,7 +51,8 @@ class InRelationState(State, BottomMixin):
     .. automethod:: InRelationState._join
     .. automethod:: InRelationState._widening
     """
-    def __init__(self, tuple_set: Set[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]] = None):
+    def __init__(self, tuple_set:
+                 Set[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]] = None):
         super().__init__()
         if tuple_set is None:
             tuple_set = set()
@@ -71,7 +72,9 @@ class InRelationState(State, BottomMixin):
 
         result = "{"
         first = True
-        for t in sorted(self.tuple_set, key = lambda t: (t[0].name, t[1] and t[1].name, t[2] and t[2].name)):   # sort according to their names
+        # output tuples sorted by their variable names
+        for t in sorted(self.tuple_set,
+                        key=lambda t: (t[0].name, t[1] and t[1].name, t[2] and t[2].name)):
             if first:
                 result += f"({t[0]}, {t[1]}, {t[2]})"
                 first = False
@@ -88,11 +91,12 @@ class InRelationState(State, BottomMixin):
 
     @copy_docstring(Lattice.is_top)
     def is_top(self) -> bool:
-        return self.tuple_set == set() # TODO: is_bottom needed?
+        return self.tuple_set == set()
 
     @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'InRelationState') -> bool:
-        """A element is less_equal another, if its tuple set is a superset of the tuple set of the other"""
+        """An element is less_equal another,
+        if its tuple set is a superset of the tuple set of the other"""
         return self.tuple_set.issuperset(other.tuple_set)
 
     @copy_docstring(Lattice._join)
@@ -107,27 +111,31 @@ class InRelationState(State, BottomMixin):
         new_set = self.tuple_set.union(other.tuple_set)
         return self._replace(InRelationState(new_set))
 
-    #helpers
-    def find_key(self, k: VariableIdentifier) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
+    # helpers
+    def find_key(self, k: VariableIdentifier) \
+            -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
         """Returns the tuples from the set that have k at the key position"""
         if self.is_bottom():
             return iter(())  # empty iterator
 
         return filter(lambda t: (t[1] and t[1] == k), self.tuple_set)
 
-    def find_value(self, v: VariableIdentifier) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
+    def find_value(self, v: VariableIdentifier) \
+            -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
         """Returns the tuples from the set that have v at the value position"""
         if self.is_bottom():
             return iter(())  # empty iterator
 
         return filter(lambda t: (t[2] and t[2] == v), self.tuple_set)
 
-    def find_var(self, v: VariableIdentifier) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
+    def find_var(self, v: VariableIdentifier) \
+            -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
         """Returns the tuples from the set that have v at the dict OR key OR value position"""
         if self.is_bottom():
             return iter(())     # empty iterator
 
-        return filter(lambda t: (t[0] and t[0] == v) or (t[1] and t[1] == v) or (t[2] and t[2] == v), self.tuple_set)
+        return filter(lambda t: (t[0] and t[0] == v) or (t[1] and t[1] == v) or
+                                (t[2] and t[2] == v), self.tuple_set)
 
     def loop_vars(self) -> Set[VariableIdentifier]:
         """Returns the set of all key/value variables"""
@@ -140,7 +148,8 @@ class InRelationState(State, BottomMixin):
             result.add(t[2])
         return result
 
-    def k_v_tuples(self) -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
+    def k_v_tuples(self) \
+            -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
         """Returns all tuples without a None (i.e. with a key & a value variable)"""
         if self.is_bottom():
             return iter(())     # empty iterator
@@ -162,7 +171,6 @@ class InRelationState(State, BottomMixin):
                 else:  # left_tuple[2] == v
                     new_tuple = (v_tuple[0], v_tuple[1], None)
                 self.tuple_set.add(new_tuple)
-
 
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'InRelationState') -> 'InRelationState':
@@ -186,7 +194,7 @@ class InRelationState(State, BottomMixin):
                         new_tuples.add((left, right_tuple[1], right_tuple[2]))
                     elif right_tuple[1] and right_tuple[1] == right:
                         new_tuples.add((right_tuple[0], left, right_tuple[2]))
-                    else: # right_tuple[2] == right
+                    else:  # right_tuple[2] == right
                         new_tuples.add((right_tuple[0], right_tuple[1], left))
 
                 self.tuple_set.update(new_tuples)
@@ -198,10 +206,10 @@ class InRelationState(State, BottomMixin):
         if self.is_bottom():
             return self
 
-        if isinstance(condition, BinaryComparisonOperation):    # TODO: boolean conjunctions of them?
+        if isinstance(condition, BinaryComparisonOperation):  # TODO: boolean conjunctions of them?
             if condition.operator == 9:  # op 9 == In
                 if isinstance(condition.left, VariableIdentifier):
-                    #TODO: don't invalidate for ifs?
+                    # TODO: don't invalidate for ifs?
                     self.invalidate_var(condition.left)
 
                     if isinstance(condition.right, Keys):
@@ -210,7 +218,8 @@ class InRelationState(State, BottomMixin):
                     elif isinstance(condition.right, Values):
                         new_tuple = (condition.right.target_dict, None, condition.left)
                         self.tuple_set.add(new_tuple)
-                elif isinstance(condition.left, TupleDisplay) and isinstance(condition.right, Items):
+                elif isinstance(condition.left, TupleDisplay) \
+                        and isinstance(condition.right, Items):
                     # TODO: don't invalidate for ifs?
                     self.invalidate_var(condition.left.items[0])
                     self.invalidate_var(condition.left.items[1])
@@ -221,7 +230,8 @@ class InRelationState(State, BottomMixin):
             elif condition.operator == 10:       # NotIn
                 if isinstance(condition.left, VariableIdentifier):
                     self.invalidate_var(condition.left)
-                elif isinstance(condition.left, TupleDisplay) and isinstance(condition.right, Items):
+                elif isinstance(condition.left, TupleDisplay) \
+                        and isinstance(condition.right, Items):
                     self.invalidate_var(condition.left.items[0])
                     self.invalidate_var(condition.left.items[1])
 
@@ -348,16 +358,23 @@ class DictContentState(State):
     .. automethod:: DictContentState._update_dict_from_refined_scalar
     """
 
-    # here the Union type means a logical AND: the domain should inherit from both the Wrapper and State
+    # here the Union type means a logical AND: Domains should inherit from both Wrapper and State
     def __init__(self, scalar_domain: Type[Union[ScalarWrapper, State]],
-                 key_domain: Type[Union[KeyWrapper, State]], value_domain: Type[Union[ScalarWrapper, State]],
-                 scalar_vars: Set[VariableIdentifier] = None, dict_vars: Set[VariableIdentifier] = None,
-                 scalar_k_conv: Callable[[Union[ScalarWrapper, State]], Union[KeyWrapper, State]] = lambda x: deepcopy(x),
-                 k_scalar_conv: Callable[[Union[KeyWrapper, State]], Union[ScalarWrapper, State]] = lambda x: deepcopy(x),
-                 scalar_v_conv: Callable[[Union[ScalarWrapper, State]], Union[ValueWrapper, State]] = lambda x: deepcopy(x),
-                 v_scalar_conv: Callable[[Union[ValueWrapper, State]], Union[ScalarWrapper, State]] = lambda x: deepcopy(x)):
+                 key_domain: Type[Union[KeyWrapper, State]],
+                 value_domain: Type[Union[ScalarWrapper, State]],
+                 scalar_vars: Set[VariableIdentifier] = None,
+                 dict_vars: Set[VariableIdentifier] = None,
+                 scalar_k_conv: Callable[[Union[ScalarWrapper, State]], Union[KeyWrapper, State]]
+                 = lambda x: x,
+                 k_scalar_conv: Callable[[Union[KeyWrapper, State]], Union[ScalarWrapper, State]]
+                 = lambda x: x,
+                 scalar_v_conv: Callable[[Union[ScalarWrapper, State]], Union[ValueWrapper, State]]
+                 = lambda x: x,
+                 v_scalar_conv: Callable[[Union[ValueWrapper, State]], Union[ScalarWrapper, State]]
+                 = lambda x: x):
         """
-        :param scalar_domain: domain for abstraction of scalar variable values, ranges over the scalar variables
+        :param scalar_domain: domain for abstraction of scalar variable values,
+            ranges over the scalar variables
             (may have different abstract domains for different types)
         :param key_domain: domain for abstraction of dictionary keys,
             ranges over the scalar variables and the special key variable v_k
@@ -365,10 +382,14 @@ class DictContentState(State):
             ranges over the scalar variables and the special value variable v_v
         :param scalar_vars: list of scalar variables, whose values should be abstracted
         :param dict_vars: list of dictionary variables, whose values should be abstracted
-        :param scalar_k_conv: conversion function to convert from scalar domain elements to key domain elements
-        :param k_scalar_conv: conversion function to convert from key domain elements to scalar domain elements
-        :param scalar_v_conv: conversion function to convert from scalar domain elements to value domain elements
-        :param v_scalar_conv: conversion function to convert from value domain elements to scalar domain elements
+        :param scalar_k_conv: conversion function to convert from scalar domain elements
+                                                             to key domain elements
+        :param k_scalar_conv: conversion function to convert from key domain elements
+                                                             to scalar domain elements
+        :param scalar_v_conv: conversion function to convert from scalar domain elements
+                                                             to value domain elements
+        :param v_scalar_conv: conversion function to convert from value domain elements
+                                                             to scalar domain elements
         """
         super().__init__()
 
@@ -391,20 +412,14 @@ class DictContentState(State):
             typ = dv.typ
             if isinstance(typ, DictLyraType):  # should be true
                 if typ not in arguments:
-                    # if issubclass(key_domain, Store):   # not relational -> don't need scalar vars
-                    #     key_vars = []
-                    # else:
-                    #key_vars = scalar_vars.copy()
-                    # if issubclass(value_domain, Store):
-                    #     value_vars = []
-                    # else:
-                    # value_vars = scalar_vars.copy()
                     k_var = VariableIdentifier(typ.key_type, k_name)
                     v_var = VariableIdentifier(typ.value_type, v_name)
 
                     arguments[typ] = {'key_domain': key_domain, 'value_domain': value_domain,
-                                    'key_d_args': {'scalar_variables': scalar_vars, 'k_var': k_var},
-                                    'value_d_args': {'scalar_variables': scalar_vars, 'v_var': v_var}}
+                                      'key_d_args': {'scalar_variables': scalar_vars,
+                                                     'k_var': k_var},
+                                      'value_d_args': {'scalar_variables': scalar_vars,
+                                                       'v_var': v_var}}
             else:
                 raise TypeError("Dictionary variables should be of DictLyraType")
 
@@ -424,7 +439,6 @@ class DictContentState(State):
         self._in_relations = InRelationState()
 
         self._loop_flag = False
-
 
     @property
     def scalar_state(self) -> Union[ScalarWrapper, State]:
@@ -476,15 +490,15 @@ class DictContentState(State):
         """Function to convert from value domain elements to scalar domain elements"""
         return self._v_s_conv
 
-
     def __repr__(self):             # TODO: use join
         k_is_store = issubclass(self.k_domain, Store)
         v_is_store = issubclass(self.v_domain, Store)
         if k_is_store or v_is_store:
-            v_k = VariableIdentifier(LyraType(), k_name)  # type does not matter, because eq in terms of name
+            # type does not matter, because eq is implemented in terms of name
+            v_k = VariableIdentifier(LyraType(), k_name)
             v_v = VariableIdentifier(LyraType(), v_name)
             result = repr(self.scalar_state)
-            for d, d_lattice in sorted(self.dict_store.store.items(), key = lambda t: t[0].name):
+            for d, d_lattice in sorted(self.dict_store.store.items(), key=lambda t: t[0].name):
                 result += f", {d} -> {{"
                 first = True
                 for (k, v) in d_lattice.sorted_segments():
@@ -505,7 +519,7 @@ class DictContentState(State):
                     result += ")"
                 result += "}"
 
-            for d, i_lattice in sorted(self.init_store.store.items(), key = lambda t: t[0].name):
+            for d, i_lattice in sorted(self.init_store.store.items(), key=lambda t: t[0].name):
                 result += f", {d} -> {{"
                 first = True
                 for (k, v) in i_lattice.sorted_segments():
@@ -612,7 +626,7 @@ class DictContentState(State):
         scalar_copy = deepcopy(self.scalar_state)
         v_k = VariableIdentifier(key_expr.typ, k_name)       # TODO: type?
         scalar_copy.add_var(v_k)
-        scalar_copy.assign({v_k},{key_expr})
+        scalar_copy.assign({v_k}, {key_expr})
 
         return self._s_k_conv(scalar_copy)
 
@@ -628,7 +642,8 @@ class DictContentState(State):
 
     # helper
     def _temp_cleanup(self, evaluation: Dict[Subscription, VariableIdentifier]):
-        """Deletes all temporary variables of evaluation and assigns them back to the dictionary subscription before that"""
+        """Deletes all temporary variables of evaluation
+        and assigns them back to the dictionary subscription before that"""
         current_temps = set(evaluation.values())
 
         for expr, var in evaluation.items():
@@ -638,7 +653,7 @@ class DictContentState(State):
             k_abs = self.eval_key(expr.key)
             v_abs = self.eval_value(var)
 
-            #temporary variables not needed in dict abstractions
+            # temporary variables not needed in dict abstractions
             for temp in current_temps:     # TODO: better way?
                 k_abs.remove_var(temp)
                 v_abs.remove_var(temp)
@@ -662,7 +677,8 @@ class DictContentState(State):
             current_temps.remove(var)
 
     def _update_dict_from_refined_scalar(self):
-        """update scalar variables in dictionary stores to conform with a refined scalar state"""  # TODO: too slow?
+        """update scalar variables in dictionary stores to conform with a refined scalar state"""
+        # TODO: too slow?
         d_store = self.dict_store.store
         d_lattice: DictSegmentLattice
         for d, d_lattice in d_store.items():
@@ -680,7 +696,8 @@ class DictContentState(State):
                 s_v_state = self.s_v_conv(v_s_state)
                 new_v = deepcopy(v).meet(s_v_state)
                 new_segments.add((new_k, new_v))
-            d_store[d] = DictSegmentLattice(d_lattice.k_domain, d_lattice.v_domain, d_lattice.k_d_args, d_lattice.v_d_args, new_segments)
+            d_store[d] = DictSegmentLattice(d_lattice.k_domain, d_lattice.v_domain,
+                                            d_lattice.k_d_args, d_lattice.v_d_args, new_segments)
 
         i_store = self.init_store.store
         i_lattice: DictSegmentLattice
@@ -694,25 +711,26 @@ class DictContentState(State):
                 s_k_state = self.s_k_conv(k_s_state)
                 new_k = deepcopy(k).meet(s_k_state)
                 new_segments.add((new_k, b))
-            i_store[d] = DictSegmentLattice(i_lattice.k_domain, i_lattice.v_domain, i_lattice.k_d_args, i_lattice.v_d_args, new_segments)
+            i_store[d] = DictSegmentLattice(i_lattice.k_domain, i_lattice.v_domain,
+                                            i_lattice.k_d_args, i_lattice.v_d_args, new_segments)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
         all_ids = left.ids().union(right.ids())
 
-        if all(type(id.typ) in scalar_types for id in all_ids):   # TODO: not any?
+        if all(type(id.typ) in scalar_types for id in all_ids):   # TODO: use not any?
             # completely SCALAR STMT
             # update scalar part
             self.scalar_state.assign({left}, {right})
 
             # update relations with scalar variables in dict stores
             for d_lattice in self.dict_store.store.values():
-                for (k1,v) in d_lattice.segments:
+                for (k1, v) in d_lattice.segments:
                     k1.assign({left}, {right})
                     v.assign({left}, {right})
                 d_lattice.d_norm_own()
             for i_lattice in self.init_store.store.values():
-                for (k2,b) in i_lattice.segments:        # b must be True
+                for (k2, b) in i_lattice.segments:        # b must be True
                     k2.assign({left}, {right})
                 i_lattice.d_norm_own()
 
@@ -740,7 +758,9 @@ class DictContentState(State):
                     left_i_lattice: DictSegmentLattice = self.init_store.store[left]
                     # erase all dict contents before:
                     left_lattice.bottom()
-                    # everything uninitialized, but scalars conform with scalar state -> copy from scalar state:        # TODO: use invalidate_var?
+                    # everything uninitialized,
+                    # but scalars should conform with scalar state -> copy from scalar state:
+                    # TODO: use invalidate_var?
                     v_k = VariableIdentifier(left.typ.key_type, k_name)
                     s_state = deepcopy(self.scalar_state)
                     s_state.add_var(v_k)
@@ -803,13 +823,14 @@ class DictContentState(State):
         if isinstance(condition, BinaryComparisonOperation):
             if condition.operator == BinaryComparisonOperation.Operator.In:
                 # refine variable:
-                if isinstance(condition.right, Keys) and isinstance(condition.left, VariableIdentifier):
+                if isinstance(condition.right, Keys) \
+                        and isinstance(condition.left, VariableIdentifier):
                     d = condition.right.target_dict
                     d_lattice: DictSegmentLattice = self.dict_store.store[d]
                     k_abs: Union[KeyWrapper, State] = d_lattice.get_keys_joined()
                     v_k = k_abs.k_var
 
-                    if self._loop_flag: # loop condition -> overwrite old value
+                    if self._loop_flag:  # loop condition -> overwrite old value
                         self.scalar_state.add_var(v_k)
                         self.scalar_state.meet(self._k_s_conv(k_abs))
                         self.scalar_state.assign({condition.left}, {v_k})
@@ -832,13 +853,14 @@ class DictContentState(State):
                     # refine in_relations
                     self.in_relations.assume({condition})
                     return self
-                elif isinstance(condition.right, Values) and isinstance(condition.left, VariableIdentifier):
+                elif isinstance(condition.right, Values) \
+                        and isinstance(condition.left, VariableIdentifier):
                     d = condition.right.target_dict
                     d_lattice: DictSegmentLattice = self.dict_store.store[d]
                     v_abs: Union[ValueWrapper, State] = d_lattice.get_values_joined()
                     v_v = v_abs.v_var
 
-                    if self._loop_flag: # loop condition -> overwrite old value
+                    if self._loop_flag:  # loop condition -> overwrite old value
                         self.scalar_state.add_var(v_v)
                         self.scalar_state.meet(self._v_s_conv(v_abs))
                         self.scalar_state.assign({condition.left}, {v_v})
@@ -861,7 +883,8 @@ class DictContentState(State):
                     # refine in_relations
                     self.in_relations.assume({condition})
                     return self
-                elif isinstance(condition.right, Items) and isinstance(condition.left, TupleDisplay):
+                elif isinstance(condition.right, Items) \
+                        and isinstance(condition.left, TupleDisplay):
                     d = condition.right.target_dict
                     d_lattice: DictSegmentLattice = self.dict_store.store[d]
 
@@ -871,7 +894,7 @@ class DictContentState(State):
                     v_abs = d_lattice.get_values_joined()
                     v_v = v_abs.v_var
 
-                    if self._loop_flag: # loop condition -> overwrite old value
+                    if self._loop_flag:  # loop condition -> overwrite old value
                         self.scalar_state.add_var(v_k)
                         self.scalar_state.meet(self._k_s_conv(k_abs))
                         self.scalar_state.assign({condition.left.items[0]}, {v_k})
@@ -1012,7 +1035,8 @@ class DictContentState(State):
 
         self._temp_cleanup(evaluation)
 
-        # check if coupled loop variables (from items-loops) get refined to refine their counterpart
+        # check, if coupled loop variables (from items-loops) get refined
+        # -> refine their counterpart
         cond_vars = condition.ids()
         for (d_var, k_var, v_var) in self.in_relations.k_v_tuples():
             if k_var in cond_vars:
@@ -1020,7 +1044,8 @@ class DictContentState(State):
                     raise NotImplementedError(
                         f"Conditions like {condition} containing both the key and value loop variable of a .items()-loop are not yet supported!")
                 else:
-                    # refine v_var according to refined k_var -> re-evaluate: v_var meet d_var[k_var]
+                    # refine v_var according to refined k_var
+                    # -> re-evaluate: v_var meet d_var[k_var]
                     d_lattice: DictSegmentLattice = self.dict_store.store[d_var]
 
                     k_abs = self.eval_key(k_var)
@@ -1031,7 +1056,7 @@ class DictContentState(State):
                         v_abs = d_lattice.v_domain(scalar_vars, v_v).bottom()
                         for (k, v) in d_lattice.segments:
                             key_meet_k = deepcopy(k_abs).meet(k)
-                            if not key_meet_k.is_bottom():  # overlap/key may be contained in this segment
+                            if not key_meet_k.is_bottom():  # key may be contained in this segment
                                 v_abs.join(deepcopy(v))
 
                         scalar_copy = deepcopy(self.scalar_state)
@@ -1053,7 +1078,7 @@ class DictContentState(State):
                     k_abs = d_lattice.k_domain(scalar_vars, v_k).bottom()
                     for (k, v) in d_lattice.segments:
                         value_meet_v = deepcopy(v_abs).meet(v)
-                        if not value_meet_v.is_bottom():  # overlap/value may be contained in this segment
+                        if not value_meet_v.is_bottom():  # value may be contained in this segment
                             k_abs.join(deepcopy(k))
 
                     scalar_copy = deepcopy(self.scalar_state)
@@ -1063,7 +1088,6 @@ class DictContentState(State):
                     scalar_copy.remove_var(v_k)
 
                     self.scalar_state.meet(scalar_copy)
-
 
         self._update_dict_from_refined_scalar()
 
@@ -1099,9 +1123,9 @@ class DictContentState(State):
         # expression evaluation
 
     class DictReadEvaluation:
-        """Visitor that performs the evaluation of dictionary reads in the DictContentDomain lattice
-        by replacing them with a temporary (scalar) variable holding the corresponding value
-        in the scalar state.
+        """Visitor that performs the evaluation of dictionary reads in the DictContentDomain
+        lattice by replacing them with a temporary (scalar) variable holding
+        the corresponding value in the scalar state.
 
         Adapted from `ExpressionVisitor`.
         """
@@ -1123,7 +1147,8 @@ class DictContentState(State):
                 return self.default_visit(expr, *args, **kwargs)
 
         @copy_docstring(ExpressionVisitor.visit_Subscription)
-        def visit_Subscription(self, expr: Subscription, state: 'DictContentState'=None, evaluation=None):
+        def visit_Subscription(self, expr: Subscription, state: 'DictContentState'=None,
+                               evaluation=None):
             if isinstance(expr.target.typ, DictLyraType):
                 if expr in evaluation:  # already evaluated
                     return evaluation[expr]
@@ -1141,7 +1166,7 @@ class DictContentState(State):
                     v_abs = d_lattice.v_domain(scalar_vars, v_var).bottom()
                     for (k, v) in d_lattice.segments:
                         key_meet_k = deepcopy(k_abs).meet(k)
-                        if not key_meet_k.is_bottom():  # overlap/key may be contained in this segment
+                        if not key_meet_k.is_bottom():  # key may be contained in this segment
                             v_abs.join(deepcopy(v))
 
                     for old_temp in evaluation.values():    # add already added temp vars
@@ -1150,7 +1175,8 @@ class DictContentState(State):
                     state.scalar_state.add_var(v_var)
                     state.scalar_state.meet(state.v_s_conv(v_abs))
 
-                    temp_var = VariableIdentifier(d.typ.value_type, str(len(evaluation)) + "v")  # use increasing numbers for temp_var names
+                    # use increasing numbers for temp_var names
+                    temp_var = VariableIdentifier(d.typ.value_type, str(len(evaluation)) + "v")
                     state.scalar_state.add_var(temp_var)
 
                     state.scalar_state.assign({temp_var}, {v_var})
@@ -1160,8 +1186,6 @@ class DictContentState(State):
                     return temp_var
             else:
                 return self.default_visit(expr, state, evaluation)
-
-        # TODO: Slicing?
 
         def default_visit(self, expr: Expression, state: 'DictContentState'=None, evaluation=None):
             # default: visit & replace children (adapted from expressions._iter_child_exprs)

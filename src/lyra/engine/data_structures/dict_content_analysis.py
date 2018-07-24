@@ -5,13 +5,11 @@ Dictionary Content Analysis
 :Author: Lowis Engel
 """
 from copy import deepcopy, copy
-from typing import Set
 
 from lyra.abstract_domains.data_structures import dict_content_domain
 from lyra.abstract_domains.data_structures.dict_content_domain import DictContentState
 from lyra.abstract_domains.data_structures.interval_wrappers import IntervalSWrapper, \
     IntervalKWrapper, IntervalVWrapper
-from lyra.abstract_domains.numerical.interval_domain import IntervalState, IntervalLattice
 from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType, \
     DictLyraType
 from lyra.engine.forward import ForwardInterpreter
@@ -33,7 +31,8 @@ class DictContentAnalysis(Runner):
                     k_var = var
                     s_vars.remove(k_var)
             if not k_var:
-                raise ValueError(f"The key variable {dict_content_domain.k_name} must be added to the scalar store before conversion")
+                raise ValueError(f"The key variable {dict_content_domain.k_name} "
+                                 f"must be added to the scalar store before conversion")
             k_state = IntervalKWrapper(s_vars, k_var)
             k_state._store = deepcopy(s_state.store)
 
@@ -54,7 +53,8 @@ class DictContentAnalysis(Runner):
                     v_var = var
                     s_vars.remove(v_var)
             if not v_var:
-                raise ValueError(f"The value variable {dict_content_domain.v_name} must be added to the scalar store before conversion")
+                raise ValueError(f"The value variable {dict_content_domain.v_name} "
+                                 f"must be added to the scalar store before conversion")
             v_state = IntervalVWrapper(s_vars, v_var)
             v_state._store = deepcopy(s_state.store)
 
@@ -67,11 +67,9 @@ class DictContentAnalysis(Runner):
 
             return s_state
 
-
-
-        scalar_types = {BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType}
-        scalar_vars = {v for v in self.variables if type(v.typ) in scalar_types}
+        scalar_vars = {v for v in self.variables if type(v.typ) in
+                       dict_content_domain.scalar_types}
         dict_vars = {v for v in self.variables if type(v.typ) == DictLyraType}
-        return DictContentState(IntervalSWrapper, IntervalKWrapper, IntervalVWrapper, scalar_vars, dict_vars, s_k_conversion, k_s_conversion, s_v_conversion, v_s_conversion)
-
-
+        return DictContentState(IntervalSWrapper, IntervalKWrapper, IntervalVWrapper,
+                                scalar_vars, dict_vars,
+                                s_k_conversion, k_s_conversion, s_v_conversion, v_s_conversion)

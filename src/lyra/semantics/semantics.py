@@ -98,7 +98,8 @@ class ExpressionSemantics(Semantics):
                 display = ListDisplay(ListLyraType(combination[0].typ), list(combination))
                 result.add(display)
         else:
-            result.add(ListDisplay(ListLyraType(LyraType())))     # empty list of generic type TODO: way to get specific type? -> add type to display statements?
+            result.add(ListDisplay(ListLyraType(LyraType())))     # empty list of generic type
+            # TODO: way to get specific type? -> add type to display statements?
         state.result = result
         return state
 
@@ -117,7 +118,7 @@ class ExpressionSemantics(Semantics):
                 display = TupleDisplay(TupleLyraType(types), list(combination))
                 result.add(display)
         else:
-            error = f"Semantics for empty tuples not yet implemented!"      # TODO: Handle empty tuple
+            error = f"Semantics for empty tuples not yet implemented!"   # TODO: Handle empty tuple
             raise NotImplementedError(error)
         state.result = result
         return state
@@ -136,7 +137,8 @@ class ExpressionSemantics(Semantics):
                 display = SetDisplay(SetLyraType(combination[0].typ), list(combination))
                 result.add(display)
         else:
-            result.add(SetDisplay(SetLyraType(LyraType())))     # empty set of generic type TODO: way to get specific type?
+            result.add(SetDisplay(SetLyraType(LyraType())))     # empty set of generic type
+            # TODO: way to get specific type?
         state.result = result
         return state
 
@@ -153,18 +155,19 @@ class ExpressionSemantics(Semantics):
         result = set()
 
         if k_exprs:     # not empty
+            # One "Set" of Tuples of possible key-value pairs per actual k-v-pair
             k_v_tuples = map(itertools.product, k_exprs, v_exprs)
-                # One "Set" of Tuples of possible key-value pairs per actual k-v-pair
 
             k_typ = next(iter(k_exprs[0])).typ      # Is there a better way to retrieve the types?
             v_typ = next(iter(v_exprs[0])).typ
 
             for combination in itertools.product(*k_v_tuples):
-                unzip = list(zip(*combination))     # to create two separate lists for keys and values
+                unzip = list(zip(*combination))  # to create two separate lists for keys and values
                 display = DictDisplay(DictLyraType(k_typ, v_typ), list(unzip[0]), list(unzip[1]))
                 result.add(display)
         else:
-            result.add(DictDisplay(DictLyraType(LyraType(), LyraType())))       # empty dict of generic type TODO: way to get specific type?
+            # empty dict of generic type TODO: way to get specific type?
+            result.add(DictDisplay(DictLyraType(LyraType(), LyraType())))
         state.result = result
         return state
 
@@ -344,7 +347,8 @@ class BuiltInCallSemantics(CallSemantics):
         if (isinstance(stmt.target, VariableAccess)):
             state.result = {Items(stmt.typ, stmt.target.variable)}
         else:
-            error = f"Semantics for items() call on non-variable {stmt.target} is not yet implemented!"
+            error = f"Semantics for items() call on non-variable {stmt.target} is not yet " \
+                    f"implemented!"
             raise NotImplementedError(error)
         return state
 
@@ -358,7 +362,8 @@ class BuiltInCallSemantics(CallSemantics):
         if (isinstance(stmt.target, VariableAccess)):
             state.result = {Keys(stmt.typ, stmt.target.variable)}
         else:
-            error = f"Semantics for keys() call on non-variable {stmt.target} is not yet implemented!"
+            error = f"Semantics for keys() call on non-variable {stmt.target} is not yet " \
+                    f"implemented!"
             raise NotImplementedError(error)
         return state
 
@@ -372,7 +377,8 @@ class BuiltInCallSemantics(CallSemantics):
         if (isinstance(stmt.target, VariableAccess)):
             state.result = {Values(stmt.typ, stmt.target.variable)}
         else:
-            error = f"Semantics for values() call on non-variable {stmt.target} is not yet implemented!"
+            error = f"Semantics for values() call on non-variable {stmt.target} is not yet " \
+                    f"implemented!"
             raise NotImplementedError(error)
         return state
 

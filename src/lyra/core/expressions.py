@@ -440,7 +440,8 @@ class ListDisplay(Expression):
 
 
 class TupleDisplay(Expression):
-    """Tuple display (= expression list with comma, or ()) representation.      # TODO: what about expression list without comma?
+    """Tuple display (= expression list with comma, or ()) representation.
+    # TODO: handle expression list without comma?
 
     https://docs.python.org/3/reference/expressions.html#expression-lists
     """
@@ -505,7 +506,8 @@ class DictDisplay(Expression):
     https://docs.python.org/3/reference/expressions.html#dictionary-displays
     """
 
-    def __init__(self, typ: DictLyraType, keys: List[Expression] = None, values: List[Expression] = None):
+    def __init__(self, typ: DictLyraType, keys: List[Expression] = None,
+                 values: List[Expression] = None):
         """Dictionary display construction.
 
         :param typ: type of the dictionary

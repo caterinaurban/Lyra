@@ -138,7 +138,7 @@ class SimpleUsageState(Stack, State):
             if value.is_written() or value.is_top():
                 effect = True
         if effect:      # the current nesting level has an effect on the outcome of the program
-            for identifier in condition.ids():              # TODO: handle "in .items()" here!?
+            for identifier in condition.ids():
                 if isinstance(identifier, VariableIdentifier):
                     self.lattice.store[identifier].top()
         return self
@@ -183,7 +183,7 @@ class SimpleUsageState(Stack, State):
             target = left.target
             if self.lattice.store[target].is_top() or self.lattice.store[target].is_scoped():
                 # the assigned variable is used or scoped
-                self.lattice.store[target].top()      # summarization abstraction (join of U/S with W)
+                self.lattice.store[target].top()   # summarization abstraction (join of U/S with W)
                 for identifier in right.ids():
                     if isinstance(identifier, VariableIdentifier):
                         self.lattice.store[identifier].top()
@@ -191,12 +191,13 @@ class SimpleUsageState(Stack, State):
                         error = f"Substitution with {right} is not implemented!"
                         raise NotImplementedError(error)
 
-                if (isinstance(left,Subscription)):
+                if isinstance(left, Subscription):
                     ids = left.key.ids()
-                else: # Slicing
+                else:   # Slicing
                     ids = left.lower.ids() | left.upper.ids()
                 for identifier in ids:  # make ids in subscript used
-                    if isinstance(identifier, VariableIdentifier):  # needed? ids = VariableIdentifier?
+                    # needed? ids = VariableIdentifier?
+                    if isinstance(identifier, VariableIdentifier):
                         self.lattice.store[identifier].top()
                     else:
                         error = f"Identifier {identifier} in subscript is not yet supported!"

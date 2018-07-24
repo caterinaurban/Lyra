@@ -43,7 +43,7 @@ class Store(Lattice):
         self._lattices = lattices
         self._arguments = arguments
         try:
-            self._store = {v: lattices[v.typ](**arguments[v.typ]) for v in variables}           # TODO: why duplicates in variables (from loop variable?)
+            self._store = {v: lattices[v.typ](**arguments[v.typ]) for v in variables}
         except KeyError as key:
             error = f"Missing lattice for variable type {repr(key.args[0])}!"
             raise ValueError(error)

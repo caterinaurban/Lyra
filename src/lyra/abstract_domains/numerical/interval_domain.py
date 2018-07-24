@@ -243,7 +243,6 @@ class IntervalState(Store, State):
             return self
         raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
 
-
     # expression evaluation
 
     class ExpressionEvaluation(ExpressionVisitor):

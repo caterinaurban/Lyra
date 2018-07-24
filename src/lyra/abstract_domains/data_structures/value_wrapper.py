@@ -1,4 +1,4 @@
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from copy import copy
 from typing import Set
 
@@ -14,10 +14,12 @@ class ValueWrapper(ScalarWrapper, metaclass=ABCMeta):
     A concrete wrapper should inherit from this class and the state that should be 'wrapped'.
     """
 
-    def __init__(self, scalar_variables: Set[VariableIdentifier], v_var: VariableIdentifier, *domain_args):
+    def __init__(self, scalar_variables: Set[VariableIdentifier], v_var: VariableIdentifier,
+                 *domain_args):
         """
         :param scalar_variables:
-        :param v_var: special variable (with correct type) representing the value values at a specific segment
+        :param v_var: special variable (with correct type)
+                      representing the value values at a specific segment
         :param domain_args: arguments needed by the underlying domain
         """
         key_vars = copy(scalar_variables)
@@ -29,7 +31,8 @@ class ValueWrapper(ScalarWrapper, metaclass=ABCMeta):
     @property
     def v_var(self) -> VariableIdentifier:
         return self._v_var
-    #
-    # @property
-    # def s_vars(self) -> Set[VariableIdentifier]:
-    #     return self._s_vars
+
+    @abstractmethod
+    def is_bottom(self) -> bool:
+        """Should be true if the special value variable is bottom
+        (i.e. cannot have any concrete value)"""
