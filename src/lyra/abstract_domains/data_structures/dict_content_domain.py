@@ -134,8 +134,8 @@ class InRelationState(State, BottomMixin):
         if self.is_bottom():
             return iter(())     # empty iterator
 
-        return filter(lambda t: (t[0] and t[0] == v) or (t[1] and t[1] == v) or
-                                (t[2] and t[2] == v), self.tuple_set)
+        return filter(lambda t: (t[0] and t[0] == v) or (t[1] and t[1] == v)
+                      or (t[2] and t[2] == v), self.tuple_set)
 
     def loop_vars(self) -> Set[VariableIdentifier]:
         """Returns the set of all key/value variables"""
@@ -948,7 +948,7 @@ class DictContentState(State):
                     key_complement = k_current.decomp(k_current, k_abs)
                     joined_complement = k_current.big_join(list(key_complement))
 
-                    if self._loop_flag: # loop condition -> overwrite old value
+                    if self._loop_flag:  # loop condition -> overwrite old value
                         self.scalar_state.add_var(v_k)
                         self.scalar_state.meet(self._k_s_conv(joined_complement))
                         self.scalar_state.assign({condition.left}, {v_k})
@@ -998,7 +998,7 @@ class DictContentState(State):
                     key_complement = k_current.decomp(k_current, k_abs)
                     joined_complement = k_current.big_join(list(key_complement))
 
-                    if self._loop_flag: # loop condition -> overwrite old value
+                    if self._loop_flag:  # loop condition -> overwrite old value
                         self.scalar_state.add_var(v_k)
                         self.scalar_state.meet(self._k_s_conv(joined_complement))
                         self.scalar_state.assign({condition.left.items[0]}, {v_k})
@@ -1042,7 +1042,8 @@ class DictContentState(State):
             if k_var in cond_vars:
                 if v_var in cond_vars:
                     raise NotImplementedError(
-                        f"Conditions like {condition} containing both the key and value loop variable of a .items()-loop are not yet supported!")
+                        f"Conditions like {condition} containing both the key "
+                        f"and value loop variable of a .items()-loop are not yet supported!")
                 else:
                     # refine v_var according to refined k_var
                     # -> re-evaluate: v_var meet d_var[k_var]
@@ -1147,8 +1148,8 @@ class DictContentState(State):
                 return self.default_visit(expr, *args, **kwargs)
 
         @copy_docstring(ExpressionVisitor.visit_Subscription)
-        def visit_Subscription(self, expr: Subscription, state: 'DictContentState'=None,
-                               evaluation=None):
+        def visit_Subscription(self, expr: Subscription, state: 'DictContentState' = None,
+                               evaluation = None):
             if isinstance(expr.target.typ, DictLyraType):
                 if expr in evaluation:  # already evaluated
                     return evaluation[expr]
@@ -1187,7 +1188,8 @@ class DictContentState(State):
             else:
                 return self.default_visit(expr, state, evaluation)
 
-        def default_visit(self, expr: Expression, state: 'DictContentState'=None, evaluation=None):
+        def default_visit(self, expr: Expression, state: 'DictContentState' = None,
+                          evaluation = None):
             # default: visit & replace children (adapted from expressions._iter_child_exprs)
             new_expr = copy(expr)
             for name, field in new_expr.__dict__.items():
