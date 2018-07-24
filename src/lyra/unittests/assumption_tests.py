@@ -55,7 +55,7 @@ class OctagonStringAssumptionTest(TestRunner):
 
 def test_suite():
     suite = unittest.TestSuite()
-    name = os.getcwd() + '/assumption/**.py'
+    name = os.getcwd() + '/assumption/octagons/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             suite.addTest(OctagonStringAssumptionTest(path))

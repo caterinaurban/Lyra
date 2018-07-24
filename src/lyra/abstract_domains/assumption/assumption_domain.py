@@ -10,18 +10,19 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
-from typing import List, Dict, Type, Any, Union, Tuple, Set, Optional
+from typing import List, Dict, Type, Any, Union, Tuple, Set, Optional, Generator
+
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
+from lyra.assumption.error import CheckerError
 from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparisonOperation, \
     Range, Literal, NegationFreeNormalExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
     ExpressionVisitor, Input, ListDisplay, AttributeReference, Subscription, Slicing, \
-    UnaryArithmeticOperation, BinaryArithmeticOperation
+    UnaryArithmeticOperation, BinaryArithmeticOperation, Identifier
 from lyra.core.statements import ProgramPoint
-from lyra.core.types import IntegerLyraType
+from lyra.core.types import IntegerLyraType, FloatLyraType
 from lyra.core.utils import copy_docstring
-
 
 class JSONMixin(Lattice, metaclass=ABCMeta):
     """Mixin to add a mechanism for converting a lattice to and from JSON format."""
@@ -43,8 +44,11 @@ class JSONMixin(Lattice, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def check_input(self) -> '':
-        pass
+    def check_input(self, *args):
+        """
+        Checks if the given input value satisfies the constraints of the current lattice element.
+        :return:
+        """
 
 class InputMixin(State, metaclass=ABCMeta):
     """Mixin to add a mechanism for recording and retrieving constraints on the input data.
@@ -110,6 +114,7 @@ class InputMixin(State, metaclass=ABCMeta):
         :return: current state modified to record the constraint
         """
         type(self).inputs[self.pp].append(constraint)
+        print("RECORD", type(self).inputs)
         return self
 
     def retrieve(self) -> List[JSONMixin]:
@@ -120,7 +125,77 @@ class InputMixin(State, metaclass=ABCMeta):
 
         :return: the list of constraints corresponding to the current program point
         """
+        ins = type(self).inputs[self.pp]
         return type(self).inputs.pop(self.pp, list())
+
+
+class MultiplierEvaluator(ExpressionVisitor):
+
+    def visit_Literal(self, expr: 'Literal', pp_value=None):
+        if expr.typ == IntegerLyraType():
+            return int(expr.val)
+        if expr.typ == FloatLyraType():
+            return float(expr.val)
+
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
+    def visit_Input(self, expr: 'Input', pp_value=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
+    def visit_VariableIdentifier(self, expr: 'VariableIdentifier', pp_value=None):
+        return pp_value[expr.name][1]
+
+    def visit_ListDisplay(self, expr: 'ListDisplay', pp_value=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
+    def visit_Range(self, expr: 'Range', pp_value=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
+    def visit_AttributeReference(self, expr: 'AttributeReference', pp_value=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
+    def visit_Subscription(self, expr: 'Subscription', pp_value=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
+    def visit_Slicing(self, expr: 'Slicing', pp_value=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
+    def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', pp_value=None):
+        eval = self.visit(expr.expression, pp_value)
+        if isinstance(CheckerError):
+            return eval
+        if expr.operator == UnaryArithmeticOperation.Operator.Sub:
+            return -eval
+        return eval
+
+    def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', pp_value=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
+    def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', pp_value=None):
+        left = self.visit(expr.left, pp_value)
+        right = self.visit(expr.right, pp_value)
+        errors = []
+        if isinstance(left, CheckerError):
+            errors.append(left)
+        if isinstance(right, CheckerError):
+            errors.append(right)
+        if len(errors) > 0:
+            return errors
+        op = expr.operator
+        if op == BinaryArithmeticOperation.Operator.Sub:
+            return left - right
+        if op == BinaryArithmeticOperation.Operator.Add:
+            return left + right
+        if op == BinaryArithmeticOperation.Operator.Mult:
+            return left * right
+        if op == BinaryArithmeticOperation.Operator.Div:
+            return left / right
+
+    def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation', pp_value=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
+    def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation', pp_value=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
 
 class AssumptionState(State):
@@ -135,7 +210,7 @@ class AssumptionState(State):
     .. automethod:: AssumptionState._assume
     .. automethod:: AssumptionState._substitute
     """
-
+    state_name = dict()
     class InputStack(Stack, State):
         """Stack of assumptions on the input data.
 
@@ -144,7 +219,7 @@ class AssumptionState(State):
         .. automethod:: InputStack._substitute
         """
 
-        class InputLattice(BottomMixin):
+        class InputLattice(BottomMixin, JSONMixin):
             """Assumptions on the input data.
 
             Each assumption is a (possibly symbolic) repetition of constraints on the input data.
@@ -174,6 +249,7 @@ class AssumptionState(State):
             .. automethod:: InputLattice._join
             .. automethod:: InputLattice._widening
             """
+
             InputLattice = 'AssumptionState.InputStack.InputLattice'
             StarConstraint = Tuple[ProgramPoint, ...]
             BasicConstraint = Tuple[ProgramPoint, Tuple[JSONMixin, ...]]
@@ -184,6 +260,7 @@ class AssumptionState(State):
                 super().__init__()
                 self._multiplier = multiplier
                 self._constraints = constraints
+                self._state_names = dict()
 
             @property
             def multiplier(self):
@@ -194,6 +271,11 @@ class AssumptionState(State):
             def constraints(self):
                 """Current list of constraints."""
                 return self._constraints
+
+            @property
+            def state_names(self):
+                """Mapping state names to types for JSON parsing purposes."""
+                return self._state_names
 
             def __repr__(self):
                 def do(constraint):
@@ -395,20 +477,133 @@ class AssumptionState(State):
                 replaced = AssumptionState.InputStack.InputLattice(multiplier, constraints)
                 return self._replace(replaced)
 
-            # def copy(self):
-            #     def do(constraint):
-            #         if isinstance(constraint, tuple):
-            #             # the constraint is a StarConstraint or a BasicConstraint
-            #             if not constraint:  # the constraint is a StarConstraint
-            #                 return None
-            #             else:  # the constraint is a BasicConstraint
-            #                 return (deepcopy(constraint[0]), constraint[1].copy)
-            #         else:  # the constraint is an InputLattice
-            #             return constraint.copy()
-            #     multiplier = deepcopy(self.multiplier)
-            #     constraints = [do(constraint) for constraint in self.constraints]
-            #     return AssumptionState.InputStack.InputLattice(multiplier, constraints)
-            #
+            _state_names = dict()
+            @copy_docstring(JSONMixin.to_json)
+            def to_json(self) -> dict:
+                def do_multiplier(expression):
+                    numerical_types = [IntegerLyraType(), FloatLyraType()]
+                    if isinstance(expression, Identifier) and expression.typ in numerical_types:
+                        return {'type': ['identifier', str(expression.typ)], 'value': expression.name}
+                    if isinstance(expression, Literal) and expression.typ in numerical_types:
+                        return {'type': ['literal', str(expression.typ)], 'value': expression.val}
+                    js = dict()
+                    if isinstance(expression, BinaryArithmeticOperation) and expression.typ in numerical_types:
+                        js['type'] = ['binary_arithmetic', str(expression.typ)]
+                        js['left'] = do_multiplier(expression.left)
+                        js['operator'] = self.operator
+                        js['right'] = do_multiplier(expression.right)
+                        return js
+                    raise ValueError("JSON conversion not supported for multiplier {}".format(self))
+
+                def is_star(constraint): return isinstance(constraint, tuple) and not constraint
+
+                def is_basic(constraint): return isinstance(constraint, tuple) and constraint
+
+                def do_constraint(constraint):
+                    if is_star(constraint):
+                        return '*'
+                    if is_basic(constraint):
+                        js = dict()
+                        js['pp'] = [constraint[0].line, constraint[0].column]
+                        js['lattice_elements'] = []
+                        for element in constraint[1]:
+                            AssumptionState.InputStack.InputLattice._state_names[type(element).__name__] = type(element)
+                            js['lattice_elements'].append({
+                                'domain': str(type(element).__name__),
+                                'element': element.to_json()
+                            })
+
+                        return js
+                    if isinstance(constraint, AssumptionState.InputStack.InputLattice):
+                        return constraint.to_json()
+                # if self.is_top():
+                #     return 'T'
+                # if self.is_bottom():
+                #     return '⊥'
+                js = dict()
+                js['multiplier'] = do_multiplier(self.multiplier)
+                js['constraints'] = [do_constraint(constraint) for constraint in self.constraints]
+                return js
+
+            @staticmethod
+            @copy_docstring(JSONMixin.from_json)
+            def from_json(json: dict) -> 'JSONMixin':
+                def do_multiplier(js):
+                    types = {'int': IntegerLyraType, 'float': FloatLyraType}
+                    if js['type'][0] == 'identifier':
+                        return VariableIdentifier(types[js['type'][1]](), js['value'])
+                    if js['type'][0] == 'literal':
+                        return Literal(types[js['type'][1]](), js['value'])
+                    if js['type'][0] == 'binary_arithmetic':
+                        type = types[js['type'][1]()]
+                        left = do_multiplier(js['left'])
+                        operator = js['operator']
+                        right = do_multiplier(js['right'])
+                        return BinaryArithmeticOperation(type, left, operator, right)
+
+                def do_constraint(js):
+                    if js == '*':
+                        return ()
+                    if 'pp' in js:  # basic constraint
+                        pp = ProgramPoint(js['pp'][0], js['pp'][1])
+                        cons = []
+                        for element in js['lattice_elements']:
+                            state = AssumptionState.InputStack.InputLattice._state_names[element['domain']]
+                            cons.append(state.from_json(element['element']))
+                        cons = tuple(cons)
+                        return pp, cons
+                    if 'multiplier' in js:  # input constraint
+                        return AssumptionState.InputStack.InputLattice.from_json(js)
+                # if json == "T":
+                #     return AssumptionState.InputStack.InputLattice().top()
+                # if json == "⊥":
+                #     return AssumptionState.InputStack.InputLattice.bottom()
+                multiplier = do_multiplier(json['multiplier'])
+                constraints = [do_constraint(c) for c in json['constraints']]
+                return AssumptionState.InputStack.InputLattice(multiplier, constraints)
+
+            @copy_docstring(JSONMixin.check_input)
+            def check_input(self, input_generator: Generator):
+
+                def gen(assumption, val):
+                    if isinstance(assumption, AssumptionState.InputStack.InputLattice.BasicConstraint) or isinstance(
+                            assumption, AssumptionState.InputStack.InputLattice.StarConstraint):
+                        yield assumption
+                    else:
+                        mult = MultiplierEvaluator().visit(assumption.multiplier, val)
+                        if isinstance(mult, CheckerError):
+                            yield mult
+                            return
+                        for _ in range(mult):
+                            for cons in assumption.constraints:
+                                yield gen(cons, val)
+
+                # {'program_point': (input line number, input value)}
+                pp_value: Dict[str, Union[Tuple[int, str], CheckerError]] = dict()
+                # {'line_no': [errors] }
+                line_errors: Dict[int, List[CheckerError]] = defaultdict(lambda : [])
+                constraint_generator = gen(self, pp_value)
+                try:
+                    line_number, input_value = next(input_generator)
+                except StopIteration:
+                    end_of_input = True
+
+                try:
+                    constraint = constraint_generator.next()
+                except:
+                    end_of_constraints = True
+
+                if not end_of_input and not end_of_constraints:
+                    if isinstance(constraint, AssumptionState.InputStack.InputLattice.StarConstraint):
+                        #TODO handle start constraint
+                        pass
+                    elif isinstance(constraint, AssumptionState.InputStack.InputLattice.BasicConstraint):
+                        pp = str(constraint[0])
+                        pp_value[pp] = (line_number, input_value)
+                        for cons in constraint[1]:
+                            cons.check_input(pp, pp_value, line_errors)
+                elif end_of_input and not end_of_constraints:
+                    raise Exception("Too few inputs!")
 
         class Scope(Enum):
             """Scope type. Either ``Branch`` or ``Loop``."""
@@ -441,14 +636,6 @@ class AssumptionState(State):
         def scope(self):
             """Current scope type."""
             return self._scopes[-1]
-
-        # @property
-        # def pp(self):
-        #     return self._pp
-        #
-        # @pp.setter
-        # def pp(self, pp):
-        #     self._pp = pp
 
         def __repr__(self):
             return "\n---\n".join(map(repr, reversed(self.stack)))
@@ -536,15 +723,6 @@ class AssumptionState(State):
             self.lattice.record(constraint)
             return self
 
-        # def copy(self):
-        #     stack = [element.copy() for element in self.stack]
-        #     copy = AssumptionState.InputStack()
-        #     copy.stack = stack
-        #     copy.scopes = deepcopy(self.scopes)
-        #     return copy
-
-        # input replacement
-
         class InputReplacement(ExpressionVisitor):
             """Visitor that replaces any occurrence of an input (sub)expression
             with a fresh variable identifier that depends on a given program point.
@@ -577,7 +755,7 @@ class AssumptionState(State):
 
             @copy_docstring(ExpressionVisitor.visit_Input)
             def visit_Input(self, expr: Input):
-                name = "{}.{}".format(self.pp.line, self.nonce)
+                name = "L({}.{})".format(self.pp.line, self.nonce)
                 return VariableIdentifier(expr.typ, name)
 
             @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
@@ -780,6 +958,8 @@ class AssumptionState(State):
         for i, state in enumerate(self.states):
             self.states[i] = state.substitute({left}, {right})
         # retrieve the constraints imposed on the input data...
+        # for state in self.states:
+        #     r = state.retrieve()
         retrieved = zip(*[state.retrieve() for state in self.states])
         # ...and record them on the stack
         for constraint in retrieved:
@@ -787,14 +967,6 @@ class AssumptionState(State):
         # perform the substitution on the stack
         self.stack.substitute({left}, {right})
         return self
-
-    # def copy(self):
-    #     arguments = deepcopy(self._arguments)
-    #     states = [state.__class__ for state in self.states]
-    #     copy = AssumptionState(states, arguments)
-    #     copy.stack = self.stack.copy()
-    #     copy.states = [state.copy() for state in self.states]
-    #     return copy
 
 
 class TypeRangeAssumptionState(AssumptionState):
@@ -812,8 +984,8 @@ class TypeRangeAssumptionState(AssumptionState):
     """
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
-        from lyra.abstract_domains.assumption.type_domain import TypeState
         from lyra.abstract_domains.assumption.range_domain import RangeState
+        from lyra.abstract_domains.assumption.type_domain import TypeState
         states = [TypeState, RangeState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)
@@ -822,8 +994,9 @@ class TypeRangeAssumptionState(AssumptionState):
 class OctagonStringAssumptionState(AssumptionState):
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
-        from lyra.abstract_domains.assumption.type_domain import TypeState
         from lyra.abstract_domains.assumption.octagons_domain import OctagonState
-        states = [TypeState, OctagonState]
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.character_domain import CharacterState
+        states = [TypeState, OctagonState, CharacterState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)

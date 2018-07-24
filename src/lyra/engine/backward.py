@@ -67,7 +67,7 @@ class BackwardInterpreter(Interpreter):
                         successor = self.result.get_node_result(edge.target)[0].copy()
                     else:
                         successor = initial.copy().bottom()
-                    # handle unconditional non-default edges
+                    # handle unconditional non-default edge
                     if edge.kind == Edge.Kind.IF_OUT:
                         successor = successor.enter_if()
                     elif edge.kind == Edge.Kind.LOOP_OUT:
@@ -112,6 +112,7 @@ class BackwardInterpreter(Interpreter):
                         successor = self.semantics.semantics(edge.condition, successor).filter()
                         successor = successor.exit_loop()
                     entry = entry.join(successor)
+
                 # widening
                 if isinstance(current, Loop) and self.widening < iteration:
                     entry = previous.copy().widening(entry)

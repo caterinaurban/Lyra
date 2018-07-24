@@ -10,12 +10,13 @@ The set of possible values of a program variable in a state is represented as a 
 from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum
-from typing import Set
+from typing import Set, Tuple, Dict, List
 
 from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONMixin
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
+from lyra.assumption.error import CheckerError
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
     Input, ListDisplay, Range, AttributeReference, Subscription, Slicing, \
     UnaryArithmeticOperation, BinaryArithmeticOperation
@@ -71,6 +72,7 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
     .. automethod:: TypeLattice._join
     .. automethod:: TypeLattice._widening
     """
+
     class Status(IntEnum):
         """Type status.
 
@@ -205,7 +207,7 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
             return self._replace(TypeLattice(TypeLattice.Status.Integer))
         elif self.is_top():
             return self.bottom()
-        return self   # nothing to be done
+        return self  # nothing to be done
 
     @copy_docstring(ArithmeticMixin._add)
     def _add(self, other: 'TypeLattice') -> 'TypeLattice':
@@ -306,6 +308,28 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
             return TypeLattice(TypeLattice.Status.Float)
         return TypeLattice()
 
+    @copy_docstring(JSONMixin.check_input)
+    def check_input(self, pp: str, pp_value: Dict[str, Tuple[int, ...]], line_errors: Dict[int, List[CheckerError]]):
+        error = None
+        input_line = pp_value[pp][0]
+        input_value = pp_value[pp][1]
+        try:
+            if self.is_float():
+                float(input_value)
+            elif self.is_integer():
+                int(input_value)
+            elif self.is_boolean():
+                if input_value not in ["1", "0", "True", "False", "true", "false"]:
+                    raise ValueError
+        except ValueError:
+            error = CheckerError("Expected type {}".format(str(self.element)))
+
+        if self.is_bottom():
+            error = CheckerError("Type error.")
+
+        if error is not None:
+            line_errors[input_line].append(error)
+
 
 class TypeState(Store, InputMixin):
     """Type assumption analysis state. An element of the type assumption abstract domain.
@@ -325,6 +349,7 @@ class TypeState(Store, InputMixin):
     .. automethod:: TypeState._assume
     .. automethod:: TypeState._substitute
     """
+
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to the type representing its value.
 
@@ -586,6 +611,7 @@ class TypeState(Store, InputMixin):
         (1) refines the value of an evaluated arithmetic expression based on a given interval; and
         (2) modifies the current state based on the refined value of the arithmetic expression.
         """
+
         def visit(self, expr: Expression, *args, **kwargs):
             """Visit of an evaluated expression."""
             method = 'visit_' + expr.__class__.__name__
@@ -596,12 +622,12 @@ class TypeState(Store, InputMixin):
 
         @copy_docstring(ExpressionVisitor.visit_Literal)
         def visit_Literal(self, expr: Literal, evaluation=None, value=None, state=None):
-            return state    # nothing to be done
+            return state  # nothing to be done
 
         @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
             state.record(value)
-            return state    # nothing to be done
+            return state  # nothing to be done
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):

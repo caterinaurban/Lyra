@@ -3,5 +3,8 @@
 x: str = input()
 for i in range(5):
     y: str = input()
-    print(y)
+    if y == "abc":
+        print(y)
+    else:
+        raise ValueError
 z: str = input()
