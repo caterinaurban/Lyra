@@ -134,8 +134,8 @@ class InRelationState(State, BottomMixin):
         if self.is_bottom():
             return iter(())     # empty iterator
 
-        return filter(lambda t: (t[0] and t[0] == v) or (t[1] and t[1] == v)
-                      or (t[2] and t[2] == v), self.tuple_set)
+        return filter(lambda t: (t[0] == v) or (t[1] and t[1] == v) or (t[2] and t[2] == v),
+                      self.tuple_set)
 
     def loop_vars(self) -> Set[VariableIdentifier]:
         """Returns the set of all key/value variables"""
@@ -758,7 +758,7 @@ class DictContentState(State):
 
             elif isinstance(left.typ, DictLyraType):    # overwrite dictionary
                 if isinstance(right, VariableIdentifier):
-                    self.dict_store.store[left] = deepcopy(self.dict_store.store[right])
+                    self.dict_store.store[left] = deepcopy(self.dict_store.store[right])        # TODO: alias -> don't copy?
                     self.init_store.store[left] = deepcopy(self.init_store.store[right])
                 elif isinstance(right, DictDisplay):
                     # "NEW DICT"
