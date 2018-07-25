@@ -230,7 +230,7 @@ class DictSegmentLattice(Lattice):
                 if not s_meet_o.is_bottom():    # segments overlap (cond. 1)
                     o_overlaps = True
                     # overlaps with some o (not cond. 2) -> needs to be widened
-                    segment_set.discard(s)
+                    segment_set.remove(s)
                     # point-wise widening
                     r = (deepcopy(s[0]).widening(deepcopy(o[0])),
                          deepcopy(s[1]).widening(deepcopy(o[1])))

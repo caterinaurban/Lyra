@@ -138,7 +138,7 @@ class SimpleUsageState(Stack, State):
             if value.is_written() or value.is_top():
                 effect = True
         if effect:      # the current nesting level has an effect on the outcome of the program
-            for identifier in condition.ids():
+            for identifier in condition.ids():               # TODO: handle "in .items()" here!?
                 if isinstance(identifier, VariableIdentifier):
                     self.lattice.store[identifier].top()
         return self
