@@ -33,6 +33,7 @@ class LyraType(metaclass=ABCMeta):
         """
         return "Any"
 
+
 class BooleanLyraType(LyraType):
     """Boolean type representation."""
 
@@ -80,9 +81,12 @@ class ListLyraType(LyraType):
         return f"List[{repr(self.typ)}]"
 
 
-class TupleLyraType(LyraType):          # TODO: maybe support tuples of variable length, esp. empty tuple?:
-    """Tuple type representation."""    # To specify a variable-length tuple of homogeneous type, use literal ellipsis, e.g. Tuple[int, ...].
-                                        # A plain Tuple is equivalent to Tuple[Any, ...], and in turn to tuple.
+class TupleLyraType(LyraType):
+    """Tuple type representation."""
+    # TODO: maybe support tuples of variable length, esp. empty tuple?:
+    # To specify a variable-length tuple of homogeneous type, use literal ellipsis,
+    # e.g. Tuple[int, ...].
+    # A plain Tuple is equivalent to Tuple[Any, ...], and in turn to tuple.
 
     def __init__(self, types: List[LyraType]):
         """Tuple type creation.
@@ -171,7 +175,8 @@ def resolve_type_annotation(annotation):
             value = resolve_type_annotation(annotation.slice.value)     # element type
             return SetLyraType(value)
         elif annotation.value.id == 'Tuple':
-            values = [resolve_type_annotation(v) for v in annotation.slice.value.elts] # element types
+            # element types
+            values = [resolve_type_annotation(v) for v in annotation.slice.value.elts]
             return TupleLyraType(values)
 
     raise NotImplementedError(f"Type annotation {annotation} is not yet supported!")

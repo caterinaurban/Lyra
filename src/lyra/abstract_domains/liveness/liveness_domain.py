@@ -209,7 +209,7 @@ class StrongLivenessState(LivenessState):
             return self
         elif isinstance(left, Subscription) or isinstance(left, Slicing):
             target = left.target
-            if self.store[target].is_top():  # the assigned variable (list, dict,...) is strongly-live
+            if self.store[target].is_top():  # the target variable (list, dict,..) is strongly-live
                 # summarization abstraction (weak update)
                 for identifier in right.ids():
                     if isinstance(identifier, VariableIdentifier):
@@ -223,7 +223,8 @@ class StrongLivenessState(LivenessState):
                 else:  # Slicing
                     ids = left.lower.ids() | left.upper.ids()
                 for identifier in ids:  # make ids in subscript strongly live
-                    if isinstance(identifier, VariableIdentifier):  # needed? ids = VariableIdentifier?
+                    # needed? ids = VariableIdentifier?
+                    if isinstance(identifier, VariableIdentifier):
                         self.store[identifier].top()
                     else:
                         error = f"Identifier {identifier} in subscript is not yet supported!"

@@ -16,10 +16,12 @@ class KeyWrapper(ScalarWrapper, metaclass=ABCMeta):
     A concrete wrapper should inherit from this class and the state that should be 'wrapped'.
     """
 
-    def __init__(self, scalar_variables: Set[VariableIdentifier], k_var: VariableIdentifier, *domain_args):
+    def __init__(self, scalar_variables: Set[VariableIdentifier], k_var: VariableIdentifier,
+                 *domain_args):
         """
         :param scalar_variables:
-        :param k_var: special variable (with correct type) representing the key values at a specific segment
+        :param k_var: special variable (with correct type)
+                      representing the key values at a specific segment
         :param domain_args: arguments needed by the underlying domain
         """
         key_vars = copy(scalar_variables)
@@ -54,12 +56,12 @@ class KeyWrapper(ScalarWrapper, metaclass=ABCMeta):
         :return: decomposition/partition of 'state' avoiding 'exclude'
         """
 
-    # @abstractmethod
-    # def __lt__(self, other):
-    #     """Used to order disjoint segements for their unique representation.
-    #     Does not (need to) conform with Lattice's less_equal"""
+    @abstractmethod
+    def __lt__(self, other):
+        """Used to order disjoint segements for their unique representation.
+        Does not (need to) conform with Lattice's less_equal"""
 
-    # @abstractmethod
-    # def __gt__(self, other):
-    #     """Used to order disjoint segements for their unique representation.
-    #     Does not (need to) conform with Lattice's less_equal"""
+    @abstractmethod
+    def is_bottom(self) -> bool:
+        """Should be true if the special key variable is bottom
+        (i.e. cannot have any concrete value)"""

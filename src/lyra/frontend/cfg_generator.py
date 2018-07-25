@@ -347,7 +347,9 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_AnnAssign(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         annotated = resolve_type_annotation(node.annotation)
-        # if node.value != None:        # TODO: implement annotation without assignment https://greentreesnakes.readthedocs.io/en/latest/nodes.html#statements
+        #  TODO: implement annotation without assignment
+        #           https://greentreesnakes.readthedocs.io/en/latest/nodes.html#statements
+        # if node.value != None:
         value = self.visit(node.value, types, annotated)
         target = self.visit(node.target, types, annotated)
         return Assignment(pp, target, value)
@@ -440,7 +442,8 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_For(self, node, types=None, typ=None):
         pp = ProgramPoint(node.target.lineno, node.target.col_offset)
 
-        # don't provide result type (should be set before by a type annotation for variables/will be set later for calls)
+        # don't provide result type
+        # (should be set before by a type annotation for variables/will be set later for calls)
         iteration = self.visit(node.iter, types)
 
         # set types: iteration._typ = type of object being iterated over,
@@ -452,24 +455,27 @@ class CFGVisitor(ast.NodeVisitor):
                 target_type = iteration.variable.typ.key_type
                 # conversion to .keys() call to be consistent:
                 iteration = Call(iteration.pp, "keys", [], SetLyraType(target_type), iteration)
-                    # TODO: return type necessary & correct?
+                # TODO: return type necessary & correct?
         elif isinstance(iteration, Call) and iteration.name == "range":
             target_type = IntegerLyraType()
             iteration._typ = ListLyraType(IntegerLyraType())    # TODO: necessary?
         elif isinstance(iteration, Call) and iteration.name == "items" \
-                and isinstance(iteration.target, VariableAccess):   # right now only handle single variables as target
-            called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
+                and isinstance(iteration.target, VariableAccess):
+            # right now only handle single variables as target
+            called_on_type = types[iteration.target.variable.name]     # always called on Dict[...]
             target_type = TupleLyraType([called_on_type.key_type, called_on_type.value_type])
             # items() actually returns 'view' object, but here for simplicity: Dict
             iteration._typ = called_on_type      # TODO: necessary & correct ?
         elif isinstance(iteration, Call) and iteration.name == "keys" \
-                and isinstance(iteration.target, VariableAccess):   # right now only handle single variables as target
-            called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
+                and isinstance(iteration.target, VariableAccess):
+            # right now only handle single variables as target
+            called_on_type = types[iteration.target.variable.name]     # always called on Dict[...]
             target_type = called_on_type.key_type
             iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
         elif isinstance(iteration, Call) and iteration.name == "values" \
-                and isinstance(iteration.target, VariableAccess):   # right now only handle single variables as target
-            called_on_type = types[iteration.target.variable.name]      # always called on Dict[...]
+                and isinstance(iteration.target, VariableAccess):
+            # right now only handle single variables as target
+            called_on_type = types[iteration.target.variable.name]     # always called on Dict[...]
             target_type = called_on_type.value_type
             iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
         else:
@@ -594,7 +600,7 @@ class CFGVisitor(ast.NodeVisitor):
             target = None
         return Call(pp, name, [self.visit(arg, types, typ) for arg in node.args], typ, target)
 
-    def visit_Tuple(self, node, types=None, typ = None):    # same as list
+    def visit_Tuple(self, node, types=None, typ=None):    # same as list
         pp = ProgramPoint(node.lineno, node.col_offset)
         return TupleDisplayAccess(pp, [self.visit(node.elts[i], types, typ.types[i])
                                        for i in range(len(node.elts))])
@@ -677,7 +683,8 @@ class CFGVisitor(ast.NodeVisitor):
                 else:
                     cfg_factory.append_cfg(_dummy_cfg(self._id_gen))
             # elif isinstance(child, ast.Assign): # TODO
-            #     raise NotAnnotatedError(f"The Assignment in line {str(child.lineno)} is not type annotated")
+            #    raise NotAnnotatedError(f"The Assignment in line {str(child.lineno)} "
+            #                            f"is not type annotated")
             else:
                 raise NotImplementedError(
                     f"The statement {str(type(child))} is not yet translatable to CFG!")

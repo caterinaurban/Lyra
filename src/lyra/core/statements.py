@@ -188,7 +188,7 @@ class SetDisplayAccess(ExpressionAccess):
 
 class DictDisplayAccess(ExpressionAccess):
     """Dictionary display access representation. ({k:v, ...})"""
-    def __init__(self, pp: ProgramPoint, keys: List[Statement], values: List[Statement]):    # List[Statements]?
+    def __init__(self, pp: ProgramPoint, keys: List[Statement], values: List[Statement]):
         """Dictionary display access construction.
 
         :param pp: program point associated with the list display access
