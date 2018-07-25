@@ -11,7 +11,7 @@ can have value *U* (used), *S* (scoped), *W* (written), and *N* (not used).
 """
 from collections import defaultdict
 from copy import deepcopy, copy
-from typing import Dict, Type, Set, Union, Callable
+from typing import Type, Set, Union, Callable
 
 from lyra.abstract_domains.data_structures.dict_content_domain import DictContentState
 from lyra.abstract_domains.data_structures.dict_segment_lattice import DictSegmentLattice
@@ -21,13 +21,14 @@ from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
-from lyra.abstract_domains.usage.usage_domain import SimpleUsageState, SimpleUsageStore
+from lyra.abstract_domains.usage.usage_domain import SimpleUsageStore
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
-from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing, _walk, \
+from lyra.core.expressions import VariableIdentifier, Expression, Subscription, \
     _iter_child_exprs, NegationFreeNormalExpression, BinaryComparisonOperation, Keys, Values, Items
-from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, StringLyraType, \
+from lyra.core.types import BooleanLyraType, IntegerLyraType, StringLyraType, \
     FloatLyraType, DictLyraType
 from lyra.core.utils import copy_docstring
+
 Status = UsageLattice.Status
 
 # special variable names:
@@ -115,16 +116,6 @@ class DictSegmentUsageLattice(Lattice):
     def dict_usage(self) -> Store:
         """Abstract store of dictionary variable contents."""
         return self._dict_usage
-
-    @property
-    def s_k_conv(self):
-        """Function to convert from scalar (usage) domain elements to key domain elements"""
-        return self._s_k_conv
-
-    @property
-    def k_s_conv(self):
-        """Function to convert from key domain elements to scalar (usage) domain elements"""
-        return self._k_s_conv
 
     def __repr__(self):
         return repr(self.scalar_usage) + repr(self.dict_usage)  # TODO
@@ -316,6 +307,16 @@ class DictSegmentUsageState(Stack, State):
     # @property
     # def scalar_vars(self) -> Set[VariableIdentifier]:
     #     return self._s_vars
+
+    @property
+    def s_k_conv(self):
+        """Function to convert from scalar (usage) domain elements to key domain elements"""
+        return self._s_k_conv
+
+    @property
+    def k_s_conv(self):
+        """Function to convert from key domain elements to scalar (usage) domain elements"""
+        return self._k_s_conv
 
     # TODO: properties?
     @copy_docstring(Stack.push)
