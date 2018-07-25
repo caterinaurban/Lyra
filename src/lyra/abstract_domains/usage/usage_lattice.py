@@ -139,7 +139,7 @@ class UsageLattice(Lattice):
         :return: current lattice element modified to reflect a decreased nesting level
         """
         assert not self.is_written() or not other.is_scoped()
-        if self.is_bottom() or other.is_written() or other.is_top():
+        if self.is_bottom() or other.is_written() or other.is_top():        # TODO: why self.is_bottom?
             self._replace(other)
         return self
 

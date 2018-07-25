@@ -139,8 +139,8 @@ class SimpleUsageState(Stack, State):
                 effect = True
                 break
         if effect:      # the current nesting level has an effect on the outcome of the program
-            for identifier in condition.ids():               # TODO: handle "in .items()" here!?
-                if isinstance(identifier, VariableIdentifier):
+            for identifier in condition.ids():              # TODO: handle "in .items()" here!?
+                if isinstance(identifier, VariableIdentifier):      # TODO: not needed?
                     self.lattice.store[identifier].top()
         return self
 
