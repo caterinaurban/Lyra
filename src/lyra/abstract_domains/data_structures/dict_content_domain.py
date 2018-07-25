@@ -1079,7 +1079,7 @@ class DictContentState(State):
                 # refine k_var according to refined v_bar -> k_var, s.t. d_var[k_var] = v_var
                 d_lattice: DictSegmentLattice = self.dict_store.store[d_var]
 
-                v_abs = self.eval_key(v_var)
+                v_abs = self.eval_value(v_var)
 
                 if not v_abs.is_top():  # TODO: check for less_equal old?
                     scalar_vars = self._s_vars.copy()
