@@ -314,7 +314,6 @@ class AssumptionState(State):
             @copy_docstring(BottomMixin._less_equal)
             def _less_equal(self, other: InputLattice) -> bool:
                 """``self <= other`` if and only if ``Ɣ(self) ⊆ Ɣ(other)``."""
-
                 def do(constraint1, constraint2) -> bool:
                     if isinstance(constraint1, tuple) and isinstance(constraint2, tuple):
                         # the constraints are StarConstraints or BasicConstraints
@@ -325,18 +324,11 @@ class AssumptionState(State):
                             l1: Tuple[JSONMixin, ...] = constraint1[1]
                             l2: Tuple[JSONMixin, ...] = constraint2[1]
                             return all(x.less_equal(y) for x, y in zip(l1, l2))
-                    else:  # the constraints are InputLattices
-                        m1: Expression = constraint1.multiplier
-                        m2: Expression = constraint2.multiplier
+                    else:   # the constraints are InputLattices
+                        m: bool = constraint1.multiplier == constraint2.multiplier
                         c1 = constraint1.constraints
                         c2 = constraint2.constraints
-                        if isinstance(m1, Literal) and isinstance(m2, Literal):
-                            assert isinstance(m1.typ, IntegerLyraType)
-                            assert isinstance(m2.typ, IntegerLyraType)
-                            m: bool = int(m1.val) <= int(m2.val)
-                        else:
-                            m: bool = m1 == m2
-                        c: bool = len(c2) <= len(c1) and all(do(x, y) for x, y in zip(c1, c2))
+                        c: bool = len(c2) == len(c1) and all(do(x, y) for x, y in zip(c1, c2))
                         return m and c
 
                 multiplier1 = self.multiplier
@@ -350,7 +342,6 @@ class AssumptionState(State):
             @copy_docstring(BottomMixin._join)
             def _join(self, other: InputLattice) -> InputLattice:  # TODO:
                 """``Ɣ(self) ⋃ Ɣ(other) ⊆ Ɣ(self \/ other)``."""
-
                 def do(constraint1, constraint2):
                     if isinstance(constraint1, tuple) and isinstance(constraint2, tuple):
                         # the constraints are StarConstraints or BasicConstraints
@@ -364,54 +355,39 @@ class AssumptionState(State):
                             l1: Tuple[JSONMixin, ...] = constraint1[1]
                             l2: Tuple[JSONMixin, ...] = constraint2[1]
                             return pp, tuple(x.join(y) for x, y in zip(l1, l2))
-                    else:  # the constraints are InputLattices
+
+                    else:   # the constraints are InputLattices
+                        assert isinstance(constraint1, AssumptionState.InputStack.InputLattice)
+                        assert isinstance(constraint2, AssumptionState.InputStack.InputLattice)
                         m1: Expression = constraint1.multiplier
                         m2: Expression = constraint2.multiplier
                         c1 = constraint1.constraints
                         c2 = constraint2.constraints
-                        if isinstance(m1, Literal) and isinstance(m2, Literal):
-                            assert isinstance(m1.typ, IntegerLyraType)
-                            assert isinstance(m2.typ, IntegerLyraType)
-                            val = str(min(int(m1.val), int(m2.val)))
-                            m: Expression = Literal(IntegerLyraType(), val)
+                        is_one1 = isinstance(m1, Literal) and m1.val == "1"
+                        is_one2 = isinstance(m2, Literal) and m2.val == "1"
+                        if is_one1 and is_one2:
+                            m = Literal(IntegerLyraType(), "1")
+                            c = [do(x, y) for x, y in zip(c1, c2)]
+                            if len(c1) != len(c2):  # lengths of list of constraints are different
+                                c.append(())  # add a star constraint
                         else:
-                            m: Expression = m1 if m1 == m2 else one
-                        r: bool = m1 != m2  # are the multipliers different?
-                        c = [do(x, y) for x, y in zip(c1, c2)]
-                        # do the list of constraints have different length?
-                        r = r or len(c1) != len(c2)
-                        if r:  # multipliers of lengths of list of constraints are different
-                            c.append(())  # add a star constraint
+                            assert m1 == m2
+                            m: Expression = m1
+                            c = [do(x, y) for x, y in zip(c1, c2)]
+                            c.extend(c1[len(c2):])
+                            c.extend(c2[len(c1):])
                         return AssumptionState.InputStack.InputLattice(m, c)
 
                 multiplier1 = self.multiplier
                 multiplier2 = other.multiplier
                 assert isinstance(multiplier1, Literal) and multiplier1.val == "1"
                 assert isinstance(multiplier2, Literal) and multiplier2.val == "1"
-                if len(self.constraints) == len(other.constraints):
-                    constraints = [do(x, y) for x, y in zip(self.constraints, other.constraints)]
-                    one = Literal(IntegerLyraType(), "1")
-                    return self._replace(AssumptionState.InputStack.InputLattice(one, constraints))
-                else:  # the join is happening at a loop head
-                    assert abs(len(self.constraints) - len(other.constraints)) == 1
-                    one = Literal(IntegerLyraType(), "1")
-                    if len(self.constraints) < len(other.constraints):
-                        tail = other.constraints[1:]
-                        constraints = [do(x, y) for x, y in zip(self.constraints, tail)]
-                        other.constraints[1:] = constraints
-                        join = AssumptionState.InputStack.InputLattice(one, other.constraints)
-                        self._replace(join)
-                    else:
-                        tail = self.constraints[1:]
-                        constraints = [do(x, y) for x, y in zip(tail, other.constraints)]
-                        self.constraints[1:] = constraints
-                        join = AssumptionState.InputStack.InputLattice(one, self.constraints)
-                        self._replace(join)
-                    return self
+                constraints = [do(x, y) for x, y in zip(self.constraints, other.constraints)]
+                one = Literal(IntegerLyraType(), "1")
+                return self._replace(AssumptionState.InputStack.InputLattice(one, constraints))
 
             @copy_docstring(BottomMixin._meet)
-            def _meet(self, other: InputLattice) -> InputLattice:  # TODO:
-                """``Ɣ(self) ⋂ Ɣ(other) ⊆ Ɣ(self /\ other)``."""
+            def _meet(self, other: InputLattice) -> InputLattice:   # TODO
                 return self
 
             @copy_docstring(BottomMixin._widening)
@@ -431,18 +407,32 @@ class AssumptionState(State):
             def record(self, constraint: InputConstraint) -> InputLattice:
                 """Record a constraint on the input data.
 
-                .. note::
-                    The constraint is effectively not recorded if
-                    it is a repeated assumption identical
-                    to the previously recorded repeated assumption.
-                    This situation only happens when leaving the body of a loop.
+                By default, the constraint is added to the current list of recorded constraints.
+
+                When leaving the body of a for loop another time than the first, the constraint
+                to be recorded is instead merged with the previously recorded constraint.
 
                 :param constraint: constraint to be recorded
                 :return: current lattice element modified to record the constraint
                 """
-                repeated = isinstance(constraint, AssumptionState.InputStack.InputLattice)
-                if not repeated or not self.constraints or constraint != self.constraints[0]:
-                    self.constraints.insert(0, constraint)
+                def do(constraint1, constraint2):
+                    assert isinstance(constraint2, AssumptionState.InputStack.InputLattice)
+                    assert constraint1.multiplier == constraint2.multiplier
+                    for i, cs in enumerate(zip(constraint1.constraints, constraint2.constraints)):
+                        if cs[0] != cs[1]:
+                            constraint1.constraints[i] = do(cs[0], cs[1])
+                    reminder = constraint2.constraints[len(constraint1.constraints):]
+                    constraint1.constraints.extend(reminder)
+                    return constraint1
+                if self.constraints:    # there is at least one previously recorded constraint
+                    previous = self.constraints[0]
+                    repeated = AssumptionState.InputStack.InputLattice
+                    not_first = isinstance(previous, repeated)
+                    if isinstance(constraint, repeated) and not_first:
+                        # we are leaving the body of a for loop another time than the first
+                        self.constraints[0] = do(constraint, previous)
+                        return self
+                self.constraints.insert(0, constraint)
                 return self
 
             def replace(self, variable: VariableIdentifier, expression: Expression):
