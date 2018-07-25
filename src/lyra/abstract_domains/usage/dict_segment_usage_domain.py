@@ -304,12 +304,18 @@ class DictSegmentUsageState(Stack, State):
         super().__init__(DictSegmentUsageLattice, arguments)    # Stack
         State.__init__(self, precursory)
 
+        # self._s_vars = scalar_vars
+
         self._s_k_conv = usage_k_conv
         self._k_s_conv = k_usage_conv
         self._k_k_pre_conv = k_k_pre_conv
         self._k_pre_k_conv = k_pre_k_conv
 
         self._loop_flag = False
+
+    # @property
+    # def scalar_vars(self) -> Set[VariableIdentifier]:
+    #     return self._s_vars
 
     # TODO: properties?
     @copy_docstring(Stack.push)
@@ -360,6 +366,27 @@ class DictSegmentUsageState(Stack, State):
             if isinstance(expr, VariableIdentifier):
                 if type(expr.typ) in scalar_types:
                     self.lattice.scalar_usage.store[expr].top()
+                    # update dictionary usage at corresponding position
+                    # if variable occured in a 'in-condition'
+                    # only track value usage
+                    for (d_var, k_var, v_var) in self.precursory.in_relations.find_value(expr):
+                        d_lattice: DictSegmentLattice = self.lattice.dict_usage.store[d_var]
+                        if k_var is None:   # Values condition
+                            v_abs = self.precursory.eval_value(v_var)
+                            old_segments = copy(d_lattice.segments)
+                            for (k, v) in old_segments:
+                                value_meet_v = deepcopy(v_abs).meet(v)
+                                if not value_meet_v.is_bottom():  # value may be in this segment
+                                    # mark segment as used
+                                    if not v.is_top():
+                                        d_lattice.segments.remove((k, v))
+                                        d_lattice.segments.add((k, UsageLattice(Status.U)))
+                        else:      # Items condition
+                            k_pre = self.precursory.eval_key(k_var)     # may be refined
+                            k_abs = self._k_pre_k_conv(k_pre)
+                            # weak update = strong update, since U is top
+                            d_lattice.partition_add(k_abs, UsageLattice(Status.U))
+
                 elif isinstance(expr.typ, DictLyraType):
                     self.lattice.dict_usage.store[expr].top()
                 else:
