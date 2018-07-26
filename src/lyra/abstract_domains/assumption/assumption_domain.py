@@ -203,10 +203,10 @@ class AssumptionState(State):
                 is_one = isinstance(multiplier, Literal) and multiplier.val == "1"
                 repetitions = "" if is_one else "{} * ".format(multiplier)
                 single = len(self.constraints) == 1
-                beginning = "" if is_one or single else "["
                 formatted = (do(constraint) for constraint in self.constraints)
                 constraints = ", ".join(constraint for constraint in formatted if constraint)
-                ending = "" if is_one or single else "]"
+                beginning = "" if is_one or (single and constraints) else "["
+                ending = "" if is_one or (single and constraints) else "]"
                 assumption = repetitions + beginning + constraints + ending
                 return assumption if assumption else "ε"
 
