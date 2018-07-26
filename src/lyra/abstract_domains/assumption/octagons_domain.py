@@ -9,6 +9,8 @@ TODO
 import typing
 from copy import deepcopy
 from typing import List, Set, Tuple, Dict
+
+
 Union = typing.Union
 from elina.python_interface.elina_abstract0 import *
 from elina.python_interface.elina_dimension import *
@@ -162,10 +164,6 @@ class OctagonLattice(Lattice):
         :param
         """
         dim = self.indexes[variable.name]
-        # libc = CDLL(util.find_library('c'))
-        # cstdout = c_void_p.in_dll(libc, 'stdout')
-        # print("BEFORE PROJECTION", dim)
-        # elina_abstract0_fprint(cstdout, _elina_manager, self.elina_abstract, None)
         abstract = elina_abstract0_forget_array(_elina_manager, False, self.elina_abstract, ElinaDim(dim), 1, False)
         # print("AFTER PROJECTION")
         # elina_abstract0_fprint(cstdout, _elina_manager, abstract, None)
@@ -181,6 +179,11 @@ class OctagonLattice(Lattice):
         # update dictionary of Elina with the new variable
         self.variables.append(variable)
         return self._replace(OctagonLattice(self.variables, abstract))
+
+    # def print_abstract(self, abstract):
+    #     libc = CDLL(util.find_library('c'))
+    #     cstdout = c_void_p.in_dll(libc, 'stdout')
+    #     elina_abstract0_fprint(cstdout, _elina_manager, abstract, None)
 
     def lincons_to_string(self, lincons, pp_value=None):
         """
@@ -203,8 +206,8 @@ class OctagonLattice(Lattice):
             if pp_value is None:
                 string += str(self.variables[linterm.dim])
             else:
-                varname = self.variables[linterm.dim].name
-                string += f"line {pp_value[varname][0]}"
+                variable = self.variables[linterm.dim]
+                string += f"line {pp_value[variable][0]}"
         const_dbl = lincons.linexpr0.contents.cst.val.scalar.contents.val.dbl
         if const_dbl >= 0:
             string += ' + '
@@ -275,7 +278,15 @@ class OctagonLattice(Lattice):
         subs_index = self.indexes[subs_variable]
         indexes = [self.indexes[var] for var in variables]
         linexpr = OctagonLattice.create_linear_expression(indexes, coefficients, constant)
+        # print("SUBS VARIABLE {}, DIMENSION {}".format(subs_variable, subs_index))
+        # print("LINEAR EXPRESSION")
+        # elina_linexpr0_print(linexpr, None)
+        # print()
+        # print("ABSTRACT BEFORE")
+        # self.print_abstract(self.elina_abstract)
         abstract = elina_abstract0_substitute_linexpr(_elina_manager, False, self.elina_abstract, ElinaDim(subs_index), linexpr, None)
+        # print("ABSTRACT AFTER")
+        # self.print_abstract(abstract)
         return self._replace(OctagonLattice(self.variables, abstract))
 
     def unify(self, other: 'OctagonLattice') -> List[VariableIdentifier]:
@@ -289,9 +300,10 @@ class OctagonLattice(Lattice):
         self._replace(OctagonLattice(self.variables, elina_abstract0_copy(_elina_manager, self.elina_abstract)))
         return deepcopy(self.variables)
 
-    def check_input(self, pp: str, pp_value: Dict[str, typing.Union[Tuple[int, ...], CheckerError]], line_errors: Dict[int, List[CheckerError]]):
-        for i in range(self.lincons_array.size):
-            lincons = self.lincons_array.p[i]
+    def check_input(self, pp: VariableIdentifier, pp_value: Dict[str, typing.Union[Tuple[int, ...], CheckerError]], line_errors: Dict[int, List[CheckerError]]):
+        linear_constraints = self.elina_linear_constraints
+        for i in range(linear_constraints.size):
+            lincons = linear_constraints.p[i]
             value = 0
             ignore_constraint = False
             lines_involved = []
@@ -299,27 +311,27 @@ class OctagonLattice(Lattice):
                 linterm = lincons.linexpr0.contents.p.linterm[j]
                 coeff = linterm.coeff
                 coeff = elina_scalar_sgn(coeff.val.scalar)
-                variable = self.variables[linterm.dim].name
+                variable = self.variables[linterm.dim]
                 # contains non-input variable
                 if variable not in pp_value:
                     ignore_constraint = True
                     break
                 input_line = pp_value[variable][0]
                 input_value = pp_value[variable][1]
-                if not isinstance(input_value, CheckerError):
+                if input_value is not None:
                     lines_involved.append(input_line)
                     value += coeff * input_value
                 else:  # depends on wrong value
                     ignore_constraint = True
-                    dependency_error = DependencyError(source_line=input_line, message=input_value.message)
+                    dependency_error = DependencyError(source_line=input_line)
                     for line in lines_involved:
                         line_errors[line].append(dependency_error)
             # contains non-input variable or depends on wrong value
             if ignore_constraint:
                 continue
-            current_intput_line = pp_value[pp][0]
-            expected_value = pp_value[pp][1]
-            if value != expected_value:
+            const_dbl = lincons.linexpr0.contents.cst.val.scalar.contents.val.dbl
+            value += const_dbl
+            if not value >= 0:
                 relational_error = RelationalError(self.lincons_to_string(lincons, pp_value))
                 for line in lines_involved:
                     line_errors[line].append(relational_error)
@@ -342,7 +354,7 @@ class ConditionEvaluator(ExpressionVisitor):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
     def visit_Input(self, expr: 'Input', state=None):
-        if expr.typ == IntegerLyraType() or expr.typ is FloatLyraType() or expr.typ is BooleanLyraType():
+        if expr.typ == IntegerLyraType() or expr.typ == FloatLyraType() or expr.typ == BooleanLyraType():
             state.record(deepcopy(state))
             return [], [], None
         else:
@@ -405,8 +417,10 @@ class ConditionEvaluator(ExpressionVisitor):
     def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', state=None):
         coeff = None
         variables1, coefficients1, constant1 = self.visit(expr.left, state)
+        if constant1 is None:
+            return [], [], None
         variables2, coefficients2, constant2 = self.visit(expr.right, state)
-        if constant1 is None or constant2 is None:
+        if constant2 is None:
             return [], [], None
         if expr.operator == BinaryArithmeticOperation.Operator.Add:
             coeff = 1
@@ -608,7 +622,9 @@ class OctagonState(InputMixin, JSONMixin):
         self._substitute(variable, expression)
         return self
 
-    def unify(self, other: 'OctagonState') -> 'InputMixin':
+    def unify(self, other: 'OctagonState') -> 'OctagonState':
+        if other.lattice_element.dimensions != self.lattice_element.dimensions:
+            pass
         self.variables = self.lattice_element.unify(other.lattice_element)
         return self
 
@@ -641,5 +657,5 @@ class OctagonState(InputMixin, JSONMixin):
         return lattice_element
 
     @copy_docstring(JSONMixin.check_input)
-    def check_input(self, pp: str, pp_value: Dict[str, typing.Union[Tuple[int, str], CheckerError]], line_errors: Dict[int, List[CheckerError]]):
+    def check_input(self, pp: VariableIdentifier, pp_value: Dict[str, typing.Union[Tuple[int, str], CheckerError]], line_errors: Dict[int, List[CheckerError]]):
         self.lattice_element.check_input(pp, pp_value, line_errors)

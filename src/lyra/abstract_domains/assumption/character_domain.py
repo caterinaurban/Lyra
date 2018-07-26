@@ -1,11 +1,12 @@
 import string
 from copy import deepcopy
-from typing import Set
+from typing import Set, List, Dict, Union, Tuple
 
 from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONMixin
 from lyra.abstract_domains.lattice import BottomMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
+from lyra.assumption.error import CheckerError, DependencyError
 from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor, Literal, BinaryArithmeticOperation, \
     UnaryBooleanOperation, BinaryBooleanOperation, BinaryComparisonOperation
 from lyra.core.types import StringLyraType
@@ -26,8 +27,25 @@ class CharacterLattice(BottomMixin, JSONMixin):
     def from_json(json: dict) -> 'JSONMixin':
         return CharacterLattice(set(json['maybe']), set(json['certainly']))
 
-    def check_input(self, *args):
-        pass
+    def check_input(self,  pp: VariableIdentifier, pp_value: Dict[str, Union[Tuple[int, ...], CheckerError]], line_errors: Dict[int, List[CheckerError]]):
+        if self.is_top():
+            return
+        input_line = pp_value[pp][0]
+        input_value = pp_value[pp][1]
+        if input_value is not None:
+            input_value = set(input_value)
+            error_message = ""
+            if not input_value.issuperset(self.certainly):
+                error_message += "String must contain all characters: {}; ".format(self.certainly)
+
+            if not input_value.issubset(self.maybe):
+                error_message += "String must contain only characters: {}".format(self.maybe)
+            if len(error_message) > 0:
+                error = CheckerError(error_message)
+                line_errors[input_line].append(error)
+        else:
+            error = DependencyError(input_line)
+            line_errors[input_line].append(error)
 
     def __init__(self, certainly=set(), maybe=_alphabet):
         self._certainly = certainly
@@ -133,7 +151,7 @@ class Refinement(ExpressionVisitor):
         pass
 
     def visit_Input(self, expr: 'Input', state=None, evaluation=None):
-        print("BEFORE REC CHAR", type(state).inputs)
+        # print("BEFORE REC CHAR", type(state).inputs)
         state.record(deepcopy(evaluation))
 
     def visit_VariableIdentifier(self, expr: 'VariableIdentifier', state=None, evaluation=None):
@@ -250,5 +268,5 @@ class CharacterState(Store, InputMixin):
         left_eval = _evaluator.visit(left, self)
         _refinement.visit(right, self, left_eval)
         self.store[left].top()
-        print("AFTER REC CHAR", type(self).inputs)
+        # print("AFTER REC CHAR", type(self).inputs)
         return self

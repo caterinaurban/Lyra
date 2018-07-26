@@ -10,7 +10,7 @@ The set of possible values of a program variable in a state is represented as a 
 from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum
-from typing import Set, Tuple, Dict, List
+from typing import Set, Tuple, Dict, List, Any
 
 from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONMixin
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin
@@ -309,17 +309,24 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
         return TypeLattice()
 
     @copy_docstring(JSONMixin.check_input)
-    def check_input(self, pp: str, pp_value: Dict[str, Tuple[int, ...]], line_errors: Dict[int, List[CheckerError]]):
+    def check_input(self, pp: str, pp_value: Dict[str, Tuple[int, Any]], line_errors: Dict[int, List[CheckerError]]):
         error = None
         input_line = pp_value[pp][0]
         input_value = pp_value[pp][1]
+        correct_value = None
         try:
-            if self.is_float():
-                float(input_value)
+            if self.is_top():
+                correct_value = str(input_value)
+            elif self.is_float():
+                correct_value = float(input_value)
             elif self.is_integer():
-                int(input_value)
+                correct_value = int(input_value)
             elif self.is_boolean():
-                if input_value not in ["1", "0", "True", "False", "true", "false"]:
+                if input_value in ['0', 'false', 'False']:
+                    correct_value = 0
+                elif input_value in ['1', 'true', 'True']:
+                    correct_value = 1
+                else:
                     raise ValueError
         except ValueError:
             error = CheckerError("Expected type {}".format(str(self.element)))
@@ -329,6 +336,8 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
 
         if error is not None:
             line_errors[input_line].append(error)
+        pp_value[pp] = (input_line, correct_value)
+
 
 
 class TypeState(Store, InputMixin):

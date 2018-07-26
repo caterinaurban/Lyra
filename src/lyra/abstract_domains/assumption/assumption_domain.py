@@ -114,7 +114,6 @@ class InputMixin(State, metaclass=ABCMeta):
         :return: current state modified to record the constraint
         """
         type(self).inputs[self.pp].append(constraint)
-        print("RECORD", type(self).inputs)
         return self
 
     def retrieve(self) -> List[JSONMixin]:
@@ -143,7 +142,7 @@ class MultiplierEvaluator(ExpressionVisitor):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
     def visit_VariableIdentifier(self, expr: 'VariableIdentifier', pp_value=None):
-        return pp_value[expr.name][1]
+        return pp_value[expr][1]
 
     def visit_ListDisplay(self, expr: 'ListDisplay', pp_value=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
@@ -563,46 +562,48 @@ class AssumptionState(State):
                 return AssumptionState.InputStack.InputLattice(multiplier, constraints)
 
             @copy_docstring(JSONMixin.check_input)
-            def check_input(self, input_generator: Generator):
+            def check_input(self, input_generator: Generator, pp_value, line_errors):
+                def is_star(constraint): return isinstance(constraint, tuple) and not constraint
 
-                def gen(assumption, val):
-                    if isinstance(assumption, AssumptionState.InputStack.InputLattice.BasicConstraint) or isinstance(
-                            assumption, AssumptionState.InputStack.InputLattice.StarConstraint):
+                def is_basic(constraint): return isinstance(constraint, tuple) and constraint
+
+                def gen(assumption):
+                    if is_star(assumption) or is_basic(assumption):
                         yield assumption
                     else:
-                        mult = MultiplierEvaluator().visit(assumption.multiplier, val)
-                        if isinstance(mult, CheckerError):
-                            yield mult
-                            return
+                        mult = MultiplierEvaluator().visit(assumption.multiplier, pp_value)
+                        if not isinstance(mult, int):
+                            raise ValueError("multiplier {} is not an int".format(mult))
                         for _ in range(mult):
                             for cons in assumption.constraints:
-                                yield gen(cons, val)
+                                yield from gen(cons)
 
-                # {'program_point': (input line number, input value)}
-                pp_value: Dict[str, Union[Tuple[int, str], CheckerError]] = dict()
-                # {'line_no': [errors] }
-                line_errors: Dict[int, List[CheckerError]] = defaultdict(lambda : [])
-                constraint_generator = gen(self, pp_value)
-                try:
-                    line_number, input_value = next(input_generator)
-                except StopIteration:
-                    end_of_input = True
+                constraint_generator = gen(self)
+                end_of_constraints, end_of_input = False, False
+                while not end_of_input and not end_of_constraints:
+                    try:
+                        line_number, input_value = next(input_generator)
+                        # print("LINE NUMBER, INPUT VAL", line_number, input_value)
+                    except StopIteration:
+                        end_of_input = True
 
-                try:
-                    constraint = constraint_generator.next()
-                except:
-                    end_of_constraints = True
-
-                if not end_of_input and not end_of_constraints:
-                    if isinstance(constraint, AssumptionState.InputStack.InputLattice.StarConstraint):
-                        #TODO handle start constraint
-                        pass
-                    elif isinstance(constraint, AssumptionState.InputStack.InputLattice.BasicConstraint):
-                        pp = str(constraint[0])
+                    try:
+                        constraint = next(constraint_generator)
+                        # print("CONS", constraint)
+                    except StopIteration:
+                        end_of_constraints = True
+                    if end_of_constraints or end_of_input:
+                        break
+                    if is_star(constraint):
+                            #TODO handle start constraint
+                            pass
+                    elif is_basic(constraint):
+                        pp = constraint[0]
+                        pp = VariableIdentifier(IntegerLyraType(), "{}.{}".format(pp.line, 1))
                         pp_value[pp] = (line_number, input_value)
                         for cons in constraint[1]:
                             cons.check_input(pp, pp_value, line_errors)
-                elif end_of_input and not end_of_constraints:
+                if end_of_input and not end_of_constraints:
                     raise Exception("Too few inputs!")
 
         class Scope(Enum):
@@ -755,7 +756,7 @@ class AssumptionState(State):
 
             @copy_docstring(ExpressionVisitor.visit_Input)
             def visit_Input(self, expr: Input):
-                name = "L({}.{})".format(self.pp.line, self.nonce)
+                name = "{}.{}".format(self.pp.line, self.nonce)
                 return VariableIdentifier(expr.typ, name)
 
             @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)

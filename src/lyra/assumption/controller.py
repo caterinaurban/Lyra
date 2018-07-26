@@ -68,34 +68,37 @@ class Controller (metaclass= ABCMeta):
         :return:
         """
         import pickle
-        import hashlib
-        md5 = hashlib.md5()
+        import hashlib  # instead of md5
+
+        modified = False
+        db_path = os.getcwd() + '/db'
         try:
-            l = json.load(open("db"))
-        except JSONDecodeError:
+            l = pickle.load(open(db_path, 'rb'))
+        except EOFError:
             l = []
         db = dict(l)
         path = self.script_path
-        modified = False
-        md5.update(open(path).read().encode('utf-8'))
-        checksum = md5.digest()
+        # this converts the hash to text
+        checksum = hashlib.md5(open(path).read().encode('utf-8')).hexdigest()
         if db.get(path, None) != checksum:
             modified = True
-            db[path] = str(checksum)
-        json.dump(db, open("db", "w"))
+            db[path] = checksum
+        pickle.dump(db, open(db_path, "wb"))
+        print('MODIFIED', modified)
         return modified
 
     def main(self):
         """ Run the controller """
         # if code has been modified
-        if self.code_modified() or not self.handler.file_exists():
+        # if self.code_modified() or not self.handler.file_exists():
+        if True:
             print("Running analysis")
             result = self.run_analysis()
             print("RESULT", result)
             self.write_result(result)
         parsed_result = self.read_result()
         print("PARSED RESULT", parsed_result)
-        # self.run_checker(parsed_result)
+        self.run_checker(parsed_result)
 
 
 class AssumptionController(Controller):

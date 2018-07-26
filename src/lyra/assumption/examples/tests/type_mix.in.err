@@ -1,0 +1,6 @@
+|
+2|2|4| -line 4 + line 2 - 1.0 >= 0| -line 4 - line 2 + 19.0 >= 0
+3|5|8|String must contain all characters: {'a', 'b', 'c'}; String must contain only characters: {'a', 'b', 'c'}
+4|9|11| -line 4 + 9.0 >= 0| -line 4 + line 2 - 1.0 >= 0| -line 4 - line 2 + 19.0 >= 0
+5|12|14| -line 5 + 10.0 >= 0| -line 7 - line 5 + 19.0 >= 0| -line 5 + 10.0 >= 0
+7|19|21| -line 7 + 9.0 >= 0| -line 7 - line 5 + 19.0 >= 0
