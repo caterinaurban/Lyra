@@ -388,8 +388,8 @@ class SignState(Store, State):
         def visit_Subscription(self, expr: Subscription, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            self.visit(expr.target, state, evaluation)
-            evaluation[expr] = evaluation[expr.target]
+            evaluated = self.visit(expr.target, state, evaluation)
+            evaluation[expr] = evaluated[expr.target]
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)

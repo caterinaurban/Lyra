@@ -155,6 +155,8 @@ class IntervalState(Store, State):
     Map from each program variable to the interval representing its value.
     The value of all program variables is represented by the unbounded interval by default.
 
+    .. note:: Program variables storing lists are abstracted via summarization.
+
     .. document private methods
     .. automethod:: IntervalState._assign
     .. automethod:: IntervalState._assume
@@ -241,6 +243,18 @@ class IntervalState(Store, State):
             # refine the updated store proceeding top-down on the right-hand side
             self._refinement.visit(right, evaluation, refinement, self)
             return self
+        elif isinstance(left, Subscription) or isinstance(left, Slicing):
+            # copy the current state
+            current: IntervalState = deepcopy(self)
+            # perform the substitution on the copy of the current state
+            target = left.target
+            value: IntervalLattice = deepcopy(current.store[target])
+            current.store[target].top()
+            evaluation = current._evaluation.visit(right, current, dict())
+            refinement = evaluation[right].meet(value)
+            current._refinement.visit(right, evaluation, refinement, current)
+            # perform a weak update on the current state
+            return self.join(current)
         raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
 
     # expression evaluation
@@ -303,8 +317,11 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: Subscription, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target, state, evaluation)
+            evaluation[expr] = evaluated[expr.target]
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, state=None, evaluation=None):
@@ -411,8 +428,8 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: Subscription, evaluation=None, value=None, state=None):
-            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            state.store[expr.target] = evaluation[expr].meet(value)
+            return state
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
