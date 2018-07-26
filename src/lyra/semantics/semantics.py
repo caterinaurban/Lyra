@@ -244,21 +244,40 @@ class BuiltInCallSemantics(CallSemantics):
         return state.output(argument)
 
     def range_call_semantics(self, stmt: Call, state: State) -> State:
-        arguments = [self.semantics(arg, state).result.pop() for arg in stmt.arguments]
-        start = Literal(IntegerLyraType(), "0")
-        step = Literal(IntegerLyraType(), "1")
-        if len(arguments) == 1:
-            end = arguments[0]
-        elif len(arguments) in [2, 3]:
-            start = arguments[0]
-            end = arguments[1]
-            if len(arguments) == 3:
-                step = arguments[2]
-        else:
-            error = f"Semantics for range call with {len(arguments)} arguments is not implemented!"
-            raise NotImplementedError(error)
-        state.result = {Range(stmt.typ, start, end, step)}
-        return state
+        result = set()
+        if len(stmt.arguments) == 1:
+            start = Literal(IntegerLyraType(), "0")
+            stops = self.semantics(stmt.arguments[0], state).result
+            step = Literal(IntegerLyraType(), "1")
+            for stop in stops:
+                range = Range(stmt.typ, start, stop, step)
+                result.add(range)
+            state.result = result
+            return state
+        elif len(stmt.arguments) == 2:
+            starts = self.semantics(stmt.arguments[0], state).result
+            stops = self.semantics(stmt.arguments[1], state).result
+            step = Literal(IntegerLyraType(), "1")
+            for start in starts:
+                for stop in stops:
+                    range = Range(stmt.typ, start, stop, step)
+                    result.add(range)
+            state.result = result
+            return state
+        elif len(stmt.arguments) == 3:
+            starts = self.semantics(stmt.arguments[0], state).result
+            stops = self.semantics(stmt.arguments[1], state).result
+            steps = self.semantics(stmt.arguments[2], state).result
+            for start in starts:
+                for stop in stops:
+                    for step in steps:
+                        range = Range(stmt.typ, start, stop, step)
+                        result.add(range)
+            state.result = result
+            return state
+        error = f"Call to {stmt.name} with unexpected number of arguments!"
+        raise ValueError(error)
+
 
     def raise_semantics(self, stmt: Raise, state: State) -> State:
         """Semantics of raising an Error.
