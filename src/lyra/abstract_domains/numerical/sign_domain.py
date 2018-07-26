@@ -348,18 +348,15 @@ class SignState(Store, State):
             evaluation[expr] = SignLattice()
             return evaluation
 
-        @copy_docstring(ExpressionVisitor.visit_Input)
-        def visit_Input(self, expr: Input, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            if isinstance(expr.typ, BooleanLyraType):
-                evaluation[expr] = SignLattice(False, True, True)
-                return evaluation
-            evaluation[expr] = SignLattice()
-            return evaluation
-
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluation[expr] = deepcopy(state.store[expr])
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+        def visit_LengthIdentifier(self, expr: LengthIdentifier, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluation[expr] = deepcopy(state.store[expr])
@@ -373,11 +370,6 @@ class SignState(Store, State):
                 evaluation = self.visit(item, state, evaluation)
             evaluation[expr] = SignLattice().big_join([evaluation[item] for item in expr.items])
             return evaluation
-
-        @copy_docstring(ExpressionVisitor.visit_Range)
-        def visit_Range(self, expr: Range, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
 
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
         def visit_AttributeReference(self, expr: AttributeReference, state=None, evaluation=None):
@@ -394,6 +386,21 @@ class SignState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Input)
+        def visit_Input(self, expr: Input, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            if isinstance(expr.typ, BooleanLyraType):
+                evaluation[expr] = SignLattice(False, True, True)
+                return evaluation
+            evaluation[expr] = SignLattice()
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -479,22 +486,18 @@ class SignState(Store, State):
         def visit_Literal(self, expr: Literal, evaluation=None, value=None, state=None):
             return state  # nothing to be done
 
-        @copy_docstring(ExpressionVisitor.visit_Input)
-        def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
-            return state  # nothing to be done
-
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):
             state.store[expr] = evaluation[expr].meet(value)
             return state
 
+        @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+        def visit_LengthIdentifier(self, expr, evaluation=None, value=None, state=None):
+            state.store[expr] = evaluation[expr].meet(value)
+            return state
+
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
-            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
-
-        @copy_docstring(ExpressionVisitor.visit_Range)
-        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -510,6 +513,15 @@ class SignState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
+            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Input)
+        def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
+            return state  # nothing to be done
+
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 

@@ -17,7 +17,7 @@ from lyra.abstract_domains.store import Store
 from lyra.core.expressions import *
 
 from lyra.core.utils import copy_docstring
-from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType
+from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType, ListLyraType
 
 
 class IntervalLattice(BottomMixin, ArithmeticMixin):
@@ -283,16 +283,6 @@ class IntervalState(Store, State):
             evaluation[expr] = IntervalLattice()
             return evaluation
 
-        @copy_docstring(ExpressionVisitor.visit_Input)
-        def visit_Input(self, expr: Input, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            if isinstance(expr.typ, BooleanLyraType):
-                evaluation[expr] = IntervalLattice(0, 1)
-                return evaluation
-            evaluation[expr] = IntervalLattice()
-            return evaluation
-
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
             if expr in evaluation:
@@ -300,13 +290,15 @@ class IntervalState(Store, State):
             evaluation[expr] = deepcopy(state.store[expr])
             return evaluation
 
+        @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+        def visit_LengthIdentifier(self, expr: LengthIdentifier, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluation[expr] = deepcopy(state.store[expr])
+            return evaluation
+
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
-
-        @copy_docstring(ExpressionVisitor.visit_Range)
-        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -325,6 +317,21 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Input)
+        def visit_Input(self, expr: Input, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            if isinstance(expr.typ, BooleanLyraType):
+                evaluation[expr] = IntervalLattice(0, 1)
+                return evaluation
+            evaluation[expr] = IntervalLattice()
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -402,22 +409,18 @@ class IntervalState(Store, State):
         def visit_Literal(self, expr: Literal, evaluation=None, value=None, state=None):
             return state    # nothing to be done
 
-        @copy_docstring(ExpressionVisitor.visit_Input)
-        def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
-            return state    # nothing to be done
-
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):
             state.store[expr] = evaluation[expr].meet(value)
             return state
 
+        @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+        def visit_LengthIdentifier(self, expr, evaluation=None, value=None, state=None):
+            state.store[expr] = evaluation[expr].meet(value)
+            return state
+
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
-            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
-
-        @copy_docstring(ExpressionVisitor.visit_Range)
-        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -433,6 +436,15 @@ class IntervalState(Store, State):
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
+            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Input)
+        def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
+            return state    # nothing to be done
+
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 

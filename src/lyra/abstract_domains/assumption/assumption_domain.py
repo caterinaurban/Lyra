@@ -16,7 +16,7 @@ from lyra.abstract_domains.state import State
 from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparisonOperation, \
     Range, Literal, NegationFreeNormalExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
     ExpressionVisitor, Input, ListDisplay, AttributeReference, Subscription, Slicing, \
-    UnaryArithmeticOperation, BinaryArithmeticOperation
+    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier
 from lyra.core.statements import ProgramPoint
 from lyra.core.types import IntegerLyraType
 from lyra.core.utils import copy_docstring
@@ -325,22 +325,25 @@ class AssumptionState(State):
                 :return: current lattice element modified to record the constraint
                 """
                 def do(constraint1, constraint2):
-                    assert isinstance(constraint2, AssumptionState.InputStack.InputLattice)
-                    assert constraint1.multiplier == constraint2.multiplier
                     for i, cs in enumerate(zip(constraint1.constraints, constraint2.constraints)):
                         if cs[0] != cs[1]:
                             constraint1.constraints[i] = do(cs[0], cs[1])
                     reminder = constraint2.constraints[len(constraint1.constraints):]
                     constraint1.constraints.extend(reminder)
                     return constraint1
-                if self.constraints:    # there is at least one previously recorded constraint
+                repeated = AssumptionState.InputStack.InputLattice
+                if isinstance(constraint, repeated) and self.constraints:
+                    # the constraint to be recorded is a repetition and
+                    # there is at least one previously recorded constraint
                     previous = self.constraints[0]
-                    repeated = AssumptionState.InputStack.InputLattice
-                    not_first = isinstance(previous, repeated)
-                    if isinstance(constraint, repeated) and not_first:
-                        # we are leaving the body of a for loop another time than the first
-                        self.constraints[0] = do(constraint, previous)
-                        return self
+                    if isinstance(previous, repeated):
+                        # the previously recorded constraint is also a repetition
+                        m1 = constraint.multiplier
+                        m2 = previous.multiplier
+                        if type(m1) == type(m2) and m1 == m2:
+                            # we are leaving the body of a for loop another time than the first
+                            self.constraints[0] = do(constraint, previous)
+                            return self
                 self.constraints.insert(0, constraint)
                 return self
 
@@ -421,7 +424,7 @@ class AssumptionState(State):
                     if normal.operator == in_op or normal.operator == notin_op:
                         # the condition is ``... in range(...)`` or ``... not in range(...)``
                         if isinstance(normal.right, Range):
-                            self.lattice.repeat(normal.right.end)
+                            self.lattice.repeat(normal.right.stop)
                             return self
                 self.lattice.top()      # default to the star constraint ★
             return self
@@ -509,26 +512,18 @@ class AssumptionState(State):
             def visit_Literal(self, expr: Literal):
                 return Literal(expr.typ, expr.val)
 
-            @copy_docstring(ExpressionVisitor.visit_Input)
-            def visit_Input(self, expr: Input):
-                name = "{}.{}".format(self.pp.line, self.nonce)
-                return VariableIdentifier(expr.typ, name)
-
             @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
             def visit_VariableIdentifier(self, expr: VariableIdentifier):
                 return VariableIdentifier(expr.typ, expr.name)
+
+            @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+            def visit_LengthIdentifier(self, expr: LengthIdentifier):
+                return LengthIdentifier(expr.variable)
 
             @copy_docstring(ExpressionVisitor.visit_ListDisplay)
             def visit_ListDisplay(self, expr: ListDisplay):
                 items = [self.visit(item) for item in expr.items]
                 return ListDisplay(expr.typ, items)
-
-            @copy_docstring(ExpressionVisitor.visit_Range)
-            def visit_Range(self, expr: Range):
-                start = self.visit(expr.start)
-                end = self.visit(expr.end)
-                step = self.visit(expr.step)
-                return Range(expr.typ, start, end, step)
 
             @copy_docstring(ExpressionVisitor.visit_AttributeReference)
             def visit_AttributeReference(self, expr: AttributeReference):
@@ -548,6 +543,18 @@ class AssumptionState(State):
                 upper = self.visit(expr.upper)
                 stride = self.visit(expr.stride) if expr.stride else None
                 return Slicing(expr.typ, target, lower, upper, stride)
+
+            @copy_docstring(ExpressionVisitor.visit_Input)
+            def visit_Input(self, expr: Input):
+                name = "{}.{}".format(self.pp.line, self.nonce)
+                return VariableIdentifier(expr.typ, name)
+
+            @copy_docstring(ExpressionVisitor.visit_Range)
+            def visit_Range(self, expr: Range):
+                start = self.visit(expr.start)
+                stop = self.visit(expr.stop)
+                step = self.visit(expr.step)
+                return Range(expr.typ, start, stop, step)
 
             @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
             def visit_UnaryArithmeticOperation(self, expr: UnaryArithmeticOperation):
