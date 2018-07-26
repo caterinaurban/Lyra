@@ -204,6 +204,36 @@ class IntervalState(Store, State):
                 right = deepcopy(self)._assume(normal.right)
                 return self._assume(normal.left).join(right)
         elif isinstance(normal, BinaryComparisonOperation):
+            if normal.operator == BinaryComparisonOperation.Operator.Is:
+                error = f"Assumption of a comparison with {normal.operator} is unsupported!"
+                raise ValueError(error)
+            elif normal.operator == BinaryComparisonOperation.Operator.IsNot:
+                error = f"Assumption of a comparison with {normal.operator} is unsupported!"
+                raise ValueError(error)
+            elif normal.operator == BinaryComparisonOperation.Operator.In:
+                if isinstance(normal.right, Range):
+                    typ = BooleanLyraType()
+                    left = normal.left
+                    lower_operator = BinaryComparisonOperation.Operator.GtE
+                    lower_right = normal.right.start
+                    lower = BinaryComparisonOperation(typ, left, lower_operator, lower_right)
+                    upper_operator = BinaryComparisonOperation.Operator.Lt
+                    upper_right = normal.right.stop
+                    upper = BinaryComparisonOperation(typ, left, upper_operator, upper_right)
+                    right = deepcopy(self)._assume(upper)
+                    return self._assume(lower).meet(right)
+            elif normal.operator == BinaryComparisonOperation.Operator.NotIn:
+                if isinstance(normal.right, Range):
+                    typ = BooleanLyraType()
+                    left = normal.left
+                    lower_operator = BinaryComparisonOperation.Operator.Lt
+                    lower_right = normal.right.start
+                    lower = BinaryComparisonOperation(typ, left, lower_operator, lower_right)
+                    upper_operator = BinaryComparisonOperation.Operator.GtE
+                    upper_right = normal.right.stop
+                    upper = BinaryComparisonOperation(typ, left, upper_operator, upper_right)
+                    right = deepcopy(self)._assume(upper)
+                    return self._assume(lower).join(right)
             evaluation = self._evaluation.visit(normal.left, self, dict())
             return self._refinement.visit(normal.left, evaluation, IntervalLattice(upper=0), self)
         error = f"Assumption of a {normal.__class__.__name__} expression is unsupported!"
