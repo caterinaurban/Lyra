@@ -13,17 +13,18 @@ import re
 
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slicing, \
-    LengthIdentifier, VariableIdentifier, Range
+    LengthIdentifier, VariableIdentifier, Range, Expression
 from lyra.core.expressions import BinaryBooleanOperation, Input, TupleDisplay, ListDisplay, \
     Literal, SetDisplay, DictDisplay, Items, Keys, Values
 from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
+from lyra.core.expressions import UnaryOperation
 from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
 from lyra.core.expressions import UnaryOperation
 from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, \
     TupleDisplayAccess, ListDisplayAccess, SetDisplayAccess, DictDisplayAccess, \
     SubscriptionAccess, SlicingAccess, Raise
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
-    TupleLyraType, ListLyraType, SetLyraType, DictLyraType
+    StringLyraType, TupleLyraType, ListLyraType, SetLyraType, DictLyraType
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -245,7 +246,7 @@ class BuiltInCallSemantics(CallSemantics):
             elif isinstance(expression, VariableIdentifier):
                 result.add(VariableIdentifier(typ, expression.name))
             elif isinstance(expression, Subscription):
-                pass  # TODO
+                result.add(Subscription(typ, expression.target, expression.key))
             else:
                 error = f"Argument of type {expression.typ} of {stmt.name} is not yet supported!"
                 raise NotImplementedError(error)
@@ -306,6 +307,33 @@ class BuiltInCallSemantics(CallSemantics):
         error = f"Semantics for length of {argument} is not yet implemented!"
         raise NotImplementedError(error)
 
+    def split_call_semantics(self, stmt: Call, state: State) -> State:
+        if len(stmt.arguments) != 1:
+            error = f"Semantics for multiple arguments of {stmt.name} is not yet implemented!"
+            raise NotImplementedError(error)
+        argument = self.semantics(stmt.arguments[0], state).result
+        result = set()
+        for arg in argument:
+            assert isinstance(arg, Expression)
+            if not isinstance(arg.typ, StringLyraType):
+                error = f"Call to {stmt.name} of argument with unexpected type!"
+                raise ValueError(error)
+            typ = ListLyraType(StringLyraType())
+            if isinstance(arg, Literal):                # "a b c".split() -> ["a", "b", "c"]
+                items = [Literal(StringLyraType(), val) for val in arg.val.split()]
+                result.add(ListDisplay(typ, items))
+                continue
+            elif isinstance(arg, VariableIdentifier):   # x.split()
+                result.add(VariableIdentifier(typ, arg.name))
+                continue
+            elif isinstance(arg, Input):                # input().split()
+                result.add(Input(typ))
+                continue
+            error = f"Call to {stmt.name} of unexpected argument!"
+            raise ValueError(error)
+        state.result = result
+        return state
+
     def print_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'print'.
 
@@ -320,22 +348,40 @@ class BuiltInCallSemantics(CallSemantics):
         return state.output(argument)
 
     def range_call_semantics(self, stmt: Call, state: State) -> State:
-        arguments = [self.semantics(arg, state).result.pop() for arg in stmt.arguments]
-        # default:
-        start = Literal(IntegerLyraType(), "0")
-        step = Literal(IntegerLyraType(), "1")
-        if len(arguments) == 1:
-            end = arguments[0]
-        elif len(arguments) in [2, 3]:
-            start = arguments[0]
-            end = arguments[1]
-            if len(arguments) == 3:
-                step = arguments[2]
-        else:
-            error = f"Semantics for range call with {len(arguments)} arguments is not implemented!"
-            raise NotImplementedError(error)
-        state.result = {Range(stmt.typ, start, end, step)}
-        return state
+        result = set()
+        if len(stmt.arguments) == 1:
+            start = Literal(IntegerLyraType(), "0")
+            stops = self.semantics(stmt.arguments[0], state).result
+            step = Literal(IntegerLyraType(), "1")
+            for stop in stops:
+                range = Range(stmt.typ, start, stop, step)
+                result.add(range)
+            state.result = result
+            return state
+        elif len(stmt.arguments) == 2:
+            starts = self.semantics(stmt.arguments[0], state).result
+            stops = self.semantics(stmt.arguments[1], state).result
+            step = Literal(IntegerLyraType(), "1")
+            for start in starts:
+                for stop in stops:
+                    range = Range(stmt.typ, start, stop, step)
+                    result.add(range)
+            state.result = result
+            return state
+        elif len(stmt.arguments) == 3:
+            starts = self.semantics(stmt.arguments[0], state).result
+            stops = self.semantics(stmt.arguments[1], state).result
+            steps = self.semantics(stmt.arguments[2], state).result
+            for start in starts:
+                for stop in stops:
+                    for step in steps:
+                        range = Range(stmt.typ, start, stop, step)
+                        result.add(range)
+            state.result = result
+            return state
+        error = f"Call to {stmt.name} with unexpected number of arguments!"
+        raise ValueError(error)
+
 
     def items_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of calls to 'items'.
@@ -382,18 +428,7 @@ class BuiltInCallSemantics(CallSemantics):
             raise NotImplementedError(error)
         return state
 
-    def split_call_semantics(self, stmt: Call, state: State) -> State:
-        """Semantics of calls to 'split'.
-
-                        :param stmt: call to 'split' to be executed
-                        :param state: state before executing the call statement
-                        :return: state modified by the call statement
-                        """
-        # treat as just the target expression (forget about call)
-        return self.semantics(stmt.target, state)
-
-    # TODO: define default call semantics instead?
-
+    # TODO: define default call semantics instead for usage?
     def lower_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of calls to 'split'.
 

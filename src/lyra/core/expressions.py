@@ -128,12 +128,12 @@ class ExpressionVisitor(metaclass=ABCMeta):
         """Visit of a literal expression."""
 
     @abstractmethod
-    def visit_Input(self, expr: 'Input'):
-        """Visit of an input expression."""
-
-    @abstractmethod
     def visit_VariableIdentifier(self, expr: 'VariableIdentifier'):
         """Visit of a variable identifier."""
+
+    @abstractmethod
+    def visit_LengthIdentifier(self, expr: 'LengthIdentifier'):
+        """Visit of a sequence or collection length."""
 
     @abstractmethod
     def visit_ListDisplay(self, expr: 'ListDisplay'):
@@ -142,10 +142,6 @@ class ExpressionVisitor(metaclass=ABCMeta):
     # @abstractmethod
     # def visit_DictDisplay(self, expr: 'DictDisplay'):
     #     """Visit of dictionary display."""
-
-    @abstractmethod
-    def visit_Range(self, expr: 'Range'):
-        """Visit of a range call."""
 
     @abstractmethod
     def visit_AttributeReference(self, expr: 'AttributeReference'):
@@ -158,6 +154,14 @@ class ExpressionVisitor(metaclass=ABCMeta):
     @abstractmethod
     def visit_Slicing(self, expr: 'Slicing'):
         """Visit of a slicing expression."""
+
+    @abstractmethod
+    def visit_Input(self, expr: 'Input'):
+        """Visit of an input call expression."""
+
+    @abstractmethod
+    def visit_Range(self, expr: 'Range'):
+        """Visit of a range call expression."""
 
     @abstractmethod
     def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation'):
@@ -199,10 +203,6 @@ class NegationFreeNormalExpression(ExpressionVisitor):
     def visit_Literal(self, expr: 'Literal', invert=False):
         return expr    # nothing to be done
 
-    @copy_docstring(ExpressionVisitor.visit_Input)
-    def visit_Input(self, expr: 'Input', invert=False):
-        return expr
-
     @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
     def visit_VariableIdentifier(self, expr: 'VariableIdentifier', invert=False):
         if isinstance(expr.typ, BooleanLyraType) and invert:
@@ -210,12 +210,12 @@ class NegationFreeNormalExpression(ExpressionVisitor):
             return UnaryBooleanOperation(BooleanLyraType(), operator, expr)
         return expr     # nothing to be done
 
-    @copy_docstring(ExpressionVisitor.visit_ListDisplay)
-    def visit_ListDisplay(self, expr: 'ListDisplay', invert=False):
+    @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+    def visit_LengthIdentifier(self, expr: 'LengthIdentifier', invert=False):
         return expr     # nothing to be done
 
-    @copy_docstring(ExpressionVisitor.visit_Range)
-    def visit_Range(self, expr: 'Range', invert=False):
+    @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+    def visit_ListDisplay(self, expr: 'ListDisplay', invert=False):
         return expr     # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_AttributeReference)
@@ -228,6 +228,14 @@ class NegationFreeNormalExpression(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_Slicing)
     def visit_Slicing(self, expr: 'Slicing', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Input)
+    def visit_Input(self, expr: 'Input', invert=False):
+        return expr
+
+    @copy_docstring(ExpressionVisitor.visit_Range)
+    def visit_Range(self, expr: 'Range', invert=False):
         return expr     # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -357,7 +365,7 @@ class Literal(Expression):
         return f"{self.val}"
 
 
-class Identifier(Expression):
+class Identifier(Expression, metaclass=ABCMeta):
     """Identifier representation.
 
     https://docs.python.org/3.4/reference/expressions.html#atom-identifiers
@@ -408,6 +416,11 @@ class LengthIdentifier(Identifier):
         """
         name = "len({0.name})".format(variable)
         super().__init__(IntegerLyraType(), name)
+        self._variable = variable
+
+    @property
+    def variable(self):
+        return self._variable
 
 
 class ListDisplay(Expression):
@@ -535,149 +548,6 @@ class DictDisplay(Expression):
         str_keys = map(str, self.keys)
         str_values = map(str, self.values)
         return '{' + ', '.join(' : '.join(x) for x in zip(str_keys, str_values)) + '}'
-
-
-class Input(Expression):
-    """Input expression representation."""
-
-    def __init__(self, typ: LyraType):
-        """Input expression construction.
-
-        :param typ: type of the input
-        """
-        super().__init__(typ)
-
-    def __eq__(self, other):
-        return self.typ == other.typ
-
-    def __hash__(self):
-        return hash(self.typ)
-
-    def __str__(self):
-        return "input()"
-
-
-class Range(Expression):
-    """Range Call representation."""
-
-    def __init__(self, typ: LyraType, start: Expression, end: Expression, step: Expression):
-        """Range call expression construction.
-
-        :param typ: type of the range call
-        :param start: start of the range
-        :param end: end of the range (exclusive)
-        :param step: size of steps that are taken in the range
-        """
-        super().__init__(typ)
-        self._start = start
-        self._end = end
-        self._step = step
-
-    @property
-    def start(self):
-        return self._start
-
-    @property
-    def end(self):
-        return self._end
-
-    @property
-    def step(self):
-        return self._step
-
-    def __eq__(self, other):
-        typ = self.typ == other.typ
-        start = self.start == other.start
-        end = self.end == other.end
-        step = self.step == other.step
-        return typ and start and end and step
-
-    def __hash__(self):
-        return hash((self.typ, self.start, self.end, self.step))
-
-    def __str__(self):
-        return f"range({self.start}, {self.end}, {self.step})"
-
-
-class Items(Expression):
-    """Items call representation"""
-
-    def __init__(self, typ: LyraType, target_dict: Expression):
-        """Items() call expression construction.
-
-        :param typ: type that items() returns
-        :param target_dict: target of the items() call
-        """
-
-        super().__init__(typ)
-        self._target_dict = target_dict
-
-    @property
-    def target_dict(self):
-        return self._target_dict
-
-    def __eq__(self, other):
-        return (self.typ == other.typ) and (self.target_dict == other.target_dict)
-
-    def __hash__(self):
-        return hash((self.typ, str(self.target_dict)))
-
-    def __str__(self):
-        return f"{self.target_dict}.items()"
-
-
-class Keys(Expression):
-    """Keys call representation"""
-
-    def __init__(self, typ: LyraType, target_dict: Expression):
-        """Keys() call expression construction.
-
-        :param typ: type that keys() returns
-        :param target_dict: target of the keys() call
-        """
-
-        super().__init__(typ)
-        self._target_dict = target_dict
-
-    @property
-    def target_dict(self):
-        return self._target_dict
-
-    def __eq__(self, other):
-        return (self.typ == other.typ) and (self.target_dict == other.target_dict)
-
-    def __hash__(self):
-        return hash((self.typ, str(self.target_dict)))
-
-    def __str__(self):
-        return f"{self.target_dict}.keys()"
-
-
-class Values(Expression):
-    """Values call representation"""
-
-    def __init__(self, typ: LyraType, target_dict: Expression):
-        """Values() call expression construction.
-
-        :param typ: type that values() returns
-        :param target_dict: target of the values() call
-        """
-
-        super().__init__(typ)
-        self._target_dict = target_dict
-
-    @property
-    def target_dict(self):
-        return self._target_dict
-
-    def __eq__(self, other):
-        return (self.typ == other.typ) and (self.target_dict == other.target_dict)
-
-    def __hash__(self):
-        return hash((self.typ, str(self.target_dict)))
-
-    def __str__(self):
-        return f"{self.target_dict}.values()"
 
 
 """
@@ -815,6 +685,156 @@ class Slicing(Expression):
         if self.stride:
             return "{0.target}[{0.lower}:{0.upper}:{0.stride}]".format(self)
         return "{0.target}[{0.lower}:{0.upper}]".format(self)
+
+
+class Call(Expression, metaclass=ABCMeta):
+    """Call representation.
+
+    https://docs.python.org/3.4/reference/expressions.html#calls
+    """
+
+
+class Input(Call):
+    """Input call representation."""
+
+    def __init__(self, typ: LyraType):
+        """Input call construction.
+
+        :param typ: return type of the input call
+        """
+        super().__init__(typ)
+
+    def __eq__(self, other):
+        return self.typ == other.typ
+
+    def __hash__(self):
+        return hash(self.typ)
+
+    def __str__(self):
+        return "input()"
+
+
+class Range(Call):
+    """Range call representation."""
+
+    def __init__(self, typ: LyraType, start: Expression, stop: Expression, step: Expression):
+        """Range call construction.
+
+        :param typ: return type of the range call
+        :param start: start of the range sequence
+        :param stop: end of the range sequence (exclusive)
+        :param step: difference between elements of the sequence
+        """
+        super().__init__(typ)
+        self._start = start
+        self._stop = stop
+        self._step = step
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def stop(self):
+        return self._stop
+
+    @property
+    def step(self):
+        return self._step
+
+    def __eq__(self, other):
+        typ = self.typ == other.typ
+        start = self.start == other.start
+        stop = self.stop == other.stop
+        step = self.step == other.step
+        return typ and start and stop and step
+
+    def __hash__(self):
+        return hash((self.typ, self.start, self.stop, self.step))
+
+    def __str__(self):
+        return f"range({self.start}, {self.stop}, {self.step})"
+
+
+class Items(Call):
+    """Items call representation"""
+
+    def __init__(self, typ: LyraType, target_dict: Expression):
+        """Items() call expression construction.
+
+        :param typ: type that items() returns
+        :param target_dict: target of the items() call
+        """
+
+        super().__init__(typ)
+        self._target_dict = target_dict
+
+    @property
+    def target_dict(self):
+        return self._target_dict
+
+    def __eq__(self, other):
+        return (self.typ == other.typ) and (self.target_dict == other.target_dict)
+
+    def __hash__(self):
+        return hash((self.typ, str(self.target_dict)))
+
+    def __str__(self):
+        return f"{self.target_dict}.items()"
+
+
+class Keys(Call):
+    """Keys call representation"""
+
+    def __init__(self, typ: LyraType, target_dict: Expression):
+        """Keys() call expression construction.
+
+        :param typ: type that keys() returns
+        :param target_dict: target of the keys() call
+        """
+
+        super().__init__(typ)
+        self._target_dict = target_dict
+
+    @property
+    def target_dict(self):
+        return self._target_dict
+
+    def __eq__(self, other):
+        return (self.typ == other.typ) and (self.target_dict == other.target_dict)
+
+    def __hash__(self):
+        return hash((self.typ, str(self.target_dict)))
+
+    def __str__(self):
+        return f"{self.target_dict}.keys()"
+
+
+class Values(Call):
+    """Values call representation"""
+
+    def __init__(self, typ: LyraType, target_dict: Expression):
+        """Values() call expression construction.
+
+        :param typ: type that values() returns
+        :param target_dict: target of the values() call
+        """
+
+        super().__init__(typ)
+        self._target_dict = target_dict
+
+    @property
+    def target_dict(self):
+        return self._target_dict
+
+    def __eq__(self, other):
+        return (self.typ == other.typ) and (self.target_dict == other.target_dict)
+
+    def __hash__(self):
+        return hash((self.typ, str(self.target_dict)))
+
+    def __str__(self):
+        return f"{self.target_dict}.values()"
 
 
 """
