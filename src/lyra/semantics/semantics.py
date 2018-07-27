@@ -17,7 +17,6 @@ from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slici
 from lyra.core.expressions import BinaryBooleanOperation, Input, TupleDisplay, ListDisplay, \
     Literal, SetDisplay, DictDisplay, Items, Keys, Values
 from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
-from lyra.core.expressions import UnaryOperation
 from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
 from lyra.core.expressions import UnaryOperation
 from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, \
@@ -390,10 +389,10 @@ class BuiltInCallSemantics(CallSemantics):
                 :param state: state before executing the call statement
                 :return: state modified by the call statement
                 """
-        if (isinstance(stmt.target, VariableAccess)):
-            state.result = {Items(stmt.typ, stmt.target.variable)}
+        if isinstance(stmt.arguments[0], VariableAccess):  # target
+            state.result = {Items(stmt.typ, stmt.arguments[0].variable)}
         else:
-            error = f"Semantics for items() call on non-variable {stmt.target} is not yet " \
+            error = f"Semantics for items() call on non-variable {stmt.arguments[0]} is not yet " \
                     f"implemented!"
             raise NotImplementedError(error)
         return state
@@ -405,10 +404,10 @@ class BuiltInCallSemantics(CallSemantics):
                         :param state: state before executing the call statement
                         :return: state modified by the call statement
                         """
-        if (isinstance(stmt.target, VariableAccess)):
-            state.result = {Keys(stmt.typ, stmt.target.variable)}
+        if isinstance(stmt.arguments[0], VariableAccess):  # target
+            state.result = {Keys(stmt.typ, stmt.arguments[0].variable)}
         else:
-            error = f"Semantics for keys() call on non-variable {stmt.target} is not yet " \
+            error = f"Semantics for keys() call on non-variable {stmt.arguments[0]} is not yet " \
                     f"implemented!"
             raise NotImplementedError(error)
         return state
@@ -420,10 +419,10 @@ class BuiltInCallSemantics(CallSemantics):
                         :param state: state before executing the call statement
                         :return: state modified by the call statement
                         """
-        if (isinstance(stmt.target, VariableAccess)):
-            state.result = {Values(stmt.typ, stmt.target.variable)}
+        if isinstance(stmt.arguments[0], VariableAccess):     # target
+            state.result = {Values(stmt.typ, stmt.arguments[0].variable)}
         else:
-            error = f"Semantics for values() call on non-variable {stmt.target} is not yet " \
+            error = f"Semantics for values() call on non-variable {stmt.arguments[0]} is not yet " \
                     f"implemented!"
             raise NotImplementedError(error)
         return state
@@ -437,7 +436,7 @@ class BuiltInCallSemantics(CallSemantics):
                         :return: state modified by the call statement
                         """
         # treat as just the target expression (forget about call)
-        return self.semantics(stmt.target, state)
+        return self.semantics(stmt.arguments[0], state)     # target
 
     def raise_semantics(self, stmt: Raise, state: State) -> State:
         """Semantics of raising an Error.

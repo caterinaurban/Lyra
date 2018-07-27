@@ -16,7 +16,6 @@ from lyra.core.expressions import VariableIdentifier, LengthIdentifier
 from lyra.core.statements import Assignment, VariableAccess, Call, TupleDisplayAccess
 from lyra.core.types import ListLyraType
 from lyra.engine.result import AnalysisResult
-
 from lyra.frontend.cfg_generator import ast_to_cfg, StringLyraType
 from lyra.visualization.graph_renderer import AnalysisResultRenderer
 
