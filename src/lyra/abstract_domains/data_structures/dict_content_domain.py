@@ -758,7 +758,7 @@ class DictContentState(State):
 
             elif isinstance(left.typ, DictLyraType):    # overwrite dictionary
                 if isinstance(right, VariableIdentifier):
-                    self.dict_store.store[left] = deepcopy(self.dict_store.store[right])        # TODO: alias -> don't copy?
+                    self.dict_store.store[left] = deepcopy(self.dict_store.store[right])
                     self.init_store.store[left] = deepcopy(self.init_store.store[right])
                 elif isinstance(right, DictDisplay):
                     # "NEW DICT"
