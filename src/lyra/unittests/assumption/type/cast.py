@@ -1,4 +1,4 @@
 
 x: str = input()
-# STATE: x -> Integer, y -> Float
+# STATE: len(x) -> Integer, x -> Integer, y -> Float
 y: float = int(x)

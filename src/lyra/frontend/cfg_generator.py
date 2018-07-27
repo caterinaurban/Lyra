@@ -459,23 +459,24 @@ class CFGVisitor(ast.NodeVisitor):
         elif isinstance(iteration, Call) and iteration.name == "range":
             target_type = IntegerLyraType()
             iteration._typ = ListLyraType(IntegerLyraType())    # TODO: necessary?
+        # Call.arguments[0] == target
         elif isinstance(iteration, Call) and iteration.name == "items" \
-                and isinstance(iteration.target, VariableAccess):
+                and isinstance(iteration.arguments[0], VariableAccess):
             # right now only handle single variables as target
-            called_on_type = types[iteration.target.variable.name]     # always called on Dict[...]
+            called_on_type = types[iteration.arguments[0].variable.name]     # always called on Dict[...]
             target_type = TupleLyraType([called_on_type.key_type, called_on_type.value_type])
             # items() actually returns 'view' object, but here for simplicity: Dict
             iteration._typ = called_on_type      # TODO: necessary & correct ?
         elif isinstance(iteration, Call) and iteration.name == "keys" \
-                and isinstance(iteration.target, VariableAccess):
+                and isinstance(iteration.arguments[0], VariableAccess):
             # right now only handle single variables as target
-            called_on_type = types[iteration.target.variable.name]     # always called on Dict[...]
+            called_on_type = types[iteration.arguments[0].variable.name]     # always called on Dict[...]
             target_type = called_on_type.key_type
             iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
         elif isinstance(iteration, Call) and iteration.name == "values" \
-                and isinstance(iteration.target, VariableAccess):
+                and isinstance(iteration.arguments[0], VariableAccess):
             # right now only handle single variables as target
-            called_on_type = types[iteration.target.variable.name]     # always called on Dict[...]
+            called_on_type = types[iteration.arguments[0].variable.name]     # always called on Dict[...]
             target_type = called_on_type.value_type
             iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
         else:
@@ -592,13 +593,16 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        if isinstance(node.func, ast.Attribute):  # function called on a target
-            name = node.func.attr
-            target = self.visit(node.func.value, types)
-        else:       # func : ast.Name
-            name = node.func.id
-            target = None
-        return Call(pp, name, [self.visit(arg, types, typ) for arg in node.args], typ, target)
+        func = node.func
+        if isinstance(func, ast.Name):
+            name: str = func.id
+            arguments = [self.visit(arg, types, typ) for arg in node.args]
+            return Call(pp, name, arguments, typ)
+        elif isinstance(func, ast.Attribute):
+            name: str = func.attr
+            arguments = [self.visit(func.value, types, typ)]
+            arguments.extend([self.visit(arg, types, typ) for arg in node.args])
+            return Call(pp, name, arguments, typ)
 
     def visit_Tuple(self, node, types=None, typ=None):    # same as list
         pp = ProgramPoint(node.lineno, node.col_offset)
