@@ -10,7 +10,7 @@ import unittest
 
 import sys
 
-from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState
+from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, TypeAlphabetState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
 from lyra.engine.backward import BackwardInterpreter
@@ -43,6 +43,15 @@ class TypeRangeAssumptionTest(TestRunner):
 
     def state(self):
         return TypeRangeAssumptionState(self.variables)
+
+
+class TypeAlphabetAssumptionTest(TestRunner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return TypeAlphabetState(self.variables)
 
 
 def test_suite():

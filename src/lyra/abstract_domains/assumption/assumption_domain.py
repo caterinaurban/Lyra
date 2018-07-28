@@ -741,3 +741,13 @@ class TypeRangeAssumptionState(AssumptionState):
         states = [TypeState, RangeState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)
+
+
+class TypeAlphabetState(AssumptionState):
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
+        states = [TypeState, AlphabetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
