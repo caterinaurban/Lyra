@@ -1,14 +1,12 @@
 import string
 from copy import deepcopy
-from typing import Set
 
 from docutils.io import Input
 
 from lyra.abstract_domains.lattice import BottomMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
-from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor, Literal, BinaryArithmeticOperation, \
-    UnaryBooleanOperation, BinaryBooleanOperation, BinaryComparisonOperation, ListDisplay, Range, AttributeReference
+from lyra.core.expressions import *
 from lyra.core.types import StringLyraType
 from lyra.core.utils import copy_docstring
 
@@ -42,7 +40,7 @@ class CharacterLattice(BottomMixin):
         if self.is_top():
             return "T"
 
-        return "(<{}>, <{}>)".format(','.join([m for m in self.certainly]), ','.join(c for c in self.maybe))
+        return "(<{}>, <{}>)".format(self.certainly, self.maybe)
 
     @copy_docstring(BottomMixin.is_top)
     def is_top(self) -> bool:
@@ -70,11 +68,14 @@ class CharacterLattice(BottomMixin):
 
     def concat(self, other: 'CharacterLattice') -> 'CharacterLattice':
         """
-            Define semantics for the string concatenation operation. Both the **certainly** and **maybe** sets are unioned.
+            Define semantics for the string concatenation operation.
+            Both the **certainly** and **maybe** sets are joined
         :param other: lattice element to be concatenated with the current element
         :return: the result of the concatenation
         """
-        return self._replace(CharacterLattice(self.certainly.union(other.certainly), self.maybe.union(other.maybe)))
+        certainly = self.certainly.union(other.certainly)
+        maybe = self.certainly.union(other.certainly)
+        return self._replace(certainly, maybe)
 
 
 class CharacterState(Store, State):
@@ -82,61 +83,62 @@ class CharacterState(Store, State):
     """
         An implementation of the Character Inclusion Domain.
 
-        Maps from every string variable to a tuple of two sets: one set of characters that are **certainly** included
-        in the string and a set of characters that are **maybe** included in the string. The string cannot contain
-        characters from outside the **maybe** set and must contain all characters in **certainly**. Therefore,
+        Maps from every string variable to a tuple of two sets: one set of characters that
+        are **certainly** included in the string and a set of characters that are **maybe**
+        included in the string. The string cannot contain characters from outside the **maybe**
+        set and must contain all characters in **certainly**. Therefore,
         the **certainly** set is a subset of the **maybe** set.
 
     """
 
     class ConditionEvaluator(ExpressionVisitor):
 
-        def visit_Literal(self, expr: 'Literal', state=None, eval=None):
+        def visit_Literal(self, expr, state=None, eval=None):
             if expr.typ == StringLyraType():
                 return CharacterLattice(set(expr.val), set(expr.val))
             raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
-        def visit_Input(self, expr: 'Input', state=None, eval=None):
+        def visit_Input(self, expr, state=None, eval=None):
             raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
-        def visit_VariableIdentifier(self, expr: 'VariableIdentifier', state=None, eval=None):
+        def visit_VariableIdentifier(self, expr, state=None, eval=None):
             return state.store[expr]
 
-        def visit_LengthIdentifier(self, expr: 'LengthIdentifier'):
+        def visit_LengthIdentifier(self, expr):
             pass
 
-        def visit_ListDisplay(self, expr: 'ListDisplay', state=None, eval=None):
+        def visit_ListDisplay(self, expr, state=None, eval=None):
             raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
-        def visit_Range(self, expr: 'Range', state=None, eval=None):
+        def visit_Range(self, expr, state=None, eval=None):
             raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
-        def visit_AttributeReference(self, expr: 'AttributeReference', state=None, eval=None):
+        def visit_AttributeReference(self, expr, state=None, eval=None):
             raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
-        def visit_Subscription(self, expr: 'Subscription', state=None, eval=None):
+        def visit_Subscription(self, expr, state=None, eval=None):
             raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
-        def visit_Slicing(self, expr: 'Slicing', state=None, eval=None):
+        def visit_Slicing(self, expr, state=None, eval=None):
             raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
-        def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', state=None, eval=None):
+        def visit_UnaryArithmeticOperation(self, expr, state=None, eval=None):
             raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
-        def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', state=None, eval=None):
+        def visit_UnaryBooleanOperation(self, expr, state=None, eval=None):
             raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
-        def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', state=None, eval=None):
+        def visit_BinaryArithmeticOperation(self, expr, state=None, eval=None):
             if expr.operator == BinaryArithmeticOperation.Operator.Add:
                 left = self.visit(expr.left, state, eval)
                 right = self.visit(expr.right, state, eval)
                 return left.concat(right)
             raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
-        def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation', state=None, eval=None):
+        def visit_BinaryBooleanOperation(self, expr, state=None, eval=None):
             raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
-        def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation', state=None, eval=None):
+        def visit_BinaryComparisonOperation(self, expr, state=None, eval=None):
             raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
     class Refinement(ExpressionVisitor):
@@ -147,42 +149,42 @@ class CharacterState(Store, State):
         def visit_Input(self, expr: 'Input', state=None, evaluation=None):
             pass
 
-        def visit_VariableIdentifier(self, expr: 'VariableIdentifier', state=None, evaluation=None):
+        def visit_VariableIdentifier(self, expr, state=None, evaluation=None):
             state.store[expr].meet(evaluation)
 
-        def visit_LengthIdentifier(self, expr: 'LengthIdentifier'):
+        def visit_LengthIdentifier(self, expr):
             pass
 
-        def visit_ListDisplay(self, expr: 'ListDisplay', state=None, evaluation=None):
+        def visit_ListDisplay(self, expr, state=None, evaluation=None):
             pass
 
-        def visit_Range(self, expr: 'Range', state=None, evaluation=None):
+        def visit_Range(self, expr, state=None, evaluation=None):
             pass
 
-        def visit_AttributeReference(self, expr: 'AttributeReference', state=None, evaluation=None):
+        def visit_AttributeReference(self, expr, state=None, evaluation=None):
             pass
 
-        def visit_Subscription(self, expr: 'Subscription', state=None, evaluation=None):
+        def visit_Subscription(self, expr, state=None, evaluation=None):
             pass
 
-        def visit_Slicing(self, expr: 'Slicing', state=None, evaluation=None):
+        def visit_Slicing(self, expr, state=None, evaluation=None):
             pass
 
-        def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', state=None, evaluation=None):
+        def visit_UnaryArithmeticOperation(self, expr, state=None, evaluation=None):
             pass
 
-        def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', state=None, evaluation=None):
+        def visit_UnaryBooleanOperation(self, expr, state=None, evaluation=None):
             pass
 
-        def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', state=None, evaluation=None):
+        def visit_BinaryArithmeticOperation(self, expr, state=None, evaluation=None):
             evaluation = CharacterLattice(maybe=evaluation.certainly)
             self.visit(expr.right, state, evaluation)
             self.visit(expr.left, state, evaluation)
 
-        def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation', state=None, evaluation=None):
+        def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
             pass
 
-        def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation', state=None, evaluation=None):
+        def visit_BinaryComparisonOperation(self, expr, state=None, evaluation=None):
             pass
 
     _evaluator = ConditionEvaluator()
@@ -204,16 +206,19 @@ class CharacterState(Store, State):
                     left = expression.left
                     operator = expression.operator.reverse_operator()
                     right = expression.right
-                    return self._assume(BinaryBooleanOperation(expression.typ, left, operator, right))
+                    new_expression = BinaryBooleanOperation(expression.typ, left, operator, right)
+                    return self._assume(new_expression)
                 elif isinstance(expression, UnaryBooleanOperation):
                     if isinstance(expression, UnaryBooleanOperation.Operator.Neg):
                         return self._assume(expression.expression)
                 elif isinstance(expression, BinaryBooleanOperation):
                     left = expression.left
-                    left = UnaryBooleanOperation(left.typ, UnaryBooleanOperation.Operator.Neg, left)
+                    op = UnaryBooleanOperation.Operator.Neg
+                    left = UnaryBooleanOperation(left.typ, op, left)
                     operator = expression.operator.reverse_operator()
                     right = expression.right
-                    right = UnaryBooleanOperation(right.typ, UnaryBooleanOperation.Operator.Neg, right)
+                    op = UnaryBooleanOperation.Operator.Neg
+                    right = UnaryBooleanOperation(right.typ, op, right)
                     return self._assume(BinaryBooleanOperation(expression.typ, left, operator, right))
         elif isinstance(condition, BinaryBooleanOperation):
             if condition.operator == BinaryBooleanOperation.Operator.And:
