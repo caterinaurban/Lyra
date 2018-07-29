@@ -267,7 +267,6 @@ class BuiltInCallSemantics(CallSemantics):
         :param state: state before executing the raise Error
         :return: state modified by the raise
         """
-
         return state.raise_error()
 
     def _unary_operation(self, stmt: Call, operator: UnaryOperation.Operator, state: State):

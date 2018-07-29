@@ -66,7 +66,13 @@ def test_suite():
     # name = os.getcwd() + '/assumption/**.py'
     # for path in glob.iglob(name):
     #     if os.path.basename(path) != "__init__.py":
-    #         suite.addTest(OctagonStringAssumptionTest(path))
+    #         suite.addTest(OctagonStringAssumptionTest(
+    #
+    #
+    #
+    #
+    #
+    # path))
     return suite
 
 

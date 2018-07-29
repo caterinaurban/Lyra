@@ -128,5 +128,6 @@ class AssumptionController(Controller):
         def run_checker(self, result: 'JSONMixin'):
             self.checker.main(result)
 
+
 if __name__ == '__main__':
     AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type_mix.py').main()

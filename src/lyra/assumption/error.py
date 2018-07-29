@@ -21,4 +21,5 @@ class RelationalError(CheckerError):
 
 class DependencyError(CheckerError):
     def __init__(self, source_line: int):
-        super().__init__(source_line)
+        self.source_line = source_line
+        super().__init__('')

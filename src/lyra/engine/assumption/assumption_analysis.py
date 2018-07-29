@@ -57,7 +57,7 @@ class CharacterDomainAnalysis(Runner):
 
 class AssumptionAnalysis(Runner):
 
-    def __init__(self, do_render=True, show_simple=False):
+    def __init__(self, do_render=False, show_simple=False):
         super().__init__()
         self.do_render = do_render
         self.show_simple = show_simple

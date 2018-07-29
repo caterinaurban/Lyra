@@ -21,7 +21,7 @@ from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparis
     ExpressionVisitor, Input, ListDisplay, AttributeReference, Subscription, Slicing, \
     UnaryArithmeticOperation, BinaryArithmeticOperation, Identifier
 from lyra.core.statements import ProgramPoint
-from lyra.core.types import IntegerLyraType, FloatLyraType
+from lyra.core.types import IntegerLyraType, FloatLyraType, StringLyraType, BooleanLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
 
 class JSONMixin(Lattice, metaclass=ABCMeta):
@@ -130,7 +130,7 @@ class InputMixin(State, metaclass=ABCMeta):
 
 class MultiplierEvaluator(ExpressionVisitor):
 
-    def visit_Literal(self, expr: 'Literal', pp_value=None):
+    def visit_Literal(self, expr: 'Literal', pp_value=None, lines_involved=None):
         if expr.typ == IntegerLyraType():
             return int(expr.val)
         if expr.typ == FloatLyraType():
@@ -138,48 +138,46 @@ class MultiplierEvaluator(ExpressionVisitor):
 
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_Input(self, expr: 'Input', pp_value=None):
+    def visit_Input(self, expr: 'Input', pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_VariableIdentifier(self, expr: 'VariableIdentifier', pp_value=None):
-        return pp_value[expr][1]
+    def visit_VariableIdentifier(self, expr: 'VariableIdentifier', pp_value=None, lines_involved=None):
+        (line_number, input_value) = pp_value[expr]
+        if input_value is None:
+            lines_involved.append(line_number)
+        return input_value
 
-    def visit_ListDisplay(self, expr: 'ListDisplay', pp_value=None):
+    def visit_ListDisplay(self, expr: 'ListDisplay', pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_Range(self, expr: 'Range', pp_value=None):
+    def visit_Range(self, expr: 'Range', pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_AttributeReference(self, expr: 'AttributeReference', pp_value=None):
+    def visit_AttributeReference(self, expr: 'AttributeReference', pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_Subscription(self, expr: 'Subscription', pp_value=None):
+    def visit_Subscription(self, expr: 'Subscription', pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_Slicing(self, expr: 'Slicing', pp_value=None):
+    def visit_Slicing(self, expr: 'Slicing', pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', pp_value=None):
+    def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', pp_value=None, lines_involved=None):
         eval = self.visit(expr.expression, pp_value)
-        if isinstance(CheckerError):
+        if eval is None or expr.operator == UnaryArithmeticOperation.Operator.Add:
             return eval
         if expr.operator == UnaryArithmeticOperation.Operator.Sub:
             return -eval
-        return eval
-
-    def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', pp_value=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', pp_value=None):
+    def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', pp_value=None, lines_involved=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
+    def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', pp_value=None, lines_involved=None):
         left = self.visit(expr.left, pp_value)
         right = self.visit(expr.right, pp_value)
-        errors = []
-        if isinstance(left, CheckerError):
-            errors.append(left)
-        if isinstance(right, CheckerError):
-            errors.append(right)
-        if len(errors) > 0:
-            return errors
+        if left is None or right is None:
+            return None
         op = expr.operator
         if op == BinaryArithmeticOperation.Operator.Sub:
             return left - right
@@ -190,10 +188,10 @@ class MultiplierEvaluator(ExpressionVisitor):
         if op == BinaryArithmeticOperation.Operator.Div:
             return left / right
 
-    def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation', pp_value=None):
+    def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation', pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation', pp_value=None):
+    def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation', pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
 
@@ -481,18 +479,18 @@ class AssumptionState(State):
             def to_json(self) -> dict:
                 def do_multiplier(expression):
                     numerical_types = [IntegerLyraType(), FloatLyraType()]
-                    if isinstance(expression, Identifier) and expression.typ in numerical_types:
+                    if isinstance(expression, Identifier):
                         return {'type': ['identifier', str(expression.typ)], 'value': expression.name}
                     if isinstance(expression, Literal) and expression.typ in numerical_types:
                         return {'type': ['literal', str(expression.typ)], 'value': expression.val}
                     js = dict()
-                    if isinstance(expression, BinaryArithmeticOperation) and expression.typ in numerical_types:
+                    if isinstance(expression, BinaryArithmeticOperation):
                         js['type'] = ['binary_arithmetic', str(expression.typ)]
                         js['left'] = do_multiplier(expression.left)
-                        js['operator'] = self.operator
+                        js['operator'] = expression.operator
                         js['right'] = do_multiplier(expression.right)
                         return js
-                    raise ValueError("JSON conversion not supported for multiplier {}".format(self))
+                    raise ValueError("JSON conversion not supported for multiplier {}".format(expression))
 
                 def is_star(constraint): return isinstance(constraint, tuple) and not constraint
 
@@ -527,18 +525,34 @@ class AssumptionState(State):
             @staticmethod
             @copy_docstring(JSONMixin.from_json)
             def from_json(json: dict) -> 'JSONMixin':
+
+                def do_type(typ:str):
+                    if typ == 'int':
+                        return IntegerLyraType()
+                    if typ == 'float':
+                        return FloatLyraType()
+                    if typ == 'string':
+                        return StringLyraType()
+                    if typ == 'bool':
+                        return BooleanLyraType()
+                    if typ.startswith("List"):
+                        typ = typ[5:-1]
+                        return ListLyraType(do_type(typ))
+
                 def do_multiplier(js):
-                    types = {'int': IntegerLyraType, 'float': FloatLyraType}
+                    types = {'int': IntegerLyraType, 'float': FloatLyraType, 'string': StringLyraType}
                     if js['type'][0] == 'identifier':
-                        return VariableIdentifier(types[js['type'][1]](), js['value'])
+                        typ = do_type(js['type'][1])
+                        return VariableIdentifier(typ, js['value'])
                     if js['type'][0] == 'literal':
-                        return Literal(types[js['type'][1]](), js['value'])
+                        typ = do_type(js['type'][1])
+                        return Literal(typ, js['value'])
                     if js['type'][0] == 'binary_arithmetic':
-                        type = types[js['type'][1]()]
+                        typ = do_type(js['type'][1])
                         left = do_multiplier(js['left'])
                         operator = js['operator']
                         right = do_multiplier(js['right'])
-                        return BinaryArithmeticOperation(type, left, operator, right)
+                        return BinaryArithmeticOperation(typ, left, operator, right)
 
                 def do_constraint(js):
                     if js == '*':
@@ -571,15 +585,24 @@ class AssumptionState(State):
                     if is_star(assumption) or is_basic(assumption):
                         yield assumption
                     else:
-                        mult = MultiplierEvaluator().visit(assumption.multiplier, pp_value)
-                        if not isinstance(mult, int):
-                            raise ValueError("multiplier {} is not an int".format(mult))
+                        lines_involved = []
+                        mult = MultiplierEvaluator().visit(assumption.multiplier, pp_value, lines_involved)
+                        # check for valid multiplier
+                        message = ""
+                        if mult is None:
+                            message += "Cannot calculate loop range. Errors on lines: {}.".format(','.join([str(l) for l in lines_involved]))
+                        elif not isinstance(mult, int):
+                            message += "Loop range must be an integer."
+                        if len(message) > 0:
+                            mult_error = CheckerError(message)
+                            raise ValueError(mult_error)
                         for _ in range(mult):
                             for cons in assumption.constraints:
                                 yield from gen(cons)
 
                 constraint_generator = gen(self)
                 end_of_constraints, end_of_input = False, False
+                line_number = 1
                 while not end_of_input and not end_of_constraints:
                     try:
                         line_number, input_value = next(input_generator)
@@ -592,19 +615,27 @@ class AssumptionState(State):
                         # print("CONS", constraint)
                     except StopIteration:
                         end_of_constraints = True
+                    except ValueError as e:
+                        line_errors[line_number].append(e.args[0])
+                        break
+
+                    if is_star(constraint):  # information loss, cannot continue checking
+                        error = CheckerError("Not enough information to continue checking after this line.")
+                        line_errors[line_number].append(error)
+                        end_of_constraints = True
+
                     if end_of_constraints or end_of_input:
                         break
-                    if is_star(constraint):
-                            #TODO handle start constraint
-                            pass
-                    elif is_basic(constraint):
+
+                    if is_basic(constraint):
                         pp = constraint[0]
                         pp = VariableIdentifier(IntegerLyraType(), "{}.{}".format(pp.line, 1))
                         pp_value[pp] = (line_number, input_value)
                         for cons in constraint[1]:
                             cons.check_input(pp, pp_value, line_errors)
                 if end_of_input and not end_of_constraints:
-                    raise Exception("Too few inputs!")
+                    error = CheckerError("Too few inputs for this program!")
+                    line_errors[line_number].append(error)
 
         class Scope(Enum):
             """Scope type. Either ``Branch`` or ``Loop``."""

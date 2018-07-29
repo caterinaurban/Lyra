@@ -329,7 +329,7 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
                 else:
                     raise ValueError
         except ValueError:
-            error = CheckerError("Expected type {}".format(str(self.element)))
+            error = CheckerError("Expected type {}".format(str(self.element.name)))
 
         if self.is_bottom():
             error = CheckerError("Type error.")

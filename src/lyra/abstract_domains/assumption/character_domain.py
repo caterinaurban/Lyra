@@ -7,8 +7,8 @@ from lyra.abstract_domains.lattice import BottomMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.assumption.error import CheckerError, DependencyError
-from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor, Literal, BinaryArithmeticOperation, \
-    UnaryBooleanOperation, BinaryBooleanOperation, BinaryComparisonOperation
+from lyra.core.expressions import Expression, VariableIdentifier, ExpressionVisitor, BinaryComparisonOperation
+from lyra.core.expressions import Literal, BinaryArithmeticOperation, UnaryBooleanOperation, BinaryBooleanOperation
 from lyra.core.types import StringLyraType
 
 _alphabet = set(string.printable)
@@ -72,7 +72,7 @@ class CharacterLattice(BottomMixin, JSONMixin):
         if self.is_top():
             return "T"
 
-        return "(<{}>, <{}>)".format(','.join([m for m in self.certainly]), ','.join(c for c in self.maybe))
+        return "({}, {})".format(self.certainly, self.maybe)
 
     def is_top(self) -> bool:
         return not self.is_bottom() and self.certainly == set() and self.maybe == _alphabet

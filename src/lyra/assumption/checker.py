@@ -5,7 +5,7 @@ from typing import List, Tuple, Dict, Union, Any
 
 from lyra.abstract_domains.assumption.assumption_domain import AssumptionState
 from lyra.abstract_domains.lattice import Lattice
-from lyra.assumption.error import CheckerError
+from lyra.assumption.error import CheckerError, RelationalError, DependencyError
 
 
 class Checker(metaclass=ABCMeta):
@@ -45,6 +45,7 @@ class AssumptionChecker(Checker):
         input_path = "{}/{}.in".format(folder, name) if input_path is None else input_path
         error_path = "{}.err".format(input_path)
         self.line_offset = None
+        self.separator = '|'
         super().__init__(input_path, error_path)
 
     def check(self, assumption: 'AssumptionState.InputStack.InputLattice'):
@@ -67,22 +68,44 @@ class AssumptionChecker(Checker):
         line_errors: Dict[int, List[CheckerError]] = defaultdict(lambda: [])
         assumption.check_input(input_generator(), pp_value, line_errors)
         self.line_offset = line_offset
-        self.separator = '|'
         return line_errors
 
     def write_errors(self, errors):
+
+        def do(errors, line_number):
+            messages = []
+            message = ';'.join([err.message for err in errors if isinstance(err, RelationalError)])
+            if len(message) > 0:
+                message = "Relations violated: {}".format(message)
+                messages.append(message)
+
+            message = [str(err.source_line) for err in errors if isinstance(err, DependencyError) and err.source_line != line_number]
+            if len(message) > 0:
+                message = "This line depends on previous error value on line(s): {}".format(message)
+                messages.append(message)
+
+            message = '. '.join([err.message for err in errors if not (isinstance(err, RelationalError) or isinstance(err, DependencyError))])
+            if len(message) > 0:
+                messages.append(message)
+
+            return '. '.join([msg for msg in messages])
+
         sorted_key = sorted(errors)
-        print('LINE OFSSET', self.line_offset)
         with open(self.error_path, 'w') as file:
-            file.write("{}\n".format(self.separator))
+            if len(errors) > 0:
+                file.write("{}\n".format(self.separator))
+            else:
+                file.write('')
+            print("-----------ERROR FILE----------")
             for input_line in sorted_key:
                 line = []
                 error_list = errors[input_line]
                 line.append(str(input_line))
                 line.append(str(self.line_offset[input_line][0]))
                 line.append(str(self.line_offset[input_line][1]))
-                err_str = self.separator.join(str(err) for err in error_list)
-                line.append(err_str)
+                line.append(do(error_list, input_line))
                 out_line = self.separator.join([l for l in line])
                 out_line += '\n'
+                print(out_line)
                 file.write(out_line)
+            print("-----------END ERROR FILE--------")
