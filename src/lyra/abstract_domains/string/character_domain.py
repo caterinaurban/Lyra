@@ -219,7 +219,8 @@ class CharacterState(Store, State):
                     right = expression.right
                     op = UnaryBooleanOperation.Operator.Neg
                     right = UnaryBooleanOperation(right.typ, op, right)
-                    return self._assume(BinaryBooleanOperation(expression.typ, left, operator, right))
+                    typ = expression.typ
+                    return self._assume(BinaryBooleanOperation(typ, left, operator, right))
         elif isinstance(condition, BinaryBooleanOperation):
             if condition.operator == BinaryBooleanOperation.Operator.And:
                 right = deepcopy(self)._assume(condition.right)
