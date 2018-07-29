@@ -11,4 +11,3 @@ for i in range(T):
         pass
     else:
         raise ValueError
-
