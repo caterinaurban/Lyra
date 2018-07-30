@@ -135,8 +135,7 @@ class DictSegmentLattice(Lattice):
         if len(self.segments) == 1:
             segment = next(iter(self.segments))     # 'get' (work-around to not use pop)
             return segment[0].is_top() and segment[1].is_top()
-        else:
-            return False
+        return False
 
     @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'DictSegmentLattice') -> bool:
@@ -178,41 +177,17 @@ class DictSegmentLattice(Lattice):
                                          self.k_d_args, self.v_d_args, new_segments))
         return self
 
-    def d_norm(self, segment_set: Set[Tuple[Lattice, Lattice]],
-               known_disjoint: Set[Tuple[Lattice, Lattice]] = None) \
-            -> Set[Tuple[Lattice, Lattice]]:
-        """disjoint normalization function:
-        Computes a partition such that no two abstract keys overlap (i.e. their meet is bottom)
-        (and the keys are minimal)"""
-        # TODO: make faster? (sorted segments?)
-        # TODO: assert same domains?
-        if known_disjoint is None:
-            result_set = set()
-        else:
-            result_set = copy(known_disjoint)
-        for s in segment_set:
-            remove_set = set()
-            for r in result_set:
-                s_meet_r = deepcopy(s[0]).meet(r[0])
-                if not s_meet_r.is_bottom():  # not disjoint -> join segments
-                    s = (deepcopy(s[0]).join(deepcopy(r[0])), deepcopy(s[1]).join(deepcopy(r[1])))
-                    remove_set.add(r)
-            result_set.difference_update(remove_set)
-            result_set.add(s)
-
-        return result_set
-
     def d_norm_own(self):
         """Applies d_norm to own segment set"""
-        self._segments = self.d_norm(self.segments)
+        self._segments = d_norm(self.segments)
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'DictSegmentLattice') -> 'DictSegmentLattice':
         # dnorm(union(segments))
         if len(self.segments) > len(other.segments):
-            new_segments = self.d_norm(other.segments, self.segments)
+            new_segments = d_norm(other.segments, self.segments)
         else:
-            new_segments = self.d_norm(self.segments, other.segments)
+            new_segments = d_norm(self.segments, other.segments)
         self._replace(DictSegmentLattice(self.k_domain, self.v_domain,
                                          self.k_d_args, self.v_d_args, new_segments))
         return self
@@ -275,7 +250,7 @@ class DictSegmentLattice(Lattice):
         and applies the d_norm function (so the new segment may get joined with existing ones)
         (weak update)"""
         if not (key.is_bottom() or value.is_bottom()):
-            self._segments = self.d_norm({(key, value)}, self.segments)
+            self._segments = d_norm({(key, value)}, self.segments)
 
     # helper
     def forget_variable(self, variable: VariableIdentifier):
@@ -296,3 +271,28 @@ class DictSegmentLattice(Lattice):
         for (k, v) in self.segments:
             result.join(deepcopy(v))
         return result
+
+
+def d_norm(segment_set: Set[Tuple[Lattice, Lattice]],
+           known_disjoint: Set[Tuple[Lattice, Lattice]] = None) \
+        -> Set[Tuple[Lattice, Lattice]]:
+    """disjoint normalization function:
+    Computes a partition such that no two abstract keys overlap (i.e. their meet is bottom)
+    (and the keys are minimal)"""
+    # TODO: make faster? (sorted segments?)
+    # TODO: assert same domains?
+    if known_disjoint is None:
+        result_set = set()
+    else:
+        result_set = copy(known_disjoint)
+    for s in segment_set:
+        remove_set = set()
+        for r in result_set:
+            s_meet_r = deepcopy(s[0]).meet(r[0])
+            if not s_meet_r.is_bottom():  # not disjoint -> join segments
+                s = (deepcopy(s[0]).join(deepcopy(r[0])), deepcopy(s[1]).join(deepcopy(r[1])))
+                remove_set.add(r)
+        result_set.difference_update(remove_set)
+        result_set.add(s)
+
+    return result_set
