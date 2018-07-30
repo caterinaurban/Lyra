@@ -358,7 +358,6 @@ class AssumptionState(State):
 
                     else:   # the constraints are InputLattices
                         assert isinstance(constraint1, AssumptionState.InputStack.InputLattice)
-                        assert isinstance(constraint2, AssumptionState.InputStack.InputLattice)
                         m1: Expression = constraint1.multiplier
                         m2: Expression = constraint2.multiplier
                         c1 = constraint1.constraints

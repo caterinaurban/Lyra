@@ -57,8 +57,7 @@ class JSONHandler(Handler):
         super().__init__()
         folder, script = os.path.split(script_path)
         script_name = script.split('.')[0]
-        os.makedirs("{}/json".format(folder), exist_ok=True)
-        self._assumption_file = "{}/json/{}.json".format(folder, script_name)
+        self._assumption_file = "{}/{}.json".format(folder, script_name)
 
     @copy_docstring(Handler.write_result)
     def write_result(self, result: 'AssumptionState.InputStack.InputLattice'):
