@@ -16,10 +16,11 @@ _alphabet = set(string.printable)
 class CharacterLattice(BottomMixin):
 
     def __init__(self, certainly=set(), maybe=_alphabet):
-        self._certainly = certainly
-        self._maybe = maybe
         super().__init__()
-        if not self.certainly.issubset(self.maybe):
+        if certainly.issubset(maybe):
+            self._certainly = certainly
+            self._maybe = maybe
+        else: 
             self.bottom()
 
     @property
