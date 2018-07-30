@@ -12,14 +12,14 @@ class AlphabetLattice(CharacterLattice, JSONMixin):
 
     def to_json(self) -> dict:
         js = {
-            'maybe': list(self.certainly),
-            'certainly': list(self.maybe)
+            'certainly': list(self.certainly),
+            'maybe': list(self.maybe)
         }
         return js
 
     @staticmethod
     def from_json(json: dict) -> 'JSONMixin':
-        return CharacterLattice(set(json['maybe']), set(json['certainly']))
+        return CharacterLattice(set(json['certainly']), set(json['maybe']))
 
 
 class AlphabetState(CharacterState, InputMixin):
