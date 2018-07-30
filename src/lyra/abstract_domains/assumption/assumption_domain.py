@@ -743,7 +743,7 @@ class TypeRangeAssumptionState(AssumptionState):
         super().__init__(states, arguments, precursory)
 
 
-class TypeAlphabetState(AssumptionState):
+class TypeAlphabetAssumptionState(AssumptionState):
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         from lyra.abstract_domains.assumption.type_domain import TypeState

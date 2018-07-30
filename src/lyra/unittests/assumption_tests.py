@@ -10,7 +10,7 @@ import unittest
 
 import sys
 
-from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, TypeAlphabetState
+from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, TypeAlphabetAssumptionState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
 from lyra.engine.backward import BackwardInterpreter
@@ -51,7 +51,7 @@ class TypeAlphabetAssumptionTest(TestRunner):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        return TypeAlphabetState(self.variables)
+        return TypeAlphabetAssumptionState(self.variables)
 
 
 def test_suite():
@@ -64,6 +64,10 @@ def test_suite():
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             suite.addTest(RangeTest(path))
+    name = os.getcwd() + '/assumption/character/**.py'
+    for path in glob.iglob(name):
+        if os.path.basename(path) != "__init__.py":
+            suite.addTest(TypeAlphabetAssumptionTest(path))
     name = os.getcwd() + '/assumption/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":

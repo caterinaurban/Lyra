@@ -35,9 +35,9 @@ class AlphabetState(CharacterState, InputMixin):
     def unify(self, other: 'InputMixin') -> 'InputMixin':
         return self
 
-    class Refinement(CharacterState.Refinement):
+    class Refinement(CharacterState.ExpressionRefinement):
 
-        def visit_Input(self, expr: 'Input', state=None, evaluation=None):
-            state.record(deepcopy(evaluation))
-
+        def visit_Input(self, expr: 'Input', state=None, evaluation=None, value=None):
+            state.record(deepcopy(value))
+            return state
     _refinement = Refinement()

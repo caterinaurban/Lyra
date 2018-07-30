@@ -1,9 +1,10 @@
 import string
+from collections import defaultdict
 from copy import deepcopy
 
 from docutils.io import Input
 
-from lyra.abstract_domains.lattice import BottomMixin
+from lyra.abstract_domains.lattice import BottomMixin, Lattice
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import *
@@ -13,14 +14,26 @@ from lyra.core.utils import copy_docstring
 _alphabet = set(string.printable)
 
 
-class CharacterLattice(BottomMixin):
+class StringMixin(Lattice, metaclass=ABCMeta):
+    """Mixin to add string operations to a lattice."""
+
+    @abstractmethod
+    def concat(self, other: 'StringMixin') -> 'StringMixin':
+        """
+            Define semantics for the string concatenation operation.
+        :param other: lattice element to be concatenated with the current element
+        :return: the result of the concatenation
+        """
+
+
+class CharacterLattice(BottomMixin, StringMixin):
 
     def __init__(self, certainly=set(), maybe=_alphabet):
         super().__init__()
         if certainly.issubset(maybe):
             self._certainly = certainly
             self._maybe = maybe
-        else: 
+        else:
             self.bottom()
 
     @property
@@ -41,7 +54,7 @@ class CharacterLattice(BottomMixin):
         if self.is_top():
             return "T"
 
-        return "(<{}>, <{}>)".format(self.certainly, self.maybe)
+        return "({}, {})".format(self.certainly, self.maybe)
 
     @copy_docstring(BottomMixin.is_top)
     def is_top(self) -> bool:
@@ -49,34 +62,31 @@ class CharacterLattice(BottomMixin):
 
     @copy_docstring(BottomMixin._less_equal)
     def _less_equal(self, other: 'CharacterLattice') -> bool:
-        return self.maybe.issuperset(other.maybe) and self.certainly.issubset(other.certainly)
+        return self.certainly.issuperset(other.certainly) and self.maybe.issubset(other.maybe)
 
     @copy_docstring(BottomMixin._join)
     def _join(self, other: 'CharacterLattice') -> 'CharacterLattice':
-        maybe = self.certainly.intersection(other.certainly)
-        certainly = self.maybe.intersection(other.maybe)
-        return self._replace(CharacterLattice(maybe, certainly))
+        certainly = self.certainly.intersection(other.certainly)
+        maybe = self.maybe.union(other.maybe)
+        return self._replace(CharacterLattice(certainly, maybe))
 
     @copy_docstring(BottomMixin._meet)
     def _meet(self, other: 'CharacterLattice'):
-        maybe = self.certainly.union(other.certainly)
-        certainly = self.maybe.intersection(other.maybe)
-        return self._replace(CharacterLattice(maybe, certainly))
+        if self.certainly.issubset(other.maybe) and other.certainly.issubset(self.maybe):
+            certainly = self.certainly.union(other.certainly)
+            maybe = self.maybe.intersection(other.maybe)
+            return self._replace(CharacterLattice(certainly, maybe))
+        return self.bottom()
 
     @copy_docstring(BottomMixin._widening)
     def _widening(self, other: 'CharacterLattice'):
         return self._join(other)
 
+    @copy_docstring(StringMixin.concat)
     def concat(self, other: 'CharacterLattice') -> 'CharacterLattice':
-        """
-            Define semantics for the string concatenation operation.
-            Both the **certainly** and **maybe** sets are joined
-        :param other: lattice element to be concatenated with the current element
-        :return: the result of the concatenation
-        """
         certainly = self.certainly.union(other.certainly)
         maybe = self.certainly.union(other.certainly)
-        return self._replace(certainly, maybe)
+        return self._replace(CharacterLattice(certainly, maybe))
 
 
 class CharacterState(Store, State):
@@ -92,112 +102,134 @@ class CharacterState(Store, State):
 
     """
 
-    class ConditionEvaluator(ExpressionVisitor):
+    class ExpressionEvaluation(ExpressionVisitor):
 
-        def visit_Literal(self, expr, state=None, eval=None):
+        def visit_Literal(self, expr, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation
             if expr.typ == StringLyraType():
-                return CharacterLattice(set(expr.val), set(expr.val))
-            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
+                evaluation[expr] = CharacterLattice(set(expr.val), set(expr.val))
+            else:
+                evaluation[expr] = CharacterLattice()
+            return evaluation
 
-        def visit_Input(self, expr, state=None, eval=None):
-            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
-
-        def visit_VariableIdentifier(self, expr, state=None, eval=None):
-            return state.store[expr]
-
-        def visit_LengthIdentifier(self, expr):
-            pass
-
-        def visit_ListDisplay(self, expr, state=None, eval=None):
-            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
-
-        def visit_Range(self, expr, state=None, eval=None):
-            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
-
-        def visit_AttributeReference(self, expr, state=None, eval=None):
-            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
-
-        def visit_Subscription(self, expr, state=None, eval=None):
-            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
-
-        def visit_Slicing(self, expr, state=None, eval=None):
-            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
-
-        def visit_UnaryArithmeticOperation(self, expr, state=None, eval=None):
-            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
-
-        def visit_UnaryBooleanOperation(self, expr, state=None, eval=None):
-            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
-
-        def visit_BinaryArithmeticOperation(self, expr, state=None, eval=None):
-            if expr.operator == BinaryArithmeticOperation.Operator.Add:
-                left = self.visit(expr.left, state, eval)
-                right = self.visit(expr.right, state, eval)
-                return left.concat(right)
-            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
-
-        def visit_BinaryBooleanOperation(self, expr, state=None, eval=None):
-            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
-
-        def visit_BinaryComparisonOperation(self, expr, state=None, eval=None):
-            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
-
-    class Refinement(ExpressionVisitor):
-
-        def visit_Literal(self, expr: 'Literal', state=None, evaluation=None):
-            pass
-
-        def visit_Input(self, expr: 'Input', state=None, evaluation=None):
-            pass
+        def visit_Input(self, expr, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation
+            evaluation[expr] = CharacterLattice()
+            return evaluation
 
         def visit_VariableIdentifier(self, expr, state=None, evaluation=None):
-            state.store[expr].meet(evaluation)
+            if expr in evaluation:
+                return evaluation
+            evaluation[expr] = deepcopy(state.store[expr])
+            return evaluation
 
-        def visit_LengthIdentifier(self, expr):
-            pass
+        def visit_LengthIdentifier(self, expr, state=None, evaluation=None):
+            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
         def visit_ListDisplay(self, expr, state=None, evaluation=None):
-            pass
+            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
         def visit_Range(self, expr, state=None, evaluation=None):
-            pass
+            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
         def visit_AttributeReference(self, expr, state=None, evaluation=None):
-            pass
+            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
         def visit_Subscription(self, expr, state=None, evaluation=None):
-            pass
+            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
         def visit_Slicing(self, expr, state=None, evaluation=None):
-            pass
+            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
         def visit_UnaryArithmeticOperation(self, expr, state=None, evaluation=None):
-            pass
+            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
         def visit_UnaryBooleanOperation(self, expr, state=None, evaluation=None):
-            pass
+            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
         def visit_BinaryArithmeticOperation(self, expr, state=None, evaluation=None):
-            evaluation = CharacterLattice(maybe=evaluation.certainly)
-            self.visit(expr.right, state, evaluation)
-            self.visit(expr.left, state, evaluation)
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated1 = self.visit(expr.left, state, evaluation)
+            evaluated2 = self.visit(expr.right, state, evaluated1)
+            if expr.operator == BinaryArithmeticOperation.Operator.Add:
+                evaluated2[expr] = deepcopy(evaluated2[expr.left]).concat(evaluated2[expr.right])
+                return evaluated2
+            evaluation[expr] = CharacterLattice()
+            return evaluation
 
         def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
-            pass
+            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
         def visit_BinaryComparisonOperation(self, expr, state=None, evaluation=None):
-            pass
+            raise NotImplementedError("Condition evalutator not supported for {}".format(expr))
 
-    _evaluator = ConditionEvaluator()
-    _refinement = Refinement()
+    class ExpressionRefinement(ExpressionVisitor):
 
-    def __init__(self, variables: Set[VariableIdentifier]):
-        self._variables = variables
-        lattices = {v.typ: CharacterLattice for v in variables}
+        def visit_Literal(self, expr: 'Literal', state=None, evaluation=None, value=None):
+            return state
+
+        def visit_Input(self, expr: 'Input', state=None, evaluation=None, value=None):
+            return state
+
+        def visit_VariableIdentifier(self, expr, state=None, evaluation=None, value=None):
+            state.store[expr] = evaluation[expr].meet(value)
+            return state
+
+        def visit_LengthIdentifier(self, expr, state=None, evaluation=None, value=None):
+            return state
+
+        def visit_ListDisplay(self, expr, state=None, evaluation=None, value=None):
+            return state
+
+        def visit_Range(self, expr, state=None, evaluation=None, value=None):
+            return state
+
+        def visit_AttributeReference(self, expr, state=None, evaluation=None, value=None):
+            return state
+
+        def visit_Subscription(self, expr, state=None, evaluation=None, value=None):
+            return state
+
+        def visit_Slicing(self, expr, state=None, evaluation=None, value=None):
+            return state
+
+        def visit_UnaryArithmeticOperation(self, expr, state=None, evaluation=None, value=None):
+            return state
+
+        def visit_UnaryBooleanOperation(self, expr, state=None, evaluation=None, value=None):
+            return state
+
+        def visit_BinaryArithmeticOperation(self, expr, state=None, evaluation=None, value=None):
+            if expr.operator == BinaryArithmeticOperation.Operator.Add:
+                new_value = CharacterLattice(maybe=value.maybe)
+                refined1 = self.visit(expr.right, state, evaluation, new_value)
+                refined2 = self.visit(expr.left, refined1, evaluation, new_value)
+                return refined2
+            return state
+
+        def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None, value=None):
+            return state
+
+        def visit_BinaryComparisonOperation(self, expr, state=None, evaluation=None, value=None):
+            return state
+
+    _evaluation = ExpressionEvaluation()
+    _refinement = ExpressionRefinement()
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        lattices = defaultdict(lambda: CharacterLattice)
         super().__init__(variables, lattices)
+        State.__init__(self, precursory)
 
     def _assign(self, left: Expression, right: Expression) -> 'State':
-        raise Exception("Assignment should not be called in backward analysis.")
+        if isinstance(left, VariableIdentifier):
+            evaluation = self._evaluation.visit(right, self, dict())
+            self.store[left] = evaluation[right]
+            return self
+        raise NotImplementedError(f"Assignment to {left.__class__.__name__} is unsupported!")
 
     def _assume(self, condition: Expression) -> 'State':
         if isinstance(condition, UnaryBooleanOperation):
@@ -233,13 +265,10 @@ class CharacterState(Store, State):
             if condition.operator == BinaryComparisonOperation.Operator.Eq:
                 left = condition.left
                 right = condition.right
-                try:
-                    left_eval = self._evaluator.visit(condition.left, self)
-                    right_eval = self._evaluator.visit(condition.right, self)
-                except NotImplementedError:
-                    return self.meet(deepcopy(self.top()))
-                self._refinement.visit(left, self, right_eval)
-                self._refinement.visit(right, self, left_eval)
+                left_eval = self._evaluation.visit(condition.left, self, dict())
+                right_eval = self._evaluation.visit(condition.right, self, dict())
+                self._refinement.visit(left, self, left_eval, right_eval[right])
+                self._refinement.visit(right, self, right_eval, left_eval[left])
         return self
 
     def enter_if(self) -> 'State':
@@ -258,7 +287,9 @@ class CharacterState(Store, State):
         return self
 
     def _substitute(self, left: Expression, right: Expression) -> 'State':
-        left_eval = self._evaluator.visit(left, self)
-        self._refinement.visit(right, self, left_eval)
-        self.store[left].top()
+        if isinstance(left, VariableIdentifier):
+            left_eval = self._evaluation.visit(left, self, dict())
+            right_eval = self._evaluation.visit(right, self, dict())
+            self._refinement.visit(right, self, right_eval, left_eval[left])
+            self.store[left].top()
         return self
