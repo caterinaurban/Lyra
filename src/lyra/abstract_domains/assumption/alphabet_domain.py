@@ -3,7 +3,6 @@ from copy import deepcopy
 from typing import Set, List, Dict, Union, Tuple
 
 from lyra.abstract_domains.assumption.assumption_domain import JSONMixin, InputMixin
-from lyra.abstract_domains.numerical.interval_domain import IntervalLattice
 from lyra.abstract_domains.string.character_domain import CharacterLattice, CharacterState
 from lyra.assumption.error import CheckerError, DependencyError
 from lyra.core.expressions import VariableIdentifier, Expression
