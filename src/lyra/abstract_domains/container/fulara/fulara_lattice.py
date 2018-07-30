@@ -116,14 +116,14 @@ class DictSegmentLattice(Lattice):
     def bottom(self) -> 'DictSegmentLattice':
         """The bottom lattice element is ``{}``."""
         self._replace(DictSegmentLattice(self.k_domain, self.v_domain,
-                                         self._k_d_args, self._v_d_args, set()))
+                                         self.k_d_args, self.v_d_args, set()))
         return self
 
     @copy_docstring(Lattice.top)
     def top(self) -> 'DictSegmentLattice':
         """The top lattice element is ``{(top, top)}``."""
         self._replace(DictSegmentLattice(self.k_domain, self.v_domain,
-                                         self._k_d_args, self._v_d_args))
+                                         self.k_d_args, self.v_d_args))
         return self
 
     @copy_docstring(Lattice.is_bottom)
@@ -175,7 +175,7 @@ class DictSegmentLattice(Lattice):
                         new_segments.add((k_meet, v_meet))
 
         self._replace(DictSegmentLattice(self.k_domain, self.v_domain,
-                                         self._k_d_args, self._v_d_args, new_segments))
+                                         self.k_d_args, self.v_d_args, new_segments))
         return self
 
     def d_norm(self, segment_set: Set[Tuple[Lattice, Lattice]],
@@ -214,7 +214,7 @@ class DictSegmentLattice(Lattice):
         else:
             new_segments = self.d_norm(self.segments, other.segments)
         self._replace(DictSegmentLattice(self.k_domain, self.v_domain,
-                                         self._k_d_args, self._v_d_args, new_segments))
+                                         self.k_d_args, self.v_d_args, new_segments))
         return self
 
     @copy_docstring(Lattice._widening)
@@ -243,14 +243,14 @@ class DictSegmentLattice(Lattice):
         if o_add_segment:   # cond. 3, not using d_norm for efficiency
             # join everything to one top segment (extreme widening)
             value_list = [s[1] for s in segment_set]
-            top_segment = (self.k_domain(**self._k_d_args).top(),
+            top_segment = (self.k_domain(**self.k_d_args).top(),
                            self.v_domain(**self.v_d_args).big_join(value_list))
             result_set.add(top_segment)
         else:  # o does not have an additional non-overlapping segment
-            result_set = self.d_norm(segment_set)
+            result_set = d_norm(segment_set)
 
         self._replace(DictSegmentLattice(self.k_domain, self.v_domain,
-                                         self._k_d_args, self._v_d_args, result_set))
+                                         self.k_d_args, self.v_d_args, result_set))
         return self
 
     # helper      # TODO: put helpers in DictContentDomain?
@@ -278,21 +278,21 @@ class DictSegmentLattice(Lattice):
             self._segments = self.d_norm({(key, value)}, self.segments)
 
     # helper
-    def invalidate_var(self, var: VariableIdentifier):
+    def forget_variable(self, variable: VariableIdentifier):
         for (k, v) in self.segments:
-            k.invalidate_var(var)
-            v.invalidate_var(var)
+            k.forget_variable(variable)
+            v.forget_variable(variable)
 
     # helper
     def get_keys_joined(self) -> Lattice:
-        result = self.k_domain(**self._k_d_args).bottom()
+        result = self.k_domain(**self.k_d_args).bottom()
         for (k, v) in self.segments:
             result.join(deepcopy(k))
         return result
 
     # helper
     def get_values_joined(self) -> Lattice:
-        result = self.v_domain(**self._v_d_args).bottom()
+        result = self.v_domain(**self.v_d_args).bottom()
         for (k, v) in self.segments:
             result.join(deepcopy(v))
         return result

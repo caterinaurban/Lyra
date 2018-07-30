@@ -3,7 +3,7 @@ from copy import copy
 from typing import Set
 
 # (Class) Adapter pattern
-from lyra.abstract_domains.data_structures.scalar_wrapper import ScalarWrapper
+from lyra.abstract_domains.container.fulara.scalar_wrapper import ScalarWrapper
 from lyra.core.expressions import VariableIdentifier
 
 

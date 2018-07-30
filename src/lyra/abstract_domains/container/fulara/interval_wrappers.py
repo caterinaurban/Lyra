@@ -1,9 +1,9 @@
 from copy import deepcopy
 from typing import Set
 
-from lyra.abstract_domains.data_structures.key_wrapper import KeyWrapper
-from lyra.abstract_domains.data_structures.scalar_wrapper import ScalarWrapper
-from lyra.abstract_domains.data_structures.value_wrapper import ValueWrapper
+from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
+from lyra.abstract_domains.container.fulara.scalar_wrapper import ScalarWrapper
+from lyra.abstract_domains.container.fulara.value_wrapper import ValueWrapper
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.numerical.interval_domain import IntervalState, IntervalLattice
 from lyra.core.expressions import VariableIdentifier
@@ -16,24 +16,24 @@ class IntervalSWrapper(ScalarWrapper, IntervalState):
     def __init__(self, scalar_variables: Set[VariableIdentifier]):
         super().__init__(scalar_variables)
 
-    @copy_docstring(ScalarWrapper.add_var)
-    def add_var(self, var: VariableIdentifier):
+    @copy_docstring(ScalarWrapper.add_variable)
+    def add_variable(self, var: VariableIdentifier):
         if var not in self.store.keys():
             self.variables.add(var)
             self.store[var] = IntervalLattice()     # top
         else:
             raise ValueError(f"Variable can not be added to a store if it is already present")
 
-    @copy_docstring(ScalarWrapper.remove_var)
-    def remove_var(self, var: VariableIdentifier):
+    @copy_docstring(ScalarWrapper.remove_variable)
+    def remove_variable(self, var: VariableIdentifier):
         if var in self.store.keys():
             self.variables.remove(var)
             del self.store[var]
         else:
             raise ValueError(f"Variable can only be removed from a store if it is already present")
 
-    @copy_docstring(ScalarWrapper.invalidate_var)
-    def invalidate_var(self, var: VariableIdentifier):
+    @copy_docstring(ScalarWrapper.forget_variable)
+    def forget_variable(self, var: VariableIdentifier):
         self.store[var].top()
 
 

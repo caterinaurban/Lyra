@@ -20,13 +20,13 @@ class ScalarWrapper(metaclass=ABCMeta):
         super().__init__(scalar_variables, *domain_args)      # init of wrapped domain
 
     @abstractmethod
-    def add_var(self, var: VariableIdentifier):
+    def add_variable(self, variable: VariableIdentifier):
         """Adds a new variable to the state with no information about it (top)"""
 
     @abstractmethod
-    def remove_var(self, var: VariableIdentifier):
+    def remove_variable(self, variable: VariableIdentifier):
         """Removes a variable from the state"""
 
     @abstractmethod
-    def invalidate_var(self, var: VariableIdentifier):
-        """Forgets everything about var -> sets to top"""
+    def forget_variable(self, variable: VariableIdentifier):
+        """Forgets everything about variable -> sets to top"""
