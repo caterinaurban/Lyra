@@ -3,7 +3,7 @@ b: str = input()
 c: str = input()
 x:int = 0
 
-if a == b + c:
+if a == a + c:
     pass
 else:
     raise ValueError

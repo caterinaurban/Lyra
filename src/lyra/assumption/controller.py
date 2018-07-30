@@ -130,4 +130,4 @@ class AssumptionController(Controller):
 
 
 if __name__ == '__main__':
-    AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type_mix.py').main()
+    AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/survey/convert.py').main()
