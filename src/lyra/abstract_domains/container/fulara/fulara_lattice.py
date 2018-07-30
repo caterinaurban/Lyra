@@ -152,8 +152,19 @@ class DictSegmentLattice(Lattice):
         # if len(self.segments) > len(other.segments):  # more segments => more 'boundaries'
         #
         else:
-            # fallback     # TODO: do more efficiently?
-            return deepcopy(self).join(other) == other
+            # all segments of self need to be contained in some segment of other
+            # & their value must be less_equal
+            for (k1, v1) in self.segments:
+                for (k2, v2) in other.segments:
+                    k_meet = deepcopy(k1).meet(k2)
+                    if not k_meet.is_bottom():      # segments overlap
+                        if k1.less_equal(k2) and v1.less_equal(v2):
+                            break   # self segment can only be contained in one other segment
+                        return False  # (k1, v1) not fully contained in (k2, v2)
+                else:   # (k1, v1) does not overlap with any segment of other
+                    return False
+
+            return True
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'DictSegmentLattice') -> 'DictSegmentLattice':
