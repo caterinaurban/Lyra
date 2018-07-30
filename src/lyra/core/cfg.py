@@ -9,7 +9,7 @@ Lyra's internal representation of a Python program.
 
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import Dict, List, Set, Tuple, Union
+from typing import Dict, List, Set, Tuple, Union, Optional
 
 from lyra.core.statements import Statement
 
@@ -19,7 +19,7 @@ class Node(metaclass=ABCMeta):
         """Node of a control flow graph.
 
         :param identifier: identifier associated with the node
-        :param stmts: list of statements stored in the node 
+        :param stmts: list of statements stored in the node
         """
         self._identifier = identifier
         self._stmts = stmts
@@ -46,15 +46,15 @@ class Node(metaclass=ABCMeta):
 
     @abstractmethod
     def __str__(self):
-        """Node string representation.  
-        
+        """Node string representation.
+
         :return: string representing the node
         """
 
     def size(self):
         """Number of statements stored in the node.
-        
-        :return: number of statements stored in the node 
+
+        :return: number of statements stored in the node
         """
         return len(self.stmts)
 
@@ -62,9 +62,9 @@ class Node(metaclass=ABCMeta):
 class Basic(Node):
     def __init__(self, identifier: int, stmts: List[Statement] = None):
         """Basic node of a control flow graph.
-        
-        :param identifier: identifier associated with the node  
-        :param stmts: list of statements stored in the node 
+
+        :param identifier: identifier associated with the node
+        :param stmts: list of statements stored in the node
         """
         super().__init__(identifier, stmts or [])
 
@@ -76,8 +76,8 @@ class Loop(Node):
     def __init__(self, identifier: int, stmts: List[Statement] = None):
         """Loop head node of a control flow graph.
 
-        :param identifier: identifier associated with the block  
-        :param stmts: list of statements stored in the block 
+        :param identifier: identifier associated with the block
+        :param stmts: list of statements stored in the block
         """
         super().__init__(identifier, stmts or [])
 
@@ -96,7 +96,7 @@ class Edge(metaclass=ABCMeta):
 
     def __init__(self, source: Node, target: Node, kind: Kind = Kind.DEFAULT):
         """Edge of a control flow graph.
-        
+
         :param source: source node of the edge
         :param target: target node of the edge
         :param kind: kind of the edge
@@ -131,14 +131,14 @@ class Edge(metaclass=ABCMeta):
 
     @abstractmethod
     def __str__(self):
-        """Edge string representation.  
+        """Edge string representation.
 
         :return: string representing the edge
         """
 
 
 class Unconditional(Edge):
-    def __init__(self, source: Union[Node, None], target: Union[Node, None], kind=Edge.Kind.DEFAULT):
+    def __init__(self, source: Optional[Node], target: Optional[Node], kind=Edge.Kind.DEFAULT):
         """Unconditional edge of a control flow graph.
 
         :param source: source node of the edge
@@ -152,9 +152,10 @@ class Unconditional(Edge):
 
 
 class Conditional(Edge):
-    def __init__(self, source: Union[Node, None], condition: Statement, target: Union[Node, None], kind=Edge.Kind.DEFAULT):
+    def __init__(self, source: Optional[Node], condition: Statement,
+                 target: Optional[Node], kind=Edge.Kind.DEFAULT):
         """Conditional edge of a control flow graph.
-        
+
         :param source: source node of the edge
         :param target: target node of the edge
         :param condition: condition associated with the edge
@@ -174,7 +175,7 @@ class Conditional(Edge):
 class ControlFlowGraph:
     def __init__(self, nodes: Set[Node], in_node: Node, out_node: Node, edges: Set[Edge]):
         """Control flow graph representation.
-        
+
         :param nodes: set of nodes of the control flow graph
         :param in_node: entry node of the control flow graph
         :param out_node: exit node of the control flow graph
@@ -203,7 +204,7 @@ class ControlFlowGraph:
 
     def in_edges(self, node: Node) -> Set[Edge]:
         """Ingoing edges of a given node.
-        
+
         :param node: given node
         :return: set of ingoing edges of the node
         """
@@ -227,7 +228,7 @@ class ControlFlowGraph:
 
     def successors(self, node: Node) -> Set[Node]:
         """Successors of a given node.
-        
+
         :param node: given node
         :return: set of successors of the node
         """

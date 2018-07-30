@@ -12,11 +12,12 @@ from queue import Queue
 from typing import Set
 
 from lyra.core.cfg import Loop
-from lyra.core.expressions import VariableIdentifier
+from lyra.core.expressions import VariableIdentifier, LengthIdentifier
 from lyra.core.statements import Assignment, VariableAccess, Call
+from lyra.core.types import ListLyraType
 from lyra.engine.result import AnalysisResult
 
-from lyra.frontend.cfg_generator import ast_to_cfg
+from lyra.frontend.cfg_generator import ast_to_cfg, StringLyraType
 from lyra.visualization.graph_renderer import AnalysisResultRenderer
 
 
@@ -80,13 +81,19 @@ class Runner:
                 visited.add(current.identifier)
                 for stmt in current.stmts:
                     if isinstance(stmt, Assignment) and isinstance(stmt.left, VariableAccess):
-                        variables.add(stmt.left.variable)
+                        variable = stmt.left.variable
+                        variables.add(variable)
+                        if isinstance(variable.typ, (StringLyraType, ListLyraType)):
+                            variables.add(LengthIdentifier(variable))
                 if isinstance(current, Loop):
                     edges = self.cfg.edges.items()
                     conds = [edge.condition for nodes, edge in edges if nodes[0] == current]
                     for cond in [c for c in conds if isinstance(c, Call)]:
                         for arg in [a for a in cond.arguments if isinstance(a, VariableAccess)]:
+                            variable = arg.variable
                             variables.add(arg.variable)
+                            if isinstance(variable.typ, (StringLyraType, ListLyraType)):
+                                variables.add(LengthIdentifier(variable))
                 for node in self.cfg.successors(current):
                     worklist.put(node)
         return variables

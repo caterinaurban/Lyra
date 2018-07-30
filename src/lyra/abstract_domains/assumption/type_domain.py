@@ -19,7 +19,7 @@ from lyra.abstract_domains.store import Store
 from lyra.assumption.error import CheckerError
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
     Input, ListDisplay, Range, AttributeReference, Subscription, Slicing, \
-    UnaryArithmeticOperation, BinaryArithmeticOperation
+    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, Identifier
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -72,7 +72,6 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
     .. automethod:: TypeLattice._join
     .. automethod:: TypeLattice._widening
     """
-
     class Status(IntEnum):
         """Type status.
 
@@ -509,18 +508,7 @@ class TypeState(Store, InputMixin):
                 return evaluation
             raise ValueError(f"Literal type {typ} is unsupported!")
 
-        @copy_docstring(ExpressionVisitor.visit_Input)
-        def visit_Input(self, expr: Input, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            typ = expr.typ
-            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
-                evaluation[expr] = TypeLattice.from_lyra_type(typ)
-                return evaluation
-            raise ValueError(f"Input type {expr.typ} is unsupported!")
-
-        @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
-        def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
+        def visit_Identifier(self, expr: Identifier, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             typ = expr.typ
@@ -530,13 +518,16 @@ class TypeState(Store, InputMixin):
                 return evaluation
             raise ValueError(f"Variable type {typ} is unsupported!")
 
+        @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+        def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
+            return self.visit_Identifier(expr, state, evaluation)
+
+        @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+        def visit_LengthIdentifier(self, expr: LengthIdentifier, state=None, evaluation=None):
+            return self.visit_Identifier(expr, state, evaluation)
+
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
-
-        @copy_docstring(ExpressionVisitor.visit_Range)
-        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -552,6 +543,21 @@ class TypeState(Store, InputMixin):
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Input)
+        def visit_Input(self, expr: Input, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            typ = expr.typ
+            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
+                evaluation[expr] = TypeLattice.from_lyra_type(typ)
+                return evaluation
+            raise ValueError(f"Input type {expr.typ} is unsupported!")
+
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -633,11 +639,6 @@ class TypeState(Store, InputMixin):
         def visit_Literal(self, expr: Literal, evaluation=None, value=None, state=None):
             return state  # nothing to be done
 
-        @copy_docstring(ExpressionVisitor.visit_Input)
-        def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
-            state.record(value)
-            return state  # nothing to be done
-
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):
             typ = expr.typ
@@ -646,13 +647,16 @@ class TypeState(Store, InputMixin):
                 return state
             raise ValueError(f"Variable type {expr.typ} is unsupported!")
 
+        @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+        def visit_LengthIdentifier(self, expr, evaluation=None, value=None, state=None):
+            typ = expr.typ
+            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
+                state.store[expr] = evaluation[expr].meet(value)
+                return state
+            raise ValueError(f"Variable type {expr.typ} is unsupported!")
+
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
-            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
-
-        @copy_docstring(ExpressionVisitor.visit_Range)
-        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -668,6 +672,16 @@ class TypeState(Store, InputMixin):
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
+            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Input)
+        def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
+            state.record(value)
+            return state    # nothing to be done
+
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 

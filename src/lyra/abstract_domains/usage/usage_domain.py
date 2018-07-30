@@ -31,6 +31,7 @@ class UsageStore(Store):
     .. automethod:: UsageStore._meet
     .. automethod:: UsageStore._join
     """
+
     def __init__(self, variables, lattices: Dict[LyraType, Type[Lattice]]):
         """Map each program variable to its usage status.
 
@@ -80,6 +81,7 @@ class SimpleUsageStore(UsageStore):
     .. automethod:: SimpleUsageStore._meet
     .. automethod:: SimpleUsageStore._join
     """
+
     def __init__(self, variables: Set[VariableIdentifier]):
         """Map each program variable to its usage status.
 
@@ -104,6 +106,7 @@ class SimpleUsageState(Stack, State):
     .. automethod:: SimpleUsageState._output
     .. automethod:: SimpleUsageState._substitute
     """
+
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         super().__init__(SimpleUsageStore, {'variables': variables})
         State.__init__(self, precursory)

@@ -25,6 +25,7 @@ class Stack(BoundedLattice, metaclass=ABCMeta):
     .. automethod:: Stack._meet
     .. automethod:: Stack._join
     """
+
     def __init__(self, lattice: Type, arguments: Dict[str, Any]):
         """Create a stack of elements of a lattice.
 

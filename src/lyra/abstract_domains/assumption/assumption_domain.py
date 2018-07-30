@@ -19,7 +19,7 @@ from lyra.assumption.error import CheckerError
 from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparisonOperation, \
     Range, Literal, NegationFreeNormalExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
     ExpressionVisitor, Input, ListDisplay, AttributeReference, Subscription, Slicing, \
-    UnaryArithmeticOperation, BinaryArithmeticOperation, Identifier
+    UnaryArithmeticOperation, BinaryArithmeticOperation
 from lyra.core.statements import ProgramPoint
 from lyra.core.types import IntegerLyraType, FloatLyraType, StringLyraType, BooleanLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
@@ -124,7 +124,6 @@ class InputMixin(State, metaclass=ABCMeta):
 
         :return: the list of constraints corresponding to the current program point
         """
-        ins = type(self).inputs[self.pp]
         return type(self).inputs.pop(self.pp, list())
 
 
@@ -207,7 +206,6 @@ class AssumptionState(State):
     .. automethod:: AssumptionState._assume
     .. automethod:: AssumptionState._substitute
     """
-    state_name = dict()
     class InputStack(Stack, State):
         """Stack of assumptions on the input data.
 
@@ -215,8 +213,7 @@ class AssumptionState(State):
         .. automethod:: InputStack._assume
         .. automethod:: InputStack._substitute
         """
-
-        class InputLattice(BottomMixin, JSONMixin):
+        class InputLattice(BottomMixin):
             """Assumptions on the input data.
 
             Each assumption is a (possibly symbolic) repetition of constraints on the input data.
@@ -246,7 +243,6 @@ class AssumptionState(State):
             .. automethod:: InputLattice._join
             .. automethod:: InputLattice._widening
             """
-
             InputLattice = 'AssumptionState.InputStack.InputLattice'
             StarConstraint = Tuple[ProgramPoint, ...]
             BasicConstraint = Tuple[ProgramPoint, Tuple[JSONMixin, ...]]
@@ -257,7 +253,6 @@ class AssumptionState(State):
                 super().__init__()
                 self._multiplier = multiplier
                 self._constraints = constraints
-                self._state_names = dict()
 
             @property
             def multiplier(self):
@@ -269,11 +264,6 @@ class AssumptionState(State):
                 """Current list of constraints."""
                 return self._constraints
 
-            @property
-            def state_names(self):
-                """Mapping state names to types for JSON parsing purposes."""
-                return self._state_names
-
             def __repr__(self):
                 def do(constraint):
                     if isinstance(constraint, tuple):
@@ -284,15 +274,14 @@ class AssumptionState(State):
                             return "{}:{}".format(constraint[0].line, constraint[1])
                     else:  # the constraint is an InputLattice
                         return "{}".format(constraint) if constraint.constraints else ""
-
                 multiplier = self.multiplier
                 is_one = isinstance(multiplier, Literal) and multiplier.val == "1"
                 repetitions = "" if is_one else "{} * ".format(multiplier)
                 single = len(self.constraints) == 1
-                beginning = "" if is_one or single else "["
                 formatted = (do(constraint) for constraint in self.constraints)
                 constraints = ", ".join(constraint for constraint in formatted if constraint)
-                ending = "" if is_one or single else "]"
+                beginning = "" if is_one or (single and constraints) else "["
+                ending = "" if is_one or (single and constraints) else "]"
                 assumption = repetitions + beginning + constraints + ending
                 return assumption if assumption else "ε"
 
@@ -304,8 +293,8 @@ class AssumptionState(State):
 
             @copy_docstring(BottomMixin.is_top)
             def is_top(self) -> bool:
-                def is_star(constraint): return isinstance(constraint, tuple) and not constraint
-
+                def is_star(constraint):
+                    return isinstance(constraint, tuple) and not constraint
                 multiplier = self.multiplier
                 one = isinstance(multiplier, Literal) and multiplier.val == "1"
                 single = len(self.constraints) == 1
@@ -313,7 +302,6 @@ class AssumptionState(State):
 
             @copy_docstring(BottomMixin._less_equal)
             def _less_equal(self, other: InputLattice) -> bool:
-                """``self <= other`` if and only if ``Ɣ(self) ⊆ Ɣ(other)``."""
                 def do(constraint1, constraint2) -> bool:
                     if isinstance(constraint1, tuple) and isinstance(constraint2, tuple):
                         # the constraints are StarConstraints or BasicConstraints
@@ -330,7 +318,6 @@ class AssumptionState(State):
                         c2 = constraint2.constraints
                         c: bool = len(c2) == len(c1) and all(do(x, y) for x, y in zip(c1, c2))
                         return m and c
-
                 multiplier1 = self.multiplier
                 multiplier2 = other.multiplier
                 assert isinstance(multiplier1, Literal) and multiplier1.val == "1"
@@ -340,24 +327,23 @@ class AssumptionState(State):
                 return False
 
             @copy_docstring(BottomMixin._join)
-            def _join(self, other: InputLattice) -> InputLattice:  # TODO:
-                """``Ɣ(self) ⋃ Ɣ(other) ⊆ Ɣ(self \/ other)``."""
+            def _join(self, other: InputLattice) -> InputLattice:
                 def do(constraint1, constraint2):
                     if isinstance(constraint1, tuple) and isinstance(constraint2, tuple):
                         # the constraints are StarConstraints or BasicConstraints
                         if not constraint1 and not constraint2:
                             # the constraints are StarConstraints
                             return ()
-                        else:  # the constraints are BasicConstraints
+                        else:   # the constraints are BasicConstraints
                             pp1: ProgramPoint = constraint1[0]
                             pp2: ProgramPoint = constraint2[0]
                             pp: ProgramPoint = pp1 if pp1.line <= pp2.line else pp2
                             l1: Tuple[JSONMixin, ...] = constraint1[1]
                             l2: Tuple[JSONMixin, ...] = constraint2[1]
                             return pp, tuple(x.join(y) for x, y in zip(l1, l2))
-
                     else:   # the constraints are InputLattices
                         assert isinstance(constraint1, AssumptionState.InputStack.InputLattice)
+                        assert isinstance(constraint2, AssumptionState.InputStack.InputLattice)
                         m1: Expression = constraint1.multiplier
                         m2: Expression = constraint2.multiplier
                         c1 = constraint1.constraints
@@ -376,7 +362,6 @@ class AssumptionState(State):
                             c.extend(c1[len(c2):])
                             c.extend(c2[len(c1):])
                         return AssumptionState.InputStack.InputLattice(m, c)
-
                 multiplier1 = self.multiplier
                 multiplier2 = other.multiplier
                 assert isinstance(multiplier1, Literal) and multiplier1.val == "1"
@@ -415,22 +400,25 @@ class AssumptionState(State):
                 :return: current lattice element modified to record the constraint
                 """
                 def do(constraint1, constraint2):
-                    assert isinstance(constraint2, AssumptionState.InputStack.InputLattice)
-                    assert constraint1.multiplier == constraint2.multiplier
                     for i, cs in enumerate(zip(constraint1.constraints, constraint2.constraints)):
                         if cs[0] != cs[1]:
                             constraint1.constraints[i] = do(cs[0], cs[1])
                     reminder = constraint2.constraints[len(constraint1.constraints):]
                     constraint1.constraints.extend(reminder)
                     return constraint1
-                if self.constraints:    # there is at least one previously recorded constraint
+                repeated = AssumptionState.InputStack.InputLattice
+                if isinstance(constraint, repeated) and self.constraints:
+                    # the constraint to be recorded is a repetition and
+                    # there is at least one previously recorded constraint
                     previous = self.constraints[0]
-                    repeated = AssumptionState.InputStack.InputLattice
-                    not_first = isinstance(previous, repeated)
-                    if isinstance(constraint, repeated) and not_first:
-                        # we are leaving the body of a for loop another time than the first
-                        self.constraints[0] = do(constraint, previous)
-                        return self
+                    if isinstance(previous, repeated):
+                        # the previously recorded constraint is also a repetition
+                        m1 = constraint.multiplier
+                        m2 = previous.multiplier
+                        if type(m1) == type(m2) and m1 == m2:
+                            # we are leaving the body of a for loop another time than the first
+                            self.constraints[0] = do(constraint, previous)
+                            return self
                 self.constraints.insert(0, constraint)
                 return self
 
@@ -441,19 +429,18 @@ class AssumptionState(State):
                 :param expression: expression replacing the variable
                 :return: current lattice element modified to manifest the replacement
                 """
-
                 def do(constraint):
                     if isinstance(constraint, tuple):
                         # the constraint is a StarConstraint or a BasicConstraint
                         if not constraint:  # the constraint is a StarConstraint
                             return constraint
-                        else:  # the constraint is a BasicConstraint
+                        else:   # the constraint is a BasicConstraint
                             lattices = list(constraint[1])
                             for i, lattice in enumerate(lattices):
                                 if hasattr(lattice, 'replace'):
                                     lattices[i] = lattice.replace(variable, expression)
                             return constraint[0], tuple(lattices)
-                    else:  # the constraint is an InputLattice
+                    else:   # the constraint is an InputLattice
                         return constraint.replace(variable, expression)
 
                 multiplier = self.multiplier
@@ -637,21 +624,9 @@ class AssumptionState(State):
             self._scopes = list()  # stack of scope types
 
         @property
-        def stack(self):
-            return super().stack
-
-        @stack.setter
-        def stack(self, stack):
-            self._stack = stack
-
-        @property
         def scopes(self):
             """Current stack of scope types."""
             return self._scopes
-
-        @scopes.setter
-        def scopes(self, scopes):
-            self._scopes = scopes
 
         @property
         def scope(self):
@@ -679,7 +654,7 @@ class AssumptionState(State):
         @copy_docstring(State._assume)
         def _assume(self, condition: Expression) -> 'AssumptionState.InputStack':
             loop = AssumptionState.InputStack.Scope.Loop
-            if not self.is_bottom() and self.scope == loop:  # the current scope is a loop
+            if not self.is_bottom() and self.scope == loop:      # the current scope is a loop
                 negation_free_normal_expression = NegationFreeNormalExpression()
                 normal = negation_free_normal_expression.visit(condition)
                 if isinstance(normal, BinaryComparisonOperation):
@@ -688,9 +663,9 @@ class AssumptionState(State):
                     if normal.operator == in_op or normal.operator == notin_op:
                         # the condition is ``... in range(...)`` or ``... not in range(...)``
                         if isinstance(normal.right, Range):
-                            self.lattice.repeat(normal.right.end)
+                            self.lattice.repeat(normal.right.stop)
                             return self
-                self.lattice.top()  # default to the star constraint ★
+                self.lattice.top()      # default to the star constraint ★
             return self
 
         @copy_docstring(State.enter_if)
@@ -744,6 +719,8 @@ class AssumptionState(State):
             self.lattice.record(constraint)
             return self
 
+        # input replacement
+
         class InputReplacement(ExpressionVisitor):
             """Visitor that replaces any occurrence of an input (sub)expression
             with a fresh variable identifier that depends on a given program point.
@@ -774,26 +751,18 @@ class AssumptionState(State):
             def visit_Literal(self, expr: Literal):
                 return Literal(expr.typ, expr.val)
 
-            @copy_docstring(ExpressionVisitor.visit_Input)
-            def visit_Input(self, expr: Input):
-                name = "{}.{}".format(self.pp.line, self.nonce)
-                return VariableIdentifier(expr.typ, name)
-
             @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
             def visit_VariableIdentifier(self, expr: VariableIdentifier):
                 return VariableIdentifier(expr.typ, expr.name)
+
+            @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+            def visit_LengthIdentifier(self, expr: LengthIdentifier):
+                return LengthIdentifier(expr.variable)
 
             @copy_docstring(ExpressionVisitor.visit_ListDisplay)
             def visit_ListDisplay(self, expr: ListDisplay):
                 items = [self.visit(item) for item in expr.items]
                 return ListDisplay(expr.typ, items)
-
-            @copy_docstring(ExpressionVisitor.visit_Range)
-            def visit_Range(self, expr: Range):
-                start = self.visit(expr.start)
-                end = self.visit(expr.end)
-                step = self.visit(expr.step)
-                return Range(expr.typ, start, end, step)
 
             @copy_docstring(ExpressionVisitor.visit_AttributeReference)
             def visit_AttributeReference(self, expr: AttributeReference):
@@ -813,6 +782,18 @@ class AssumptionState(State):
                 upper = self.visit(expr.upper)
                 stride = self.visit(expr.stride) if expr.stride else None
                 return Slicing(expr.typ, target, lower, upper, stride)
+
+            @copy_docstring(ExpressionVisitor.visit_Input)
+            def visit_Input(self, expr: Input):
+                name = "{}.{}".format(self.pp.line, self.nonce)
+                return VariableIdentifier(expr.typ, name)
+
+            @copy_docstring(ExpressionVisitor.visit_Range)
+            def visit_Range(self, expr: Range):
+                start = self.visit(expr.start)
+                stop = self.visit(expr.stop)
+                step = self.visit(expr.step)
+                return Range(expr.typ, start, stop, step)
 
             @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
             def visit_UnaryArithmeticOperation(self, expr: UnaryArithmeticOperation):
@@ -848,25 +829,16 @@ class AssumptionState(State):
         super().__init__(precursory)
         self._states = [state(**arguments[state]) for state in states]
         self._stack = AssumptionState.InputStack()
-        self._arguments = arguments
 
     @property
     def states(self):
         """Current list of constraining states."""
         return self._states
 
-    @states.setter
-    def states(self, states):
-        self._states = states
-
     @property
     def stack(self):
         """Current stack of assumptions on the input data."""
         return self._stack
-
-    @stack.setter
-    def stack(self, stack):
-        self._stack = stack
 
     def __repr__(self):
         return "{}".format(self.stack)
@@ -979,8 +951,6 @@ class AssumptionState(State):
         for i, state in enumerate(self.states):
             self.states[i] = state.substitute({left}, {right})
         # retrieve the constraints imposed on the input data...
-        # for state in self.states:
-        #     r = state.retrieve()
         retrieved = zip(*[state.retrieve() for state in self.states])
         # ...and record them on the stack
         for constraint in retrieved:
@@ -1005,8 +975,8 @@ class TypeRangeAssumptionState(AssumptionState):
     """
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
-        from lyra.abstract_domains.assumption.range_domain import RangeState
         from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.range_domain import RangeState
         states = [TypeState, RangeState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)

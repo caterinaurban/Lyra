@@ -62,6 +62,7 @@ class RangeState(IntervalState, InputMixin):
     .. automethod:: RangeState._assume
     .. automethod:: RangeState._substitute
     """
+
     def __init__(self, variables: Set[VariableIdentifier], precursory: InputMixin = None):
         """Map each program variable to the interval representing its value.
 

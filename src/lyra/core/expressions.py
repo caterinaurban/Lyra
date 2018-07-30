@@ -20,6 +20,7 @@ class Expression(metaclass=ABCMeta):
 
     https://docs.python.org/3.4/reference/expressions.html
     """
+
     def __init__(self, typ: LyraType):
         """Expression construction.
 
@@ -34,7 +35,7 @@ class Expression(metaclass=ABCMeta):
     @abstractmethod
     def __eq__(self, other: 'Expression'):
         """Expression equality.
-        
+
         :param other: other expression to compare
         :return: whether the expression equality holds
         """
@@ -42,7 +43,7 @@ class Expression(metaclass=ABCMeta):
     @abstractmethod
     def __hash__(self):
         """Expression hash representation.
-        
+
         :return: hash value representing the expression
         """
 
@@ -52,13 +53,13 @@ class Expression(metaclass=ABCMeta):
     @abstractmethod
     def __str__(self):
         """Expression string representation.
-        
+
         :return: string representing the expression
         """
 
     def ids(self) -> Set['VariableIdentifier']:
         """Identifiers that appear in the expression.
-        
+
         :return: set of identifiers that appear in the expression
         """
         ids = set()
@@ -112,6 +113,7 @@ class ExpressionVisitor(metaclass=ABCMeta):
 
     Adapted from `ast.py`.
     """
+
     def visit(self, expr, *args, **kwargs):
         """Visit of an expression."""
         method = 'visit_' + expr.__class__.__name__
@@ -125,20 +127,16 @@ class ExpressionVisitor(metaclass=ABCMeta):
         """Visit of a literal expression."""
 
     @abstractmethod
-    def visit_Input(self, expr: 'Input'):
-        """Visit of an input expression."""
-
-    @abstractmethod
     def visit_VariableIdentifier(self, expr: 'VariableIdentifier'):
         """Visit of a variable identifier."""
 
     @abstractmethod
-    def visit_ListDisplay(self, expr: 'ListDisplay'):
-        """Visit of a list display."""
+    def visit_LengthIdentifier(self, expr: 'LengthIdentifier'):
+        """Visit of a sequence or collection length."""
 
     @abstractmethod
-    def visit_Range(self, expr: 'Range'):
-        """Visit of a range call."""
+    def visit_ListDisplay(self, expr: 'ListDisplay'):
+        """Visit of a list display."""
 
     @abstractmethod
     def visit_AttributeReference(self, expr: 'AttributeReference'):
@@ -151,6 +149,14 @@ class ExpressionVisitor(metaclass=ABCMeta):
     @abstractmethod
     def visit_Slicing(self, expr: 'Slicing'):
         """Visit of a slicing expression."""
+
+    @abstractmethod
+    def visit_Input(self, expr: 'Input'):
+        """Visit of an input call expression."""
+
+    @abstractmethod
+    def visit_Range(self, expr: 'Range'):
+        """Visit of a range call expression."""
 
     @abstractmethod
     def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation'):
@@ -192,10 +198,6 @@ class NegationFreeNormalExpression(ExpressionVisitor):
     def visit_Literal(self, expr: 'Literal', invert=False):
         return expr    # nothing to be done
 
-    @copy_docstring(ExpressionVisitor.visit_Input)
-    def visit_Input(self, expr: 'Input', invert=False):
-        return expr
-
     @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
     def visit_VariableIdentifier(self, expr: 'VariableIdentifier', invert=False):
         if isinstance(expr.typ, BooleanLyraType) and invert:
@@ -203,12 +205,12 @@ class NegationFreeNormalExpression(ExpressionVisitor):
             return UnaryBooleanOperation(BooleanLyraType(), operator, expr)
         return expr     # nothing to be done
 
-    @copy_docstring(ExpressionVisitor.visit_ListDisplay)
-    def visit_ListDisplay(self, expr: 'ListDisplay', invert=False):
+    @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+    def visit_LengthIdentifier(self, expr: 'LengthIdentifier', invert=False):
         return expr     # nothing to be done
 
-    @copy_docstring(ExpressionVisitor.visit_Range)
-    def visit_Range(self, expr: 'Range', invert=False):
+    @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+    def visit_ListDisplay(self, expr: 'ListDisplay', invert=False):
         return expr     # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_AttributeReference)
@@ -221,6 +223,14 @@ class NegationFreeNormalExpression(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_Slicing)
     def visit_Slicing(self, expr: 'Slicing', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Input)
+    def visit_Input(self, expr: 'Input', invert=False):
+        return expr
+
+    @copy_docstring(ExpressionVisitor.visit_Range)
+    def visit_Range(self, expr: 'Range', invert=False):
         return expr     # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -324,6 +334,7 @@ class Literal(Expression):
 
     https://docs.python.org/3.4/reference/expressions.html#literals
     """
+
     def __init__(self, typ: LyraType, val: str):
         """Literal construction.
 
@@ -349,11 +360,12 @@ class Literal(Expression):
         return f"{self.val}"
 
 
-class Identifier(Expression):
+class Identifier(Expression, metaclass=ABCMeta):
     """Identifier representation.
 
     https://docs.python.org/3.4/reference/expressions.html#atom-identifiers
     """
+
     def __init__(self, typ: LyraType, name: str):
         """Identifier construction.
 
@@ -379,9 +391,10 @@ class Identifier(Expression):
 
 class VariableIdentifier(Identifier):
     """Variable identifier representation."""
+
     def __init__(self, typ: LyraType, name: str):
         """Variable identifier construction.
-        
+
         :param typ: type of the identifier
         :param name: name of the identifier
         """
@@ -390,6 +403,7 @@ class VariableIdentifier(Identifier):
 
 class LengthIdentifier(Identifier):
     """Sequence or collection length representation."""
+
     def __init__(self, variable: VariableIdentifier):
         """Sequence or collection length construction.
 
@@ -397,17 +411,22 @@ class LengthIdentifier(Identifier):
         """
         name = "len({0.name})".format(variable)
         super().__init__(IntegerLyraType(), name)
+        self._variable = variable
+
+    @property
+    def variable(self):
+        return self._variable
 
 
 class ListDisplay(Expression):
     """List display representation.
-    
+
     https://docs.python.org/3/reference/expressions.html#list-displays
     """
 
     def __init__(self, typ: LyraType, items: List[Expression] = None):
         """List display construction.
-        
+
         :param typ: type of the list
         :param items: list of items being displayed
         """
@@ -428,66 +447,6 @@ class ListDisplay(Expression):
         return str(self.items)
 
 
-class Input(Expression):
-    """Input expression representation."""
-    def __init__(self, typ: LyraType):
-        """Input expression construction.
-
-        :param typ: type of the input
-        """
-        super().__init__(typ)
-
-    def __eq__(self, other):
-        return self.typ == other.typ
-
-    def __hash__(self):
-        return hash(self.typ)
-
-    def __str__(self):
-        return "input()"
-
-
-class Range(Expression):
-    """Range Call representation."""
-    def __init__(self, typ: LyraType, start: Expression, end: Expression, step: Expression):
-        """Range call expression construction.
-
-        :param typ: type of the range call
-        :param start: start of the range
-        :param end: end of the range (exclusive)
-        :param step: size of steps that are taken in the range
-        """
-        super().__init__(typ)
-        self._start = start
-        self._end = end
-        self._step = step
-
-    @property
-    def start(self):
-        return self._start
-
-    @property
-    def end(self):
-        return self._end
-
-    @property
-    def step(self):
-        return self._step
-
-    def __eq__(self, other):
-        typ = self.typ == other.typ
-        start = self.start == other.start
-        end = self.end == other.end
-        step = self.step == other.step
-        return typ and start and end and step
-
-    def __hash__(self):
-        return hash((self.typ, self.start, self.end, self.step))
-
-    def __str__(self):
-        return f"range({self.start}, {self.end}, {self.step})"
-
-
 """
 Primary Expressions
 https://docs.python.org/3.4/reference/expressions.html#primaries
@@ -499,9 +458,10 @@ class AttributeReference(Expression):
 
     https://docs.python.org/3.4/reference/expressions.html#attribute-references
     """
+
     def __init__(self, typ: LyraType, target: Expression, attribute: Identifier):
         """Attribute reference construction.
-        
+
         :param typ: type of the attribute
         :param target: object the attribute of which is being referenced
         :param attribute: attribute being referenced
@@ -536,6 +496,7 @@ class Subscription(Expression):
 
     https://docs.python.org/3.4/reference/expressions.html#subscriptions
     """
+
     def __init__(self, typ: LyraType, target: Expression, key: Expression):
         """Subscription construction.
 
@@ -573,6 +534,7 @@ class Slicing(Expression):
 
     https://docs.python.org/3.4/reference/expressions.html#slicings
     """
+
     def __init__(self, typ: LyraType, target: Expression,
                  lower: Expression, upper: Expression, stride: Expression = None):
         """Slicing construction.
@@ -622,6 +584,75 @@ class Slicing(Expression):
         return "{0.target}[{0.lower}:{0.upper}]".format(self)
 
 
+class Call(Expression, metaclass=ABCMeta):
+    """Call representation.
+
+    https://docs.python.org/3.4/reference/expressions.html#calls
+    """
+
+
+class Input(Call):
+    """Input call representation."""
+
+    def __init__(self, typ: LyraType):
+        """Input call construction.
+
+        :param typ: return type of the input call
+        """
+        super().__init__(typ)
+
+    def __eq__(self, other):
+        return self.typ == other.typ
+
+    def __hash__(self):
+        return hash(self.typ)
+
+    def __str__(self):
+        return "input()"
+
+
+class Range(Call):
+    """Range call representation."""
+
+    def __init__(self, typ: LyraType, start: Expression, stop: Expression, step: Expression):
+        """Range call construction.
+
+        :param typ: return type of the range call
+        :param start: start of the range sequence
+        :param stop: end of the range sequence (exclusive)
+        :param step: difference between elements of the sequence
+        """
+        super().__init__(typ)
+        self._start = start
+        self._stop = stop
+        self._step = step
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def stop(self):
+        return self._stop
+
+    @property
+    def step(self):
+        return self._step
+
+    def __eq__(self, other):
+        typ = self.typ == other.typ
+        start = self.start == other.start
+        stop = self.stop == other.stop
+        step = self.step == other.step
+        return typ and start and stop and step
+
+    def __hash__(self):
+        return hash((self.typ, self.start, self.stop, self.step))
+
+    def __str__(self):
+        return f"range({self.start}, {self.stop}, {self.step})"
+
+
 """
 Operation Expressions
 """
@@ -644,16 +675,16 @@ class UnaryOperation(Operation):
         @abstractmethod
         def __str__(self):
             """Unary operator string representation.
-            
+
             :return: string representing the operator
             """
 
     def __init__(self, typ: LyraType, operator: Operator, expression: Expression):
         """Unary operation construction.
-        
+
         :param typ: type of the operation
         :param operator: operator of the operation
-        :param expression: expression of the operation 
+        :param expression: expression of the operation
         """
         super().__init__(typ)
         self._operator = operator
@@ -685,7 +716,7 @@ class UnaryOperation(Operation):
 
 class UnaryArithmeticOperation(UnaryOperation):
     """Unary arithmetic operation expression representation.
-    
+
     https://docs.python.org/3.4/reference/expressions.html#unary-arithmetic-and-bitwise-operations
     """
 
@@ -702,17 +733,17 @@ class UnaryArithmeticOperation(UnaryOperation):
 
     def __init__(self, typ: LyraType, operator: Operator, expression: Expression):
         """Unary arithmetic operation expression representation.
-        
+
         :param typ: type of the operation
         :param operator: operator of the operation
-        :param expression: expression of the operation 
+        :param expression: expression of the operation
         """
         super().__init__(typ, operator, expression)
 
 
 class UnaryBooleanOperation(UnaryOperation):
     """Unary boolean operation expression representation.
-    
+
     https://docs.python.org/3.4/reference/expressions.html#boolean-operations
     """
 
@@ -726,10 +757,10 @@ class UnaryBooleanOperation(UnaryOperation):
 
     def __init__(self, typ: LyraType, operator: Operator, expression: Expression):
         """Unary boolean operation expression representation.
-        
+
         :param typ: type of the operation
         :param operator: operator of the operation
-        :param expression: expression of the operation 
+        :param expression: expression of the operation
         """
         super().__init__(typ, operator, expression)
 
@@ -753,7 +784,7 @@ class BinaryOperation(Operation):
 
     def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
         """Binary operation construction.
-        
+
         :param typ: type of the operation
         :param left: left expression of the operation
         :param operator: operator of the operation
@@ -798,7 +829,7 @@ class BinaryOperation(Operation):
 
 class BinaryArithmeticOperation(BinaryOperation):
     """Binary arithmetic operation expression representation.
-    
+
     https://docs.python.org/3.4/reference/expressions.html#binary-arithmetic-operations
     """
 
@@ -821,7 +852,7 @@ class BinaryArithmeticOperation(BinaryOperation):
 
     def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
         """Binary arithmetic operation expression representation.
-        
+
         :param typ: type of the operation
         :param left: left expression of the operation
         :param operator: operator of the operation
@@ -832,7 +863,7 @@ class BinaryArithmeticOperation(BinaryOperation):
 
 class BinaryBooleanOperation(BinaryOperation):
     """Binary boolean operation expression representation.
-    
+
     https://docs.python.org/3.6/reference/expressions.html#boolean-operations
     """
 
@@ -864,7 +895,7 @@ class BinaryBooleanOperation(BinaryOperation):
 
 class BinaryComparisonOperation(BinaryOperation):
     """Binary comparison operation expression representation.
-    
+
     https://docs.python.org/3.4/reference/expressions.html#comparisons
     """
 

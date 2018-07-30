@@ -6,6 +6,7 @@ Assumption Analysis - Unit Tests
 """
 import glob
 import os
+import sys
 import unittest
 
 from lyra.abstract_domains.assumption.assumption_domain import OctagonStringAssumptionState
@@ -23,8 +24,8 @@ class TypeTest(TestRunner):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        return TypeRangeAssumptionState(self.variables)
-        # return OctagonStringAssumptionState(self.variables)
+        return TypeState(self.variables)
+
 
 class RangeTest(TestRunner):
 
@@ -58,24 +59,12 @@ def test_suite():
     name = os.getcwd() + '/assumption/octagons/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
-            suite.addTest(OctagonStringAssumptionTest(path))
-    # name = os.getcwd() + '/assumption/range/**.py'
-    # for path in glob.iglob(name):
-    #     if os.path.basename(path) != "__init__.py":
-    #         suite.addTest(OctagonStringAssumptionTest(path))
-    # name = os.getcwd() + '/assumption/**.py'
-    # for path in glob.iglob(name):
-    #     if os.path.basename(path) != "__init__.py":
-    #         suite.addTest(OctagonStringAssumptionTest(
-    #
-    #
-    #
-    #
-    #
-    # path))
+            suite.addTest(TypeRangeAssumptionTest(path))
     return suite
 
 
 if __name__ == '__main__':
     runner = unittest.TextTestRunner()
-    runner.run(test_suite())
+    result = runner.run(test_suite())
+    if not result.wasSuccessful():
+        sys.exit(1)
