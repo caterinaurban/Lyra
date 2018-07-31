@@ -14,7 +14,7 @@ from typing import Tuple, Set, Type, Callable, Dict, Union, Iterator
 
 from lyra.abstract_domains.container.fulara.fulara_lattice import FularaLattice
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
-from lyra.abstract_domains.container.fulara.scalar_wrapper import ScalarWrapper
+from lyra.abstract_domains.state import EnvironmentMixin
 from lyra.abstract_domains.container.fulara.value_wrapper import ValueWrapper
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
 from lyra.abstract_domains.state import State
@@ -359,27 +359,29 @@ class FularaState(State):
     """
 
     # here the Union type means a logical AND: Domains should inherit from both Wrapper and State
-    def __init__(self, scalar_domain: Type[Union[ScalarWrapper, State]],
-                 key_domain: Type[Union[KeyWrapper, State]],
-                 value_domain: Type[Union[ScalarWrapper, State]],
+    def __init__(self, scalar_domain: Type[EnvironmentMixin],
+                 key_domain: Type[KeyWrapper],
+                 value_domain: Type[ValueWrapper],
                  scalar_vars: Set[VariableIdentifier] = None,
                  dict_vars: Set[VariableIdentifier] = None,
-                 scalar_k_conv: Callable[[Union[ScalarWrapper, State]], Union[KeyWrapper, State]]
+                 scalar_k_conv: Callable[[EnvironmentMixin], KeyWrapper]
                  = lambda x: x,
-                 k_scalar_conv: Callable[[Union[KeyWrapper, State]], Union[ScalarWrapper, State]]
+                 k_scalar_conv: Callable[[KeyWrapper], EnvironmentMixin]
                  = lambda x: x,
-                 scalar_v_conv: Callable[[Union[ScalarWrapper, State]], Union[ValueWrapper, State]]
+                 scalar_v_conv: Callable[[EnvironmentMixin], ValueWrapper]
                  = lambda x: x,
-                 v_scalar_conv: Callable[[Union[ValueWrapper, State]], Union[ScalarWrapper, State]]
+                 v_scalar_conv: Callable[[ValueWrapper], EnvironmentMixin]
                  = lambda x: x):
         """
         :param scalar_domain: domain for abstraction of scalar variable values,
-            ranges over the scalar variables
+            ranges over the scalar variables (should accept a set of variables in in __init__)
             (may have different abstract domains for different types)
         :param key_domain: domain for abstraction of dictionary keys,
             ranges over the scalar variables and the special key variable v_k
+            and should therefore have a 'scalar_variables' and a 'k_var' argument in __init__
         :param value_domain: domain for abstraction of dictionary values,
             ranges over the scalar variables and the special value variable v_v
+            and should therefore have a 'scalar_variables' and a 'v_var' argument in __init__
         :param scalar_vars: list of scalar variables, whose values should be abstracted
         :param dict_vars: list of dictionary variables, whose values should be abstracted
         :param scalar_k_conv: conversion function to convert from scalar domain elements
@@ -441,7 +443,7 @@ class FularaState(State):
         self._loop_flag = False
 
     @property
-    def scalar_state(self) -> Union[ScalarWrapper, State]:
+    def scalar_state(self) -> EnvironmentMixin:
         """Abstract state of scalar variable values."""
         return self._scalar_state
 
@@ -461,12 +463,12 @@ class FularaState(State):
         return self._in_relations
 
     @property
-    def v_domain(self) -> Type[Union[ValueWrapper, State]]:
+    def v_domain(self) -> Type[ValueWrapper]:
         """Domain for dictionary values"""
         return self._v_domain
 
     @property
-    def k_domain(self) -> Type[Union[KeyWrapper, State]]:
+    def k_domain(self) -> Type[KeyWrapper]:
         """Domain for dictionary keys"""
         return self._k_domain
 
@@ -621,7 +623,7 @@ class FularaState(State):
         return self
 
     # helper
-    def eval_key(self, key_expr: Expression) -> Union[KeyWrapper, State]:
+    def eval_key(self, key_expr: Expression) -> KeyWrapper:
         """evaluates key_expr in the scalar_state and assigns it to v_k in a key state"""
         scalar_copy = deepcopy(self.scalar_state)
         v_k = VariableIdentifier(key_expr.typ, k_name)       # TODO: type?
@@ -631,7 +633,7 @@ class FularaState(State):
         return self._s_k_conv(scalar_copy)
 
     # helper
-    def eval_value(self, value_expr: Expression) -> Union[ValueWrapper, State]:
+    def eval_value(self, value_expr: Expression) -> ValueWrapper:
         """evaluates value_expr in the scalar_state and assigns it to v_v in a value state"""
         scalar_copy = deepcopy(self.scalar_state)
         v_v = VariableIdentifier(value_expr.typ, v_name)  # TODO: type?
@@ -888,7 +890,7 @@ class FularaState(State):
                     d = condition.right.target_dict
                     d_lattice: FularaLattice = self.dict_store.store[d]
 
-                    k_abs: Union[KeyWrapper, State] = d_lattice.get_keys_joined()
+                    k_abs: KeyWrapper = d_lattice.get_keys_joined()
                     v_k = k_abs.k_var
 
                     v_abs = d_lattice.get_values_joined()

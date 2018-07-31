@@ -1,8 +1,8 @@
-from copy import deepcopy
+from copy import deepcopy, copy
 from typing import Set
 
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
-from lyra.abstract_domains.container.fulara.scalar_wrapper import ScalarWrapper
+from lyra.abstract_domains.state import EnvironmentMixin
 from lyra.abstract_domains.container.fulara.value_wrapper import ValueWrapper
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.numerical.interval_domain import IntervalState, IntervalLattice
@@ -10,13 +10,13 @@ from lyra.core.expressions import VariableIdentifier
 from lyra.core.utils import copy_docstring
 
 
-class IntervalSWrapper(ScalarWrapper, IntervalState):
-    """Wrapper around IntervalState for scalar domain of DictContentState"""
+class IntervalSWrapper(IntervalState, EnvironmentMixin):
+    """Wrapper around IntervalState for scalar domain of FularaState"""
 
     def __init__(self, scalar_variables: Set[VariableIdentifier]):
         super().__init__(scalar_variables)
 
-    @copy_docstring(ScalarWrapper.add_variable)
+    @copy_docstring(EnvironmentMixin.add_variable)
     def add_variable(self, var: VariableIdentifier):
         if var not in self.store.keys():
             self.variables.add(var)
@@ -24,7 +24,7 @@ class IntervalSWrapper(ScalarWrapper, IntervalState):
         else:
             raise ValueError(f"Variable can not be added to a store if it is already present")
 
-    @copy_docstring(ScalarWrapper.remove_variable)
+    @copy_docstring(EnvironmentMixin.remove_variable)
     def remove_variable(self, var: VariableIdentifier):
         if var in self.store.keys():
             self.variables.remove(var)
@@ -32,16 +32,20 @@ class IntervalSWrapper(ScalarWrapper, IntervalState):
         else:
             raise ValueError(f"Variable can only be removed from a store if it is already present")
 
-    @copy_docstring(ScalarWrapper.forget_variable)
+    @copy_docstring(EnvironmentMixin.forget_variable)
     def forget_variable(self, var: VariableIdentifier):
         self.store[var].top()
 
 
 class IntervalKWrapper(KeyWrapper, IntervalSWrapper):
-    """Wrapper around IntervalState for key domain of DictContentState"""
+    """Wrapper around IntervalState for key domain of FularaState"""
 
     def __init__(self, scalar_variables: Set[VariableIdentifier], k_var: VariableIdentifier):
-        super().__init__(scalar_variables, k_var)
+        super().__init__(k_var)
+        key_vars = copy(scalar_variables)
+        key_vars.add(k_var)
+        IntervalSWrapper.__init__(self, key_vars)
+
 
     @copy_docstring(KeyWrapper.decomp)
     def decomp(self, state: 'IntervalKWrapper', exclude: 'IntervalKWrapper') \
@@ -99,10 +103,17 @@ class IntervalKWrapper(KeyWrapper, IntervalSWrapper):
 
 
 class IntervalVWrapper(ValueWrapper, IntervalSWrapper):
-    """Wrapper around IntervalState for value domain of DictContentState"""
+    """Wrapper around IntervalState for value domain of FularaState"""
 
     def __init__(self, scalar_variables: Set[VariableIdentifier], v_var: VariableIdentifier):
-        super().__init__(scalar_variables, v_var)
+        super().__init__(v_var)
+        value_vars = copy(scalar_variables)
+        value_vars.add(v_var)
+        IntervalSWrapper.__init__(self, value_vars)
+
+    def __repr__(self):
+        # other variables do not matter, since it the state is not relational
+        return repr(self.store[self.v_var])
 
     @copy_docstring(KeyWrapper.is_bottom)
     def is_bottom(self):
