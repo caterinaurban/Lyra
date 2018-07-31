@@ -168,10 +168,12 @@ class FularaLattice(Lattice):
     def _meet(self, other: 'FularaLattice') -> 'FularaLattice':
         """Point-wise meet of overlapping segments"""
         new_segments = set()
+        other_segments = copy(other.segments)
         for (k1, v1) in self.segments:
-            for (k2, v2) in other.segments:
+            for (k2, v2) in other_segments:
                 if (k1, v1) == (k2, v2):
                     new_segments.add((k1, v1))
+                    other_segments.remove((k2, v2))     # cannot overlap again
                     break   # there cannot be more segments in other that overlap with (k1, v1)
 
                 k_meet = deepcopy(k1).meet(deepcopy(k2))
