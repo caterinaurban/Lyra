@@ -1,5 +1,5 @@
 """
-Syntactic Dictionary Segment Usage Abstract Domain
+Fulara Syntactic Dictionary Usage Abstract Domain
 ===============================
 
 Abstract domain to be used for **input data usage analysis** using syntactic variable dependencies
@@ -16,7 +16,7 @@ from typing import Type, Set, Union, Callable
 from lyra.abstract_domains.container.fulara.fulara_domain import FularaState
 from lyra.abstract_domains.container.fulara.fulara_lattice import FularaLattice
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
-from lyra.abstract_domains.container.fulara.scalar_wrapper import ScalarWrapper
+from lyra.abstract_domains.state import EnvironmentMixin
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
@@ -37,7 +37,7 @@ k_name = "0v_k"
 scalar_types = {BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType}
 
 
-class DictSegmentUsageLattice(Lattice):
+class FularaUsageLattice(Lattice):
     """Dictionary segment usage analysis state.
     An element of the dictionary segment usage abstract domain.
 
@@ -50,10 +50,10 @@ class DictSegmentUsageLattice(Lattice):
     All elements are *not used* by default
 
     .. document private methods
-    .. automethod:: DictSegmentUsageLattice._assign
-    .. automethod:: DictSegmentUsageLattice._assume
-    .. automethod:: DictSegmentUsageLattice._output
-    .. automethod:: DictSegmentUsageLattice._substitute
+    .. automethod:: FularaUsageLattice._assign
+    .. automethod:: FularaUsageLattice._assume
+    .. automethod:: FularaUsageLattice._output
+    .. automethod:: FularaUsageLattice._substitute
     """
 
     # here the Union type means a logical AND: Domains should inherit from both Wrapper and State
@@ -102,7 +102,7 @@ class DictSegmentUsageLattice(Lattice):
             else:
                 raise TypeError("Dictionary variables should be of DictLyraType")
 
-        lattices = defaultdict(lambda: DictSegmentLattice)
+        lattices = defaultdict(lambda: FularaLattice)
         self._dict_usage = Store(dict_vars, lattices, arguments)
 
         # self._length_usage # TODO
@@ -121,14 +121,14 @@ class DictSegmentUsageLattice(Lattice):
         return repr(self.scalar_usage) + repr(self.dict_usage)  # TODO
 
     @copy_docstring(Lattice.bottom)
-    def bottom(self) -> 'DictSegmentUsageLattice':
+    def bottom(self) -> 'FularaUsageLattice':
         """Point-wise"""
         self.scalar_usage.bottom()
         self.dict_usage.bottom()
         return self
 
     @copy_docstring(Lattice.top)
-    def top(self) -> 'DictSegmentUsageLattice':
+    def top(self) -> 'FularaUsageLattice':
         """Point-wise"""
         self.scalar_usage.top()
         self.dict_usage.top()
@@ -149,29 +149,29 @@ class DictSegmentUsageLattice(Lattice):
         return scalar_t and dict_t
 
     @copy_docstring(Lattice._less_equal)
-    def _less_equal(self, other: 'DictSegmentUsageLattice') -> bool:
+    def _less_equal(self, other: 'FularaUsageLattice') -> bool:
         """Defined point-wise"""
         scalar_le = self.scalar_usage.less_equal(other.scalar_usage)
         dict_le = self.dict_usage.less_equal(other.dict_usage)
         return scalar_le and dict_le
 
     @copy_docstring(Lattice._join)
-    def _join(self, other: 'DictSegmentUsageLattice') -> 'DictSegmentUsageLattice':
+    def _join(self, other: 'FularaUsageLattice') -> 'FularaUsageLattice':
         """Defined point-wise"""
         self.scalar_usage.join(other.scalar_usage)
         self.dict_usage.join(other.dict_usage)
         return self
 
     @copy_docstring(Lattice._meet)
-    def _meet(self, other: 'DictSegmentUsageLattice'):
+    def _meet(self, other: 'FularaUsageLattice'):
         """Defined point-wise"""
         self.scalar_usage.meet(other.scalar_usage)
         self.dict_usage.meet(other.dict_usage)
         return self
 
     @copy_docstring(Lattice._widening)
-    def _widening(self, other: 'DictSegmentUsageLattice'):
-        """To avoid imprecise widening of DictSegmentLattice, first widens the scalar state"""
+    def _widening(self, other: 'FularaUsageLattice'):
+        """To avoid imprecise widening of FularaLattice, first widens the scalar state"""
         old_scalar = deepcopy(self.scalar_usage)
         self.scalar_usage.widening(other.scalar_usage)
         if old_scalar != self.scalar_usage:
@@ -180,7 +180,7 @@ class DictSegmentUsageLattice(Lattice):
             self.dict_usage.widening(other.dict_usage)
         return self
 
-    def increase(self) -> 'DictSegmentUsageLattice':
+    def increase(self) -> 'FularaUsageLattice':
         """Increase the nesting level.
 
         :return: current lattice element modified to reflect an increased nesting level
@@ -199,7 +199,7 @@ class DictSegmentUsageLattice(Lattice):
                 d_lattice.segments.add((k, v_copy))
         return self
 
-    def decrease(self, other: 'DictSegmentUsageLattice') -> 'DictSegmentUsageLattice':
+    def decrease(self, other: 'FularaUsageLattice') -> 'FularaUsageLattice':
         """Decrease the nesting level by combining lattice elements.
 
         :param other: other lattice element
@@ -215,8 +215,8 @@ class DictSegmentUsageLattice(Lattice):
         # self_d_store = self.dict_usage.store
         # other_d_store = other.dict_usage.store
         # for d in self_d_store.keys():        # should have the same dict_variables
-        #     self_lattice: DictSegmentLattice = self_d_store[d]
-        #     other_lattice: DictSegmentLattice = other_d_store[d]
+        #     self_lattice: FularaLattice = self_d_store[d]
+        #     other_lattice: FularaLattice = other_d_store[d]
         #     self_segments = self_lattice.sorted_segments()      # TODO: deepcopy?
         #     other_segments = other_lattice.sorted_segments()
         #     result_segments = set()
@@ -263,7 +263,7 @@ class DictSegmentUsageLattice(Lattice):
         return self
 
 
-class DictSegmentUsageState(Stack, State):
+class FularaUsageState(Stack, State):
     """Input data usage analysis state.     # TODO: doc
     An element of the syntactic usage abstract domain.
 
@@ -282,17 +282,17 @@ class DictSegmentUsageState(Stack, State):
     def __init__(self, key_domain: Type[Union[KeyWrapper, State]],
                  scalar_vars: Set[VariableIdentifier] = None,
                  dict_vars: Set[VariableIdentifier] = None,
-                 usage_k_conv: Callable[[Union[ScalarWrapper, State]], Union[KeyWrapper, State]]
+                 usage_k_conv: Callable[[Union[EnvironmentMixin, State]], Union[KeyWrapper, State]]
                  = lambda x: deepcopy(x),
-                 k_usage_conv: Callable[[Union[KeyWrapper, State]], Union[ScalarWrapper, State]]
+                 k_usage_conv: Callable[[Union[KeyWrapper, State]], Union[EnvironmentMixin, State]]
                  = lambda x: deepcopy(x),
                  k_k_pre_conv: Callable[[Union[KeyWrapper, State]], Union[KeyWrapper, State]]
                  = lambda x: x,
                  k_pre_k_conv: Callable[[Union[KeyWrapper, State]], Union[KeyWrapper, State]]
                  = lambda x: x,
-                 precursory: DictContentState = None):
+                 precursory: FularaState = None):
         arguments = {'key_domain': key_domain, 'scalar_vars': scalar_vars, 'dict_vars': dict_vars}
-        super().__init__(DictSegmentUsageLattice, arguments)    # Stack
+        super().__init__(FularaUsageLattice, arguments)    # Stack
         State.__init__(self, precursory)
 
         # self._s_vars = scalar_vars
@@ -371,7 +371,7 @@ class DictSegmentUsageState(Stack, State):
                     # if variable occured in a 'in-condition'
                     # only track value usage
                     for (d_var, k_var, v_var) in self.precursory.in_relations.find_value(expr):
-                        d_lattice: DictSegmentLattice = self.lattice.dict_usage.store[d_var]
+                        d_lattice: FularaLattice = self.lattice.dict_usage.store[d_var]
                         if k_var is None:   # Values condition
                             v_abs = self.precursory.eval_value(v_var)
                             old_segments = copy(d_lattice.segments)
@@ -394,8 +394,8 @@ class DictSegmentUsageState(Stack, State):
                     raise NotImplementedError(
                         f"Type '{expr.typ}' of variable {expr} not supported")
             elif isinstance(expr, Subscription) and isinstance(expr.target.typ, DictLyraType):
-                d_lattice: DictSegmentLattice = self.lattice.dict_usage.store[expr.target]
-                pre_copy: DictContentState = deepcopy(self.precursory)  # TODO: copy needed?
+                d_lattice: FularaLattice = self.lattice.dict_usage.store[expr.target]
+                pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
                 scalar_key = pre_copy._read_eval.visit(expr.key)
                 k_pre = pre_copy.eval_key(scalar_key)
                 k_abs = self._k_pre_k_conv(k_pre)
@@ -406,7 +406,7 @@ class DictSegmentUsageState(Stack, State):
                 pass       # value usage done inside loop/branch by using InRelations
 
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression) -> 'DictSegmentUsageState':
+    def _assume(self, condition: Expression) -> 'FularaUsageState':
         condition = NegationFreeNormalExpression().visit(condition)     # eliminate negations
 
         if self._loop_flag:
@@ -450,30 +450,30 @@ class DictSegmentUsageState(Stack, State):
         return self
 
     @copy_docstring(State.enter_if)
-    def enter_if(self) -> 'DictSegmentUsageState':
+    def enter_if(self) -> 'FularaUsageState':
         self._loop_flag = False
         return self.push()
 
     @copy_docstring(State.exit_if)
-    def exit_if(self) -> 'DictSegmentUsageState':
+    def exit_if(self) -> 'FularaUsageState':
         return self.pop()
 
     @copy_docstring(State.enter_loop)
-    def enter_loop(self) -> 'DictSegmentUsageState':
+    def enter_loop(self) -> 'FularaUsageState':
         self._loop_flag = True
         return self.push()
 
     @copy_docstring(State.exit_loop)
-    def exit_loop(self) -> 'DictSegmentUsageState':
+    def exit_loop(self) -> 'FularaUsageState':
         return self.pop()
 
     @copy_docstring(State._output)
-    def _output(self, output: Expression) -> 'DictSegmentUsageState':
+    def _output(self, output: Expression) -> 'FularaUsageState':
         self.make_used(output)
         return self
 
     @copy_docstring(State._substitute)
-    def _substitute(self, left: Expression, right: Expression) -> 'DictSegmentUsageState':
+    def _substitute(self, left: Expression, right: Expression) -> 'FularaUsageState':
         left_u_s = False    # left expression is used or scoped
         if isinstance(left, VariableIdentifier):
             if type(left.typ) in scalar_types:
@@ -482,7 +482,7 @@ class DictSegmentUsageState(Stack, State):
 
                 left_state.written()      # left overwritten
             elif isinstance(left.typ, DictLyraType):
-                left_lattice: DictSegmentLattice = self.lattice.dict_usage.store[left]
+                left_lattice: FularaLattice = self.lattice.dict_usage.store[left]
                 left_u_s = any(v.is_top() or v.is_scoped() for (_, v) in left_lattice.segments)
 
                 # U/W/S segments (all) -> overwritten (W):
@@ -491,8 +491,8 @@ class DictSegmentUsageState(Stack, State):
                 for (k, v) in old_segments:
                     left_lattice.segments.add((k, UsageLattice(Status.W)))
         elif isinstance(left, Subscription) and isinstance(left.target.typ, DictLyraType):
-            left_lattice: DictSegmentLattice = self.lattice.dict_usage.store[left.target]
-            pre_copy: DictContentState = deepcopy(self.precursory)  # TODO: copy needed?
+            left_lattice: FularaLattice = self.lattice.dict_usage.store[left.target]
+            pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
             scalar_key = pre_copy._read_eval.visit(left.key)
             k_pre = pre_copy.eval_key(scalar_key)
             k_abs = self._k_pre_k_conv(k_pre)
