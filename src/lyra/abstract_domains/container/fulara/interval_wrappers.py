@@ -46,7 +46,6 @@ class IntervalKWrapper(KeyWrapper, IntervalSWrapper):
         key_vars.add(k_var)
         IntervalSWrapper.__init__(self, key_vars)
 
-
     @copy_docstring(KeyWrapper.decomp)
     def decomp(self, state: 'IntervalKWrapper', exclude: 'IntervalKWrapper') \
             -> Set['IntervalKWrapper']:
