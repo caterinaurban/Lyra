@@ -3,7 +3,6 @@ from copy import deepcopy
 from typing import Set
 
 from lyra.abstract_domains.assumption.assumption_domain import JSONMixin, InputMixin
-from lyra.abstract_domains.numerical.interval_domain import IntervalLattice
 from lyra.abstract_domains.string.character_domain import CharacterLattice, CharacterState
 from lyra.core.expressions import VariableIdentifier, Expression
 
@@ -19,7 +18,7 @@ class AlphabetLattice(CharacterLattice, JSONMixin):
 
     @staticmethod
     def from_json(json: dict) -> 'JSONMixin':
-        return CharacterLattice(set(json['certainly']), set(json['maybe']))
+        return AlphabetLattice(set(json['certainly']), set(json['maybe']))
 
 
 class AlphabetState(CharacterState, InputMixin):
@@ -37,7 +36,7 @@ class AlphabetState(CharacterState, InputMixin):
 
     class Refinement(CharacterState.ExpressionRefinement):
 
-        def visit_Input(self, expr: 'Input', state=None, evaluation=None, value=None):
+        def visit_Input(self, expr, state=None, evaluation=None, value=None):
             state.record(deepcopy(value))
             return state
     _refinement = Refinement()
