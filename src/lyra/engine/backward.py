@@ -36,6 +36,8 @@ class BackwardInterpreter(Interpreter):
         return self._semantics
 
     def analyze(self, initial: State) -> AnalysisResult:
+        from lyra.engine.forward import ForwardInterpreter
+
         # run the precursory analysis (if any)
         if self.precursory:     # there is a precursory analysis to be run
             pre_result: Optional[AnalysisResult] = self.precursory.analyze(initial.precursory)
@@ -83,7 +85,11 @@ class BackwardInterpreter(Interpreter):
                         successor = successor.enter_loop() if loop else successor
 
                         if pre_result:  # a precursory analysis was run
-                            precursory = pre_result.get_node_result(edge.target)[0]
+                            if isinstance(self.precursory, ForwardInterpreter):
+                                precursory = pre_result.get_node_result(edge.source)[-1]
+                            else:
+                                assert isinstance(self.precursory, BackwardInterpreter)
+                                precursory = pre_result.get_node_result(edge.target)[0]
                         else:           # no precursory analysis was run
                             precursory = None
 
@@ -95,7 +101,11 @@ class BackwardInterpreter(Interpreter):
                         assert isinstance(edge, Conditional)
 
                         if pre_result:  # a precursory analysis was run
-                            precursory = pre_result.get_node_result(edge.target)[0]
+                            if isinstance(self.precursory, ForwardInterpreter):
+                                precursory = pre_result.get_node_result(edge.source)[-1]
+                            else:
+                                assert isinstance(self.precursory, BackwardInterpreter)
+                                precursory = pre_result.get_node_result(edge.target)[0]
                         else:           # no precursory analysis was run
                             precursory = None
 
@@ -106,7 +116,11 @@ class BackwardInterpreter(Interpreter):
                         assert isinstance(edge, Conditional)
 
                         if pre_result:  # a precursory analysis was run
-                            precursory = pre_result.get_node_result(edge.target)[0]
+                            if isinstance(self.precursory, ForwardInterpreter):
+                                precursory = pre_result.get_node_result(edge.source)[-1]
+                            else:
+                                assert isinstance(self.precursory, BackwardInterpreter)
+                                precursory = pre_result.get_node_result(edge.target)[0]
                         else:           # no precursory analysis was run
                             precursory = None
 
@@ -126,6 +140,11 @@ class BackwardInterpreter(Interpreter):
 
                     if pre_result:     # a precursory analysis was run
                         pre_states: List[Optional[State]] = pre_result.get_node_result(current)
+                        if isinstance(self.precursory, ForwardInterpreter):
+                            pre_states = pre_states[1:]
+                        else:
+                            assert isinstance(self.precursory, BackwardInterpreter)
+                            pre_states = pre_states[:-1]
                     else:              # no precursory analysis was run
                         pre_states: List[Optional[State]] = [None] * len(current.stmts)
 

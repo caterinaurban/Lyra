@@ -1,5 +1,5 @@
 """
-Dictionary Content Abstract Domain
+Fulara Abstract Domain
 ========================
 
 Generic abstract domain to abstract scalar variables and dictionary contents.
@@ -12,10 +12,10 @@ from collections import defaultdict
 from copy import deepcopy, copy
 from typing import Tuple, Set, Type, Callable, Dict, Union, Iterator
 
-from lyra.abstract_domains.data_structures.dict_segment_lattice import DictSegmentLattice
-from lyra.abstract_domains.data_structures.key_wrapper import KeyWrapper
-from lyra.abstract_domains.data_structures.scalar_wrapper import ScalarWrapper
-from lyra.abstract_domains.data_structures.value_wrapper import ValueWrapper
+from lyra.abstract_domains.container.fulara.fulara_lattice import FularaLattice
+from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
+from lyra.abstract_domains.state import EnvironmentMixin
+from lyra.abstract_domains.container.fulara.value_wrapper import ValueWrapper
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
@@ -156,8 +156,8 @@ class InRelationState(State, BottomMixin):
 
         return filter(lambda t: (t[1] is not None) and (t[2] is not None), self.tuple_set)
 
-    def invalidate_var(self, v: VariableIdentifier):
-        """Removes v from its tuple(s)"""
+    def forget_variable(self, v: VariableIdentifier):
+        """Removes variable from its tuple(s)"""
         if self.is_bottom():
             return
 
@@ -184,7 +184,7 @@ class InRelationState(State, BottomMixin):
 
         if isinstance(left, VariableIdentifier):
             # invalidate left, since overwritten
-            self.invalidate_var(left)
+            self.forget_variable(left)
 
             # copy tuples of 'right'
             if isinstance(right, VariableIdentifier):    # TODO: are there other relevant cases?
@@ -210,7 +210,7 @@ class InRelationState(State, BottomMixin):
             if condition.operator == 9:  # op 9 == In
                 if isinstance(condition.left, VariableIdentifier):
                     # TODO: don't invalidate for ifs?
-                    self.invalidate_var(condition.left)
+                    self.forget_variable(condition.left)
 
                     if isinstance(condition.right, Keys):
                         new_tuple = (condition.right.target_dict, condition.left, None)
@@ -221,19 +221,19 @@ class InRelationState(State, BottomMixin):
                 elif isinstance(condition.left, TupleDisplay) \
                         and isinstance(condition.right, Items):
                     # TODO: don't invalidate for ifs?
-                    self.invalidate_var(condition.left.items[0])
-                    self.invalidate_var(condition.left.items[1])
+                    self.forget_variable(condition.left.items[0])
+                    self.forget_variable(condition.left.items[1])
 
                     left_items = condition.left.items
                     new_tuple = (condition.right.target_dict, left_items[0], left_items[1])
                     self.tuple_set.add(new_tuple)
             elif condition.operator == 10:       # NotIn
                 if isinstance(condition.left, VariableIdentifier):
-                    self.invalidate_var(condition.left)
+                    self.forget_variable(condition.left)
                 elif isinstance(condition.left, TupleDisplay) \
                         and isinstance(condition.right, Items):
-                    self.invalidate_var(condition.left.items[0])
-                    self.invalidate_var(condition.left.items[1])
+                    self.forget_variable(condition.left.items[0])
+                    self.forget_variable(condition.left.items[1])
 
         return self
 
@@ -327,20 +327,20 @@ class BoolLattice(Lattice):
     def _widening(self, other: 'BoolLattice') -> 'BoolLattice':
         pass    # already handled by widening
 
-    def invalidate_var(self, var: VariableIdentifier):
+    def forget_variable(self, variable: VariableIdentifier):
         pass    # no variables stored
 
 
-class DictContentState(State):
+class FularaState(State):
     """Dictionary content analysis state.
     An element of the dictionary content abstract domain.
 
     It consists of the following 4 elements:
     - Abstract state from a given domain A over all scalar variables,
         abstracting their values
-    - Map from each dictionary variables to a DictSegmentLattice-element with a given key domain K
+    - Map from each dictionary variables to a FularaLattice-element with a given key domain K
         and value domain V, abstracting the contents of the dictionaries
-    - Map from each dictionary variables to a DictSegmentLattice-element with a given key domain K
+    - Map from each dictionary variables to a FularaLattice-element with a given key domain K
         and the BoolLattice as value domain,
         abstracting the initialization info of the dictionary elements
         (True = may be uninitialized, False/Not present = definitely initialized)
@@ -350,36 +350,38 @@ class DictContentState(State):
     Everything is Top by default
 
     .. document private methods
-    .. automethod:: DictContentState._assign
-    .. automethod:: DictContentState._assume
-    .. automethod:: DictContentState._output
-    .. automethod:: DictContentState._substitute
-    .. automethod:: DictContentState._temp_cleanup
-    .. automethod:: DictContentState._update_dict_from_refined_scalar
+    .. automethod:: FularaState._assign
+    .. automethod:: FularaState._assume
+    .. automethod:: FularaState._output
+    .. automethod:: FularaState._substitute
+    .. automethod:: FularaState._temp_cleanup
+    .. automethod:: FularaState._update_dict_from_refined_scalar
     """
 
     # here the Union type means a logical AND: Domains should inherit from both Wrapper and State
-    def __init__(self, scalar_domain: Type[Union[ScalarWrapper, State]],
-                 key_domain: Type[Union[KeyWrapper, State]],
-                 value_domain: Type[Union[ScalarWrapper, State]],
+    def __init__(self, scalar_domain: Type[EnvironmentMixin],
+                 key_domain: Type[KeyWrapper],
+                 value_domain: Type[ValueWrapper],
                  scalar_vars: Set[VariableIdentifier] = None,
                  dict_vars: Set[VariableIdentifier] = None,
-                 scalar_k_conv: Callable[[Union[ScalarWrapper, State]], Union[KeyWrapper, State]]
+                 scalar_k_conv: Callable[[EnvironmentMixin], KeyWrapper]
                  = lambda x: x,
-                 k_scalar_conv: Callable[[Union[KeyWrapper, State]], Union[ScalarWrapper, State]]
+                 k_scalar_conv: Callable[[KeyWrapper], EnvironmentMixin]
                  = lambda x: x,
-                 scalar_v_conv: Callable[[Union[ScalarWrapper, State]], Union[ValueWrapper, State]]
+                 scalar_v_conv: Callable[[EnvironmentMixin], ValueWrapper]
                  = lambda x: x,
-                 v_scalar_conv: Callable[[Union[ValueWrapper, State]], Union[ScalarWrapper, State]]
+                 v_scalar_conv: Callable[[ValueWrapper], EnvironmentMixin]
                  = lambda x: x):
         """
         :param scalar_domain: domain for abstraction of scalar variable values,
-            ranges over the scalar variables
+            ranges over the scalar variables (should accept a set of variables in in __init__)
             (may have different abstract domains for different types)
         :param key_domain: domain for abstraction of dictionary keys,
             ranges over the scalar variables and the special key variable v_k
+            and should therefore have a 'scalar_variables' and a 'k_var' argument in __init__
         :param value_domain: domain for abstraction of dictionary values,
             ranges over the scalar variables and the special value variable v_v
+            and should therefore have a 'scalar_variables' and a 'v_var' argument in __init__
         :param scalar_vars: list of scalar variables, whose values should be abstracted
         :param dict_vars: list of dictionary variables, whose values should be abstracted
         :param scalar_k_conv: conversion function to convert from scalar domain elements
@@ -431,7 +433,7 @@ class DictContentState(State):
             else:
                 raise TypeError("Dictionary variables should be of DictLyraType")
 
-        lattices = defaultdict(lambda: DictSegmentLattice)
+        lattices = defaultdict(lambda: FularaLattice)
         self._dict_store = Store(dict_vars, lattices, arguments)
 
         for k in arguments.keys():
@@ -449,7 +451,7 @@ class DictContentState(State):
         self._loop_flag = False
 
     @property
-    def scalar_state(self) -> Union[ScalarWrapper, State]:
+    def scalar_state(self) -> EnvironmentMixin:
         """Abstract state of scalar variable values."""
         return self._scalar_state
 
@@ -469,12 +471,12 @@ class DictContentState(State):
         return self._in_relations
 
     @property
-    def v_domain(self) -> Type[Union[ValueWrapper, State]]:
+    def v_domain(self) -> Type[ValueWrapper]:
         """Domain for dictionary values"""
         return self._v_domain
 
     @property
-    def k_domain(self) -> Type[Union[KeyWrapper, State]]:
+    def k_domain(self) -> Type[KeyWrapper]:
         """Domain for dictionary keys"""
         return self._k_domain
 
@@ -498,60 +500,11 @@ class DictContentState(State):
         """Function to convert from value domain elements to scalar domain elements"""
         return self._v_s_conv
 
-    def __repr__(self):             # TODO: use join
-        k_is_store = issubclass(self.k_domain, Store)
-        v_is_store = issubclass(self.v_domain, Store)
-        if k_is_store or v_is_store:
-            # type does not matter, because eq is implemented in terms of name
-            v_k = VariableIdentifier(LyraType(), k_name)
-            v_v = VariableIdentifier(LyraType(), v_name)
-            result = repr(self.scalar_state)
-            for d, d_lattice in sorted(self.dict_store.store.items(), key=lambda t: t[0].name):
-                result += f", {d} -> {{"
-                first = True
-                for (k, v) in d_lattice.sorted_segments():
-                    if first:
-                        first = False
-                    else:
-                        result += ", "
-                    result += "("
-                    if k_is_store:
-                        result += repr(k.store[v_k])      # only print value of v_k
-                    else:
-                        result += repr(k)
-                    result += ", "
-                    if v_is_store:
-                        result += repr(v.store[v_v])  # only print value of v_v
-                    else:
-                        result += repr(v)
-                    result += ")"
-                result += "}"
-
-            for d, i_lattice in sorted(self.init_store.store.items(), key=lambda t: t[0].name):
-                result += f", {d} -> {{"
-                first = True
-                for (k, v) in i_lattice.sorted_segments():
-                    if first:
-                        first = False
-                    else:
-                        result += ", "
-                    result += "("
-                    if k_is_store:
-                        result += repr(k.store[v_k])  # only print value of v_k
-                    else:
-                        result += repr(k)
-                    result += ", "
-                    result += repr(v)
-                    result += ")"
-                result += "}"
-
-            result += ", " + repr(self.in_relations)
-            return result
-        else:
-            return f"{self.scalar_state}, {self.dict_store}, {self.init_store}"
+    def __repr__(self):             # TODO: use join?
+        return f"{self.scalar_state}, {self.dict_store}, {self.init_store}, {self.in_relations}"
 
     @copy_docstring(Lattice.bottom)
-    def bottom(self) -> 'DictContentState':
+    def bottom(self) -> 'FularaState':
         """The bottom lattice element is defined point-wise."""
         self.scalar_state.bottom()
         self.dict_store.bottom()
@@ -560,7 +513,7 @@ class DictContentState(State):
         return self
 
     @copy_docstring(Lattice.top)
-    def top(self) -> 'DictContentState':
+    def top(self) -> 'FularaState':
         """The top lattice element is defined point-wise."""
         self.scalar_state.top()
         self.dict_store.top()
@@ -587,7 +540,7 @@ class DictContentState(State):
         return scalar_t and dict_t and init_t and in_t
 
     @copy_docstring(Lattice._less_equal)
-    def _less_equal(self, other: 'DictContentState') -> bool:
+    def _less_equal(self, other: 'FularaState') -> bool:
         """Defined point-wise"""
         scalar_le = self.scalar_state.less_equal(other.scalar_state)
         dict_le = self.dict_store.less_equal(other.dict_store)
@@ -596,7 +549,7 @@ class DictContentState(State):
         return scalar_le and dict_le and init_le and in_le
 
     @copy_docstring(Lattice._join)
-    def _join(self, other: 'DictContentState') -> 'DictContentState':
+    def _join(self, other: 'FularaState') -> 'FularaState':
         """Defined point-wise"""
         self.scalar_state.join(other.scalar_state)
         self.dict_store.join(other.dict_store)
@@ -605,7 +558,7 @@ class DictContentState(State):
         return self
 
     @copy_docstring(Lattice._meet)
-    def _meet(self, other: 'DictContentState'):
+    def _meet(self, other: 'FularaState'):
         """Defined point-wise"""
         self.scalar_state.meet(other.scalar_state)
         self.dict_store.meet(other.dict_store)
@@ -614,8 +567,8 @@ class DictContentState(State):
         return self
 
     @copy_docstring(Lattice._widening)
-    def _widening(self, other: 'DictContentState'):
-        """To avoid imprecise widening of DictSegmentLattice, first widens the scalar state"""
+    def _widening(self, other: 'FularaState'):
+        """To avoid imprecise widening of FularaLattice, first widens the scalar state"""
         old_scalar = deepcopy(self.scalar_state)
         self.scalar_state.widening(other.scalar_state)
         if old_scalar != self.scalar_state:
@@ -629,21 +582,21 @@ class DictContentState(State):
         return self
 
     # helper
-    def eval_key(self, key_expr: Expression) -> Union[KeyWrapper, State]:
+    def eval_key(self, key_expr: Expression) -> KeyWrapper:
         """evaluates key_expr in the scalar_state and assigns it to v_k in a key state"""
         scalar_copy = deepcopy(self.scalar_state)
         v_k = VariableIdentifier(key_expr.typ, k_name)       # TODO: type?
-        scalar_copy.add_var(v_k)
+        scalar_copy.add_variable(v_k)
         scalar_copy.assign({v_k}, {key_expr})
 
         return self._s_k_conv(scalar_copy)
 
     # helper
-    def eval_value(self, value_expr: Expression) -> Union[ValueWrapper, State]:
+    def eval_value(self, value_expr: Expression) -> ValueWrapper:
         """evaluates value_expr in the scalar_state and assigns it to v_v in a value state"""
         scalar_copy = deepcopy(self.scalar_state)
         v_v = VariableIdentifier(value_expr.typ, v_name)  # TODO: type?
-        scalar_copy.add_var(v_v)
+        scalar_copy.add_variable(v_v)
         scalar_copy.assign({v_v}, {value_expr})
 
         return self._s_v_conv(scalar_copy)
@@ -663,15 +616,15 @@ class DictContentState(State):
 
             # temporary variables not needed in dict abstractions
             for temp in current_temps:     # TODO: better way?
-                k_abs.remove_var(temp)
-                v_abs.remove_var(temp)
+                k_abs.remove_variable(temp)
+                v_abs.remove_variable(temp)
 
-            d_lattice: 'DictSegmentLattice' = self.dict_store.store[d]
+            d_lattice: 'FularaLattice' = self.dict_store.store[d]
 
             if k_abs.is_singleton():
                 # STRONG UPDATE
                 d_lattice.partition_add(k_abs, v_abs)
-                i_lattice: 'DictSegmentLattice' = self.init_store.store[d]
+                i_lattice: 'FularaLattice' = self.init_store.store[d]
                 i_lattice.partition_add(k_abs, BoolLattice(False))
             else:
                 # WEAK UPDATE
@@ -681,46 +634,46 @@ class DictContentState(State):
                 d_lattice.meet(assign_lattice)
 
             # remove temporary var
-            self.scalar_state.remove_var(var)
+            self.scalar_state.remove_variable(var)
             current_temps.remove(var)
 
     def _update_dict_from_refined_scalar(self):
         """update scalar variables in dictionary stores to conform with a refined scalar state"""
         # TODO: too slow?
         d_store = self.dict_store.store
-        d_lattice: DictSegmentLattice
+        d_lattice: FularaLattice
         for d, d_lattice in d_store.items():
             v_k = VariableIdentifier(d.typ.key_type, k_name)
             v_v = VariableIdentifier(d.typ.value_type, v_name)
             new_segments = set()
             for (k, v) in d_lattice.segments:
                 k_s_state = deepcopy(self.scalar_state)
-                k_s_state.add_var(v_k)
+                k_s_state.add_variable(v_k)
                 s_k_state = self.s_k_conv(k_s_state)
                 new_k = deepcopy(k).meet(s_k_state)
 
                 v_s_state = deepcopy(self.scalar_state)
-                v_s_state.add_var(v_v)
+                v_s_state.add_variable(v_v)
                 s_v_state = self.s_v_conv(v_s_state)
                 new_v = deepcopy(v).meet(s_v_state)
                 new_segments.add((new_k, new_v))
-            d_store[d] = DictSegmentLattice(d_lattice.k_domain, d_lattice.v_domain,
-                                            d_lattice.k_d_args, d_lattice.v_d_args, new_segments)
+            d_store[d] = FularaLattice(d_lattice.k_domain, d_lattice.v_domain,
+                                       d_lattice.k_d_args, d_lattice.v_d_args, new_segments)
 
         i_store = self.init_store.store
-        i_lattice: DictSegmentLattice
+        i_lattice: FularaLattice
         for d, i_lattice in i_store.items():
             v_k = VariableIdentifier(d.typ.key_type, k_name)
 
             new_segments = set()
             for (k, b) in i_lattice.segments:
                 k_s_state = deepcopy(self.scalar_state)
-                k_s_state.add_var(v_k)
+                k_s_state.add_variable(v_k)
                 s_k_state = self.s_k_conv(k_s_state)
                 new_k = deepcopy(k).meet(s_k_state)
                 new_segments.add((new_k, b))
-            i_store[d] = DictSegmentLattice(i_lattice.k_domain, i_lattice.v_domain,
-                                            i_lattice.k_d_args, i_lattice.v_d_args, new_segments)
+            i_store[d] = FularaLattice(i_lattice.k_domain, i_lattice.v_domain,
+                                       i_lattice.k_d_args, i_lattice.v_d_args, new_segments)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
@@ -752,9 +705,9 @@ class DictContentState(State):
 
                 # invalidate old left in dict stores                      # IMPRECISION!!
                 for d_lattice in self.dict_store.store.values():
-                    d_lattice.invalidate_var(left)
+                    d_lattice.forget_variable(left)
                 for i_lattice in self.init_store.store.values():
-                    i_lattice.invalidate_var(left)
+                    i_lattice.forget_variable(left)
 
             elif isinstance(left.typ, DictLyraType):    # overwrite dictionary
                 if isinstance(right, VariableIdentifier):
@@ -762,16 +715,16 @@ class DictContentState(State):
                     self.init_store.store[left] = deepcopy(self.init_store.store[right])
                 elif isinstance(right, DictDisplay):
                     # "NEW DICT"
-                    left_lattice: DictSegmentLattice = self.dict_store.store[left]
-                    left_i_lattice: DictSegmentLattice = self.init_store.store[left]
+                    left_lattice: FularaLattice = self.dict_store.store[left]
+                    left_i_lattice: FularaLattice = self.init_store.store[left]
                     # erase all dict contents before:
                     left_lattice.bottom()
                     # everything uninitialized,
                     # but scalars should conform with scalar state -> copy from scalar state:
-                    # TODO: use invalidate_var?
+                    # TODO: use forget_variable?
                     v_k = VariableIdentifier(left.typ.key_type, k_name)
                     s_state = deepcopy(self.scalar_state)
-                    s_state.add_var(v_k)
+                    s_state.add_variable(v_k)
                     top_state = self.s_k_conv(s_state)
                     top_segment = (top_state, BoolLattice(True))
                     left_i_lattice.segments.clear()
@@ -801,15 +754,15 @@ class DictContentState(State):
             scalar_right = self._read_eval.visit(right, self, evaluation)
             v_abs = self.eval_value(scalar_right)
             for temp in evaluation.values():
-                v_abs.remove_var(temp)
+                v_abs.remove_variable(temp)
             self._temp_cleanup(evaluation)      # TODO: no assign needed?
 
-            d_lattice: 'DictSegmentLattice' = self.dict_store.store[d]
+            d_lattice: 'FularaLattice' = self.dict_store.store[d]
 
             if k_abs.is_singleton():
                 # STRONG UPDATE
                 d_lattice.partition_add(k_abs, v_abs)
-                i_lattice: 'DictSegmentLattice' = self.init_store.store[d]
+                i_lattice: 'FularaLattice' = self.init_store.store[d]
                 i_lattice.partition_add(k_abs, BoolLattice(False))
             else:
                 # WEAK UPDATE
@@ -825,7 +778,7 @@ class DictContentState(State):
         return self
 
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression) -> 'DictContentState':
+    def _assume(self, condition: Expression) -> 'FularaState':
         condition = NegationFreeNormalExpression().visit(condition)     # eliminate negations
 
         if isinstance(condition, BinaryComparisonOperation):
@@ -834,25 +787,25 @@ class DictContentState(State):
                 if isinstance(condition.right, Keys) \
                         and isinstance(condition.left, VariableIdentifier):
                     d = condition.right.target_dict
-                    d_lattice: DictSegmentLattice = self.dict_store.store[d]
-                    k_abs: Union[KeyWrapper, State] = d_lattice.get_keys_joined()
+                    d_lattice: FularaLattice = self.dict_store.store[d]
+                    k_abs: KeyWrapper = d_lattice.get_keys_joined()
                     v_k = k_abs.k_var
 
                     if self._loop_flag:  # loop condition -> overwrite old value
-                        self.scalar_state.add_var(v_k)
+                        self.scalar_state.add_variable(v_k)
                         self.scalar_state.meet(self._k_s_conv(k_abs))
                         self.scalar_state.assign({condition.left}, {v_k})
-                        self.scalar_state.remove_var(v_k)
+                        self.scalar_state.remove_variable(v_k)
 
                         # invalidate old left in dict stores                      # IMPRECISION!!
                         for d_lattice in self.dict_store.store.values():
-                            d_lattice.invalidate_var(condition.left)
+                            d_lattice.forget_variable(condition.left)
                         for i_lattice in self.init_store.store.values():
-                            i_lattice.invalidate_var(condition.left)
+                            i_lattice.forget_variable(condition.left)
                     else:   # meet after assignment -> only refine old value
                         assign_state = self._k_s_conv(k_abs)
                         assign_state.assign({condition.left}, {v_k})
-                        assign_state.remove_var(v_k)
+                        assign_state.remove_variable(v_k)
                         self.scalar_state.meet(assign_state)
                         if self.scalar_state.is_bottom():   # not reachable
                             return self.bottom()
@@ -864,25 +817,25 @@ class DictContentState(State):
                 elif isinstance(condition.right, Values) \
                         and isinstance(condition.left, VariableIdentifier):
                     d = condition.right.target_dict
-                    d_lattice: DictSegmentLattice = self.dict_store.store[d]
-                    v_abs: Union[ValueWrapper, State] = d_lattice.get_values_joined()
+                    d_lattice: FularaLattice = self.dict_store.store[d]
+                    v_abs: ValueWrapper = d_lattice.get_values_joined()
                     v_v = v_abs.v_var
 
                     if self._loop_flag:  # loop condition -> overwrite old value
-                        self.scalar_state.add_var(v_v)
+                        self.scalar_state.add_variable(v_v)
                         self.scalar_state.meet(self._v_s_conv(v_abs))
                         self.scalar_state.assign({condition.left}, {v_v})
-                        self.scalar_state.remove_var(v_v)
+                        self.scalar_state.remove_variable(v_v)
 
                         # invalidate old left in dict stores                      # IMPRECISION!!
                         for d_lattice in self.dict_store.store.values():
-                            d_lattice.invalidate_var(condition.left)
+                            d_lattice.forget_variable(condition.left)
                         for i_lattice in self.init_store.store.values():
-                            i_lattice.invalidate_var(condition.left)
+                            i_lattice.forget_variable(condition.left)
                     else:   # meet after assignment -> only refine old value
                         assign_state = self._v_s_conv(v_abs)
                         assign_state.assign({condition.left}, {v_v})
-                        assign_state.remove_var(v_v)
+                        assign_state.remove_variable(v_v)
                         self.scalar_state.meet(assign_state)
                         if self.scalar_state.is_bottom():   # not reachable
                             return self.bottom()
@@ -894,40 +847,40 @@ class DictContentState(State):
                 elif isinstance(condition.right, Items) \
                         and isinstance(condition.left, TupleDisplay):
                     d = condition.right.target_dict
-                    d_lattice: DictSegmentLattice = self.dict_store.store[d]
+                    d_lattice: FularaLattice = self.dict_store.store[d]
 
-                    k_abs: Union[KeyWrapper, State] = d_lattice.get_keys_joined()
+                    k_abs: KeyWrapper = d_lattice.get_keys_joined()
                     v_k = k_abs.k_var
 
                     v_abs = d_lattice.get_values_joined()
                     v_v = v_abs.v_var
 
                     if self._loop_flag:  # loop condition -> overwrite old value
-                        self.scalar_state.add_var(v_k)
+                        self.scalar_state.add_variable(v_k)
                         self.scalar_state.meet(self._k_s_conv(k_abs))
                         self.scalar_state.assign({condition.left.items[0]}, {v_k})
-                        self.scalar_state.remove_var(v_k)
+                        self.scalar_state.remove_variable(v_k)
 
-                        self.scalar_state.add_var(v_v)
+                        self.scalar_state.add_variable(v_v)
                         self.scalar_state.meet(self._v_s_conv(v_abs))
                         self.scalar_state.assign({condition.left.items[1]}, {v_v})
-                        self.scalar_state.remove_var(v_v)
+                        self.scalar_state.remove_variable(v_v)
 
                         # invalidate old left in dict stores                      # IMPRECISION!!
                         for d_lattice in self.dict_store.store.values():
-                            d_lattice.invalidate_var(condition.left.items[0])
-                            d_lattice.invalidate_var(condition.left.items[1])
+                            d_lattice.forget_variable(condition.left.items[0])
+                            d_lattice.forget_variable(condition.left.items[1])
                         for i_lattice in self.init_store.store.values():
-                            i_lattice.invalidate_var(condition.left.items[0])
-                            i_lattice.invalidate_var(condition.left.items[1])
+                            i_lattice.forget_variable(condition.left.items[0])
+                            i_lattice.forget_variable(condition.left.items[1])
                     else:
                         k_s_state = self.k_s_conv(k_abs)
                         k_s_state.assign({condition.left.items[0]}, {v_k})
-                        k_s_state.remove_var(v_k)
+                        k_s_state.remove_variable(v_k)
 
                         v_s_state = self.v_s_conv(v_abs)
                         v_s_state.assign({condition.left.items[1]}, {v_v})
-                        v_s_state.remove_var(v_v)
+                        v_s_state.remove_variable(v_v)
 
                         assign_state = k_s_state
                         assign_state.meet(v_s_state)
@@ -945,32 +898,32 @@ class DictContentState(State):
             elif condition.operator == BinaryComparisonOperation.Operator.NotIn:
                 if isinstance(condition.right, Keys):
                     d = condition.right.target_dict
-                    d_lattice: DictSegmentLattice = self.dict_store.store[d]
-                    k_abs: Union[KeyWrapper, State] = d_lattice.get_keys_joined()
+                    d_lattice: FularaLattice = self.dict_store.store[d]
+                    k_abs: KeyWrapper = d_lattice.get_keys_joined()
                     v_k = k_abs.k_var
 
                     s_current = deepcopy(self.scalar_state)
-                    s_current.add_var(v_k)
+                    s_current.add_variable(v_k)
                     s_current.assign({v_k}, {condition.left})
                     k_current = self.s_k_conv(s_current)
                     key_complement = k_current.decomp(k_current, k_abs)
                     joined_complement = k_current.big_join(list(key_complement))
 
                     if self._loop_flag:  # loop condition -> overwrite old value
-                        self.scalar_state.add_var(v_k)
+                        self.scalar_state.add_variable(v_k)
                         self.scalar_state.meet(self._k_s_conv(joined_complement))
                         self.scalar_state.assign({condition.left}, {v_k})
-                        self.scalar_state.remove_var(v_k)
+                        self.scalar_state.remove_variable(v_k)
 
                         # invalidate old left in dict stores                      # imprecision
                         for d_lattice in self.dict_store.store.values():
-                            d_lattice.invalidate_var(condition.left)
+                            d_lattice.forget_variable(condition.left)
                         for i_lattice in self.init_store.store.values():
-                            i_lattice.invalidate_var(condition.left)
+                            i_lattice.forget_variable(condition.left)
                     else:
                         assign_state = self._k_s_conv(joined_complement)
                         assign_state.assign({condition.left}, {v_k})
-                        assign_state.remove_var(v_k)
+                        assign_state.remove_variable(v_k)
                         self.scalar_state.meet(assign_state)
                         if self.scalar_state.is_bottom():   # not reachable
                             return self.bottom()
@@ -982,47 +935,47 @@ class DictContentState(State):
                 elif isinstance(condition.right, Values):
                     # TODO
                     if self._loop_flag:
-                        self.scalar_state.invalidate_var(condition.left)
+                        self.scalar_state.forget_variable(condition.left)
 
                         # invalidate old left in dict stores                      # imprecision
                         for d_lattice in self.dict_store.store.values():
-                            d_lattice.invalidate_var(condition.left)
+                            d_lattice.forget_variable(condition.left)
                         for i_lattice in self.init_store.store.values():
-                            i_lattice.invalidate_var(condition.left)
+                            i_lattice.forget_variable(condition.left)
 
                     # refine in_relations
                     self.in_relations.assume({condition})
                     return self
                 elif isinstance(condition.right, Items):
                     d = condition.right.target_dict
-                    d_lattice: DictSegmentLattice = self.dict_store.store[d]
-                    k_abs: Union[KeyWrapper, State] = d_lattice.get_keys_joined()
+                    d_lattice: FularaLattice = self.dict_store.store[d]
+                    k_abs: KeyWrapper = d_lattice.get_keys_joined()
                     v_k = k_abs.k_var
 
                     s_current = deepcopy(self.scalar_state)
-                    s_current.add_var(v_k)
+                    s_current.add_variable(v_k)
                     s_current.assign({v_k}, {condition.left.items[0]})
                     k_current = self.s_k_conv(s_current)
                     key_complement = k_current.decomp(k_current, k_abs)
                     joined_complement = k_current.big_join(list(key_complement))
 
                     if self._loop_flag:  # loop condition -> overwrite old value
-                        self.scalar_state.add_var(v_k)
+                        self.scalar_state.add_variable(v_k)
                         self.scalar_state.meet(self._k_s_conv(joined_complement))
                         self.scalar_state.assign({condition.left.items[0]}, {v_k})
-                        self.scalar_state.remove_var(v_k)
+                        self.scalar_state.remove_variable(v_k)
 
                         # invalidate old left in dict stores                      # imprecision
                         for d_lattice in self.dict_store.store.values():
-                            d_lattice.invalidate_var(condition.left.items[0])
-                            d_lattice.invalidate_var(condition.left.items[1])
+                            d_lattice.forget_variable(condition.left.items[0])
+                            d_lattice.forget_variable(condition.left.items[1])
                         for i_lattice in self.init_store.store.values():
-                            i_lattice.invalidate_var(condition.left.items[0])
-                            i_lattice.invalidate_var(condition.left.items[1])
+                            i_lattice.forget_variable(condition.left.items[0])
+                            i_lattice.forget_variable(condition.left.items[1])
                     else:
                         assign_state = self._k_s_conv(joined_complement)
                         assign_state.assign({condition.left.items[0]}, {v_k})
-                        assign_state.remove_var(v_k)
+                        assign_state.remove_variable(v_k)
                         self.scalar_state.meet(assign_state)
                         if self.scalar_state.is_bottom():   # not reachable
                             return self.bottom()
@@ -1055,7 +1008,7 @@ class DictContentState(State):
                 else:
                     # refine v_var according to refined k_var
                     # -> re-evaluate: v_var meet d_var[k_var]
-                    d_lattice: DictSegmentLattice = self.dict_store.store[d_var]
+                    d_lattice: FularaLattice = self.dict_store.store[d_var]
 
                     k_abs = self.eval_key(k_var)
 
@@ -1069,15 +1022,15 @@ class DictContentState(State):
                                 v_abs.join(deepcopy(v))
 
                         scalar_copy = deepcopy(self.scalar_state)
-                        scalar_copy.add_var(v_v)
+                        scalar_copy.add_variable(v_v)
                         scalar_copy.meet(self.v_s_conv(v_abs))
                         scalar_copy.assign({v_var}, {v_v})
-                        scalar_copy.remove_var(v_v)
+                        scalar_copy.remove_variable(v_v)
 
                         self.scalar_state.meet(scalar_copy)
             elif v_var in cond_vars:
                 # refine k_var according to refined v_bar -> k_var, s.t. d_var[k_var] = v_var
-                d_lattice: DictSegmentLattice = self.dict_store.store[d_var]
+                d_lattice: FularaLattice = self.dict_store.store[d_var]
 
                 v_abs = self.eval_value(v_var)
 
@@ -1091,10 +1044,10 @@ class DictContentState(State):
                             k_abs.join(deepcopy(k))
 
                     scalar_copy = deepcopy(self.scalar_state)
-                    scalar_copy.add_var(v_k)
+                    scalar_copy.add_variable(v_k)
                     scalar_copy.meet(self.k_s_conv(k_abs))
                     scalar_copy.assign({k_var}, {v_k})
-                    scalar_copy.remove_var(v_k)
+                    scalar_copy.remove_variable(v_k)
 
                     self.scalar_state.meet(scalar_copy)
 
@@ -1104,29 +1057,29 @@ class DictContentState(State):
         return self
 
     @copy_docstring(State.enter_if)
-    def enter_if(self) -> 'DictContentState':
+    def enter_if(self) -> 'FularaState':
         self._loop_flag = False
         return self  # nothing else to be done
 
     @copy_docstring(State.exit_if)
-    def exit_if(self) -> 'DictContentState':
+    def exit_if(self) -> 'FularaState':
         return self  # nothing to be done
 
     @copy_docstring(State.enter_loop)
-    def enter_loop(self) -> 'DictContentState':
+    def enter_loop(self) -> 'FularaState':
         self._loop_flag = True
         return self  # nothing else to be done
 
     @copy_docstring(State.exit_loop)
-    def exit_loop(self) -> 'DictContentState':
+    def exit_loop(self) -> 'FularaState':
         return self  # nothing to be done
 
     @copy_docstring(State._output)
-    def _output(self, output: Expression) -> 'DictContentState':
+    def _output(self, output: Expression) -> 'FularaState':
         return self  # nothing to be done
 
     @copy_docstring(State._substitute)
-    def _substitute(self, left: Expression, right: Expression) -> 'DictContentState':
+    def _substitute(self, left: Expression, right: Expression) -> 'FularaState':
         raise RuntimeError("Unexpected substitute in a forward analysis!")
 
         # expression evaluation
@@ -1143,7 +1096,7 @@ class DictContentState(State):
         def visit(self, expr, *args, **kwargs):
             """
             :param expr: current expression
-            :param state: current DictContentState
+            :param state: current FularaState
             :param evaluation: dictionary mapping from dictionary read expressions,
                 that already got evaluated to temporary variables (VariableIdentifier)
             :return expression with replaced dictionary reads
@@ -1156,19 +1109,19 @@ class DictContentState(State):
                 return self.default_visit(expr, *args, **kwargs)
 
         @copy_docstring(ExpressionVisitor.visit_Subscription)
-        def visit_Subscription(self, expr: Subscription, state: 'DictContentState' = None,
+        def visit_Subscription(self, expr: Subscription, state: 'FularaState' = None,
                                evaluation=None):
             if isinstance(expr.target.typ, DictLyraType):
                 if expr in evaluation:  # already evaluated
                     return evaluation[expr]
                 else:
                     d = expr.target
-                    d_lattice: DictSegmentLattice = state.dict_store.store[d]
+                    d_lattice: FularaLattice = state.dict_store.store[d]
 
                     k_abs = state.eval_key(expr.key)
 
                     for old_temp in evaluation.values():    # remove already added temp vars
-                        k_abs.remove_var(old_temp)
+                        k_abs.remove_variable(old_temp)
 
                     scalar_vars = state._s_vars.copy()
                     v_var = VariableIdentifier(d.typ.value_type, v_name)
@@ -1179,24 +1132,24 @@ class DictContentState(State):
                             v_abs.join(deepcopy(v))
 
                     for old_temp in evaluation.values():    # add already added temp vars
-                        v_abs.add_var(old_temp)
+                        v_abs.add_variable(old_temp)
 
-                    state.scalar_state.add_var(v_var)
+                    state.scalar_state.add_variable(v_var)
                     state.scalar_state.meet(state.v_s_conv(v_abs))
 
                     # use increasing numbers for temp_var names
                     temp_var = VariableIdentifier(d.typ.value_type, str(len(evaluation)) + "v")
-                    state.scalar_state.add_var(temp_var)
+                    state.scalar_state.add_variable(temp_var)
 
                     state.scalar_state.assign({temp_var}, {v_var})
-                    state.scalar_state.remove_var(v_var)
+                    state.scalar_state.remove_variable(v_var)
 
                     evaluation[expr] = temp_var
                     return temp_var
             else:
                 return self.default_visit(expr, state, evaluation)
 
-        def default_visit(self, expr: Expression, state: 'DictContentState' = None,
+        def default_visit(self, expr: Expression, state: 'FularaState' = None,
                           evaluation=None):
             # default: visit & replace children (adapted from expressions._iter_child_exprs)
             new_expr = copy(expr)

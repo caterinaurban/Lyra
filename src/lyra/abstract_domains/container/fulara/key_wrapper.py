@@ -5,38 +5,28 @@ from typing import Set
 
 
 # (Class) Adapter pattern
-from lyra.abstract_domains.data_structures.scalar_wrapper import ScalarWrapper
+from lyra.abstract_domains.state import EnvironmentMixin, State
 from lyra.core.expressions import VariableIdentifier
 
 
-class KeyWrapper(ScalarWrapper, metaclass=ABCMeta):
+class KeyWrapper(EnvironmentMixin, metaclass=ABCMeta):
     """
     (Abstract) wrapper around a domain with some extra functions,
-    that are needed for the key state of a DictContentState.
+    that are needed for the key state of a FularaState.
     A concrete wrapper should inherit from this class and the state that should be 'wrapped'.
     """
 
-    def __init__(self, scalar_variables: Set[VariableIdentifier], k_var: VariableIdentifier,
-                 *domain_args):
+    def __init__(self, k_var: VariableIdentifier):
         """
-        :param scalar_variables:
         :param k_var: special variable (with correct type)
                       representing the key values at a specific segment
-        :param domain_args: arguments needed by the underlying domain
         """
-        key_vars = copy(scalar_variables)
-        key_vars.add(k_var)
-        super().__init__(key_vars, *domain_args)       # init of wrapped domain
-        # self._s_vars = copy(scalar_variables)
+        EnvironmentMixin.__init__(self)
         self._k_var = k_var
 
     @property
     def k_var(self) -> VariableIdentifier:
         return self._k_var
-
-    # @property
-    # def s_vars(self) -> Set[VariableIdentifier]:
-    #     return self._s_vars
 
     @abstractmethod
     def is_singleton(self) -> bool:

@@ -1,11 +1,4 @@
-from lyra.engine.assumption.assumption_analysis import TypeAnalysis, RangeAnalysis, \
-    TypeRangeAssumptionAnalysis
-from lyra.engine.data_structures.dict_content_analysis import DictContentAnalysis
-from lyra.engine.liveness.liveness_analysis import LivenessAnalysis, StrongLivenessAnalysis
-from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
-from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis
-from lyra.engine.numerical.sign_analysis import BackwardSignAnalysis
-from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
+from lyra.engine.container.fulara.fulara_analysis import DictContentAnalysis
 
 # LivenessAnalysis().main("liveness/example.py")
 # StrongLivenessAnalysis().main("liveness/example.py")

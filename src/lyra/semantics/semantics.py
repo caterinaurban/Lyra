@@ -381,7 +381,6 @@ class BuiltInCallSemantics(CallSemantics):
         error = f"Call to {stmt.name} with unexpected number of arguments!"
         raise ValueError(error)
 
-
     def items_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of calls to 'items'.
 
@@ -422,7 +421,7 @@ class BuiltInCallSemantics(CallSemantics):
         if isinstance(stmt.arguments[0], VariableAccess):     # target
             state.result = {Values(stmt.typ, stmt.arguments[0].variable)}
         else:
-            error = f"Semantics for values() call on non-variable {stmt.arguments[0]} is not yet " \
+            error = f"Semantics for values() call on non-variable {stmt.arguments[0]} is not yet "\
                     f"implemented!"
             raise NotImplementedError(error)
         return state

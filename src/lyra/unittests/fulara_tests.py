@@ -1,5 +1,5 @@
 """
-Dictionary Content Analysis - Unit Tests
+Fulara Analysis - Unit Tests
 ==============================
 
 :Authors: Lowis Engel
@@ -11,20 +11,18 @@ import os
 import unittest
 from copy import copy, deepcopy
 
-from lyra.abstract_domains.data_structures import dict_content_domain
-from lyra.abstract_domains.data_structures.dict_content_domain import DictContentState
-from lyra.abstract_domains.data_structures.interval_wrappers import IntervalSWrapper, \
+from lyra.abstract_domains.container.fulara import fulara_domain
+from lyra.abstract_domains.container.fulara.fulara_domain import FularaState
+from lyra.abstract_domains.container.fulara.interval_wrappers import IntervalSWrapper, \
     IntervalKWrapper, IntervalVWrapper
-from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.forward import ForwardInterpreter
-from lyra.semantics.backward import DefaultBackwardSemantics
 from lyra.semantics.forward import DefaultForwardSemantics
 
-from lyra.abstract_domains.numerical.interval_domain import IntervalState, DictLyraType
+from lyra.abstract_domains.numerical.interval_domain import DictLyraType
 from lyra.unittests.runner import TestRunner
 
 
-class DictContentTest(TestRunner):
+class FularaTest(TestRunner):
 
     def interpreter(self):
         return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
@@ -35,12 +33,12 @@ class DictContentTest(TestRunner):
             s_vars = copy(s_state.variables)
             k_var = None
             for var in s_state.variables:
-                if var.name == dict_content_domain.k_name:
+                if var.name == fulara_domain.k_name:
                     k_var = var
                     s_vars.remove(k_var)
             if not k_var:
                 raise ValueError(
-                    f"The key variable {dict_content_domain.k_name} must be added to the scalar store before conversion")
+                    f"The key variable {fulara_domain.k_name} must be added to the scalar store before conversion")
             k_state = IntervalKWrapper(s_vars, k_var)
             k_state._store = deepcopy(s_state.store)
 
@@ -57,12 +55,12 @@ class DictContentTest(TestRunner):
             s_vars = copy(s_state.variables)
             v_var = None
             for var in s_state.variables:
-                if var.name == dict_content_domain.v_name:
+                if var.name == fulara_domain.v_name:
                     v_var = var
                     s_vars.remove(v_var)
             if not v_var:
                 raise ValueError(
-                    f"The value variable {dict_content_domain.v_name} must be added to the scalar store before conversion")
+                    f"The value variable {fulara_domain.v_name} must be added to the scalar store before conversion")
             v_state = IntervalVWrapper(s_vars, v_var)
             v_state._store = deepcopy(s_state.store)
 
@@ -75,19 +73,19 @@ class DictContentTest(TestRunner):
 
             return s_state
 
-        scalar_vars = {v for v in self.variables if type(v.typ) in dict_content_domain.scalar_types}
+        scalar_vars = {v for v in self.variables if type(v.typ) in fulara_domain.scalar_types}
         dict_vars = {v for v in self.variables if type(v.typ) == DictLyraType}
-        return DictContentState(IntervalSWrapper, IntervalKWrapper, IntervalVWrapper,
-                                scalar_vars, dict_vars, s_k_conversion, k_s_conversion,
-                                s_v_conversion, v_s_conversion)
+        return FularaState(IntervalSWrapper, IntervalKWrapper, IntervalVWrapper,
+                           scalar_vars, dict_vars, s_k_conversion, k_s_conversion,
+                           s_v_conversion, v_s_conversion)
 
 
 def test_suite():
     suite = unittest.TestSuite()
-    name = os.getcwd() + '/data_structures/interval/**.py'
+    name = os.getcwd() + '/container/fulara/interval/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
-            suite.addTest(DictContentTest(path))
+            suite.addTest(FularaTest(path))
     return suite
 
 

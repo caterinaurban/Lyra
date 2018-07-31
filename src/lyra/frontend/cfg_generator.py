@@ -3,10 +3,10 @@ import optparse
 import sys
 
 from lyra.core.cfg import *
-from lyra.core.expressions import *
+from lyra.core.expressions import Literal
 from lyra.core.statements import *
 from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
-    FloatLyraType, ListLyraType, TupleLyraType
+    FloatLyraType, ListLyraType, TupleLyraType, StringLyraType, DictLyraType, SetLyraType
 from lyra.visualization.graph_renderer import CfgRenderer
 
 
@@ -444,17 +444,17 @@ class CFGVisitor(ast.NodeVisitor):
 
         # don't provide result type
         # (should be set before by a type annotation for variables/will be set later for calls)
-        iteration = self.visit(node.iter, types)
+        iteration = self.visit(node.iter, types)        # rhs of 'in'
 
         # set types: iteration._typ = type of object being iterated over,
-        #           target_type = type of iteration variable (i.e. element type of iter_type)
+        #           target_type = type of iteration variable (i.e. element type of iteration._typ)
         if isinstance(iteration, VariableAccess):
             if isinstance(iteration.variable.typ, ListLyraType):  # iteration over list items
                 target_type = iteration.variable.typ.typ  # element type
             if isinstance(iteration.variable.typ, DictLyraType):   # iteration over dictionary keys
                 target_type = iteration.variable.typ.key_type
                 # conversion to .keys() call to be consistent:
-                iteration = Call(iteration.pp, "keys", [], SetLyraType(target_type), iteration)
+                iteration = Call(iteration.pp, "keys", [iteration], SetLyraType(target_type))
                 # TODO: return type necessary & correct?
         elif isinstance(iteration, Call) and iteration.name == "range":
             target_type = IntegerLyraType()
@@ -463,20 +463,20 @@ class CFGVisitor(ast.NodeVisitor):
         elif isinstance(iteration, Call) and iteration.name == "items" \
                 and isinstance(iteration.arguments[0], VariableAccess):
             # right now only handle single variables as target
-            called_on_type = types[iteration.arguments[0].variable.name]     # always called on Dict[...]
+            called_on_type = types[iteration.arguments[0].variable.name]   # always called on Dict
             target_type = TupleLyraType([called_on_type.key_type, called_on_type.value_type])
             # items() actually returns 'view' object, but here for simplicity: Dict
-            iteration._typ = called_on_type      # TODO: necessary & correct ?
+            iteration._typ = SetLyraType(target_type)      # TODO: necessary & correct ?
         elif isinstance(iteration, Call) and iteration.name == "keys" \
                 and isinstance(iteration.arguments[0], VariableAccess):
             # right now only handle single variables as target
-            called_on_type = types[iteration.arguments[0].variable.name]     # always called on Dict[...]
+            called_on_type = types[iteration.arguments[0].variable.name]   # always called on Dict
             target_type = called_on_type.key_type
             iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
         elif isinstance(iteration, Call) and iteration.name == "values" \
                 and isinstance(iteration.arguments[0], VariableAccess):
             # right now only handle single variables as target
-            called_on_type = types[iteration.arguments[0].variable.name]     # always called on Dict[...]
+            called_on_type = types[iteration.arguments[0].variable.name]   # always called on Dict
             target_type = called_on_type.value_type
             iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
         else:
@@ -600,7 +600,7 @@ class CFGVisitor(ast.NodeVisitor):
             return Call(pp, name, arguments, typ)
         elif isinstance(func, ast.Attribute):
             name: str = func.attr
-            arguments = [self.visit(func.value, types, typ)]
+            arguments = [self.visit(func.value, types, typ)]        # target of the call
             arguments.extend([self.visit(arg, types, typ) for arg in node.args])
             return Call(pp, name, arguments, typ)
 

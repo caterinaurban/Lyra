@@ -14,7 +14,7 @@ from copy import deepcopy
 from typing import Set, Optional
 
 from lyra.abstract_domains.lattice import Lattice
-from lyra.core.expressions import Expression
+from lyra.core.expressions import Expression, VariableIdentifier
 from lyra.core.statements import ProgramPoint
 
 
@@ -204,3 +204,19 @@ class State(Lattice, metaclass=ABCMeta):
         self.big_join([deepcopy(self)._substitute(l, r) for l in left for r in right])
         self.result = set()  # assignments have no result, only side-effects
         return self
+
+
+class EnvironmentMixin(State, metaclass=ABCMeta):
+    """Mixin to add environment modification operations to a state."""
+
+    @abstractmethod
+    def add_variable(self, variable: VariableIdentifier):
+        """Adds a new variable to the state with no information about it (top)"""
+
+    @abstractmethod
+    def remove_variable(self, variable: VariableIdentifier):
+        """Removes a variable from the state"""
+
+    @abstractmethod
+    def forget_variable(self, variable: VariableIdentifier):
+        """Forgets everything about variable -> sets to top"""

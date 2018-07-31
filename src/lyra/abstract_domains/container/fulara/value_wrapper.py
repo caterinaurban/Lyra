@@ -3,29 +3,23 @@ from copy import copy
 from typing import Set
 
 # (Class) Adapter pattern
-from lyra.abstract_domains.data_structures.scalar_wrapper import ScalarWrapper
+from lyra.abstract_domains.state import EnvironmentMixin
 from lyra.core.expressions import VariableIdentifier
 
 
-class ValueWrapper(ScalarWrapper, metaclass=ABCMeta):
+class ValueWrapper(EnvironmentMixin, metaclass=ABCMeta):
     """
     (Abstract) wrapper around a domain with some extra functions,
-    that are needed for the value state of a DictContentState.
+    that are needed for the value state of a FularaState.
     A concrete wrapper should inherit from this class and the state that should be 'wrapped'.
     """
 
-    def __init__(self, scalar_variables: Set[VariableIdentifier], v_var: VariableIdentifier,
-                 *domain_args):
+    def __init__(self, v_var: VariableIdentifier):
         """
-        :param scalar_variables:
         :param v_var: special variable (with correct type)
                       representing the value values at a specific segment
-        :param domain_args: arguments needed by the underlying domain
         """
-        key_vars = copy(scalar_variables)
-        key_vars.add(v_var)
-        super().__init__(key_vars, *domain_args)       # init of wrapped domain
-        # self._s_vars = copy(scalar_variables)
+        EnvironmentMixin.__init__(self)
         self._v_var = v_var
 
     @property
