@@ -37,7 +37,7 @@ class BackwardInterpreter(Interpreter):
 
     def analyze(self, initial: State) -> AnalysisResult:
         from lyra.engine.forward import ForwardInterpreter
-        
+
         # run the precursory analysis (if any)
         if self.precursory:     # there is a precursory analysis to be run
             pre_result: Optional[AnalysisResult] = self.precursory.analyze(initial.precursory)
