@@ -11,6 +11,7 @@ from copy import deepcopy, copy
 from typing import List, Tuple, Set, Type, Dict, Any
 
 from lyra.abstract_domains.lattice import Lattice
+from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier
 from lyra.core.utils import copy_docstring
 
@@ -38,7 +39,7 @@ class FularaLattice(Lattice):
 
     # use typing.Generic instead of domains as parameter?
     def __init__(self, key_domain: Type[Lattice], value_domain: Type[Lattice],
-                 key_d_args: Dict[str, Any] = {}, value_d_args: Dict[str, Any] = {},
+                 key_d_args: Dict[str, Any] = None, value_d_args: Dict[str, Any] = None,
                  segments: Set[Tuple[Lattice, Lattice]] = None):
         """
         :param key_domain: domain for abstraction of dictionary keys,
@@ -50,6 +51,12 @@ class FularaLattice(Lattice):
         :param segments: initial set of abstract segments; if None, a top segment is created
         """
         # TODO: segments internally as List?
+
+        if key_d_args is None:
+            key_d_args = {}
+        if value_d_args is None:
+            value_d_args = {}
+
         super().__init__()
         self._k_domain = key_domain
         self._k_d_args = key_d_args
