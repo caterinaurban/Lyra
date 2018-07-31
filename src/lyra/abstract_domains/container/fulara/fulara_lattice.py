@@ -167,15 +167,13 @@ class FularaLattice(Lattice):
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'FularaLattice') -> 'FularaLattice':
         """Point-wise meet of overlapping segments"""
-        self_segments = copy(self.segments)
-        other_segments = copy(other.segments)
-        # skip equal segments:
-        same_segments = self_segments.intersection(other_segments)
-        self_segments.difference_update(same_segments)
-        other_segments.difference_update(same_segments)
-        new_segments = same_segments
-        for (k1, v1) in self_segments:
-            for (k2, v2) in other_segments:
+        new_segments = set()
+        for (k1, v1) in self.segments:
+            for (k2, v2) in other.segments:
+                if (k1, v1) == (k2, v2):
+                    new_segments.add((k1, v1))
+                    break   # there cannot be more segments in other that overlap with (k1, v1)
+
                 k_meet = deepcopy(k1).meet(deepcopy(k2))
                 if not k_meet.is_bottom():
                     v_meet = deepcopy(v1).meet(deepcopy(v2))
