@@ -4,7 +4,8 @@ Assumption Analysis
 
 :Author: Caterina Urban and Madelin Schumacher
 """
-from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, TypeAlphabetAssumptionState
+from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, \
+    TypeAlphabetAssumptionState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
 from lyra.engine.backward import BackwardInterpreter
@@ -45,4 +46,4 @@ class TypeAlphabetAssumptionAnalysis(Runner):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        return TypeAlphabetAssumptionState(self.variables);
+        return TypeAlphabetAssumptionState(self.variables)
