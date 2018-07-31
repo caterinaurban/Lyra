@@ -97,6 +97,10 @@ class IntervalKWrapper(KeyWrapper, IntervalSWrapper):
                 return False
         return NotImplemented
 
+    def __repr__(self):
+        # other variables do not matter, since it the state is not relational
+        return repr(self.store[self.k_var])
+
     @copy_docstring(KeyWrapper.is_bottom)
     def is_bottom(self):
         return self.store[self.k_var].is_bottom()

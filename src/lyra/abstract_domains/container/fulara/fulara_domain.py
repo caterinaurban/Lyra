@@ -492,57 +492,8 @@ class FularaState(State):
         """Function to convert from value domain elements to scalar domain elements"""
         return self._v_s_conv
 
-    def __repr__(self):             # TODO: use join
-        k_is_store = issubclass(self.k_domain, Store)
-        v_is_store = issubclass(self.v_domain, Store)
-        if k_is_store or v_is_store:
-            # type does not matter, because eq is implemented in terms of name
-            v_k = VariableIdentifier(LyraType(), k_name)
-            v_v = VariableIdentifier(LyraType(), v_name)
-            result = repr(self.scalar_state)
-            for d, d_lattice in sorted(self.dict_store.store.items(), key=lambda t: t[0].name):
-                result += f", {d} -> {{"
-                first = True
-                for (k, v) in d_lattice.sorted_segments():
-                    if first:
-                        first = False
-                    else:
-                        result += ", "
-                    result += "("
-                    if k_is_store:
-                        result += repr(k.store[v_k])      # only print value of v_k
-                    else:
-                        result += repr(k)
-                    result += ", "
-                    if v_is_store:
-                        result += repr(v.store[v_v])  # only print value of v_v
-                    else:
-                        result += repr(v)
-                    result += ")"
-                result += "}"
-
-            for d, i_lattice in sorted(self.init_store.store.items(), key=lambda t: t[0].name):
-                result += f", {d} -> {{"
-                first = True
-                for (k, v) in i_lattice.sorted_segments():
-                    if first:
-                        first = False
-                    else:
-                        result += ", "
-                    result += "("
-                    if k_is_store:
-                        result += repr(k.store[v_k])  # only print value of v_k
-                    else:
-                        result += repr(k)
-                    result += ", "
-                    result += repr(v)
-                    result += ")"
-                result += "}"
-
-            result += ", " + repr(self.in_relations)
-            return result
-        else:
-            return f"{self.scalar_state}, {self.dict_store}, {self.init_store}"
+    def __repr__(self):             # TODO: use join?
+        return f"{self.scalar_state}, {self.dict_store}, {self.init_store}, {self.in_relations}"
 
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'FularaState':

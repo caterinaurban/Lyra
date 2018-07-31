@@ -100,16 +100,9 @@ class FularaLattice(Lattice):
         """List of all abstract segments ordered by their keys"""
         return sorted(self.segments, key=lambda t: t[0])
 
-    def __repr__(self):     # TODO: use join?
-        result = "{"
-        first = True
-        for (k, v) in self.sorted_segments():
-            if first:
-                first = False
-            else:
-                result += ", "
-            result += f"({k},  {v})"
-        result += "}"
+    def __repr__(self):
+        str_segments = map(repr, self.sorted_segments())
+        result = "{" + ", ".join(str_segments) + "}"
         return result
 
     @copy_docstring(Lattice.bottom)
