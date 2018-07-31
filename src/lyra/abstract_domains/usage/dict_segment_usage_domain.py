@@ -13,10 +13,10 @@ from collections import defaultdict
 from copy import deepcopy, copy
 from typing import Type, Set, Union, Callable
 
-from lyra.abstract_domains.data_structures.dict_content_domain import DictContentState
-from lyra.abstract_domains.data_structures.dict_segment_lattice import DictSegmentLattice
-from lyra.abstract_domains.data_structures.key_wrapper import KeyWrapper
-from lyra.abstract_domains.data_structures.scalar_wrapper import ScalarWrapper
+from lyra.abstract_domains.container.fulara.fulara_domain import FularaState
+from lyra.abstract_domains.container.fulara.fulara_lattice import FularaLattice
+from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
+from lyra.abstract_domains.container.fulara.scalar_wrapper import ScalarWrapper
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
