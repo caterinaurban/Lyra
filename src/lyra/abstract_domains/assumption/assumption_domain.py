@@ -19,7 +19,7 @@ from lyra.assumption.error import CheckerError
 from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparisonOperation, \
     Range, Literal, NegationFreeNormalExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
     ExpressionVisitor, Input, ListDisplay, AttributeReference, Subscription, Slicing, \
-    UnaryArithmeticOperation, BinaryArithmeticOperation
+    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, Identifier
 from lyra.core.statements import ProgramPoint
 from lyra.core.types import IntegerLyraType, FloatLyraType, StringLyraType, BooleanLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
@@ -145,6 +145,9 @@ class MultiplierEvaluator(ExpressionVisitor):
         if input_value is None:
             lines_involved.append(line_number)
         return input_value
+
+    def visit_LengthIdentifier(self, expr: 'LengthIdentifier', pp_value=None, lines_involved=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
     def visit_ListDisplay(self, expr: 'ListDisplay', pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))

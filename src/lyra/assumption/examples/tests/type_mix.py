@@ -3,7 +3,7 @@ for i in range(T):
     x: int = int(input())
     y: str = input()
     z: float = float(input())
-    if x <= 10 and y.isalpha():
+    if x <= 10 and y == 'abc':
         pass
     else:
         raise ValueError

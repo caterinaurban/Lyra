@@ -6,12 +6,11 @@ Assumption Analysis
 """
 from typing import List
 
-from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, AssumptionState, \
+from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
+from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState,\
     OctagonStringAssumptionState
-from lyra.abstract_domains.assumption.character_domain import CharacterState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
-from lyra.abstract_domains.state import State
 from lyra.core.expressions import Identifier, LengthIdentifier
 from lyra.core.types import ListLyraType, StringLyraType
 from lyra.engine.backward import BackwardInterpreter
@@ -46,13 +45,13 @@ class TypeRangeAssumptionAnalysis(Runner):
         return TypeRangeAssumptionState(self.variables)
 
 
-class CharacterDomainAnalysis(Runner):
+class AlphabetDomainAnalysis(Runner):
 
     def interpreter(self):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        return CharacterState(self.variables)
+        return AlphabetState(self.variables)
 
 
 class AssumptionAnalysis(Runner):

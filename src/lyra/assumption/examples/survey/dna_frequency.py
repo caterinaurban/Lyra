@@ -13,3 +13,5 @@ for i in range(N):
         G_count: int = G_count + 1
     elif base == 'T':
         T_count: int = T_count + 1
+    else:
+        raise ValueError

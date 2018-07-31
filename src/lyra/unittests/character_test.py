@@ -10,7 +10,7 @@ import glob
 import os
 import unittest
 
-from lyra.abstract_domains.assumption.character_domain import CharacterState
+from lyra.abstract_domains.string.character_domain import CharacterState
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.forward import ForwardInterpreter
 from lyra.semantics.backward import DefaultBackwardSemantics

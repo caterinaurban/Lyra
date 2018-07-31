@@ -1,6 +1,6 @@
 from collections import defaultdict
 from copy import deepcopy
-from typing import Set, List, Dict, Union, Tuple
+from typing import Set, List, Dict
 
 from lyra.abstract_domains.assumption.assumption_domain import JSONMixin, InputMixin
 from lyra.abstract_domains.string.character_domain import CharacterLattice, CharacterState
@@ -19,7 +19,7 @@ class AlphabetLattice(CharacterLattice, JSONMixin):
 
     @staticmethod
     def from_json(json: dict) -> 'JSONMixin':
-        return CharacterLattice(set(json['certainly']), set(json['maybe']))
+        return AlphabetLattice(set(json['certainly']), set(json['maybe']))
 
     def check_input(self,  pp: VariableIdentifier, pp_value: dict, line_errors: Dict[int, List[CheckerError]]):
         if self.is_top():

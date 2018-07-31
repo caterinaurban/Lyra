@@ -2,14 +2,9 @@ import glob
 import os
 import unittest
 
-from lyra.abstract_domains.assumption.character_domain import CharacterState
 from lyra.abstract_domains.assumption.octagons_domain import OctagonState
 from lyra.engine.backward import BackwardInterpreter
-from lyra.engine.forward import ForwardInterpreter
 from lyra.semantics.backward import DefaultBackwardSemantics
-from lyra.semantics.forward import DefaultForwardSemantics
-
-from lyra.abstract_domains.numerical.interval_domain import IntervalState
 from lyra.unittests.runner import TestRunner
 
 
