@@ -7,7 +7,7 @@ Dictionary Content Analysis
 from copy import deepcopy, copy
 
 from lyra.abstract_domains.container.fulara import fulara_domain
-from lyra.abstract_domains.container.fulara.fulara_domain import DictContentState
+from lyra.abstract_domains.container.fulara.fulara_domain import FularaState
 from lyra.abstract_domains.container.fulara.interval_wrappers import IntervalSWrapper, \
     IntervalKWrapper, IntervalVWrapper
 from lyra.core.types import DictLyraType
@@ -69,6 +69,6 @@ class DictContentAnalysis(Runner):
         scalar_vars = {v for v in self.variables if type(v.typ) in
                        fulara_domain.scalar_types}
         dict_vars = {v for v in self.variables if type(v.typ) == DictLyraType}
-        return DictContentState(IntervalSWrapper, IntervalKWrapper, IntervalVWrapper,
-                                scalar_vars, dict_vars,
-                                s_k_conversion, k_s_conversion, s_v_conversion, v_s_conversion)
+        return FularaState(IntervalSWrapper, IntervalKWrapper, IntervalVWrapper,
+                           scalar_vars, dict_vars,
+                           s_k_conversion, k_s_conversion, s_v_conversion, v_s_conversion)

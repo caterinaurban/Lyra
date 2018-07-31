@@ -1,5 +1,5 @@
 """
-Dictionary Segment Lattice
+Fulara Lattice
 ========================
 
 Generic lattice to abstract dictionaries as a set of abstract segments
@@ -15,8 +15,8 @@ from lyra.core.expressions import VariableIdentifier
 from lyra.core.utils import copy_docstring
 
 
-class DictSegmentLattice(Lattice):
-    """Dictionary segment lattice element::
+class FularaLattice(Lattice):
+    """Fulara lattice element::
 
         set of abstract segments,
         represented by tuples (k,v) from two abstract domains K, V given as input
@@ -30,10 +30,10 @@ class DictSegmentLattice(Lattice):
     The default lattice element is Top, meaning the dictionary can contain anything.
 
     .. document private methods
-    .. automethod:: DictSegmentLattice._less_equal
-    .. automethod:: DictSegmentLattice._meet
-    .. automethod:: DictSegmentLattice._join
-    .. automethod:: DictSegmentLattice._widening
+    .. automethod:: FularaLattice._less_equal
+    .. automethod:: FularaLattice._meet
+    .. automethod:: FularaLattice._join
+    .. automethod:: FularaLattice._widening
     """
 
     # use typing.Generic instead of domains as parameter?
@@ -113,17 +113,17 @@ class DictSegmentLattice(Lattice):
         return result
 
     @copy_docstring(Lattice.bottom)
-    def bottom(self) -> 'DictSegmentLattice':
+    def bottom(self) -> 'FularaLattice':
         """The bottom lattice element is ``{}``."""
-        self._replace(DictSegmentLattice(self.k_domain, self.v_domain,
-                                         self.k_d_args, self.v_d_args, set()))
+        self._replace(FularaLattice(self.k_domain, self.v_domain,
+                                    self.k_d_args, self.v_d_args, set()))
         return self
 
     @copy_docstring(Lattice.top)
-    def top(self) -> 'DictSegmentLattice':
+    def top(self) -> 'FularaLattice':
         """The top lattice element is ``{(top, top)}``."""
-        self._replace(DictSegmentLattice(self.k_domain, self.v_domain,
-                                         self.k_d_args, self.v_d_args))
+        self._replace(FularaLattice(self.k_domain, self.v_domain,
+                                    self.k_d_args, self.v_d_args))
         return self
 
     @copy_docstring(Lattice.is_bottom)
@@ -138,7 +138,7 @@ class DictSegmentLattice(Lattice):
         return False
 
     @copy_docstring(Lattice._less_equal)
-    def _less_equal(self, other: 'DictSegmentLattice') -> bool:
+    def _less_equal(self, other: 'FularaLattice') -> bool:
         if self.k_domain != other.k_domain:
             raise TypeError(f"Cannot compare dictionary abstractions with different "
                             f"key abstractions ({self.k_domain}, {other.k_domain})")
@@ -147,10 +147,8 @@ class DictSegmentLattice(Lattice):
                             f"value abstractions ({self.v_domain}, {other.v_domain})")
 
         # le <=> same or more 'boundaries'
-        if self.segments == other.segments:
+        if self.segments == other.segments:     # TODO: needed (efficiency?
             return True
-        # if len(self.segments) > len(other.segments):  # more segments => more 'boundaries'
-        #
         else:
             # all segments of self need to be contained in some segment of other
             # & their value must be less_equal
@@ -167,7 +165,7 @@ class DictSegmentLattice(Lattice):
             return True
 
     @copy_docstring(Lattice._meet)
-    def _meet(self, other: 'DictSegmentLattice') -> 'DictSegmentLattice':
+    def _meet(self, other: 'FularaLattice') -> 'FularaLattice':
         """Point-wise meet of overlapping segments"""
         self_segments = copy(self.segments)
         other_segments = copy(other.segments)
@@ -184,8 +182,8 @@ class DictSegmentLattice(Lattice):
                     if not v_meet.is_bottom():
                         new_segments.add((k_meet, v_meet))
 
-        self._replace(DictSegmentLattice(self.k_domain, self.v_domain,
-                                         self.k_d_args, self.v_d_args, new_segments))
+        self._replace(FularaLattice(self.k_domain, self.v_domain,
+                                    self.k_d_args, self.v_d_args, new_segments))
         return self
 
     def d_norm_own(self):
@@ -193,18 +191,18 @@ class DictSegmentLattice(Lattice):
         self._segments = d_norm(self.segments)
 
     @copy_docstring(Lattice._join)
-    def _join(self, other: 'DictSegmentLattice') -> 'DictSegmentLattice':
+    def _join(self, other: 'FularaLattice') -> 'FularaLattice':
         # dnorm(union(segments))
         if len(self.segments) > len(other.segments):
             new_segments = d_norm(other.segments, self.segments)
         else:
             new_segments = d_norm(self.segments, other.segments)
-        self._replace(DictSegmentLattice(self.k_domain, self.v_domain,
-                                         self.k_d_args, self.v_d_args, new_segments))
+        self._replace(FularaLattice(self.k_domain, self.v_domain,
+                                    self.k_d_args, self.v_d_args, new_segments))
         return self
 
     @copy_docstring(Lattice._widening)
-    def _widening(self, other: 'DictSegmentLattice') -> 'DictSegmentLattice':
+    def _widening(self, other: 'FularaLattice') -> 'FularaLattice':
         # imprecise version
 
         segment_set = copy(self.segments)     # cond. 2
@@ -235,8 +233,8 @@ class DictSegmentLattice(Lattice):
         else:  # o does not have an additional non-overlapping segment
             result_set = d_norm(segment_set)
 
-        self._replace(DictSegmentLattice(self.k_domain, self.v_domain,
-                                         self.k_d_args, self.v_d_args, result_set))
+        self._replace(FularaLattice(self.k_domain, self.v_domain,
+                                    self.k_d_args, self.v_d_args, result_set))
         return self
 
     # helper      # TODO: put helpers in DictContentDomain?
