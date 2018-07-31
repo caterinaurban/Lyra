@@ -1,5 +1,5 @@
 """
-Dictionary Content Analysis - Unit Tests
+Fulara Analysis - Unit Tests
 ==============================
 
 :Authors: Lowis Engel
@@ -22,7 +22,7 @@ from lyra.abstract_domains.numerical.interval_domain import DictLyraType
 from lyra.unittests.runner import TestRunner
 
 
-class DictContentTest(TestRunner):
+class FularaTest(TestRunner):
 
     def interpreter(self):
         return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
@@ -82,10 +82,10 @@ class DictContentTest(TestRunner):
 
 def test_suite():
     suite = unittest.TestSuite()
-    name = os.getcwd() + '/data_structures/interval/**.py'
+    name = os.getcwd() + '/container/fulara/interval/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
-            suite.addTest(DictContentTest(path))
+            suite.addTest(FularaTest(path))
     return suite
 
 
