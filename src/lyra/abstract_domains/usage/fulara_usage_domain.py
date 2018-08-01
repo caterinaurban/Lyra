@@ -279,16 +279,12 @@ class FularaUsageState(Stack, State):
     .. automethod:: SimpleUsageState._substitute
     """
 
-    def __init__(self, key_domain: Type[Union[KeyWrapper, State]],
+    def __init__(self, key_domain: Type[KeyWrapper],
                  scalar_vars: Set[VariableIdentifier] = None,
                  dict_vars: Set[VariableIdentifier] = None,
-                 usage_k_conv: Callable[[Union[EnvironmentMixin, State]], Union[KeyWrapper, State]]
-                 = lambda x: deepcopy(x),
-                 k_usage_conv: Callable[[Union[KeyWrapper, State]], Union[EnvironmentMixin, State]]
-                 = lambda x: deepcopy(x),
-                 k_k_pre_conv: Callable[[Union[KeyWrapper, State]], Union[KeyWrapper, State]]
+                 k_k_pre_conv: Callable[[KeyWrapper], KeyWrapper]
                  = lambda x: x,
-                 k_pre_k_conv: Callable[[Union[KeyWrapper, State]], Union[KeyWrapper, State]]
+                 k_pre_k_conv: Callable[[KeyWrapper], KeyWrapper]
                  = lambda x: x,
                  precursory: FularaState = None):
         arguments = {'key_domain': key_domain, 'scalar_vars': scalar_vars, 'dict_vars': dict_vars}
@@ -296,9 +292,6 @@ class FularaUsageState(Stack, State):
         State.__init__(self, precursory)
 
         # self._s_vars = scalar_vars
-
-        self._s_k_conv = usage_k_conv
-        self._k_s_conv = k_usage_conv
         self._k_k_pre_conv = k_k_pre_conv
         self._k_pre_k_conv = k_pre_k_conv
 
@@ -307,16 +300,6 @@ class FularaUsageState(Stack, State):
     # @property
     # def scalar_vars(self) -> Set[VariableIdentifier]:
     #     return self._s_vars
-
-    @property
-    def s_k_conv(self):
-        """Function to convert from scalar (usage) domain elements to key domain elements"""
-        return self._s_k_conv
-
-    @property
-    def k_s_conv(self):
-        """Function to convert from key domain elements to scalar (usage) domain elements"""
-        return self._k_s_conv
 
     # TODO: properties?
     @copy_docstring(Stack.push)
