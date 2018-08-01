@@ -306,7 +306,6 @@ class BuiltInCallSemantics(CallSemantics):
         error = f"Call to {stmt.name} with unexpected number of arguments!"
         raise ValueError(error)
 
-
     def raise_semantics(self, stmt: Raise, state: State) -> State:
         """Semantics of raising an Error.
 
