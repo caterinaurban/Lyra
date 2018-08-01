@@ -22,11 +22,11 @@ class TestSignLattice(AbstractTest.ArithmeticLatticeTest):
 
     @staticmethod
     def positive() -> SignLattice:
-        return SignLattice(False, True, False)
+        return SignLattice(False, False, True)
 
     @staticmethod
     def zero() -> SignLattice:
-        return SignLattice(False, False, True)
+        return SignLattice(False, True, False)
 
     @staticmethod
     def non_negative() -> SignLattice:
@@ -34,11 +34,11 @@ class TestSignLattice(AbstractTest.ArithmeticLatticeTest):
 
     @staticmethod
     def non_positive() -> SignLattice:
-        return SignLattice(True, False, True)
+        return SignLattice(True, True, False)
 
     @staticmethod
     def non_zero() -> SignLattice:
-        return SignLattice(True, True, False)
+        return SignLattice(True, False, True)
 
     def elements(self) -> List[SignLattice]:
         return [self.bottom(),
