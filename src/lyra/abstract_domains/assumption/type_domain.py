@@ -289,6 +289,10 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
             return self.bottom()
         return self._replace(TypeLattice(max(self.element, other.element)))
 
+    @copy_docstring(ArithmeticMixin._div)
+    def _div(self, other: 'TypeLattice') -> 'TypeLattice':
+        return self._replace(TypeLattice())
+
     @copy_docstring(JSONMixin.to_json)
     def to_json(self) -> str:
         return str(self)
@@ -476,7 +480,8 @@ class TypeState(Store, InputMixin):
                 return evaluation
             raise ValueError(f"Literal type {typ} is unsupported!")
 
-        def visit_Identifier(self, expr: Identifier, state=None, evaluation=None):
+        @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+        def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             typ = expr.typ
@@ -486,13 +491,16 @@ class TypeState(Store, InputMixin):
                 return evaluation
             raise ValueError(f"Variable type {typ} is unsupported!")
 
-        @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
-        def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
-            return self.visit_Identifier(expr, state, evaluation)
-
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
         def visit_LengthIdentifier(self, expr: LengthIdentifier, state=None, evaluation=None):
-            return self.visit_Identifier(expr, state, evaluation)
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            typ = expr.typ
+            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
+                value: TypeLattice = deepcopy(state.store[expr])
+                evaluation[expr] = value.meet(TypeLattice.from_lyra_type(typ))
+                return evaluation
+            raise ValueError(f"Variable type {typ} is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
