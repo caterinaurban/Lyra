@@ -16,7 +16,6 @@ from typing import Type, Set, Union, Callable
 from lyra.abstract_domains.container.fulara.fulara_domain import FularaState
 from lyra.abstract_domains.container.fulara.fulara_lattice import FularaLattice
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
-from lyra.abstract_domains.state import EnvironmentMixin
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
