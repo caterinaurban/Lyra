@@ -166,7 +166,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin):
     @copy_docstring(ArithmeticMixin._div)
     def _div(self, other: 'IntervalLattice') -> 'IntervalLattice':
         return self._replace(IntervalLattice())
-    
+
     # boolean operations
 
     @copy_docstring(BooleanMixin.false)
