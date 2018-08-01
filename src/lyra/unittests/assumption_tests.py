@@ -65,7 +65,7 @@ def test_suite():
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             suite.addTest(RangeTest(path))
-    name = os.getcwd() + '/assumption/character/**.py'
+    name = os.getcwd() + '/assumption/alphabet/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             suite.addTest(TypeAlphabetAssumptionTest(path))

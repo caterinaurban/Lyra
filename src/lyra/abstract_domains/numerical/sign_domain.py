@@ -9,12 +9,10 @@ The set of possible values of a program variable is represented as their sign
 :Author: Jérôme Dohrau and Caterina Urban
 """
 from collections import defaultdict
-from copy import deepcopy
 
 from lyra.abstract_domains.basis import Basis
 from lyra.abstract_domains.lattice import ArithmeticMixin, BooleanMixin
 from lyra.abstract_domains.state import State
-from lyra.abstract_domains.store import Store
 from lyra.core.expressions import *
 from lyra.core.types import FloatLyraType
 

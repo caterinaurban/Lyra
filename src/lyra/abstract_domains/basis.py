@@ -17,7 +17,7 @@ from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing, \
     BinaryBooleanOperation, ExpressionVisitor, Literal, LengthIdentifier, ListDisplay, \
     AttributeReference, Input, Range, UnaryArithmeticOperation, BinaryArithmeticOperation, \
-    UnaryBooleanOperation, Identifier
+    UnaryBooleanOperation
 from lyra.core.types import LyraType, BooleanLyraType
 from lyra.core.utils import copy_docstring
 

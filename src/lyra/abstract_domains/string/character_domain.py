@@ -2,8 +2,6 @@ import string
 from collections import defaultdict
 from copy import deepcopy
 
-from docutils.io import Input
-
 from lyra.abstract_domains.lattice import BottomMixin, Lattice
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
@@ -242,7 +240,7 @@ class CharacterState(Store, State):
                     new_expression = BinaryBooleanOperation(expression.typ, left, operator, right)
                     return self._assume(new_expression)
                 elif isinstance(expression, UnaryBooleanOperation):
-                    if isinstance(expression, UnaryBooleanOperation.Operator.Neg):
+                    if expression.operator == UnaryBooleanOperation.Operator.Neg:
                         return self._assume(expression.expression)
                 elif isinstance(expression, BinaryBooleanOperation):
                     left = expression.left
