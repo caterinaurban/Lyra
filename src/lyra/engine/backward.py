@@ -141,10 +141,10 @@ class BackwardInterpreter(Interpreter):
                     if pre_result:     # a precursory analysis was run
                         pre_states: List[Optional[State]] = pre_result.get_node_result(current)
                         if isinstance(self.precursory, ForwardInterpreter):
-                            pre_states = pre_states[1:]
+                            pre_states = pre_states[:-1]
                         else:
                             assert isinstance(self.precursory, BackwardInterpreter)
-                            pre_states = pre_states[:-1]
+                            pre_states = pre_states[1:]
                     else:              # no precursory analysis was run
                         pre_states: List[Optional[State]] = [None] * len(current.stmts)
 
