@@ -10,7 +10,8 @@ import unittest
 
 import sys
 
-from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, TypeAlphabetAssumptionState
+from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, \
+    TypeAlphabetAssumptionState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
 from lyra.engine.backward import BackwardInterpreter

@@ -370,3 +370,155 @@ class ArithmeticMixin(Lattice, metaclass=ABCMeta):
             return self._replace(other)
         else:
             return self._mult(other)
+
+    @abstractmethod
+    def _div(self, other: 'ArithmeticMixin') -> 'ArithmeticMixin':
+        """Division between two default lattice elements.
+
+        :param other: other lattice element
+        :return: current lattice element modified to be the division
+
+        """
+
+    def div(self, other: 'ArithmeticMixin') -> 'ArithmeticMixin':
+        """Multiplication between two lattice elements.
+
+        :param other: other lattice element
+        :return: current lattice element modified to be the product
+
+        """
+        if self.is_bottom():
+            return self
+        elif other.is_bottom():
+            return self._replace(other)
+        else:
+            return self._div(other)
+
+
+class BooleanMixin(Lattice, metaclass=ABCMeta):
+    """Mixin to add boolean operations to a lattice."""
+
+    @abstractmethod
+    def false(self) -> 'BooleanMixin':
+        """False lattice element.
+
+        :return: current lattice element modified to be the false lattice element
+
+        """
+
+    @abstractmethod
+    def true(self) -> 'BooleanMixin':
+        """True lattice element.
+
+        :return: current lattice element modified to be the true lattice element
+
+        """
+
+    @abstractmethod
+    def maybe(self) -> 'BooleanMixin':
+        """Maybe lattice element.
+
+        :return: current lattice element modified to be the maybe lattice element
+
+        """
+
+    @abstractmethod
+    def is_false(self) -> bool:
+        """Test whether the lattice element is false.
+
+        :return: whether the lattice element is false
+
+        """
+
+    @abstractmethod
+    def is_true(self) -> bool:
+        """Test whether the lattice element is true.
+
+        :return: whether the lattice element is true
+
+        """
+
+    @abstractmethod
+    def is_maybe(self) -> bool:
+        """Test whether the lattice element is maybe.
+
+        :return: whether the lattice element is maybe
+
+        """
+
+    def _compl(self) -> 'BooleanMixin':
+        """Complement of a default lattice elements.
+
+        :return: current lattice element modified to be its complement
+
+        """
+        if self.is_false():
+            return self.true()
+        elif self.is_true():
+            return self.false()
+        return self
+
+    def compl(self) -> 'BooleanMixin':
+        """Complement of a lattice elements.
+
+        :return: current lattice element modified to be its complement
+
+        """
+        if self.is_bottom():
+            return self
+        else:
+            return self._compl()
+
+    def _conj(self, other: 'BooleanMixin') -> 'BooleanMixin':
+        """Conjunction between two default lattice elements.
+
+        :param other: other lattice element
+        :return: current lattice element modified to be the conjunction
+
+        """
+        if self.is_false() or other.is_false():
+            return self.false()
+        elif self.is_maybe() or other.is_maybe():
+            return self.maybe()
+        return self.true()
+
+    def conj(self, other: 'BooleanMixin') -> 'BooleanMixin':
+        """Conjunction between two lattice elements.
+
+        :param other: other lattice element
+        :return: current lattice element modified to be the conjunction
+
+        """
+        if self.is_bottom():
+            return self
+        elif other.is_bottom():
+            return self._replace(other)
+        else:
+            return self._conj(other)
+
+    def _disj(self, other: 'BooleanMixin') -> 'BooleanMixin':
+        """Disjunction between two default lattice elements.
+
+        :param other: other lattice element
+        :return: current lattice element modified to be the disjunction
+
+        """
+        if self.is_true() or other.is_true():
+            return self.true()
+        elif self.is_maybe() or other.is_maybe():
+            return self.maybe()
+        return self.false()
+
+    def disj(self, other: 'BooleanMixin') -> 'BooleanMixin':
+        """Disjunction between two lattice elements.
+
+        :param other: other lattice element
+        :return: current lattice element modified to be the disjunction
+
+        """
+        if self.is_bottom():
+            return self
+        elif other.is_bottom():
+            return self._replace(other)
+        else:
+            return self._disj(other)
