@@ -1,4 +1,4 @@
-from lyra.engine.container.fulara.fulara_analysis import DictContentAnalysis
+from lyra.engine.container.fulara.fulara_analysis import FularaAnalysis
 
 # LivenessAnalysis().main("liveness/example.py")
 # StrongLivenessAnalysis().main("liveness/example.py")
@@ -14,4 +14,4 @@ from lyra.engine.container.fulara.fulara_analysis import DictContentAnalysis
 # RangeAnalysis().main("assumption/example.py")
 # TypeRangeAssumptionAnalysis().main("assumption/example.py")
 
-DictContentAnalysis().main("numerical/larger_expressions.py")
+FularaAnalysis().main("numerical/larger_expressions.py")
