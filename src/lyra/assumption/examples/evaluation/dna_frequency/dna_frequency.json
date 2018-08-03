@@ -1,0 +1,696 @@
+{
+    "multiplier": {
+        "type": [
+            "literal",
+            "int"
+        ],
+        "value": "1"
+    },
+    "constraints": [
+        {
+            "pp": [
+                2,
+                0
+            ],
+            "lattice_elements": [
+                {
+                    "domain": "TypeLattice",
+                    "element": "Integer"
+                },
+                {
+                    "domain": "OctagonState",
+                    "element": {
+                        "dimensions": 13,
+                        "variables": [
+                            [
+                                "A_count",
+                                "int"
+                            ],
+                            [
+                                "C_count",
+                                "int"
+                            ],
+                            [
+                                "G_count",
+                                "int"
+                            ],
+                            [
+                                "T_count",
+                                "int"
+                            ],
+                            [
+                                "base",
+                                "string"
+                            ],
+                            [
+                                "i",
+                                "int"
+                            ],
+                            [
+                                "len(base)",
+                                "int"
+                            ],
+                            [
+                                "len(separator)",
+                                "int"
+                            ],
+                            [
+                                "number_of_sequences",
+                                "int"
+                            ],
+                            [
+                                "s",
+                                "int"
+                            ],
+                            [
+                                "separator",
+                                "string"
+                            ],
+                            [
+                                "sequence_length",
+                                "int"
+                            ],
+                            [
+                                "2.1",
+                                "int"
+                            ]
+                        ],
+                        "indexes": {
+                            "A_count": 0,
+                            "C_count": 1,
+                            "G_count": 2,
+                            "T_count": 3,
+                            "base": 4,
+                            "i": 5,
+                            "len(base)": 6,
+                            "len(separator)": 7,
+                            "number_of_sequences": 8,
+                            "s": 9,
+                            "separator": 10,
+                            "sequence_length": 11,
+                            "2.1": 12
+                        },
+                        "lincons_array": [
+                            {
+                                "variables": [
+                                    12
+                                ],
+                                "signs": [
+                                    1
+                                ],
+                                "constraint_type": 1,
+                                "constant": -1.0
+                            }
+                        ]
+                    }
+                },
+                {
+                    "domain": "AlphabetLattice",
+                    "element": {
+                        "certainly": [],
+                        "maybe": [
+                            "1",
+                            "<",
+                            "6",
+                            "R",
+                            "Y",
+                            "v",
+                            "Q",
+                            "]",
+                            "\\",
+                            "7",
+                            "[",
+                            "y",
+                            "p",
+                            "*",
+                            "B",
+                            "r",
+                            "|",
+                            "I",
+                            "J",
+                            "s",
+                            "@",
+                            "W",
+                            "k",
+                            "\n",
+                            "N",
+                            "e",
+                            "b",
+                            "j",
+                            "n",
+                            "u",
+                            "A",
+                            "a",
+                            "#",
+                            "9",
+                            "t",
+                            "_",
+                            "~",
+                            ".",
+                            "\"",
+                            "4",
+                            "c",
+                            "-",
+                            "i",
+                            "q",
+                            "0",
+                            "z",
+                            " ",
+                            "?",
+                            "/",
+                            "X",
+                            "\r",
+                            "d",
+                            "o",
+                            ",",
+                            "\t",
+                            "V",
+                            ";",
+                            "3",
+                            "8",
+                            "F",
+                            "}",
+                            "M",
+                            ")",
+                            "Z",
+                            "H",
+                            "%",
+                            "{",
+                            "E",
+                            "P",
+                            "x",
+                            "w",
+                            "f",
+                            "'",
+                            "T",
+                            "O",
+                            "K",
+                            ":",
+                            "m",
+                            "2",
+                            "^",
+                            "l",
+                            "+",
+                            "C",
+                            "$",
+                            "\f",
+                            "G",
+                            "\u000b",
+                            "!",
+                            ">",
+                            "`",
+                            "D",
+                            "S",
+                            "5",
+                            "U",
+                            "L",
+                            "=",
+                            "(",
+                            "g",
+                            "&",
+                            "h"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "multiplier": {
+                "type": [
+                    "literal",
+                    "int"
+                ],
+                "value": "1"
+            },
+            "constraints": []
+        },
+        {
+            "multiplier": {
+                "type": [
+                    "identifier",
+                    "int"
+                ],
+                "value": "2.1"
+            },
+            "constraints": [
+                {
+                    "pp": [
+                        6,
+                        4
+                    ],
+                    "lattice_elements": [
+                        {
+                            "domain": "TypeLattice",
+                            "element": "Integer"
+                        },
+                        {
+                            "domain": "OctagonState",
+                            "element": {
+                                "dimensions": 14,
+                                "variables": [
+                                    [
+                                        "A_count",
+                                        "int"
+                                    ],
+                                    [
+                                        "C_count",
+                                        "int"
+                                    ],
+                                    [
+                                        "G_count",
+                                        "int"
+                                    ],
+                                    [
+                                        "T_count",
+                                        "int"
+                                    ],
+                                    [
+                                        "base",
+                                        "string"
+                                    ],
+                                    [
+                                        "i",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(base)",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(separator)",
+                                        "int"
+                                    ],
+                                    [
+                                        "number_of_sequences",
+                                        "int"
+                                    ],
+                                    [
+                                        "s",
+                                        "int"
+                                    ],
+                                    [
+                                        "separator",
+                                        "string"
+                                    ],
+                                    [
+                                        "sequence_length",
+                                        "int"
+                                    ],
+                                    [
+                                        "6.1",
+                                        "int"
+                                    ],
+                                    [
+                                        "2.1",
+                                        "int"
+                                    ]
+                                ],
+                                "indexes": {
+                                    "A_count": 0,
+                                    "C_count": 1,
+                                    "G_count": 2,
+                                    "T_count": 3,
+                                    "base": 4,
+                                    "i": 5,
+                                    "len(base)": 6,
+                                    "len(separator)": 7,
+                                    "number_of_sequences": 8,
+                                    "s": 9,
+                                    "separator": 10,
+                                    "sequence_length": 11,
+                                    "6.1": 12,
+                                    "2.1": 13
+                                },
+                                "lincons_array": []
+                            }
+                        },
+                        {
+                            "domain": "AlphabetLattice",
+                            "element": {
+                                "certainly": [],
+                                "maybe": [
+                                    "1",
+                                    "<",
+                                    "6",
+                                    "R",
+                                    "Y",
+                                    "v",
+                                    "Q",
+                                    "]",
+                                    "\\",
+                                    "7",
+                                    "[",
+                                    "y",
+                                    "p",
+                                    "*",
+                                    "B",
+                                    "r",
+                                    "|",
+                                    "I",
+                                    "J",
+                                    "s",
+                                    "@",
+                                    "W",
+                                    "k",
+                                    "\n",
+                                    "N",
+                                    "e",
+                                    "b",
+                                    "j",
+                                    "n",
+                                    "u",
+                                    "A",
+                                    "a",
+                                    "#",
+                                    "9",
+                                    "t",
+                                    "_",
+                                    "~",
+                                    ".",
+                                    "\"",
+                                    "4",
+                                    "c",
+                                    "-",
+                                    "i",
+                                    "q",
+                                    "0",
+                                    "z",
+                                    " ",
+                                    "?",
+                                    "/",
+                                    "X",
+                                    "\r",
+                                    "d",
+                                    "o",
+                                    ",",
+                                    "\t",
+                                    "V",
+                                    ";",
+                                    "3",
+                                    "8",
+                                    "F",
+                                    "}",
+                                    "M",
+                                    ")",
+                                    "Z",
+                                    "H",
+                                    "%",
+                                    "{",
+                                    "E",
+                                    "P",
+                                    "x",
+                                    "w",
+                                    "f",
+                                    "'",
+                                    "O",
+                                    "T",
+                                    "K",
+                                    ":",
+                                    "m",
+                                    "2",
+                                    "^",
+                                    "l",
+                                    "+",
+                                    "C",
+                                    "$",
+                                    "\f",
+                                    "G",
+                                    "\u000b",
+                                    "!",
+                                    ">",
+                                    "`",
+                                    "D",
+                                    "S",
+                                    "5",
+                                    "U",
+                                    "L",
+                                    "=",
+                                    "(",
+                                    "g",
+                                    "&",
+                                    "h"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "multiplier": {
+                        "type": [
+                            "identifier",
+                            "int"
+                        ],
+                        "value": "6.1"
+                    },
+                    "constraints": [
+                        {
+                            "pp": [
+                                12,
+                                8
+                            ],
+                            "lattice_elements": [
+                                {
+                                    "domain": "TypeLattice",
+                                    "element": "String"
+                                },
+                                {
+                                    "domain": "OctagonState",
+                                    "element": {
+                                        "dimensions": 15,
+                                        "variables": [
+                                            [
+                                                "A_count",
+                                                "int"
+                                            ],
+                                            [
+                                                "C_count",
+                                                "int"
+                                            ],
+                                            [
+                                                "G_count",
+                                                "int"
+                                            ],
+                                            [
+                                                "T_count",
+                                                "int"
+                                            ],
+                                            [
+                                                "base",
+                                                "string"
+                                            ],
+                                            [
+                                                "i",
+                                                "int"
+                                            ],
+                                            [
+                                                "len(base)",
+                                                "int"
+                                            ],
+                                            [
+                                                "len(separator)",
+                                                "int"
+                                            ],
+                                            [
+                                                "number_of_sequences",
+                                                "int"
+                                            ],
+                                            [
+                                                "s",
+                                                "int"
+                                            ],
+                                            [
+                                                "separator",
+                                                "string"
+                                            ],
+                                            [
+                                                "sequence_length",
+                                                "int"
+                                            ],
+                                            [
+                                                "12.1",
+                                                "string"
+                                            ],
+                                            [
+                                                "6.1",
+                                                "int"
+                                            ],
+                                            [
+                                                "2.1",
+                                                "int"
+                                            ]
+                                        ],
+                                        "indexes": {
+                                            "A_count": 0,
+                                            "C_count": 1,
+                                            "G_count": 2,
+                                            "T_count": 3,
+                                            "base": 4,
+                                            "i": 5,
+                                            "len(base)": 6,
+                                            "len(separator)": 7,
+                                            "number_of_sequences": 8,
+                                            "s": 9,
+                                            "separator": 10,
+                                            "sequence_length": 11,
+                                            "12.1": 12,
+                                            "6.1": 13,
+                                            "2.1": 14
+                                        },
+                                        "lincons_array": []
+                                    }
+                                },
+                                {
+                                    "domain": "AlphabetLattice",
+                                    "element": {
+                                        "certainly": [],
+                                        "maybe": [
+                                            "G",
+                                            "T",
+                                            "A",
+                                            "C"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "multiplier": {
+                                "type": [
+                                    "literal",
+                                    "int"
+                                ],
+                                "value": "1"
+                            },
+                            "constraints": [
+                                "*"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "pp": [
+                        23,
+                        4
+                    ],
+                    "lattice_elements": [
+                        {
+                            "domain": "TypeLattice",
+                            "element": "String"
+                        },
+                        {
+                            "domain": "OctagonState",
+                            "element": {
+                                "dimensions": 16,
+                                "variables": [
+                                    [
+                                        "A_count",
+                                        "int"
+                                    ],
+                                    [
+                                        "C_count",
+                                        "int"
+                                    ],
+                                    [
+                                        "G_count",
+                                        "int"
+                                    ],
+                                    [
+                                        "T_count",
+                                        "int"
+                                    ],
+                                    [
+                                        "base",
+                                        "string"
+                                    ],
+                                    [
+                                        "i",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(base)",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(separator)",
+                                        "int"
+                                    ],
+                                    [
+                                        "number_of_sequences",
+                                        "int"
+                                    ],
+                                    [
+                                        "s",
+                                        "int"
+                                    ],
+                                    [
+                                        "separator",
+                                        "string"
+                                    ],
+                                    [
+                                        "sequence_length",
+                                        "int"
+                                    ],
+                                    [
+                                        "23.1",
+                                        "string"
+                                    ],
+                                    [
+                                        "12.1",
+                                        "string"
+                                    ],
+                                    [
+                                        "6.1",
+                                        "int"
+                                    ],
+                                    [
+                                        "2.1",
+                                        "int"
+                                    ]
+                                ],
+                                "indexes": {
+                                    "A_count": 0,
+                                    "C_count": 1,
+                                    "G_count": 2,
+                                    "T_count": 3,
+                                    "base": 4,
+                                    "i": 5,
+                                    "len(base)": 6,
+                                    "len(separator)": 7,
+                                    "number_of_sequences": 8,
+                                    "s": 9,
+                                    "separator": 10,
+                                    "sequence_length": 11,
+                                    "23.1": 12,
+                                    "12.1": 13,
+                                    "6.1": 14,
+                                    "2.1": 15
+                                },
+                                "lincons_array": []
+                            }
+                        },
+                        {
+                            "domain": "AlphabetLattice",
+                            "element": {
+                                "certainly": [],
+                                "maybe": [
+                                    ".",
+                                    "#"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "multiplier": {
+                        "type": [
+                            "literal",
+                            "int"
+                        ],
+                        "value": "1"
+                    },
+                    "constraints": []
+                }
+            ]
+        }
+    ]
+}

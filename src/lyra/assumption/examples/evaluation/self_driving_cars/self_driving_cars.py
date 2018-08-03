@@ -1,6 +1,9 @@
+# 2:(Integer, T, T), 2.1 * [4:(Float, OCT( +4.1 + 0.0 >= 0), T), 7:(Integer, T, T), 7.1 * [10:(Integer, OCT( -10.1 + 4.1 + 0.0 >= 0), T), 13:(Float, OCT( +13.1 + 0.0 >= 0), T)]]
 cases: int = int(input())
 for cc in range(cases):
     distance: float = float(input())
+    if distance < 0:
+        raise ValueError("Distance cannot be negative.")
     n: int = int(input())
     max_time: float = 0
     for i in range(n):

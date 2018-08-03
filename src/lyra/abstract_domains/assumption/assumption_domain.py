@@ -141,10 +141,11 @@ class MultiplierEvaluator(ExpressionVisitor):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
     def visit_VariableIdentifier(self, expr: 'VariableIdentifier', pp_value=None, lines_involved=None):
-        (line_number, input_value) = pp_value[expr]
-        if input_value is None:
-            lines_involved.append(line_number)
-        return input_value
+        if expr in pp_value:
+            (line_number, input_value) = pp_value[expr]
+            if input_value is None:
+                lines_involved.append(line_number)
+            return input_value
 
     def visit_LengthIdentifier(self, expr: 'LengthIdentifier', pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
@@ -403,6 +404,8 @@ class AssumptionState(State):
                 :return: current lattice element modified to record the constraint
                 """
                 def do(constraint1, constraint2):
+                    if isinstance(constraint1, tuple) or isinstance(constraint2, tuple):
+                        return deepcopy(constraint1)
                     for i, cs in enumerate(zip(constraint1.constraints, constraint2.constraints)):
                         if cs[0] != cs[1]:
                             constraint1.constraints[i] = do(cs[0], cs[1])
@@ -492,10 +495,6 @@ class AssumptionState(State):
                         return js
                     if isinstance(constraint, AssumptionState.InputStack.InputLattice):
                         return constraint.to_json()
-                # if self.is_top():
-                #     return 'T'
-                # if self.is_bottom():
-                #     return '⊥'
                 js = dict()
                 js['multiplier'] = do_multiplier(self.multiplier)
                 js['constraints'] = [do_constraint(constraint) for constraint in self.constraints]
@@ -546,16 +545,13 @@ class AssumptionState(State):
                         return pp, cons
                     if 'multiplier' in js:  # input constraint
                         return AssumptionState.InputStack.InputLattice.from_json(js)
-                # if json == "T":
-                #     return AssumptionState.InputStack.InputLattice().top()
-                # if json == "⊥":
-                #     return AssumptionState.InputStack.InputLattice.bottom()
                 multiplier = do_multiplier(json['multiplier'])
                 constraints = [do_constraint(c) for c in json['constraints']]
                 return AssumptionState.InputStack.InputLattice(multiplier, constraints)
 
             @copy_docstring(JSONMixin.check_input)
             def check_input(self, input_generator: Generator, pp_value, line_errors):
+
                 def is_star(constraint): return isinstance(constraint, tuple) and not constraint
 
                 def is_basic(constraint): return isinstance(constraint, tuple) and constraint
@@ -565,11 +561,14 @@ class AssumptionState(State):
                         yield assumption
                     else:
                         lines_involved = []
-                        mult = MultiplierEvaluator().visit(assumption.multiplier, pp_value, lines_involved)
+                        m = assumption.multiplier
+                        mult = MultiplierEvaluator().visit(m, pp_value, lines_involved)
                         # check for valid multiplier
                         message = ""
                         if mult is None:
-                            message += "Cannot calculate loop range. Errors on lines: {}.".format(','.join([str(l) for l in lines_involved]))
+                            lines_message = ','.join([str(l) for l in lines_involved])
+                            message += "Cannot calculate loop range."
+                            message += "Errors on lines: {}.".format(lines_message)
                         elif not isinstance(mult, int):
                             message += "Loop range must be an integer."
                         if len(message) > 0:
@@ -598,13 +597,15 @@ class AssumptionState(State):
                         line_errors[line_number].append(e.args[0])
                         break
 
+                    if end_of_constraints or end_of_input:
+                        break
+
                     if is_star(constraint):  # information loss, cannot continue checking
                         error = CheckerError("Not enough information to continue checking after this line.")
                         line_errors[line_number].append(error)
                         end_of_constraints = True
 
-                    if end_of_constraints or end_of_input:
-                        break
+
 
                     if is_basic(constraint):
                         pp = constraint[0]
@@ -613,7 +614,15 @@ class AssumptionState(State):
                         for cons in constraint[1]:
                             cons.check_input(pp, pp_value, line_errors)
                 if end_of_input and not end_of_constraints:
-                    error = CheckerError("Too few inputs for this program!")
+                    constraints_left = 0
+                    while not end_of_constraints:
+                        constraints_left += 1
+                        try:
+                            next(constraint_generator)
+                        except StopIteration:
+                            end_of_constraints = True
+                    msg = "At least {} more inputs expected.".format(constraints_left)
+                    error = CheckerError(msg)
                     line_errors[line_number].append(error)
 
         class Scope(Enum):
@@ -844,7 +853,7 @@ class AssumptionState(State):
         return self._stack
 
     def __repr__(self):
-        return "{}".format(self.stack)
+        return "{}||{}".format(self.states, self.stack)
 
     @copy_docstring(State.bottom)
     def bottom(self) -> 'AssumptionState':

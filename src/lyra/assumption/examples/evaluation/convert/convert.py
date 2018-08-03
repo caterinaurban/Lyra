@@ -1,7 +1,8 @@
-N: int = int(input())
-if N == 0:
+# RESULT 2:(Integer, T, T), 2.1 * [6:(String, T, T), 7:(Integer, OCT( +7.1 - 1.0 >= 0), T), 10:(String, T, (set(), {'i', '.', 'z', 'm', 'e', 'd', 'n', 's', 'g', 'o', 'r', 'a', 'u', 'l', 'c', 'b', 'p', 'k'})), ★]
+number_of_items: int = int(input())
+if number_of_items == 0:
     raise ValueError
-for i in range(N):
+for i in range(number_of_items):
     item_name: str = input()
     weight: int = int(input())
     if weight <= 0:
@@ -17,7 +18,7 @@ for i in range(N):
         print(weight)
     else:
         raise ValueError
-    print("item: ")
+    print("Item: ")
     print(item_name)
     print(", ")
     print("weight: ")
