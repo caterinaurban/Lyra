@@ -1,0 +1,9 @@
+|
+4|17|22|String must contain only characters: {'b', 'i', 'm', 's', 'z', 'c', 'd', 'r', 'n', 'l', 'g', 'k', 'u', 'o', 'e', '.', 'p', 'a'}
+6|34|35|Relations violated:  +line 6 - 1.0 >= 0
+9|54|56|Expected type Integer
+10|57|63|String must contain only characters: {'b', 'i', 'm', 's', 'z', 'c', 'd', 'r', 'n', 'l', 'g', 'k', 'u', 'o', 'e', '.', 'p', 'a'}
+12|80|84|Expected type Integer
+15|108|111|Expected type Integer
+18|145|148|Expected type Integer
+30|249|252|Expected type Integer

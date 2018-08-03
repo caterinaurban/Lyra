@@ -9,7 +9,213 @@
     "constraints": [
         {
             "pp": [
-                1,
+                2,
+                0
+            ],
+            "lattice_elements": [
+                {
+                    "domain": "TypeLattice",
+                    "element": "String"
+                },
+                {
+                    "domain": "OctagonState",
+                    "element": {
+                        "dimensions": 15,
+                        "variables": [
+                            [
+                                "homeworks",
+                                "int"
+                            ],
+                            [
+                                "hw_grade_sum",
+                                "float"
+                            ],
+                            [
+                                "i",
+                                "int"
+                            ],
+                            [
+                                "j",
+                                "int"
+                            ],
+                            [
+                                "len(student_id)",
+                                "int"
+                            ],
+                            [
+                                "len(subject)",
+                                "int"
+                            ],
+                            [
+                                "max_grade_sum",
+                                "float"
+                            ],
+                            [
+                                "max_hw_grade",
+                                "float"
+                            ],
+                            [
+                                "max_test_grade",
+                                "float"
+                            ],
+                            [
+                                "number_of_students",
+                                "int"
+                            ],
+                            [
+                                "student_hw_grade",
+                                "float"
+                            ],
+                            [
+                                "student_id",
+                                "string"
+                            ],
+                            [
+                                "student_test_grade",
+                                "float"
+                            ],
+                            [
+                                "subject",
+                                "string"
+                            ],
+                            [
+                                "2.1",
+                                "string"
+                            ]
+                        ],
+                        "indexes": {
+                            "homeworks": 0,
+                            "hw_grade_sum": 1,
+                            "i": 2,
+                            "j": 3,
+                            "len(student_id)": 4,
+                            "len(subject)": 5,
+                            "max_grade_sum": 6,
+                            "max_hw_grade": 7,
+                            "max_test_grade": 8,
+                            "number_of_students": 9,
+                            "student_hw_grade": 10,
+                            "student_id": 11,
+                            "student_test_grade": 12,
+                            "subject": 13,
+                            "2.1": 14
+                        },
+                        "lincons_array": []
+                    }
+                },
+                {
+                    "domain": "AlphabetLattice",
+                    "element": {
+                        "certainly": [],
+                        "maybe": [
+                            " ",
+                            "z",
+                            "X",
+                            "x",
+                            "S",
+                            "'",
+                            "u",
+                            "{",
+                            ":",
+                            "e",
+                            "m",
+                            "I",
+                            "c",
+                            "%",
+                            "r",
+                            "C",
+                            "P",
+                            "!",
+                            "\f",
+                            "H",
+                            "F",
+                            "p",
+                            ")",
+                            "+",
+                            "d",
+                            "Y",
+                            "N",
+                            "k",
+                            ";",
+                            "?",
+                            "Q",
+                            "j",
+                            "-",
+                            "[",
+                            "&",
+                            "\r",
+                            "\"",
+                            "W",
+                            "~",
+                            "|",
+                            "8",
+                            "i",
+                            "4",
+                            "\t",
+                            "O",
+                            "(",
+                            "\u000b",
+                            "A",
+                            "#",
+                            "@",
+                            "n",
+                            "l",
+                            "U",
+                            "w",
+                            "V",
+                            "o",
+                            "2",
+                            "h",
+                            "7",
+                            "}",
+                            "*",
+                            "1",
+                            ".",
+                            "f",
+                            "3",
+                            "v",
+                            "t",
+                            "R",
+                            "6",
+                            "M",
+                            "\\",
+                            "b",
+                            "^",
+                            "/",
+                            "q",
+                            "T",
+                            "g",
+                            "_",
+                            "$",
+                            "s",
+                            "`",
+                            "=",
+                            "D",
+                            "Z",
+                            "B",
+                            "\n",
+                            "K",
+                            "J",
+                            "]",
+                            "0",
+                            "a",
+                            "G",
+                            ",",
+                            "9",
+                            "<",
+                            "L",
+                            ">",
+                            "5",
+                            "E",
+                            "y"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "pp": [
+                3,
                 0
             ],
             "lattice_elements": [
@@ -20,35 +226,90 @@
                 {
                     "domain": "OctagonState",
                     "element": {
-                        "dimensions": 5,
+                        "dimensions": 16,
                         "variables": [
                             [
-                                "1.1",
+                                "homeworks",
                                 "int"
                             ],
                             [
-                                "a",
+                                "hw_grade_sum",
+                                "float"
+                            ],
+                            [
+                                "i",
                                 "int"
                             ],
                             [
-                                "x",
+                                "j",
                                 "int"
                             ],
                             [
-                                "y",
+                                "len(student_id)",
                                 "int"
                             ],
                             [
-                                "z",
+                                "len(subject)",
                                 "int"
+                            ],
+                            [
+                                "max_grade_sum",
+                                "float"
+                            ],
+                            [
+                                "max_hw_grade",
+                                "float"
+                            ],
+                            [
+                                "max_test_grade",
+                                "float"
+                            ],
+                            [
+                                "number_of_students",
+                                "int"
+                            ],
+                            [
+                                "student_hw_grade",
+                                "float"
+                            ],
+                            [
+                                "student_id",
+                                "string"
+                            ],
+                            [
+                                "student_test_grade",
+                                "float"
+                            ],
+                            [
+                                "subject",
+                                "string"
+                            ],
+                            [
+                                "3.1",
+                                "int"
+                            ],
+                            [
+                                "2.1",
+                                "string"
                             ]
                         ],
                         "indexes": {
-                            "1.1": 0,
-                            "a": 1,
-                            "x": 2,
-                            "y": 3,
-                            "z": 4
+                            "homeworks": 0,
+                            "hw_grade_sum": 1,
+                            "i": 2,
+                            "j": 3,
+                            "len(student_id)": 4,
+                            "len(subject)": 5,
+                            "max_grade_sum": 6,
+                            "max_hw_grade": 7,
+                            "max_test_grade": 8,
+                            "number_of_students": 9,
+                            "student_hw_grade": 10,
+                            "student_id": 11,
+                            "student_test_grade": 12,
+                            "subject": 13,
+                            "3.1": 14,
+                            "2.1": 15
                         },
                         "lincons_array": []
                     }
@@ -58,106 +319,322 @@
                     "element": {
                         "certainly": [],
                         "maybe": [
-                            "\"",
-                            "x",
-                            "u",
-                            "2",
-                            "B",
-                            "s",
-                            "z",
-                            "K",
-                            "-",
-                            "|",
-                            "4",
-                            "~",
-                            "n",
-                            "9",
-                            ",",
-                            "!",
-                            "M",
-                            "Z",
-                            "I",
                             " ",
-                            "\r",
-                            "U",
-                            "b",
-                            "Q",
-                            "t",
-                            "a",
-                            ".",
-                            "?",
-                            "C",
-                            "F",
-                            "#",
-                            ")",
-                            "\f",
-                            "p",
-                            "G",
-                            "<",
-                            "Y",
-                            "R",
-                            "H",
-                            "+",
-                            "h",
-                            "]",
-                            "8",
-                            "f",
-                            "g",
-                            "3",
-                            "%",
-                            "O",
-                            "&",
-                            "\u000b",
-                            "7",
-                            "d",
-                            "{",
-                            "c",
-                            "T",
-                            "y",
-                            "$",
-                            "w",
-                            "\t",
-                            "V",
-                            "}",
-                            "q",
-                            "=",
-                            "*",
-                            "L",
-                            ":",
-                            "E",
-                            "`",
-                            "(",
-                            ";",
-                            "S",
-                            "[",
-                            "i",
-                            "1",
-                            "/",
-                            "\\",
-                            "@",
-                            "'",
-                            "A",
-                            "k",
-                            "W",
-                            "m",
-                            "J",
-                            "D",
-                            "^",
-                            "o",
-                            "0",
-                            "j",
-                            "6",
-                            "e",
+                            "z",
                             "X",
+                            "x",
+                            "S",
+                            "'",
+                            "u",
+                            "{",
+                            ":",
+                            "e",
+                            "m",
+                            "I",
+                            "c",
+                            "%",
                             "r",
-                            "v",
-                            "5",
-                            "_",
-                            "l",
+                            "C",
                             "P",
+                            "!",
+                            "\f",
+                            "H",
+                            "F",
+                            "p",
+                            ")",
+                            "+",
+                            "d",
+                            "Y",
+                            "N",
+                            "k",
+                            ";",
+                            "?",
+                            "Q",
+                            "j",
+                            "-",
+                            "[",
+                            "&",
+                            "\r",
+                            "\"",
+                            "W",
+                            "~",
+                            "|",
+                            "8",
+                            "i",
+                            "4",
+                            "\t",
+                            "O",
+                            "(",
+                            "\u000b",
+                            "A",
+                            "#",
+                            "@",
+                            "n",
+                            "l",
+                            "U",
+                            "w",
+                            "V",
+                            "o",
+                            "2",
+                            "h",
+                            "7",
+                            "}",
+                            "*",
+                            "1",
+                            ".",
+                            "f",
+                            "3",
+                            "v",
+                            "t",
+                            "R",
+                            "6",
+                            "M",
+                            "\\",
+                            "b",
+                            "^",
+                            "/",
+                            "q",
+                            "T",
+                            "g",
+                            "_",
+                            "$",
+                            "s",
+                            "`",
+                            "=",
+                            "D",
+                            "Z",
+                            "B",
                             "\n",
+                            "K",
+                            "J",
+                            "]",
+                            "0",
+                            "a",
+                            "G",
+                            ",",
+                            "9",
+                            "<",
+                            "L",
                             ">",
-                            "N"
+                            "5",
+                            "E",
+                            "y"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "pp": [
+                4,
+                0
+            ],
+            "lattice_elements": [
+                {
+                    "domain": "TypeLattice",
+                    "element": "Integer"
+                },
+                {
+                    "domain": "OctagonState",
+                    "element": {
+                        "dimensions": 17,
+                        "variables": [
+                            [
+                                "homeworks",
+                                "int"
+                            ],
+                            [
+                                "hw_grade_sum",
+                                "float"
+                            ],
+                            [
+                                "i",
+                                "int"
+                            ],
+                            [
+                                "j",
+                                "int"
+                            ],
+                            [
+                                "len(student_id)",
+                                "int"
+                            ],
+                            [
+                                "len(subject)",
+                                "int"
+                            ],
+                            [
+                                "max_grade_sum",
+                                "float"
+                            ],
+                            [
+                                "max_hw_grade",
+                                "float"
+                            ],
+                            [
+                                "max_test_grade",
+                                "float"
+                            ],
+                            [
+                                "number_of_students",
+                                "int"
+                            ],
+                            [
+                                "student_hw_grade",
+                                "float"
+                            ],
+                            [
+                                "student_id",
+                                "string"
+                            ],
+                            [
+                                "student_test_grade",
+                                "float"
+                            ],
+                            [
+                                "subject",
+                                "string"
+                            ],
+                            [
+                                "4.1",
+                                "int"
+                            ],
+                            [
+                                "3.1",
+                                "int"
+                            ],
+                            [
+                                "2.1",
+                                "string"
+                            ]
+                        ],
+                        "indexes": {
+                            "homeworks": 0,
+                            "hw_grade_sum": 1,
+                            "i": 2,
+                            "j": 3,
+                            "len(student_id)": 4,
+                            "len(subject)": 5,
+                            "max_grade_sum": 6,
+                            "max_hw_grade": 7,
+                            "max_test_grade": 8,
+                            "number_of_students": 9,
+                            "student_hw_grade": 10,
+                            "student_id": 11,
+                            "student_test_grade": 12,
+                            "subject": 13,
+                            "4.1": 14,
+                            "3.1": 15,
+                            "2.1": 16
+                        },
+                        "lincons_array": []
+                    }
+                },
+                {
+                    "domain": "AlphabetLattice",
+                    "element": {
+                        "certainly": [],
+                        "maybe": [
+                            " ",
+                            "z",
+                            "X",
+                            "x",
+                            "S",
+                            "'",
+                            "u",
+                            "{",
+                            ":",
+                            "e",
+                            "m",
+                            "I",
+                            "c",
+                            "%",
+                            "r",
+                            "C",
+                            "P",
+                            "!",
+                            "\f",
+                            "H",
+                            "F",
+                            "p",
+                            ")",
+                            "+",
+                            "d",
+                            "Y",
+                            "N",
+                            "k",
+                            ";",
+                            "?",
+                            "Q",
+                            "j",
+                            "-",
+                            "[",
+                            "&",
+                            "\r",
+                            "\"",
+                            "W",
+                            "~",
+                            "|",
+                            "8",
+                            "i",
+                            "4",
+                            "\t",
+                            "O",
+                            "(",
+                            "\u000b",
+                            "A",
+                            "#",
+                            "@",
+                            "n",
+                            "l",
+                            "U",
+                            "w",
+                            "V",
+                            "o",
+                            "2",
+                            "h",
+                            "7",
+                            "}",
+                            "*",
+                            "1",
+                            ".",
+                            "f",
+                            "3",
+                            "v",
+                            "t",
+                            "R",
+                            "6",
+                            "M",
+                            "\\",
+                            "b",
+                            "^",
+                            "/",
+                            "q",
+                            "T",
+                            "g",
+                            "_",
+                            "$",
+                            "s",
+                            "`",
+                            "=",
+                            "D",
+                            "Z",
+                            "B",
+                            "\n",
+                            "K",
+                            "J",
+                            "]",
+                            "0",
+                            "a",
+                            "G",
+                            ",",
+                            "9",
+                            "<",
+                            "L",
+                            ">",
+                            "5",
+                            "E",
+                            "y"
                         ]
                     }
                 }
@@ -166,29 +643,89 @@
         {
             "multiplier": {
                 "type": [
-                    "literal",
+                    "identifier",
                     "int"
                 ],
-                "value": "1"
+                "value": "4.1"
             },
             "constraints": [
                 {
                     "pp": [
-                        3,
+                        6,
                         4
                     ],
                     "lattice_elements": [
                         {
                             "domain": "TypeLattice",
-                            "element": "Integer"
+                            "element": "String"
                         },
                         {
                             "domain": "OctagonState",
                             "element": {
-                                "dimensions": 6,
+                                "dimensions": 18,
                                 "variables": [
                                     [
-                                        "1.1",
+                                        "homeworks",
+                                        "int"
+                                    ],
+                                    [
+                                        "hw_grade_sum",
+                                        "float"
+                                    ],
+                                    [
+                                        "i",
+                                        "int"
+                                    ],
+                                    [
+                                        "j",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(student_id)",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(subject)",
+                                        "int"
+                                    ],
+                                    [
+                                        "max_grade_sum",
+                                        "float"
+                                    ],
+                                    [
+                                        "max_hw_grade",
+                                        "float"
+                                    ],
+                                    [
+                                        "max_test_grade",
+                                        "float"
+                                    ],
+                                    [
+                                        "number_of_students",
+                                        "int"
+                                    ],
+                                    [
+                                        "student_hw_grade",
+                                        "float"
+                                    ],
+                                    [
+                                        "student_id",
+                                        "string"
+                                    ],
+                                    [
+                                        "student_test_grade",
+                                        "float"
+                                    ],
+                                    [
+                                        "subject",
+                                        "string"
+                                    ],
+                                    [
+                                        "6.1",
+                                        "string"
+                                    ],
+                                    [
+                                        "4.1",
                                         "int"
                                     ],
                                     [
@@ -196,29 +733,29 @@
                                         "int"
                                     ],
                                     [
-                                        "a",
-                                        "int"
-                                    ],
-                                    [
-                                        "x",
-                                        "int"
-                                    ],
-                                    [
-                                        "y",
-                                        "int"
-                                    ],
-                                    [
-                                        "z",
-                                        "int"
+                                        "2.1",
+                                        "string"
                                     ]
                                 ],
                                 "indexes": {
-                                    "1.1": 0,
-                                    "3.1": 1,
-                                    "a": 2,
-                                    "x": 3,
-                                    "y": 4,
-                                    "z": 5
+                                    "homeworks": 0,
+                                    "hw_grade_sum": 1,
+                                    "i": 2,
+                                    "j": 3,
+                                    "len(student_id)": 4,
+                                    "len(subject)": 5,
+                                    "max_grade_sum": 6,
+                                    "max_hw_grade": 7,
+                                    "max_test_grade": 8,
+                                    "number_of_students": 9,
+                                    "student_hw_grade": 10,
+                                    "student_id": 11,
+                                    "student_test_grade": 12,
+                                    "subject": 13,
+                                    "6.1": 14,
+                                    "4.1": 15,
+                                    "3.1": 16,
+                                    "2.1": 17
                                 },
                                 "lincons_array": []
                             }
@@ -228,106 +765,106 @@
                             "element": {
                                 "certainly": [],
                                 "maybe": [
-                                    "\"",
-                                    "x",
-                                    "u",
-                                    "2",
-                                    "B",
-                                    "s",
-                                    "z",
-                                    "K",
-                                    "-",
-                                    "|",
-                                    "4",
-                                    "~",
-                                    "n",
-                                    "9",
-                                    ",",
-                                    "!",
-                                    "M",
-                                    "Z",
-                                    "I",
                                     " ",
-                                    "\r",
-                                    "U",
-                                    "b",
-                                    "Q",
-                                    "t",
-                                    "a",
-                                    ".",
-                                    "?",
-                                    "C",
-                                    "F",
-                                    "#",
-                                    ")",
-                                    "\f",
-                                    "p",
-                                    "G",
-                                    "<",
-                                    "Y",
-                                    "R",
-                                    "H",
-                                    "+",
-                                    "h",
-                                    "]",
-                                    "8",
-                                    "f",
-                                    "g",
-                                    "3",
-                                    "%",
-                                    "O",
-                                    "&",
-                                    "\u000b",
-                                    "7",
-                                    "d",
-                                    "{",
-                                    "c",
-                                    "T",
-                                    "y",
-                                    "$",
-                                    "w",
-                                    "\t",
-                                    "V",
-                                    "}",
-                                    "q",
-                                    "=",
-                                    "*",
-                                    "L",
-                                    ":",
-                                    "E",
-                                    "`",
-                                    "(",
-                                    ";",
-                                    "S",
-                                    "[",
-                                    "i",
-                                    "1",
-                                    "/",
-                                    "\\",
-                                    "@",
-                                    "'",
-                                    "A",
-                                    "k",
-                                    "W",
-                                    "m",
-                                    "J",
-                                    "D",
-                                    "^",
-                                    "o",
-                                    "0",
-                                    "j",
-                                    "6",
-                                    "e",
+                                    "z",
                                     "X",
+                                    "x",
+                                    "S",
+                                    "'",
+                                    "u",
+                                    "{",
+                                    ":",
+                                    "e",
+                                    "m",
+                                    "I",
+                                    "c",
+                                    "%",
                                     "r",
-                                    "v",
-                                    "5",
-                                    "_",
-                                    "l",
+                                    "C",
                                     "P",
+                                    "!",
+                                    "\f",
+                                    "H",
+                                    "F",
+                                    "p",
+                                    ")",
+                                    "+",
+                                    "d",
+                                    "Y",
+                                    "N",
+                                    "k",
+                                    ";",
+                                    "?",
+                                    "Q",
+                                    "j",
+                                    "-",
+                                    "[",
+                                    "&",
+                                    "\r",
+                                    "\"",
+                                    "W",
+                                    "~",
+                                    "|",
+                                    "8",
+                                    "i",
+                                    "4",
+                                    "\t",
+                                    "O",
+                                    "(",
+                                    "\u000b",
+                                    "A",
+                                    "#",
+                                    "@",
+                                    "n",
+                                    "l",
+                                    "U",
+                                    "w",
+                                    "V",
+                                    "o",
+                                    "2",
+                                    "h",
+                                    "7",
+                                    "}",
+                                    "*",
+                                    "1",
+                                    ".",
+                                    "f",
+                                    "3",
+                                    "v",
+                                    "t",
+                                    "R",
+                                    "6",
+                                    "M",
+                                    "\\",
+                                    "b",
+                                    "^",
+                                    "/",
+                                    "q",
+                                    "T",
+                                    "g",
+                                    "_",
+                                    "$",
+                                    "s",
+                                    "`",
+                                    "=",
+                                    "D",
+                                    "Z",
+                                    "B",
                                     "\n",
+                                    "K",
+                                    "J",
+                                    "]",
+                                    "0",
+                                    "a",
+                                    "G",
+                                    ",",
+                                    "9",
+                                    "<",
+                                    "L",
                                     ">",
-                                    "N"
+                                    "5",
+                                    "E",
+                                    "y"
                                 ]
                             }
                         }
@@ -336,12 +873,1059 @@
                 {
                     "multiplier": {
                         "type": [
-                            "literal",
+                            "identifier",
                             "int"
                         ],
-                        "value": "1"
+                        "value": "3.1"
                     },
-                    "constraints": []
+                    "constraints": [
+                        {
+                            "pp": [
+                                10,
+                                8
+                            ],
+                            "lattice_elements": [
+                                {
+                                    "domain": "TypeLattice",
+                                    "element": "Float"
+                                },
+                                {
+                                    "domain": "OctagonState",
+                                    "element": {
+                                        "dimensions": 19,
+                                        "variables": [
+                                            [
+                                                "homeworks",
+                                                "int"
+                                            ],
+                                            [
+                                                "hw_grade_sum",
+                                                "float"
+                                            ],
+                                            [
+                                                "i",
+                                                "int"
+                                            ],
+                                            [
+                                                "j",
+                                                "int"
+                                            ],
+                                            [
+                                                "len(student_id)",
+                                                "int"
+                                            ],
+                                            [
+                                                "len(subject)",
+                                                "int"
+                                            ],
+                                            [
+                                                "max_grade_sum",
+                                                "float"
+                                            ],
+                                            [
+                                                "max_hw_grade",
+                                                "float"
+                                            ],
+                                            [
+                                                "max_test_grade",
+                                                "float"
+                                            ],
+                                            [
+                                                "number_of_students",
+                                                "int"
+                                            ],
+                                            [
+                                                "student_hw_grade",
+                                                "float"
+                                            ],
+                                            [
+                                                "student_id",
+                                                "string"
+                                            ],
+                                            [
+                                                "student_test_grade",
+                                                "float"
+                                            ],
+                                            [
+                                                "subject",
+                                                "string"
+                                            ],
+                                            [
+                                                "10.1",
+                                                "float"
+                                            ],
+                                            [
+                                                "6.1",
+                                                "string"
+                                            ],
+                                            [
+                                                "4.1",
+                                                "int"
+                                            ],
+                                            [
+                                                "3.1",
+                                                "int"
+                                            ],
+                                            [
+                                                "2.1",
+                                                "string"
+                                            ]
+                                        ],
+                                        "indexes": {
+                                            "homeworks": 0,
+                                            "hw_grade_sum": 1,
+                                            "i": 2,
+                                            "j": 3,
+                                            "len(student_id)": 4,
+                                            "len(subject)": 5,
+                                            "max_grade_sum": 6,
+                                            "max_hw_grade": 7,
+                                            "max_test_grade": 8,
+                                            "number_of_students": 9,
+                                            "student_hw_grade": 10,
+                                            "student_id": 11,
+                                            "student_test_grade": 12,
+                                            "subject": 13,
+                                            "10.1": 14,
+                                            "6.1": 15,
+                                            "4.1": 16,
+                                            "3.1": 17,
+                                            "2.1": 18
+                                        },
+                                        "lincons_array": [
+                                            {
+                                                "variables": [
+                                                    14
+                                                ],
+                                                "signs": [
+                                                    1
+                                                ],
+                                                "constraint_type": 1,
+                                                "constant": 0.0
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "domain": "AlphabetLattice",
+                                    "element": {
+                                        "certainly": [],
+                                        "maybe": [
+                                            " ",
+                                            "z",
+                                            "X",
+                                            "x",
+                                            "S",
+                                            "'",
+                                            "u",
+                                            "{",
+                                            ":",
+                                            "e",
+                                            "m",
+                                            "I",
+                                            "c",
+                                            "%",
+                                            "r",
+                                            "C",
+                                            "P",
+                                            "!",
+                                            "F",
+                                            "H",
+                                            "\f",
+                                            "p",
+                                            ")",
+                                            "+",
+                                            "d",
+                                            "Y",
+                                            "N",
+                                            "k",
+                                            ";",
+                                            "?",
+                                            "Q",
+                                            "j",
+                                            "-",
+                                            "[",
+                                            "&",
+                                            "\r",
+                                            "\"",
+                                            "W",
+                                            "~",
+                                            "|",
+                                            "8",
+                                            "i",
+                                            "4",
+                                            "\t",
+                                            "O",
+                                            "(",
+                                            "\u000b",
+                                            "A",
+                                            "#",
+                                            "@",
+                                            "n",
+                                            "l",
+                                            "U",
+                                            "w",
+                                            "V",
+                                            "o",
+                                            "2",
+                                            "h",
+                                            "7",
+                                            "}",
+                                            "*",
+                                            "1",
+                                            ".",
+                                            "f",
+                                            "3",
+                                            "v",
+                                            "t",
+                                            "R",
+                                            "6",
+                                            "M",
+                                            "\\",
+                                            "b",
+                                            "^",
+                                            "/",
+                                            "q",
+                                            "T",
+                                            "g",
+                                            "_",
+                                            "$",
+                                            "s",
+                                            "`",
+                                            "=",
+                                            "D",
+                                            "Z",
+                                            "B",
+                                            "\n",
+                                            "K",
+                                            "J",
+                                            "]",
+                                            "0",
+                                            "a",
+                                            "G",
+                                            ",",
+                                            "9",
+                                            "<",
+                                            "L",
+                                            ">",
+                                            "5",
+                                            "E",
+                                            "y"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "pp": [
+                                11,
+                                8
+                            ],
+                            "lattice_elements": [
+                                {
+                                    "domain": "TypeLattice",
+                                    "element": "Float"
+                                },
+                                {
+                                    "domain": "OctagonState",
+                                    "element": {
+                                        "dimensions": 20,
+                                        "variables": [
+                                            [
+                                                "homeworks",
+                                                "int"
+                                            ],
+                                            [
+                                                "hw_grade_sum",
+                                                "float"
+                                            ],
+                                            [
+                                                "i",
+                                                "int"
+                                            ],
+                                            [
+                                                "j",
+                                                "int"
+                                            ],
+                                            [
+                                                "len(student_id)",
+                                                "int"
+                                            ],
+                                            [
+                                                "len(subject)",
+                                                "int"
+                                            ],
+                                            [
+                                                "max_grade_sum",
+                                                "float"
+                                            ],
+                                            [
+                                                "max_hw_grade",
+                                                "float"
+                                            ],
+                                            [
+                                                "max_test_grade",
+                                                "float"
+                                            ],
+                                            [
+                                                "number_of_students",
+                                                "int"
+                                            ],
+                                            [
+                                                "student_hw_grade",
+                                                "float"
+                                            ],
+                                            [
+                                                "student_id",
+                                                "string"
+                                            ],
+                                            [
+                                                "student_test_grade",
+                                                "float"
+                                            ],
+                                            [
+                                                "subject",
+                                                "string"
+                                            ],
+                                            [
+                                                "11.1",
+                                                "float"
+                                            ],
+                                            [
+                                                "10.1",
+                                                "float"
+                                            ],
+                                            [
+                                                "6.1",
+                                                "string"
+                                            ],
+                                            [
+                                                "4.1",
+                                                "int"
+                                            ],
+                                            [
+                                                "3.1",
+                                                "int"
+                                            ],
+                                            [
+                                                "2.1",
+                                                "string"
+                                            ]
+                                        ],
+                                        "indexes": {
+                                            "homeworks": 0,
+                                            "hw_grade_sum": 1,
+                                            "i": 2,
+                                            "j": 3,
+                                            "len(student_id)": 4,
+                                            "len(subject)": 5,
+                                            "max_grade_sum": 6,
+                                            "max_hw_grade": 7,
+                                            "max_test_grade": 8,
+                                            "number_of_students": 9,
+                                            "student_hw_grade": 10,
+                                            "student_id": 11,
+                                            "student_test_grade": 12,
+                                            "subject": 13,
+                                            "11.1": 14,
+                                            "10.1": 15,
+                                            "6.1": 16,
+                                            "4.1": 17,
+                                            "3.1": 18,
+                                            "2.1": 19
+                                        },
+                                        "lincons_array": [
+                                            {
+                                                "variables": [
+                                                    14
+                                                ],
+                                                "signs": [
+                                                    1
+                                                ],
+                                                "constraint_type": 1,
+                                                "constant": 0.0
+                                            },
+                                            {
+                                                "variables": [
+                                                    14,
+                                                    15
+                                                ],
+                                                "signs": [
+                                                    -1,
+                                                    1
+                                                ],
+                                                "constraint_type": 1,
+                                                "constant": 0.0
+                                            },
+                                            {
+                                                "variables": [
+                                                    14,
+                                                    15
+                                                ],
+                                                "signs": [
+                                                    1,
+                                                    1
+                                                ],
+                                                "constraint_type": 1,
+                                                "constant": 0.0
+                                            },
+                                            {
+                                                "variables": [
+                                                    15
+                                                ],
+                                                "signs": [
+                                                    1
+                                                ],
+                                                "constraint_type": 1,
+                                                "constant": 0.0
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "domain": "AlphabetLattice",
+                                    "element": {
+                                        "certainly": [],
+                                        "maybe": [
+                                            " ",
+                                            "z",
+                                            "X",
+                                            "x",
+                                            "S",
+                                            "'",
+                                            "u",
+                                            "{",
+                                            ":",
+                                            "e",
+                                            "m",
+                                            "I",
+                                            "c",
+                                            "%",
+                                            "r",
+                                            "C",
+                                            "P",
+                                            "!",
+                                            "F",
+                                            "H",
+                                            "\f",
+                                            "p",
+                                            ")",
+                                            "+",
+                                            "d",
+                                            "Y",
+                                            "N",
+                                            "k",
+                                            ";",
+                                            "?",
+                                            "Q",
+                                            "j",
+                                            "-",
+                                            "[",
+                                            "&",
+                                            "\r",
+                                            "\"",
+                                            "W",
+                                            "~",
+                                            "|",
+                                            "8",
+                                            "i",
+                                            "4",
+                                            "\t",
+                                            "O",
+                                            "(",
+                                            "\u000b",
+                                            "A",
+                                            "#",
+                                            "@",
+                                            "n",
+                                            "l",
+                                            "U",
+                                            "w",
+                                            "V",
+                                            "o",
+                                            "2",
+                                            "h",
+                                            "7",
+                                            "}",
+                                            "*",
+                                            "1",
+                                            ".",
+                                            "f",
+                                            "3",
+                                            "v",
+                                            "t",
+                                            "R",
+                                            "6",
+                                            "M",
+                                            "\\",
+                                            "b",
+                                            "^",
+                                            "/",
+                                            "q",
+                                            "T",
+                                            "g",
+                                            "_",
+                                            "$",
+                                            "s",
+                                            "`",
+                                            "=",
+                                            "D",
+                                            "Z",
+                                            "B",
+                                            "\n",
+                                            "K",
+                                            "J",
+                                            "]",
+                                            "0",
+                                            "a",
+                                            "G",
+                                            ",",
+                                            "9",
+                                            "<",
+                                            "L",
+                                            ">",
+                                            "5",
+                                            "E",
+                                            "y"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "pp": [
+                        23,
+                        4
+                    ],
+                    "lattice_elements": [
+                        {
+                            "domain": "TypeLattice",
+                            "element": "Float"
+                        },
+                        {
+                            "domain": "OctagonState",
+                            "element": {
+                                "dimensions": 21,
+                                "variables": [
+                                    [
+                                        "homeworks",
+                                        "int"
+                                    ],
+                                    [
+                                        "hw_grade_sum",
+                                        "float"
+                                    ],
+                                    [
+                                        "i",
+                                        "int"
+                                    ],
+                                    [
+                                        "j",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(student_id)",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(subject)",
+                                        "int"
+                                    ],
+                                    [
+                                        "max_grade_sum",
+                                        "float"
+                                    ],
+                                    [
+                                        "max_hw_grade",
+                                        "float"
+                                    ],
+                                    [
+                                        "max_test_grade",
+                                        "float"
+                                    ],
+                                    [
+                                        "number_of_students",
+                                        "int"
+                                    ],
+                                    [
+                                        "student_hw_grade",
+                                        "float"
+                                    ],
+                                    [
+                                        "student_id",
+                                        "string"
+                                    ],
+                                    [
+                                        "student_test_grade",
+                                        "float"
+                                    ],
+                                    [
+                                        "subject",
+                                        "string"
+                                    ],
+                                    [
+                                        "23.1",
+                                        "float"
+                                    ],
+                                    [
+                                        "11.1",
+                                        "float"
+                                    ],
+                                    [
+                                        "10.1",
+                                        "float"
+                                    ],
+                                    [
+                                        "6.1",
+                                        "string"
+                                    ],
+                                    [
+                                        "4.1",
+                                        "int"
+                                    ],
+                                    [
+                                        "3.1",
+                                        "int"
+                                    ],
+                                    [
+                                        "2.1",
+                                        "string"
+                                    ]
+                                ],
+                                "indexes": {
+                                    "homeworks": 0,
+                                    "hw_grade_sum": 1,
+                                    "i": 2,
+                                    "j": 3,
+                                    "len(student_id)": 4,
+                                    "len(subject)": 5,
+                                    "max_grade_sum": 6,
+                                    "max_hw_grade": 7,
+                                    "max_test_grade": 8,
+                                    "number_of_students": 9,
+                                    "student_hw_grade": 10,
+                                    "student_id": 11,
+                                    "student_test_grade": 12,
+                                    "subject": 13,
+                                    "23.1": 14,
+                                    "11.1": 15,
+                                    "10.1": 16,
+                                    "6.1": 17,
+                                    "4.1": 18,
+                                    "3.1": 19,
+                                    "2.1": 20
+                                },
+                                "lincons_array": [
+                                    {
+                                        "variables": [
+                                            14
+                                        ],
+                                        "signs": [
+                                            1
+                                        ],
+                                        "constraint_type": 1,
+                                        "constant": 0.0
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "domain": "AlphabetLattice",
+                            "element": {
+                                "certainly": [],
+                                "maybe": [
+                                    " ",
+                                    "z",
+                                    "X",
+                                    "x",
+                                    "S",
+                                    "'",
+                                    "u",
+                                    "{",
+                                    ":",
+                                    "e",
+                                    "m",
+                                    "I",
+                                    "c",
+                                    "%",
+                                    "r",
+                                    "C",
+                                    "P",
+                                    "!",
+                                    "\f",
+                                    "H",
+                                    "F",
+                                    "p",
+                                    ")",
+                                    "+",
+                                    "d",
+                                    "Y",
+                                    "N",
+                                    "k",
+                                    ";",
+                                    "?",
+                                    "Q",
+                                    "j",
+                                    "-",
+                                    "[",
+                                    "&",
+                                    "\r",
+                                    "\"",
+                                    "W",
+                                    "~",
+                                    "|",
+                                    "8",
+                                    "i",
+                                    "4",
+                                    "\t",
+                                    "O",
+                                    "(",
+                                    "\u000b",
+                                    "A",
+                                    "#",
+                                    "@",
+                                    "n",
+                                    "l",
+                                    "U",
+                                    "w",
+                                    "V",
+                                    "o",
+                                    "2",
+                                    "h",
+                                    "7",
+                                    "}",
+                                    "*",
+                                    "1",
+                                    ".",
+                                    "f",
+                                    "3",
+                                    "v",
+                                    "t",
+                                    "R",
+                                    "6",
+                                    "M",
+                                    "\\",
+                                    "b",
+                                    "^",
+                                    "/",
+                                    "q",
+                                    "T",
+                                    "g",
+                                    "_",
+                                    "$",
+                                    "s",
+                                    "`",
+                                    "=",
+                                    "D",
+                                    "Z",
+                                    "B",
+                                    "\n",
+                                    "K",
+                                    "J",
+                                    "]",
+                                    "0",
+                                    "a",
+                                    "G",
+                                    ",",
+                                    "9",
+                                    "<",
+                                    "L",
+                                    ">",
+                                    "5",
+                                    "E",
+                                    "y"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "pp": [
+                        24,
+                        4
+                    ],
+                    "lattice_elements": [
+                        {
+                            "domain": "TypeLattice",
+                            "element": "Float"
+                        },
+                        {
+                            "domain": "OctagonState",
+                            "element": {
+                                "dimensions": 22,
+                                "variables": [
+                                    [
+                                        "homeworks",
+                                        "int"
+                                    ],
+                                    [
+                                        "hw_grade_sum",
+                                        "float"
+                                    ],
+                                    [
+                                        "i",
+                                        "int"
+                                    ],
+                                    [
+                                        "j",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(student_id)",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(subject)",
+                                        "int"
+                                    ],
+                                    [
+                                        "max_grade_sum",
+                                        "float"
+                                    ],
+                                    [
+                                        "max_hw_grade",
+                                        "float"
+                                    ],
+                                    [
+                                        "max_test_grade",
+                                        "float"
+                                    ],
+                                    [
+                                        "number_of_students",
+                                        "int"
+                                    ],
+                                    [
+                                        "student_hw_grade",
+                                        "float"
+                                    ],
+                                    [
+                                        "student_id",
+                                        "string"
+                                    ],
+                                    [
+                                        "student_test_grade",
+                                        "float"
+                                    ],
+                                    [
+                                        "subject",
+                                        "string"
+                                    ],
+                                    [
+                                        "24.1",
+                                        "float"
+                                    ],
+                                    [
+                                        "23.1",
+                                        "float"
+                                    ],
+                                    [
+                                        "11.1",
+                                        "float"
+                                    ],
+                                    [
+                                        "10.1",
+                                        "float"
+                                    ],
+                                    [
+                                        "6.1",
+                                        "string"
+                                    ],
+                                    [
+                                        "4.1",
+                                        "int"
+                                    ],
+                                    [
+                                        "3.1",
+                                        "int"
+                                    ],
+                                    [
+                                        "2.1",
+                                        "string"
+                                    ]
+                                ],
+                                "indexes": {
+                                    "homeworks": 0,
+                                    "hw_grade_sum": 1,
+                                    "i": 2,
+                                    "j": 3,
+                                    "len(student_id)": 4,
+                                    "len(subject)": 5,
+                                    "max_grade_sum": 6,
+                                    "max_hw_grade": 7,
+                                    "max_test_grade": 8,
+                                    "number_of_students": 9,
+                                    "student_hw_grade": 10,
+                                    "student_id": 11,
+                                    "student_test_grade": 12,
+                                    "subject": 13,
+                                    "24.1": 14,
+                                    "23.1": 15,
+                                    "11.1": 16,
+                                    "10.1": 17,
+                                    "6.1": 18,
+                                    "4.1": 19,
+                                    "3.1": 20,
+                                    "2.1": 21
+                                },
+                                "lincons_array": [
+                                    {
+                                        "variables": [
+                                            14
+                                        ],
+                                        "signs": [
+                                            1
+                                        ],
+                                        "constraint_type": 1,
+                                        "constant": 0.0
+                                    },
+                                    {
+                                        "variables": [
+                                            14,
+                                            15
+                                        ],
+                                        "signs": [
+                                            -1,
+                                            1
+                                        ],
+                                        "constraint_type": 1,
+                                        "constant": 0.0
+                                    },
+                                    {
+                                        "variables": [
+                                            14,
+                                            15
+                                        ],
+                                        "signs": [
+                                            1,
+                                            1
+                                        ],
+                                        "constraint_type": 1,
+                                        "constant": 0.0
+                                    },
+                                    {
+                                        "variables": [
+                                            15
+                                        ],
+                                        "signs": [
+                                            1
+                                        ],
+                                        "constraint_type": 1,
+                                        "constant": 0.0
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "domain": "AlphabetLattice",
+                            "element": {
+                                "certainly": [],
+                                "maybe": [
+                                    " ",
+                                    "z",
+                                    "X",
+                                    "x",
+                                    "S",
+                                    "'",
+                                    "u",
+                                    "{",
+                                    ":",
+                                    "e",
+                                    "m",
+                                    "I",
+                                    "c",
+                                    "%",
+                                    "r",
+                                    "C",
+                                    "P",
+                                    "!",
+                                    "\f",
+                                    "H",
+                                    "F",
+                                    "p",
+                                    ")",
+                                    "+",
+                                    "d",
+                                    "Y",
+                                    "N",
+                                    "k",
+                                    ";",
+                                    "?",
+                                    "Q",
+                                    "j",
+                                    "-",
+                                    "[",
+                                    "&",
+                                    "\r",
+                                    "\"",
+                                    "W",
+                                    "~",
+                                    "|",
+                                    "8",
+                                    "i",
+                                    "4",
+                                    "\t",
+                                    "O",
+                                    "(",
+                                    "\u000b",
+                                    "A",
+                                    "#",
+                                    "@",
+                                    "n",
+                                    "l",
+                                    "U",
+                                    "w",
+                                    "V",
+                                    "o",
+                                    "2",
+                                    "h",
+                                    "7",
+                                    "}",
+                                    "*",
+                                    "1",
+                                    ".",
+                                    "f",
+                                    "3",
+                                    "v",
+                                    "t",
+                                    "R",
+                                    "6",
+                                    "M",
+                                    "\\",
+                                    "b",
+                                    "^",
+                                    "/",
+                                    "q",
+                                    "T",
+                                    "g",
+                                    "_",
+                                    "$",
+                                    "s",
+                                    "`",
+                                    "=",
+                                    "D",
+                                    "Z",
+                                    "B",
+                                    "\n",
+                                    "K",
+                                    "J",
+                                    "]",
+                                    "0",
+                                    "a",
+                                    "G",
+                                    ",",
+                                    "9",
+                                    "<",
+                                    "L",
+                                    ">",
+                                    "5",
+                                    "E",
+                                    "y"
+                                ]
+                            }
+                        }
+                    ]
                 }
             ]
         }

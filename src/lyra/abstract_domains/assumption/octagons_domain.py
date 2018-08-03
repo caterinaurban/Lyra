@@ -193,12 +193,6 @@ class OctagonLattice(Lattice):
                                                   dimchange, False)
         # update dictionary of Elina with the new variable
         self.variables.append(variable)
-        old_variables = deepcopy(self.variables)
-        self.variables = sorted(self.variables, key=lambda v: v.name)
-        dimperm = elina_dimperm_alloc(self.dimensions)
-        for i in range(self.dimensions):
-            dimperm.contents.dim[i] = old_variables.index(self.variables[i])
-        abstract = elina_abstract0_permute_dimensions(_elina_manager, False, self.elina_abstract, dimperm)
         return self._replace(OctagonLattice(self.variables, abstract))
 
     def print_abstract(self, abstract):
@@ -360,6 +354,17 @@ class OctagonLattice(Lattice):
         if size1 != size2:
             raise ValueError
 
+    def unify(self, other: 'OctagonLattice'):
+        if self.variables != other.variables:
+            i = 0
+            for self_var, other_var in zip(self.variables, other.variables):
+                if other_var.name < self_var.name:
+                    self.variables[i] = other_var
+                i += 1
+            for var in other.variables:
+                if var not in self.variables:
+                    self.add_dimension(var)
+
 
 _normalizer = NegationFreeNormalExpression()  # puts comparison expressions in the form expr <= 0
 
@@ -485,7 +490,6 @@ class OctagonState(InputMixin, JSONMixin):
 
     def __init__(self, variables: Set[VariableIdentifier]):
         super().__init__()
-        # self._variables = list(variables)
         self.lattice_element = OctagonLattice(list(variables))
 
     @property
@@ -616,7 +620,7 @@ class OctagonState(InputMixin, JSONMixin):
         for identifier in expression.ids():
             if isinstance(identifier, VariableIdentifier):
                 variables.add(identifier)
-        variables: Set[VariableIdentifier] = variables.symmetric_difference(set(self.variables))
+        variables: Set[VariableIdentifier] = variables.difference(set(self.variables))
         if variables:  # if there are new variables appearing in the replacing expression...
             # add the new variables to the current state
             for var in variables:
@@ -626,26 +630,8 @@ class OctagonState(InputMixin, JSONMixin):
 
     @copy_docstring(InputMixin.unify)
     def unify(self, other: 'OctagonState') -> 'OctagonState':
-        i = 0
-        for my_var, their_var in zip(self.variables, other.variables):
-            if my_var.name < their_var.name:
-                other.variables[i] = my_var
-            elif their_var.name < my_var.name:
-                self.variables[i] = their_var
-
-        for var in self.variables:
-            if var not in other.variables:
-                other.lattice_element.add_dimension(var)
-
-        for var in other.variables:
-            if var not in self.variables:
-                self.lattice_element.add_dimension(var)
-
-        for var1, var2 in zip(self.variables, other.variables):
-            if var1 != var2:
-                raise ValueError
+        self.lattice_element.unify(other.lattice_element)
         return self
-
 
     @copy_docstring(JSONMixin.to_json)
     def to_json(self) -> dict:

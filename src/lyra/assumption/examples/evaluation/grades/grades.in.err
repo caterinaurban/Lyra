@@ -1,2 +1,24 @@
 |
-1|0|40|Expected type Integer
+5|53|54|Relations violated:  -line 6 + line 5 + 0.0 >= 0
+6|55|57|Relations violated:  -line 6 + line 5 + 0.0 >= 0
+11|70|72|Relations violated:  -line 12 + line 11 + 0.0 >= 0
+12|73|75|Relations violated:  -line 12 + line 11 + 0.0 >= 0
+14|85|86|Relations violated:  -line 15 + line 14 + 0.0 >= 0
+15|87|89|Relations violated:  -line 15 + line 14 + 0.0 >= 0
+18|96|98|Relations violated:  +line 18 + 0.0 >= 0; -line 19 + line 18 + 0.0 >= 0; +line 18 + 0.0 >= 0
+19|99|101|Relations violated:  -line 19 + line 18 + 0.0 >= 0
+23|116|119|Relations violated:  -line 24 + line 23 + 0.0 >= 0
+24|120|122|Relations violated:  -line 24 + line 23 + 0.0 >= 0
+25|123|124|Relations violated:  -line 26 + line 25 + 0.0 >= 0
+26|125|127|Relations violated:  -line 26 + line 25 + 0.0 >= 0
+27|128|131|Expected type Float
+28|132|134|This line depends on previous error value on line(s): ['27', '27']
+29|135|138|Relations violated:  +line 29 + 0.0 >= 0; -line 30 + line 29 + 0.0 >= 0; +line 29 + 0.0 >= 0
+30|139|141|Relations violated:  -line 30 + line 29 + 0.0 >= 0
+32|150|153|Relations violated:  -line 33 + line 32 + 0.0 >= 0
+33|154|156|Relations violated:  -line 33 + line 32 + 0.0 >= 0
+34|157|159|Relations violated:  -line 35 + line 34 + 0.0 >= 0
+35|160|162|Relations violated:  -line 35 + line 34 + 0.0 >= 0
+36|163|164|Relations violated:  -line 37 + line 36 + 0.0 >= 0
+37|165|167|Relations violated:  -line 37 + line 36 + 0.0 >= 0
+38|168|170|At least 1 more inputs expected.
