@@ -3,7 +3,8 @@ Interval Abstract Domain
 ========================
 
 Non-relational abstract domain to be used for **numerical analysis**.
-The set of possible values of a program variable in a state is represented as an interval.
+The set of possible numerical values of a program variable in a program state
+is represented as an interval.
 
 :Authors: Caterina Urban and Simon Wehrli
 """
@@ -115,8 +116,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin):
         upper = min(self.upper, other.upper)
         if lower <= upper:
             return self._replace(IntervalLattice(lower, upper))
-        else:
-            return self.bottom()
+        return self.bottom()
 
     @copy_docstring(BottomMixin._widening)
     def _widening(self, other: 'IntervalLattice') -> 'IntervalLattice':

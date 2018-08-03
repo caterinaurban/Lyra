@@ -3,8 +3,8 @@ Sign Abstract Domain
 ====================
 
 Non-relational abstract domain to be used for **numerical analysis**.
-The set of possible values of a program variable is represented as their sign
-(negative, zero, positive, ...).
+The set of possible numerical values of a program variable in a program state
+is represented by their sign (negative, zero, positive, ...).
 
 :Author: Jérôme Dohrau and Caterina Urban
 """

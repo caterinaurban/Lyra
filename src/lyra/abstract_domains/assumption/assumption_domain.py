@@ -744,8 +744,8 @@ class TypeRangeAssumptionState(AssumptionState):
     which (directly) constraints the input data read from the current program point.
 
     .. document private methods
-    .. automethod:: AssumptionState._assume
-    .. automethod:: AssumptionState._substitute
+    .. automethod:: TypeRangeAssumptionState._assume
+    .. automethod:: TypeRangeAssumptionState._substitute
     """
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
@@ -757,10 +757,39 @@ class TypeRangeAssumptionState(AssumptionState):
 
 
 class TypeAlphabetAssumptionState(AssumptionState):
+    """Type+string assumption analysis state.
+
+    Reduced product of type and string constraining states,
+    and a stack of assumptions on the input data.
+
+    .. document private methods
+    .. automethod:: TypeAlphabetAssumptionState._assume
+    .. automethod:: TypeAlphabetAssumptionState._substitute
+    """
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         from lyra.abstract_domains.assumption.type_domain import TypeState
         from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
         states = [TypeState, AlphabetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
+
+
+class TypeRangeAlphabetAssumptionState(AssumptionState):
+    """Type+string assumption analysis state.
+
+    Reduced product of type, range, and string constraining states,
+    and a stack of assumptions on the input data.
+
+    .. document private methods
+    .. automethod:: TypeRangeAlphabetAssumptionState._assume
+    .. automethod:: TypeRangeAlphabetAssumptionState._substitute
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.range_domain import RangeState
+        from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
+        states = [TypeState, RangeState, AlphabetState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)
