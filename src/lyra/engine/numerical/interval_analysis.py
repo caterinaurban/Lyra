@@ -1,5 +1,5 @@
 """
-Interval analysis
+Interval Analysis
 =================
 
 :Author: Caterina Urban

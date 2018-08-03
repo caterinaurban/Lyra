@@ -98,19 +98,19 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin):
 
     @copy_docstring(BottomMixin._less_equal)
     def _less_equal(self, other: 'IntervalLattice') -> bool:
-        """``[a, b] <= [c, d]`` if and only if ``c <= a`` and ``b <= d``."""
+        """``[a, b] ⊑ [c, d]`` if and only if ``c <= a`` and ``b <= d``."""
         return other.lower <= self.lower and self.upper <= other.upper
 
     @copy_docstring(BottomMixin._join)
     def _join(self, other: 'IntervalLattice') -> 'IntervalLattice':
-        """``[a, b] \/ [c, d] = [min(a,c), max(b,d)]``."""
+        """``[a, b] ⊔ [c, d] = [min(a,c), max(b,d)]``."""
         lower = min(self.lower, other.lower)
         upper = max(self.upper, other.upper)
         return self._replace(IntervalLattice(lower, upper))
 
     @copy_docstring(BottomMixin._meet)
     def _meet(self, other: 'IntervalLattice') -> 'IntervalLattice':
-        """``[a, b] /\ [c, d] = [max(a,c), min(b,d)]``."""
+        """``[a, b] ⊓ [c, d] = [max(a,c), min(b,d)]``."""
         lower = max(self.lower, other.lower)
         upper = min(self.upper, other.upper)
         if lower <= upper:
@@ -120,7 +120,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin):
 
     @copy_docstring(BottomMixin._widening)
     def _widening(self, other: 'IntervalLattice') -> 'IntervalLattice':
-        """``[a, b] ▽ [c, d] = [(c < a? -oo : a), (b < d? +oo : b)]``."""
+        """``[a, b] ▽ [c, d] = [(c < a ? -oo : a), (b < d ? +oo : b)]``."""
         lower = self.lower
         upper = self.upper
         if other.lower < self.lower:

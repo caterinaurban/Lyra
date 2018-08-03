@@ -250,6 +250,12 @@ class Basis(Store, State, metaclass=ABCMeta):
                 else:
                     evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
                 return evaluated2
+            elif expr.operator == BinaryArithmeticOperation.Operator.Div:
+                if isinstance(value1, ArithmeticMixin):
+                    evaluated2[expr] = deepcopy(value1).div(value2)
+                else:
+                    evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
+                return evaluated2
             raise ValueError(f"Binary arithmetic operator '{str(expr.operator)}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
