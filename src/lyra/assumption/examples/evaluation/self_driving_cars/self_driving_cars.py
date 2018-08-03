@@ -13,9 +13,9 @@ for cc in range(cases):
         speed: float = float(input())
         if speed < 0:
             raise ValueError("The speed cannot be negative.")
-        # val: float = (distance - position) / speed
-        # if val > max_time:
-        #     max_time: int = val
+        val: float = (distance - position) / speed
+        if val > max_time:
+            max_time: int = val
     print('Trip #')
     # print(cc+1)
     print("with speed")

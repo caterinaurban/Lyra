@@ -14,7 +14,9 @@ from typing import Set, Tuple, Dict, List, Any
 from lyra.abstract_domains.assumption.assumption_domain import JSONMixin, InputMixin
 from lyra.abstract_domains.numerical.sign_domain import SignLattice, SignState
 from lyra.assumption.error import CheckerError
-from lyra.core.expressions import VariableIdentifier, Expression, Input
+from lyra.core.expressions import VariableIdentifier, Expression, Input, \
+    BinaryArithmeticOperation, BinaryComparisonOperation, Literal
+from lyra.core.types import BooleanLyraType, IntegerLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -149,5 +151,16 @@ class QuantityState(SignState, InputMixin):
         def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
             state.record(value)
             return state  # nothing to be done
+
+        @copy_docstring(SignState.ArithmeticExpressionRefinement.visit_BinaryArithmeticOperation)
+        def visit_BinaryArithmeticOperation(self, expr, evaluation=None, value=None, state=None):
+            updated = super().visit_BinaryArithmeticOperation(expr, evaluation, value, state)
+            if expr.operator == BinaryArithmeticOperation.Operator.Div:
+                left = expr.right
+                operator = BinaryComparisonOperation.Operator.NotEq
+                right = Literal(IntegerLyraType(), "0")
+                condition = BinaryComparisonOperation(BooleanLyraType(), left, operator, right)
+                return updated.assume({condition})
+            return updated
 
     _refinement = ExpressionRefinement()  # static class member shared between instances
