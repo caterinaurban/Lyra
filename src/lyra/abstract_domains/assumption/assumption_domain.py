@@ -331,19 +331,24 @@ class AssumptionState(State):
                     reminder = constraint2.constraints[len(constraint1.constraints):]
                     constraint1.constraints.extend(reminder)
                     return constraint1
-                repeated = AssumptionState.InputStack.InputLattice
-                if isinstance(constraint, repeated) and self.constraints:
-                    # the constraint to be recorded is a repetition and
-                    # there is at least one previously recorded constraint
-                    previous = self.constraints[0]
-                    if isinstance(previous, repeated):
-                        # the previously recorded constraint is also a repetition
-                        m1 = constraint.multiplier
-                        m2 = previous.multiplier
-                        if type(m1) == type(m2) and m1 == m2:
-                            # we are leaving the body of a for loop another time than the first
-                            self.constraints[0] = do(constraint, previous)
-                            return self
+                if isinstance(constraint, AssumptionState.InputStack.InputLattice):
+                    # the constraint to be recorded is a (possibly empty) repetition
+                    m1 = constraint.multiplier
+                    if isinstance(m1, Literal) and m1.val == "1" and not constraint.constraints:
+                        # the constraint to be recorded is empty
+                        return self
+                    if self.constraints:
+                        # the constraint to be recorded is a non-empty repetition and
+                        # there is at least one previously recorded constraint
+                        previous = self.constraints[0]
+                        if isinstance(previous, AssumptionState.InputStack.InputLattice):
+                            # the previously recorded constraint is also a repetition
+
+                            m2 = previous.multiplier
+                            if type(m1) == type(m2) and m1 == m2:
+                                # we are leaving the body of a for loop another time than the first
+                                self.constraints[0] = do(constraint, previous)
+                                return self
                 self.constraints.insert(0, constraint)
                 return self
 

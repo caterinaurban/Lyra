@@ -1,5 +1,5 @@
 
-# INITIAL:  3:(String, [-inf, inf]), 4:(String, [-inf, inf]), len(seq1) * []
+# INITIAL:  3:(String, [-inf, inf]), 4:(String, [-inf, inf])
 seq1: str = input()
 seq2: str = input()
 hamm: int = 0
