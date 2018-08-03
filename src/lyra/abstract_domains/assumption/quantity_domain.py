@@ -1,38 +1,36 @@
 """
-Range Abstract Domain
-=====================
+Quantity Abstract Domain
+========================
 
-Non-relational abstract domain to be used for **input data assumption analysis**.
-The set of possible values of a program variable in a program state
-is represented by a value range.
+Non-relational abstract domain to be used for **input data assumptions analysis**.
+The set of possible values of a program variables in a program state
+is represented by their sign (negative, zero, positive, ...)
 
-:Authors: Caterina Urban and Madelin Schumacher
+:Authors: Caterina Urban
 """
 from collections import defaultdict
-from math import inf
 from typing import Set
-from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONMixin
-from lyra.abstract_domains.numerical.interval_domain import IntervalState, \
-    copy_docstring, Input, IntervalLattice
-from lyra.core.expressions import VariableIdentifier, Expression
+
+from lyra.abstract_domains.assumption.assumption_domain import JSONMixin, InputMixin
+from lyra.abstract_domains.numerical.sign_domain import SignLattice, SignState
+from lyra.core.expressions import VariableIdentifier, Expression, Input
+from lyra.core.utils import copy_docstring
 
 
-class RangeLattice(IntervalLattice, JSONMixin):
-    """Range lattice. The bottom range represents an empty set of values.
+class QuantityLattice(SignLattice, JSONMixin):
+    """Quantity lattice.
 
-    .. image:: _static/interval.jpg
-
-    The default abstraction is the unbounded range ``[-oo, +oo]``.
+    .. image:: _static/sign.png
 
     .. document private methods
-    .. automethod:: RangeLattice._less_equal
-    .. automethod:: RangeLattice._meet
-    .. automethod:: RangeLattice._join
-    .. automethod:: RangeLattice._widening
-    .. automethod:: RangeLattice._neg
-    .. automethod:: RangeLattice._add
-    .. automethod:: RangeLattice._sub
-    .. automethod:: RangeLattice._mult
+    .. automethod:: QuantityLattice._less_equal
+    .. automethod:: QuantityLattice._meet
+    .. automethod:: QuantityLattice._join
+    .. automethod:: QuantityLattice._widening
+    .. automethod:: QuantityLattice._neg
+    .. automethod:: QuantityLattice._add
+    .. automethod:: QuantityLattice._sub
+    .. automethod:: QuantityLattice._mult
     """
     @copy_docstring(JSONMixin.to_json)
     def to_json(self) -> str:
@@ -41,47 +39,47 @@ class RangeLattice(IntervalLattice, JSONMixin):
     @staticmethod
     @copy_docstring(JSONMixin.from_json)
     def from_json(json: str) -> 'JSONMixin':
-        if json == '⊥':
-            return RangeLattice().bottom()
-        lower, upper = json[1:-1].split(',')
-        lower = int(lower) if lower != '-inf' else -inf
-        upper = int(upper) if upper != 'inf' else inf
-        return RangeLattice(lower, upper)
+        negative, zero, positive = False, False, False
+        if json == '≤0' or json == '≠0' or json == '<0' or json == '⊤':
+            negative = True
+        if json == '≤0' or json == '=0' or json == '≥0' or json == '⊤':
+            zero = True
+        if json == '≥0' or json == '≠0' or json == '>0' or json == '⊤':
+            positive = True
+        return QuantityLattice(negative, zero, positive)
 
 
-class RangeState(IntervalState, InputMixin):
-    """Range assumption analysis state. An element of the range assumption abstract domain.
+class QuantityState(SignState, InputMixin):
+    """Quantity assumption analysis state. An element of the quantity assumption abstract domain.
 
-    Map from each program variable to the value range representing its value.
-    The value of all program variables is represented by the unbounded range by default.
+    Map from each program variable to the sign representing its value.
 
-    When reading input data, the corresponding range assumptions
+    When reading input data, the corresponding quantity assumptions
     are stored in the class member ``inputs``, which is a map from each program point
-    to the list of range assumptions on the input data read at that point.
+    to the list of quantity assumptions on the input data read at that point.
 
     .. document private methods
-    .. automethod:: RangeState._assume
-    .. automethod:: RangeState._substitute
+    .. automethod:: QuantityState._assume
+    .. automethod:: QuantityState._substitute
     """
-
     def __init__(self, variables: Set[VariableIdentifier], precursory: InputMixin = None):
         """Map each program variable to the interval representing its value.
 
         :param variables: set of program variables
         """
-        lattices = defaultdict(lambda: RangeLattice)
-        super(IntervalState, self).__init__(variables, lattices)
+        lattices = defaultdict(lambda: QuantityLattice)
+        super(SignState, self).__init__(variables, lattices)
         InputMixin.__init__(self, precursory)
 
     @copy_docstring(InputMixin.replace)
-    def replace(self, variable: VariableIdentifier, expression: Expression) -> 'RangeState':
+    def replace(self, variable: VariableIdentifier, expression: Expression) -> 'QuantityState':
         # collect the new variables appearing in the replacing expression
         variables: Set[VariableIdentifier] = set()
         for identifier in expression.ids():
             if isinstance(identifier, VariableIdentifier):
                 variables.add(identifier)
         variables: Set[VariableIdentifier] = variables.difference(set(self.variables))
-        if variables:   # if there are new variables appearing in the replacing expression...
+        if variables:  # if there are new variables appearing in the replacing expression...
             # add the new variables to the current state
             for var in variables:
                 self.variables.append(var)
@@ -91,7 +89,7 @@ class RangeState(IntervalState, InputMixin):
         return self
 
     @copy_docstring(InputMixin.unify)
-    def unify(self, other: 'RangeState') -> 'RangeState':
+    def unify(self, other: 'QuantityState') -> 'QuantityState':
         # collect the variables that differ in the current and other state
         mine = sorted(set(self.variables).difference(set(other.variables)), key=lambda x: x.name)
         theirs = sorted(set(other.variables).difference(set(self.variables)), key=lambda x: x.name)
@@ -111,11 +109,11 @@ class RangeState(IntervalState, InputMixin):
 
     # expression refinement
 
-    class ExpressionRefinement(IntervalState.ExpressionRefinement):
+    class ExpressionRefinement(SignState.ExpressionRefinement):
 
-        @copy_docstring(IntervalState.ExpressionRefinement.visit_Input)
+        @copy_docstring(SignState.ExpressionRefinement.visit_Input)
         def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
             state.record(value)
-            return state    # nothing to be done
+            return state  # nothing to be done
 
     _refinement = ExpressionRefinement()  # static class member shared between instances

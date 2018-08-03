@@ -6,7 +6,8 @@ Assumption Analysis
 """
 from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
 from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, \
-    TypeAlphabetAssumptionState, TypeRangeAlphabetAssumptionState
+    TypeAlphabetAssumptionState, TypeRangeAlphabetAssumptionState, TypeQuantityAssumptionState
+from lyra.abstract_domains.assumption.quantity_domain import QuantityState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
 from lyra.engine.backward import BackwardInterpreter
@@ -21,6 +22,15 @@ class TypeAnalysis(Runner):
 
     def state(self):
         return TypeState(self.variables)
+
+
+class QuantityAnalysis(Runner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return QuantityState(self.variables)
 
 
 class RangeAnalysis(Runner):
@@ -39,6 +49,15 @@ class AlphabetAnalysis(Runner):
 
     def state(self):
         return AlphabetState(self.variables)
+
+
+class TypeQuantityAssumptionAnalysis(Runner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return TypeQuantityAssumptionState(self.variables)
 
 
 class TypeRangeAssumptionAnalysis(Runner):

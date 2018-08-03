@@ -342,8 +342,8 @@ class TypeState(Store, InputMixin):
         we should always have m(x) ≤ TypeLattice.from_lyra_type(x.typ)
 
     When reading input data, the corresponding type assumptions
-    are stored in the class member ``inputs``, which is a map
-    from each program point to the list of type assumptions on the inputs read at that point.
+    are stored in the class member ``inputs``, which is a map from each program point
+    to the list of type assumptions on the inputs read at that point.
 
     .. document private methods
     .. automethod:: TypeState._assume
