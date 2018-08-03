@@ -325,12 +325,21 @@ class AssumptionState(State):
                 :return: current lattice element modified to record the constraint
                 """
                 def do(constraint1, constraint2):
-                    for i, cs in enumerate(zip(constraint1.constraints, constraint2.constraints)):
-                        if cs[0] != cs[1]:
-                            constraint1.constraints[i] = do(cs[0], cs[1])
-                    reminder = constraint2.constraints[len(constraint1.constraints):]
-                    constraint1.constraints.extend(reminder)
-                    return constraint1
+                    if isinstance(constraint1, tuple) and isinstance(constraint2, tuple):
+                        # the constraints are BasicConstraints about the same program point
+                        assert constraint1 and constraint2 and constraint1[0] == constraint2[0]
+                        l1: Tuple[JSONMixin, ...] = constraint1[1]
+                        l2: Tuple[JSONMixin, ...] = constraint2[1]
+                        return constraint1[0], tuple(x.join(y) for x, y in zip(l1, l2))
+                    else:   # the constraints are InputLattices
+                        constraints1 = constraint1.constraints
+                        constraints2 = constraint2.constraints
+                        for i, cs in enumerate(zip(constraints1, constraints2)):
+                            if cs[0] != cs[1]:
+                                constraint1.constraints[i] = do(cs[0], cs[1])
+                        reminder = constraint2.constraints[len(constraint1.constraints):]
+                        constraint1.constraints.extend(reminder)
+                        return constraint1
                 if isinstance(constraint, AssumptionState.InputStack.InputLattice):
                     # the constraint to be recorded is a (possibly empty) repetition
                     m1 = constraint.multiplier
@@ -343,7 +352,6 @@ class AssumptionState(State):
                         previous = self.constraints[0]
                         if isinstance(previous, AssumptionState.InputStack.InputLattice):
                             # the previously recorded constraint is also a repetition
-
                             m2 = previous.multiplier
                             if type(m1) == type(m2) and m1 == m2:
                                 # we are leaving the body of a for loop another time than the first
@@ -700,7 +708,7 @@ class AssumptionState(State):
     @copy_docstring(State.exit_loop)
     def exit_loop(self) -> 'AssumptionState':
         for i, state in enumerate(self.states):
-            self.states[i] = state.enter_loop()
+            self.states[i] = state.exit_loop()
         self.stack.exit_loop()
         return self
 
