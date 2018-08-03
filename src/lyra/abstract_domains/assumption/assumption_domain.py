@@ -984,6 +984,28 @@ class AssumptionState(State):
         return self
 
 
+class TypeQuantityAssumptionState(AssumptionState):
+    """Type+quantity assumption analysis state.
+    An element of the type+quantity assumption abstract domain.
+
+    Reduced product of type and quantity constraining states,
+    which respectively collect constraints on the type and sign of values of the program variables
+    and (indirectly) on the input data, and a stack of assumptions on the input data,
+    which (directly) constraints the input data read from the current program point.
+
+    .. document private methods
+    .. automethod:: TypeQuantityAssumptionState._assume
+    .. automethod:: TypeQuantityAssumptionState._substitute
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.quantity_domain import QuantityState
+        states = [TypeState, QuantityState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
+
+
 class TypeRangeAssumptionState(AssumptionState):
     """Type+range assumption analysis state.
     An element of the type+range assumption abstract domain.

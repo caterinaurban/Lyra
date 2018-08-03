@@ -196,20 +196,16 @@ class SignLattice(ArithmeticMixin):
         return self._replace(SignLattice(negative, positive, zero))
 
     def _add(self, other: 'SignLattice') -> 'SignLattice':
-        negative = (self.maybe_negative() and not other.is_bottom()) or \
-                   (self.maybe_non_negative() and other.maybe_negative())
-        positive = (self.maybe_positive() and not other.is_bottom()) or \
-                   (self.maybe_non_positive() and other.maybe_positive())
+        negative = self.maybe_negative() or other.maybe_negative()
+        positive = self.maybe_positive() or other.maybe_positive()
         zero = (self.maybe_zero() and other.maybe_zero()) or \
                (self.maybe_negative() and other.maybe_positive()) or \
                (self.maybe_positive() and other.maybe_negative())
         return self._replace(SignLattice(negative, positive, zero))
 
     def _sub(self, other: 'SignLattice') -> 'SignLattice':
-        negative = (self.maybe_negative() and not other.is_bottom()) or \
-                   (self.maybe_non_negative() and other.maybe_positive())
-        positive = (self.maybe_positive() and not other.is_bottom()) or \
-                   (self.maybe_non_positive() and other.maybe_negative())
+        negative = self.maybe_negative() or other.maybe_positive()
+        positive = self.maybe_positive() or other.maybe_negative()
         zero = (self.maybe_zero() and other.maybe_zero()) or \
                (self.maybe_negative() and other.maybe_negative()) or \
                (self.maybe_positive() and other.maybe_positive())
