@@ -394,7 +394,7 @@ class FularaUsageState(Stack, State):
     def _assume(self, condition: Expression) -> 'FularaUsageState':
         condition = NegationFreeNormalExpression().visit(condition)     # eliminate negations
 
-        if self._loop_flag:
+        if self._loop_flag:     # TODO: not really working
             if isinstance(condition, BinaryComparisonOperation):
                 if condition.operator == BinaryComparisonOperation.Operator.In:
                     left = condition.left

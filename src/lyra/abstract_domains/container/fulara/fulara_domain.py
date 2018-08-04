@@ -913,7 +913,7 @@ class FularaState(State):
                     key_complement = k_current.decomp(k_current, k_abs)
                     joined_complement = k_current.big_join(list(key_complement))
 
-                    if self._loop_flag:  # loop condition -> overwrite old value
+                    if self._loop_flag:  # loop condition -> overwrite old value        # TODO: can this happen?
                         self.scalar_state.add_variable(v_k)
                         self.scalar_state.meet(self._k_s_conv(joined_complement))
                         self.scalar_state.assign({condition.left}, {v_k})
@@ -938,7 +938,7 @@ class FularaState(State):
                     return self
                 elif isinstance(condition.right, Values):
                     # TODO
-                    if self._loop_flag:
+                    if self._loop_flag:                 # TODO: can this happen?
                         self.scalar_state.forget_variable(condition.left)
 
                         # invalidate old left in dict stores                      # imprecision
@@ -963,7 +963,7 @@ class FularaState(State):
                     key_complement = k_current.decomp(k_current, k_abs)
                     joined_complement = k_current.big_join(list(key_complement))
 
-                    if self._loop_flag:  # loop condition -> overwrite old value
+                    if self._loop_flag:  # loop condition -> overwrite old value        # TODO: can this happen?
                         self.scalar_state.add_variable(v_k)
                         self.scalar_state.meet(self._k_s_conv(joined_complement))
                         self.scalar_state.assign({condition.left.items[0]}, {v_k})
