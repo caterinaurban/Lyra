@@ -15,6 +15,6 @@ from lyra.engine.usage.fulara_usage_analysis import FularaUsageAnalysis
 # RangeAnalysis().main("assumption/example.py")
 # TypeRangeAssumptionAnalysis().main("assumption/example.py")
 
-# FularaAnalysis().main("numerical/larger_expressions.py")
+# FularaAnalysis().main("usage/dict_example.py")
 
-FularaUsageAnalysis().main("numerical/dict_example.py")
+FularaUsageAnalysis().main("usage/dict_example.py")
