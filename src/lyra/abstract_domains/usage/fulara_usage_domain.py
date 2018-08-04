@@ -23,8 +23,8 @@ from lyra.abstract_domains.store import Store
 from lyra.abstract_domains.usage.usage_domain import SimpleUsageStore
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, \
-    _iter_child_exprs, NegationFreeNormalExpression, BinaryComparisonOperation, Keys, Values, \
-    Items, TupleDisplay
+    _iter_child_exprs, NegationFreeNormalExpression, Keys, Values, \
+    Items
 from lyra.core.types import BooleanLyraType, IntegerLyraType, StringLyraType, \
     FloatLyraType, DictLyraType
 from lyra.core.utils import copy_docstring
