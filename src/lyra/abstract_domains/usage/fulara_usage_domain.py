@@ -121,7 +121,7 @@ class FularaUsageLattice(Lattice):
         return self._dict_usage
 
     def __repr__(self):
-        return repr(self.scalar_usage) + repr(self.dict_usage)  # TODO
+        return f"{self.scalar_usage}, {self.dict_usage}"
 
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'FularaUsageLattice':
@@ -492,11 +492,14 @@ class FularaUsageState(Stack, State):
                 left_lattice: FularaLattice = self.lattice.dict_usage.store[left]
                 left_u_s = any(v.is_top() or v.is_scoped() for (_, v) in left_lattice.segments)
 
-                # U/W/S segments (all) -> overwritten (W):
+                # U/W/S segments (all) -> overwritten (W) (if any):
                 old_segments = copy(left_lattice.segments)
                 left_lattice.segments.clear()
                 for (k, v) in old_segments:
                     left_lattice.segments.add((k, UsageLattice(Status.W)))
+            else:
+                error = f"Substitution for {left} is not yet implemented!"
+                raise NotImplementedError(error)
         elif isinstance(left, Subscription) and isinstance(left.target.typ, DictLyraType):
             left_lattice: FularaLattice = self.lattice.dict_usage.store[left.target]
             pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
