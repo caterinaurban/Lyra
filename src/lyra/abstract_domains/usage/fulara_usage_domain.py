@@ -197,9 +197,10 @@ class FularaUsageLattice(Lattice):
             old_segments = copy(d_lattice.segments)     # TODO: deep?
             for (k, v) in old_segments:
                 d_lattice.segments.remove((k, v))
-                v_copy: UsageLattice = copy(v)
-                v_copy.increase()
-                d_lattice.segments.add((k, v_copy))
+                if not v.is_written():      # don't want to add a N segment
+                    v_copy: UsageLattice = copy(v)
+                    v_copy.increase()
+                    d_lattice.segments.add((k, v_copy))
         return self
 
     def decrease(self, other: 'FularaUsageLattice') -> 'FularaUsageLattice':
