@@ -527,6 +527,9 @@ class FularaUsageState(Stack, State):
                             # weak update: W join S = U     # TODO: only update overlapping parts?
                             left_lattice.segments.add((k, UsageLattice(Status.U)))
 
+            if left_u_s:      # make subscript used
+                self.make_used(left.key)
+
         else:
             error = f"Substitution for {left} is not yet implemented!"
             raise NotImplementedError(error)
