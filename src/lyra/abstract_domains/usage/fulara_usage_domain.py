@@ -23,7 +23,8 @@ from lyra.abstract_domains.store import Store
 from lyra.abstract_domains.usage.usage_domain import SimpleUsageStore
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, \
-    _iter_child_exprs, NegationFreeNormalExpression, BinaryComparisonOperation, Keys, Values, Items
+    _iter_child_exprs, NegationFreeNormalExpression, BinaryComparisonOperation, Keys, Values, \
+    Items, TupleDisplay
 from lyra.core.types import BooleanLyraType, IntegerLyraType, StringLyraType, \
     FloatLyraType, DictLyraType
 from lyra.core.utils import copy_docstring
@@ -405,10 +406,31 @@ class FularaUsageState(Stack, State):
                             left_state.written()
                             self.make_used(condition.right)
                         return self
+                    elif isinstance(left, TupleDisplay) \
+                        and all(type(i.typ) in scalar_types for i in left.items):
+                        # loop condition -> like assignment left := right
+                        left_u_s = False
+                        for i in left.items:
+                            i_state = self.lattice.scalar_usage.store[i]
+                            if i_state.is_scoped() or i_state.is_top():
+                                i_state.written()
+                                left_u_s = True
+                        if left_u_s:
+                            self.make_used(condition.right)
+                        return self
                     else:
                         error = f"The loop condition {condition} is not yet supported!"
                         raise NotImplementedError(error)
                 # TODO: not in?
+                elif condition.operator == BinaryComparisonOperation.Operator.NotIn:
+                    return self     # do nothing
+                    # left = condition.left
+                    # if isinstance(left, VariableIdentifier) and type(left.typ) in scalar_types:
+                    #     self.make_used(condition.right)
+                    #     return self
+                    # else:
+                    #     error = f"The loop condition {condition} is not yet supported!"
+                    #     raise NotImplementedError(error)
 
         # default:
         effect = False  # effect of the current nesting level on the outcome of the program
