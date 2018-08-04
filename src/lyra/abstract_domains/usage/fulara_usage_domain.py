@@ -485,9 +485,9 @@ class FularaUsageState(Stack, State):
         if isinstance(left, VariableIdentifier):
             if type(left.typ) in scalar_types:
                 left_state = self.lattice.scalar_usage.store[left]
-                left_u_s = left_state.is_top() or left_state.is_scoped()
-
-                left_state.written()      # left overwritten
+                if left_state.is_top() or left_state.is_scoped():
+                    left_u_s = True
+                    left_state.written()      # left overwritten
             elif isinstance(left.typ, DictLyraType):
                 left_lattice: FularaLattice = self.lattice.dict_usage.store[left]
                 left_u_s = any(v.is_top() or v.is_scoped() for (_, v) in left_lattice.segments)
