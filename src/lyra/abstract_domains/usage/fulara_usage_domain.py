@@ -298,7 +298,7 @@ class FularaUsageState(Stack, State):
         self._k_k_pre_conv = k_k_pre_conv
         self._k_pre_k_conv = k_pre_k_conv
 
-        self._loop_flag = False
+        # self._loop_flag = False
 
     # @property
     # def scalar_vars(self) -> Set[VariableIdentifier]:
@@ -395,42 +395,42 @@ class FularaUsageState(Stack, State):
     def _assume(self, condition: Expression) -> 'FularaUsageState':
         condition = NegationFreeNormalExpression().visit(condition)     # eliminate negations
 
-        if self._loop_flag:     # TODO: not really working
-            if isinstance(condition, BinaryComparisonOperation):
-                if condition.operator == BinaryComparisonOperation.Operator.In:
-                    left = condition.left
-                    if isinstance(left, VariableIdentifier) and type(left.typ) in scalar_types:
-                        left_state = self.lattice.scalar_usage.store[left]
-                        # loop condition -> like assignment left := right
-                        if left_state.is_scoped() or left_state.is_top():
-                            left_state.written()
-                            self.make_used(condition.right)
-                        return self
-                    elif isinstance(left, TupleDisplay) \
-                        and all(type(i.typ) in scalar_types for i in left.items):
-                        # loop condition -> like assignment left := right
-                        left_u_s = False
-                        for i in left.items:
-                            i_state = self.lattice.scalar_usage.store[i]
-                            if i_state.is_scoped() or i_state.is_top():
-                                i_state.written()
-                                left_u_s = True
-                        if left_u_s:
-                            self.make_used(condition.right)
-                        return self
-                    else:
-                        error = f"The loop condition {condition} is not yet supported!"
-                        raise NotImplementedError(error)
-                # TODO: not in?
-                elif condition.operator == BinaryComparisonOperation.Operator.NotIn:
-                    return self     # do nothing
-                    # left = condition.left
-                    # if isinstance(left, VariableIdentifier) and type(left.typ) in scalar_types:
-                    #     self.make_used(condition.right)
-                    #     return self
-                    # else:
-                    #     error = f"The loop condition {condition} is not yet supported!"
-                    #     raise NotImplementedError(error)
+        # if self._loop_flag:     # TODO: not really working
+        #     if isinstance(condition, BinaryComparisonOperation):
+        #         if condition.operator == BinaryComparisonOperation.Operator.In:
+        #             left = condition.left
+        #             if isinstance(left, VariableIdentifier) and type(left.typ) in scalar_types:
+        #                 left_state = self.lattice.scalar_usage.store[left]
+        #                 # loop condition -> like assignment left := right
+        #                 if left_state.is_scoped() or left_state.is_top():
+        #                     left_state.written()
+        #                     self.make_used(condition.right)
+        #                 return self
+        #             elif isinstance(left, TupleDisplay) \
+        #                 and all(type(i.typ) in scalar_types for i in left.items):
+        #                 # loop condition -> like assignment left := right
+        #                 left_u_s = False
+        #                 for i in left.items:
+        #                     i_state = self.lattice.scalar_usage.store[i]
+        #                     if i_state.is_scoped() or i_state.is_top():
+        #                         i_state.written()
+        #                         left_u_s = True
+        #                 if left_u_s:
+        #                     self.make_used(condition.right)
+        #                 return self
+        #             else:
+        #                 error = f"The loop condition {condition} is not yet supported!"
+        #                 raise NotImplementedError(error)
+        #         # TODO: not in?
+        #         elif condition.operator == BinaryComparisonOperation.Operator.NotIn:
+        #             return self     # do nothing
+        #             # left = condition.left
+        #             # if isinstance(left, VariableIdentifier) and type(left.typ) in scalar_types:
+        #             #     self.make_used(condition.right)
+        #             #     return self
+        #             # else:
+        #             #     error = f"The loop condition {condition} is not yet supported!"
+        #             #     raise NotImplementedError(error)
 
         # default:
         effect = False  # effect of the current nesting level on the outcome of the program
@@ -458,7 +458,6 @@ class FularaUsageState(Stack, State):
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'FularaUsageState':
-        self._loop_flag = False
         return self.push()
 
     @copy_docstring(State.exit_if)
@@ -467,7 +466,6 @@ class FularaUsageState(Stack, State):
 
     @copy_docstring(State.enter_loop)
     def enter_loop(self) -> 'FularaUsageState':
-        self._loop_flag = True
         return self.push()
 
     @copy_docstring(State.exit_loop)
@@ -514,7 +512,7 @@ class FularaUsageState(Stack, State):
                     if not key_meet_k.is_bottom():    # key may be contained in this segment
                         if v.is_top() or v.is_scoped():  # TODO: more efficient way?
                             left_u_s = True
-                            left_lattice.partition_add(k, UsageLattice(Status.W))   # strong update
+                            left_lattice.partition_add(k_abs, UsageLattice(Status.W))   # strong update
                     break   # there can only be one overlapping segment (since k_abs is singleton)
             else:
                 for (k, v) in old_segments:
