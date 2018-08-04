@@ -76,7 +76,7 @@ class AssumptionChecker(Checker):
             messages = []
             message = ';'.join([err.message for err in errors if isinstance(err, RelationalError)])
             if len(message) > 0:
-                message = "Relations violated: {}".format(message)
+                message = "Expected relations: {}".format(message)
                 messages.append(message)
 
             message = [str(err.source_line) for err in errors if isinstance(err, DependencyError) and err.source_line != line_number]

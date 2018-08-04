@@ -11,6 +11,7 @@ from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
 from typing import List, Dict, Type, Any, Union, Tuple, Set, Optional, Generator
+
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
@@ -1034,6 +1035,7 @@ class OctagonStringAssumptionState(AssumptionState):
         from lyra.abstract_domains.assumption.octagons_domain import OctagonState
         from lyra.abstract_domains.assumption.type_domain import TypeState
         from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
+        from lyra.abstract_domains.assumption.quantity_domain import QuantityState
         states = [TypeState, OctagonState, AlphabetState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)

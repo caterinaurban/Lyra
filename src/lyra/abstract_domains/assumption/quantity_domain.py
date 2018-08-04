@@ -9,10 +9,11 @@ is represented by their sign (negative, zero, positive, ...)
 :Authors: Caterina Urban
 """
 from collections import defaultdict
-from typing import Set
+from typing import Set, Tuple, Dict, List, Any
 
 from lyra.abstract_domains.assumption.assumption_domain import JSONMixin, InputMixin
 from lyra.abstract_domains.numerical.sign_domain import SignLattice, SignState
+from lyra.assumption.error import CheckerError
 from lyra.core.expressions import VariableIdentifier, Expression, Input
 from lyra.core.utils import copy_docstring
 
@@ -32,6 +33,7 @@ class QuantityLattice(SignLattice, JSONMixin):
     .. automethod:: QuantityLattice._sub
     .. automethod:: QuantityLattice._mult
     """
+
     @copy_docstring(JSONMixin.to_json)
     def to_json(self) -> str:
         return str(self)
@@ -47,6 +49,38 @@ class QuantityLattice(SignLattice, JSONMixin):
         if json == '≥0' or json == '≠0' or json == '>0' or json == '⊤':
             positive = True
         return QuantityLattice(negative, zero, positive)
+
+    @copy_docstring(JSONMixin.check_input)
+    def check_input(self, pp: str, pp_value: Dict[str, Tuple[int, Any]],
+                    line_errors: Dict[int, List[CheckerError]]):
+        """
+        If sign check fails, the value passed to the next state's check_input through
+        **pp_value** is None to indicate that this value is uncheckable.
+        Errors are added the respective lines in **line_errors**.
+
+        :param pp: Program point of the current constraint
+        :param pp_value: Mapping from program point to the last value read from it
+        :param line_errors: errors present on each line
+        :return:
+        """
+        error = None
+        input_line = pp_value[pp][0]
+        input_value = pp_value[pp][1]
+        correct_value = None
+
+        if self.is_positive():
+            if input_value <= 0:
+                error = CheckerError("Expected a positive value.")
+        if self.is_zero():
+            if input_value != 0:
+                error = CheckerError("Expected a zero.")
+        if self.is_negative():
+            if input_value >= 0:
+                error = CheckerError("Expected a negative value.")
+
+        if error is not None:
+            line_errors[input_line].append(error)
+        pp_value[pp] = (input_line, correct_value)
 
 
 class QuantityState(SignState, InputMixin):
@@ -109,9 +143,9 @@ class QuantityState(SignState, InputMixin):
 
     # expression refinement
 
-    class ExpressionRefinement(SignState.ExpressionRefinement):
+    class ExpressionRefinement(SignState.ArithmeticExpressionRefinement):
 
-        @copy_docstring(SignState.ExpressionRefinement.visit_Input)
+        @copy_docstring(SignState.ArithmeticExpressionRefinement.visit_Input)
         def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
             state.record(value)
             return state  # nothing to be done

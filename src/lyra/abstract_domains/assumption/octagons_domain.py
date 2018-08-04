@@ -222,7 +222,7 @@ class OctagonLattice(Lattice):
                 string += str(self.variables[linterm.dim])
             else:
                 variable = self.variables[linterm.dim]
-                string += f"line {pp_value[variable][0]}"
+                string += f"(Line{pp_value[variable][0])}"
         const_dbl = lincons.linexpr0.contents.cst.val.scalar.contents.val.dbl
         if const_dbl >= 0:
             string += ' + '

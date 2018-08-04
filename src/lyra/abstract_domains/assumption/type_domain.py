@@ -309,6 +309,17 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
 
     @copy_docstring(JSONMixin.check_input)
     def check_input(self, pp: str, pp_value: Dict[str, Tuple[int, Any]], line_errors: Dict[int, List[CheckerError]]):
+        """
+        If type check fails, the values passed to the next state's check_input through
+        **pp_value** is None to indicate that this value is uncheckable. Otherwise, the value is
+        cast to its correct type in order to be checked by the next state.
+        Errors are added the respective lines in **line_errors**.
+
+        :param pp: Program point of the current constraint
+        :param pp_value: Mapping from program point to the last value read from it
+        :param line_errors: errors present on each line
+        :return:
+        """
         error = None
         input_line = pp_value[pp][0]
         input_value = pp_value[pp][1]
