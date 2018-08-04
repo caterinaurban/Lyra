@@ -10,13 +10,12 @@ Generic lattice to abstract dictionaries as a set of abstract segments
 from copy import deepcopy, copy
 from typing import List, Tuple, Set, Type, Dict, Any
 
-from lyra.abstract_domains.lattice import Lattice
-from lyra.abstract_domains.store import Store
+from lyra.abstract_domains.lattice import Lattice, BottomMixin
 from lyra.core.expressions import VariableIdentifier
 from lyra.core.utils import copy_docstring
 
 
-class FularaLattice(Lattice):
+class FularaLattice(BottomMixin):
     """Fulara lattice element::
 
         set of abstract segments,
@@ -26,7 +25,13 @@ class FularaLattice(Lattice):
              (ii) there are no empty segments (i.e. neither k nor v are bottom)
 
     Top: {(top, top)}
-    Bottom: {}
+        /     |     \
+             ...
+
+           \  |  /
+             {}
+              |
+    Bottom:   ⊥
 
     The default lattice element is Top, meaning the dictionary can contain anything.
 
@@ -77,6 +82,7 @@ class FularaLattice(Lattice):
             #         raise TypeError(f"The value type of the segment {s}
             #                         does not match the provided value domain {value_domain}")
             self._segments = segments
+        # TODO: add possibility to create bottom element?
 
     @property
     def k_domain(self) -> Type[Lattice]:
@@ -101,43 +107,42 @@ class FularaLattice(Lattice):
     @property
     def segments(self) -> Set[Tuple[Lattice, Lattice]]:
         """Set of all abstract segments."""
-        return self._segments
+        if not self.is_bottom():
+            return self._segments
 
     def sorted_segments(self) -> List[Tuple[Lattice, Lattice]]:
         """List of all abstract segments ordered by their keys"""
-        return sorted(self.segments, key=lambda t: t[0])
+        if not self.is_bottom():
+            return sorted(self.segments, key=lambda t: t[0])
 
     def __repr__(self):
+        if self.is_bottom():
+            return "⊥"
         str_segments = map(repr, self.sorted_segments())
         result = "{" + ", ".join(str_segments) + "}"
         return result
 
-    @copy_docstring(Lattice.bottom)
-    def bottom(self) -> 'FularaLattice':
-        """The bottom lattice element is ``{}``."""
-        self._replace(FularaLattice(self.k_domain, self.v_domain,
-                                    self.k_d_args, self.v_d_args, set()))
-        return self
-
-    @copy_docstring(Lattice.top)
+    @copy_docstring(BottomMixin.top)
     def top(self) -> 'FularaLattice':
         """The top lattice element is ``{(top, top)}``."""
         self._replace(FularaLattice(self.k_domain, self.v_domain,
                                     self.k_d_args, self.v_d_args))
         return self
 
-    @copy_docstring(Lattice.is_bottom)
-    def is_bottom(self) -> bool:
-        return len(self.segments) == 0
-
-    @copy_docstring(Lattice.is_top)
+    @copy_docstring(BottomMixin.is_top)
     def is_top(self) -> bool:
-        if len(self.segments) == 1:
+        if not self.is_bottom() and len(self.segments) == 1:
             segment = next(iter(self.segments))     # 'get' (work-around to not use pop)
             return segment[0].is_top() and segment[1].is_top()
         return False
 
-    @copy_docstring(Lattice._less_equal)
+    def empty(self) -> 'FularaLattice':
+        """Abstraction of an empty dictionary (=> empty segment set)"""
+        self._replace(FularaLattice(self.k_domain, self.v_domain,
+                                    self.k_d_args, self.v_d_args, set()))
+        return self
+
+    @copy_docstring(BottomMixin._less_equal)
     def _less_equal(self, other: 'FularaLattice') -> bool:
         if self.k_domain != other.k_domain:
             raise TypeError(f"Cannot compare dictionary abstractions with different "
@@ -147,7 +152,7 @@ class FularaLattice(Lattice):
                             f"value abstractions ({self.v_domain}, {other.v_domain})")
 
         # le <=> same or more 'boundaries'
-        if self.segments == other.segments:     # TODO: needed (efficiency?
+        if self.segments == other.segments:     # TODO: needed (efficiency?)
             return True
         else:
             # all segments of self need to be contained in some segment of other
@@ -164,7 +169,7 @@ class FularaLattice(Lattice):
 
             return True
 
-    @copy_docstring(Lattice._meet)
+    @copy_docstring(BottomMixin._meet)
     def _meet(self, other: 'FularaLattice') -> 'FularaLattice':
         """Point-wise meet of overlapping segments"""
         new_segments = set()
@@ -188,9 +193,10 @@ class FularaLattice(Lattice):
 
     def d_norm_own(self):
         """Applies d_norm to own segment set"""
-        self._segments = d_norm(self.segments)
+        if not self.is_bottom():
+            self._segments = d_norm(self.segments)
 
-    @copy_docstring(Lattice._join)
+    @copy_docstring(BottomMixin._join)
     def _join(self, other: 'FularaLattice') -> 'FularaLattice':
         # dnorm(union(segments))
         if len(self.segments) > len(other.segments):
@@ -201,10 +207,9 @@ class FularaLattice(Lattice):
                                     self.k_d_args, self.v_d_args, new_segments))
         return self
 
-    @copy_docstring(Lattice._widening)
+    @copy_docstring(BottomMixin._widening)
     def _widening(self, other: 'FularaLattice') -> 'FularaLattice':
         # imprecise version
-
         segment_set = copy(self.segments)     # cond. 2
         o_add_segment = False   # other has a segment, which does not overlap with any of self
         for o in other.segments:
@@ -242,44 +247,49 @@ class FularaLattice(Lattice):
         """Adds the given key-value-pair to the segments (if key/value are not bottom)
         and removes all overlapping parts of other segments (computes a new partition).
         (strong update)"""
-        old_segments = copy(self.segments)
-        for s in old_segments:
-            s_meet_key = deepcopy(s[0]).meet(key)
-            if not s_meet_key.is_bottom():
-                # segments overlap -> partition, s.t. overlapping part is removed
-                self.segments.remove(s)
-                # TODO: require KeyWrapper?
-                non_overlapping = {(m, s[1]) for m in s[0].decomp(s[0], key) if not m.is_bottom()}
-                self.segments.update(non_overlapping)       # union
-        if not (key.is_bottom() or value.is_bottom()):
-            self.segments.add((key, value))
+        if not self.is_bottom():
+            old_segments = copy(self.segments)
+            for s in old_segments:
+                s_meet_key = deepcopy(s[0]).meet(key)
+                if not s_meet_key.is_bottom():
+                    # segments overlap -> partition, s.t. overlapping part is removed
+                    self.segments.remove(s)
+                    # TODO: require KeyWrapper?
+                    non_overlapping = {(m, s[1]) for m in s[0].decomp(s[0], key) if not m.is_bottom()}
+                    self.segments.update(non_overlapping)       # union
+            if not (key.is_bottom() or value.is_bottom()):
+                self.segments.add((key, value))
 
     def normalized_add(self, key: Lattice, value: Lattice):
         """Adds the given key-value-pair to the segment set (if key/value are not bottom)
         and applies the d_norm function (so the new segment may get joined with existing ones)
         (weak update)"""
-        if not (key.is_bottom() or value.is_bottom()):
-            self._segments = d_norm({(key, value)}, self.segments)
+        if not self.is_bottom():
+            if not (key.is_bottom() or value.is_bottom()):
+                self._segments = d_norm({(key, value)}, self.segments)
 
     # helper
     def forget_variable(self, variable: VariableIdentifier):
-        for (k, v) in self.segments:
-            k.forget_variable(variable)
-            v.forget_variable(variable)
+        if not self.is_bottom():
+            for (k, v) in self.segments:
+                k.forget_variable(variable)
+                v.forget_variable(variable)
 
     # helper
     def get_keys_joined(self) -> Lattice:
-        result = self.k_domain(**self.k_d_args).bottom()
-        for (k, v) in self.segments:
-            result.join(deepcopy(k))
-        return result
+        if not self.is_bottom():
+            result = self.k_domain(**self.k_d_args).bottom()
+            for (k, v) in self.segments:
+                result.join(deepcopy(k))
+            return result
 
     # helper
     def get_values_joined(self) -> Lattice:
-        result = self.v_domain(**self.v_d_args).bottom()
-        for (k, v) in self.segments:
-            result.join(deepcopy(v))
-        return result
+        if not self.is_bottom():
+            result = self.v_domain(**self.v_d_args).bottom()
+            for (k, v) in self.segments:
+                result.join(deepcopy(v))
+            return result
 
 
 def d_norm(segment_set: Set[Tuple[Lattice, Lattice]],
@@ -290,10 +300,11 @@ def d_norm(segment_set: Set[Tuple[Lattice, Lattice]],
     (and the keys are minimal)"""
     # TODO: make faster? (sorted segments?)
     # TODO: assert same domains?
-    if known_disjoint is None:
-        result_set = set()
-    else:
+    if known_disjoint:      # not empty & not None
         result_set = copy(known_disjoint)
+    else:
+        result_set = set()
+
     for s in segment_set:
         remove_set = set()
         for r in result_set:
