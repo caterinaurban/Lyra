@@ -21,7 +21,7 @@ from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, DictDisplay, \
     BinaryComparisonOperation, Keys, Items, Values, TupleDisplay, ExpressionVisitor, \
-    NegationFreeNormalExpression
+    NegationFreeNormalExpression, Input
 from lyra.core.types import DictLyraType, LyraType, BooleanLyraType, IntegerLyraType, \
     FloatLyraType, StringLyraType
 from lyra.core.utils import copy_docstring
@@ -737,6 +737,10 @@ class FularaState(State):
                         # k_abs must be a singleton -> 'strong update'
                         left_lattice.partition_add(k_abs, v_abs)
                         left_i_lattice.partition_add(k_abs, BoolLattice(False))
+                elif isinstance(right, Input):      # TODO: not really possible
+                    # everything set to top
+                    self.dict_store.store[left].top()
+                    self.init_store.store[left].top()
                 else:
                     raise NotImplementedError(
                         f"Assignment '{left} = {right}' is not yet supported")
