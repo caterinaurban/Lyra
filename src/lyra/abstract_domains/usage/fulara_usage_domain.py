@@ -103,6 +103,9 @@ class FularaUsageLattice(Lattice):
 
         lattices = defaultdict(lambda: FularaLattice)
         self._dict_usage = Store(dict_vars, lattices, arguments)
+        # start with 'not used'
+        for var in dict_vars:
+            self._dict_usage.store[var].empty()
 
         # self._length_usage # TODO
 
