@@ -11,13 +11,13 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import Set, Dict, Type, Any
 
-from lyra.abstract_domains.lattice import Lattice, ArithmeticMixin, BooleanMixin
+from lyra.abstract_domains.lattice import Lattice, ArithmeticMixin, BooleanMixin, StringMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing, \
     BinaryBooleanOperation, ExpressionVisitor, Literal, LengthIdentifier, ListDisplay, \
     AttributeReference, Input, Range, UnaryArithmeticOperation, BinaryArithmeticOperation, \
-    UnaryBooleanOperation, Identifier
+    UnaryBooleanOperation
 from lyra.core.types import LyraType, BooleanLyraType
 from lyra.core.utils import copy_docstring
 
@@ -235,6 +235,8 @@ class Basis(Store, State, metaclass=ABCMeta):
             if expr.operator == BinaryArithmeticOperation.Operator.Add:
                 if isinstance(value1, ArithmeticMixin):
                     evaluated2[expr] = deepcopy(value1).add(value2)
+                elif isinstance(value1, StringMixin):
+                    evaluated2[expr] = deepcopy(value1).concat(value2)
                 else:
                     evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
                 return evaluated2
@@ -247,6 +249,12 @@ class Basis(Store, State, metaclass=ABCMeta):
             elif expr.operator == BinaryArithmeticOperation.Operator.Mult:
                 if isinstance(value1, ArithmeticMixin):
                     evaluated2[expr] = deepcopy(value1).mult(value2)
+                else:
+                    evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
+                return evaluated2
+            elif expr.operator == BinaryArithmeticOperation.Operator.Div:
+                if isinstance(value1, ArithmeticMixin):
+                    evaluated2[expr] = deepcopy(value1).div(value2)
                 else:
                     evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
                 return evaluated2

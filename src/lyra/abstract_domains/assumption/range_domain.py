@@ -3,7 +3,8 @@ Range Abstract Domain
 =====================
 
 Non-relational abstract domain to be used for **input data assumption analysis**.
-The set of possible values of a program variable in a state is represented as a value range.
+The set of possible values of a program variable in a program state
+is represented by a value range.
 
 :Authors: Caterina Urban and Madelin Schumacher
 """
@@ -55,8 +56,8 @@ class RangeState(IntervalState, InputMixin):
     The value of all program variables is represented by the unbounded range by default.
 
     When reading input data, the corresponding range assumptions
-    are stored in the class member ``inputs``, which is a map
-    from each program point to the list of range assumptions on the input data read at that point.
+    are stored in the class member ``inputs``, which is a map from each program point
+    to the list of range assumptions on the input data read at that point.
 
     .. document private methods
     .. automethod:: RangeState._assume

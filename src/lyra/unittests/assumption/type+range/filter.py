@@ -1,5 +1,5 @@
 
-# INITIAL: 3:(Integer, [-inf, 9]), ★
+# INITIAL: 3:(Integer, [-inf, 9])
 T: int = int(input())
 
 if 0 < T:

@@ -1,92 +1,126 @@
+"""
+Character Inclusion Abstract Domain
+===================================
+
+Non-relational abstract domain to be used for **string analysis**.
+The set of possible string values of a program variable in a program state
+is represented by the set of characters that must and may form the string.
+
+:Authors: Radwa Sherif Abdelbar and Caterina Urban
+"""
 import string
 from collections import defaultdict
 from copy import deepcopy
 
-from docutils.io import Input
-
-from lyra.abstract_domains.lattice import BottomMixin, Lattice
+from lyra.abstract_domains.lattice import BottomMixin, StringMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import *
 from lyra.core.types import StringLyraType
 from lyra.core.utils import copy_docstring
 
+
 _alphabet = set(string.printable)
 
 
-class StringMixin(Lattice, metaclass=ABCMeta):
-    """Mixin to add string operations to a lattice."""
-
-    @abstractmethod
-    def concat(self, other: 'StringMixin') -> 'StringMixin':
-        """
-            Define semantics for the string concatenation operation.
-        :param other: lattice element to be concatenated with the current element
-        :return: the result of the concatenation
-        """
-
-
 class CharacterLattice(BottomMixin, StringMixin):
+    """Character inclusion lattice.
 
-    def __init__(self, certainly=set(), maybe=_alphabet):
+    The default abstraction is the unconstraining pair ``(∅, Σ)``,
+    where ``Σ`` denotes the entire alphabet.
+    The bottom element of the lattice represents a contradiction.
+
+    .. document private methods
+    .. automethod:: CharacterLattice._less_equal
+    .. automethod:: CharacterLattice._meet
+    .. automethod:: CharacterLattice._join
+    .. automethod:: CharacterLattice._widening
+    .. automethod:: CharacterLattice._concat
+    """
+
+    def __init__(self, certainly: Set[str] = set(), maybe: Set[str] = _alphabet):
         super().__init__()
-        if certainly.issubset(maybe):
+        if certainly.issubset(maybe):   # the must and may sets of characters are in agreement
             self._certainly = certainly
             self._maybe = maybe
-        else:
+        else:   # the must and may sets of characters are in conflict
             self.bottom()
 
     @property
     def certainly(self):
+        """Current set of must characters.
+
+        :return: the current set of must characters if there is no conflict, ``None`` otherwise
+        """
+        if self.is_bottom():
+            return None
         return self._certainly
 
     @property
     def maybe(self):
+        """Current set of may characters.
+
+        :return: the current set of may characters if there is no conflict, ``None`` otherwise
+        """
+        if self.is_bottom():
+            return None
         return self._maybe
 
-    def top(self):
-        return self._replace(CharacterLattice())
-
     def __repr__(self):
+        def do(charset: Set[str]):
+            if not charset:
+                return "∅"
+            elif charset == _alphabet:
+                return "Σ"
+            charlist = sorted(charset, key=lambda x: x)
+            return "{" + ", ".join("'{}'".format(char) for char in charlist) + "}"
         if self.is_bottom():
             return "⊥"
+        return "(" + do(self.certainly) + ", " + do(self.maybe) + ")"
 
-        if self.is_top():
-            return "T"
-
-        return "({}, {})".format(self.certainly, self.maybe)
+    @copy_docstring(BottomMixin.top)
+    def top(self):
+        """The top lattice element is ``(∅, Σ)``."""
+        return self._replace(type(self)())
 
     @copy_docstring(BottomMixin.is_top)
     def is_top(self) -> bool:
-        return not self.is_bottom() and self.certainly == set() and self.maybe == _alphabet
+        return not self.certainly and self.maybe == _alphabet
 
     @copy_docstring(BottomMixin._less_equal)
     def _less_equal(self, other: 'CharacterLattice') -> bool:
-        return self.certainly.issuperset(other.certainly) and self.maybe.issubset(other.maybe)
+        """``(c1, m1) ⊑ (c2, m2)`` if and only if ``c2 ⊆ c1`` and ``m1 ⊆ m2``."""
+        return other.certainly.issubset(self.certainly) and self.maybe.issubset(other.maybe)
 
     @copy_docstring(BottomMixin._join)
     def _join(self, other: 'CharacterLattice') -> 'CharacterLattice':
+        """``(c1, m1) ⊔ (c2, m2) = (c1 ∩ c2, m1 ∪ m2)``."""
         certainly = self.certainly.intersection(other.certainly)
         maybe = self.maybe.union(other.maybe)
-        return self._replace(CharacterLattice(certainly, maybe))
+        return self._replace(type(self)(certainly, maybe))
 
     @copy_docstring(BottomMixin._meet)
     def _meet(self, other: 'CharacterLattice'):
-        if self.certainly.issubset(other.maybe) and other.certainly.issubset(self.maybe):
-            certainly = self.certainly.union(other.certainly)
-            maybe = self.maybe.intersection(other.maybe)
-            return self._replace(CharacterLattice(certainly, maybe))
+        """``(c1, m1) ⊓ (c2, m2) = (c1 ∪ c2, m1 ∩ m2)``."""
+        certainly = self.certainly.union(other.certainly)
+        maybe = self.maybe.intersection(other.maybe)
+        if certainly.issubset(maybe):
+            return self._replace(type(self)(certainly, maybe))
         return self.bottom()
 
     @copy_docstring(BottomMixin._widening)
     def _widening(self, other: 'CharacterLattice'):
+        """``(c1, m1) ▽ (c2, m2) = (c1, m1) ⊔ (c2, m2)``."""
         return self._join(other)
 
+    # string operations
+
     @copy_docstring(StringMixin.concat)
-    def concat(self, other: 'CharacterLattice') -> 'CharacterLattice':
+    def _concat(self, other: 'CharacterLattice') -> 'CharacterLattice':
+        """``(c1, m1) + (c2, m2) = (c1 ∪ c2, m1 ∪ m2)``."""
         certainly = self.certainly.union(other.certainly)
         maybe = self.certainly.union(other.certainly)
-        return self._replace(CharacterLattice(certainly, maybe))
+        return self._replace(type(self)(certainly, maybe))
 
 
 class CharacterState(Store, State):
@@ -108,15 +142,15 @@ class CharacterState(Store, State):
             if expr in evaluation:
                 return evaluation
             if expr.typ == StringLyraType():
-                evaluation[expr] = CharacterLattice(set(expr.val), set(expr.val))
+                evaluation[expr] = state.lattices[expr.typ](set(expr.val), set(expr.val))
             else:
-                evaluation[expr] = CharacterLattice()
+                evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ])
             return evaluation
 
         def visit_Input(self, expr, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation
-            evaluation[expr] = CharacterLattice()
+            evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ])
             return evaluation
 
         def visit_VariableIdentifier(self, expr, state=None, evaluation=None):
@@ -157,7 +191,7 @@ class CharacterState(Store, State):
             if expr.operator == BinaryArithmeticOperation.Operator.Add:
                 evaluated2[expr] = deepcopy(evaluated2[expr.left]).concat(evaluated2[expr.right])
                 return evaluated2
-            evaluation[expr] = CharacterLattice()
+            evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ])
             return evaluation
 
         def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
@@ -204,7 +238,7 @@ class CharacterState(Store, State):
 
         def visit_BinaryArithmeticOperation(self, expr, state=None, evaluation=None, value=None):
             if expr.operator == BinaryArithmeticOperation.Operator.Add:
-                new_value = CharacterLattice(maybe=value.maybe)
+                new_value = state.lattices[expr.typ](maybe=value.maybe)
                 refined1 = self.visit(expr.right, state, evaluation, new_value)
                 refined2 = self.visit(expr.left, refined1, evaluation, new_value)
                 return refined2
@@ -242,7 +276,7 @@ class CharacterState(Store, State):
                     new_expression = BinaryBooleanOperation(expression.typ, left, operator, right)
                     return self._assume(new_expression)
                 elif isinstance(expression, UnaryBooleanOperation):
-                    if isinstance(expression, UnaryBooleanOperation.Operator.Neg):
+                    if expression.operator == UnaryBooleanOperation.Operator.Neg:
                         return self._assume(expression.expression)
                 elif isinstance(expression, BinaryBooleanOperation):
                     left = expression.left

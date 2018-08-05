@@ -2,7 +2,7 @@
 Assumption Analysis - Unit Tests
 ================================
 
-:Authors: Caterina Urban and Madelin Schumacher
+:Authors: Caterina Urban and Radwa Sherif Abdelbar and Madelin Schumacher
 """
 import glob
 import os
@@ -10,8 +10,10 @@ import unittest
 
 import sys
 
+from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
 from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, \
-    TypeAlphabetAssumptionState
+    TypeAlphabetAssumptionState, TypeRangeAlphabetAssumptionState, TypeQuantityAssumptionState
+from lyra.abstract_domains.assumption.quantity_domain import QuantityState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
 from lyra.engine.backward import BackwardInterpreter
@@ -28,6 +30,15 @@ class TypeTest(TestRunner):
         return TypeState(self.variables)
 
 
+class QuantityTest(TestRunner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return QuantityState(self.variables)
+
+
 class RangeTest(TestRunner):
 
     def interpreter(self):
@@ -35,6 +46,24 @@ class RangeTest(TestRunner):
 
     def state(self):
         return RangeState(self.variables)
+
+
+class AlphabetTest(TestRunner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return AlphabetState(self.variables)
+
+
+class TypeQuantityAssumptionTest(TestRunner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return TypeQuantityAssumptionState(self.variables)
 
 
 class TypeRangeAssumptionTest(TestRunner):
@@ -55,24 +84,49 @@ class TypeAlphabetAssumptionTest(TestRunner):
         return TypeAlphabetAssumptionState(self.variables)
 
 
+class TypeRangeAlphabetAssumptionTest(TestRunner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return TypeRangeAlphabetAssumptionState(self.variables)
+
+
 def test_suite():
     suite = unittest.TestSuite()
     name = os.getcwd() + '/assumption/type/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             suite.addTest(TypeTest(path))
+    name = os.getcwd() + '/assumption/quantity/**.py'
+    for path in glob.iglob(name):
+        if os.path.basename(path) != "__init__.py":
+            suite.addTest(QuantityTest(path))
     name = os.getcwd() + '/assumption/range/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             suite.addTest(RangeTest(path))
-    name = os.getcwd() + '/assumption/character/**.py'
+    name = os.getcwd() + '/assumption/alphabet/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
-            suite.addTest(TypeAlphabetAssumptionTest(path))
-    name = os.getcwd() + '/assumption/**.py'
+            suite.addTest(AlphabetTest(path))
+    name = os.getcwd() + '/assumption/type+quantity/**.py'
+    for path in glob.iglob(name):
+        if os.path.basename(path) != "__init__.py":
+            suite.addTest(TypeQuantityAssumptionTest(path))
+    name = os.getcwd() + '/assumption/type+range/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             suite.addTest(TypeRangeAssumptionTest(path))
+    name = os.getcwd() + '/assumption/type+string/**.py'
+    for path in glob.iglob(name):
+        if os.path.basename(path) != "__init__.py":
+            suite.addTest(TypeAlphabetAssumptionTest(path))
+    name = os.getcwd() + '/assumption/type+range+alphabet/**.py'
+    for path in glob.iglob(name):
+        if os.path.basename(path) != "__init__.py":
+            suite.addTest(TypeRangeAlphabetAssumptionTest(path))
     return suite
 
 
