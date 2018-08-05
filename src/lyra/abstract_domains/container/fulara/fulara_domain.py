@@ -710,7 +710,7 @@ class FularaState(State):
                     left_lattice: FularaLattice = self.dict_store.store[left]
                     left_i_lattice: FularaLattice = self.init_store.store[left]
                     # erase all dict contents before:
-                    left_lattice.bottom()
+                    left_lattice.empty()
                     # everything uninitialized,
                     # but scalars should conform with scalar state -> copy from scalar state:
                     # TODO: use forget_variable?
