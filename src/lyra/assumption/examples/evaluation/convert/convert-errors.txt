@@ -1,13 +1,13 @@
-10##
+10##   Error: integer
 earphones
 300
-gramx
+gramx Error: x
 stereo set
-0
+0       Error: == 0
 kgs
 camera tripod
-1@
-qounds
+1@      Error: integer
+qounds  Error: no q
 trolly suitcase
 30.5
 lbs
@@ -15,11 +15,11 @@ laptop lenovo 5070
 1.5
 kgs
 laptop lenovo thinkpad
-2.5>>
+2.5>>   Error: integer
 pounds
 12x envelope
 35
-gmz
+gmz     Error: z
 bic blue pens 4-piece set
 125
 grams
@@ -27,5 +27,5 @@ travel compass
 50
 grams
 vacuum cleaner
-2#0
+2#0     Error: integer
 kgs

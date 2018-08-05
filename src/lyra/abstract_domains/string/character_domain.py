@@ -2,8 +2,6 @@ import string
 from collections import defaultdict
 from copy import deepcopy
 
-from docutils.io import Input
-
 from lyra.abstract_domains.lattice import BottomMixin, Lattice
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store

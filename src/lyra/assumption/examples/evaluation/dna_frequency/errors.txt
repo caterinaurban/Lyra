@@ -1,0 +1,34 @@
+3.. (Should be integer)
+10
+A
+O   (Should be A, C, G, T)
+C
+..G  Error
+G
+X    Error
+T
+A
+C
+G
+#
+15
+C
+G@  Error
+T
+A
+C
+&C* Error
+G
+T
+O   Error
+G
+A
+C
+T)) Error
+G
+T
+*
+5
+A
+C
+T

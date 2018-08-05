@@ -273,9 +273,9 @@ class OctagonLattice(Lattice):
 
         # create elina linear expression
         linexpr = OctagonLattice.create_linear_expression(indexes, coefficients, constant)
-        print("LINEAR EXPR")
-        elina_linexpr0_print(linexpr, None)
-        print()
+        # print("LINEAR EXPR")
+        # elina_linexpr0_print(linexpr, None)
+        # print()
         # create elina linear constraint array of size
         lincons_array = elina_lincons0_array_make(1)
         # the constraint uses the linear expression with constraint type of '>=' always
@@ -522,15 +522,15 @@ class OctagonState(InputMixin, JSONMixin):
         return self.lattice_element.less_equal(other.lattice_element)
 
     def _join(self, other: 'OctagonState') -> 'OctagonState':
-        print("BEFORE JOIN")
+        # print("BEFORE JOIN")
         self.lattice_element.join(other.lattice_element)
-        print("AFTER JOIN")
+        # print("AFTER JOIN")
         return self
 
     def _meet(self, other: 'OctagonState'):
-        print("BEFORE MEET")
+        # print("BEFORE MEET")
         self.lattice_element.meet(other.lattice_element)
-        print("AFTER MEET")
+        # print("AFTER MEET")
         return self
 
     def _widening(self, other: 'OctagonState'):
@@ -583,7 +583,7 @@ class OctagonState(InputMixin, JSONMixin):
                         indexes = [self.lattice_element.indexes[var] for var in variables]
                         coefficients = list(map(lambda x: -x, coefficients))
                         constant *= -1
-                        print("ASSUME, ", normal)
+                        # print("ASSUME, ", normal)
                         self.lattice_element.add_linear_constraint(indexes, coefficients, constant)
         return self
 
