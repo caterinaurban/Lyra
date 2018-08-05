@@ -16,7 +16,6 @@ from lyra.abstract_domains.lattice import Lattice, BottomMixin
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.assumption.error import CheckerError
-from lyra.assumption.error import CheckerError
 from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparisonOperation, \
     Range, Literal, NegationFreeNormalExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
     ExpressionVisitor, Input, ListDisplay, AttributeReference, Subscription, Slicing, \
@@ -461,7 +460,6 @@ class AssumptionState(State):
                             return constraint[0], tuple(lattices)
                     else:   # the constraint is an InputLattice
                         return constraint.replace(variable, expression)
-
                 multiplier = self.multiplier
                 if isinstance(multiplier, VariableIdentifier) and multiplier == variable:
                     multiplier = expression
@@ -646,7 +644,7 @@ class AssumptionState(State):
         def __init__(self, precursory: State = None):
             super().__init__(AssumptionState.InputStack.InputLattice, dict())
             State.__init__(self, precursory)
-            self._scopes = list()  # stack of scope types
+            self._scopes = list()   # stack of scope types
 
         @property
         def scopes(self):
@@ -723,7 +721,7 @@ class AssumptionState(State):
 
         @copy_docstring(State._output)
         def _output(self, output: Expression) -> 'AssumptionState.InputStack':
-            return self  # nothing to be done
+            return self     # nothing to be done
 
         @copy_docstring(State._substitute)
         def _substitute(self, left: Expression, right: Expression) -> 'AssumptionState.InputStack':
@@ -1017,8 +1015,8 @@ class TypeRangeAssumptionState(AssumptionState):
     which (directly) constraints the input data read from the current program point.
 
     .. document private methods
-    .. automethod:: AssumptionState._assume
-    .. automethod:: AssumptionState._substitute
+    .. automethod:: TypeRangeAssumptionState._assume
+    .. automethod:: TypeRangeAssumptionState._substitute
     """
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
@@ -1029,13 +1027,52 @@ class TypeRangeAssumptionState(AssumptionState):
         super().__init__(states, arguments, precursory)
 
 
-class OctagonStringAssumptionState(AssumptionState):
+class SignOctagonStringAssumptionState(AssumptionState):
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         from lyra.abstract_domains.assumption.octagons_domain import OctagonState
         from lyra.abstract_domains.assumption.type_domain import TypeState
         from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
         from lyra.abstract_domains.assumption.quantity_domain import QuantityState
-        states = [TypeState, OctagonState, AlphabetState]
+        states = [TypeState, QuantityState, OctagonState, AlphabetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
+
+
+class TypeAlphabetAssumptionState(AssumptionState):
+    """Type+string assumption analysis state.
+
+    Reduced product of type and string constraining states,
+    and a stack of assumptions on the input data.
+
+    .. document private methods
+    .. automethod:: TypeAlphabetAssumptionState._assume
+    .. automethod:: TypeAlphabetAssumptionState._substitute
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
+        states = [TypeState, AlphabetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
+
+
+class TypeRangeAlphabetAssumptionState(AssumptionState):
+    """Type+string assumption analysis state.
+
+    Reduced product of type, range, and string constraining states,
+    and a stack of assumptions on the input data.
+
+    .. document private methods
+    .. automethod:: TypeRangeAlphabetAssumptionState._assume
+    .. automethod:: TypeRangeAlphabetAssumptionState._substitute
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.range_domain import RangeState
+        from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
+        states = [TypeState, RangeState, AlphabetState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)

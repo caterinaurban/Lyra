@@ -7,8 +7,11 @@ Assumption Analysis
 from typing import List
 
 from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
-from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState,\
-    OctagonStringAssumptionState
+from lyra.abstract_domains.assumption.assumption_domain import TypeAlphabetAssumptionState, \
+    TypeRangeAlphabetAssumptionState, TypeQuantityAssumptionState
+from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, \
+    SignOctagonStringAssumptionState
+from lyra.abstract_domains.assumption.quantity_domain import QuantityState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
 from lyra.core.expressions import Identifier, LengthIdentifier
@@ -27,6 +30,15 @@ class TypeAnalysis(Runner):
         return TypeState(self.variables)
 
 
+class QuantityAnalysis(Runner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return QuantityState(self.variables)
+
+
 class RangeAnalysis(Runner):
 
     def interpreter(self):
@@ -36,6 +48,24 @@ class RangeAnalysis(Runner):
         return RangeState(self.variables)
 
 
+class AlphabetAnalysis(Runner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return AlphabetState(self.variables)
+
+
+class TypeQuantityAssumptionAnalysis(Runner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return TypeQuantityAssumptionState(self.variables)
+
+
 class TypeRangeAssumptionAnalysis(Runner):
 
     def interpreter(self):
@@ -43,6 +73,24 @@ class TypeRangeAssumptionAnalysis(Runner):
 
     def state(self):
         return TypeRangeAssumptionState(self.variables)
+
+
+class TypeAlphabetAssumptionAnalysis(Runner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return TypeAlphabetAssumptionState(self.variables)
+
+
+class TypeRangeAlphabetAssumptionAnalysis(Runner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return TypeRangeAlphabetAssumptionState(self.variables)
 
 
 class AlphabetDomainAnalysis(Runner):
@@ -77,7 +125,7 @@ class AssumptionAnalysis(Runner):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        return OctagonStringAssumptionState(self.variables)
+        return SignOctagonStringAssumptionState(self.variables)
 
     def run(self):
         result = self.interpreter().analyze(self.state())

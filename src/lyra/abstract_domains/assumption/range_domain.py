@@ -111,11 +111,11 @@ class RangeState(IntervalState, InputMixin):
 
     # expression refinement
 
-    class ArithmeticExpressionRefinement(IntervalState.ArithmeticExpressionRefinement):
+    class ExpressionRefinement(IntervalState.ExpressionRefinement):
 
-        @copy_docstring(IntervalState.ArithmeticExpressionRefinement.visit_Input)
+        @copy_docstring(IntervalState.ExpressionRefinement.visit_Input)
         def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
             state.record(value)
             return state    # nothing to be done
 
-    _refinement = ArithmeticExpressionRefinement()  # static class member shared between instances
+    _refinement = ExpressionRefinement()  # static class member shared between instances

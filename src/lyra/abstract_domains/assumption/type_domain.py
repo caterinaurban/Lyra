@@ -19,7 +19,7 @@ from lyra.abstract_domains.store import Store
 from lyra.assumption.error import CheckerError
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
     Input, ListDisplay, Range, AttributeReference, Subscription, Slicing, \
-    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, Identifier
+    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -290,6 +290,30 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
             return self.bottom()
         return self._replace(TypeLattice(max(self.element, other.element)))
 
+    @copy_docstring(ArithmeticMixin._div)
+    def _div(self, other: 'TypeLattice') -> 'TypeLattice':
+        """
+        Boolean / Boolean = Float
+        Boolean / Integer = Float
+        Boolean / Float = Float
+        Boolean / String = ⊥
+        Integer / Boolean = Float
+        Integer / Integer = Float
+        Integer / Float = Float
+        Integer / String = ⊥
+        Float / Boolean = Float
+        Float / Integer = Float
+        Float / Float = Float
+        Float / String = ⊥
+        String / Boolean = ⊥
+        String / Integer = ⊥
+        String / Float = ⊥
+        String / String = ⊥
+        """
+        if self.is_top() or other.is_top():
+            return self.bottom()
+        return self._replace(TypeLattice(TypeLattice.Status.Float))
+
     @copy_docstring(JSONMixin.to_json)
     def to_json(self) -> str:
         return str(self)
@@ -519,7 +543,8 @@ class TypeState(Store, InputMixin):
                 return evaluation
             raise ValueError(f"Literal type {typ} is unsupported!")
 
-        def visit_Identifier(self, expr: Identifier, state=None, evaluation=None):
+        @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+        def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             typ = expr.typ
@@ -529,13 +554,16 @@ class TypeState(Store, InputMixin):
                 return evaluation
             raise ValueError(f"Variable type {typ} is unsupported!")
 
-        @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
-        def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
-            return self.visit_Identifier(expr, state, evaluation)
-
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
         def visit_LengthIdentifier(self, expr: LengthIdentifier, state=None, evaluation=None):
-            return self.visit_Identifier(expr, state, evaluation)
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            typ = expr.typ
+            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
+                value: TypeLattice = deepcopy(state.store[expr])
+                evaluation[expr] = value.meet(TypeLattice.from_lyra_type(typ))
+                return evaluation
+            raise ValueError(f"Variable type {typ} is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
@@ -613,6 +641,10 @@ class TypeState(Store, InputMixin):
                 return evaluated2
             elif expr.operator == BinaryArithmeticOperation.Operator.Mult:
                 value: TypeLattice = deepcopy(evaluated2[expr.left]).mult(evaluated2[expr.right])
+                evaluated2[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
+                return evaluated2
+            elif expr.operator == BinaryArithmeticOperation.Operator.Div:
+                value: TypeLattice = deepcopy(evaluated2[expr.left]).div(evaluated2[expr.right])
                 evaluated2[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
                 return evaluated2
             raise ValueError(f"Binary operator '{str(expr.operator)}' is unsupported!")
@@ -716,7 +748,9 @@ class TypeState(Store, InputMixin):
             add = BinaryArithmeticOperation.Operator.Add
             sub = BinaryArithmeticOperation.Operator.Sub
             mult = BinaryArithmeticOperation.Operator.Mult
-            if expr.operator == add or expr.operator == sub or expr.operator == mult:
+            div = BinaryArithmeticOperation.Operator.Div
+            operator = expr.operator
+            if operator == add or operator == sub or operator == mult or operator == div:
                 refined = evaluation[expr].meet(value)
                 refinement1 = deepcopy(refined).meet(evaluation[expr.right])
                 left = self.visit(expr.left, evaluation, refinement1, state)

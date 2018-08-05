@@ -9,7 +9,7 @@ is represented by their sign (negative, zero, positive, ...)
 :Authors: Caterina Urban
 """
 from collections import defaultdict
-from typing import Set, Tuple, Dict, List, Any
+from typing import Set, Dict, List, Tuple, Any
 
 from lyra.abstract_domains.assumption.assumption_domain import JSONMixin, InputMixin
 from lyra.abstract_domains.numerical.sign_domain import SignLattice, SignState
@@ -35,7 +35,6 @@ class QuantityLattice(SignLattice, JSONMixin):
     .. automethod:: QuantityLattice._sub
     .. automethod:: QuantityLattice._mult
     """
-
     @copy_docstring(JSONMixin.to_json)
     def to_json(self) -> str:
         return str(self)
@@ -145,14 +144,14 @@ class QuantityState(SignState, InputMixin):
 
     # expression refinement
 
-    class ExpressionRefinement(SignState.ArithmeticExpressionRefinement):
+    class ExpressionRefinement(SignState.ExpressionRefinement):
 
-        @copy_docstring(SignState.ArithmeticExpressionRefinement.visit_Input)
+        @copy_docstring(SignState.ExpressionRefinement.visit_Input)
         def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
             state.record(value)
             return state  # nothing to be done
 
-        @copy_docstring(SignState.ArithmeticExpressionRefinement.visit_BinaryArithmeticOperation)
+        @copy_docstring(SignState.ExpressionRefinement.visit_BinaryArithmeticOperation)
         def visit_BinaryArithmeticOperation(self, expr, evaluation=None, value=None, state=None):
             updated = super().visit_BinaryArithmeticOperation(expr, evaluation, value, state)
             if expr.operator == BinaryArithmeticOperation.Operator.Div:
