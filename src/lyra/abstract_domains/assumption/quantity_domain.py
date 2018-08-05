@@ -69,15 +69,28 @@ class QuantityLattice(SignLattice, JSONMixin):
         input_value = pp_value[pp][1]
         correct_value = None
 
-        if self.is_positive():
-            if input_value <= 0:
-                error = CheckerError("Expected a positive value.")
-        if self.is_zero():
-            if input_value != 0:
-                error = CheckerError("Expected a zero.")
-        if self.is_negative():
-            if input_value >= 0:
-                error = CheckerError("Expected a negative value.")
+        if self.is_top():
+            return
+        elif self.maybe_negative() and self.maybe_zero():
+            if not input_value <= 0:
+                error = CheckerError("Value should be ≤0.")
+        elif self.maybe_zero() and self.maybe_positive():
+            if not input_value >= 0:
+                error = CheckerError("Value should be ≥0.")
+        elif self.maybe_negative() and self.maybe_positive():
+            if not input_value != 0:
+                error = CheckerError("Value should not be zero.")
+        elif self.maybe_negative():
+            if not input_value < 0:
+                error = CheckerError("Value should be <0.")
+        elif self.maybe_positive():
+            if not input_value > 0:
+                error = CheckerError("Value should be >0.")
+        elif self.maybe_zero():
+            if not input_value == 0:
+                error = CheckerError("Value should be zero.")
+        else:  # self.is_bottom()
+            return "⊥"
 
         if error is not None:
             line_errors[input_line].append(error)
