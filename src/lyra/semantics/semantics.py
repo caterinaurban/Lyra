@@ -353,8 +353,7 @@ class BuiltInCallSemantics(CallSemantics):
             stops = self.semantics(stmt.arguments[0], state).result
             step = Literal(IntegerLyraType(), "1")
             for stop in stops:
-                range = Range(stmt.typ, start, stop, step)
-                result.add(range)
+                result.add(Range(stmt.typ, start, stop, step))
             state.result = result
             return state
         elif len(stmt.arguments) == 2:
@@ -363,8 +362,7 @@ class BuiltInCallSemantics(CallSemantics):
             step = Literal(IntegerLyraType(), "1")
             for start in starts:
                 for stop in stops:
-                    range = Range(stmt.typ, start, stop, step)
-                    result.add(range)
+                    result.add(Range(stmt.typ, start, stop, step))
             state.result = result
             return state
         elif len(stmt.arguments) == 3:
@@ -374,8 +372,7 @@ class BuiltInCallSemantics(CallSemantics):
             for start in starts:
                 for stop in stops:
                     for step in steps:
-                        range = Range(stmt.typ, start, stop, step)
-                        result.add(range)
+                        result.add(Range(stmt.typ, start, stop, step))
             state.result = result
             return state
         error = f"Call to {stmt.name} with unexpected number of arguments!"
@@ -444,7 +441,6 @@ class BuiltInCallSemantics(CallSemantics):
         :param state: state before executing the raise Error
         :return: state modified by the raise
         """
-
         return state.raise_error()
 
     def _unary_operation(self, stmt: Call, operator: UnaryOperation.Operator, state: State):

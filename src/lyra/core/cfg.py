@@ -9,7 +9,7 @@ Lyra's internal representation of a Python program.
 
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import Dict, List, Set, Tuple, Union, Optional
+from typing import Dict, List, Set, Tuple, Optional
 
 from lyra.core.statements import Statement
 
