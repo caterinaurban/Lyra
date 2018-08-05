@@ -81,7 +81,7 @@ class CharacterLattice(BottomMixin, StringMixin):
     @copy_docstring(BottomMixin.top)
     def top(self):
         """The top lattice element is ``(∅, Σ)``."""
-        return self._replace(CharacterLattice())
+        return self._replace(type(self)())
 
     @copy_docstring(BottomMixin.is_top)
     def is_top(self) -> bool:
@@ -97,7 +97,7 @@ class CharacterLattice(BottomMixin, StringMixin):
         """``(c1, m1) ⊔ (c2, m2) = (c1 ∩ c2, m1 ∪ m2)``."""
         certainly = self.certainly.intersection(other.certainly)
         maybe = self.maybe.union(other.maybe)
-        return self._replace(CharacterLattice(certainly, maybe))
+        return self._replace(type(self)(certainly, maybe))
 
     @copy_docstring(BottomMixin._meet)
     def _meet(self, other: 'CharacterLattice'):
@@ -105,7 +105,7 @@ class CharacterLattice(BottomMixin, StringMixin):
         certainly = self.certainly.union(other.certainly)
         maybe = self.maybe.intersection(other.maybe)
         if certainly.issubset(maybe):
-            return self._replace(CharacterLattice(certainly, maybe))
+            return self._replace(type(self)(certainly, maybe))
         return self.bottom()
 
     @copy_docstring(BottomMixin._widening)
@@ -120,7 +120,7 @@ class CharacterLattice(BottomMixin, StringMixin):
         """``(c1, m1) + (c2, m2) = (c1 ∪ c2, m1 ∪ m2)``."""
         certainly = self.certainly.union(other.certainly)
         maybe = self.certainly.union(other.certainly)
-        return self._replace(CharacterLattice(certainly, maybe))
+        return self._replace(type(self)(certainly, maybe))
 
 
 class CharacterState(Store, State):
@@ -142,15 +142,15 @@ class CharacterState(Store, State):
             if expr in evaluation:
                 return evaluation
             if expr.typ == StringLyraType():
-                evaluation[expr] = CharacterLattice(set(expr.val), set(expr.val))
+                evaluation[expr] = state.lattices[expr.typ](set(expr.val), set(expr.val))
             else:
-                evaluation[expr] = CharacterLattice()
+                evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ])
             return evaluation
 
         def visit_Input(self, expr, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation
-            evaluation[expr] = CharacterLattice()
+            evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ])
             return evaluation
 
         def visit_VariableIdentifier(self, expr, state=None, evaluation=None):
@@ -191,7 +191,7 @@ class CharacterState(Store, State):
             if expr.operator == BinaryArithmeticOperation.Operator.Add:
                 evaluated2[expr] = deepcopy(evaluated2[expr.left]).concat(evaluated2[expr.right])
                 return evaluated2
-            evaluation[expr] = CharacterLattice()
+            evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ])
             return evaluation
 
         def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
@@ -238,7 +238,7 @@ class CharacterState(Store, State):
 
         def visit_BinaryArithmeticOperation(self, expr, state=None, evaluation=None, value=None):
             if expr.operator == BinaryArithmeticOperation.Operator.Add:
-                new_value = CharacterLattice(maybe=value.maybe)
+                new_value = state.lattices[expr.typ](maybe=value.maybe)
                 refined1 = self.visit(expr.right, state, evaluation, new_value)
                 refined2 = self.visit(expr.left, refined1, evaluation, new_value)
                 return refined2

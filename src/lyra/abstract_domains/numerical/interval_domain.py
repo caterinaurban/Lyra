@@ -51,16 +51,16 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin):
     def from_literal(cls, literal: Literal) -> 'IntervalLattice':
         if isinstance(literal.typ, BooleanLyraType):
             if literal.val == "True":
-                return IntervalLattice().true()
+                return cls().true()
             assert literal.val == "False"
-            return IntervalLattice().false()
+            return cls().false()
         elif isinstance(literal.typ, IntegerLyraType):
             value = int(literal.val)
-            return IntervalLattice(value, value)
+            return cls(value, value)
         elif isinstance(literal.typ, FloatLyraType):
             value = float(literal.val)
-            return IntervalLattice(value, value)
-        return IntervalLattice()
+            return cls(value, value)
+        return cls()
 
     @property
     def lower(self):
@@ -90,7 +90,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin):
     @copy_docstring(BottomMixin.top)
     def top(self) -> 'IntervalLattice':
         """The top lattice element is ``[-oo,+oo]``."""
-        self._replace(IntervalLattice())
+        self._replace(type(self)())
         return self
 
     @copy_docstring(BottomMixin.is_top)
@@ -107,7 +107,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin):
         """``[a, b] ⊔ [c, d] = [min(a,c), max(b,d)]``."""
         lower = min(self.lower, other.lower)
         upper = max(self.upper, other.upper)
-        return self._replace(IntervalLattice(lower, upper))
+        return self._replace(type(self)(lower, upper))
 
     @copy_docstring(BottomMixin._meet)
     def _meet(self, other: 'IntervalLattice') -> 'IntervalLattice':
@@ -115,7 +115,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin):
         lower = max(self.lower, other.lower)
         upper = min(self.upper, other.upper)
         if lower <= upper:
-            return self._replace(IntervalLattice(lower, upper))
+            return self._replace(type(self)(lower, upper))
         return self.bottom()
 
     @copy_docstring(BottomMixin._widening)
@@ -127,7 +127,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin):
             lower = -inf
         if self.upper < other.upper:
             upper = inf
-        return self._replace(IntervalLattice(lower, upper))
+        return self._replace(type(self)(lower, upper))
 
     # arithmetic operations
 
@@ -136,21 +136,21 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin):
         """``- [a, b] = [-b, -a]``."""
         lower = 0 - self.upper
         upper = 0 - self.lower
-        return self._replace(IntervalLattice(lower, upper))
+        return self._replace(type(self)(lower, upper))
 
     @copy_docstring(ArithmeticMixin._add)
     def _add(self, other: 'IntervalLattice') -> 'IntervalLattice':
         """``[a, b] + [c, d] = [a + c, b + d]``."""
         lower = 0 + self.lower + other.lower
         upper = 0 + self.upper + other.upper
-        return self._replace(IntervalLattice(lower, upper))
+        return self._replace(type(self)(lower, upper))
 
     @copy_docstring(ArithmeticMixin._sub)
     def _sub(self, other: 'IntervalLattice') -> 'IntervalLattice':
         """``[a, b] - [c, d] = [a - d, b - c]``."""
         lower = 0 + self.lower - other.upper
         upper = 0 + self.upper - other.lower
-        return self._replace(IntervalLattice(lower, upper))
+        return self._replace(type(self)(lower, upper))
 
     @copy_docstring(ArithmeticMixin._mult)
     def _mult(self, other: 'IntervalLattice') -> 'IntervalLattice':
@@ -161,30 +161,30 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin):
         bd = 0 if self.upper == 0 or other.upper == 0 else 1 * self.upper * other.upper
         lower = min(ac, ad, bc, bd)
         upper = max(ac, ad, bc, bd)
-        return self._replace(IntervalLattice(lower, upper))
+        return self._replace(type(self)(lower, upper))
 
     @copy_docstring(ArithmeticMixin._div)
     def _div(self, other: 'IntervalLattice') -> 'IntervalLattice':
-        return self._replace(IntervalLattice())
+        return self._replace(type(self)())
 
     # boolean operations
 
     @copy_docstring(BooleanMixin.false)
     def false(self) -> 'IntervalLattice':
         """The false lattice element is ``[0,0]``."""
-        self._replace(IntervalLattice(0, 0))
+        self._replace(type(self)(0, 0))
         return self
 
     @copy_docstring(BooleanMixin.true)
     def true(self) -> 'IntervalLattice':
         """The true lattice element is ``[1,1]``."""
-        self._replace(IntervalLattice(1, 1))
+        self._replace(type(self)(1, 1))
         return self
 
     @copy_docstring(BooleanMixin.maybe)
     def maybe(self) -> 'IntervalLattice':
         """The maybe lattice element is ``[0,1]``."""
-        self._replace(IntervalLattice(0, 1))
+        self._replace(type(self)(0, 1))
         return self
 
     @copy_docstring(BooleanMixin.is_false)
@@ -229,14 +229,16 @@ class IntervalState(Basis):
         normal = NegationFreeNormalExpression().visit(condition)
         if isinstance(normal, VariableIdentifier) and isinstance(normal.typ, BooleanLyraType):
             evaluation = self._evaluation.visit(normal, self, dict())
-            return self._refinement.visit(normal, evaluation, IntervalLattice().true(), self)
+            true = self.lattices[normal.typ](**self.arguments[normal.typ]).true()
+            return self._refinement.visit(normal, evaluation, true, self)
         elif isinstance(normal, UnaryBooleanOperation):
             if normal.operator == UnaryBooleanOperation.Operator.Neg:
                 expression = normal.expression
                 if isinstance(expression, VariableIdentifier):
+                    typ = expression.typ
                     if isinstance(expression.typ, BooleanLyraType):
                         evaluation = self._evaluation.visit(normal, self, dict())
-                        false = IntervalLattice().false()
+                        false = self.lattices[typ](**self.arguments[typ]).false()
                         return self._refinement.visit(expression, evaluation, false, self)
         elif isinstance(normal, BinaryBooleanOperation):
             return self._assume_binarybooleanoperation(normal)
@@ -272,7 +274,8 @@ class IntervalState(Basis):
                     right = deepcopy(self)._assume(upper)
                     return self._assume(lower).join(right)
             evaluation = self._evaluation.visit(normal.left, self, dict())
-            return self._refinement.visit(normal.left, evaluation, IntervalLattice(upper=0), self)
+            nonpositive = self.lattices[normal.typ](upper=0)
+            return self._refinement.visit(normal.left, evaluation, nonpositive, self)
         error = f"Assumption of a {normal.__class__.__name__} expression is unsupported!"
         raise ValueError(error)
 
@@ -285,7 +288,7 @@ class IntervalState(Basis):
         def visit_Literal(self, expr: Literal, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation    # nothing to be done
-            evaluation[expr] = IntervalLattice.from_literal(expr)
+            evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
             return evaluation
 
     _evaluation = ExpressionEvaluation()  # static class member shared between all instances
