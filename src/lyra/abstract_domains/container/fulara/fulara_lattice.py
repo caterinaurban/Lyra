@@ -255,7 +255,8 @@ class FularaLattice(BottomMixin):
                     # segments overlap -> partition, s.t. overlapping part is removed
                     self.segments.remove(s)
                     # TODO: require KeyWrapper?
-                    non_overlapping = {(m, s[1]) for m in s[0].decomp(s[0], key) if not m.is_bottom()}
+                    non_overlapping = {(m, s[1]) for m in s[0].decomp(s[0], key)
+                                       if not m.is_bottom()}
                     self.segments.update(non_overlapping)       # union
             if not (key.is_bottom() or value.is_bottom()):
                 self.segments.add((key, value))
