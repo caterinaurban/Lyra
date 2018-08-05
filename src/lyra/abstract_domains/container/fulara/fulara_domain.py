@@ -669,6 +669,9 @@ class FularaState(State):
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
+        if self.is_bottom():      # unreachable
+            return self
+
         all_ids = left.ids().union(right.ids())
 
         if all(type(id.typ) in scalar_types for id in all_ids):   # TODO: use not any?
@@ -771,6 +774,9 @@ class FularaState(State):
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'FularaState':
+        if self.is_bottom():      # unreachable
+            return self
+
         condition = NegationFreeNormalExpression().visit(condition)     # eliminate negations
 
         if isinstance(condition, BinaryComparisonOperation):
