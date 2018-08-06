@@ -357,6 +357,7 @@ class FularaUsageState(Stack, State):
                     # update dictionary usage at corresponding position
                     # if variable occured in a 'in-condition'
                     # only track value usage
+                    # TODO: correct for if conditions?
                     for (d_var, k_var, v_var) in self.precursory.in_relations.find_value(expr):
                         d_lattice: FularaLattice = self.lattice.dict_usage.store[d_var]
                         if k_var is None:   # Values condition
