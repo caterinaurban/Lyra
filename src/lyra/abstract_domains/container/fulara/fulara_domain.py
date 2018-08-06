@@ -111,6 +111,11 @@ class InRelationState(State, BottomMixin):
         new_set = self.tuple_set.union(other.tuple_set)
         return self._replace(InRelationState(new_set))
 
+    @copy_docstring(Lattice._widening)
+    def _widening(self, other: 'InRelationState') -> 'InRelationState':
+        # only finitely many variable combinations -> widening not needed?
+        return self._join(other)
+
     # helpers
     def find_key(self, k: VariableIdentifier) \
             -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
@@ -132,7 +137,7 @@ class InRelationState(State, BottomMixin):
             -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
         """Returns the tuples from the set that have v at the dict OR key OR value position"""
         if self.is_bottom():
-            return iter(())     # empty iterator
+            return iter(())  # empty iterator
 
         return filter(lambda t: (t[0] == v) or (t[1] and t[1] == v) or (t[2] and t[2] == v),
                       self.tuple_set)
@@ -152,7 +157,7 @@ class InRelationState(State, BottomMixin):
             -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
         """Returns all tuples without a None (i.e. with a key & a value variable)"""
         if self.is_bottom():
-            return iter(())     # empty iterator
+            return iter(())  # empty iterator
 
         return filter(lambda t: (t[1] is not None) and (t[2] is not None), self.tuple_set)
 
@@ -171,11 +176,6 @@ class InRelationState(State, BottomMixin):
                 else:  # left_tuple[2] == v
                     new_tuple = (v_tuple[0], v_tuple[1], None)
                 self.tuple_set.add(new_tuple)
-
-    @copy_docstring(Lattice._widening)
-    def _widening(self, other: 'InRelationState') -> 'InRelationState':
-        # only finitely many variable combinations -> widening not needed?
-        return self._join(other)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
