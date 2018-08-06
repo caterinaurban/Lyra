@@ -90,10 +90,12 @@ class QuantityLattice(SignLattice, JSONMixin):
             if not input_value == 0:
                 error = CheckerError("Value should be zero.")
         else:  # self.is_bottom()
-            return "⊥"
+                error = CheckerError("Sign error.")
 
         if error is not None:
             line_errors[input_line].append(error)
+        else:
+            correct_value = input_value
         pp_value[pp] = (input_line, correct_value)
 
 

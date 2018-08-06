@@ -458,20 +458,24 @@ class ConditionEvaluator(ExpressionVisitor):
                     map(lambda x: x * constant1, coefficients2)), constant1 * constant2
         # TODO handle y/x --> x != 0
         if expr.operator == BinaryArithmeticOperation.Operator.Div:
+            # constant expression, e.g. 5/2 --> [], [], 5/2
             if len(variables1) == len(variables2) == 0:
                 if constant2 != 0:
                     return [], [], constant1 / constant2
-                raise ZeroDivisionError
+                else:
+                    raise ZeroDivisionError
             elif len(variables1) > 0 and len(variables2) == 0:
+            # variables divided by constant, e.g. (x + y + 5)/2 = x * 0.5 + y * 0.5 + 2.5
                 if constant2 != 0:
-                    return variables1, list(
-                        map(lambda x: x / constant2, coefficients1)), constant1 / constant2
-                raise ZeroDivisionError
-            elif len(variables2) > 0:
-                denominator = BinaryComparisonOperation(expr.left.typ, expr.left,
-                                                        BinaryComparisonOperation.Operator.NotEq,
-                                                        Literal(IntegerLyraType, "0"))
-                state.assume(denominator)
+                    l = list(map(lambda x: x / constant2, coefficients1))
+                    return variables1, l, constant1 / constant2
+                else:
+                    raise ZeroDivisionError
+            return [], [], None
+                # denominator = BinaryComparisonOperation(expr.left.typ, expr.left,
+                #                                         BinaryComparisonOperation.Operator.NotEq,
+                #                                         Literal(IntegerLyraType, "0"))
+                # state.assume(denominator)
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
     def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation',

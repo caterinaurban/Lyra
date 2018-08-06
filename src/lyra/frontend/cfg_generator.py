@@ -625,7 +625,7 @@ class CFGVisitor(ast.NodeVisitor):
                 cfg_factory.complete_basic_block()
                 cont_cfg = self.visit(child, types)
                 cfg_factory.append_cfg(cont_cfg)
-            elif isinstance(child, ast.Pass):
+            elif isinstance(child, ast.Pass) or isinstance(child, ast.Import) or isinstance(child, ast.Assign):
                 if cfg_factory.incomplete_block():
                     pass
                 else:
