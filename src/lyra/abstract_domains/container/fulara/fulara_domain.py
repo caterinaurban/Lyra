@@ -66,21 +66,17 @@ class InRelationState(State, BottomMixin):
 
         return self._tuple_set
 
-    def __repr__(self):         # TODO: use join?
+    def __repr__(self):
         if self.is_bottom():
             return "⊥"
 
         result = "{"
         first = True
         # output tuples sorted by their variable names
-        for t in sorted(self.tuple_set,
-                        key=lambda t: (t[0].name, t[1] and t[1].name, t[2] and t[2].name)):
-            if first:
-                result += f"({t[0]}, {t[1]}, {t[2]})"
-                first = False
-            else:
-                result += f", ({t[0]}, {t[1]}, {t[2]})"
-        result += "}"
+        str_tuples = map(lambda t: f"({t[0]}, {t[1]}, {t[2]})", self.tuple_set)
+        str_tuples = sorted(str_tuples)
+
+        result = "{" + ", ".join(str_tuples) + "}"
         return result
 
     @copy_docstring(Lattice.top)
