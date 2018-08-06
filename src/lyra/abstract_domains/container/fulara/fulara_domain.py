@@ -265,7 +265,7 @@ class InRelationState(State, BottomMixin):
 class BoolLattice(Lattice):
     """Boolean lattice element (True/False),
         where True overapproximates concrete True values
-        (so True -> may be True in the concrete
+        (so True -> may be True in the concrete)
 
     (Maybe) True
           |
