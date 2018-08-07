@@ -208,35 +208,49 @@ class OctagonLattice(Lattice):
         :param pp_value: optional dictionary to use for mapping indexes to input lines.
         :return:
         """
+
+        def do(l: list):
+            res = ""
+            for i, (c, var) in enumerate(l):
+                if c >= 0:
+                    res += ' + ' if i > 0 else ''
+                else:
+                    res += ' - ' if i > 0 else '-'
+                if pp_value is None:
+                    res += str(var)
+                else:
+                    res += f"(Value on line {pp_value[var][0]})"
+            return res
+
         string = ""
+        lhs = []
+        rhs = []
         for i in range(lincons.linexpr0.contents.size):
             linterm = lincons.linexpr0.contents.p.linterm[i]
             coeff = linterm.coeff
             coeff_val = elina_scalar_sgn(coeff.val.scalar)
             # print(coeff.val.scalar.contents.discr==ELINA_SCALAR_MPQ)
-            string += (" +" if coeff_val >= 0 else " -")
-            string += " " if i > 0 else ""
-            if coeff_val not in [1, -1]:
-                string += str(coeff_val) + "*"
-            if pp_value is None:
-                string += str(self.variables[linterm.dim])
+            if coeff_val >= 0:
+                lhs.append((coeff_val, self.variables[linterm.dim]))
             else:
-                variable = self.variables[linterm.dim]
-                string += f"(Line{pp_value[variable][0]})"
+                rhs.append((-1 * coeff_val, self.variables[linterm.dim]))
+
+        string += do(lhs)
         const_dbl = lincons.linexpr0.contents.cst.val.scalar.contents.val.dbl
-        if const_dbl >= 0:
-            string += ' + '
-        else:
-            string += ' - '
-        string += str(abs(const_dbl))
+        if const_dbl > 0:
+            string += ' + ' if len(lhs) > 0 else ""
+            string += str(abs(const_dbl))
+        elif const_dbl < 0:
+            string += ' - ' if len(lhs) > 0 else "-"
+            string += str(abs(const_dbl))
+
         if lincons.constyp == ElinaConstyp.ELINA_CONS_SUPEQ:
             string += " >= "
         elif lincons.constyp == ElinaConstyp.ELINA_CONS_SUP:
             string += " > "
         elif lincons.constyp == ElinaConstyp.ELINA_CONS_EQ:
             string += " = "
-        string += "0"
-        # print("FUNCTION OUTPUT", string)
+        string += do(rhs)
         return string
 
     @staticmethod

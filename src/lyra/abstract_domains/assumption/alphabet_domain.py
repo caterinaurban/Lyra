@@ -30,10 +30,14 @@ class AlphabetLattice(CharacterLattice, JSONMixin):
             input_value = set(input_value)
             error_message = ""
             if not input_value.issuperset(self.certainly):
-                error_message += "Expected to contain characters: {}; ".format(self.certainly)
+                s = ', '.join(['\'' + c + '\'' for c in self.certainly])
+                error_message += "This value should contain all the characters: {}".format(s)
 
             if not input_value.issubset(self.maybe):
-                error_message += "Must not contain character other than: {}".format(self.maybe)
+                if len(error_message) > 0:
+                    error_message += "; \n"
+                s = ', '.join(['\'' + c + '\'' for c in self.maybe])
+                error_message += "This value ust contain only the characters: {}".format(s)
             if len(error_message) > 0:
                 error = CheckerError(error_message)
                 line_errors[input_line].append(error)

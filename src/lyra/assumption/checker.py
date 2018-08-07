@@ -76,10 +76,11 @@ class AssumptionChecker(Checker):
             messages = []
             message = ';'.join([err.message for err in errors if isinstance(err, RelationalError)])
             if len(message) > 0:
-                message = "Expected relations: {}".format(message)
+                message = "Expected condition(s): {}".format(message)
                 messages.append(message)
 
-            message = [str(err.source_line) for err in errors if isinstance(err, DependencyError) and err.source_line != line_number]
+            source_lines = set([str(err.source_line) for err in set(errors) if isinstance(err, DependencyError) and err.source_line != line_number])
+            message = ', '.join(source_lines)
             if len(message) > 0:
                 message = "This line depends on previous error value on line(s): {}".format(message)
                 messages.append(message)
@@ -96,7 +97,7 @@ class AssumptionChecker(Checker):
                 file.write("{}\n".format(self.separator))
             else:
                 file.write('')
-            print("-----------ERROR FILE----------")
+            # print("-----------ERROR FILE----------")
             for input_line in sorted_key:
                 line = []
                 error_list = errors[input_line]
@@ -106,6 +107,6 @@ class AssumptionChecker(Checker):
                 line.append(do(error_list, input_line))
                 out_line = self.separator.join([l for l in line])
                 out_line += '\n'
-                print(out_line)
+                # print(out_line)
                 file.write(out_line)
-            print("-----------END ERROR FILE--------")
+            # print("-----------END ERROR FILE--------")

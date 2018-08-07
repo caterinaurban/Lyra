@@ -1,0 +1,26 @@
+3
+10.5
+3
+4
+40
+6
+45.5
+12      Error: 12 > 10
+50
+120
+5>>     Error: integer
+25km    Error: integer
+90
+45
+99km/h  Error: integer
+-57     Error: positive
+-123    Error: positive
+76
+130
+1200    Error: 1200 > 120
+140
+50
+2
+30
+120
+50.5  Error: 50.5 > 50

@@ -68,7 +68,8 @@ class QuantityLattice(SignLattice, JSONMixin):
         input_line = pp_value[pp][0]
         input_value = pp_value[pp][1]
         correct_value = None
-
+        if input_value is None:
+            return
         if self.is_top():
             return
         elif self.maybe_negative() and self.maybe_zero():
