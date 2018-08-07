@@ -270,10 +270,11 @@ class CharacterState(Store, State):
             if condition.operator == UnaryBooleanOperation.Operator.Neg:
                 expression = condition.expression
                 if isinstance(expression, BinaryComparisonOperation):
+                    typ = expression.typ
                     left = expression.left
                     operator = expression.operator.reverse_operator()
                     right = expression.right
-                    new_expression = BinaryBooleanOperation(expression.typ, left, operator, right)
+                    new_expression = BinaryComparisonOperation(typ, left, operator, right)
                     return self._assume(new_expression)
                 elif isinstance(expression, UnaryBooleanOperation):
                     if expression.operator == UnaryBooleanOperation.Operator.Neg:
