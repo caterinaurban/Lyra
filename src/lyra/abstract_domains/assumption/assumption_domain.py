@@ -632,7 +632,7 @@ class AssumptionState(State):
                             next(constraint_generator)
                         except StopIteration:
                             end_of_constraints = True
-                    msg = "At least {} more inputs expected on {} more lines.".format(constraints_left, constraints_left)
+                    msg = "At least {} more input(s) expected on the next {} line(s).".format(constraints_left, constraints_left)
                     error = CheckerError(msg)
                     line_errors[line_number].append(error)
 

@@ -4,7 +4,7 @@ earphones
 gramx Error: x
 stereo set
 0       Error: == 0
-kgs
+kg
 camera tripod
 1@      Error: integer
 qounds  Error: no q
@@ -19,7 +19,7 @@ laptop lenovo thinkpad
 pounds
 12x envelope
 35
-gmz     Error: z
+gm.     Error: .
 bic blue pens 4-piece set
 125
 grams

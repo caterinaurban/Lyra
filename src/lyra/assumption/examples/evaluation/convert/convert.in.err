@@ -1,8 +1,8 @@
 |
-4|17|22|This value ust contain only the characters: 'k', 'l', 'n', 'i', 'm', 'e', 'g', 'z', 'u', 'r', '.', 'o', 'p', 's', 'd', 'c', 'a', 'b'
+4|17|22|This value must contain *only* the characters: 'l', 'c', 'k', 'o', '.', 'g', 's', 'z', 'm', 'd', 'r', 'n', 'u', 'p', 'a', 'b', 'i', 'e'
 6|34|35|Value should be >0.
 9|54|56|Expected type Integer
-10|57|63|This value ust contain only the characters: 'k', 'l', 'n', 'i', 'm', 'e', 'g', 'z', 'u', 'r', '.', 'o', 'p', 's', 'd', 'c', 'a', 'b'
+10|57|63|This value must contain *only* the characters: 'l', 'c', 'k', 'o', '.', 'g', 's', 'z', 'm', 'd', 'r', 'n', 'u', 'p', 'a', 'b', 'i', 'e'
 12|80|84|Expected type Integer
 15|108|111|Expected type Integer
 18|139|144|Expected type Integer
