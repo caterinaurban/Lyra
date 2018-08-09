@@ -18,7 +18,7 @@ from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
     Input, ListDisplay, Range, AttributeReference, Subscription, Slicing, \
-    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, Identifier
+    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -291,7 +291,27 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
 
     @copy_docstring(ArithmeticMixin._div)
     def _div(self, other: 'TypeLattice') -> 'TypeLattice':
-        return self._replace(TypeLattice())
+        """
+        Boolean / Boolean = Float
+        Boolean / Integer = Float
+        Boolean / Float = Float
+        Boolean / String = ⊥
+        Integer / Boolean = Float
+        Integer / Integer = Float
+        Integer / Float = Float
+        Integer / String = ⊥
+        Float / Boolean = Float
+        Float / Integer = Float
+        Float / Float = Float
+        Float / String = ⊥
+        String / Boolean = ⊥
+        String / Integer = ⊥
+        String / Float = ⊥
+        String / String = ⊥
+        """
+        if self.is_top() or other.is_top():
+            return self.bottom()
+        return self._replace(TypeLattice(TypeLattice.Status.Float))
 
     @copy_docstring(JSONMixin.to_json)
     def to_json(self) -> str:
@@ -322,8 +342,8 @@ class TypeState(Store, InputMixin):
         we should always have m(x) ≤ TypeLattice.from_lyra_type(x.typ)
 
     When reading input data, the corresponding type assumptions
-    are stored in the class member ``inputs``, which is a map
-    from each program point to the list of type assumptions on the inputs read at that point.
+    are stored in the class member ``inputs``, which is a map from each program point
+    to the list of type assumptions on the inputs read at that point.
 
     .. document private methods
     .. automethod:: TypeState._assume
@@ -580,6 +600,10 @@ class TypeState(Store, InputMixin):
                 value: TypeLattice = deepcopy(evaluated2[expr.left]).mult(evaluated2[expr.right])
                 evaluated2[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
                 return evaluated2
+            elif expr.operator == BinaryArithmeticOperation.Operator.Div:
+                value: TypeLattice = deepcopy(evaluated2[expr.left]).div(evaluated2[expr.right])
+                evaluated2[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
+                return evaluated2
             raise ValueError(f"Binary operator '{str(expr.operator)}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
@@ -681,7 +705,9 @@ class TypeState(Store, InputMixin):
             add = BinaryArithmeticOperation.Operator.Add
             sub = BinaryArithmeticOperation.Operator.Sub
             mult = BinaryArithmeticOperation.Operator.Mult
-            if expr.operator == add or expr.operator == sub or expr.operator == mult:
+            div = BinaryArithmeticOperation.Operator.Div
+            operator = expr.operator
+            if operator == add or operator == sub or operator == mult or operator == div:
                 refined = evaluation[expr].meet(value)
                 refinement1 = deepcopy(refined).meet(evaluation[expr.right])
                 left = self.visit(expr.left, evaluation, refinement1, state)

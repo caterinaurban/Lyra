@@ -3,18 +3,16 @@ Sign Abstract Domain
 ====================
 
 Non-relational abstract domain to be used for **numerical analysis**.
-The set of possible values of a program variable is represented as their sign
-(negative, zero, positive, ...).
+The set of possible numerical values of a program variable in a program state
+is represented by their sign (negative, zero, positive, ...).
 
 :Author: Jérôme Dohrau and Caterina Urban
 """
 from collections import defaultdict
-from copy import deepcopy
 
 from lyra.abstract_domains.basis import Basis
 from lyra.abstract_domains.lattice import ArithmeticMixin, BooleanMixin
 from lyra.abstract_domains.state import State
-from lyra.abstract_domains.store import Store
 from lyra.core.expressions import *
 from lyra.core.types import FloatLyraType
 
@@ -47,16 +45,16 @@ class SignLattice(ArithmeticMixin, BooleanMixin):
     def from_literal(cls, literal: Literal) -> 'SignLattice':
         if isinstance(literal.typ, BooleanLyraType):
             if literal.val == "True":
-                return SignLattice(False, False, True)
+                return cls(False, False, True)
             assert literal.val == "False"
-            return SignLattice(False, True, False)
+            return cls(False, True, False)
         elif isinstance(literal.typ, IntegerLyraType):
             value = int(literal.val)
-            return SignLattice(value < 0, value == 0, value > 0)
+            return cls(value < 0, value == 0, value > 0)
         elif isinstance(literal.typ, FloatLyraType):
             value = float(literal.val)
-            return SignLattice(value < 0.0, value == 0.0, value > 0.0)
-        return SignLattice()
+            return cls(value < 0.0, value == 0.0, value > 0.0)
+        return cls()
 
     @property
     def negative(self):
@@ -165,11 +163,11 @@ class SignLattice(ArithmeticMixin, BooleanMixin):
 
     @copy_docstring(ArithmeticMixin.bottom)
     def bottom(self) -> 'SignLattice':
-        return self._replace(SignLattice(False, False, False))
+        return self._replace(type(self)(False, False, False))
 
     @copy_docstring(ArithmeticMixin.top)
     def top(self) -> 'SignLattice':
-        return self._replace(SignLattice(True, True, True))
+        return self._replace(type(self)(True, True, True))
 
     @copy_docstring(ArithmeticMixin.is_bottom)
     def is_bottom(self) -> bool:
@@ -191,14 +189,14 @@ class SignLattice(ArithmeticMixin, BooleanMixin):
         negative = self.maybe_negative() or other.maybe_negative()
         zero = self.maybe_zero() or other.maybe_zero()
         positive = self.maybe_positive() or other.maybe_positive()
-        return self._replace(SignLattice(negative, zero, positive))
+        return self._replace(type(self)(negative, zero, positive))
 
     @copy_docstring(ArithmeticMixin._meet)
     def _meet(self, other: 'SignLattice') -> 'SignLattice':
         negative = self.maybe_negative() and other.maybe_negative()
         zero = self.maybe_zero() and other.maybe_zero()
         positive = self.maybe_positive() and other.maybe_positive()
-        return self._replace(SignLattice(negative, zero, positive))
+        return self._replace(type(self)(negative, zero, positive))
 
     @copy_docstring(ArithmeticMixin._widening)
     def _widening(self, other: 'SignLattice') -> 'SignLattice':
@@ -211,27 +209,23 @@ class SignLattice(ArithmeticMixin, BooleanMixin):
         negative = self.maybe_positive()
         zero = self.maybe_zero()
         positive = self.maybe_negative()
-        return self._replace(SignLattice(negative, zero, positive))
+        return self._replace(type(self)(negative, zero, positive))
 
     def _add(self, other: 'SignLattice') -> 'SignLattice':
-        negative = (self.maybe_negative() and not other.is_bottom()) or \
-                   (self.maybe_non_negative() and other.maybe_negative())
-        positive = (self.maybe_positive() and not other.is_bottom()) or \
-                   (self.maybe_non_positive() and other.maybe_positive())
+        negative = self.maybe_negative() or other.maybe_negative()
+        positive = self.maybe_positive() or other.maybe_positive()
         zero = (self.maybe_zero() and other.maybe_zero()) or \
                (self.maybe_negative() and other.maybe_positive()) or \
                (self.maybe_positive() and other.maybe_negative())
-        return self._replace(SignLattice(negative, zero, positive))
+        return self._replace(type(self)(negative, zero, positive))
 
     def _sub(self, other: 'SignLattice') -> 'SignLattice':
-        negative = (self.maybe_negative() and not other.is_bottom()) or \
-                   (self.maybe_non_negative() and other.maybe_positive())
-        positive = (self.maybe_positive() and not other.is_bottom()) or \
-                   (self.maybe_non_positive() and other.maybe_negative())
+        negative = self.maybe_negative() or other.maybe_positive()
+        positive = self.maybe_positive() or other.maybe_negative()
         zero = (self.maybe_zero() and other.maybe_zero()) or \
                (self.maybe_negative() and other.maybe_negative()) or \
                (self.maybe_positive() and other.maybe_positive())
-        return self._replace(SignLattice(negative, zero, positive))
+        return self._replace(type(self)(negative, zero, positive))
 
     def _mult(self, other: 'SignLattice') -> 'SignLattice':
         negative = (self.maybe_negative() and other.maybe_positive()) or \
@@ -239,29 +233,29 @@ class SignLattice(ArithmeticMixin, BooleanMixin):
         positive = (self.maybe_negative() and other.maybe_negative()) or \
                    (self.maybe_positive() and other.maybe_positive())
         zero = self.maybe_zero() or other.maybe_zero()
-        return self._replace(SignLattice(negative, zero, positive))
+        return self._replace(type(self)(negative, zero, positive))
 
     def _div(self, other: 'SignLattice') -> 'SignLattice':
-        return self._replace(SignLattice())
+        return self._replace(type(self)())
 
     # boolean operations
 
     @copy_docstring(BooleanMixin.false)
     def false(self) -> 'SignLattice':
         """The false lattice element is ``=0``."""
-        self._replace(SignLattice(False, True, False))
+        self._replace(type(self)(False, True, False))
         return self
 
     @copy_docstring(BooleanMixin.true)
     def true(self) -> 'SignLattice':
         """The true lattice element is ``>0``."""
-        self._replace(SignLattice(False, False, True))
+        self._replace(type(self)(False, False, True))
         return self
 
     @copy_docstring(BooleanMixin.maybe)
     def maybe(self) -> 'SignLattice':
         """The maybe lattice element is ``≥0``."""
-        self._replace(SignLattice(False, True, True))
+        self._replace(type(self)(False, True, True))
         return self
 
     @copy_docstring(BooleanMixin.is_false)
@@ -303,20 +297,22 @@ class SignState(Basis):
         normal = NegationFreeNormalExpression().visit(condition)
         if isinstance(normal, VariableIdentifier) and isinstance(normal.typ, BooleanLyraType):
             evaluation = self._evaluation.visit(normal, self, dict())
-            return self._refinement.visit(normal, evaluation, SignLattice().true(), self)
+            true = self.lattices[normal.typ](**self.arguments[normal.typ]).true()
+            return self._refinement.visit(normal, evaluation, true, self)
         elif isinstance(normal, UnaryBooleanOperation):
             if normal.operator == UnaryBooleanOperation.Operator.Neg:
                 if isinstance(normal.expression, VariableIdentifier):
-                    if isinstance(normal.expression.typ, BooleanLyraType):
+                    typ = normal.expression.typ
+                    if isinstance(typ, BooleanLyraType):
                         evaluation = self._evaluation.visit(normal, self, dict())
-                        false = SignLattice().false()
+                        false = self.lattices[typ](**self.arguments[typ]).false()
                         return self._refinement.visit(normal.expression, evaluation, false, self)
         elif isinstance(normal, BinaryBooleanOperation):
             return self._assume_binarybooleanoperation(normal)
         elif isinstance(normal, BinaryComparisonOperation):
             evaluation = self._evaluation.visit(normal.left, self, dict())
-            non_positive = SignLattice(True, True, False)
-            return self._refinement.visit(normal.left, evaluation, non_positive, self)
+            nonpositive = self.lattices[normal.typ](True, True, False)
+            return self._refinement.visit(normal.left, evaluation, nonpositive, self)
         error = f"Assumption of a {normal.__class__.__name__} expression is unsupported!"
         raise ValueError(error)
 
@@ -329,7 +325,7 @@ class SignState(Basis):
         def visit_Literal(self, expr: Literal, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            evaluation[expr] = SignLattice.from_literal(expr)
+            evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
             return evaluation
 
     _evaluation = ExpressionEvaluation()  # static class member shared between instances
