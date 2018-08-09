@@ -18,6 +18,6 @@ if 2 <= i <= 5:
 for k in dict_own.keys():
     dict_out[k]: int = dict_in[k] + dict_own[k]
 
-for k,v in dict_out.items():
+for k, v in dict_out.items():
     if k >= 3:
         print(v)
