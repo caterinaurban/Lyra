@@ -24,7 +24,7 @@ from lyra.abstract_domains.usage.usage_domain import SimpleUsageStore
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, \
     _iter_child_exprs, NegationFreeNormalExpression, Keys, Values, \
-    Items
+    Items, BinaryComparisonOperation, TupleDisplay
 from lyra.core.types import BooleanLyraType, IntegerLyraType, StringLyraType, \
     FloatLyraType, DictLyraType
 from lyra.core.utils import copy_docstring
@@ -108,6 +108,7 @@ class FularaUsageLattice(Lattice):
         for var in dict_vars:
             self._dict_usage.store[var].empty()
 
+        self._loop_flag = False
         # self._length_usage # TODO
 
     @property
@@ -119,6 +120,14 @@ class FularaUsageLattice(Lattice):
     def dict_usage(self) -> Store:
         """Abstract store of dictionary variable contents."""
         return self._dict_usage
+
+    @property
+    def loop_flag(self) -> bool:
+        return self._loop_flag
+
+    @loop_flag.setter
+    def loop_flag(self, value: bool):
+        self._loop_flag = value
 
     def __repr__(self):
         return f"{self.scalar_usage}, {self.dict_usage}"
@@ -306,6 +315,7 @@ class FularaUsageState(Stack, State):
     #     return self._s_vars
 
     # TODO: properties?
+
     @copy_docstring(Stack.push)
     def push(self):
         if self.is_bottom() or self.is_top():
@@ -397,42 +407,42 @@ class FularaUsageState(Stack, State):
     def _assume(self, condition: Expression) -> 'FularaUsageState':
         condition = NegationFreeNormalExpression().visit(condition)     # eliminate negations
 
-        # if self._loop_flag:     # TODO: not really working
-        #     if isinstance(condition, BinaryComparisonOperation):
-        #         if condition.operator == BinaryComparisonOperation.Operator.In:
-        #             left = condition.left
-        #             if isinstance(left, VariableIdentifier) and type(left.typ) in scalar_types:
-        #                 left_state = self.lattice.scalar_usage.store[left]
-        #                 # loop condition -> like assignment left := right
-        #                 if left_state.is_scoped() or left_state.is_top():
-        #                     left_state.written()
-        #                     self.make_used(condition.right)
-        #                 return self
-        #             elif isinstance(left, TupleDisplay) \
-        #                 and all(type(i.typ) in scalar_types for i in left.items):
-        #                 # loop condition -> like assignment left := right
-        #                 left_u_s = False
-        #                 for i in left.items:
-        #                     i_state = self.lattice.scalar_usage.store[i]
-        #                     if i_state.is_scoped() or i_state.is_top():
-        #                         i_state.written()
-        #                         left_u_s = True
-        #                 if left_u_s:
-        #                     self.make_used(condition.right)
-        #                 return self
-        #             else:
-        #                 error = f"The loop condition {condition} is not yet supported!"
-        #                 raise NotImplementedError(error)
-        #         # TODO: not in?
-        #         elif condition.operator == BinaryComparisonOperation.Operator.NotIn:
-        #             return self     # do nothing
-        #             # left = condition.left
-        #             # if isinstance(left, VariableIdentifier) and type(left.typ) in scalar_types:
-        #             #     self.make_used(condition.right)
-        #             #     return self
-        #             # else:
-        #             #     error = f"The loop condition {condition} is not yet supported!"
-        #             #     raise NotImplementedError(error)
+        if self.lattice.loop_flag:     # not necessarily true for first iteration, but eventually
+            if isinstance(condition, BinaryComparisonOperation):
+                if condition.operator == BinaryComparisonOperation.Operator.In:
+                    left = condition.left
+                    if isinstance(left, VariableIdentifier) and type(left.typ) in scalar_types:
+                        left_state = self.lattice.scalar_usage.store[left]
+                        # loop condition -> like assignment left := right
+                        if left_state.is_scoped() or left_state.is_top():
+                            left_state.written()
+                            self.make_used(condition.right)
+                        return self
+                    elif isinstance(left, TupleDisplay) \
+                        and all(type(i.typ) in scalar_types for i in left.items):
+                        # loop condition -> like assignment left := right
+                        left_u_s = False
+                        for i in left.items:
+                            i_state = self.lattice.scalar_usage.store[i]
+                            if i_state.is_scoped() or i_state.is_top():
+                                i_state.written()
+                                left_u_s = True
+                        if left_u_s:
+                            self.make_used(condition.right)
+                        return self
+                    else:
+                        error = f"The loop condition {condition} is not yet supported!"
+                        raise NotImplementedError(error)
+                # TODO: not in?
+                elif condition.operator == BinaryComparisonOperation.Operator.NotIn:
+                    return self     # do nothing
+                    # left = condition.left
+                    # if isinstance(left, VariableIdentifier) and type(left.typ) in scalar_types:
+                    #     self.make_used(condition.right)
+                    #     return self
+                    # else:
+                    #     error = f"The loop condition {condition} is not yet supported!"
+                    #     raise NotImplementedError(error)
 
         # default:
         effect = False  # effect of the current nesting level on the outcome of the program
@@ -460,7 +470,9 @@ class FularaUsageState(Stack, State):
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'FularaUsageState':
-        return self.push()
+        pushed_state = self.push()
+        pushed_state.lattice.loop_flag = False
+        return pushed_state
 
     @copy_docstring(State.exit_if)
     def exit_if(self) -> 'FularaUsageState':
@@ -468,7 +480,9 @@ class FularaUsageState(Stack, State):
 
     @copy_docstring(State.enter_loop)
     def enter_loop(self) -> 'FularaUsageState':
-        return self.push()
+        pushed_state = self.push()
+        pushed_state.lattice.loop_flag = True
+        return pushed_state
 
     @copy_docstring(State.exit_loop)
     def exit_loop(self) -> 'FularaUsageState':
