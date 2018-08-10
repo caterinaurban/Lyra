@@ -133,8 +133,7 @@ class LivenessState(Store, State):
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'LivenessState':
         for identifier in condition.ids():
-            if isinstance(identifier, VariableIdentifier):
-                self.store[identifier].top()
+            self.store[identifier].top()
         return self
 
     @copy_docstring(State.enter_if)
@@ -162,11 +161,7 @@ class LivenessState(Store, State):
         if isinstance(left, VariableIdentifier):
             self.store[left].bottom()
             for identifier in right.ids():
-                if isinstance(identifier, VariableIdentifier):
-                    self.store[identifier].top()
-                else:
-                    error = f"Substitution with {right} is not implemented!"
-                    raise NotImplementedError(error)
+                self.store[identifier].top()
             return self
         error = f"Substitution for {left} is not yet implemented!"
         raise NotImplementedError(error)
@@ -191,8 +186,7 @@ class StrongLivenessState(LivenessState):
     @copy_docstring(LivenessState._output)
     def _output(self, output: Expression) -> 'StrongLivenessState':
         for identifier in output.ids():
-            if isinstance(identifier, VariableIdentifier):
-                self.store[identifier] = LivenessLattice(LivenessLattice.Status.Live)
+            self.store[identifier] = LivenessLattice(LivenessLattice.Status.Live)
         return self
 
     @copy_docstring(LivenessState._substitute)
@@ -201,34 +195,21 @@ class StrongLivenessState(LivenessState):
             if self.store[left].is_top():   # the assigned variable is strongly-live
                 self.store[left].bottom()
                 for identifier in right.ids():
-                    if isinstance(identifier, VariableIdentifier):
-                        self.store[identifier].top()
-                    else:
-                        error = f"Substitution with {right} is not implemented!"
-                        raise NotImplementedError(error)
+                    self.store[identifier].top()
             return self
         elif isinstance(left, Subscription) or isinstance(left, Slicing):
             target = left.target
             if self.store[target].is_top():  # the target variable (list, dict,..) is strongly-live
                 # summarization abstraction (weak update)
                 for identifier in right.ids():
-                    if isinstance(identifier, VariableIdentifier):
-                        self.store[identifier].top()
-                    else:
-                        error = f"Substitution with {right} is not implemented!"
-                        raise NotImplementedError(error)
+                    self.store[identifier].top()
 
                 if (isinstance(left, Subscription)):
                     ids = left.key.ids()
                 else:  # Slicing
                     ids = left.lower.ids() | left.upper.ids()
                 for identifier in ids:  # make ids in subscript strongly live
-                    # needed? ids = VariableIdentifier?
-                    if isinstance(identifier, VariableIdentifier):
-                        self.store[identifier].top()
-                    else:
-                        error = f"Identifier {identifier} in subscript is not yet supported!"
-                        raise NotImplementedError(error)
+                    self.store[identifier].top()
             return self
         error = f"Substitution for {left} is not yet implemented!"
         raise NotImplementedError(error)

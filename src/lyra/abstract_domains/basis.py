@@ -331,13 +331,13 @@ class Basis(Store, State, metaclass=ABCMeta):
 
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: Subscription, evaluation=None, value=None, state=None):
-            refined = evaluation[expr].meet(value)
+            refined = evaluation[expr]      # weak update
             state.store[expr.target] = refined
             return state
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
-            refined = evaluation[expr].meet(value)
+            refined = evaluation[expr]      # weak update
             state.store[expr.target] = refined
             return state
 

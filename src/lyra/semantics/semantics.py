@@ -23,7 +23,7 @@ from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, C
     TupleDisplayAccess, ListDisplayAccess, SetDisplayAccess, DictDisplayAccess, \
     SubscriptionAccess, SlicingAccess, Raise
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
-    StringLyraType, TupleLyraType, ListLyraType, SetLyraType, DictLyraType
+    StringLyraType, TupleLyraType, ListLyraType, SetLyraType, DictLyraType, AnyLyraType
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -98,7 +98,7 @@ class ExpressionSemantics(Semantics):
                 display = ListDisplay(ListLyraType(combination[0].typ), list(combination))
                 result.add(display)
         else:
-            result.add(ListDisplay(ListLyraType(LyraType())))     # empty list of generic type
+            result.add(ListDisplay(ListLyraType(AnyLyraType())))     # empty list of generic type
             # TODO: way to get specific type? -> add type to display statements?
         state.result = result
         return state
@@ -117,9 +117,8 @@ class ExpressionSemantics(Semantics):
                 types = [elem.typ for elem in combination]
                 display = TupleDisplay(TupleLyraType(types), list(combination))
                 result.add(display)
-        else:
-            error = f"Semantics for empty tuples not yet implemented!"   # TODO: Handle empty tuple
-            raise NotImplementedError(error)
+        else:   # empty tuple
+            result.add(TupleDisplay(TupleLyraType([])))
         state.result = result
         return state
 
@@ -137,7 +136,7 @@ class ExpressionSemantics(Semantics):
                 display = SetDisplay(SetLyraType(combination[0].typ), list(combination))
                 result.add(display)
         else:
-            result.add(SetDisplay(SetLyraType(LyraType())))     # empty set of generic type
+            result.add(SetDisplay(SetLyraType(AnyLyraType())))     # empty set of generic type
             # TODO: way to get specific type?
         state.result = result
         return state
@@ -167,7 +166,7 @@ class ExpressionSemantics(Semantics):
                 result.add(display)
         else:
             # empty dict of generic type TODO: way to get specific type?
-            result.add(DictDisplay(DictLyraType(LyraType(), LyraType())))
+            result.add(DictDisplay(DictLyraType(AnyLyraType(), AnyLyraType())))
         state.result = result
         return state
 
@@ -381,10 +380,10 @@ class BuiltInCallSemantics(CallSemantics):
     def items_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of calls to 'items'.
 
-                :param stmt: call to 'items' to be executed
-                :param state: state before executing the call statement
-                :return: state modified by the call statement
-                """
+        :param stmt: call to 'items' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
         if isinstance(stmt.arguments[0], VariableAccess):  # target
             state.result = {Items(stmt.typ, stmt.arguments[0].variable)}
         else:
@@ -396,10 +395,10 @@ class BuiltInCallSemantics(CallSemantics):
     def keys_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of calls to 'keys'.
 
-                        :param stmt: call to 'keys' to be executed
-                        :param state: state before executing the call statement
-                        :return: state modified by the call statement
-                        """
+        :param stmt: call to 'keys' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
         if isinstance(stmt.arguments[0], VariableAccess):  # target
             state.result = {Keys(stmt.typ, stmt.arguments[0].variable)}
         else:
@@ -411,10 +410,10 @@ class BuiltInCallSemantics(CallSemantics):
     def values_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of calls to 'values'.
 
-                        :param stmt: call to 'values' to be executed
-                        :param state: state before executing the call statement
-                        :return: state modified by the call statement
-                        """
+        :param stmt: call to 'values' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
         if isinstance(stmt.arguments[0], VariableAccess):     # target
             state.result = {Values(stmt.typ, stmt.arguments[0].variable)}
         else:
@@ -425,12 +424,12 @@ class BuiltInCallSemantics(CallSemantics):
 
     # TODO: define default call semantics instead for usage?
     def lower_call_semantics(self, stmt: Call, state: State) -> State:
-        """Semantics of calls to 'split'.
+        """Semantics of calls to 'lower'.
 
-                        :param stmt: call to 'split' to be executed
-                        :param state: state before executing the call statement
-                        :return: state modified by the call statement
-                        """
+        :param stmt: call to 'lower' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
         # treat as just the target expression (forget about call)
         return self.semantics(stmt.arguments[0], state)     # target
 

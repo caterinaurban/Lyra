@@ -10,19 +10,19 @@ Dictionaries are abstracted by a set of abstract segments.
 
 from collections import defaultdict
 from copy import deepcopy, copy
-from typing import Tuple, Set, Type, Callable, Dict, Union, Iterator
+from typing import Tuple, Set, Type, Callable, Dict, Iterator
 
 from lyra.abstract_domains.container.fulara.fulara_lattice import FularaLattice
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
-from lyra.abstract_domains.state import EnvironmentMixin
 from lyra.abstract_domains.container.fulara.value_wrapper import ValueWrapper
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
+from lyra.abstract_domains.state import EnvironmentMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, DictDisplay, \
     BinaryComparisonOperation, Keys, Items, Values, TupleDisplay, ExpressionVisitor, \
     NegationFreeNormalExpression, Input
-from lyra.core.types import DictLyraType, LyraType, BooleanLyraType, IntegerLyraType, \
+from lyra.core.types import DictLyraType, BooleanLyraType, IntegerLyraType, \
     FloatLyraType, StringLyraType
 from lyra.core.utils import copy_docstring
 
@@ -54,9 +54,7 @@ class InRelationState(State, BottomMixin):
     def __init__(self, tuple_set:
                  Set[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]] = None):
         super().__init__()
-        if tuple_set is None:
-            tuple_set = set()
-        self._tuple_set = tuple_set
+        self._tuple_set = tuple_set or set()
 
     @property
     def tuple_set(self):
@@ -66,21 +64,17 @@ class InRelationState(State, BottomMixin):
 
         return self._tuple_set
 
-    def __repr__(self):         # TODO: use join?
+    def __repr__(self):
         if self.is_bottom():
             return "⊥"
 
         result = "{"
         first = True
         # output tuples sorted by their variable names
-        for t in sorted(self.tuple_set,
-                        key=lambda t: (t[0].name, t[1] and t[1].name, t[2] and t[2].name)):
-            if first:
-                result += f"({t[0]}, {t[1]}, {t[2]})"
-                first = False
-            else:
-                result += f", ({t[0]}, {t[1]}, {t[2]})"
-        result += "}"
+        str_tuples = map(lambda t: f"({t[0]}, {t[1]}, {t[2]})", self.tuple_set)
+        str_tuples = sorted(str_tuples)
+
+        result = "{" + ", ".join(str_tuples) + "}"
         return result
 
     @copy_docstring(Lattice.top)
@@ -395,13 +389,8 @@ class FularaState(State):
         """
         super().__init__()
 
-        if scalar_vars is None:
-            scalar_vars = set()
-        if dict_vars is None:
-            dict_vars = set()
-
-        self._s_vars = scalar_vars
-        self._d_vars = dict_vars
+        self._s_vars = scalar_vars or set()
+        self._d_vars = dict_vars or set()
 
         self._k_domain = key_domain
         self._v_domain = value_domain

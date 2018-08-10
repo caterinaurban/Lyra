@@ -139,9 +139,8 @@ class SimpleUsageState(Stack, State):
                 effect = True
                 break
         if effect:      # the current nesting level has an effect on the outcome of the program
-            for identifier in condition.ids():              # TODO: handle "in .items()" here!?
-                if isinstance(identifier, VariableIdentifier):      # TODO: not needed?
-                    self.lattice.store[identifier].top()
+            for identifier in condition.ids():          # TODO: handle "in .items()" here!?
+                self.lattice.store[identifier].top()
         return self
 
     @copy_docstring(State.enter_if)
@@ -163,8 +162,7 @@ class SimpleUsageState(Stack, State):
     @copy_docstring(State._output)
     def _output(self, output: Expression) -> 'SimpleUsageState':
         for identifier in output.ids():
-            if isinstance(identifier, VariableIdentifier):
-                self.lattice.store[identifier].top()
+            self.lattice.store[identifier].top()
         return self
 
     @copy_docstring(State._substitute)
@@ -174,11 +172,7 @@ class SimpleUsageState(Stack, State):
                 # the assigned variable is used or scoped
                 self.lattice.store[left].written()
                 for identifier in right.ids():
-                    if isinstance(identifier, VariableIdentifier):
-                        self.lattice.store[identifier].top()
-                    else:
-                        error = f"Substitution with {right} is not implemented!"
-                        raise NotImplementedError(error)
+                    self.lattice.store[identifier].top()
             return self
         elif isinstance(left, Subscription) or isinstance(left, Slicing):
             target = left.target
@@ -186,23 +180,14 @@ class SimpleUsageState(Stack, State):
                 # the assigned variable is used or scoped
                 self.lattice.store[target].top()   # summarization abstraction (join of U/S with W)
                 for identifier in right.ids():
-                    if isinstance(identifier, VariableIdentifier):
-                        self.lattice.store[identifier].top()
-                    else:
-                        error = f"Substitution with {right} is not implemented!"
-                        raise NotImplementedError(error)
+                    self.lattice.store[identifier].top()
 
                 if isinstance(left, Subscription):
                     ids = left.key.ids()
                 else:   # Slicing
                     ids = left.lower.ids() | left.upper.ids()
                 for identifier in ids:  # make ids in subscript used
-                    # needed? ids = VariableIdentifier?
-                    if isinstance(identifier, VariableIdentifier):
-                        self.lattice.store[identifier].top()
-                    else:
-                        error = f"Identifier {identifier} in subscript is not yet supported!"
-                        raise NotImplementedError(error)
+                    self.lattice.store[identifier].top()
             return self
         error = f"Substitution for {left} is not yet implemented!"
         raise NotImplementedError(error)

@@ -24,13 +24,19 @@ class LyraType(metaclass=ABCMeta):
     def __hash__(self):
         return hash(repr(self))
 
-    # @abstractmethod
+    @abstractmethod
     def __repr__(self):
         """Unambiguous string representation of the type.
 
         :return: unambiguous string representation
 
         """
+
+
+class AnyLyraType(LyraType):
+    """Any type representation"""
+
+    def __repr__(self):
         return "Any"
 
 
@@ -83,10 +89,10 @@ class ListLyraType(LyraType):
 
 class TupleLyraType(LyraType):
     """Tuple type representation."""
-    # TODO: maybe support tuples of variable length, esp. empty tuple?:
+    # TODO: maybe support tuples of variable length
     # To specify a variable-length tuple of homogeneous type, use literal ellipsis,
     # e.g. Tuple[int, ...].
-    # A plain Tuple is equivalent to Tuple[Any, ...], and in turn to tuple.
+    # A plain Tuple is equivalent to Tuple[Any, ...]
 
     def __init__(self, types: List[LyraType]):
         """Tuple type creation.
@@ -101,7 +107,10 @@ class TupleLyraType(LyraType):
         return self._types
 
     def __repr__(self):
-        str_types = map(repr, self.types)
+        if len(self.types) == 0:    # empty tuple
+            str_types = ["()"]      # -> Tuple[()]  (see https://www.python.org/dev/peps/pep-0484/)
+        else:
+            str_types = map(repr, self.types)
         return "Tuple[" + ', '.join(str_types) + "]"
 
 
