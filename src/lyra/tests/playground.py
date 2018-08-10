@@ -66,6 +66,5 @@
 # from lyra.engine.assumption.assumption_analysis import TypeAlphabetAssumptionAnalysis
 # TypeAlphabetAssumptionAnalysis().main("assumption/example.py")
 
-
 # from lyra.engine.assumption.assumption_analysis import TypeRangeAlphabetAssumptionAnalysis
 # TypeRangeAlphabetAssumptionAnalysis().main("assumption/example.py")

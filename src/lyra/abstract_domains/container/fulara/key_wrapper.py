@@ -1,11 +1,10 @@
 from abc import ABCMeta, abstractmethod
-from copy import copy
 
 from typing import Set
 
 
 # (Class) Adapter pattern
-from lyra.abstract_domains.state import EnvironmentMixin, State
+from lyra.abstract_domains.state import EnvironmentMixin
 from lyra.core.expressions import VariableIdentifier
 
 
