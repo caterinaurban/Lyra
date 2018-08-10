@@ -24,13 +24,19 @@ class LyraType(metaclass=ABCMeta):
     def __hash__(self):
         return hash(repr(self))
 
-    # @abstractmethod
+    @abstractmethod
     def __repr__(self):
         """Unambiguous string representation of the type.
 
         :return: unambiguous string representation
 
         """
+
+
+class AnyLyraType(LyraType):
+    """Any type representation"""
+
+    def __repr__(self):
         return "Any"
 
 

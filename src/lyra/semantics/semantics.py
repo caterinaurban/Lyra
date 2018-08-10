@@ -23,7 +23,7 @@ from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, C
     TupleDisplayAccess, ListDisplayAccess, SetDisplayAccess, DictDisplayAccess, \
     SubscriptionAccess, SlicingAccess, Raise
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
-    StringLyraType, TupleLyraType, ListLyraType, SetLyraType, DictLyraType
+    StringLyraType, TupleLyraType, ListLyraType, SetLyraType, DictLyraType, AnyLyraType
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -98,7 +98,7 @@ class ExpressionSemantics(Semantics):
                 display = ListDisplay(ListLyraType(combination[0].typ), list(combination))
                 result.add(display)
         else:
-            result.add(ListDisplay(ListLyraType(LyraType())))     # empty list of generic type
+            result.add(ListDisplay(ListLyraType(AnyLyraType())))     # empty list of generic type
             # TODO: way to get specific type? -> add type to display statements?
         state.result = result
         return state
@@ -137,7 +137,7 @@ class ExpressionSemantics(Semantics):
                 display = SetDisplay(SetLyraType(combination[0].typ), list(combination))
                 result.add(display)
         else:
-            result.add(SetDisplay(SetLyraType(LyraType())))     # empty set of generic type
+            result.add(SetDisplay(SetLyraType(AnyLyraType())))     # empty set of generic type
             # TODO: way to get specific type?
         state.result = result
         return state
@@ -167,7 +167,7 @@ class ExpressionSemantics(Semantics):
                 result.add(display)
         else:
             # empty dict of generic type TODO: way to get specific type?
-            result.add(DictDisplay(DictLyraType(LyraType(), LyraType())))
+            result.add(DictDisplay(DictLyraType(AnyLyraType(), AnyLyraType())))
         state.result = result
         return state
 
