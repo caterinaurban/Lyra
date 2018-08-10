@@ -502,21 +502,33 @@ class BuiltInCallSemantics(CallSemantics):
         :param state: state before executing the call statements
         :return: state modified by the call statement
         """
-        assert len(stmt.arguments) == 2     # binary operations have exactly two arguments
-        argument1 = self.semantics(stmt.arguments[0], state).result
-        argument2 = self.semantics(stmt.arguments[1], state).result
+        arguments = list()
+        updated = state
+        for i in range(len(stmt.arguments)):
+            updated = self.semantics(stmt.arguments[i], updated)
+            arguments.append(updated.result)
+        assert len(arguments) >= 2      # binary operations have at least two arguments
         result = set()
         if isinstance(operator, BinaryArithmeticOperation.Operator):
-            for left, right in itertools.product(argument1, argument2):
-                operation = BinaryArithmeticOperation(stmt.typ, left, operator, right)
+            for product in itertools.product(*arguments):
+                operation = product[0]
+                for i in range(1, len(arguments)):
+                    right = product[i]
+                    operation = BinaryArithmeticOperation(stmt.typ, operation, operator, right)
                 result.add(operation)
         elif isinstance(operator, BinaryComparisonOperation.Operator):
-            for left, right in itertools.product(argument1, argument2):
-                operation = BinaryComparisonOperation(stmt.typ, left, operator, right)
+            for product in itertools.product(*arguments):
+                operation = product[0]
+                for i in range(1, len(arguments)):
+                    right = product[i]
+                    operation = BinaryComparisonOperation(stmt.typ, operation, operator, right)
                 result.add(operation)
         elif isinstance(operator, BinaryBooleanOperation.Operator):
-            for left, right in itertools.product(argument1, argument2):
-                operation = BinaryBooleanOperation(stmt.typ, left, operator, right)
+            for product in itertools.product(*arguments):
+                operation = product[0]
+                for i in range(1, len(arguments)):
+                    right = product[i]
+                    operation = BinaryBooleanOperation(stmt.typ, operation, operator, right)
                 result.add(operation)
         else:
             error = f"Semantics for binary operator {operator} is not yet implemented!"
