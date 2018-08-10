@@ -453,8 +453,7 @@ class ListDisplay(Expression):
 
 
 class TupleDisplay(Expression):
-    """Tuple display (= expression list with comma, or ()) representation.
-    # TODO: handle expression list without comma?
+    """Tuple display (= expression list with comma or ()) representation.
 
     https://docs.python.org/3/reference/expressions.html#expression-lists
     """
@@ -480,6 +479,8 @@ class TupleDisplay(Expression):
 
     def __str__(self):
         str_items = map(str, self.items)
+        if len(self.items) == 1:
+            return f"({next(str_items)},)"      # add a trailing comma
         return '(' + ', '.join(str_items) + ')'
 
 
