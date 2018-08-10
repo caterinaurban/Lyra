@@ -10,19 +10,19 @@ Dictionaries are abstracted by a set of abstract segments.
 
 from collections import defaultdict
 from copy import deepcopy, copy
-from typing import Tuple, Set, Type, Callable, Dict, Union, Iterator
+from typing import Tuple, Set, Type, Callable, Dict, Iterator
 
 from lyra.abstract_domains.container.fulara.fulara_lattice import FularaLattice
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
-from lyra.abstract_domains.state import EnvironmentMixin
 from lyra.abstract_domains.container.fulara.value_wrapper import ValueWrapper
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
+from lyra.abstract_domains.state import EnvironmentMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, DictDisplay, \
     BinaryComparisonOperation, Keys, Items, Values, TupleDisplay, ExpressionVisitor, \
     NegationFreeNormalExpression
-from lyra.core.types import DictLyraType, LyraType, BooleanLyraType, IntegerLyraType, \
+from lyra.core.types import DictLyraType, BooleanLyraType, IntegerLyraType, \
     FloatLyraType, StringLyraType
 from lyra.core.utils import copy_docstring
 

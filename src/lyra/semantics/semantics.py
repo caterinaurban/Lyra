@@ -380,10 +380,10 @@ class BuiltInCallSemantics(CallSemantics):
     def items_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of calls to 'items'.
 
-                :param stmt: call to 'items' to be executed
-                :param state: state before executing the call statement
-                :return: state modified by the call statement
-                """
+        :param stmt: call to 'items' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
         if isinstance(stmt.arguments[0], VariableAccess):  # target
             state.result = {Items(stmt.typ, stmt.arguments[0].variable)}
         else:
@@ -395,10 +395,10 @@ class BuiltInCallSemantics(CallSemantics):
     def keys_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of calls to 'keys'.
 
-                        :param stmt: call to 'keys' to be executed
-                        :param state: state before executing the call statement
-                        :return: state modified by the call statement
-                        """
+        :param stmt: call to 'keys' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
         if isinstance(stmt.arguments[0], VariableAccess):  # target
             state.result = {Keys(stmt.typ, stmt.arguments[0].variable)}
         else:
@@ -410,10 +410,10 @@ class BuiltInCallSemantics(CallSemantics):
     def values_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of calls to 'values'.
 
-                        :param stmt: call to 'values' to be executed
-                        :param state: state before executing the call statement
-                        :return: state modified by the call statement
-                        """
+        :param stmt: call to 'values' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
         if isinstance(stmt.arguments[0], VariableAccess):     # target
             state.result = {Values(stmt.typ, stmt.arguments[0].variable)}
         else:
@@ -424,12 +424,12 @@ class BuiltInCallSemantics(CallSemantics):
 
     # TODO: define default call semantics instead for usage?
     def lower_call_semantics(self, stmt: Call, state: State) -> State:
-        """Semantics of calls to 'split'.
+        """Semantics of calls to 'lower'.
 
-                        :param stmt: call to 'split' to be executed
-                        :param state: state before executing the call statement
-                        :return: state modified by the call statement
-                        """
+        :param stmt: call to 'lower' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
         # treat as just the target expression (forget about call)
         return self.semantics(stmt.arguments[0], state)     # target
 
