@@ -117,9 +117,8 @@ class ExpressionSemantics(Semantics):
                 types = [elem.typ for elem in combination]
                 display = TupleDisplay(TupleLyraType(types), list(combination))
                 result.add(display)
-        else:
-            error = f"Semantics for empty tuples not yet implemented!"   # TODO: Handle empty tuple
-            raise NotImplementedError(error)
+        else:   # empty tuple
+            result.add(TupleDisplay(TupleLyraType([])))
         state.result = result
         return state
 
