@@ -3,11 +3,10 @@ import optparse
 import sys
 
 from lyra.core.cfg import *
-from lyra.core.expressions import *
-
+from lyra.core.expressions import Literal
 from lyra.core.statements import *
 from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
-    FloatLyraType, ListLyraType
+    FloatLyraType, ListLyraType, TupleLyraType, StringLyraType, DictLyraType, SetLyraType
 from lyra.visualization.graph_renderer import CfgRenderer
 
 
@@ -348,9 +347,15 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_AnnAssign(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
         annotated = resolve_type_annotation(node.annotation)
+        #  TODO: implement annotation without assignment
+        #           https://greentreesnakes.readthedocs.io/en/latest/nodes.html#statements
+        # if node.value != None:
         value = self.visit(node.value, types, annotated)
         target = self.visit(node.target, types, annotated)
         return Assignment(pp, target, value)
+        # else:     # just a type annotation without assignment
+        #     target = target = self.visit(node.target, types, annotated)
+        #     return ?
 
     def visit_Module(self, node, types=None, typ=None):
         start_cfg = _dummy_cfg(self._id_gen)
@@ -435,23 +440,59 @@ class CFGVisitor(ast.NodeVisitor):
         return cfg
 
     def visit_For(self, node, types=None, typ=None):
+        pp = ProgramPoint(node.target.lineno, node.target.col_offset)
+
+        # don't provide result type
+        # (should be set before by a type annotation for variables/will be set later for calls)
+        iteration = self.visit(node.iter, types)        # rhs of 'in'
+
+        # set types: iteration._typ = type of object being iterated over,
+        #           target_type = type of iteration variable (i.e. element type of iteration._typ)
+        if isinstance(iteration, VariableAccess):
+            if isinstance(iteration.variable.typ, ListLyraType):  # iteration over list items
+                target_type = iteration.variable.typ.typ  # element type
+            if isinstance(iteration.variable.typ, DictLyraType):   # iteration over dictionary keys
+                target_type = iteration.variable.typ.key_type
+                # conversion to .keys() call to be consistent:
+                iteration = Call(iteration.pp, "keys", [iteration], SetLyraType(target_type))
+                # TODO: return type necessary & correct?
+        elif isinstance(iteration, Call) and iteration.name == "range":
+            target_type = IntegerLyraType()
+            iteration._typ = ListLyraType(IntegerLyraType())    # TODO: necessary?
+        # Call.arguments[0] == target
+        elif isinstance(iteration, Call) and iteration.name == "items" \
+                and isinstance(iteration.arguments[0], VariableAccess):
+            # right now only handle single variables as target
+            called_on_type = types[iteration.arguments[0].variable.name]   # always called on Dict
+            target_type = TupleLyraType([called_on_type.key_type, called_on_type.value_type])
+            # items() actually returns 'view' object, but here for simplicity: Dict
+            iteration._typ = SetLyraType(target_type)      # TODO: necessary & correct ?
+        elif isinstance(iteration, Call) and iteration.name == "keys" \
+                and isinstance(iteration.arguments[0], VariableAccess):
+            # right now only handle single variables as target
+            called_on_type = types[iteration.arguments[0].variable.name]   # always called on Dict
+            target_type = called_on_type.key_type
+            iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
+        elif isinstance(iteration, Call) and iteration.name == "values" \
+                and isinstance(iteration.arguments[0], VariableAccess):
+            # right now only handle single variables as target
+            called_on_type = types[iteration.arguments[0].variable.name]   # always called on Dict
+            target_type = called_on_type.value_type
+            iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
+        else:
+            error = f"The for loop iteration statment {iteration} is not yet translatable to CFG!"
+            raise NotImplementedError(error)
+
+        target = self.visit(node.target, types, target_type)
+
+        test = Call(pp, "in", [target, iteration], BooleanLyraType())
+        neg_test = Call(pp, "not", [test], BooleanLyraType())
+
         header_node = Loop(self._id_gen.next)
 
         cfg = self._translate_body(node.body, types, typ)
         body_in_node = cfg.in_node
         body_out_node = cfg.out_node
-
-        pp = ProgramPoint(node.target.lineno, node.target.col_offset)
-        iteration = self.visit(node.iter, types, ListLyraType(IntegerLyraType()))
-        if isinstance(iteration, Call) and iteration.name == "range":
-            target_type = IntegerLyraType()
-        else:
-            error = f"The for loop iteration statment {node.iter} is not yet translatable to CFG!"
-            raise NotImplementedError(error)
-        target = self.visit(node.target, types, target_type)
-
-        test = Call(pp, "in", [target, iteration], BooleanLyraType())
-        neg_test = Call(pp, "not", [test], BooleanLyraType())
 
         cfg.add_node(header_node)
         cfg.in_node = header_node
@@ -559,13 +600,28 @@ class CFGVisitor(ast.NodeVisitor):
             return Call(pp, name, arguments, typ)
         elif isinstance(func, ast.Attribute):
             name: str = func.attr
-            arguments = [self.visit(func.value, types, typ)]
+            arguments = [self.visit(func.value, types, typ)]        # target of the call
             arguments.extend([self.visit(arg, types, typ) for arg in node.args])
             return Call(pp, name, arguments, typ)
 
+    def visit_Tuple(self, node, types=None, typ=None):    # same as list
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        return TupleDisplayAccess(pp, [self.visit(node.elts[i], types, typ.types[i])
+                                       for i in range(len(node.elts))])
+
     def visit_List(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
-        return ListDisplayAccess(pp, [self.visit(e, types, typ) for e in node.elts])
+        return ListDisplayAccess(pp, [self.visit(e, types, typ.typ) for e in node.elts])
+
+    def visit_Set(self, node, types=None, typ=None):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        return SetDisplayAccess(pp, [self.visit(e, types, typ.typ) for e in node.elts])
+
+    def visit_Dict(self, node, types=None, typ=None):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        k_stmts = [self.visit(k, types, typ.key_type) for k in node.keys]
+        v_stmts = [self.visit(v, types, typ.value_type) for v in node.values]
+        return DictDisplayAccess(pp, k_stmts, v_stmts)
 
     def visit_Raise(self, node, types=None, typ=None):
         pp = ProgramPoint(node.lineno, node.col_offset)
@@ -630,6 +686,9 @@ class CFGVisitor(ast.NodeVisitor):
                     pass
                 else:
                     cfg_factory.append_cfg(_dummy_cfg(self._id_gen))
+            # elif isinstance(child, ast.Assign): # TODO
+            #    raise NotAnnotatedError(f"The Assignment in line {str(child.lineno)} "
+            #                            f"is not type annotated")
             else:
                 raise NotImplementedError(
                     f"The statement {str(type(child))} is not yet translatable to CFG!")
