@@ -433,7 +433,7 @@ class BuiltInCallSemantics(CallSemantics):
         # treat as just the target expression (forget about call)
         return self.semantics(stmt.arguments[0], state)     # target
 
-    def raise_semantics(self, stmt: Raise, state: State) -> State:
+    def raise_semantics(self, _, state: State) -> State:
         """Semantics of raising an Error.
 
         :param stmt: raise statement to be executed

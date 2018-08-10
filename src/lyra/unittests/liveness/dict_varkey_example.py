@@ -1,5 +1,5 @@
 # INITIAL: example -> Dead, i -> Dead, key -> Dead, len(key) -> Dead, value -> Dead
-value: int = input()
+value: int = int(input())
 # STATE: example -> Dead, i -> Dead, key -> Dead, len(key) -> Dead, value -> Live
 example: Dict[str, int] = {"a": 0, "b": 1, "c": 2}
 # STATE: example -> Live, i -> Dead, key -> Dead, len(key) -> Dead, value -> Live

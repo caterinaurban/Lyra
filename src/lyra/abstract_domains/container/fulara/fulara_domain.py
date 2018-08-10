@@ -403,8 +403,8 @@ class FularaState(State):
             typ = dv.typ
             if isinstance(typ, DictLyraType):  # should be true
                 if typ not in arguments:
-                    k_var = VariableIdentifier(typ.key_type, k_name)
-                    v_var = VariableIdentifier(typ.value_type, v_name)
+                    k_var = VariableIdentifier(typ.key_typ, k_name)
+                    v_var = VariableIdentifier(typ.val_typ, v_name)
 
                     arguments[typ] = {'key_domain': key_domain, 'value_domain': value_domain,
                                       'key_d_args': {'scalar_variables': scalar_vars,
@@ -624,8 +624,8 @@ class FularaState(State):
         d_store = self.dict_store.store
         d_lattice: FularaLattice
         for d, d_lattice in d_store.items():
-            v_k = VariableIdentifier(d.typ.key_type, k_name)
-            v_v = VariableIdentifier(d.typ.value_type, v_name)
+            v_k = VariableIdentifier(d.typ.key_typ, k_name)
+            v_v = VariableIdentifier(d.typ.val_typ, v_name)
             new_segments = set()
             for (k, v) in d_lattice.segments:
                 k_s_state = deepcopy(self.scalar_state)
@@ -644,7 +644,7 @@ class FularaState(State):
         i_store = self.init_store.store
         i_lattice: FularaLattice
         for d, i_lattice in i_store.items():
-            v_k = VariableIdentifier(d.typ.key_type, k_name)
+            v_k = VariableIdentifier(d.typ.key_typ, k_name)
 
             new_segments = set()
             for (k, b) in i_lattice.segments:
@@ -706,7 +706,7 @@ class FularaState(State):
                     # everything uninitialized,
                     # but scalars should conform with scalar state -> copy from scalar state:
                     # TODO: use forget_variable?
-                    v_k = VariableIdentifier(left.typ.key_type, k_name)
+                    v_k = VariableIdentifier(left.typ.key_typ, k_name)
                     s_state = deepcopy(self.scalar_state)
                     s_state.add_variable(v_k)
                     top_state = self.s_k_conv(s_state)
@@ -1001,7 +1001,7 @@ class FularaState(State):
 
                     if not k_abs.is_top():          # TODO: check for less_equal old?
                         scalar_vars = self._s_vars.copy()
-                        v_v = VariableIdentifier(d_var.typ.value_type, v_name)
+                        v_v = VariableIdentifier(d_var.typ.val_typ, v_name)
                         v_abs = d_lattice.v_domain(scalar_vars, v_v).bottom()
                         for (k, v) in d_lattice.segments:
                             key_meet_k = deepcopy(k_abs).meet(k)
@@ -1023,7 +1023,7 @@ class FularaState(State):
 
                 if not v_abs.is_top():  # TODO: check for less_equal old?
                     scalar_vars = self._s_vars.copy()
-                    v_k = VariableIdentifier(d_var.typ.key_type, k_name)
+                    v_k = VariableIdentifier(d_var.typ.key_typ, k_name)
                     k_abs = d_lattice.k_domain(scalar_vars, v_k).bottom()
                     for (k, v) in d_lattice.segments:
                         value_meet_v = deepcopy(v_abs).meet(v)
@@ -1111,7 +1111,7 @@ class FularaState(State):
                         k_abs.remove_variable(old_temp)
 
                     scalar_vars = state._s_vars.copy()
-                    v_var = VariableIdentifier(d.typ.value_type, v_name)
+                    v_var = VariableIdentifier(d.typ.val_typ, v_name)
                     v_abs = d_lattice.v_domain(scalar_vars, v_var).bottom()
                     for (k, v) in d_lattice.segments:
                         key_meet_k = deepcopy(k_abs).meet(k)
@@ -1125,7 +1125,7 @@ class FularaState(State):
                     state.scalar_state.meet(state.v_s_conv(v_abs))
 
                     # use increasing numbers for temp_var names
-                    temp_var = VariableIdentifier(d.typ.value_type, str(len(evaluation)) + "v")
+                    temp_var = VariableIdentifier(d.typ.val_typ, str(len(evaluation)) + "v")
                     state.scalar_state.add_variable(temp_var)
 
                     state.scalar_state.assign({temp_var}, {v_var})

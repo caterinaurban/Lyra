@@ -231,23 +231,6 @@ def _dummy_cfg(id_gen):
     return LooseControlFlowGraph({dummy}, dummy, dummy, set())
 
 
-class NodeIdentifierGenerator:
-    """
-    A helper class to generate a increasing sequence of node identifiers.
-    """
-
-    def __init__(self):
-        """
-        Creates a sequencer which will return 1 as the first id.
-        """
-        self._next = 0
-
-    @property
-    def next(self):
-        self._next += 1
-        return self._next
-
-
 class CFGFactory:
     """
     A helper class that encapsulates a partial CFG
@@ -290,8 +273,8 @@ class CFGFactory:
         :param stmts: a single statement or an iterable of statements
         :return:
         """
-        if isinstance(stmts, (List, Tuple)):
-            self._stmts.extend(list(stmts))
+        if isinstance(stmts, List):
+            self._stmts.extend(stmts)
         else:
             self._stmts.append(stmts)
 
@@ -307,18 +290,47 @@ class CFGFactory:
 
 # noinspection PyPep8Naming
 class CFGVisitor(ast.NodeVisitor):
-    """
-    This AST visitor generates a CFG recursively.
+    """AST visitor that generates a CFG."""
 
-    Overwritten methods return either a partial CFG or a statement/expression,
-    depending on the type of node.
-    """
+    class NodeIdentifierGenerator:
+        """Helper class that generates an increasing sequence of node identifiers."""
+
+        def __init__(self):
+            self._next = 0
+
+        @property
+        def next(self):
+            self._next += 1
+            return self._next
 
     def __init__(self):
         super().__init__()
-        self._id_gen = NodeIdentifierGenerator()
+        self._id_gen = CFGVisitor.NodeIdentifierGenerator()
 
+    def visit(self, node, *args, **kwargs):
+        """Visit an AST node.
+
+        :param node: node to be visited
+        :return: either a statement or a partial CFG, depending on the visited node
+
+        :keyword arguments:
+            * *types* -- dictionary mapping (variable) names to their corresponding (lyra) type
+            * *typ* -- type of the current node
+        """
+        method = 'visit_' + node.__class__.__name__
+        visitor = getattr(self, method, self.generic_visit)
+        return visitor(node, *args, **kwargs)
+
+    def generic_visit(self, node, *args, **kwargs):
+        print(type(node).__name__)
+        raise NotImplementedError(f"Visit of {node.__class__.__name__} is unsupported!")
+
+    # Literals
+
+    # noinspection PyUnusedLocal
     def visit_Num(self, node, types=None, typ=None):
+        """Visitor function for a number (integer, float, or complex).
+        The n attribute stores the value, already converted to the relevant type."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.n, int):
             expr = Literal(IntegerLyraType(), str(node.n))
@@ -326,49 +338,275 @@ class CFGVisitor(ast.NodeVisitor):
         elif isinstance(node.n, float):
             expr = Literal(FloatLyraType(), str(node.n))
             return LiteralEvaluation(pp, expr)
-        raise NotImplementedError(f"Num {node.n.__class__.__name__} is not yet supported!")
+        raise NotImplementedError(f"Num of type {node.n.__class__.__name__} is unsupported!")
 
-    # noinspection PyMethodMayBeStatic
+    # noinspection PyMethodMayBeStatic, PyUnusedLocal
     def visit_Str(self, node, types=None, typ=None):
+        """Visitor function for a string. The s attribute stores the value."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         expr = Literal(StringLyraType(), node.s)
         return LiteralEvaluation(pp, expr)
 
-    # noinspection PyMethodMayBeStatic
-    def visit_Name(self, node, types=None, typ=None):
+    def visit_List(self, node, types=None, typ=None):
+        """Visitor function for a list.
+        The elts attribute stores a list of nodes representing the elements.
+        The ctx attribute is Store if the container is an assignment target, and Load otherwise."""
         pp = ProgramPoint(node.lineno, node.col_offset)
-        if node.id in types:
+        assert isinstance(typ, ListLyraType)    # we expect typ to be a ListLyraType
+        items = [self.visit(item, types, typ.typ) for item in node.elts]
+        return ListDisplayAccess(pp, typ, items)
+
+    def visit_Tuple(self, node, types=None, typ=None):
+        """Visitor function for a tuple.
+        The elts attribute stores a list of nodes representing the elements.
+        The ctx attribute is Store if the container is an assignment target, and Load otherwise."""
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        assert isinstance(typ, TupleLyraType)   # we expect typ to be a TupleLyraType
+        items = [self.visit(item, types, item_typ) for item, item_typ in zip(node.elts, typ.typs)]
+        return TupleDisplayAccess(pp, typ, items)
+
+    def visit_Set(self, node, types=None, typ=None):
+        """Visitor function for a set.
+        The elts attribute stores a list of nodes representing the elements."""
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        assert isinstance(typ, SetLyraType)     # we expect typ to be a SetLyraType
+        items = [self.visit(item, types, typ.typ) for item in node.elts]
+        return SetDisplayAccess(pp, typ, items)
+
+    def visit_Dict(self, node, types=None, typ=None):
+        """Visitor function for a dictionary.
+        The attributes keys and values store lists of nodes with matching order
+        representing the keys and the values, respectively."""
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        assert isinstance(typ, DictLyraType)    # we expect typ to be a DictLyraType
+        keys = [self.visit(key, types, typ.key_typ) for key in node.keys]
+        values = [self.visit(value, types, typ.val_typ) for value in node.values]
+        return DictDisplayAccess(pp, typ, keys, values)
+
+    # noinspection PyUnusedLocal
+    def visit_NameConstant(self, node, types=None, typ=None):
+        """Visitor function for True, False or None.
+        The value attribute stores the constant."""
+        if isinstance(node.value, bool):
+            pp = ProgramPoint(node.lineno, node.col_offset)
+            expr = Literal(BooleanLyraType(), str(node.value))
+            return LiteralEvaluation(pp, expr)
+        raise NotImplementedError(f"Constant {node.value.__class__.__name__} is unsupported!")
+
+    # Variables
+
+    def visit_Name(self, node, types=None, typ=None):
+        """Visitor function for a variable name.
+        The attribute id stores the name as a string.
+        The attribute ctx is Store (to assign a new value to the variable),
+        Load (to load the value of the variable), or Del (to delete the variable)."""
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        if isinstance(node.ctx, ast.Store):
+            if node.id not in types:
+                if typ:
+                    types[node.id] = typ
+                else:
+                    raise ValueError(f"Missing type annotation for variable {node.id}!")
             expr = VariableIdentifier(types[node.id], node.id)
-        else:
-            types[node.id] = typ
-            expr = VariableIdentifier(typ, node.id)
-        return VariableAccess(pp, expr)
+            return VariableAccess(pp, types[node.id], expr)
+        if isinstance(node.ctx, ast.Load):
+            assert node.id in types
+            # assert types[node.id] == typ or typ is None
+            expr = VariableIdentifier(types[node.id], node.id)
+            return VariableAccess(pp, types[node.id], expr)
+        assert isinstance(node.ctx, ast.Del)
+        raise NotImplementedError(f"Name deletion is unsupported!")
+
+    # Expressions
+
+    # noinspection PyUnusedLocal
+    def visit_Expr(self, node, types=None, typ=None):
+        """Visitor function for an expression statement (whose return value is unused).
+        The attribute value stored another AST node."""
+        return self.visit(node.value, types)
+
+    def visit_UnaryOp(self, node, types=None, typ=None):
+        """Visitor function for a unary operation.
+        The attributes op and operand store the operator
+        and any expression node, respectively."""
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        name = type(node.op).__name__.lower()
+        argument = self.visit(node.operand, types, typ)
+        return Call(pp, name, [argument], typ)
+
+    def visit_BinOp(self, node, types=None, typ=None):
+        """Visitor function for a binary operation.
+        The attributes op, left, and right store the operator
+        and any expression nodes, respectively."""
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        name = type(node.op).__name__.lower()
+        left = self.visit(node.left, types, typ)
+        right = self.visit(node.right, types, typ)
+        return Call(pp, name, [left, right], typ)
+
+    def visit_BoolOp(self, node, types=None, typ=None):
+        """Visitor function for a boolean operation.
+        The attributes op and values store the operand
+        and a list of any expression node representing the operand involed, respectively."""
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        name = type(node.op).__name__.lower()
+        arguments = [self.visit(val, types, typ) for val in node.values]
+        return Call(pp, name, arguments, typ)
+
+    def visit_Compare(self, node, types=None, typ=None):
+        """Visitor function for a comparison operation.
+        The attributes left, ops, and comparators store the first value in the comparison,
+        the list of operators, and the list of compared values after the first."""
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        assert isinstance(typ, BooleanLyraType)     # we expect typ to be a BooleanLyraType
+        left = self.visit(node.left, types, None)
+        name = type(node.ops[0]).__name__.lower()
+        second = self.visit(node.comparators[0], types, None)
+        result = Call(pp, name, [left, second], typ)
+        for op, comparator in zip(node.ops[1:], node.comparators[1:]):
+            name = type(op).__name__.lower()
+            right = self.visit(comparator, types, None)
+            current = Call(pp, name, [second, right], typ)
+            result = Call(pp, 'and', [result, current], typ)
+            second = right
+        return result
+
+    def visit_Call(self, node, types=None, typ=None):
+        """Visitor function for a call.
+        The attribute func stores the function being called (often a Name or Attribute object).
+        The attribute args stores a list fo the arguments passed by position."""
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        if isinstance(node.func, ast.Name):
+            name: str = node.func.id
+            if name == 'bool' or name == 'int':
+                arguments = [self.visit(arg, types, typ) for arg in node.args]
+                return Call(pp, name, arguments, typ)
+            arguments = [self.visit(arg, types, None) for arg in node.args]
+            return Call(pp, name, arguments, typ)
+        elif isinstance(node.func, ast.Attribute):
+            name: str = node.func.attr
+            if name == "split":     # str.split([sep[, maxsplit]])
+                assert isinstance(typ, ListLyraType)    # we expect type to be a ListLyraType
+                arguments = [self.visit(node.func.value, types, typ.typ)]   # target of the call
+                args_typs = zip(node.args, [typ.typ, IntegerLyraType()])
+                args = [self.visit(arg, types, arg_typ) for arg, arg_typ in args_typs]
+                arguments.extend(args)
+                return Call(pp, name, arguments, typ)
+            arguments = [self.visit(node.func.value, types, None)]   # target of the call
+            arguments.extend([self.visit(arg, types, None) for arg in node.args])
+            return Call(pp, name, arguments, typ)
+
+    def visit_IfExp(self, node, targets, op=None, types=None, typ=None):
+        """Visitor function for an if expression.
+        The components of the expression are stored in the attributes test, body, and orelse."""
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        then = CFGFactory(self._id_gen)
+        body = self.visit(node.body, types, typ)
+        assignments = list()
+        for target in targets:
+            if op:
+                left = self.visit(target, types, typ)
+                name = type(op).__name__.lower()
+                value = Call(pp, name, [left, body], left.typ)
+                assignments.append(Assignment(pp, left, value))
+            else:
+                assignments.append(Assignment(pp, self.visit(target, types, typ), body))
+        then.add_stmts(assignments)
+        then.complete_basic_block()
+        then = then.cfg
+        test = self.visit(node.test, types, BooleanLyraType())
+        then.add_edge(Conditional(None, test, then.in_node, Edge.Kind.IF_IN))
+        then.add_edge(Unconditional(then.out_node, None, Edge.Kind.IF_OUT))
+        orelse = CFGFactory(self._id_gen)
+        body = self.visit(node.orelse, types, typ)
+        assignments = list()
+        for target in targets:
+            if op:
+                left = self.visit(target, types, typ)
+                name = type(op).__name__.lower()
+                value = Call(pp, name, [left, body], left.typ)
+                assignments.append(Assignment(pp, left, value))
+            else:
+                assignments.append(Assignment(pp, self.visit(target, types, typ), body))
+        orelse.add_stmts(assignments)
+        orelse.complete_basic_block()
+        orelse = orelse.cfg
+        not_test = Call(pp, 'not', [test], BooleanLyraType())
+        orelse.add_edge(Conditional(None, not_test, orelse.in_node, Edge.Kind.IF_IN))
+        orelse.add_edge(Unconditional(orelse.out_node, None, Edge.Kind.IF_OUT))
+        return then.combine(orelse)
+
+    # Subscripting
+
+    def visit_Subscript(self, node, types=None, typ=None):
+        """Visitor function for a subscript.
+        The attribute value stores the target of the subscript (often a Name).
+        The attribute slice is one of Index, Slice, or ExtSlice.
+        The attribute ctx is Load, Store, or Del."""
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        if isinstance(node.slice, ast.Index):
+            target = self.visit(node.value, types, None)
+            key = self.visit(node.slice.value, types, None)
+            return SubscriptionAccess(pp, typ, target, key)
+        elif isinstance(node.slice, ast.Slice):
+            value = self.visit(node.value, types, None)
+            lower = self.visit(node.slice.lower, types, None)
+            upper = self.visit(node.slice.upper, types, None)
+            step = self.visit(node.slice.step, types, None) if node.slice.step else None
+            return SlicingAccess(pp, typ, value, lower, upper, step)
+        raise NotImplementedError(f"Subscription {node.slice.__class__.__name__} is unsupported!")
+
+    # Statements
+
+    def visit_Assign(self, node, types=None, typ=None):
+        """Visitor function for an assignment.
+        The attribute targets stores a list of targets of the assignment.
+        The attribute value stores the assigned value."""
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        assert typ is None     # we expect typ to be None
+        assignments = list()
+        value = self.visit(node.value, types, None)
+        for target in node.targets:
+            target = self.visit(target, types, None)
+            assignments.append(Assignment(pp, target, value))
+        return assignments
 
     def visit_AnnAssign(self, node, types=None, typ=None):
+        """Visitor function for an assignment with a type annotation.
+        The attribute target stores the target of the assignment (a Name, Attribute, or Subscript).
+        The attribute annotation stores the type annotation (a Str or Name).
+        The attribute value opionally stores the assigned value."""
         pp = ProgramPoint(node.lineno, node.col_offset)
+        assert typ is None     # we expect typ to be None
         annotated = resolve_type_annotation(node.annotation)
-        #  TODO: implement annotation without assignment
-        #           https://greentreesnakes.readthedocs.io/en/latest/nodes.html#statements
-        # if node.value != None:
-        value = self.visit(node.value, types, annotated)
         target = self.visit(node.target, types, annotated)
+        value = self.visit(node.value, types, annotated)
         return Assignment(pp, target, value)
-        # else:     # just a type annotation without assignment
-        #     target = target = self.visit(node.target, types, annotated)
-        #     return ?
 
-    def visit_Module(self, node, types=None, typ=None):
-        start_cfg = _dummy_cfg(self._id_gen)
-        body_cfg = self._translate_body(
-            node.body, types, allow_loose_in_edges=True, allow_loose_out_edges=True)
-        end_cfg = _dummy_cfg(self._id_gen)
-        if body_cfg is None:
-            return start_cfg.append(end_cfg)
-        else:
-            return start_cfg.append(body_cfg).append(end_cfg)
+    def visit_AugAssign(self, node, types=None, typ=None):
+        """Visitor function for an augmented assignment.
+        The attribute target stores the target of the assignment (a Name, Attribute, or Subscript).
+        The attributes op and value store the operation and the assigned value, respectively."""
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        assert typ is None  # we expect typ to be None
+        target = self.visit(node.target, types, None)
+        name = type(node.op).__name__.lower()
+        right = self.visit(node.value, types, None)
+        value = Call(pp, name, [target, right], target.typ)
+        return Assignment(pp, target, value)
 
+    # noinspection PyMethodMayBeStatic, PyUnusedLocal
+    def visit_Raise(self, node, types=None, typ=None):
+        """Visitor function for an exception raise.
+        The attribute exc stores the exception object to be raised
+        (normally a Call or Name, or None for a standalone raise)."""
+        return Raise(ProgramPoint(node.lineno, node.col_offset))
+
+    # Control Flow
+
+    # noinspection PyUnusedLocal
     def visit_If(self, node, types=None, typ=None):
-        body_cfg = self._translate_body(node.body, types)
+        body_cfg = self._visit_body(node.body, types)
 
         pp = ProgramPoint(node.test.lineno, node.test.col_offset)
         test = self.visit(node.test, types, BooleanLyraType())
@@ -379,7 +617,7 @@ class CFGVisitor(ast.NodeVisitor):
             # if control flow can exit the body at all, add an unconditional IF_OUT edge
             body_cfg.add_edge(Unconditional(body_cfg.out_node, None, Edge.Kind.IF_OUT))
         if node.orelse:  # if there is else branch
-            orelse_cfg = self._translate_body(node.orelse, types)
+            orelse_cfg = self._visit_body(node.orelse, types)
             orelse_cfg.add_edge(Conditional(None, neg_test, orelse_cfg.in_node, Edge.Kind.IF_IN))
             if orelse_cfg.out_node:
                 # if control flow can exit the else at all, add an unconditional IF_OUT edge
@@ -406,7 +644,7 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_While(self, node, types=None, typ=None):
         header_node = Loop(self._id_gen.next)
 
-        cfg = self._translate_body(node.body, types, typ)
+        cfg = self._visit_body(node.body, types, typ)
         body_in_node = cfg.in_node
         body_out_node = cfg.out_node
 
@@ -424,7 +662,7 @@ class CFGVisitor(ast.NodeVisitor):
             cfg.add_edge(Unconditional(body_out_node, header_node, Edge.Kind.LOOP_OUT))
 
         if node.orelse:  # if there is else branch
-            orelse_cfg = self._translate_body(node.orelse, types)
+            orelse_cfg = self._visit_body(node.orelse, types)
             if orelse_cfg.out_node:
                 # if control flow can exit the else at all, add an unconditional DEFAULT edge
                 orelse_cfg.add_edge(Unconditional(orelse_cfg.out_node, None, Edge.Kind.DEFAULT))
@@ -452,7 +690,7 @@ class CFGVisitor(ast.NodeVisitor):
             if isinstance(iteration.variable.typ, ListLyraType):  # iteration over list items
                 target_type = iteration.variable.typ.typ  # element type
             if isinstance(iteration.variable.typ, DictLyraType):   # iteration over dictionary keys
-                target_type = iteration.variable.typ.key_type
+                target_type = iteration.variable.typ.key_typ
                 # conversion to .keys() call to be consistent:
                 iteration = Call(iteration.pp, "keys", [iteration], SetLyraType(target_type))
                 # TODO: return type necessary & correct?
@@ -464,20 +702,20 @@ class CFGVisitor(ast.NodeVisitor):
                 and isinstance(iteration.arguments[0], VariableAccess):
             # right now only handle single variables as target
             called_on_type = types[iteration.arguments[0].variable.name]   # always called on Dict
-            target_type = TupleLyraType([called_on_type.key_type, called_on_type.value_type])
+            target_type = TupleLyraType([called_on_type.key_typ, called_on_type.val_typ])
             # items() actually returns 'view' object, but here for simplicity: Dict
             iteration._typ = SetLyraType(target_type)      # TODO: necessary & correct ?
         elif isinstance(iteration, Call) and iteration.name == "keys" \
                 and isinstance(iteration.arguments[0], VariableAccess):
             # right now only handle single variables as target
             called_on_type = types[iteration.arguments[0].variable.name]   # always called on Dict
-            target_type = called_on_type.key_type
+            target_type = called_on_type.key_typ
             iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
         elif isinstance(iteration, Call) and iteration.name == "values" \
                 and isinstance(iteration.arguments[0], VariableAccess):
             # right now only handle single variables as target
             called_on_type = types[iteration.arguments[0].variable.name]   # always called on Dict
-            target_type = called_on_type.value_type
+            target_type = called_on_type.val_typ
             iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
         else:
             error = f"The for loop iteration statment {iteration} is not yet translatable to CFG!"
@@ -490,7 +728,7 @@ class CFGVisitor(ast.NodeVisitor):
 
         header_node = Loop(self._id_gen.next)
 
-        cfg = self._translate_body(node.body, types, typ)
+        cfg = self._visit_body(node.body, types, typ)
         body_in_node = cfg.in_node
         body_out_node = cfg.out_node
 
@@ -504,7 +742,7 @@ class CFGVisitor(ast.NodeVisitor):
             cfg.add_edge(Unconditional(body_out_node, header_node, Edge.Kind.LOOP_OUT))
 
         if node.orelse:  # if there is else branch
-            orelse_cfg = self._translate_body(node.orelse, types)
+            orelse_cfg = self._visit_body(node.orelse, types)
             if orelse_cfg.out_node:
                 # if control flow can exit the else at all, add an unconditional DEFAULT edge
                 orelse_cfg.add_edge(Unconditional(orelse_cfg.out_node, None, Edge.Kind.DEFAULT))
@@ -519,6 +757,7 @@ class CFGVisitor(ast.NodeVisitor):
 
         return cfg
 
+    # noinspection PyUnusedLocal
     def visit_Break(self, _, types=None, typ=None):
         dummy = _dummy(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
@@ -531,6 +770,7 @@ class CFGVisitor(ast.NodeVisitor):
         )
         return cfg
 
+    # noinspection PyUnusedLocal
     def visit_Continue(self, _, types=None, typ=None):
         dummy = _dummy(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
@@ -543,163 +783,85 @@ class CFGVisitor(ast.NodeVisitor):
         )
         return cfg
 
-    def visit_UnaryOp(self, node, types=None, typ=None):
-        pp = ProgramPoint(node.lineno, node.col_offset)
-        name = type(node.op).__name__.lower()
-        argument = self.visit(node.operand, types, typ)
-        return Call(pp, name, [argument], typ)
-
-    def visit_BinOp(self, node, types=None, typ=None):
-        pp = ProgramPoint(node.lineno, node.col_offset)
-        name = type(node.op).__name__.lower()
-        left = self.visit(node.left, types, typ)
-        right = self.visit(node.right, types, typ)
-        return Call(pp, name, [left, right], typ)
-
-    def visit_BoolOp(self, node, types=None, typ=None):
-        pp = ProgramPoint(node.lineno, node.col_offset)
-        name = type(node.op).__name__.lower()
-        arguments = [self.visit(val, types, typ) for val in node.values]
-        return Call(pp, name, arguments, typ)
-
-    def visit_Compare(self, node, types=None, typ=None):
-        pp = ProgramPoint(node.lineno, node.col_offset)
-        last_comp = self.visit(node.comparators[0], types, None)
-        result = Call(pp, type(node.ops[0]).__name__.lower(),
-                      [self.visit(node.left, types, None), last_comp],
-                      BooleanLyraType())
-        for op, comp in list(zip(node.ops, node.comparators))[1:]:
-            cur_call = Call(pp, type(op).__name__.lower(),
-                            [last_comp,
-                             self.visit(comp, types, None)],
-                            BooleanLyraType())
-            result = Call(pp, 'and',
-                          [result,
-                           cur_call],
-                          BooleanLyraType())
-        return result
-
-    # noinspection PyMethodMayBeStatic
-    def visit_NameConstant(self, node, types=None, typ=None):
-        if isinstance(node.value, bool):
-            pp = ProgramPoint(node.lineno, node.col_offset)
-            expr = Literal(BooleanLyraType(), str(node.value))
-            return LiteralEvaluation(pp, expr)
-        raise NotImplementedError(
-            f"Name constant {node.value.__class__.__name__} is not yet supported!")
-
-    def visit_Expr(self, node, types=None, typ=None):
-        return self.visit(node.value, types, typ)
-
-    def visit_Call(self, node, types=None, typ=None):
-        pp = ProgramPoint(node.lineno, node.col_offset)
-        func = node.func
-        if isinstance(func, ast.Name):
-            name: str = func.id
-            arguments = [self.visit(arg, types, typ) for arg in node.args]
-            return Call(pp, name, arguments, typ)
-        elif isinstance(func, ast.Attribute):
-            name: str = func.attr
-            arguments = [self.visit(func.value, types, typ)]        # target of the call
-            arguments.extend([self.visit(arg, types, typ) for arg in node.args])
-            return Call(pp, name, arguments, typ)
-
-    def visit_Tuple(self, node, types=None, typ=None):    # same as list
-        pp = ProgramPoint(node.lineno, node.col_offset)
-        return TupleDisplayAccess(pp, [self.visit(node.elts[i], types, typ.types[i])
-                                       for i in range(len(node.elts))])
-
-    def visit_List(self, node, types=None, typ=None):
-        pp = ProgramPoint(node.lineno, node.col_offset)
-        return ListDisplayAccess(pp, [self.visit(e, types, typ.typ) for e in node.elts])
-
-    def visit_Set(self, node, types=None, typ=None):
-        pp = ProgramPoint(node.lineno, node.col_offset)
-        return SetDisplayAccess(pp, [self.visit(e, types, typ.typ) for e in node.elts])
-
-    def visit_Dict(self, node, types=None, typ=None):
-        pp = ProgramPoint(node.lineno, node.col_offset)
-        k_stmts = [self.visit(k, types, typ.key_type) for k in node.keys]
-        v_stmts = [self.visit(v, types, typ.value_type) for v in node.values]
-        return DictDisplayAccess(pp, k_stmts, v_stmts)
-
-    def visit_Raise(self, node, types=None, typ=None):
-        pp = ProgramPoint(node.lineno, node.col_offset)
-        exception_call = self.visit(node.exc, types, typ)
-        return Raise(pp, exception_call)
-
-    def visit_Subscript(self, node, types=None, typ=None):
-        pp = ProgramPoint(node.lineno, node.col_offset)
-        if isinstance(node.slice, ast.Index):
-            target = self.visit(node.value, types, typ)
-            key = self.visit(node.slice.value, types, typ)
-            return SubscriptionAccess(pp, target, key)
-        elif isinstance(node.slice, ast.Slice):
-            value = self.visit(node.value, types, typ)
-            lower = self.visit(node.slice.lower, types, typ)
-            upper = self.visit(node.slice.upper, types, typ)
-            step = self.visit(node.slice.step, types, typ) if node.slice.step else None
-            return SlicingAccess(pp, value, lower, upper, step)
-        else:
-            raise NotImplementedError(
-                f"The statement {str(type(node.slice))} is not yet translatable to CFG!")
-
-    def visit(self, node, *args, **kwargs):
-        """Visit a node."""
-        method = 'visit_' + node.__class__.__name__
-        visitor = getattr(self, method, self.generic_visit)
-        return visitor(node, *args, **kwargs)
-
-    def generic_visit(self, node, *args, **kwargs):
-        print(type(node).__name__)
-        super().generic_visit(node)
-
-    def _translate_body(self, body, types,
-                        allow_loose_in_edges=False, allow_loose_out_edges=False):
-        cfg_factory = CFGFactory(self._id_gen)
+    def _visit_body(self, body, types, loose_in_edges=False, loose_out_edges=False):
+        factory = CFGFactory(self._id_gen)
 
         for child in body:
-            if isinstance(child, (ast.AnnAssign, ast.Expr, ast.Raise)):
-                cfg_factory.add_stmts(self.visit(child, types))
+            if isinstance(child, ast.Assign):
+                if isinstance(child.value, ast.IfExp):  # the value is a conditional expression
+                    factory.complete_basic_block()
+                    if_cfg = self.visit(child.value, child.targets, None, types)
+                    factory.append_cfg(if_cfg)
+                else:  # normal assignment
+                    factory.add_stmts(self.visit(child, types))
+            elif isinstance(child, ast.AnnAssign):
+                if child.value is None:     # only a type annotation
+                    annotation = resolve_type_annotation(child.annotation)
+                    if isinstance(child.target, ast.Name):
+                        types[child.target.id] = annotation
+                    elif isinstance(child.target, (ast.Attribute, ast.Subscript)):
+                        types[child.target.value] = annotation
+                elif isinstance(child.value, ast.IfExp):    # the value is a conditional expression
+                    factory.complete_basic_block()
+                    annotation = resolve_type_annotation(child.annotation)
+                    if_cfg = self.visit(child.value, [child.target], None, types, annotation)
+                    factory.append_cfg(if_cfg)
+                else:   # normal annotated assignment
+                    factory.add_stmts(self.visit(child, types))
+            elif isinstance(child, ast.AugAssign):
+                if isinstance(child.value, ast.IfExp):  # the value is a conditional expression
+                    factory.complete_basic_block()
+                    if_cfg = self.visit(child.value, [child.target], child.op, types)
+                    factory.append_cfg(if_cfg)
+                else:  # normal augmented assignment
+                    factory.add_stmts(self.visit(child, types))
+            elif isinstance(child, (ast.Expr, ast.Raise)):
+                # check other options for AnnAssign (empty value, or IfExp as value)
+                factory.add_stmts(self.visit(child, types))
             elif isinstance(child, ast.If):
-                cfg_factory.complete_basic_block()
+                factory.complete_basic_block()
                 if_cfg = self.visit(child, types)
-                cfg_factory.append_cfg(if_cfg)
+                factory.append_cfg(if_cfg)
             elif isinstance(child, ast.While):
-                cfg_factory.complete_basic_block()
+                factory.complete_basic_block()
                 while_cfg = self.visit(child, types)
-                cfg_factory.append_cfg(while_cfg)
+                factory.append_cfg(while_cfg)
             elif isinstance(child, ast.For):
-                cfg_factory.complete_basic_block()
+                factory.complete_basic_block()
                 for_cfg = self.visit(child, types)
-                cfg_factory.append_cfg(for_cfg)
+                factory.append_cfg(for_cfg)
             elif isinstance(child, ast.Break):
-                cfg_factory.complete_basic_block()
+                factory.complete_basic_block()
                 break_cfg = self.visit(child, types)
-                cfg_factory.append_cfg(break_cfg)
+                factory.append_cfg(break_cfg)
             elif isinstance(child, ast.Continue):
-                cfg_factory.complete_basic_block()
+                factory.complete_basic_block()
                 cont_cfg = self.visit(child, types)
-                cfg_factory.append_cfg(cont_cfg)
+                factory.append_cfg(cont_cfg)
             elif isinstance(child, ast.Pass):
-                if cfg_factory.incomplete_block():
+                if factory.incomplete_block():
                     pass
                 else:
-                    cfg_factory.append_cfg(_dummy_cfg(self._id_gen))
-            # elif isinstance(child, ast.Assign): # TODO
-            #    raise NotAnnotatedError(f"The Assignment in line {str(child.lineno)} "
-            #                            f"is not type annotated")
+                    factory.append_cfg(_dummy_cfg(self._id_gen))
             else:
                 raise NotImplementedError(
                     f"The statement {str(type(child))} is not yet translatable to CFG!")
-        cfg_factory.complete_basic_block()
+        factory.complete_basic_block()
 
-        if not allow_loose_in_edges and cfg_factory.cfg and cfg_factory.cfg.loose_in_edges:
-            cfg_factory.prepend_cfg(_dummy_cfg(self._id_gen))
-        if not allow_loose_out_edges and cfg_factory.cfg and cfg_factory.cfg.loose_out_edges:
-            cfg_factory.append_cfg(_dummy_cfg(self._id_gen))
+        if not loose_in_edges and factory.cfg and factory.cfg.loose_in_edges:
+            factory.prepend_cfg(_dummy_cfg(self._id_gen))
+        if not loose_out_edges and factory.cfg and factory.cfg.loose_out_edges:
+            factory.append_cfg(_dummy_cfg(self._id_gen))
 
-        return cfg_factory.cfg
+        return factory.cfg
+
+    # noinspection PyUnusedLocal
+    def visit_Module(self, node, types=None, typ=None):
+        """Visitor function for a Python module."""
+        start = _dummy_cfg(self._id_gen)
+        body = self._visit_body(node.body, types, loose_in_edges=True, loose_out_edges=True)
+        end = _dummy_cfg(self._id_gen)
+        return start.append(body).append(end) if body else start.append(end)
 
 
 def ast_to_cfg(root_node):
