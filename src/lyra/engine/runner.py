@@ -87,7 +87,7 @@ class Runner:
                 if isinstance(current, Loop):
                     edges = self.cfg.edges.items()
                     conds = [edge.condition for nodes, edge in edges if nodes[0] == current]
-                    for cond in [c for c in conds if isinstance(c, Call)]:      # TODO: use .ids()?
+                    for cond in [c for c in conds if isinstance(c, Call)]:
                         for arg in cond.arguments:
                             if isinstance(arg, VariableAccess):
                                 variable = arg.variable
