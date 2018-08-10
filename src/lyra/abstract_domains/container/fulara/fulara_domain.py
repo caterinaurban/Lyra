@@ -54,9 +54,7 @@ class InRelationState(State, BottomMixin):
     def __init__(self, tuple_set:
                  Set[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]] = None):
         super().__init__()
-        if tuple_set is None:
-            tuple_set = set()
-        self._tuple_set = tuple_set
+        self._tuple_set = tuple_set or set()
 
     @property
     def tuple_set(self):
@@ -391,13 +389,8 @@ class FularaState(State):
         """
         super().__init__()
 
-        if scalar_vars is None:
-            scalar_vars = set()
-        if dict_vars is None:
-            dict_vars = set()
-
-        self._s_vars = scalar_vars
-        self._d_vars = dict_vars
+        self._s_vars = scalar_vars or set()
+        self._d_vars = dict_vars or set()
 
         self._k_domain = key_domain
         self._v_domain = value_domain

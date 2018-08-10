@@ -57,19 +57,15 @@ class FularaLattice(BottomMixin):
         """
         # TODO: segments internally as List?
 
-        if key_d_args is None:
-            key_d_args = {}
-        if value_d_args is None:
-            value_d_args = {}
-
         super().__init__()
         self._k_domain = key_domain
-        self._k_d_args = key_d_args
+        self._k_d_args = key_d_args or {}
         self._v_domain = value_domain
-        self._v_d_args = value_d_args
+        self._v_d_args = value_d_args or {}
 
         if segments is None:    # default element
-            self._segments = {(key_domain(**key_d_args).top(), value_domain(**value_d_args).top())}
+            self._segments = {(key_domain(**self.k_d_args).top(),
+                               value_domain(**self.v_d_args).top())}
         else:
             # for s in segments:      # TODO: remove?
             #     if len(s) != 2:
