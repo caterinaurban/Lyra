@@ -782,7 +782,10 @@ class FularaState(State):
 
         if isinstance(condition, BinaryComparisonOperation):
             if condition.operator == BinaryComparisonOperation.Operator.In:
-                # refine variable:
+                # refine in_relations
+                self.in_relations.assume({condition})
+
+                # refine variable(s):
                 if isinstance(condition.right, Keys) \
                         and isinstance(condition.left, VariableIdentifier):
                     d = condition.right.target_dict
@@ -810,8 +813,6 @@ class FularaState(State):
                             return self.bottom()
                         self._update_dict_from_refined_scalar()
 
-                    # refine in_relations
-                    self.in_relations.assume({condition})
                     return self
                 elif isinstance(condition.right, Values) \
                         and isinstance(condition.left, VariableIdentifier):
@@ -840,8 +841,6 @@ class FularaState(State):
                             return self.bottom()
                         self._update_dict_from_refined_scalar()
 
-                    # refine in_relations
-                    self.in_relations.assume({condition})
                     return self
                 elif isinstance(condition.right, Items) \
                         and isinstance(condition.left, TupleDisplay):
@@ -888,13 +887,17 @@ class FularaState(State):
                             return self.bottom()
                         self._update_dict_from_refined_scalar()
 
-                    # refine in_relations
-                    self.in_relations.assume({condition})
                     return self
                 else:
                     # refine in_relations
                     self.in_relations.assume({condition})
             elif condition.operator == BinaryComparisonOperation.Operator.NotIn:
+                # refine in_relations
+                self.in_relations.assume({condition})
+
+                if self._loop_flag:
+                    return self  # can have any value from before or in the loop
+
                 if isinstance(condition.right, Keys):
                     d = condition.right.target_dict
                     d_lattice: FularaLattice = self.dict_store.store[d]
@@ -908,42 +911,17 @@ class FularaState(State):
                     key_complement = k_current.decomp(k_current, k_abs)
                     joined_complement = k_current.big_join(list(key_complement))
 
-                    if self._loop_flag:  # loop condition -> overwrite old value        # TODO: can this happen?
-                        self.scalar_state.add_variable(v_k)
-                        self.scalar_state.meet(self._k_s_conv(joined_complement))
-                        self.scalar_state.assign({condition.left}, {v_k})
-                        self.scalar_state.remove_variable(v_k)
+                    assign_state = self._k_s_conv(joined_complement)
+                    assign_state.assign({condition.left}, {v_k})
+                    assign_state.remove_variable(v_k)
+                    self.scalar_state.meet(assign_state)
+                    if self.scalar_state.is_bottom():   # not reachable
+                        return self.bottom()
+                    self._update_dict_from_refined_scalar()
 
-                        # invalidate old left in dict stores                      # imprecision
-                        for d_lattice in self.dict_store.store.values():
-                            d_lattice.forget_variable(condition.left)
-                        for i_lattice in self.init_store.store.values():
-                            i_lattice.forget_variable(condition.left)
-                    else:
-                        assign_state = self._k_s_conv(joined_complement)
-                        assign_state.assign({condition.left}, {v_k})
-                        assign_state.remove_variable(v_k)
-                        self.scalar_state.meet(assign_state)
-                        if self.scalar_state.is_bottom():   # not reachable
-                            return self.bottom()
-                        self._update_dict_from_refined_scalar()
-
-                    # refine in_relations
-                    self.in_relations.assume({condition})
                     return self
                 elif isinstance(condition.right, Values):
                     # TODO
-                    if self._loop_flag:                 # TODO: can this happen?
-                        self.scalar_state.forget_variable(condition.left)
-
-                        # invalidate old left in dict stores                      # imprecision
-                        for d_lattice in self.dict_store.store.values():
-                            d_lattice.forget_variable(condition.left)
-                        for i_lattice in self.init_store.store.values():
-                            i_lattice.forget_variable(condition.left)
-
-                    # refine in_relations
-                    self.in_relations.assume({condition})
                     return self
                 elif isinstance(condition.right, Items):
                     d = condition.right.target_dict
@@ -958,34 +936,16 @@ class FularaState(State):
                     key_complement = k_current.decomp(k_current, k_abs)
                     joined_complement = k_current.big_join(list(key_complement))
 
-                    if self._loop_flag:  # loop condition -> overwrite old value        # TODO: can this happen?
-                        self.scalar_state.add_variable(v_k)
-                        self.scalar_state.meet(self._k_s_conv(joined_complement))
-                        self.scalar_state.assign({condition.left.items[0]}, {v_k})
-                        self.scalar_state.remove_variable(v_k)
+                    # TODO: refine value abstraction?
+                    assign_state = self._k_s_conv(joined_complement)
+                    assign_state.assign({condition.left.items[0]}, {v_k})
+                    assign_state.remove_variable(v_k)
+                    self.scalar_state.meet(assign_state)
+                    if self.scalar_state.is_bottom():   # not reachable
+                        return self.bottom()
+                    self._update_dict_from_refined_scalar()
 
-                        # invalidate old left in dict stores                      # imprecision
-                        for d_lattice in self.dict_store.store.values():
-                            d_lattice.forget_variable(condition.left.items[0])
-                            d_lattice.forget_variable(condition.left.items[1])
-                        for i_lattice in self.init_store.store.values():
-                            i_lattice.forget_variable(condition.left.items[0])
-                            i_lattice.forget_variable(condition.left.items[1])
-                    else:
-                        assign_state = self._k_s_conv(joined_complement)
-                        assign_state.assign({condition.left.items[0]}, {v_k})
-                        assign_state.remove_variable(v_k)
-                        self.scalar_state.meet(assign_state)
-                        if self.scalar_state.is_bottom():   # not reachable
-                            return self.bottom()
-                        self._update_dict_from_refined_scalar()
-
-                    # refine in_relations
-                    self.in_relations.assume({condition})
                     return self
-                else:
-                    # refine in_relations
-                    self.in_relations.assume({condition})
 
         # default: try in scalar domain
         evaluation = dict()
