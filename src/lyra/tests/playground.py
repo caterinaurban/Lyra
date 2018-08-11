@@ -17,4 +17,4 @@ from lyra.engine.usage.fulara_usage_analysis import FularaUsageAnalysis
 
 # FularaAnalysis().main("usage/dict_example.py")
 
-FularaUsageAnalysis().main("usage/dict_example.py")
+FularaUsageAnalysis().main("usage/running_example.py")
