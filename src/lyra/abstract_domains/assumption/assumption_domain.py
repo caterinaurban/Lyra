@@ -266,6 +266,22 @@ class AssumptionState(State):
                             l1: Tuple[JSONMixin, ...] = constraint1[1]
                             l2: Tuple[JSONMixin, ...] = constraint2[1]
                             return pp, tuple(x.join(y) for x, y in zip(l1, l2))
+                    elif isinstance(constraint1, tuple):
+                        assert isinstance(constraint2, AssumptionState.InputStack.InputLattice)
+                        if not constraint1:
+                            return ()
+                        else:
+                            m = Literal(IntegerLyraType(), "1")
+                            c1 = AssumptionState.InputStack.InputLattice(m, [constraint1])
+                            return do(c1, constraint2)
+                    elif isinstance(constraint2, tuple):
+                        assert isinstance(constraint1, AssumptionState.InputStack.InputLattice)
+                        if not constraint2:
+                            return ()
+                        else:
+                            m = Literal(IntegerLyraType(), "1")
+                            c2 = AssumptionState.InputStack.InputLattice(m, [constraint1])
+                            return do(constraint1, c2)
                     else:   # the constraints are InputLattices
                         assert isinstance(constraint1, AssumptionState.InputStack.InputLattice)
                         assert isinstance(constraint2, AssumptionState.InputStack.InputLattice)
@@ -280,12 +296,15 @@ class AssumptionState(State):
                             c = [do(x, y) for x, y in zip(c1, c2)]
                             if len(c1) != len(c2):  # lengths of list of constraints are different
                                 c.append(())  # add a star constraint
-                        else:
-                            assert m1 == m2
+                        elif m1 == m2:
                             m: Expression = m1
                             c = [do(x, y) for x, y in zip(c1, c2)]
                             c.extend(c1[len(c2):])
                             c.extend(c2[len(c1):])
+                        else:   # m1 != m2
+                            m = Literal(IntegerLyraType(), "1")
+                            c = [do(x, y) for x, y in zip(c1, c2)]
+                            c.append(())  # add a star constraint
                         return AssumptionState.InputStack.InputLattice(m, c)
                 multiplier1 = self.multiplier
                 multiplier2 = other.multiplier
@@ -779,7 +798,7 @@ class TypeRangeAssumptionState(AssumptionState):
 
 
 class TypeAlphabetAssumptionState(AssumptionState):
-    """Type+string assumption analysis state.
+    """Type+alphabet assumption analysis state.
 
     Reduced product of type and string constraining states,
     and a stack of assumptions on the input data.
@@ -798,7 +817,7 @@ class TypeAlphabetAssumptionState(AssumptionState):
 
 
 class TypeRangeAlphabetAssumptionState(AssumptionState):
-    """Type+string assumption analysis state.
+    """Type+range+alphabet assumption analysis state.
 
     Reduced product of type, range, and string constraining states,
     and a stack of assumptions on the input data.

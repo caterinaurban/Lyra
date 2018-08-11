@@ -204,7 +204,7 @@ class StrongLivenessState(LivenessState):
                 for identifier in right.ids():
                     self.store[identifier].top()
 
-                if (isinstance(left, Subscription)):
+                if isinstance(left, Subscription):
                     ids = left.key.ids()
                 else:  # Slicing
                     ids = left.lower.ids() | left.upper.ids()

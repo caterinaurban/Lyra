@@ -94,23 +94,23 @@ class TupleLyraType(LyraType):
     # e.g. Tuple[int, ...].
     # A plain Tuple is equivalent to Tuple[Any, ...]
 
-    def __init__(self, types: List[LyraType]):
+    def __init__(self, typs: List[LyraType]):
         """Tuple type creation.
 
-        :param types: types of the tuple elements (can be different)
+        :param typs: types of the tuple elements (can be different)
         """
-        self._types = types
+        self._typs = typs
 
     @property
-    def types(self):
+    def typs(self):
         """Types of the tuple elements."""
-        return self._types
+        return self._typs
 
     def __repr__(self):
-        if len(self.types) == 0:    # empty tuple
+        if len(self.typs) == 0:    # empty tuple
             str_types = ["()"]      # -> Tuple[()]  (see https://www.python.org/dev/peps/pep-0484/)
         else:
-            str_types = map(repr, self.types)
+            str_types = map(repr, self.typs)
         return "Tuple[" + ', '.join(str_types) + "]"
 
 
@@ -136,27 +136,27 @@ class SetLyraType(LyraType):
 class DictLyraType(LyraType):
     """Dictionary type representation."""
 
-    def __init__(self, key_type: LyraType, value_type: LyraType):
+    def __init__(self, key_typ: LyraType, val_typ: LyraType):
         """Dictionary type creation.
 
-        :param key_type: type of the dictionary keys
-        :param value_type: type of the dictionary values
+        :param key_typ: type of the dictionary keys
+        :param val_typ: type of the dictionary values
         """
-        self._key_type = key_type
-        self._value_type = value_type
+        self._key_typ = key_typ
+        self._value_typ = val_typ
 
     @property
-    def key_type(self):
+    def key_typ(self):
         """Type of the dictionary keys."""
-        return self._key_type
+        return self._key_typ
 
     @property
-    def value_type(self):
+    def val_typ(self):
         """Type of the dictionary values."""
-        return self._value_type
+        return self._value_typ
 
     def __repr__(self):
-        return f"Dict[{repr(self.key_type)}, {repr(self.value_type)}]"
+        return f"Dict[{repr(self.key_typ)}, {repr(self.val_typ)}]"
 
 
 def resolve_type_annotation(annotation):

@@ -1,17 +1,17 @@
 # INITIAL: inp -> [-inf, inf], v -> [-inf, inf], v1 -> [-inf, inf], v2 -> [-inf, inf], d1 -> {([-inf, inf], [-inf, inf])}, d2 -> {([-inf, inf], [-inf, inf])}, d1 -> {([-inf, inf], True)}, d2 -> {([-inf, inf], True)}, {}
 inp: int = int(input())
 # STATE: inp -> [-inf, inf], v -> [-inf, inf], v1 -> [-inf, inf], v2 -> [-inf, inf], d1 -> {([-inf, inf], [-inf, inf])}, d2 -> {([-inf, inf], [-inf, inf])}, d1 -> {([-inf, inf], True)}, d2 -> {([-inf, inf], True)}, {}
-if inp >= 5 and inp <= 8:
+if 5 <= inp <= 8:
     # STATE: inp -> [5, 8], v -> [-inf, inf], v1 -> [-inf, inf], v2 -> [-inf, inf], d1 -> {([-inf, inf], [-inf, inf])}, d2 -> {([-inf, inf], [-inf, inf])}, d1 -> {([-inf, inf], True)}, d2 -> {([-inf, inf], True)}, {}
-    d1: Dict[int, int] = {2:2, 5:10, 3:8}
+    d1: Dict[int, int] = {2: 2, 5: 10, 3: 8}
     # STATE: inp -> [5, 8], v -> [-inf, inf], v1 -> [-inf, inf], v2 -> [-inf, inf], d1 -> {([2, 2], [2, 2]), ([3, 3], [8, 8]), ([5, 5], [10, 10])}, d2 -> {([-inf, inf], [-inf, inf])}, d1 -> {([-inf, 1], True), ([4, 4], True), ([6, inf], True)}, d2 -> {([-inf, inf], True)}, {}
     d2: Dict[int, int] = {}
     # STATE: inp -> [5, 8], v -> [-inf, inf], v1 -> [-inf, inf], v2 -> [-inf, inf], d1 -> {([2, 2], [2, 2]), ([3, 3], [8, 8]), ([5, 5], [10, 10])}, d2 -> {}, d1 -> {([-inf, 1], True), ([4, 4], True), ([6, inf], True)}, d2 -> {([-inf, inf], True)}, {}
     v1: int = 4 + 5
     # STATE: inp -> [5, 8], v -> [-inf, inf], v1 -> [9, 9], v2 -> [-inf, inf], d1 -> {([2, 2], [2, 2]), ([3, 3], [8, 8]), ([5, 5], [10, 10])}, d2 -> {}, d1 -> {([-inf, 1], True), ([4, 4], True), ([6, inf], True)}, d2 -> {([-inf, inf], True)}, {}
-    v2: int = d1[3] * 2 - d1[5] # 16 - 10
+    v2: int = d1[3] * 2 - d1[5]   # 16 - 10
     # STATE: inp -> [5, 8], v -> [-inf, inf], v1 -> [9, 9], v2 -> [6, 6], d1 -> {([2, 2], [2, 2]), ([3, 3], [8, 8]), ([5, 5], [10, 10])}, d2 -> {}, d1 -> {([-inf, 1], True), ([4, 4], True), ([6, inf], True)}, d2 -> {([-inf, inf], True)}, {}
-    d1[v1]: int = v2 * d1[2]    # 6 * 2
+    d1[v1]: int = v2 * d1[2]   # 6 * 2
     # STATE: inp -> [5, 8], v -> [-inf, inf], v1 -> [9, 9], v2 -> [6, 6], d1 -> {([2, 2], [2, 2]), ([3, 3], [8, 8]), ([5, 5], [10, 10]), ([9, 9], [12, 12])}, d2 -> {}, d1 -> {([-inf, 1], True), ([4, 4], True), ([6, 8], True), ([10, inf], True)}, d2 -> {([-inf, inf], True)}, {}
     if d1[v1] > (inp + 5):
         # STATE: inp -> [5, 6], v -> [-inf, inf], v1 -> [9, 9], v2 -> [6, 6], d1 -> {([2, 2], [2, 2]), ([3, 3], [8, 8]), ([5, 5], [10, 10]), ([9, 9], [12, 12])}, d2 -> {}, d1 -> {([-inf, 1], True), ([4, 4], True), ([6, 8], True), ([10, inf], True)}, d2 -> {([-inf, inf], True)}, {}

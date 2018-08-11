@@ -3,7 +3,7 @@ v1: int = 0
 # STATE: i -> [-inf, inf], k -> [-inf, inf], v -> [-inf, inf], v1 -> [0, 0], v2 -> [-inf, inf], d -> {([-inf, inf], [-inf, inf])}, d -> {([-inf, inf], True)}, {}
 i: int = int(input())
 # STATE: i -> [-inf, inf], k -> [-inf, inf], v -> [-inf, inf], v1 -> [0, 0], v2 -> [-inf, inf], d -> {([-inf, inf], [-inf, inf])}, d -> {([-inf, inf], True)}, {}
-d: Dict[int,int] = {3:2}
+d: Dict[int, int] = {3: 2}
 # STATE: i -> [-inf, inf], k -> [-inf, inf], v -> [-inf, inf], v1 -> [0, 0], v2 -> [-inf, inf], d -> {([3, 3], [2, 2])}, d -> {([-inf, 2], True), ([4, inf], True)}, {}
 d[4]: int = 1
 # STATE: i -> [-inf, inf], k -> [-inf, inf], v -> [-inf, inf], v1 -> [0, 0], v2 -> [-inf, inf], d -> {([3, 3], [2, 2]), ([4, 4], [1, 1])}, d -> {([-inf, 2], True), ([5, inf], True)}, {}
