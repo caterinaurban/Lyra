@@ -94,7 +94,7 @@ class FularaUsageLattice(Lattice):
                     #     value_vars = []
                     # else:
                     # value_vars = scalar_vars.copy()
-                    k_var = VariableIdentifier(typ.key_type, k_name)
+                    k_var = VariableIdentifier(typ.key_typ, k_name)
 
                     arguments[typ] = {'key_domain': key_domain, 'value_domain': UsageLattice,
                                       'key_d_args': {'scalar_variables': scalar_vars,

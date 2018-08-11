@@ -21,12 +21,12 @@ for a,b in scores.items():
     else:
         weight: int = 1
         if a not in score_occurences.keys():        # fix for defaultdict
-            score_occurences[a]: int = weight
-        score_occurences[a]: int = score_occurences[a] + weight   # BUG A: should be indexed by b & BUG B: wrong indentation
+            score_occurences[a] = weight
+        score_occurences[a] += weight   # BUG A: should be indexed by b & BUG B: wrong indentation
 
 scores_gt_10: int = 0
 for k in score_occurences.keys():
     if k > 10:
-        scores_gt_10: int = scores_gt_10 + score_occurences[k]
+        scores_gt_10 += score_occurences[k]
 
 print(scores_gt_10)
