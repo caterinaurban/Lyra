@@ -1061,11 +1061,7 @@ class FularaState(State):
             :return expression with replaced dictionary reads
             """
             method = 'visit_' + expr.__class__.__name__
-            if hasattr(self, method):
-                return getattr(self, method)(expr, *args, **kwargs)
-
-            else:
-                return self.default_visit(expr, *args, **kwargs)
+            return getattr(self, method, self.default_visit)(expr, *args, **kwargs)
 
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: Subscription, state: 'FularaState' = None,
