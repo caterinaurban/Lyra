@@ -308,8 +308,6 @@ class FularaUsageState(Stack, State):
         self._k_k_pre_conv = k_k_pre_conv
         self._k_pre_k_conv = k_pre_k_conv
 
-        # self._loop_flag = False
-
     # @property
     # def scalar_vars(self) -> Set[VariableIdentifier]:
     #     return self._s_vars
@@ -495,7 +493,7 @@ class FularaUsageState(Stack, State):
 
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'FularaUsageState':
-        left_u_s = False    # left expression is used or scoped
+        left_u_s = False    # flag for left expression is used or scoped
         if isinstance(left, VariableIdentifier):
             if type(left.typ) in scalar_types:
                 left_state = self.lattice.scalar_usage.store[left]
