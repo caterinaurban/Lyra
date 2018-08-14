@@ -139,9 +139,17 @@ class ExpressionVisitor(metaclass=ABCMeta):
     def visit_ListDisplay(self, expr: 'ListDisplay'):
         """Visit of a list display."""
 
-    # @abstractmethod
-    # def visit_DictDisplay(self, expr: 'DictDisplay'):
-    #     """Visit of dictionary display."""
+    @abstractmethod
+    def visit_TupleDisplay(self, expr: 'TupleDisplay'):
+        """Visit of a tuple display."""
+
+    @abstractmethod
+    def visit_SetDisplay(self, expr: 'SetDisplay'):
+        """Visit of a set display."""
+
+    @abstractmethod
+    def visit_DictDisplay(self, expr: 'DictDisplay'):
+        """Visit of dictionary display."""
 
     @abstractmethod
     def visit_AttributeReference(self, expr: 'AttributeReference'):
@@ -174,6 +182,10 @@ class ExpressionVisitor(metaclass=ABCMeta):
     @abstractmethod
     def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation'):
         """Visit of a binary arithmetic operation."""
+
+    @abstractmethod
+    def visit_BinarySequenceOperation(self, expr: 'BinarySequenceOperation'):
+        """Visit of a binary sequence operation."""
 
     @abstractmethod
     def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation'):
@@ -218,6 +230,18 @@ class NegationFreeNormalExpression(ExpressionVisitor):
     def visit_ListDisplay(self, expr: 'ListDisplay', invert=False):
         return expr     # nothing to be done
 
+    @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+    def visit_TupleDisplay(self, expr: 'TupleDisplay', invert=False):
+        return expr  # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+    def visit_SetDisplay(self, expr: 'SetDisplay', invert=False):
+        return expr  # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+    def visit_DictDisplay(self, expr: 'DictDisplay', invert=False):
+        return expr  # nothing to be done
+
     @copy_docstring(ExpressionVisitor.visit_AttributeReference)
     def visit_AttributeReference(self, expr: 'AttributeReference', invert=False):
         return expr     # nothing to be done
@@ -251,6 +275,10 @@ class NegationFreeNormalExpression(ExpressionVisitor):
     @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
     def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', invert=False):
         return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+    def visit_BinarySequenceOperation(self, expr: 'BinarySequenceOperation', invert=False):
+        return expr  # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
     def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation', invert=False):
@@ -353,7 +381,7 @@ class Literal(Expression):
     def val(self):
         return self._val
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'Literal'):
         return (self.typ, self.val) == (other.typ, other.val)
 
     def __hash__(self):
@@ -384,7 +412,7 @@ class Identifier(Expression, metaclass=ABCMeta):
     def name(self):
         return self._name
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'Identifier'):
         return self.name == other.name
 
     def __hash__(self):
@@ -442,7 +470,7 @@ class ListDisplay(Expression):
     def items(self):
         return self._items
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'ListDisplay'):
         return (self.typ, self.items) == (other.typ, other.items)
 
     def __hash__(self):
@@ -471,7 +499,7 @@ class TupleDisplay(Expression):
     def items(self):
         return self._items
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'TupleDisplay'):
         return (self.typ, self.items) == (other.typ, other.items)
 
     def __hash__(self):
@@ -503,7 +531,7 @@ class SetDisplay(Expression):
     def items(self):
         return self._items
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'SetDisplay'):
         return (self.typ, self.items) == (other.typ, other.items)
 
     def __hash__(self):
@@ -539,8 +567,8 @@ class DictDisplay(Expression):
     def values(self):
         return self._values
 
-    def __eq__(self, other):
-        return (self.typ, self.keys, self.values) == (other.typ, other.keys, other.items)
+    def __eq__(self, other: 'DictDisplay'):
+        return (self.typ, self.keys, self.values) == (other.typ, other.keys, other.values)
 
     def __hash__(self):
         return hash((self.typ, str(self.keys), str(self.values)))
@@ -582,7 +610,7 @@ class AttributeReference(Expression):
     def attribute(self):
         return self._attribute
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'AttributeReference'):
         typ = self.typ == other.typ
         target = self.target == other.target
         attribute = self.attribute == other.attribute
@@ -620,7 +648,7 @@ class Subscription(Expression):
     def key(self):
         return self._key
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'Subscription'):
         typ = self.typ == other.typ
         target = self.target == other.target
         key = self.key == other.key
@@ -671,7 +699,7 @@ class Slicing(Expression):
     def stride(self):
         return self._stride
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'Slicing'):
         typ = self.typ == other.typ
         target = self.target == other.target
         lower = self.lower == other.lower
@@ -688,7 +716,7 @@ class Slicing(Expression):
         return "{0.target}[{0.lower}:{0.upper}]".format(self)
 
 
-class Call(Expression, metaclass=ABCMeta):      # TODO: maybe rename this or Call in statements?
+class Call(Expression, metaclass=ABCMeta):
     """Call representation.
 
     https://docs.python.org/3.4/reference/expressions.html#calls
@@ -705,7 +733,7 @@ class Input(Call):
         """
         super().__init__(typ)
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'Input'):
         return self.typ == other.typ
 
     def __hash__(self):
@@ -743,7 +771,7 @@ class Range(Call):
     def step(self):
         return self._step
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'Range'):
         typ = self.typ == other.typ
         start = self.start == other.start
         stop = self.stop == other.stop
@@ -774,7 +802,7 @@ class Items(Call):
     def target_dict(self):
         return self._target_dict
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'Items'):
         return (self.typ == other.typ) and (self.target_dict == other.target_dict)
 
     def __hash__(self):
@@ -801,7 +829,7 @@ class Keys(Call):
     def target_dict(self):
         return self._target_dict
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'Keys'):
         return (self.typ == other.typ) and (self.target_dict == other.target_dict)
 
     def __hash__(self):
@@ -828,7 +856,7 @@ class Values(Call):
     def target_dict(self):
         return self._target_dict
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'Values'):
         return (self.typ == other.typ) and (self.target_dict == other.target_dict)
 
     def __hash__(self):
@@ -883,7 +911,7 @@ class UnaryOperation(Operation):
     def expression(self):
         return self._expression
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'UnaryOperation'):
         typ = self.typ == other.typ
         operator = self.operator == other.operator
         expression = self.expression == other.expression
@@ -992,7 +1020,7 @@ class BinaryOperation(Operation):
     def right(self):
         return self._right
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'BinaryOperation'):
         typ = self.typ == other.typ
         left = self.left == other.left
         operator = self.operator == other.operator
@@ -1037,6 +1065,28 @@ class BinaryArithmeticOperation(BinaryOperation):
 
     def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
         """Binary arithmetic operation expression representation.
+
+        :param typ: type of the operation
+        :param left: left expression of the operation
+        :param operator: operator of the operation
+        :param right: right expression of the operation
+        """
+        super().__init__(typ, left, operator, right)
+
+
+class BinarySequenceOperation(BinaryOperation):
+    """Binary sequence operation expression representation."""
+
+    class Operator(BinaryOperation.Operator):
+        """Binary sequence operator representation."""
+        Concat = 1
+
+        def __str__(self):
+            if self.value == 1:
+                return "+"
+
+    def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
+        """Binary sequence operation expression representation.
 
         :param typ: type of the operation
         :param left: left expression of the operation

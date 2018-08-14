@@ -16,7 +16,8 @@ from lyra.abstract_domains.state import State
 from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparisonOperation, \
     Range, Literal, NegationFreeNormalExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
     ExpressionVisitor, Input, ListDisplay, AttributeReference, Subscription, Slicing, \
-    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier
+    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, TupleDisplay, \
+    SetDisplay, DictDisplay, BinarySequenceOperation
 from lyra.core.statements import ProgramPoint
 from lyra.core.types import IntegerLyraType
 from lyra.core.utils import copy_docstring
@@ -557,6 +558,22 @@ class AssumptionState(State):
                 items = [self.visit(item) for item in expr.items]
                 return ListDisplay(expr.typ, items)
 
+            @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+            def visit_TupleDisplay(self, expr: TupleDisplay):
+                items = [self.visit(item) for item in expr.items]
+                return TupleDisplay(expr.typ, items)
+
+            @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+            def visit_SetDisplay(self, expr: SetDisplay):
+                items = [self.visit(item) for item in expr.items]
+                return SetDisplay(expr.typ, items)
+
+            @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+            def visit_DictDisplay(self, expr: DictDisplay):
+                keys = [self.visit(item) for item in expr.keys]
+                values = [self.visit(item) for item in expr.values]
+                return DictDisplay(expr.typ, keys, values)
+
             @copy_docstring(ExpressionVisitor.visit_AttributeReference)
             def visit_AttributeReference(self, expr: AttributeReference):
                 target = self.visit(expr.target)
@@ -603,6 +620,12 @@ class AssumptionState(State):
                 left = self.visit(expr.left)
                 right = self.visit(expr.right)
                 return BinaryArithmeticOperation(expr.typ, left, expr.operator, right)
+
+            @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+            def visit_BinarySequenceOperation(self, expr: BinarySequenceOperation):
+                left = self.visit(expr.left)
+                right = self.visit(expr.right)
+                return BinarySequenceOperation(expr.typ, left, expr.operator, right)
 
             @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
             def visit_BinaryBooleanOperation(self, expr: BinaryBooleanOperation):

@@ -18,7 +18,8 @@ from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
     Input, ListDisplay, Range, AttributeReference, Subscription, Slicing, \
-    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier
+    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, TupleDisplay, \
+    SetDisplay, DictDisplay, BinarySequenceOperation
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
     StringLyraType
 from lyra.core.utils import copy_docstring
@@ -527,6 +528,21 @@ class TypeState(Store, InputMixin):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
+        @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+        def visit_TupleDisplay(self, expr: TupleDisplay, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+        def visit_SetDisplay(self, expr: SetDisplay, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+        def visit_DictDisplay(self, expr: DictDisplay, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
         def visit_AttributeReference(self, expr: AttributeReference, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
@@ -606,6 +622,18 @@ class TypeState(Store, InputMixin):
                 return evaluated2
             raise ValueError(f"Binary operator '{str(expr.operator)}' is unsupported!")
 
+        @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+        def visit_BinarySequenceOperation(self, expr, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated1 = self.visit(expr.left, state, evaluation)
+            evaluated2 = self.visit(expr.right, state, evaluated1)
+            if expr.operator == BinarySequenceOperation.Operator.Concat:
+                value: TypeLattice = deepcopy(evaluated2[expr.left]).add(evaluated2[expr.right])
+                evaluated2[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
+                return evaluated2
+            raise ValueError(f"Binary operator '{str(expr.operator)}' is unsupported!")
+
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
         def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
@@ -660,6 +688,21 @@ class TypeState(Store, InputMixin):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
+        @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+        def visit_TupleDisplay(self, expr: TupleDisplay, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+        def visit_SetDisplay(self, expr: SetDisplay, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+        def visit_DictDisplay(self, expr: DictDisplay, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
         def visit_AttributeReference(self, expr, evaluation=None, value=None, state=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
@@ -708,6 +751,17 @@ class TypeState(Store, InputMixin):
             div = BinaryArithmeticOperation.Operator.Div
             operator = expr.operator
             if operator == add or operator == sub or operator == mult or operator == div:
+                refined = evaluation[expr].meet(value)
+                refinement1 = deepcopy(refined).meet(evaluation[expr.right])
+                left = self.visit(expr.left, evaluation, refinement1, state)
+                refinement2 = deepcopy(refined).meet(evaluation[expr.left])
+                right = self.visit(expr.right, evaluation, refinement2, left)
+                return right
+            raise ValueError(f"Binary operator '{expr.operator}' is unsupported!")
+
+        @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+        def visit_BinarySequenceOperation(self, expr, evaluation=None, value=None, state=None):
+            if expr.operator == BinarySequenceOperation.Operator.Concat:
                 refined = evaluation[expr].meet(value)
                 refinement1 = deepcopy(refined).meet(evaluation[expr.right])
                 left = self.visit(expr.left, evaluation, refinement1, state)
