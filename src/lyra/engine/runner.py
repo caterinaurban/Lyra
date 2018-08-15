@@ -14,7 +14,7 @@ from typing import Set
 from lyra.core.cfg import Loop
 from lyra.core.expressions import VariableIdentifier, LengthIdentifier
 from lyra.core.statements import Assignment, VariableAccess, Call, TupleDisplayAccess
-from lyra.core.types import ListLyraType
+from lyra.core.types import ListLyraType, SequenceLyraType
 from lyra.engine.result import AnalysisResult
 from lyra.frontend.cfg_generator import ast_to_cfg, StringLyraType
 from lyra.visualization.graph_renderer import AnalysisResultRenderer
@@ -82,7 +82,7 @@ class Runner:
                     if isinstance(stmt, Assignment) and isinstance(stmt.left, VariableAccess):
                         variable = stmt.left.variable
                         variables.add(variable)
-                        if isinstance(variable.typ, (StringLyraType, ListLyraType)):
+                        if isinstance(variable.typ, SequenceLyraType):
                             variables.add(LengthIdentifier(variable))
                 if isinstance(current, Loop):
                     edges = self.cfg.edges.items()
@@ -92,7 +92,7 @@ class Runner:
                             if isinstance(arg, VariableAccess):
                                 variable = arg.variable
                                 variables.add(arg.variable)
-                                if isinstance(variable.typ, (StringLyraType, ListLyraType)):
+                                if isinstance(variable.typ, SequenceLyraType):
                                     variables.add(LengthIdentifier(variable))
                             elif isinstance(arg, TupleDisplayAccess):
                                 for i in arg.items:

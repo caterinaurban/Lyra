@@ -18,7 +18,7 @@ from lyra.core.expressions import VariableIdentifier, Expression, Subscription, 
     BinaryBooleanOperation, ExpressionVisitor, Literal, LengthIdentifier, ListDisplay, \
     AttributeReference, Input, Range, UnaryArithmeticOperation, BinaryArithmeticOperation, \
     UnaryBooleanOperation, TupleDisplay, SetDisplay, DictDisplay, BinarySequenceOperation
-from lyra.core.types import LyraType, BooleanLyraType
+from lyra.core.types import LyraType, BooleanLyraType, SequenceLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -33,6 +33,17 @@ class Basis(Store, State, metaclass=ABCMeta):
                  precursory: State = None):
         super().__init__(variables, lattices, arguments)
         State.__init__(self, precursory)
+
+    @copy_docstring(State.is_bottom)
+    def is_bottom(self) -> bool:
+        """The current state is bottom if `any` non-summary variable maps to a bottom element."""
+        for variable, element in self.store.items():
+            if isinstance(variable.typ, (SequenceLyraType)):
+                if element.is_bottom() and self.store[LengthIdentifier(variable)].is_bottom():
+                    return True
+            elif element.is_bottom():
+                return True
+        return False
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'Basis':

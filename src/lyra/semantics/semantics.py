@@ -21,9 +21,9 @@ from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperatio
 from lyra.core.expressions import UnaryOperation
 from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, \
     TupleDisplayAccess, ListDisplayAccess, SetDisplayAccess, DictDisplayAccess, \
-    SubscriptionAccess, SlicingAccess, Raise
+    SubscriptionAccess, SlicingAccess
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
-    StringLyraType, TupleLyraType, ListLyraType, SetLyraType, DictLyraType, AnyLyraType
+    StringLyraType, TupleLyraType, ListLyraType
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')

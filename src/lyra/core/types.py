@@ -33,13 +33,6 @@ class LyraType(metaclass=ABCMeta):
         """
 
 
-class AnyLyraType(LyraType):
-    """Any type representation"""
-
-    def __repr__(self):
-        return "Any"
-
-
 class BooleanLyraType(LyraType):
     """Boolean type representation."""
 
@@ -61,14 +54,24 @@ class FloatLyraType(LyraType):
         return "float"
 
 
-class StringLyraType(LyraType):
+class SequenceLyraType(LyraType, metaclass=ABCMeta):
+    """Sequence type representation."""
+    pass
+
+
+class StringLyraType(SequenceLyraType):
     """String type representation."""
 
     def __repr__(self):
         return "string"
 
 
-class ListLyraType(LyraType):
+class ContainerLyraType(LyraType, metaclass=ABCMeta):
+    """Container type representation."""
+    pass
+
+
+class ListLyraType(SequenceLyraType, ContainerLyraType):
     """List type representation."""
 
     def __init__(self, typ: LyraType):
@@ -87,7 +90,7 @@ class ListLyraType(LyraType):
         return f"List[{repr(self.typ)}]"
 
 
-class TupleLyraType(LyraType):
+class TupleLyraType(SequenceLyraType, ContainerLyraType):
     """Tuple type representation."""
     # TODO: maybe support tuples of variable length
     # To specify a variable-length tuple of homogeneous type, use literal ellipsis,
@@ -114,7 +117,7 @@ class TupleLyraType(LyraType):
         return "Tuple[" + ', '.join(str_types) + "]"
 
 
-class SetLyraType(LyraType):
+class SetLyraType(ContainerLyraType):
     """Set type representation."""
 
     def __init__(self, typ: LyraType):
@@ -133,7 +136,7 @@ class SetLyraType(LyraType):
         return f"Set[{repr(self.typ)}]"
 
 
-class DictLyraType(LyraType):
+class DictLyraType(ContainerLyraType):
     """Dictionary type representation."""
 
     def __init__(self, key_typ: LyraType, val_typ: LyraType):

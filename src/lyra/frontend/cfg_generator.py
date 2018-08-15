@@ -485,6 +485,11 @@ class CFGVisitor(ast.NodeVisitor):
             return Call(pp, name, arguments, typ)
         elif isinstance(node.func, ast.Attribute):
             name: str = node.func.attr
+            if name == 'append':
+                arguments = [self.visit(node.func.value, types, None)]  # target of the call
+                args = [self.visit(arg, types, None) for arg in node.args]
+                arguments.extend(args)
+                return Call(pp, name, arguments, None)
             if name == "split":     # str.split([sep[, maxsplit]])
                 assert isinstance(typ, ListLyraType)    # we expect type to be a ListLyraType
                 arguments = [self.visit(node.func.value, types, typ.typ)]   # target of the call

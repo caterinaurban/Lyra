@@ -13,7 +13,7 @@ from copy import deepcopy
 from math import inf
 
 from lyra.abstract_domains.basis import Basis
-from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin, BooleanMixin
+from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import *
 
@@ -21,7 +21,7 @@ from lyra.core.utils import copy_docstring
 from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType
 
 
-class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin):
+class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin):
     """Interval lattice. The bottom interval represents an empty set.
 
     .. image:: _static/interval.jpg
@@ -198,6 +198,12 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin):
     @copy_docstring(BooleanMixin.is_maybe)
     def is_maybe(self) -> bool:
         return self.lower == 0 and self.upper == 1
+
+    # string operations
+
+    @copy_docstring(SequenceMixin._concat)
+    def _concat(self, other: 'IntervalLattice'):
+        return self.join(other)
 
 
 class IntervalState(Basis):
