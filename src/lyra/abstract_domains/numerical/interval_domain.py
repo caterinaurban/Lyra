@@ -356,10 +356,11 @@ class IntervalState(Basis):
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, state=None):
             lattice = state.lattices[IntegerLyraType()]
+
             def is_one(stride):
                 literal = isinstance(stride, Literal)
-                one = state.lattices[IntegerLyraType()](lower=1, upper=1)
-                return literal and lattice(stride).less_equal(one)
+                return literal and lattice(stride).less_equal(lattice(lower=1, upper=1))
+
             if isinstance(expr.lower, Literal):
                 lower = IntervalLattice.from_literal(expr.lower)
                 if not lower.less_equal(lattice(lower=0)):
