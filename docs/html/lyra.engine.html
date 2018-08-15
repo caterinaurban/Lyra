@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
         <link rel="up" title="lyra package" href="lyra.html"/>
-        <link rel="next" title="lyra.engine.liveness package" href="lyra.engine.liveness.html"/>
+        <link rel="next" title="lyra.engine.assumption package" href="lyra.engine.assumption.html"/>
         <link rel="prev" title="lyra.core package" href="lyra.core.html"/> 
 
   
@@ -87,7 +87,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
@@ -132,7 +132,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">src</a> &raquo;</li>
+          <li><a href="modules.html">lyra</a> &raquo;</li>
       
           <li><a href="lyra.html">lyra package</a> &raquo;</li>
       
@@ -156,6 +156,13 @@
 <h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="lyra.engine.assumption.html">lyra.engine.assumption package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="lyra.engine.assumption.html#module-lyra.engine.assumption.assumption_analysis">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lyra.engine.assumption.html#assumption-analysis">Assumption Analysis</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="lyra.engine.liveness.html">lyra.engine.liveness package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="lyra.engine.liveness.html#module-lyra.engine.liveness.liveness_analysis">Submodules</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="lyra.engine.liveness.html#strongly-live-variable-analysis">(Strongly) Live Variable Analysis</a></li>
@@ -165,7 +172,15 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="lyra.engine.numerical.html">lyra.engine.numerical package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="lyra.engine.numerical.html#module-lyra.engine.numerical.interval_analysis">Submodules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="lyra.engine.numerical.html#interval-analysis">Interval analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.engine.numerical.html#interval-analysis">Interval Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.engine.numerical.html#sign-analysis">Sign Analysis</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="lyra.engine.string.html">lyra.engine.string package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="lyra.engine.string.html#module-lyra.engine.string.character_analysis">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lyra.engine.string.html#character-inclusion-analysis">Character Inclusion Analysis</a></li>
 </ul>
 </li>
 </ul>
@@ -194,7 +209,7 @@
 </table>
 <dl class="class">
 <dt id="lyra.engine.backward.BackwardInterpreter">
-<em class="property">class </em><code class="descclassname">lyra.engine.backward.</code><code class="descname">BackwardInterpreter</code><span class="sig-paren">(</span><em>cfg: lyra.core.cfg.ControlFlowGraph</em>, <em>semantics: lyra.semantics.backward.BackwardSemantics</em>, <em>widening: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/backward.html#BackwardInterpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.backward.BackwardInterpreter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lyra.engine.backward.</code><code class="descname">BackwardInterpreter</code><span class="sig-paren">(</span><em>cfg</em>, <em>semantics: lyra.semantics.backward.BackwardSemantics</em>, <em>widening</em>, <em>precursory=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/backward.html#BackwardInterpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.backward.BackwardInterpreter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.engine.interpreter.Interpreter" title="lyra.engine.interpreter.Interpreter"><code class="xref py py-class docutils literal"><span class="pre">lyra.engine.interpreter.Interpreter</span></code></a></p>
 <p>Backward control flow graph interpreter.</p>
 <dl class="method">
@@ -222,7 +237,7 @@
 </table>
 <dl class="class">
 <dt id="lyra.engine.forward.ForwardInterpreter">
-<em class="property">class </em><code class="descclassname">lyra.engine.forward.</code><code class="descname">ForwardInterpreter</code><span class="sig-paren">(</span><em>cfg: lyra.core.cfg.ControlFlowGraph</em>, <em>semantics: lyra.semantics.forward.ForwardSemantics</em>, <em>widening: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/forward.html#ForwardInterpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.forward.ForwardInterpreter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lyra.engine.forward.</code><code class="descname">ForwardInterpreter</code><span class="sig-paren">(</span><em>cfg</em>, <em>semantics: lyra.semantics.forward.ForwardSemantics</em>, <em>widening</em>, <em>precursory=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/forward.html#ForwardInterpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.forward.ForwardInterpreter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.engine.interpreter.Interpreter" title="lyra.engine.interpreter.Interpreter"><code class="xref py py-class docutils literal"><span class="pre">lyra.engine.interpreter.Interpreter</span></code></a></p>
 <p>Forward control flow graph interpreter.</p>
 <dl class="method">
@@ -245,7 +260,7 @@
 </table>
 <dl class="class">
 <dt id="lyra.engine.interpreter.Interpreter">
-<em class="property">class </em><code class="descclassname">lyra.engine.interpreter.</code><code class="descname">Interpreter</code><span class="sig-paren">(</span><em>cfg: lyra.core.cfg.ControlFlowGraph</em>, <em>semantics: lyra.semantics.semantics.Semantics</em>, <em>widening: int</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/interpreter.html#Interpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.interpreter.Interpreter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lyra.engine.interpreter.</code><code class="descname">Interpreter</code><span class="sig-paren">(</span><em>cfg: lyra.core.cfg.ControlFlowGraph</em>, <em>semantics</em>, <em>widening</em>, <em>precursory=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/interpreter.html#Interpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.interpreter.Interpreter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <dl class="method">
 <dt id="lyra.engine.interpreter.Interpreter.analyze">
@@ -266,6 +281,11 @@
 <dl class="attribute">
 <dt id="lyra.engine.interpreter.Interpreter.cfg">
 <code class="descname">cfg</code><a class="headerlink" href="#lyra.engine.interpreter.Interpreter.cfg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.engine.interpreter.Interpreter.precursory">
+<code class="descname">precursory</code><a class="headerlink" href="#lyra.engine.interpreter.Interpreter.precursory" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -416,7 +436,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="lyra.engine.liveness.html" class="btn btn-neutral float-right" title="lyra.engine.liveness package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="lyra.engine.assumption.html" class="btn btn-neutral float-right" title="lyra.engine.assumption package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="lyra.core.html" class="btn btn-neutral" title="lyra.core package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

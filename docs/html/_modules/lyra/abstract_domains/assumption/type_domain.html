@@ -1,0 +1,977 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>lyra.abstract_domains.assumption.type_domain &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">lyra</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../../index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      
+    <li>lyra.abstract_domains.assumption.type_domain</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for lyra.abstract_domains.assumption.type_domain</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Type Abstract Domain</span>
+<span class="sd">====================</span>
+
+<span class="sd">Non-relational abstract domain to be used for **input data assumption analysis**.</span>
+<span class="sd">The set of possible values of a program variable in a state is represented as a type.</span>
+
+<span class="sd">:Authors: Caterina Urban and Madelin Schumacher</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">IntEnum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Set</span>
+
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.assumption_domain</span> <span class="k">import</span> <span class="n">InputMixin</span><span class="p">,</span> <span class="n">JSONMixin</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.lattice</span> <span class="k">import</span> <span class="n">BottomMixin</span><span class="p">,</span> <span class="n">ArithmeticMixin</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.state</span> <span class="k">import</span> <span class="n">State</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.store</span> <span class="k">import</span> <span class="n">Store</span>
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">ExpressionVisitor</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> \
+    <span class="n">Input</span><span class="p">,</span> <span class="n">ListDisplay</span><span class="p">,</span> <span class="n">Range</span><span class="p">,</span> <span class="n">AttributeReference</span><span class="p">,</span> <span class="n">Subscription</span><span class="p">,</span> <span class="n">Slicing</span><span class="p">,</span> \
+    <span class="n">UnaryArithmeticOperation</span><span class="p">,</span> <span class="n">BinaryArithmeticOperation</span><span class="p">,</span> <span class="n">LengthIdentifier</span><span class="p">,</span> <span class="n">TupleDisplay</span><span class="p">,</span> \
+    <span class="n">SetDisplay</span><span class="p">,</span> <span class="n">DictDisplay</span><span class="p">,</span> <span class="n">BinarySequenceOperation</span>
+<span class="kn">from</span> <span class="nn">lyra.core.types</span> <span class="k">import</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">BooleanLyraType</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">FloatLyraType</span><span class="p">,</span> \
+    <span class="n">StringLyraType</span>
+<span class="kn">from</span> <span class="nn">lyra.core.utils</span> <span class="k">import</span> <span class="n">copy_docstring</span>
+
+
+<div class="viewcode-block" id="TypeLattice"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice">[docs]</a><span class="k">class</span> <span class="nc">TypeLattice</span><span class="p">(</span><span class="n">BottomMixin</span><span class="p">,</span> <span class="n">ArithmeticMixin</span><span class="p">,</span> <span class="n">JSONMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Type Lattice::</span>
+
+<span class="sd">        String</span>
+<span class="sd">          |</span>
+<span class="sd">        Float</span>
+<span class="sd">          |</span>
+<span class="sd">        Integer</span>
+<span class="sd">          |</span>
+<span class="sd">        Boolean</span>
+<span class="sd">          |</span>
+<span class="sd">          ⊥</span>
+
+<span class="sd">    The default lattice element is ``String``.</span>
+
+<span class="sd">    Let S be the set of all possible strings. We define F ⊆ S, I ⊆ F, B ⊆ I to be the sets of</span>
+<span class="sd">    all possible strings that can be interpreted as floating-point numbers</span>
+<span class="sd">    (i.e., F = { 2.35, ..., 9.345, ...}), integers (i.e., I = { -3, ..., 15, ...}),</span>
+<span class="sd">    and booleans (i.e., B = { 0, 1 }), respectively.</span>
+<span class="sd">    The concretization function Ɣ: TypeLattice -&gt; 𝒫(S) is defined as follows::</span>
+
+<span class="sd">        Ɣ(String) = S</span>
+<span class="sd">        Ɣ(Float) = F</span>
+<span class="sd">        Ɣ(Integer) = I</span>
+<span class="sd">        Ɣ(Boolean) = B</span>
+<span class="sd">        Ɣ(⊥) = ∅</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        One might want to have Ɣ(Boolean) = { &#39;True&#39;, &#39;False&#39; }. This, however, would yield</span>
+<span class="sd">        the following different lattice structure::</span>
+
+<span class="sd">                   String</span>
+<span class="sd">                 /        \\</span>
+<span class="sd">                /        Float</span>
+<span class="sd">            Boolean        |</span>
+<span class="sd">                 \\      Integer</span>
+<span class="sd">                  \\      /</span>
+<span class="sd">                      ⊥</span>
+
+<span class="sd">        which is not compatible with subtyping between boolean and integer types in Python.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: TypeLattice._less_equal</span>
+<span class="sd">    .. automethod:: TypeLattice._meet</span>
+<span class="sd">    .. automethod:: TypeLattice._join</span>
+<span class="sd">    .. automethod:: TypeLattice._widening</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TypeLattice.Status"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice.Status">[docs]</a>    <span class="k">class</span> <span class="nc">Status</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Type status.</span>
+
+<span class="sd">        The current lattice element can be:</span>
+
+<span class="sd">        * ``String``: String type</span>
+
+<span class="sd">        * ``Float``: Float type</span>
+
+<span class="sd">        * ``Integer`` Integer type</span>
+
+<span class="sd">        * ``Boolean``: Boolean type</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">String</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">Float</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">Integer</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">Boolean</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type_status</span><span class="p">:</span> <span class="n">Status</span> <span class="o">=</span> <span class="n">Status</span><span class="o">.</span><span class="n">String</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_element</span> <span class="o">=</span> <span class="n">type_status</span>
+
+<div class="viewcode-block" id="TypeLattice.from_lyra_type"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice.from_lyra_type">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_lyra_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">lyra_type</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lyra_type</span><span class="p">,</span> <span class="n">BooleanLyraType</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Boolean</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lyra_type</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Integer</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lyra_type</span><span class="p">,</span> <span class="n">FloatLyraType</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Float</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">String</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">element</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Current lattice element.</span>
+
+<span class="sd">        :return: the current lattice element if the type is not bottom, ``None`` otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_element</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;⊥&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">name</span>
+
+<div class="viewcode-block" id="TypeLattice.boolean"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice.boolean">[docs]</a>    <span class="k">def</span> <span class="nf">boolean</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Integer lattice element.</span>
+
+<span class="sd">        :return: current lattice element modified to be the boolean lattice element</span>
+
+<span class="sd">        The integer lattice element is ``Boolean``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Boolean</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TypeLattice.integer"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice.integer">[docs]</a>    <span class="k">def</span> <span class="nf">integer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Integer lattice element.</span>
+
+<span class="sd">        :return: current lattice element modified to be the integer lattice element</span>
+
+<span class="sd">        The integer lattice element is ``Integer``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Integer</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TypeLattice.float"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice.float">[docs]</a>    <span class="k">def</span> <span class="nf">float</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Float lattice element.</span>
+
+<span class="sd">        :return: current lattice element modified to be the float lattice element</span>
+
+<span class="sd">        The float lattice element is ``Float``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Float</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TypeLattice.top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice.top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The top lattice element is ``String``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="TypeLattice.is_boolean"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice.is_boolean">[docs]</a>    <span class="k">def</span> <span class="nf">is_boolean</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Test whether the lattice element is boolean.</span>
+
+<span class="sd">        :return: whether the lattice element is ``Boolean``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">==</span> <span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Boolean</span></div>
+
+<div class="viewcode-block" id="TypeLattice.is_integer"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice.is_integer">[docs]</a>    <span class="k">def</span> <span class="nf">is_integer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Test whether the lattice element is integer.</span>
+
+<span class="sd">        :return: whether the lattice element is ``Integer``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">==</span> <span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Integer</span></div>
+
+<div class="viewcode-block" id="TypeLattice.is_float"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice.is_float">[docs]</a>    <span class="k">def</span> <span class="nf">is_float</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Test whether the lattice element is float.</span>
+
+<span class="sd">        :return: whether the lattice element is ``Float``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">==</span> <span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Float</span></div>
+
+<div class="viewcode-block" id="TypeLattice.is_top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice.is_top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">is_top</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">==</span> <span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">String</span></div>
+
+<div class="viewcode-block" id="TypeLattice._less_equal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice._less_equal">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_less_equal</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_less_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">element</span></div>
+
+<div class="viewcode-block" id="TypeLattice._join"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice._join">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_join</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">element</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="TypeLattice._meet"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice._meet">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_meet</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_meet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">element</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="TypeLattice._widening"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice._widening">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_widening</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_widening</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_join</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+    <span class="c1"># arithmetic operations</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_neg</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_neg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        - Boolean = Integer</span>
+<span class="sd">        - Integer = Integer</span>
+<span class="sd">        - Float = Float</span>
+<span class="sd">        - String = ⊥</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_boolean</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Integer</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>   <span class="c1"># nothing to be done</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_add</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Boolean + Boolean = Integer</span>
+<span class="sd">        Boolean + Integer = Integer</span>
+<span class="sd">        Boolean + Float = Float</span>
+<span class="sd">        Boolean + String = ⊥</span>
+<span class="sd">        Integer + Boolean = Integer</span>
+<span class="sd">        Integer + Integer = Integer</span>
+<span class="sd">        Integer + Float = Float</span>
+<span class="sd">        Integer + String = ⊥</span>
+<span class="sd">        Float + Boolean = Float</span>
+<span class="sd">        Float + Integer = Float</span>
+<span class="sd">        Float + Float = Float</span>
+<span class="sd">        Float + String = ⊥</span>
+<span class="sd">        String + Boolean = ⊥</span>
+<span class="sd">        String + Integer = ⊥</span>
+<span class="sd">        String + Float = ⊥</span>
+<span class="sd">        String + String = String</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_boolean</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">is_boolean</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Integer</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">element</span><span class="p">)))</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_sub</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_sub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Boolean - Boolean = Integer</span>
+<span class="sd">        Boolean - Integer = Integer</span>
+<span class="sd">        Boolean - Float = Float</span>
+<span class="sd">        Boolean - String = ⊥</span>
+<span class="sd">        Integer - Boolean = Integer</span>
+<span class="sd">        Integer - Integer = Integer</span>
+<span class="sd">        Integer - Float = Float</span>
+<span class="sd">        Integer - String = ⊥</span>
+<span class="sd">        Float - Boolean = Float</span>
+<span class="sd">        Float - Integer = Float</span>
+<span class="sd">        Float - Float = Float</span>
+<span class="sd">        Float - String = ⊥</span>
+<span class="sd">        String - Boolean = ⊥</span>
+<span class="sd">        String - Integer = ⊥</span>
+<span class="sd">        String - Float = ⊥</span>
+<span class="sd">        String - String = ⊥</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_boolean</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">is_boolean</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Integer</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">element</span><span class="p">)))</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_mult</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_mult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Boolean * Boolean = Integer</span>
+<span class="sd">        Boolean * Integer = Integer</span>
+<span class="sd">        Boolean * Float = Float</span>
+<span class="sd">        Boolean * String = String</span>
+<span class="sd">        Integer * Boolean = Integer</span>
+<span class="sd">        Integer * Integer = Integer</span>
+<span class="sd">        Integer * Float = Float</span>
+<span class="sd">        Integer * String = String</span>
+<span class="sd">        Float * Boolean = Float</span>
+<span class="sd">        Float * Integer = Float</span>
+<span class="sd">        Float * Float = Float</span>
+<span class="sd">        Float * String = ⊥</span>
+<span class="sd">        String * Boolean = String</span>
+<span class="sd">        String * Integer = String</span>
+<span class="sd">        String * Float = ⊥</span>
+<span class="sd">        String * String = ⊥</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_boolean</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">is_boolean</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Integer</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">is_float</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_top</span><span class="p">()):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_top</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_float</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">()):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">element</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">element</span><span class="p">)))</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_div</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_div</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Boolean / Boolean = Float</span>
+<span class="sd">        Boolean / Integer = Float</span>
+<span class="sd">        Boolean / Float = Float</span>
+<span class="sd">        Boolean / String = ⊥</span>
+<span class="sd">        Integer / Boolean = Float</span>
+<span class="sd">        Integer / Integer = Float</span>
+<span class="sd">        Integer / Float = Float</span>
+<span class="sd">        Integer / String = ⊥</span>
+<span class="sd">        Float / Boolean = Float</span>
+<span class="sd">        Float / Integer = Float</span>
+<span class="sd">        Float / Float = Float</span>
+<span class="sd">        Float / String = ⊥</span>
+<span class="sd">        String / Boolean = ⊥</span>
+<span class="sd">        String / Integer = ⊥</span>
+<span class="sd">        String / Float = ⊥</span>
+<span class="sd">        String / String = ⊥</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">TypeLattice</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Float</span><span class="p">))</span>
+
+<div class="viewcode-block" id="TypeLattice.to_json"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice.to_json">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">JSONMixin</span><span class="o">.</span><span class="n">to_json</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeLattice.from_json"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeLattice.from_json">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">JSONMixin</span><span class="o">.</span><span class="n">from_json</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">from_json</span><span class="p">(</span><span class="n">json</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;JSONMixin&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">json</span> <span class="o">==</span> <span class="s1">&#39;⊥&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TypeLattice</span><span class="p">()</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">json</span> <span class="o">==</span> <span class="s1">&#39;Boolean&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TypeLattice</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Boolean</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">json</span> <span class="o">==</span> <span class="s1">&#39;Integer&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TypeLattice</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Integer</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">json</span> <span class="o">==</span> <span class="s1">&#39;Float&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TypeLattice</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Float</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">TypeLattice</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="TypeState"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState">[docs]</a><span class="k">class</span> <span class="nc">TypeState</span><span class="p">(</span><span class="n">Store</span><span class="p">,</span> <span class="n">InputMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Type assumption analysis state. An element of the type assumption abstract domain.</span>
+
+<span class="sd">    Map from each program variable to the type representing its value.</span>
+<span class="sd">    The value of all program variables is represented by their Lyra type by default.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        This means that, for any map m: VariableIdentifier -&gt; TypeLattice and variable x,</span>
+<span class="sd">        we should always have m(x) ≤ TypeLattice.from_lyra_type(x.typ)</span>
+
+<span class="sd">    When reading input data, the corresponding type assumptions</span>
+<span class="sd">    are stored in the class member ``inputs``, which is a map from each program point</span>
+<span class="sd">    to the list of type assumptions on the inputs read at that point.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: TypeState._assume</span>
+<span class="sd">    .. automethod:: TypeState._substitute</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">],</span> <span class="n">precursory</span><span class="p">:</span> <span class="n">State</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Map each program variable to the type representing its value.</span>
+
+<span class="sd">        :param variables: set of program variables</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lattices</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">TypeLattice</span><span class="p">)</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type_status&#39;</span><span class="p">:</span> <span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">String</span><span class="p">})</span>
+        <span class="n">arguments</span><span class="p">[</span><span class="n">BooleanLyraType</span><span class="p">()]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type_status&#39;</span><span class="p">:</span> <span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Boolean</span><span class="p">}</span>
+        <span class="n">arguments</span><span class="p">[</span><span class="n">IntegerLyraType</span><span class="p">()]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type_status&#39;</span><span class="p">:</span> <span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Integer</span><span class="p">}</span>
+        <span class="n">arguments</span><span class="p">[</span><span class="n">FloatLyraType</span><span class="p">()]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;type_status&#39;</span><span class="p">:</span> <span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Float</span><span class="p">}</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">lattices</span><span class="p">,</span> <span class="n">arguments</span><span class="p">)</span>
+        <span class="n">InputMixin</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precursory</span><span class="p">)</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_assign</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeState&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unexpected assignment in a backward analysis!&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TypeState._assume"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState._assume">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_assume</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_assume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeState&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="TypeState.enter_if"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.enter_if">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">enter_if</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">enter_if</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeState&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span></div>
+
+<div class="viewcode-block" id="TypeState.exit_if"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.exit_if">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">exit_if</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">exit_if</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeState&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span></div>
+
+<div class="viewcode-block" id="TypeState.enter_loop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.enter_loop">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">enter_loop</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">enter_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeState&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span></div>
+
+<div class="viewcode-block" id="TypeState.exit_loop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.exit_loop">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">exit_loop</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">exit_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeState&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span></div>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeState&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># nothing to be done</span>
+
+<div class="viewcode-block" id="TypeState._substitute"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState._substitute">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_substitute</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_substitute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeState&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">BooleanLyraType</span><span class="p">):</span>
+                <span class="c1"># record the current value of the substituted variable</span>
+                <span class="n">value</span><span class="p">:</span> <span class="n">TypeLattice</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">])</span>
+                <span class="c1"># forget the current value of the substituted variable</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">boolean</span><span class="p">()</span>
+                <span class="c1"># evaluate the right-hand side bottom-up using the updated store and the Lyra types</span>
+                <span class="n">evaluation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluation</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+                <span class="c1"># restrict the value of the right-hand side using that of the substituted variable</span>
+                <span class="n">refinement</span> <span class="o">=</span> <span class="n">evaluation</span><span class="p">[</span><span class="n">right</span><span class="p">]</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="c1"># refine the updated store proceeding top-down on the right-hand side</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_refinement</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">refinement</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">):</span>
+                <span class="c1"># record the current value of the substituted variable</span>
+                <span class="n">value</span><span class="p">:</span> <span class="n">TypeLattice</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">])</span>
+                <span class="c1"># forget the current value of the substituted variable</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">integer</span><span class="p">()</span>
+                <span class="c1"># evaluate the right-hand side bottom-up using the updated store and the Lyra types</span>
+                <span class="n">evaluation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluation</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+                <span class="c1"># restrict the value of the right-hand side using that of the substituted variable</span>
+                <span class="n">refinement</span> <span class="o">=</span> <span class="n">evaluation</span><span class="p">[</span><span class="n">right</span><span class="p">]</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="c1"># refine the updated store proceeding top-down on the right-hand side</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_refinement</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">refinement</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">FloatLyraType</span><span class="p">):</span>
+                <span class="c1"># record the current value of the substituted variable</span>
+                <span class="n">value</span><span class="p">:</span> <span class="n">TypeLattice</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">])</span>
+                <span class="c1"># forget the current value of the substituted variable</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+                <span class="c1"># evaluate the right-hand side bottom-up using the updated store and the Lyra types</span>
+                <span class="n">evaluation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluation</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+                <span class="c1"># restrict the value of the right-hand side using that of the substituted variable</span>
+                <span class="n">refinement</span> <span class="o">=</span> <span class="n">evaluation</span><span class="p">[</span><span class="n">right</span><span class="p">]</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="c1"># refine the updated store proceeding top-down on the right-hand side</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_refinement</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">refinement</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">StringLyraType</span><span class="p">):</span>
+                <span class="c1"># record the current value of the substituted variable</span>
+                <span class="n">value</span><span class="p">:</span> <span class="n">TypeLattice</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">])</span>
+                <span class="c1"># forget the current value of the substituted variable</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">left</span><span class="p">]</span><span class="o">.</span><span class="n">top</span><span class="p">()</span>
+                <span class="c1"># evaluate the right-hand side bottom-up using the updated store and the Lyra types</span>
+                <span class="n">evaluation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluation</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+                <span class="c1"># restrict the value of the right-hand side using that of the substituted variable</span>
+                <span class="n">refinement</span> <span class="o">=</span> <span class="n">evaluation</span><span class="p">[</span><span class="n">right</span><span class="p">]</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="c1"># refine the updated store proceeding top-down on the right-hand side</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_refinement</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">refinement</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Variable type </span><span class="si">{left.typ}</span><span class="s2"> is unsupported!&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Substitution of </span><span class="si">{left.__class__.__name__}</span><span class="s2"> is unsupported!&quot;</span><span class="p">)</span>
+        <span class="c1"># check whether the property ∀x. m(x) ≤ TypeLattice.from_lyra_type(x.typ) still holds</span>
+        <span class="n">store</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">store</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">less_equal</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">from_lyra_type</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">typ</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">store</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="TypeState.replace"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.replace">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">InputMixin</span><span class="o">.</span><span class="n">replace</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeState&#39;</span><span class="p">:</span>
+        <span class="c1"># collect the new variables appearing in the replacing expression</span>
+        <span class="n">variables</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">expression</span><span class="o">.</span><span class="n">ids</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                <span class="n">variables</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="n">variables</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">variables</span><span class="p">:</span>  <span class="c1"># if there are new variables appearing in the replacing expression...</span>
+            <span class="c1"># add the new variables to the current state</span>
+            <span class="k">for</span> <span class="n">fresh</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fresh</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">fresh</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattices</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">fresh</span><span class="o">.</span><span class="n">typ</span><span class="p">)](</span>
+                    <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">fresh</span><span class="o">.</span><span class="n">typ</span><span class="p">)])</span>
+            <span class="c1"># replace the given variable with the given expression</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="TypeState.unify"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.unify">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">InputMixin</span><span class="o">.</span><span class="n">unify</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">unify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;TypeState&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;TypeState&#39;</span><span class="p">:</span>
+        <span class="c1"># collect the variables that differ in the current and other state</span>
+        <span class="n">mine</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">variables</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">theirs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="c1"># replace the variables in the current state that match those in the other state</span>
+        <span class="k">for</span> <span class="n">my_var</span><span class="p">,</span> <span class="n">their_var</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mine</span><span class="p">,</span> <span class="n">theirs</span><span class="p">):</span>
+            <span class="c1"># the replacement only occurs when the matching variables in the other state</span>
+            <span class="c1"># depend on a program point that is smaller than the program point on which</span>
+            <span class="c1"># the variables in the current state depend</span>
+            <span class="k">if</span> <span class="n">their_var</span><span class="o">.</span><span class="n">name</span> <span class="o">&lt;</span> <span class="n">my_var</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">my_var</span><span class="p">)]</span> <span class="o">=</span> <span class="n">their_var</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">their_var</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">my_var</span><span class="p">)</span>
+        <span class="c1"># add variables only present in the other state</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">theirs</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">mine</span><span class="p">):]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattices</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">typ</span><span class="p">)](</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">typ</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="c1"># expression evaluation</span>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation">[docs]</a>    <span class="k">class</span> <span class="nc">ExpressionEvaluation</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Visitor that performs the evaluation of an expression in the type lattice.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_Literal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_Literal">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Literal</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">evaluation</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">evaluation</span>  <span class="c1"># nothing to be done</span>
+            <span class="n">typ</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">typ</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="p">(</span><span class="n">BooleanLyraType</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">FloatLyraType</span><span class="p">,</span> <span class="n">StringLyraType</span><span class="p">)):</span>
+                <span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">TypeLattice</span><span class="o">.</span><span class="n">from_lyra_type</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">evaluation</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Literal type </span><span class="si">{typ}</span><span class="s2"> is unsupported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_VariableIdentifier"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_VariableIdentifier">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_VariableIdentifier</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_VariableIdentifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">evaluation</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">evaluation</span>  <span class="c1"># nothing to be done</span>
+            <span class="n">typ</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">typ</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="p">(</span><span class="n">BooleanLyraType</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">FloatLyraType</span><span class="p">,</span> <span class="n">StringLyraType</span><span class="p">)):</span>
+                <span class="n">value</span><span class="p">:</span> <span class="n">TypeLattice</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">expr</span><span class="p">])</span>
+                <span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">from_lyra_type</span><span class="p">(</span><span class="n">typ</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">evaluation</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Variable type </span><span class="si">{typ}</span><span class="s2"> is unsupported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_LengthIdentifier"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_LengthIdentifier">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_LengthIdentifier</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_LengthIdentifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">LengthIdentifier</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">evaluation</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">evaluation</span>  <span class="c1"># nothing to be done</span>
+            <span class="n">typ</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">typ</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="p">(</span><span class="n">BooleanLyraType</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">FloatLyraType</span><span class="p">,</span> <span class="n">StringLyraType</span><span class="p">)):</span>
+                <span class="n">value</span><span class="p">:</span> <span class="n">TypeLattice</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">expr</span><span class="p">])</span>
+                <span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">from_lyra_type</span><span class="p">(</span><span class="n">typ</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">evaluation</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Variable type </span><span class="si">{typ}</span><span class="s2"> is unsupported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_ListDisplay"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_ListDisplay">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_ListDisplay</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_ListDisplay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">ListDisplay</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_TupleDisplay"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_TupleDisplay">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_TupleDisplay</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_TupleDisplay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">TupleDisplay</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_SetDisplay"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_SetDisplay">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_SetDisplay</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_SetDisplay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">SetDisplay</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_DictDisplay"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_DictDisplay">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_DictDisplay</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_DictDisplay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">DictDisplay</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_AttributeReference"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_AttributeReference">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_AttributeReference</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_AttributeReference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">AttributeReference</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_Subscription"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_Subscription">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Subscription</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Subscription</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Subscription</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_Slicing"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_Slicing">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Slicing</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Slicing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Slicing</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_Input"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_Input">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Input</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Input</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">evaluation</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">evaluation</span>  <span class="c1"># nothing to be done</span>
+            <span class="n">typ</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">typ</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="p">(</span><span class="n">BooleanLyraType</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">FloatLyraType</span><span class="p">,</span> <span class="n">StringLyraType</span><span class="p">)):</span>
+                <span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">TypeLattice</span><span class="o">.</span><span class="n">from_lyra_type</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">evaluation</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Input type </span><span class="si">{expr.typ}</span><span class="s2"> is unsupported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_Range"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_Range">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Range</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Range</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_UnaryArithmeticOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_UnaryArithmeticOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_UnaryArithmeticOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_UnaryArithmeticOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">evaluation</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">evaluation</span>  <span class="c1"># nothing to be done</span>
+            <span class="n">evaluated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expression</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">UnaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Add</span><span class="p">:</span>
+                <span class="c1"># same as for UnaryArithmeticOperation.Operator.Sub</span>
+                <span class="c1"># + Boolean = Integer</span>
+                <span class="c1"># + Integer = Integer</span>
+                <span class="c1"># + Float = Float</span>
+                <span class="c1"># + String = ⊥</span>
+                <span class="n">value</span><span class="p">:</span> <span class="n">TypeLattice</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">evaluated</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">expression</span><span class="p">])</span><span class="o">.</span><span class="n">neg</span><span class="p">()</span>
+                <span class="n">evaluated</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">from_lyra_type</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">evaluated</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">UnaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Sub</span><span class="p">:</span>
+                <span class="n">value</span><span class="p">:</span> <span class="n">TypeLattice</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">evaluated</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">expression</span><span class="p">])</span><span class="o">.</span><span class="n">neg</span><span class="p">()</span>
+                <span class="n">evaluated</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">from_lyra_type</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">evaluated</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Unary operator &#39;</span><span class="si">{expr.operator}</span><span class="s2">&#39; is unsupported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_UnaryBooleanOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_UnaryBooleanOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_UnaryBooleanOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_UnaryBooleanOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_BinaryArithmeticOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_BinaryArithmeticOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinaryArithmeticOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_BinaryArithmeticOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">evaluation</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">evaluation</span>  <span class="c1"># nothing to be done</span>
+            <span class="n">evaluated1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">)</span>
+            <span class="n">evaluated2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">evaluated1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Add</span><span class="p">:</span>
+                <span class="n">value</span><span class="p">:</span> <span class="n">TypeLattice</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">])</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">])</span>
+                <span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">from_lyra_type</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">evaluated2</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Sub</span><span class="p">:</span>
+                <span class="n">value</span><span class="p">:</span> <span class="n">TypeLattice</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">])</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">])</span>
+                <span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">from_lyra_type</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">evaluated2</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Mult</span><span class="p">:</span>
+                <span class="n">value</span><span class="p">:</span> <span class="n">TypeLattice</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">])</span><span class="o">.</span><span class="n">mult</span><span class="p">(</span><span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">])</span>
+                <span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">from_lyra_type</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">evaluated2</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Div</span><span class="p">:</span>
+                <span class="n">value</span><span class="p">:</span> <span class="n">TypeLattice</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">])</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">])</span>
+                <span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">from_lyra_type</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">evaluated2</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Binary operator &#39;{str(expr.operator)}&#39; is unsupported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_BinarySequenceOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_BinarySequenceOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinarySequenceOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_BinarySequenceOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">evaluation</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">evaluation</span>  <span class="c1"># nothing to be done</span>
+            <span class="n">evaluated1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">)</span>
+            <span class="n">evaluated2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">evaluated1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinarySequenceOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Concat</span><span class="p">:</span>
+                <span class="n">value</span><span class="p">:</span> <span class="n">TypeLattice</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">])</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">])</span>
+                <span class="n">evaluated2</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">from_lyra_type</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">evaluated2</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Binary operator &#39;{str(expr.operator)}&#39; is unsupported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_BinaryBooleanOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_BinaryBooleanOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinaryBooleanOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_BinaryBooleanOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ExpressionEvaluation.visit_BinaryComparisonOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ExpressionEvaluation.visit_BinaryComparisonOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinaryComparisonOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_BinaryComparisonOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div></div>
+
+    <span class="n">_evaluation</span> <span class="o">=</span> <span class="n">ExpressionEvaluation</span><span class="p">()</span>  <span class="c1"># static class member shared between all instances</span>
+
+    <span class="c1"># expression refinement</span>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement">[docs]</a>    <span class="k">class</span> <span class="nc">ArithmeticExpressionRefinement</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Visitor that:</span>
+
+<span class="sd">        (1) refines the value of an evaluated arithmetic expression based on a given interval; and</span>
+<span class="sd">        (2) modifies the current state based on the refined value of the arithmetic expression.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit">[docs]</a>        <span class="k">def</span> <span class="nf">visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Visit of an evaluated expression.&quot;&quot;&quot;</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;visit_&#39;</span> <span class="o">+</span> <span class="n">expr</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">)(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="n">f</span><span class="s2">&quot;Missing visitor for </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> in </span><span class="si">{self.__class__.__qualname__}</span><span class="s2">!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_Literal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_Literal">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Literal</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">state</span>    <span class="c1"># nothing to be done</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_VariableIdentifier"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_VariableIdentifier">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_VariableIdentifier</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_VariableIdentifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">typ</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">typ</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="p">(</span><span class="n">BooleanLyraType</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">FloatLyraType</span><span class="p">,</span> <span class="n">StringLyraType</span><span class="p">)):</span>
+                <span class="n">state</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">state</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Variable type </span><span class="si">{expr.typ}</span><span class="s2"> is unsupported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_LengthIdentifier"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_LengthIdentifier">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_LengthIdentifier</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_LengthIdentifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">typ</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">typ</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="p">(</span><span class="n">BooleanLyraType</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">,</span> <span class="n">FloatLyraType</span><span class="p">,</span> <span class="n">StringLyraType</span><span class="p">)):</span>
+                <span class="n">state</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">state</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Variable type </span><span class="si">{expr.typ}</span><span class="s2"> is unsupported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_ListDisplay"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_ListDisplay">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_ListDisplay</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_ListDisplay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">ListDisplay</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Refinement for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_TupleDisplay"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_TupleDisplay">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_TupleDisplay</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_TupleDisplay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">TupleDisplay</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_SetDisplay"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_SetDisplay">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_SetDisplay</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_SetDisplay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">SetDisplay</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_DictDisplay"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_DictDisplay">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_DictDisplay</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_DictDisplay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">DictDisplay</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Evaluation for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_AttributeReference"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_AttributeReference">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_AttributeReference</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_AttributeReference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Refinement for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_Subscription"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_Subscription">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Subscription</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Subscription</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Subscription</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Refinement for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_Slicing"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_Slicing">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Slicing</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Slicing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Slicing</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Refinement for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_Input"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_Input">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Input</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Input</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">state</span>    <span class="c1"># nothing to be done</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_Range"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_Range">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Range</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Range</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Refinement for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is not yet supported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_UnaryArithmeticOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_UnaryArithmeticOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_UnaryArithmeticOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_UnaryArithmeticOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">add</span> <span class="o">=</span> <span class="n">UnaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Add</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="n">UnaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Sub</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">add</span> <span class="ow">or</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">sub</span><span class="p">:</span>
+                <span class="n">refined</span> <span class="o">=</span> <span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">TypeLattice</span><span class="p">(</span><span class="n">TypeLattice</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">Integer</span><span class="p">)</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">refined</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expression</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Unary operator &#39;</span><span class="si">{expr.operator}</span><span class="s2">&#39; is unsupported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_UnaryBooleanOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_UnaryBooleanOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_UnaryBooleanOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_UnaryBooleanOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Refinement for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is unsupported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_BinaryArithmeticOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_BinaryArithmeticOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinaryArithmeticOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_BinaryArithmeticOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">add</span> <span class="o">=</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Add</span>
+            <span class="n">sub</span> <span class="o">=</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Sub</span>
+            <span class="n">mult</span> <span class="o">=</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Mult</span>
+            <span class="n">div</span> <span class="o">=</span> <span class="n">BinaryArithmeticOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Div</span>
+            <span class="n">operator</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span>
+            <span class="k">if</span> <span class="n">operator</span> <span class="o">==</span> <span class="n">add</span> <span class="ow">or</span> <span class="n">operator</span> <span class="o">==</span> <span class="n">sub</span> <span class="ow">or</span> <span class="n">operator</span> <span class="o">==</span> <span class="n">mult</span> <span class="ow">or</span> <span class="n">operator</span> <span class="o">==</span> <span class="n">div</span><span class="p">:</span>
+                <span class="n">refined</span> <span class="o">=</span> <span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">refinement1</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">refined</span><span class="p">)</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">])</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">refinement1</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+                <span class="n">refinement2</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">refined</span><span class="p">)</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">])</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">refinement2</span><span class="p">,</span> <span class="n">left</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">right</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Binary operator &#39;</span><span class="si">{expr.operator}</span><span class="s2">&#39; is unsupported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_BinarySequenceOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_BinarySequenceOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinarySequenceOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_BinarySequenceOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinarySequenceOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Concat</span><span class="p">:</span>
+                <span class="n">refined</span> <span class="o">=</span> <span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">refinement1</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">refined</span><span class="p">)</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">])</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">refinement1</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+                <span class="n">refinement2</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">refined</span><span class="p">)</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">])</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">refinement2</span><span class="p">,</span> <span class="n">left</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">right</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Binary operator &#39;</span><span class="si">{expr.operator}</span><span class="s2">&#39; is unsupported!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_BinaryBooleanOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_BinaryBooleanOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinaryBooleanOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_BinaryBooleanOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Refinement for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is unsupported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeState.ArithmeticExpressionRefinement.visit_BinaryComparisonOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.type_domain.TypeState.ArithmeticExpressionRefinement.visit_BinaryComparisonOperation">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinaryComparisonOperation</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_BinaryComparisonOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Refinement for a </span><span class="si">{expr.__class__.__name__}</span><span class="s2"> expression is unsupported!&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div></div>
+
+    <span class="n">_refinement</span> <span class="o">=</span> <span class="n">ArithmeticExpressionRefinement</span><span class="p">()</span>  <span class="c1"># static class member shared between instances</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

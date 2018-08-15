@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lyra</a></li>
 </ul>
 
             
@@ -247,7 +247,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
@@ -279,7 +279,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_top</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
@@ -311,13 +311,13 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widening</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Lattice.replace"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.Lattice.replace">[docs]</a>    <span class="k">def</span> <span class="nf">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;Lattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Lattice&#39;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;Lattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Lattice&#39;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Replace this instance with another lattice element.</span>
 
 <span class="sd">        :param other: other lattice element</span>
@@ -325,7 +325,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
 
 <div class="viewcode-block" id="KindMixin"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.KindMixin">[docs]</a><span class="k">class</span> <span class="nc">KindMixin</span><span class="p">(</span><span class="n">Lattice</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
@@ -352,7 +352,12 @@
 
 
 <div class="viewcode-block" id="BottomMixin"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin">[docs]</a><span class="k">class</span> <span class="nc">BottomMixin</span><span class="p">(</span><span class="n">KindMixin</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Mixin to add a predefined bottom element to a lattice.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to add a predefined bottom element to a lattice.</span>
+
+<span class="sd">    .. warning::</span>
+<span class="sd">        Subclasses are expected to provide consistent method implementations</span>
+<span class="sd">        that check for the eventuality of ``is_bottom()`` being true.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="BottomMixin.bottom"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin.bottom">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -365,7 +370,12 @@
 
 
 <div class="viewcode-block" id="TopMixin"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.TopMixin">[docs]</a><span class="k">class</span> <span class="nc">TopMixin</span><span class="p">(</span><span class="n">KindMixin</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Mixin to add a predefined top element to another lattice.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to add a predefined top element to another lattice.</span>
+
+<span class="sd">    .. warning::</span>
+<span class="sd">        Subclasses are expected to provide consistent method implementations</span>
+<span class="sd">        that check for the eventuality of ``is_top()`` being true.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="TopMixin.top"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.TopMixin.top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Lattice</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -444,7 +454,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
@@ -467,7 +477,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
@@ -490,9 +500,188 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mult</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mult</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_div</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Division between two default lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the division</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ArithmeticMixin.div"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin.div">[docs]</a>    <span class="k">def</span> <span class="nf">div</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ArithmeticMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Multiplication between two lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the product</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_div</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="BooleanMixin"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BooleanMixin">[docs]</a><span class="k">class</span> <span class="nc">BooleanMixin</span><span class="p">(</span><span class="n">Lattice</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to add boolean operations to a lattice.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BooleanMixin.false"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BooleanMixin.false">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">false</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BooleanMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;False lattice element.</span>
+
+<span class="sd">        :return: current lattice element modified to be the false lattice element</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="BooleanMixin.true"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BooleanMixin.true">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">true</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BooleanMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;True lattice element.</span>
+
+<span class="sd">        :return: current lattice element modified to be the true lattice element</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="BooleanMixin.maybe"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BooleanMixin.maybe">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">maybe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BooleanMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Maybe lattice element.</span>
+
+<span class="sd">        :return: current lattice element modified to be the maybe lattice element</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="BooleanMixin.is_false"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BooleanMixin.is_false">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">is_false</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Test whether the lattice element is false.</span>
+
+<span class="sd">        :return: whether the lattice element is false</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="BooleanMixin.is_true"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BooleanMixin.is_true">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">is_true</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Test whether the lattice element is true.</span>
+
+<span class="sd">        :return: whether the lattice element is true</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="BooleanMixin.is_maybe"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BooleanMixin.is_maybe">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">is_maybe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Test whether the lattice element is maybe.</span>
+
+<span class="sd">        :return: whether the lattice element is maybe</span>
+
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+    <span class="k">def</span> <span class="nf">_compl</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BooleanMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Complement of a default lattice elements.</span>
+
+<span class="sd">        :return: current lattice element modified to be its complement</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_false</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">true</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_true</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">false</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="BooleanMixin.compl"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BooleanMixin.compl">[docs]</a>    <span class="k">def</span> <span class="nf">compl</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BooleanMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Complement of a lattice elements.</span>
+
+<span class="sd">        :return: current lattice element modified to be its complement</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compl</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_conj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;BooleanMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BooleanMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Conjunction between two default lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the conjunction</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_false</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_false</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">false</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_maybe</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_maybe</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">true</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BooleanMixin.conj"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BooleanMixin.conj">[docs]</a>    <span class="k">def</span> <span class="nf">conj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;BooleanMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BooleanMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Conjunction between two lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the conjunction</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conj</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_disj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;BooleanMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BooleanMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Disjunction between two default lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the disjunction</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_true</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_true</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">true</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_maybe</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">is_maybe</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">false</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BooleanMixin.disj"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.BooleanMixin.disj">[docs]</a>    <span class="k">def</span> <span class="nf">disj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;BooleanMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BooleanMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Disjunction between two lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the disjunction</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_disj</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="SequenceMixin"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.SequenceMixin">[docs]</a><span class="k">class</span> <span class="nc">SequenceMixin</span><span class="p">(</span><span class="n">Lattice</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to add sequence operations to a lattice.&quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_concat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;SequenceMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SequenceMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Concatenation between two default lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the concatenation</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SequenceMixin.concat"><a class="viewcode-back" href="../../../lyra.abstract_domains.html#lyra.abstract_domains.lattice.SequenceMixin.concat">[docs]</a>    <span class="k">def</span> <span class="nf">concat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;SequenceMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SequenceMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Concatenation between two lattice elements.</span>
+
+<span class="sd">        :param other: other lattice element</span>
+<span class="sd">        :return: current lattice element modified to be the concatenation</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>        <span class="c1"># self is the empty sequence</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>     <span class="c1"># other is the empty sequence</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_concat</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

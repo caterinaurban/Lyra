@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
         <link rel="up" title="lyra.abstract_domains package" href="lyra.abstract_domains.html"/>
-        <link rel="next" title="lyra.abstract_domains.usage package" href="lyra.abstract_domains.usage.html"/>
+        <link rel="next" title="lyra.abstract_domains.string package" href="lyra.abstract_domains.string.html"/>
         <link rel="prev" title="lyra.abstract_domains.liveness package" href="lyra.abstract_domains.liveness.html"/> 
 
   
@@ -87,7 +87,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
@@ -132,7 +132,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">src</a> &raquo;</li>
+          <li><a href="modules.html">lyra</a> &raquo;</li>
       
           <li><a href="lyra.html">lyra package</a> &raquo;</li>
       
@@ -154,120 +154,13 @@
             
   <div class="section" id="module-lyra.abstract_domains.numerical">
 <span id="lyra-abstract-domains-numerical-package"></span><h1>lyra.abstract_domains.numerical package<a class="headerlink" href="#module-lyra.abstract_domains.numerical" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="module-lyra.abstract_domains.numerical.dbm">
-<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.abstract_domains.numerical.dbm" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="lyra.abstract_domains.numerical.dbm.CDBM">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.dbm.</code><code class="descname">CDBM</code><span class="sig-paren">(</span><em>size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#CDBM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.CDBM" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p>Coherent Difference Bound Matrix.</p>
-<p>A DBM-matrix <cite>m</cite> is <em>coherent</em> if matrix entries that represent the same condition do agree on the bound.</p>
-<img alt="_images/coherence.png" src="_images/coherence.png" />
-<p><strong>NOTE:</strong> we use 0-based indices instead.</p>
-<p>This implies that the matrix as a special kind of symmetric. It is enough to store the lower left diagonal matrix 
-(<code class="docutils literal"><span class="pre">s</span></code> plus <code class="docutils literal"><span class="pre">A</span></code>), the diagonal (<code class="docutils literal"><span class="pre">D</span></code>) <strong>plus</strong> parts of one more adjacent diagonal <code class="docutils literal"><span class="pre">B</span></code> to the right, 
-which contains unary conditions that may be different from the already included diagonal <code class="docutils literal"><span class="pre">A</span></code>.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">D</span> <span class="n">B</span>
-<span class="n">A</span> <span class="n">D</span>
-<span class="n">s</span> <span class="n">A</span> <span class="n">D</span> <span class="n">B</span>
-<span class="n">s</span> <span class="n">s</span> <span class="n">A</span> <span class="n">D</span>
-<span class="n">s</span> <span class="n">s</span> <span class="n">s</span> <span class="n">A</span> <span class="n">D</span> <span class="n">B</span>
-<span class="n">s</span> <span class="n">s</span> <span class="n">s</span> <span class="n">s</span> <span class="n">A</span> <span class="n">D</span>
-</pre></div>
-</div>
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.dbm.CDBM.close">
-<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#CDBM.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.CDBM.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates closure and sets internal representation matrix to closed canonical form if possible.</p>
-<p>If no canonical form is existent, the internal representation may stay in a unclosed form and this method 
-returns <cite>False</cite>.</p>
-<p>Depending on the exact type of this CDBM, this may implement a strong (e.g. for floats) or a tight (e.g. for 
-Integers) closure.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><cite>True</cite>, iff closure successful, i.e. iff constraint system satisfiable and closed canonical form exists</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.dbm.CDBM.intersection">
-<code class="descname">intersection</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.dbm.CDBM</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.dbm.CDBM<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#CDBM.intersection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.CDBM.intersection" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.dbm.CDBM.items">
-<code class="descname">items</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#CDBM.items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.CDBM.items" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.dbm.CDBM.keys">
-<code class="descname">keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#CDBM.keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.CDBM.keys" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.dbm.CDBM.replace">
-<code class="descname">replace</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#CDBM.replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.CDBM.replace" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.dbm.CDBM.size">
-<code class="descname">size</code><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.CDBM.size" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.dbm.CDBM.strongly_closed">
-<code class="descname">strongly_closed</code><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.CDBM.strongly_closed" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="lyra.abstract_domains.numerical.dbm.CDBM.tightly_closed">
-<code class="descname">tightly_closed</code><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.CDBM.tightly_closed" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.dbm.CDBM.union">
-<code class="descname">union</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.dbm.CDBM</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.dbm.CDBM<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#CDBM.union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.CDBM.union" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.dbm.CDBM.values">
-<code class="descname">values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#CDBM.values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.CDBM.values" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.dbm.CDBM.zip">
-<code class="descname">zip</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.dbm.CDBM</em>, <em>f</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.dbm.CDBM<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#CDBM.zip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.CDBM.zip" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="lyra.abstract_domains.numerical.dbm.IntegerCDBM">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.dbm.</code><code class="descname">IntegerCDBM</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#IntegerCDBM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.IntegerCDBM" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.numerical.dbm.CDBM" title="lyra.abstract_domains.numerical.dbm.CDBM"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.numerical.dbm.CDBM</span></code></a></p>
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.dbm.IntegerCDBM.close">
-<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#IntegerCDBM.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.IntegerCDBM.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates closure and sets internal representation matrix to closed canonical form if possible.</p>
-<p>Algorithm from paper: An Improved Tight Closure Algorithm for Integer Octagonal Constraints - Roberto 
-Bagnara, Patricia M. Hill, Enea Zaffanella</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="lyra.abstract_domains.numerical.dbm.nan2inf">
-<code class="descclassname">lyra.abstract_domains.numerical.dbm.</code><code class="descname">nan2inf</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/dbm.html#nan2inf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.dbm.nan2inf" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<span class="target" id="module-lyra.abstract_domains.numerical.interval_domain"></span><div class="section" id="interval-abstract-domain">
+<div class="section" id="module-lyra.abstract_domains.numerical.interval_domain">
+<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.abstract_domains.numerical.interval_domain" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="interval-abstract-domain">
 <h3>Interval Abstract Domain<a class="headerlink" href="#interval-abstract-domain" title="Permalink to this headline">¶</a></h3>
-<p>Non-relational abstract domain to be used for <strong>interval analysis</strong>.
-The set of possible values of a program variable in a state is represented as an interval.</p>
+<p>Non-relational abstract domain to be used for <strong>numerical analysis</strong>.
+The set of possible numerical values of a program variable in a program state
+is represented as an interval.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -279,10 +172,10 @@ The set of possible values of a program variable in a state is represented as an
 <dl class="class">
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice">
 <em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.interval_domain.</code><code class="descname">IntervalLattice</code><span class="sig-paren">(</span><em>lower=-inf</em>, <em>upper=inf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin" title="lyra.abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BottomMixin</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin" title="lyra.abstract_domains.lattice.ArithmeticMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.ArithmeticMixin</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin" title="lyra.abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BottomMixin</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin" title="lyra.abstract_domains.lattice.ArithmeticMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.ArithmeticMixin</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BooleanMixin" title="lyra.abstract_domains.lattice.BooleanMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BooleanMixin</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.SequenceMixin" title="lyra.abstract_domains.lattice.SequenceMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.SequenceMixin</span></code></a></p>
 <p>Interval lattice. The bottom interval represents an empty set.</p>
 <img alt="_images/interval.jpg" src="_images/interval.jpg" />
-<p>The default abstraction is the unbounded interval [-oo, +oo].</p>
+<p>The default abstraction is the unbounded interval <code class="docutils literal"><span class="pre">[-oo,</span> <span class="pre">+oo]</span></code>.</p>
 <dl class="method">
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice._less_equal">
 <code class="descname">_less_equal</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.interval_domain.IntervalLattice</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice._less_equal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice._less_equal" title="Permalink to this definition">¶</a></dt>
@@ -297,7 +190,7 @@ The set of possible values of a program variable in a state is represented as an
 </tr>
 </tbody>
 </table>
-<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">&lt;=</span> <span class="pre">[c,</span> <span class="pre">d]</span></code> if and only if <code class="docutils literal"><span class="pre">c</span> <span class="pre">&lt;=</span> <span class="pre">a</span></code> and <code class="docutils literal"><span class="pre">b</span> <span class="pre">&lt;=</span> <span class="pre">d</span></code>.</p>
+<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">⊑</span> <span class="pre">[c,</span> <span class="pre">d]</span></code> if and only if <code class="docutils literal"><span class="pre">c</span> <span class="pre">&lt;=</span> <span class="pre">a</span></code> and <code class="docutils literal"><span class="pre">b</span> <span class="pre">&lt;=</span> <span class="pre">d</span></code>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -314,7 +207,7 @@ The set of possible values of a program variable in a state is represented as an
 </tr>
 </tbody>
 </table>
-<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">/\</span> <span class="pre">[c,</span> <span class="pre">d]</span> <span class="pre">=</span> <span class="pre">[max(a,c),</span> <span class="pre">min(b,d)]</span></code>.</p>
+<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">⊓</span> <span class="pre">[c,</span> <span class="pre">d]</span> <span class="pre">=</span> <span class="pre">[max(a,c),</span> <span class="pre">min(b,d)]</span></code>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -331,7 +224,7 @@ The set of possible values of a program variable in a state is represented as an
 </tr>
 </tbody>
 </table>
-<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">\/</span> <span class="pre">[c,</span> <span class="pre">d]</span> <span class="pre">=</span> <span class="pre">[min(a,c),</span> <span class="pre">max(b,d)]</span></code>.</p>
+<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">⊔</span> <span class="pre">[c,</span> <span class="pre">d]</span> <span class="pre">=</span> <span class="pre">[min(a,c),</span> <span class="pre">max(b,d)]</span></code>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -348,7 +241,121 @@ The set of possible values of a program variable in a state is represented as an
 </tr>
 </tbody>
 </table>
-<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">▽</span> <span class="pre">[c,</span> <span class="pre">d]</span> <span class="pre">=</span> <span class="pre">[(c</span> <span class="pre">&lt;</span> <span class="pre">a?</span> <span class="pre">-oo</span> <span class="pre">:</span> <span class="pre">a),</span> <span class="pre">(b</span> <span class="pre">&lt;</span> <span class="pre">d?</span> <span class="pre">+oo</span> <span class="pre">:</span> <span class="pre">b)]</span></code>.</p>
+<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">▽</span> <span class="pre">[c,</span> <span class="pre">d]</span> <span class="pre">=</span> <span class="pre">[(c</span> <span class="pre">&lt;</span> <span class="pre">a</span> <span class="pre">?</span> <span class="pre">-oo</span> <span class="pre">:</span> <span class="pre">a),</span> <span class="pre">(b</span> <span class="pre">&lt;</span> <span class="pre">d</span> <span class="pre">?</span> <span class="pre">+oo</span> <span class="pre">:</span> <span class="pre">b)]</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice._neg">
+<code class="descname">_neg</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice._neg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice._neg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Negation of a default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be its negation</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">-</span> <span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">=</span> <span class="pre">[-b,</span> <span class="pre">-a]</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice._add">
+<code class="descname">_add</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.interval_domain.IntervalLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice._add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice._add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Addition between two default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the sum</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">+</span> <span class="pre">[c,</span> <span class="pre">d]</span> <span class="pre">=</span> <span class="pre">[a</span> <span class="pre">+</span> <span class="pre">c,</span> <span class="pre">b</span> <span class="pre">+</span> <span class="pre">d]</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice._sub">
+<code class="descname">_sub</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.interval_domain.IntervalLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice._sub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice._sub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtraction between two default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the difference</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">-</span> <span class="pre">[c,</span> <span class="pre">d]</span> <span class="pre">=</span> <span class="pre">[a</span> <span class="pre">-</span> <span class="pre">d,</span> <span class="pre">b</span> <span class="pre">-</span> <span class="pre">c]</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice._mult">
+<code class="descname">_mult</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.interval_domain.IntervalLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice._mult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice._mult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiplication between two default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the product</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">[a,</span> <span class="pre">b]</span> <span class="pre">*</span> <span class="pre">[c,</span> <span class="pre">d]</span> <span class="pre">=</span> <span class="pre">[min(a*c,</span> <span class="pre">a*d,</span> <span class="pre">b*c,</span> <span class="pre">b*d),</span> <span class="pre">max(a*c,</span> <span class="pre">a*d,</span> <span class="pre">b*c,</span> <span class="pre">b*d)]</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.false">
+<code class="descname">false</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.false"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.false" title="Permalink to this definition">¶</a></dt>
+<dd><p>False lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the false lattice element</td>
+</tr>
+</tbody>
+</table>
+<p>The false lattice element is <code class="docutils literal"><span class="pre">[0,0]</span></code>.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.from_literal">
+<em class="property">classmethod </em><code class="descname">from_literal</code><span class="sig-paren">(</span><em>literal: lyra.core.expressions.Literal</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.from_literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.from_literal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.is_false">
+<code class="descname">is_false</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.is_false"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.is_false" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is false.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is false</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.is_maybe">
+<code class="descname">is_maybe</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.is_maybe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.is_maybe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is maybe.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is maybe</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -360,6 +367,20 @@ The set of possible values of a program variable in a state is represented as an
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is top</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.is_true">
+<code class="descname">is_true</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.is_true"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.is_true" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is true.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is true</td>
 </tr>
 </tbody>
 </table>
@@ -380,6 +401,21 @@ The set of possible values of a program variable in a state is represented as an
 </dd></dl>
 
 <dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.maybe">
+<code class="descname">maybe</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.maybe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.maybe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maybe lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the maybe lattice element</td>
+</tr>
+</tbody>
+</table>
+<p>The maybe lattice element is <code class="docutils literal"><span class="pre">[0,1]</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.top">
 <code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.top" title="Permalink to this definition">¶</a></dt>
 <dd><p>Top lattice element.</p>
@@ -392,6 +428,21 @@ The set of possible values of a program variable in a state is represented as an
 </tbody>
 </table>
 <p>The top lattice element is <code class="docutils literal"><span class="pre">[-oo,+oo]</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalLattice.true">
+<code class="descname">true</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalLattice.true"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalLattice.true" title="Permalink to this definition">¶</a></dt>
+<dd><p>True lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the true lattice element</td>
+</tr>
+</tbody>
+</table>
+<p>The true lattice element is <code class="docutils literal"><span class="pre">[1,1]</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -412,15 +463,23 @@ The set of possible values of a program variable in a state is represented as an
 
 <dl class="class">
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.interval_domain.</code><code class="descname">IntervalState</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.store.Store" title="lyra.abstract_domains.store.Store"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.store.Store</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.state.State" title="lyra.abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.state.State</span></code></a></p>
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.interval_domain.</code><code class="descname">IntervalState</code><span class="sig-paren">(</span><em>variables: typing.Set[lyra.core.expressions.VariableIdentifier], precursory: lyra.abstract_domains.state.State = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.basis.Basis" title="lyra.abstract_domains.basis.Basis"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.basis.Basis</span></code></a></p>
 <p>Interval analysis state. An element of the interval abstract domain.</p>
 <p>Map from each program variable to the interval representing its value.
 The value of all program variables is represented by the unbounded interval by default.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Program variables storing lists are abstracted via summarization.</p>
+</div>
 <dl class="method">
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState._assign">
-<code class="descname">_assign</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalState<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState._assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState._assign" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_assign</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.basis.Basis<a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState._assign" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign an expression to another expression.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -431,7 +490,7 @@ The value of all program variables is represented by the unbounded interval by d
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable assignment</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the assignment</p>
 </td>
 </tr>
 </tbody>
@@ -442,6 +501,10 @@ The value of all program variables is represented by the unbounded interval by d
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState._assume">
 <code class="descname">_assume</code><span class="sig-paren">(</span><em>condition: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalState<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState._assume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState._assume" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assume that some condition holds in the current state.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -456,8 +519,12 @@ The value of all program variables is represented by the unbounded interval by d
 
 <dl class="method">
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState._output">
-<code class="descname">_output</code><span class="sig-paren">(</span><em>output: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.interval_domain.IntervalState<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState._output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState._output" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_output</code><span class="sig-paren">(</span><em>output: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.basis.Basis<a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState._output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Outputs something in the current state.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -472,8 +539,12 @@ The value of all program variables is represented by the unbounded interval by d
 
 <dl class="method">
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState._substitute">
-<code class="descname">_substitute</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState._substitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState._substitute" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_substitute</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState._substitute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Substitute an expression to another expression.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -484,7 +555,7 @@ The value of all program variables is represented by the unbounded interval by d
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable substitution</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the substitution</p>
 </td>
 </tr>
 </tbody>
@@ -492,227 +563,558 @@ The value of all program variables is represented by the unbounded interval by d
 </dd></dl>
 
 <dl class="class">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement">
-<em class="property">class </em><code class="descname">ArithmeticExpressionRefinement</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.core.html#lyra.core.expressions.ExpressionVisitor" title="lyra.core.expressions.ExpressionVisitor"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.ExpressionVisitor</span></code></a></p>
-<p>Visitor that:</p>
-<ol class="arabic simple">
-<li>refines the value of an evaluated arithmetic expression based on a given interval; and</li>
-<li>modifies the current state based on the refined value of the arithmetic expression.</li>
-</ol>
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit">
-<code class="descname">visit</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Expression</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of an evaluated expression.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_AttributeReference">
-<code class="descname">visit_AttributeReference</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_AttributeReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_AttributeReference" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of an attribute reference.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryArithmeticOperation">
-<code class="descname">visit_BinaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_BinaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a binary arithmetic operation.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryBooleanOperation">
-<code class="descname">visit_BinaryBooleanOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_BinaryBooleanOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryBooleanOperation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a binary boolean operation.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryComparisonOperation">
-<code class="descname">visit_BinaryComparisonOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_BinaryComparisonOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_BinaryComparisonOperation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a binary comparison operation.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Input">
-<code class="descname">visit_Input</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Input</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Input" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of an input expression.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_ListDisplay">
-<code class="descname">visit_ListDisplay</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.ListDisplay</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_ListDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_ListDisplay" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a list display.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Literal">
-<code class="descname">visit_Literal</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Literal</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_Literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Literal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a literal expression.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Slicing">
-<code class="descname">visit_Slicing</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Slicing</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_Slicing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Slicing" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a slicing expression.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Subscription">
-<code class="descname">visit_Subscription</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Subscription</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_Subscription"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_Subscription" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a subscription expression.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_UnaryArithmeticOperation">
-<code class="descname">visit_UnaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_UnaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_UnaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a unary arithmetic operation.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_UnaryBooleanOperation">
-<code class="descname">visit_UnaryBooleanOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_UnaryBooleanOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_UnaryBooleanOperation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a unary boolean operation.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_VariableIdentifier">
-<code class="descname">visit_VariableIdentifier</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ArithmeticExpressionRefinement.visit_VariableIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ArithmeticExpressionRefinement.visit_VariableIdentifier" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a variable identifier.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation">
 <em class="property">class </em><code class="descname">ExpressionEvaluation</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="lyra.core.html#lyra.core.expressions.ExpressionVisitor" title="lyra.core.expressions.ExpressionVisitor"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.ExpressionVisitor</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.basis.ExpressionEvaluation</span></code></p>
 <p>Visitor that performs the evaluation of an expression in the interval lattice.</p>
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_AttributeReference">
-<code class="descname">visit_AttributeReference</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.AttributeReference</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_AttributeReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_AttributeReference" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of an attribute reference.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryArithmeticOperation">
-<code class="descname">visit_BinaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_BinaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a binary arithmetic operation.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryBooleanOperation">
-<code class="descname">visit_BinaryBooleanOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_BinaryBooleanOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryBooleanOperation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a binary boolean operation.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryComparisonOperation">
-<code class="descname">visit_BinaryComparisonOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_BinaryComparisonOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_BinaryComparisonOperation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a binary comparison operation.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Input">
-<code class="descname">visit_Input</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Input</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Input" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of an input expression.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_ListDisplay">
-<code class="descname">visit_ListDisplay</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.ListDisplay</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_ListDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_ListDisplay" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a list display.</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Literal">
 <code class="descname">visit_Literal</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Literal</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_Literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Literal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visit of a literal expression.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Slicing">
-<code class="descname">visit_Slicing</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Slicing</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_Slicing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Slicing" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a slicing expression.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Subscription">
-<code class="descname">visit_Subscription</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Subscription</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_Subscription"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_Subscription" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a subscription expression.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryArithmeticOperation">
-<code class="descname">visit_UnaryArithmeticOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_UnaryArithmeticOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryArithmeticOperation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a unary arithmetic operation.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryBooleanOperation">
-<code class="descname">visit_UnaryBooleanOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_UnaryBooleanOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_UnaryBooleanOperation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a unary boolean operation.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_VariableIdentifier">
-<code class="descname">visit_VariableIdentifier</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.VariableIdentifier</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.ExpressionEvaluation.visit_VariableIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.ExpressionEvaluation.visit_VariableIdentifier" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of a variable identifier.</p>
 </dd></dl>
 
 </dd></dl>
 
-<dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.enter_if">
-<code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.enter_if" title="Permalink to this definition">¶</a></dt>
-<dd><p>Enter a conditional if statement.</p>
+</div>
+<span class="target" id="module-lyra.abstract_domains.numerical.sign_domain"></span><div class="section" id="sign-abstract-domain">
+<h3>Sign Abstract Domain<a class="headerlink" href="#sign-abstract-domain" title="Permalink to this headline">¶</a></h3>
+<p>Non-relational abstract domain to be used for <strong>numerical analysis</strong>.
+The set of possible numerical values of a program variable in a program state
+is represented by their sign (negative, zero, positive, …).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a conditional if statement</td>
+<tr class="field-odd field"><th class="field-name">Author:</th><td class="field-body">Jérôme Dohrau and Caterina Urban</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.sign_domain.</code><code class="descname">SignLattice</code><span class="sig-paren">(</span><em>negative=True</em>, <em>zero=True</em>, <em>positive=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.ArithmeticMixin" title="lyra.abstract_domains.lattice.ArithmeticMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.ArithmeticMixin</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BooleanMixin" title="lyra.abstract_domains.lattice.BooleanMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BooleanMixin</span></code></a></p>
+<p>Sign lattice.</p>
+<img alt="_images/sign.png" src="_images/sign.png" />
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice._less_equal">
+<code class="descname">_less_equal</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.sign_domain.SignLattice</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice._less_equal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice._less_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partial order between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other element</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.enter_loop">
-<code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.enter_loop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Enter a loop.</p>
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice._meet">
+<code class="descname">_meet</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.sign_domain.SignLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice._meet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice._meet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Greatest lower bound between default lattice elements.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a loop</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.exit_if">
-<code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.exit_if" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exit a conditional if statement.</p>
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice._join">
+<code class="descname">_join</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.sign_domain.SignLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice._join"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice._join" title="Permalink to this definition">¶</a></dt>
+<dd><p>Least upper bound between default lattice elements.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to enter a conditional if statement</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="method">
-<dt id="lyra.abstract_domains.numerical.interval_domain.IntervalState.exit_loop">
-<code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/interval_domain.html#IntervalState.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.interval_domain.IntervalState.exit_loop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exit a loop.</p>
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice._widening">
+<code class="descname">_widening</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.sign_domain.SignLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice._widening"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice._widening" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widening between default lattice elements.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current state modified to exit a loop</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the widening</td>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice._neg">
+<code class="descname">_neg</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice._neg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice._neg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Negation of a default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be its negation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice._add">
+<code class="descname">_add</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.sign_domain.SignLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice._add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice._add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice._sub">
+<code class="descname">_sub</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.sign_domain.SignLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice._sub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice._sub" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice._mult">
+<code class="descname">_mult</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.numerical.sign_domain.SignLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice._mult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice._mult" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.bottom">
+<code class="descname">bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.bottom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bottom lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the bottom lattice element</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.false">
+<code class="descname">false</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.false"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.false" title="Permalink to this definition">¶</a></dt>
+<dd><p>False lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the false lattice element</td>
+</tr>
+</tbody>
+</table>
+<p>The false lattice element is <code class="docutils literal"><span class="pre">=0</span></code>.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.from_literal">
+<em class="property">classmethod </em><code class="descname">from_literal</code><span class="sig-paren">(</span><em>literal: lyra.core.expressions.Literal</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.from_literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.from_literal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.is_bottom">
+<code class="descname">is_bottom</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.is_bottom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.is_bottom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is bottom.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is bottom</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.is_false">
+<code class="descname">is_false</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.is_false"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.is_false" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is false.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is false</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.is_maybe">
+<code class="descname">is_maybe</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.is_maybe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.is_maybe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is maybe.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is maybe</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.is_negative">
+<code class="descname">is_negative</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.is_negative"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.is_negative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether the element is certainly negative.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the element is negative.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.is_positive">
+<code class="descname">is_positive</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.is_positive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.is_positive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether the element is certainly positive.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the element is positive.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.is_top">
+<code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.is_top" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is top.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is top</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.is_true">
+<code class="descname">is_true</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.is_true"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.is_true" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is true.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is true</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.is_zero">
+<code class="descname">is_zero</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.is_zero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.is_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether the element is certainly zero.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the element is zero.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe">
+<code class="descname">maybe</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.maybe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maybe lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the maybe lattice element</td>
+</tr>
+</tbody>
+</table>
+<p>The maybe lattice element is <code class="docutils literal"><span class="pre">≥0</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe_negative">
+<code class="descname">maybe_negative</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.maybe_negative"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe_negative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether the element may be negative.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the element may be negative.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe_non_negative">
+<code class="descname">maybe_non_negative</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.maybe_non_negative"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe_non_negative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether the element may be non-negative.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the element may be non-negative.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe_non_positive">
+<code class="descname">maybe_non_positive</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.maybe_non_positive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe_non_positive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether the element may be non-positive.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the element may be non-positive.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe_non_zero">
+<code class="descname">maybe_non_zero</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.maybe_non_zero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe_non_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether the element may be non-zero.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the element may be non-zero.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe_positive">
+<code class="descname">maybe_positive</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.maybe_positive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe_positive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether the element may be positive.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the element may be positive.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe_zero">
+<code class="descname">maybe_zero</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.maybe_zero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.maybe_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether the element may be zero.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> if the element may be zero.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.negative">
+<code class="descname">negative</code><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.negative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current negative flag.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current negative flag</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.positive">
+<code class="descname">positive</code><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.positive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current positive flag.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current positive flag</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.top">
+<code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.top" title="Permalink to this definition">¶</a></dt>
+<dd><p>Top lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the top lattice element</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.true">
+<code class="descname">true</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignLattice<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignLattice.true"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.true" title="Permalink to this definition">¶</a></dt>
+<dd><p>True lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the true lattice element</td>
+</tr>
+</tbody>
+</table>
+<p>The true lattice element is <code class="docutils literal"><span class="pre">&gt;0</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignLattice.zero">
+<code class="descname">zero</code><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignLattice.zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current zero flag.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current zero flag</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignState">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.numerical.sign_domain.</code><code class="descname">SignState</code><span class="sig-paren">(</span><em>variables: typing.Set[lyra.core.expressions.VariableIdentifier], precursory: lyra.abstract_domains.state.State = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.basis.Basis" title="lyra.abstract_domains.basis.Basis"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.basis.Basis</span></code></a></p>
+<p>Sign analysis state. An element of the sign abstract domain.</p>
+<p>Map from each program variable to the sign representing its value.</p>
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignState._assign">
+<code class="descname">_assign</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.basis.Basis<a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignState._assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign an expression to another expression.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>left</strong> – expression to be assigned to</li>
+<li><strong>right</strong> – expression to assign</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the assignment</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignState._assume">
+<code class="descname">_assume</code><span class="sig-paren">(</span><em>condition: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.numerical.sign_domain.SignState<a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignState._assume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignState._assume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assume that some condition holds in the current state.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>condition</strong> – expression representing the assumed condition</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified to satisfy the assumption</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignState._output">
+<code class="descname">_output</code><span class="sig-paren">(</span><em>output: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.basis.Basis<a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignState._output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outputs something in the current state.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output</strong> – expression representing the output</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified by the output</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignState._substitute">
+<code class="descname">_substitute</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignState._substitute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substitute an expression to another expression.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>left</strong> – expression to be substituted</li>
+<li><strong>right</strong> – expression to substitute</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the substitution</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignState.ExpressionEvaluation">
+<em class="property">class </em><code class="descname">ExpressionEvaluation</code><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignState.ExpressionEvaluation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignState.ExpressionEvaluation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.basis.ExpressionEvaluation</span></code></p>
+<p>Visitor that performs the evaluation of an expression in the sign lattice.</p>
+<dl class="method">
+<dt id="lyra.abstract_domains.numerical.sign_domain.SignState.ExpressionEvaluation.visit_Literal">
+<code class="descname">visit_Literal</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Literal</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/numerical/sign_domain.html#SignState.ExpressionEvaluation.visit_Literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.numerical.sign_domain.SignState.ExpressionEvaluation.visit_Literal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a literal expression.</p>
+</dd></dl>
+
 </dd></dl>
 
 </dd></dl>
@@ -728,7 +1130,7 @@ The value of all program variables is represented by the unbounded interval by d
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="lyra.abstract_domains.usage.html" class="btn btn-neutral float-right" title="lyra.abstract_domains.usage package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="lyra.abstract_domains.string.html" class="btn btn-neutral float-right" title="lyra.abstract_domains.string package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="lyra.abstract_domains.liveness.html" class="btn btn-neutral" title="lyra.abstract_domains.liveness package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

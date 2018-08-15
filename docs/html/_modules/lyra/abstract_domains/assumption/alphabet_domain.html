@@ -1,0 +1,304 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>lyra.abstract_domains.assumption.alphabet_domain &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">lyra</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../../index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      
+    <li>lyra.abstract_domains.assumption.alphabet_domain</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for lyra.abstract_domains.assumption.alphabet_domain</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Alphabet Abstract Domain</span>
+<span class="sd">========================</span>
+
+<span class="sd">Non-relational abstract domain to be used for **input data assumption analysis**.</span>
+<span class="sd">The set of possible string values of a program variable in a program state</span>
+<span class="sd">is represented by the sets of characters that must and may form the string.</span>
+
+<span class="sd">:Authors: Radwa Sherif Abdelbar and Caterina Urban</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Set</span>
+
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.assumption_domain</span> <span class="k">import</span> <span class="n">JSONMixin</span><span class="p">,</span> <span class="n">InputMixin</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.string.character_domain</span> <span class="k">import</span> <span class="n">CharacterLattice</span><span class="p">,</span> <span class="n">CharacterState</span>
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">Expression</span>
+<span class="kn">from</span> <span class="nn">lyra.core.utils</span> <span class="k">import</span> <span class="n">copy_docstring</span>
+
+
+<div class="viewcode-block" id="AlphabetLattice"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.alphabet_domain.AlphabetLattice">[docs]</a><span class="k">class</span> <span class="nc">AlphabetLattice</span><span class="p">(</span><span class="n">CharacterLattice</span><span class="p">,</span> <span class="n">JSONMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Alphabet lattice.</span>
+
+<span class="sd">    The default abstraction is the unconstraining pair ``(∅, Σ)``,</span>
+<span class="sd">    where ``Σ`` denotes the entire alphabet.</span>
+<span class="sd">    The bottom element of the lattice represents a contradiction.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: AlphabetLattice._less_equal</span>
+<span class="sd">    .. automethod:: AlphabetLattice._meet</span>
+<span class="sd">    .. automethod:: AlphabetLattice._join</span>
+<span class="sd">    .. automethod:: AlphabetLattice._widening</span>
+<span class="sd">    .. automethod:: AlphabetLattice._concat</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AlphabetLattice.to_json"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.alphabet_domain.AlphabetLattice.to_json">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">JSONMixin</span><span class="o">.</span><span class="n">to_json</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;certainly&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">certainly</span><span class="p">),</span> <span class="s1">&#39;maybe&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maybe</span><span class="p">)}</span></div>
+
+<div class="viewcode-block" id="AlphabetLattice.from_json"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.alphabet_domain.AlphabetLattice.from_json">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">JSONMixin</span><span class="o">.</span><span class="n">from_json</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">from_json</span><span class="p">(</span><span class="n">json</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;JSONMixin&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AlphabetLattice</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">json</span><span class="p">[</span><span class="s1">&#39;certainly&#39;</span><span class="p">]),</span> <span class="nb">set</span><span class="p">(</span><span class="n">json</span><span class="p">[</span><span class="s1">&#39;maybe&#39;</span><span class="p">]))</span></div></div>
+
+
+<div class="viewcode-block" id="AlphabetState"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.alphabet_domain.AlphabetState">[docs]</a><span class="k">class</span> <span class="nc">AlphabetState</span><span class="p">(</span><span class="n">CharacterState</span><span class="p">,</span> <span class="n">InputMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Alphabet analysis state. An element of the alphabet abstract domain.</span>
+
+<span class="sd">    Map from each program variable to the sets of characters</span>
+<span class="sd">    that must and may form its possible string values.</span>
+<span class="sd">    The string value of all program variables is unconstrained by default.</span>
+
+<span class="sd">    When reading input data, the corresponding range assumptions</span>
+<span class="sd">    are stored in the class member ``inputs``, which is a map from each program point</span>
+<span class="sd">    to the list of range assumptions on the input data read at that point.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: AlphabetState._assume</span>
+<span class="sd">    .. automethod:: AlphabetState._substitute</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">],</span> <span class="n">precursory</span><span class="p">:</span> <span class="n">InputMixin</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">lattices</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">AlphabetLattice</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CharacterState</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">lattices</span><span class="p">)</span>
+        <span class="n">InputMixin</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precursory</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AlphabetState.replace"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.alphabet_domain.AlphabetState.replace">[docs]</a>    <span class="k">def</span> <span class="nf">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AlphabetState&#39;</span><span class="p">:</span>
+        <span class="c1"># collect the new variables appearing in the replacing expression</span>
+        <span class="n">variables</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">expression</span><span class="o">.</span><span class="n">ids</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                <span class="n">variables</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="n">variables</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">variables</span><span class="p">:</span>  <span class="c1"># if there are new variables appearing in the replacing expression...</span>
+            <span class="c1"># add the new variables to the current state</span>
+            <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattices</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">typ</span><span class="p">)](</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">typ</span><span class="p">)])</span>
+            <span class="c1"># replace the given variable with the given expression</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_substitute</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AlphabetState.unify"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.alphabet_domain.AlphabetState.unify">[docs]</a>    <span class="k">def</span> <span class="nf">unify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;AlphabetState&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AlphabetState&#39;</span><span class="p">:</span>
+        <span class="c1"># collect the variables that differ in the current and other state</span>
+        <span class="n">mine</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">variables</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">theirs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="c1"># replace the variables in the current state that match those in the other state</span>
+        <span class="k">for</span> <span class="n">my_var</span><span class="p">,</span> <span class="n">their_var</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mine</span><span class="p">,</span> <span class="n">theirs</span><span class="p">):</span>
+            <span class="c1"># the replacement only occurs when the matching variables in the other state</span>
+            <span class="c1"># depend on a program point that is smaller than the program point on which</span>
+            <span class="c1"># the variables in the current state depend</span>
+            <span class="k">if</span> <span class="n">their_var</span><span class="o">.</span><span class="n">name</span> <span class="o">&lt;</span> <span class="n">my_var</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">my_var</span><span class="p">)]</span> <span class="o">=</span> <span class="n">their_var</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">their_var</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">my_var</span><span class="p">)</span>
+        <span class="c1"># add variables only present in the other state</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">theirs</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">mine</span><span class="p">):]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattices</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">typ</span><span class="p">)](</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">typ</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="c1"># expression refinement</span>
+
+<div class="viewcode-block" id="AlphabetState.ExpressionRefinement"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.alphabet_domain.AlphabetState.ExpressionRefinement">[docs]</a>    <span class="k">class</span> <span class="nc">ExpressionRefinement</span><span class="p">(</span><span class="n">CharacterState</span><span class="o">.</span><span class="n">ExpressionRefinement</span><span class="p">):</span>
+
+<div class="viewcode-block" id="AlphabetState.ExpressionRefinement.visit_Input"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.alphabet_domain.AlphabetState.ExpressionRefinement.visit_Input">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">CharacterState</span><span class="o">.</span><span class="n">ExpressionRefinement</span><span class="o">.</span><span class="n">visit_Input</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">state</span>    <span class="c1"># nothing to be done</span></div></div>
+
+    <span class="n">_refinement</span> <span class="o">=</span> <span class="n">ExpressionRefinement</span><span class="p">()</span>  <span class="c1"># static class member shared between instances</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

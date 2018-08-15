@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../modules.html">src</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">lyra</a></li>
 </ul>
 
             
@@ -139,7 +139,7 @@
 <span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">from</span> <span class="nn">lyra.engine.liveness.liveness_analysis</span> <span class="k">import</span> <span class="n">StrongLivenessAnalysis</span>
 <span class="kn">from</span> <span class="nn">lyra.engine.numerical.interval_analysis</span> <span class="k">import</span> <span class="n">ForwardIntervalAnalysis</span>
-<span class="kn">from</span> <span class="nn">lyra.engine.usage.usage_analysis</span> <span class="k">import</span> <span class="n">UsageAnalysis</span>
+<span class="kn">from</span> <span class="nn">lyra.engine.usage.usage_analysis</span> <span class="k">import</span> <span class="n">SimpleUsageAnalysis</span>
 
 
 <div class="viewcode-block" id="main"><a class="viewcode-back" href="../../lyra.html#lyra.main.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
@@ -159,7 +159,7 @@
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">analysis</span> <span class="o">==</span> <span class="s1">&#39;liveness&#39;</span><span class="p">:</span>
         <span class="n">StrongLivenessAnalysis</span><span class="p">()</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">python_file</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">analysis</span> <span class="o">==</span> <span class="s1">&#39;usage&#39;</span><span class="p">:</span>
-        <span class="n">UsageAnalysis</span><span class="p">()</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">python_file</span><span class="p">)</span></div>
+        <span class="n">SimpleUsageAnalysis</span><span class="p">()</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">python_file</span><span class="p">)</span></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>

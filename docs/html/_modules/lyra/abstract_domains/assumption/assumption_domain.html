@@ -1,0 +1,1044 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>lyra.abstract_domains.assumption.assumption_domain &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">lyra</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../../index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      
+    <li>lyra.abstract_domains.assumption.assumption_domain</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for lyra.abstract_domains.assumption.assumption_domain</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Assumption Abstract Domains</span>
+<span class="sd">===========================</span>
+
+<span class="sd">Abstract domains to be used for **input data assumption analysis**.</span>
+
+<span class="sd">:Authors: Caterina Urban and Radwa Sherif Abdelbar</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.lattice</span> <span class="k">import</span> <span class="n">Lattice</span><span class="p">,</span> <span class="n">BottomMixin</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.stack</span> <span class="k">import</span> <span class="n">Stack</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.state</span> <span class="k">import</span> <span class="n">State</span>
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="p">,</span> \
+    <span class="n">Range</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">NegationFreeNormalExpression</span><span class="p">,</span> <span class="n">UnaryBooleanOperation</span><span class="p">,</span> <span class="n">BinaryBooleanOperation</span><span class="p">,</span> \
+    <span class="n">ExpressionVisitor</span><span class="p">,</span> <span class="n">Input</span><span class="p">,</span> <span class="n">ListDisplay</span><span class="p">,</span> <span class="n">AttributeReference</span><span class="p">,</span> <span class="n">Subscription</span><span class="p">,</span> <span class="n">Slicing</span><span class="p">,</span> \
+    <span class="n">UnaryArithmeticOperation</span><span class="p">,</span> <span class="n">BinaryArithmeticOperation</span><span class="p">,</span> <span class="n">LengthIdentifier</span><span class="p">,</span> <span class="n">TupleDisplay</span><span class="p">,</span> \
+    <span class="n">SetDisplay</span><span class="p">,</span> <span class="n">DictDisplay</span><span class="p">,</span> <span class="n">BinarySequenceOperation</span>
+<span class="kn">from</span> <span class="nn">lyra.core.statements</span> <span class="k">import</span> <span class="n">ProgramPoint</span>
+<span class="kn">from</span> <span class="nn">lyra.core.types</span> <span class="k">import</span> <span class="n">IntegerLyraType</span>
+<span class="kn">from</span> <span class="nn">lyra.core.utils</span> <span class="k">import</span> <span class="n">copy_docstring</span>
+
+
+<div class="viewcode-block" id="JSONMixin"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.JSONMixin">[docs]</a><span class="k">class</span> <span class="nc">JSONMixin</span><span class="p">(</span><span class="n">Lattice</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to add a mechanism for converting a lattice to and from JSON format.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="JSONMixin.to_json"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.JSONMixin.to_json">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Convert the current lattice element to JSON format.</span>
+
+<span class="sd">        :return: JSON format of the current lattice element</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="JSONMixin.from_json"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.JSONMixin.from_json">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">from_json</span><span class="p">(</span><span class="n">json</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;JSONMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Reconstruct a lattice element from its JSON format.</span>
+
+<span class="sd">        :param json: JSON format of a lattice element</span>
+<span class="sd">        :return: reconstructed lattice element from its JSON format</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="InputMixin"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.InputMixin">[docs]</a><span class="k">class</span> <span class="nc">InputMixin</span><span class="p">(</span><span class="n">State</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to add a mechanism for recording and retrieving constraints on the input data.</span>
+
+<span class="sd">    Constraints are recorded in the class member ``inputs``, which is a map</span>
+<span class="sd">    from each program point to the list of constraints on the input data read at that point.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">JSONMixin</span><span class="p">]]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precursory</span><span class="p">:</span> <span class="n">State</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">precursory</span><span class="p">)</span>
+        <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InputMixin.replace"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.InputMixin.replace">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;InputMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Replace a variable with an expression.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            The new variables appearing in the replacing expression are added to the current state.</span>
+
+<span class="sd">        :param variable: variable to be replaced</span>
+<span class="sd">        :param expression: expression replacing the variable</span>
+<span class="sd">        :return: current state modified to manifest the replacement</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="InputMixin.unify"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.InputMixin.unify">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">unify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;InputMixin&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;InputMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Unification of the environment of the current state</span>
+<span class="sd">        with the environment of another state.</span>
+
+<span class="sd">        This is needed when new variables are introduced by ``replace()``</span>
+<span class="sd">        to represent input expressions. The unification should match variables</span>
+<span class="sd">        in the order of the program points on which they depend.</span>
+
+<span class="sd">        :param other: state whose environment we want to unify with</span>
+<span class="sd">        :return: current state modified to reflect the unification</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="InputMixin.less_equal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.InputMixin.less_equal">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">less_equal</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">less_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;InputMixin&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unify</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">less_equal</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">unify</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="InputMixin.join"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.InputMixin.join">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">join</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;InputMixin&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unify</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">unify</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="InputMixin.meet"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.InputMixin.meet">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">join</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">meet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;InputMixin&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unify</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">unify</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="InputMixin.widening"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.InputMixin.widening">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">join</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">widening</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;InputMixin&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unify</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">widening</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">unify</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="InputMixin.record"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.InputMixin.record">[docs]</a>    <span class="k">def</span> <span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constraint</span><span class="p">:</span> <span class="n">JSONMixin</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;InputMixin&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Record an constraint.</span>
+
+<span class="sd">        :param constraint: constraint to be recorded</span>
+<span class="sd">        :return: current state modified to record the constraint</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pp</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="InputMixin.retrieve"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.InputMixin.retrieve">[docs]</a>    <span class="k">def</span> <span class="nf">retrieve</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">JSONMixin</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Retrieve and forget the constraints corresponding to the current program point.</span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            The current state is modified to forget the returned constraints.</span>
+
+<span class="sd">        :return: the list of constraints corresponding to the current program point</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pp</span><span class="p">,</span> <span class="nb">list</span><span class="p">())</span></div></div>
+
+
+<div class="viewcode-block" id="AssumptionState"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState">[docs]</a><span class="k">class</span> <span class="nc">AssumptionState</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assumption analysis state. An element of the assumption abstract domain.</span>
+
+<span class="sd">    Reduced product of a list of constraining states,</span>
+<span class="sd">    which collect constraints on the program variables and (indirectly) on the input data,</span>
+<span class="sd">    and a stack of assumptions on the input data,</span>
+<span class="sd">    which (directly) constraints the input data read from the current program point.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: AssumptionState._assume</span>
+<span class="sd">    .. automethod:: AssumptionState._substitute</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="AssumptionState.InputStack"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack">[docs]</a>    <span class="k">class</span> <span class="nc">InputStack</span><span class="p">(</span><span class="n">Stack</span><span class="p">,</span> <span class="n">State</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Stack of assumptions on the input data.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="AssumptionState.InputStack.InputLattice"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputLattice">[docs]</a>        <span class="k">class</span> <span class="nc">InputLattice</span><span class="p">(</span><span class="n">BottomMixin</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Assumptions on the input data.</span>
+
+<span class="sd">            Each assumption is a (possibly symbolic) repetition of constraints on the input data.</span>
+<span class="sd">            A constraint can be:</span>
+
+<span class="sd">            * a basic constraint, i.e., a tuple of lattices (l, ...)</span>
+<span class="sd">              which indicates that an input data point is expected and restricts its possible value</span>
+<span class="sd">            * a star constraint, i.e., ★</span>
+<span class="sd">              which indicates that any number of input data points is expected</span>
+<span class="sd">            * another symbolically repeated assumption</span>
+
+<span class="sd">            Let S be the set of all possible sequences of input data points.</span>
+<span class="sd">            The concretization function Ɣ: InputLattice -&gt; 𝒫(S) is defined as follows::</span>
+
+<span class="sd">                Ɣ(1 * [★]) = S</span>
+<span class="sd">                ...</span>
+<span class="sd">                Ɣ(1 * [(l1, l2), ★]) = { xs ∈ S | x ∈ Ɣ(l1) ⋂ Ɣ(l2) }</span>
+<span class="sd">                ...</span>
+<span class="sd">                Ɣ(n * [(l1, l2)]) = { x^n ∈ S | x ∈ Ɣ(l1) ⋂ Ɣ(l2) }</span>
+<span class="sd">                ...</span>
+<span class="sd">                Ɣ(1 * [(l1, l2)]) = { x ∈ S | x ∈ Ɣ(l1) ⋂ Ɣ(l2) }</span>
+<span class="sd">                ...</span>
+<span class="sd">                Ɣ(1 * []) = { ε }</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">InputLattice</span> <span class="o">=</span> <span class="s1">&#39;AssumptionState.InputStack.InputLattice&#39;</span>
+            <span class="n">StarConstraint</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ProgramPoint</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+            <span class="n">BasicConstraint</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">JSONMixin</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
+            <span class="n">InputConstraint</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">StarConstraint</span><span class="p">,</span> <span class="n">BasicConstraint</span><span class="p">,</span> <span class="n">InputLattice</span><span class="p">]</span>
+
+            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">multiplier</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">(</span><span class="n">IntegerLyraType</span><span class="p">(),</span> <span class="s2">&quot;1&quot;</span><span class="p">),</span>
+                         <span class="n">constraints</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">InputConstraint</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()):</span>
+                <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_multiplier</span> <span class="o">=</span> <span class="n">multiplier</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_constraints</span> <span class="o">=</span> <span class="n">constraints</span>
+
+            <span class="nd">@property</span>
+            <span class="k">def</span> <span class="nf">multiplier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Current multiplier.&quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiplier</span>
+
+            <span class="nd">@property</span>
+            <span class="k">def</span> <span class="nf">constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Current list of constraints.&quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constraints</span>
+
+            <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="n">constraint</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                        <span class="c1"># the constraint is a StarConstraint or a BasicConstraint</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">constraint</span><span class="p">:</span>  <span class="c1"># the constraint is a StarConstraint</span>
+                            <span class="k">return</span> <span class="s2">&quot;★&quot;</span>
+                        <span class="k">else</span><span class="p">:</span>   <span class="c1"># the constraint is a BasicConstraint</span>
+                            <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">constraint</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">line</span><span class="p">,</span> <span class="n">constraint</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>   <span class="c1"># the constraint is an InputLattice</span>
+                        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span> <span class="k">if</span> <span class="n">constraint</span><span class="o">.</span><span class="n">constraints</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                <span class="n">multiplier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplier</span>
+                <span class="n">is_one</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplier</span><span class="p">,</span> <span class="n">Literal</span><span class="p">)</span> <span class="ow">and</span> <span class="n">multiplier</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span>
+                <span class="n">repetitions</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">is_one</span> <span class="k">else</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> * &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">multiplier</span><span class="p">)</span>
+                <span class="n">single</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+                <span class="n">formatted</span> <span class="o">=</span> <span class="p">(</span><span class="n">do</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span> <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">)</span>
+                <span class="n">constraints</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">constraint</span> <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">formatted</span> <span class="k">if</span> <span class="n">constraint</span><span class="p">)</span>
+                <span class="n">beginning</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">is_one</span> <span class="ow">or</span> <span class="p">(</span><span class="n">single</span> <span class="ow">and</span> <span class="n">constraints</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;[&quot;</span>
+                <span class="n">ending</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">is_one</span> <span class="ow">or</span> <span class="p">(</span><span class="n">single</span> <span class="ow">and</span> <span class="n">constraints</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;]&quot;</span>
+                <span class="n">assumption</span> <span class="o">=</span> <span class="n">repetitions</span> <span class="o">+</span> <span class="n">beginning</span> <span class="o">+</span> <span class="n">constraints</span> <span class="o">+</span> <span class="n">ending</span>
+                <span class="k">return</span> <span class="n">assumption</span> <span class="k">if</span> <span class="n">assumption</span> <span class="k">else</span> <span class="s2">&quot;ε&quot;</span>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputLattice.top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputLattice.top">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;The top lattice element is ``1 * [★]``.&quot;&quot;&quot;</span>
+                <span class="n">one</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">(</span><span class="n">IntegerLyraType</span><span class="p">(),</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">(</span><span class="n">one</span><span class="p">,</span> <span class="p">[()]))</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputLattice.is_top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputLattice.is_top">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">is_top</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">is_top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+                <span class="k">def</span> <span class="nf">is_star</span><span class="p">(</span><span class="n">constraint</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">constraint</span>
+                <span class="n">multiplier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplier</span>
+                <span class="n">one</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplier</span><span class="p">,</span> <span class="n">Literal</span><span class="p">)</span> <span class="ow">and</span> <span class="n">multiplier</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span>
+                <span class="n">single</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+                <span class="k">return</span> <span class="n">one</span> <span class="ow">and</span> <span class="n">single</span> <span class="ow">and</span> <span class="n">is_star</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_less_equal</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">_less_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">InputLattice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+                <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="n">constraint1</span><span class="p">,</span> <span class="n">constraint2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint1</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint2</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                        <span class="c1"># the constraints are StarConstraints or BasicConstraints</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">constraint1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">constraint2</span><span class="p">:</span>
+                            <span class="c1"># the constraints are StarConstraints</span>
+                            <span class="k">return</span> <span class="kc">True</span>
+                        <span class="k">else</span><span class="p">:</span>   <span class="c1"># the constraints are BasicConstraints</span>
+                            <span class="n">l1</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">JSONMixin</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                            <span class="n">l2</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">JSONMixin</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">less_equal</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>   <span class="c1"># the constraints are InputLattices</span>
+                        <span class="n">m</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">constraint1</span><span class="o">.</span><span class="n">multiplier</span> <span class="o">==</span> <span class="n">constraint2</span><span class="o">.</span><span class="n">multiplier</span>
+                        <span class="n">c1</span> <span class="o">=</span> <span class="n">constraint1</span><span class="o">.</span><span class="n">constraints</span>
+                        <span class="n">c2</span> <span class="o">=</span> <span class="n">constraint2</span><span class="o">.</span><span class="n">constraints</span>
+                        <span class="n">c</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">c2</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">c1</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">do</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">))</span>
+                        <span class="k">return</span> <span class="n">m</span> <span class="ow">and</span> <span class="n">c</span>
+                <span class="n">multiplier1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplier</span>
+                <span class="n">multiplier2</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">multiplier</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplier1</span><span class="p">,</span> <span class="n">Literal</span><span class="p">)</span> <span class="ow">and</span> <span class="n">multiplier1</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplier2</span><span class="p">,</span> <span class="n">Literal</span><span class="p">)</span> <span class="ow">and</span> <span class="n">multiplier2</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">constraints</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">do</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">constraints</span><span class="p">))</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_join</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">InputLattice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InputLattice</span><span class="p">:</span>
+                <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="n">constraint1</span><span class="p">,</span> <span class="n">constraint2</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint1</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint2</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                        <span class="c1"># the constraints are StarConstraints or BasicConstraints</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">constraint1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">constraint2</span><span class="p">:</span>
+                            <span class="c1"># the constraints are StarConstraints</span>
+                            <span class="k">return</span> <span class="p">()</span>
+                        <span class="k">else</span><span class="p">:</span>   <span class="c1"># the constraints are BasicConstraints</span>
+                            <span class="n">pp1</span><span class="p">:</span> <span class="n">ProgramPoint</span> <span class="o">=</span> <span class="n">constraint1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="n">pp2</span><span class="p">:</span> <span class="n">ProgramPoint</span> <span class="o">=</span> <span class="n">constraint2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span> <span class="o">=</span> <span class="n">pp1</span> <span class="k">if</span> <span class="n">pp1</span><span class="o">.</span><span class="n">line</span> <span class="o">&lt;=</span> <span class="n">pp2</span><span class="o">.</span><span class="n">line</span> <span class="k">else</span> <span class="n">pp2</span>
+                            <span class="n">l1</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">JSONMixin</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                            <span class="n">l2</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">JSONMixin</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                            <span class="k">return</span> <span class="n">pp</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">))</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint1</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint2</span><span class="p">,</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">constraint1</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="p">()</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">m</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">(</span><span class="n">IntegerLyraType</span><span class="p">(),</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
+                            <span class="n">c1</span> <span class="o">=</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="p">[</span><span class="n">constraint1</span><span class="p">])</span>
+                            <span class="k">return</span> <span class="n">do</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">constraint2</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint2</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint1</span><span class="p">,</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">constraint2</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="p">()</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">m</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">(</span><span class="n">IntegerLyraType</span><span class="p">(),</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
+                            <span class="n">c2</span> <span class="o">=</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="p">[</span><span class="n">constraint1</span><span class="p">])</span>
+                            <span class="k">return</span> <span class="n">do</span><span class="p">(</span><span class="n">constraint1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>   <span class="c1"># the constraints are InputLattices</span>
+                        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint1</span><span class="p">,</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">)</span>
+                        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint2</span><span class="p">,</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">)</span>
+                        <span class="n">m1</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">=</span> <span class="n">constraint1</span><span class="o">.</span><span class="n">multiplier</span>
+                        <span class="n">m2</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">=</span> <span class="n">constraint2</span><span class="o">.</span><span class="n">multiplier</span>
+                        <span class="n">c1</span> <span class="o">=</span> <span class="n">constraint1</span><span class="o">.</span><span class="n">constraints</span>
+                        <span class="n">c2</span> <span class="o">=</span> <span class="n">constraint2</span><span class="o">.</span><span class="n">constraints</span>
+                        <span class="n">is_one1</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="n">Literal</span><span class="p">)</span> <span class="ow">and</span> <span class="n">m1</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span>
+                        <span class="n">is_one2</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m2</span><span class="p">,</span> <span class="n">Literal</span><span class="p">)</span> <span class="ow">and</span> <span class="n">m2</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span>
+                        <span class="k">if</span> <span class="n">is_one1</span> <span class="ow">and</span> <span class="n">is_one2</span><span class="p">:</span>
+                            <span class="n">m</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">(</span><span class="n">IntegerLyraType</span><span class="p">(),</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
+                            <span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="n">do</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)]</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c1</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">c2</span><span class="p">):</span>  <span class="c1"># lengths of list of constraints are different</span>
+                                <span class="n">c</span><span class="o">.</span><span class="n">append</span><span class="p">(())</span>  <span class="c1"># add a star constraint</span>
+                        <span class="k">elif</span> <span class="n">m1</span> <span class="o">==</span> <span class="n">m2</span><span class="p">:</span>
+                            <span class="n">m</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">=</span> <span class="n">m1</span>
+                            <span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="n">do</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)]</span>
+                            <span class="n">c</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">c1</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">c2</span><span class="p">):])</span>
+                            <span class="n">c</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">c2</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">c1</span><span class="p">):])</span>
+                        <span class="k">else</span><span class="p">:</span>   <span class="c1"># m1 != m2</span>
+                            <span class="n">m</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">(</span><span class="n">IntegerLyraType</span><span class="p">(),</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
+                            <span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="n">do</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)]</span>
+                            <span class="n">c</span><span class="o">.</span><span class="n">append</span><span class="p">(())</span>  <span class="c1"># add a star constraint</span>
+                        <span class="k">return</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+                <span class="n">multiplier1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplier</span>
+                <span class="n">multiplier2</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">multiplier</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplier1</span><span class="p">,</span> <span class="n">Literal</span><span class="p">)</span> <span class="ow">and</span> <span class="n">multiplier1</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplier2</span><span class="p">,</span> <span class="n">Literal</span><span class="p">)</span> <span class="ow">and</span> <span class="n">multiplier2</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span>
+                <span class="n">constraints</span> <span class="o">=</span> <span class="p">[</span><span class="n">do</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">constraints</span><span class="p">)]</span>
+                <span class="n">one</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">(</span><span class="n">IntegerLyraType</span><span class="p">(),</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">(</span><span class="n">one</span><span class="p">,</span> <span class="n">constraints</span><span class="p">))</span>
+
+            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_meet</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">_meet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">InputLattice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InputLattice</span><span class="p">:</span>   <span class="c1"># TODO</span>
+                <span class="k">return</span> <span class="bp">self</span>
+
+            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_widening</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">_widening</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">InputLattice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InputLattice</span><span class="p">:</span>
+                <span class="sd">&quot;&quot;&quot;``self \/ other = self ▽ other``.&quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_join</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputLattice.repeat"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputLattice.repeat">[docs]</a>            <span class="k">def</span> <span class="nf">repeat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">multiplier</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InputLattice</span><span class="p">:</span>
+                <span class="sd">&quot;&quot;&quot;Repeat the current assumption on the input data.</span>
+
+<span class="sd">                :param multiplier: repetitions to be performed</span>
+<span class="sd">                :return: current lattice element modified to repeat the assumption</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="n">repeated</span> <span class="o">=</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">(</span><span class="n">multiplier</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">repeated</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputLattice.record"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputLattice.record">[docs]</a>            <span class="k">def</span> <span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constraint</span><span class="p">:</span> <span class="n">InputConstraint</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InputLattice</span><span class="p">:</span>
+                <span class="sd">&quot;&quot;&quot;Record a constraint on the input data.</span>
+
+<span class="sd">                By default, the constraint is added to the current list of recorded constraints.</span>
+
+<span class="sd">                When leaving the body of a for loop another time than the first, the constraint</span>
+<span class="sd">                to be recorded is instead merged with the previously recorded constraint.</span>
+
+<span class="sd">                :param constraint: constraint to be recorded</span>
+<span class="sd">                :return: current lattice element modified to record the constraint</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="n">constraint1</span><span class="p">,</span> <span class="n">constraint2</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint1</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint2</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                        <span class="c1"># the constraints are BasicConstraints about the same program point</span>
+                        <span class="k">assert</span> <span class="n">constraint1</span> <span class="ow">and</span> <span class="n">constraint2</span> <span class="ow">and</span> <span class="n">constraint1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">constraint2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">l1</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">JSONMixin</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="n">l2</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">JSONMixin</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">constraint2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="k">return</span> <span class="n">constraint1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>   <span class="c1"># the constraints are InputLattices</span>
+                        <span class="n">constraints1</span> <span class="o">=</span> <span class="n">constraint1</span><span class="o">.</span><span class="n">constraints</span>
+                        <span class="n">constraints2</span> <span class="o">=</span> <span class="n">constraint2</span><span class="o">.</span><span class="n">constraints</span>
+                        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cs</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">constraints1</span><span class="p">,</span> <span class="n">constraints2</span><span class="p">)):</span>
+                            <span class="k">if</span> <span class="n">cs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">cs</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                                <span class="n">constraint1</span><span class="o">.</span><span class="n">constraints</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">do</span><span class="p">(</span><span class="n">cs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="n">reminder</span> <span class="o">=</span> <span class="n">constraint2</span><span class="o">.</span><span class="n">constraints</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">constraint1</span><span class="o">.</span><span class="n">constraints</span><span class="p">):]</span>
+                        <span class="n">constraint1</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">reminder</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">constraint1</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint</span><span class="p">,</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">):</span>
+                    <span class="c1"># the constraint to be recorded is a (possibly empty) repetition</span>
+                    <span class="n">m1</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">multiplier</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="n">Literal</span><span class="p">)</span> <span class="ow">and</span> <span class="n">m1</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">constraint</span><span class="o">.</span><span class="n">constraints</span><span class="p">:</span>
+                        <span class="c1"># the constraint to be recorded is empty</span>
+                        <span class="k">return</span> <span class="bp">self</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">:</span>
+                        <span class="c1"># the constraint to be recorded is a non-empty repetition and</span>
+                        <span class="c1"># there is at least one previously recorded constraint</span>
+                        <span class="n">previous</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">previous</span><span class="p">,</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">):</span>
+                            <span class="c1"># the previously recorded constraint is also a repetition</span>
+                            <span class="n">m2</span> <span class="o">=</span> <span class="n">previous</span><span class="o">.</span><span class="n">multiplier</span>
+                            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">m1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">m2</span><span class="p">)</span> <span class="ow">and</span> <span class="n">m1</span> <span class="o">==</span> <span class="n">m2</span><span class="p">:</span>
+                                <span class="c1"># we are leaving the body of a for loop another time than the first</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">do</span><span class="p">(</span><span class="n">constraint</span><span class="p">,</span> <span class="n">previous</span><span class="p">)</span>
+                                <span class="k">return</span> <span class="bp">self</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">constraint</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputLattice.replace"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputLattice.replace">[docs]</a>            <span class="k">def</span> <span class="nf">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Replace a variable with an expression.</span>
+
+<span class="sd">                :param variable: variable to be replaced</span>
+<span class="sd">                :param expression: expression replacing the variable</span>
+<span class="sd">                :return: current lattice element modified to manifest the replacement</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="n">constraint</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constraint</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                        <span class="c1"># the constraint is a StarConstraint or a BasicConstraint</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">constraint</span><span class="p">:</span>  <span class="c1"># the constraint is a StarConstraint</span>
+                            <span class="k">return</span> <span class="n">constraint</span>
+                        <span class="k">else</span><span class="p">:</span>   <span class="c1"># the constraint is a BasicConstraint</span>
+                            <span class="n">lattices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">constraint</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">lattice</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lattices</span><span class="p">):</span>
+                                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">lattice</span><span class="p">,</span> <span class="s1">&#39;replace&#39;</span><span class="p">):</span>
+                                    <span class="n">lattices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">lattice</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
+                            <span class="k">return</span> <span class="n">constraint</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">lattices</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>   <span class="c1"># the constraint is an InputLattice</span>
+                        <span class="k">return</span> <span class="n">constraint</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
+                <span class="n">multiplier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplier</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplier</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">)</span> <span class="ow">and</span> <span class="n">multiplier</span> <span class="o">==</span> <span class="n">variable</span><span class="p">:</span>
+                    <span class="n">multiplier</span> <span class="o">=</span> <span class="n">expression</span>
+                <span class="n">constraints</span> <span class="o">=</span> <span class="p">[</span><span class="n">do</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span> <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">]</span>
+                <span class="n">replaced</span> <span class="o">=</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">(</span><span class="n">multiplier</span><span class="p">,</span> <span class="n">constraints</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">replaced</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.Scope"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.Scope">[docs]</a>        <span class="k">class</span> <span class="nc">Scope</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Scope type. Either ``Branch`` or ``Loop``.&quot;&quot;&quot;</span>
+            <span class="n">Branch</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">Loop</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precursory</span><span class="p">:</span> <span class="n">State</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+            <span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precursory</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_scopes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>   <span class="c1"># stack of scope types</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">scopes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Current stack of scope types.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scopes</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">scope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Current scope type.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scopes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">---</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.push"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.push">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Stack</span><span class="o">.</span><span class="n">push</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">push</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState.InputStack&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span><span class="p">())</span>
+            <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.pop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.pop">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Stack</span><span class="o">.</span><span class="n">pop</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState.InputStack&#39;</span><span class="p">:</span>
+            <span class="n">current</span><span class="p">:</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputLattice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span></div>
+
+        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_assign</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">_assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState.InputStack&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unexpected assignment in a backward analysis!&quot;</span><span class="p">)</span>
+
+        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_assume</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">_assume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState.InputStack&#39;</span><span class="p">:</span>
+            <span class="n">loop</span> <span class="o">=</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">Scope</span><span class="o">.</span><span class="n">Loop</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">scope</span> <span class="o">==</span> <span class="n">loop</span><span class="p">:</span>      <span class="c1"># the current scope is a loop</span>
+                <span class="n">negation_free_normal_expression</span> <span class="o">=</span> <span class="n">NegationFreeNormalExpression</span><span class="p">()</span>
+                <span class="n">normal</span> <span class="o">=</span> <span class="n">negation_free_normal_expression</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="p">):</span>
+                    <span class="n">in_op</span> <span class="o">=</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">In</span>
+                    <span class="n">notin_op</span> <span class="o">=</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">NotIn</span>
+                    <span class="k">if</span> <span class="n">normal</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">in_op</span> <span class="ow">or</span> <span class="n">normal</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">notin_op</span><span class="p">:</span>
+                        <span class="c1"># the condition is ``... in range(...)`` or ``... not in range(...)``</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">normal</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">Range</span><span class="p">):</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">normal</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span>
+                            <span class="k">return</span> <span class="bp">self</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">top</span><span class="p">()</span>      <span class="c1"># default to the star constraint ★</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.enter_if"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.enter_if">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">enter_if</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">enter_if</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState.InputStack&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+                <span class="k">return</span> <span class="bp">self</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scopes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">Scope</span><span class="o">.</span><span class="n">Branch</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.exit_if"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.exit_if">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">exit_if</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">exit_if</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState.InputStack&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+                <span class="k">return</span> <span class="bp">self</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scopes</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.enter_loop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.enter_loop">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">enter_loop</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">enter_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState.InputStack&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+                <span class="k">return</span> <span class="bp">self</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scopes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">Scope</span><span class="o">.</span><span class="n">Loop</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.exit_loop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.exit_loop">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">exit_loop</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">exit_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState.InputStack&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+                <span class="k">return</span> <span class="bp">self</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scopes</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span></div>
+
+        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_output</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState.InputStack&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>     <span class="c1"># nothing to be done</span>
+
+        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_substitute</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">_substitute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState.InputStack&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                <span class="n">replacement</span> <span class="o">=</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="o">.</span><span class="n">InputReplacement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pp</span><span class="p">)</span>
+                <span class="n">replaced</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">=</span> <span class="n">replacement</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">lattice</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">lattice</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">replaced</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Substitution of </span><span class="si">{left.__class__.__name__}</span><span class="s2"> is unsupported!&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.record"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.record">[docs]</a>        <span class="k">def</span> <span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constraint</span><span class="p">:</span> <span class="n">InputLattice</span><span class="o">.</span><span class="n">InputConstraint</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState.InputStack&#39;</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;Record a constraint on the input data.</span>
+
+<span class="sd">            :param constraint: constraint to be recorded</span>
+<span class="sd">            :return: current stack modified to record the constraint</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lattice</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span></div>
+
+        <span class="c1"># input replacement</span>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement">[docs]</a>        <span class="k">class</span> <span class="nc">InputReplacement</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Visitor that replaces any occurrence of an input (sub)expression</span>
+<span class="sd">            with a fresh variable identifier that depends on a given program point.</span>
+
+<span class="sd">            Example::</span>
+
+<span class="sd">                input() - 3 * input()</span>
+
+<span class="sd">            given the program point [line:L, column:C] becomes::</span>
+
+<span class="sd">                L.1 - 3 * L.2</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_pp</span> <span class="o">=</span> <span class="n">pp</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_nonce</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="nd">@property</span>
+            <span class="k">def</span> <span class="nf">pp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pp</span>
+
+            <span class="nd">@property</span>
+            <span class="k">def</span> <span class="nf">nonce</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_nonce</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nonce</span>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_Literal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_Literal">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Literal</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_Literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Literal</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">Literal</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_VariableIdentifier"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_VariableIdentifier">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_VariableIdentifier</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_VariableIdentifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">VariableIdentifier</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_LengthIdentifier"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_LengthIdentifier">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_LengthIdentifier</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_LengthIdentifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">LengthIdentifier</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">LengthIdentifier</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">variable</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_ListDisplay"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_ListDisplay">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_ListDisplay</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_ListDisplay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">ListDisplay</span><span class="p">):</span>
+                <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">items</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">ListDisplay</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">items</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_TupleDisplay"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_TupleDisplay">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_TupleDisplay</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_TupleDisplay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">TupleDisplay</span><span class="p">):</span>
+                <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">items</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">TupleDisplay</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">items</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_SetDisplay"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_SetDisplay">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_SetDisplay</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_SetDisplay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">SetDisplay</span><span class="p">):</span>
+                <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">items</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">SetDisplay</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">items</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_DictDisplay"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_DictDisplay">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_DictDisplay</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_DictDisplay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">DictDisplay</span><span class="p">):</span>
+                <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">keys</span><span class="p">]</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">DictDisplay</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_AttributeReference"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_AttributeReference">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_AttributeReference</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_AttributeReference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">AttributeReference</span><span class="p">):</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">AttributeReference</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">attribute</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_Subscription"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_Subscription">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Subscription</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_Subscription</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Subscription</span><span class="p">):</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">AttributeReference</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_Slicing"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_Slicing">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Slicing</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_Slicing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Slicing</span><span class="p">):</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+                <span class="n">lower</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
+                <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span>
+                <span class="n">stride</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">stride</span><span class="p">)</span> <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">stride</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="k">return</span> <span class="n">Slicing</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_Input"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_Input">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Input</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_Input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Input</span><span class="p">):</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">line</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">VariableIdentifier</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_Range"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_Range">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_Range</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_Range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Range</span><span class="p">):</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+                <span class="n">stop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span>
+                <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">Range</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_UnaryArithmeticOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_UnaryArithmeticOperation">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_UnaryArithmeticOperation</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_UnaryArithmeticOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">UnaryArithmeticOperation</span><span class="p">):</span>
+                <span class="n">expression</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expression</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">UnaryArithmeticOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_UnaryBooleanOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_UnaryBooleanOperation">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_UnaryBooleanOperation</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_UnaryBooleanOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">UnaryBooleanOperation</span><span class="p">):</span>
+                <span class="n">expression</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">expression</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">UnaryBooleanOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_BinaryArithmeticOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_BinaryArithmeticOperation">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinaryArithmeticOperation</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_BinaryArithmeticOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">BinaryArithmeticOperation</span><span class="p">):</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">BinaryArithmeticOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_BinarySequenceOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_BinarySequenceOperation">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinarySequenceOperation</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_BinarySequenceOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">BinarySequenceOperation</span><span class="p">):</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">BinarySequenceOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_BinaryBooleanOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_BinaryBooleanOperation">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinaryBooleanOperation</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_BinaryBooleanOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">BinaryBooleanOperation</span><span class="p">):</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">BinaryBooleanOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AssumptionState.InputStack.InputReplacement.visit_BinaryComparisonOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.InputStack.InputReplacement.visit_BinaryComparisonOperation">[docs]</a>            <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ExpressionVisitor</span><span class="o">.</span><span class="n">visit_BinaryComparisonOperation</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">visit_BinaryComparisonOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">BinaryComparisonOperation</span><span class="p">):</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">BinaryComparisonOperation</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span></div></div></div>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">states</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">InputMixin</span><span class="p">]],</span>
+                 <span class="n">arguments</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Type</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">dict</span><span class="p">()),</span>
+                 <span class="n">precursory</span><span class="p">:</span> <span class="n">State</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">precursory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">state</span><span class="p">(</span><span class="o">**</span><span class="n">arguments</span><span class="p">[</span><span class="n">state</span><span class="p">])</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">states</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stack</span> <span class="o">=</span> <span class="n">AssumptionState</span><span class="o">.</span><span class="n">InputStack</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">states</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Current list of constraining states.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_states</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stack</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Current stack of assumptions on the input data.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stack</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AssumptionState.bottom"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.bottom">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AssumptionState.top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">top</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">top</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AssumptionState.is_bottom"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.is_bottom">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="AssumptionState.is_top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.is_top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">is_top</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">is_top</span><span class="p">()</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">is_top</span><span class="p">()</span></div>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_less_equal</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_less_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">less_equal</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">states</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">less_equal</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_join</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_meet</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_meet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_widening</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_widening</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">widening</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">widening</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_assign</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unexpected assignment in a backward analysis!&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AssumptionState._assume"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState._assume">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_assume</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_assume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">assume</span><span class="p">({</span><span class="n">condition</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">assume</span><span class="p">({</span><span class="n">condition</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AssumptionState.before"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.before">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">before</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">before</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">precursory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s1">&#39;State&#39;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">before</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">precursory</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">before</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">precursory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">before</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">precursory</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AssumptionState.enter_if"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.enter_if">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">enter_if</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">enter_if</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">enter_if</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">enter_if</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AssumptionState.exit_if"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.exit_if">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">exit_if</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">exit_if</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">exit_if</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">exit_if</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AssumptionState.enter_loop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.enter_loop">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">enter_loop</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">enter_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">enter_loop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">enter_loop</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="AssumptionState.exit_loop"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState.exit_loop">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">exit_loop</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">exit_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">exit_loop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">exit_loop</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_output</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">output</span><span class="p">({</span><span class="n">output</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">output</span><span class="p">({</span><span class="n">output</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="AssumptionState._substitute"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.AssumptionState._substitute">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_substitute</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_substitute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AssumptionState&#39;</span><span class="p">:</span>
+        <span class="c1"># perform the substitution on each individual state</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">substitute</span><span class="p">({</span><span class="n">left</span><span class="p">},</span> <span class="p">{</span><span class="n">right</span><span class="p">})</span>
+        <span class="c1"># retrieve the constraints imposed on the input data...</span>
+        <span class="n">retrieved</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">retrieve</span><span class="p">()</span> <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="p">])</span>
+        <span class="c1"># ...and record them on the stack</span>
+        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">retrieved</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">record</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">pp</span><span class="p">,</span> <span class="n">constraint</span><span class="p">))</span>
+        <span class="c1"># perform the substitution on the stack</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">substitute</span><span class="p">({</span><span class="n">left</span><span class="p">},</span> <span class="p">{</span><span class="n">right</span><span class="p">})</span>
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<div class="viewcode-block" id="TypeQuantityAssumptionState"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.TypeQuantityAssumptionState">[docs]</a><span class="k">class</span> <span class="nc">TypeQuantityAssumptionState</span><span class="p">(</span><span class="n">AssumptionState</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Type+quantity assumption analysis state.</span>
+<span class="sd">    An element of the type+quantity assumption abstract domain.</span>
+
+<span class="sd">    Reduced product of type and quantity constraining states,</span>
+<span class="sd">    which respectively collect constraints on the type and sign of values of the program variables</span>
+<span class="sd">    and (indirectly) on the input data, and a stack of assumptions on the input data,</span>
+<span class="sd">    which (directly) constraints the input data read from the current program point.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: TypeQuantityAssumptionState._assume</span>
+<span class="sd">    .. automethod:: TypeQuantityAssumptionState._substitute</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">],</span> <span class="n">precursory</span><span class="p">:</span> <span class="n">State</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.type_domain</span> <span class="k">import</span> <span class="n">TypeState</span>
+        <span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.quantity_domain</span> <span class="k">import</span> <span class="n">QuantityState</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="n">TypeState</span><span class="p">,</span> <span class="n">QuantityState</span><span class="p">]</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;variables&#39;</span><span class="p">:</span> <span class="n">variables</span><span class="p">})</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">arguments</span><span class="p">,</span> <span class="n">precursory</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TypeRangeAssumptionState"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.TypeRangeAssumptionState">[docs]</a><span class="k">class</span> <span class="nc">TypeRangeAssumptionState</span><span class="p">(</span><span class="n">AssumptionState</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Type+range assumption analysis state.</span>
+<span class="sd">    An element of the type+range assumption abstract domain.</span>
+
+<span class="sd">    Reduced product of type and range constraining states,</span>
+<span class="sd">    which respectively collect constraints on the type and range of values of the program variables</span>
+<span class="sd">    and (indirectly) on the input data, and a stack of assumptions on the input data,</span>
+<span class="sd">    which (directly) constraints the input data read from the current program point.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: TypeRangeAssumptionState._assume</span>
+<span class="sd">    .. automethod:: TypeRangeAssumptionState._substitute</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">],</span> <span class="n">precursory</span><span class="p">:</span> <span class="n">State</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.type_domain</span> <span class="k">import</span> <span class="n">TypeState</span>
+        <span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.range_domain</span> <span class="k">import</span> <span class="n">RangeState</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="n">TypeState</span><span class="p">,</span> <span class="n">RangeState</span><span class="p">]</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;variables&#39;</span><span class="p">:</span> <span class="n">variables</span><span class="p">})</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">arguments</span><span class="p">,</span> <span class="n">precursory</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TypeAlphabetAssumptionState"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.TypeAlphabetAssumptionState">[docs]</a><span class="k">class</span> <span class="nc">TypeAlphabetAssumptionState</span><span class="p">(</span><span class="n">AssumptionState</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Type+alphabet assumption analysis state.</span>
+
+<span class="sd">    Reduced product of type and string constraining states,</span>
+<span class="sd">    and a stack of assumptions on the input data.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: TypeAlphabetAssumptionState._assume</span>
+<span class="sd">    .. automethod:: TypeAlphabetAssumptionState._substitute</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">],</span> <span class="n">precursory</span><span class="p">:</span> <span class="n">State</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.type_domain</span> <span class="k">import</span> <span class="n">TypeState</span>
+        <span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.alphabet_domain</span> <span class="k">import</span> <span class="n">AlphabetState</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="n">TypeState</span><span class="p">,</span> <span class="n">AlphabetState</span><span class="p">]</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;variables&#39;</span><span class="p">:</span> <span class="n">variables</span><span class="p">})</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">arguments</span><span class="p">,</span> <span class="n">precursory</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TypeRangeAlphabetAssumptionState"><a class="viewcode-back" href="../../../../lyra.abstract_domains.assumption.html#lyra.abstract_domains.assumption.assumption_domain.TypeRangeAlphabetAssumptionState">[docs]</a><span class="k">class</span> <span class="nc">TypeRangeAlphabetAssumptionState</span><span class="p">(</span><span class="n">AssumptionState</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Type+range+alphabet assumption analysis state.</span>
+
+<span class="sd">    Reduced product of type, range, and string constraining states,</span>
+<span class="sd">    and a stack of assumptions on the input data.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: TypeRangeAlphabetAssumptionState._assume</span>
+<span class="sd">    .. automethod:: TypeRangeAlphabetAssumptionState._substitute</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">],</span> <span class="n">precursory</span><span class="p">:</span> <span class="n">State</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.type_domain</span> <span class="k">import</span> <span class="n">TypeState</span>
+        <span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.range_domain</span> <span class="k">import</span> <span class="n">RangeState</span>
+        <span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.alphabet_domain</span> <span class="k">import</span> <span class="n">AlphabetState</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="n">TypeState</span><span class="p">,</span> <span class="n">RangeState</span><span class="p">,</span> <span class="n">AlphabetState</span><span class="p">]</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;variables&#39;</span><span class="p">:</span> <span class="n">variables</span><span class="p">})</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">arguments</span><span class="p">,</span> <span class="n">precursory</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
         <link rel="up" title="lyra.engine package" href="lyra.engine.html"/>
-        <link rel="next" title="lyra.engine.usage package" href="lyra.engine.usage.html"/>
+        <link rel="next" title="lyra.engine.string package" href="lyra.engine.string.html"/>
         <link rel="prev" title="lyra.engine.liveness package" href="lyra.engine.liveness.html"/> 
 
   
@@ -87,7 +87,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
@@ -132,7 +132,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">src</a> &raquo;</li>
+          <li><a href="modules.html">lyra</a> &raquo;</li>
       
           <li><a href="lyra.html">lyra package</a> &raquo;</li>
       
@@ -157,7 +157,7 @@
 <div class="section" id="module-lyra.engine.numerical.interval_analysis">
 <span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.engine.numerical.interval_analysis" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="interval-analysis">
-<h3>Interval analysis<a class="headerlink" href="#interval-analysis" title="Permalink to this headline">¶</a></h3>
+<h3>Interval Analysis<a class="headerlink" href="#interval-analysis" title="Permalink to this headline">¶</a></h3>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -199,6 +199,49 @@
 </dd></dl>
 
 </div>
+<span class="target" id="module-lyra.engine.numerical.sign_analysis"></span><div class="section" id="sign-analysis">
+<h3>Sign Analysis<a class="headerlink" href="#sign-analysis" title="Permalink to this headline">¶</a></h3>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Author:</th><td class="field-body">Jérôme Dohrau and Caterina Urban</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="lyra.engine.numerical.sign_analysis.BackwardSignAnalysis">
+<em class="property">class </em><code class="descclassname">lyra.engine.numerical.sign_analysis.</code><code class="descname">BackwardSignAnalysis</code><a class="reference internal" href="_modules/lyra/engine/numerical/sign_analysis.html#BackwardSignAnalysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.sign_analysis.BackwardSignAnalysis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.engine.html#lyra.engine.runner.Runner" title="lyra.engine.runner.Runner"><code class="xref py py-class docutils literal"><span class="pre">lyra.engine.runner.Runner</span></code></a></p>
+<dl class="method">
+<dt id="lyra.engine.numerical.sign_analysis.BackwardSignAnalysis.interpreter">
+<code class="descname">interpreter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/numerical/sign_analysis.html#BackwardSignAnalysis.interpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.sign_analysis.BackwardSignAnalysis.interpreter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.engine.numerical.sign_analysis.BackwardSignAnalysis.state">
+<code class="descname">state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/numerical/sign_analysis.html#BackwardSignAnalysis.state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.sign_analysis.BackwardSignAnalysis.state" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.engine.numerical.sign_analysis.ForwardSignAnalysis">
+<em class="property">class </em><code class="descclassname">lyra.engine.numerical.sign_analysis.</code><code class="descname">ForwardSignAnalysis</code><a class="reference internal" href="_modules/lyra/engine/numerical/sign_analysis.html#ForwardSignAnalysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.sign_analysis.ForwardSignAnalysis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.engine.html#lyra.engine.runner.Runner" title="lyra.engine.runner.Runner"><code class="xref py py-class docutils literal"><span class="pre">lyra.engine.runner.Runner</span></code></a></p>
+<dl class="method">
+<dt id="lyra.engine.numerical.sign_analysis.ForwardSignAnalysis.interpreter">
+<code class="descname">interpreter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/numerical/sign_analysis.html#ForwardSignAnalysis.interpreter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.sign_analysis.ForwardSignAnalysis.interpreter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.engine.numerical.sign_analysis.ForwardSignAnalysis.state">
+<code class="descname">state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/engine/numerical/sign_analysis.html#ForwardSignAnalysis.state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.engine.numerical.sign_analysis.ForwardSignAnalysis.state" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 </div>
 
@@ -209,7 +252,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="lyra.engine.usage.html" class="btn btn-neutral float-right" title="lyra.engine.usage package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="lyra.engine.string.html" class="btn btn-neutral float-right" title="lyra.engine.string package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="lyra.engine.liveness.html" class="btn btn-neutral" title="lyra.engine.liveness package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

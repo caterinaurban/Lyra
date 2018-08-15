@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lyra</a></li>
 </ul>
 
             
@@ -158,7 +158,7 @@
     <span class="c1"># noinspection PyUnusedLocal</span>
 <div class="viewcode-block" id="UserDefinedCallSemantics.user_defined_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.backward.UserDefinedCallSemantics.user_defined_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">user_defined_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Backward semantics of a user-defined function/method call.</span>
-<span class="sd">        </span>
+
 <span class="sd">        :param stmt: call statement to be executed</span>
 <span class="sd">        :param state: state before executing the call statement</span>
 <span class="sd">        :return: state modified by the call statement</span>
@@ -171,7 +171,7 @@
     <span class="sd">&quot;&quot;&quot;Backward semantics of assignments.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="AssignmentSemantics.assignment_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.backward.AssignmentSemantics.assignment_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">assignment_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Assignment</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Backward semantics of an assignment. </span>
+        <span class="sd">&quot;&quot;&quot;Backward semantics of an assignment.</span>
 
 <span class="sd">        :param stmt: assignment statement to be executed</span>
 <span class="sd">        :param state: state before executing the assignment</span>

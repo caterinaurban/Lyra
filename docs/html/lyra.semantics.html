@@ -86,7 +86,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
@@ -131,7 +131,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">src</a> &raquo;</li>
+          <li><a href="modules.html">lyra</a> &raquo;</li>
       
           <li><a href="lyra.html">lyra package</a> &raquo;</li>
       
@@ -286,6 +286,11 @@
 <em class="property">class </em><code class="descclassname">lyra.semantics.forward.</code><code class="descname">ForwardSemantics</code><a class="reference internal" href="_modules/lyra/semantics/forward.html#ForwardSemantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.forward.ForwardSemantics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.semantics.semantics.Semantics" title="lyra.semantics.semantics.Semantics"><code class="xref py py-class docutils literal"><span class="pre">lyra.semantics.semantics.Semantics</span></code></a></p>
 <p>Forward semantics of statements.</p>
+<dl class="method">
+<dt id="lyra.semantics.forward.ForwardSemantics.append_call_semantics">
+<code class="descname">append_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/forward.html#ForwardSemantics.append_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.forward.ForwardSemantics.append_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -336,7 +341,7 @@
 <dl class="method">
 <dt id="lyra.semantics.semantics.BuiltInCallSemantics.add_call_semantics">
 <code class="descname">add_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.add_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.add_call_semantics" title="Permalink to this definition">¶</a></dt>
-<dd><p>Semantics of a call to ‘+’ (addition, not concatenation).</p>
+<dd><p>Semantics of a call to ‘+’ (addition or concatenation).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -397,6 +402,27 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="lyra.semantics.semantics.BuiltInCallSemantics.dict_call_semantics">
+<code class="descname">dict_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.dict_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.dict_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘dict’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘dict’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="lyra.semantics.semantics.BuiltInCallSemantics.div_call_semantics">
 <code class="descname">div_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.div_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.div_call_semantics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Semantics of a call to ‘/’ (division).</p>
@@ -427,6 +453,27 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>stmt</strong> – call to ‘==’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.semantics.semantics.BuiltInCallSemantics.float_call_semantics">
+<code class="descname">float_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.float_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.float_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘float’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘float’ to be executed</li>
 <li><strong>state</strong> – state before executing the call statement</li>
 </ul>
 </td>
@@ -489,7 +536,7 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>stmt</strong> – call to ‘is’ to be executed</li>
+<li><strong>stmt</strong> – call to ‘in’ to be executed</li>
 <li><strong>state</strong> – state before executing the call statement</li>
 </ul>
 </td>
@@ -586,6 +633,48 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="lyra.semantics.semantics.BuiltInCallSemantics.items_call_semantics">
+<code class="descname">items_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.items_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.items_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of calls to ‘items’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘items’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.semantics.semantics.BuiltInCallSemantics.keys_call_semantics">
+<code class="descname">keys_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.keys_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.keys_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of calls to ‘keys’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘keys’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="lyra.semantics.semantics.BuiltInCallSemantics.len_call_semantics">
 <code class="descname">len_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.len_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.len_call_semantics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Semantics of a call to ‘len’.</p>
@@ -595,6 +684,48 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>stmt</strong> – call to ‘len’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.semantics.semantics.BuiltInCallSemantics.list_call_semantics">
+<code class="descname">list_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.list_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.list_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘list’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘list’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.semantics.semantics.BuiltInCallSemantics.lower_call_semantics">
+<code class="descname">lower_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.lower_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.lower_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of calls to ‘lower’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘lower’ to be executed</li>
 <li><strong>state</strong> – state before executing the call statement</li>
 </ul>
 </td>
@@ -775,6 +906,58 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="lyra.semantics.semantics.BuiltInCallSemantics.raise_semantics">
+<code class="descname">raise_semantics</code><span class="sig-paren">(</span><em>_</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.raise_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.raise_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of raising an Error.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>_</strong> – raise statement to be executed</li>
+<li><strong>state</strong> – state before executing the raise Error</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the raise</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.semantics.semantics.BuiltInCallSemantics.range_call_semantics">
+<code class="descname">range_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.range_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.range_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.semantics.semantics.BuiltInCallSemantics.set_call_semantics">
+<code class="descname">set_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.set_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.set_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a call to ‘set’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘set’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.semantics.semantics.BuiltInCallSemantics.split_call_semantics">
+<code class="descname">split_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.split_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.split_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="lyra.semantics.semantics.BuiltInCallSemantics.sub_call_semantics">
 <code class="descname">sub_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.sub_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.sub_call_semantics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Semantics of a call to ‘-‘ (subtraction).</p>
@@ -837,6 +1020,27 @@
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="lyra.semantics.semantics.BuiltInCallSemantics.values_call_semantics">
+<code class="descname">values_call_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.Call</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#BuiltInCallSemantics.values_call_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.BuiltInCallSemantics.values_call_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of calls to ‘values’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – call to ‘values’ to be executed</li>
+<li><strong>state</strong> – state before executing the call statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the call statement</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -881,6 +1085,27 @@
 <dd><p>Bases: <a class="reference internal" href="#lyra.semantics.semantics.Semantics" title="lyra.semantics.semantics.Semantics"><code class="xref py py-class docutils literal"><span class="pre">lyra.semantics.semantics.Semantics</span></code></a></p>
 <p>Semantics of expression evaluations and accesses.</p>
 <dl class="method">
+<dt id="lyra.semantics.semantics.ExpressionSemantics.dict_display_access_semantics">
+<code class="descname">dict_display_access_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.DictDisplayAccess</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#ExpressionSemantics.dict_display_access_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.ExpressionSemantics.dict_display_access_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a list display access.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – dictionary display access statement to be executed</li>
+<li><strong>state</strong> – state before executing the dictionary display access</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the dictionary display access</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="lyra.semantics.semantics.ExpressionSemantics.list_display_access_semantics">
 <code class="descname">list_display_access_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.ListDisplayAccess</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#ExpressionSemantics.list_display_access_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.ExpressionSemantics.list_display_access_semantics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Semantics of a list display access.</p>
@@ -923,6 +1148,27 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="lyra.semantics.semantics.ExpressionSemantics.set_display_access_semantics">
+<code class="descname">set_display_access_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.SetDisplayAccess</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#ExpressionSemantics.set_display_access_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.ExpressionSemantics.set_display_access_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a set display access.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – set display access statement to be executed</li>
+<li><strong>state</strong> – state before executing the set display access</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the set display access</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="lyra.semantics.semantics.ExpressionSemantics.slicing_access_semantics">
 <code class="descname">slicing_access_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.SlicingAccess</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#ExpressionSemantics.slicing_access_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.ExpressionSemantics.slicing_access_semantics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Semantics of a slicing access.</p>
@@ -958,6 +1204,27 @@
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the subscription access</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.semantics.semantics.ExpressionSemantics.tuple_display_access_semantics">
+<code class="descname">tuple_display_access_semantics</code><span class="sig-paren">(</span><em>stmt: lyra.core.statements.TupleDisplayAccess</em>, <em>state: lyra.abstract_domains.state.State</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/semantics/semantics.html#ExpressionSemantics.tuple_display_access_semantics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.semantics.semantics.ExpressionSemantics.tuple_display_access_semantics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Semantics of a tuple display access.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stmt</strong> – tuple display access statement to be executed</li>
+<li><strong>state</strong> – state before executing the tuple display access</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">state modified by the tuple display access</p>
 </td>
 </tr>
 </tbody>

@@ -533,6 +533,7 @@ class SequenceMixin(Lattice, metaclass=ABCMeta):
 
         :param other: other lattice element
         :return: current lattice element modified to be the concatenation
+
         """
 
     def concat(self, other: 'SequenceMixin') -> 'SequenceMixin':
@@ -540,6 +541,7 @@ class SequenceMixin(Lattice, metaclass=ABCMeta):
 
         :param other: other lattice element
         :return: current lattice element modified to be the concatenation
+
         """
         if self.is_bottom():        # self is the empty sequence
             return self._replace(other)

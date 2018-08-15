@@ -1,5 +1,5 @@
-src
-===
+lyra
+====
 
 .. toctree::
    :maxdepth: 4

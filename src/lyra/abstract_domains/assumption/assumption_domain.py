@@ -133,17 +133,13 @@ class AssumptionState(State):
     .. automethod:: AssumptionState._substitute
     """
     class InputStack(Stack, State):
-        """Stack of assumptions on the input data.
-
-        .. document private methods
-        .. automethod:: InputStack._assume
-        .. automethod:: InputStack._substitute
-        """
+        """Stack of assumptions on the input data."""
         class InputLattice(BottomMixin):
             """Assumptions on the input data.
 
             Each assumption is a (possibly symbolic) repetition of constraints on the input data.
             A constraint can be:
+
             * a basic constraint, i.e., a tuple of lattices (l, ...)
               which indicates that an input data point is expected and restricts its possible value
             * a star constraint, i.e., ★
@@ -163,11 +159,6 @@ class AssumptionState(State):
                 ...
                 Ɣ(1 * []) = { ε }
 
-            .. document private methods
-            .. automethod:: InputLattice._less_equal
-            .. automethod:: InputLattice._meet
-            .. automethod:: InputLattice._join
-            .. automethod:: InputLattice._widening
             """
             InputLattice = 'AssumptionState.InputStack.InputLattice'
             StarConstraint = Tuple[ProgramPoint, ...]
