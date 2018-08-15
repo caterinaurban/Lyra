@@ -668,7 +668,7 @@ class Slicing(Expression):
     """
 
     def __init__(self, typ: LyraType, target: Expression,
-                 lower: Expression, upper: Expression, stride: Expression = None):
+                 lower: Expression, upper: Expression = None, stride: Expression = None):
         """Slicing construction.
 
         :param typ: type of the slicing
@@ -711,9 +711,11 @@ class Slicing(Expression):
         return hash((self.typ, self.target, self.lower, self.upper, self.stride))
 
     def __str__(self):
-        if self.stride:
-            return "{0.target}[{0.lower}:{0.upper}:{0.stride}]".format(self)
-        return "{0.target}[{0.lower}:{0.upper}]".format(self)
+        target = "{}[".format(self.target)
+        lower = "{}:".format(self.lower)
+        upper = "{}".format(self.upper) if self.upper else ""
+        stride = ":{}".format(self.stride) if self.stride else ""
+        return target + lower + upper + stride + "]"
 
 
 class Call(Expression, metaclass=ABCMeta):

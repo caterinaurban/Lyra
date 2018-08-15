@@ -256,7 +256,7 @@ class SlicingAccess(ExpressionAccess):
     """Slicing access representation."""
 
     def __init__(self, pp: ProgramPoint, typ: LyraType, target: Statement,
-                 lower: Statement, upper: Statement, stride: Statement = None):
+                 lower: Statement, upper: Statement = None, stride: Statement = None):
         super().__init__(pp, typ)
         self._target = target
         self._lower = lower
@@ -280,9 +280,11 @@ class SlicingAccess(ExpressionAccess):
         return self._stride
 
     def __repr__(self):
-        if self.stride:
-            return "{0.target}[{0.lower}:{0.upper}:{0.stride}]".format(self)
-        return "{0.target}[{0.lower}:{0.upper}]".format(self)
+        target = "{}[".format(self.target)
+        lower = "{}:".format(self.lower)
+        upper = "{}".format(self.upper) if self.upper else ""
+        stride = ":{}".format(self.stride) if self.stride else ""
+        return target + lower + upper + stride + "]"
 
 
 """

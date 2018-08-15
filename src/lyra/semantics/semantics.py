@@ -174,7 +174,7 @@ class ExpressionSemantics(Semantics):
         """
         target = self.semantics(stmt.target, state).result
         lower = self.semantics(stmt.lower, state).result
-        upper = self.semantics(stmt.upper, state).result
+        upper = self.semantics(stmt.upper, state).result if stmt.upper else {None}
         stride = self.semantics(stmt.stride, state).result if stmt.stride else {None}
         result = set()
         for primary, start, stop, step in itertools.product(target, lower, upper, stride):

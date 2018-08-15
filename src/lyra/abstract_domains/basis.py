@@ -36,7 +36,8 @@ class Basis(Store, State, metaclass=ABCMeta):
 
     @copy_docstring(State.is_bottom)
     def is_bottom(self) -> bool:
-        """The current state is bottom if `any` non-summary variable maps to a bottom element."""
+        """The current state is bottom if `any` non-summary variable maps to a bottom element,
+        or if the length identifier of `any` summary variable maps to a bottom element."""
         for variable, element in self.store.items():
             if isinstance(variable.typ, (SequenceLyraType)):
                 if element.is_bottom() and self.store[LengthIdentifier(variable)].is_bottom():
@@ -322,7 +323,7 @@ class Basis(Store, State, metaclass=ABCMeta):
                 else:
                     evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
                 return evaluated2
-            raise ValueError(f"Binary arithmetic operator '{str(expr.operator)}' is unsupported!")
+            raise ValueError(f"Binary sequence operator '{str(expr.operator)}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
         def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):

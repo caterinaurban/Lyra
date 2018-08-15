@@ -18,7 +18,7 @@ from lyra.abstract_domains.state import State
 from lyra.core.expressions import *
 
 from lyra.core.utils import copy_docstring
-from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType
+from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType, SequenceLyraType
 
 
 class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin):
@@ -37,6 +37,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin)
     .. automethod:: IntervalLattice._add
     .. automethod:: IntervalLattice._sub
     .. automethod:: IntervalLattice._mult
+    .. automethod:: IntervalLattice._concat
     """
 
     def __init__(self, lower=-inf, upper=inf):
@@ -229,6 +230,18 @@ class IntervalState(Basis):
         """
         lattices = defaultdict(lambda: IntervalLattice)
         super().__init__(variables, lattices, precursory=precursory)
+        for v in self.variables:
+            if isinstance(v.typ, SequenceLyraType):
+                self.store[LengthIdentifier(v)] = lattices[IntegerLyraType()](lower=0)
+
+    @copy_docstring(Basis._assign)
+    def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
+        if isinstance(left, VariableIdentifier) and isinstance(left.typ, SequenceLyraType):
+            self.store[LengthIdentifier(left)] = self._length.visit(right, self)
+        elif isinstance(left, Slicing) and isinstance(left.target.typ, SequenceLyraType):
+            self.store[LengthIdentifier(left.target)] = self._length.visit(right, self)
+        super()._assign(left, right)
+        return self
 
     @copy_docstring(Basis._assume)
     def _assume(self, condition: Expression) -> 'IntervalState':
@@ -298,3 +311,111 @@ class IntervalState(Basis):
             return evaluation
 
     _evaluation = ExpressionEvaluation()  # static class member shared between all instances
+
+    class LengthEvaluation(ExpressionVisitor):
+        """Visitor that computes the length of a sequence type expression."""
+
+        @copy_docstring(ExpressionVisitor.visit_Literal)
+        def visit_Literal(self, expr: Literal, state=None):
+            raise ValueError(f"Unexpected expression during sequence length computation.")
+
+        @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+        def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None):
+            if isinstance(expr.typ, SequenceLyraType):
+                return state.store[LengthIdentifier(expr)]
+            raise ValueError(f"Unexpected expression during sequence length computation.")
+
+        @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+        def visit_LengthIdentifier(self, expr: LengthIdentifier, state=None):
+            raise ValueError(f"Unexpected expression during sequence length computation.")
+
+        @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+        def visit_ListDisplay(self, expr: ListDisplay, state=None):
+            return state.lattices[IntegerLyraType()](len(expr.items), len(expr.items))
+
+        @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+        def visit_TupleDisplay(self, expr: TupleDisplay, state=None):
+            return state.lattices[IntegerLyraType()](len(expr.items), len(expr.items))
+
+        @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+        def visit_SetDisplay(self, expr: SetDisplay, state=None):
+            raise ValueError(f"Unexpected expression during sequence length computation.")
+
+        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+        def visit_DictDisplay(self, expr: DictDisplay, state=None):
+            raise ValueError(f"Unexpected expression during sequence length computation.")
+
+        @copy_docstring(ExpressionVisitor.visit_AttributeReference)
+        def visit_AttributeReference(self, expr: AttributeReference, state=None):
+            raise ValueError(f"Unexpected expression during sequence length computation.")
+
+        @copy_docstring(ExpressionVisitor.visit_Subscription)
+        def visit_Subscription(self, expr: Subscription, state=None):
+            return state.lattices[IntegerLyraType()](lower=1, upper=1)
+
+        @copy_docstring(ExpressionVisitor.visit_Slicing)
+        def visit_Slicing(self, expr: Slicing, state=None):
+            lattice = state.lattices[IntegerLyraType()]
+            def is_one(stride):
+                literal = isinstance(stride, Literal)
+                one = state.lattices[IntegerLyraType()](lower=1, upper=1)
+                return literal and lattice(stride).less_equal(one)
+            if isinstance(expr.lower, Literal):
+                lower = IntervalLattice.from_literal(expr.lower)
+                if not lower.less_equal(lattice(lower=0)):
+                    lower = lower.add(state.store[LengthIdentifier(expr.target)])
+                if not expr.upper:
+                    upper = deepcopy(state.store[LengthIdentifier(expr.target)])
+                    if not expr.stride or is_one(expr.stride):  # [l:_:(1)]
+                        length = lattice(lower=0).meet(upper.sub(lower))
+                        if length.is_bottom():
+                            return lattice(lower=0, upper=0)
+                        return length
+                elif isinstance(expr.upper, Literal):
+                    upper = IntervalLattice.from_literal(expr.upper)
+                    if not upper.less_equal(lattice(lower=0)):
+                        upper = upper.add(state.store[LengthIdentifier(expr.target)])
+                    if not expr.stride or is_one(expr.stride):  # [l:u:(1)]
+                        length = lattice(lower=0).meet(upper.sub(lower))
+                        if length.is_bottom():
+                            return lattice(lower=0, upper=0)
+                        return length
+            return deepcopy(state.store[LengthIdentifier(expr.target)])   # over-approximation
+
+        @copy_docstring(ExpressionVisitor.visit_Input)
+        def visit_Input(self, expr: Input, state=None):
+            return state.lattices[IntegerLyraType()](lower=0)
+
+        @copy_docstring(ExpressionVisitor.visit_Range)
+        def visit_Range(self, expr: Range, state=None):
+            raise ValueError(f"Unexpected expression during sequence length computation.")
+
+        @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
+        def visit_UnaryArithmeticOperation(self, expr, state=None):
+            raise ValueError(f"Unexpected expression during sequence length computation.")
+
+        @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
+        def visit_UnaryBooleanOperation(self, expr, state=None):
+            raise ValueError(f"Unexpected expression during sequence length computation.")
+
+        @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
+        def visit_BinaryArithmeticOperation(self, expr, state=None):
+            raise ValueError(f"Unexpected expression during sequence length computation.")
+
+        @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+        def visit_BinarySequenceOperation(self, expr, state=None):
+            if expr.operator == BinarySequenceOperation.Operator.Concat:
+                left = self.visit(expr.left, state)
+                right = self.visit(expr.right, state)
+                return left.add(right)
+            raise ValueError(f"Binary sequence operator '{str(expr.operator)}' is unsupported!")
+
+        @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
+        def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
+            raise ValueError(f"Unexpected expression during sequence length computation.")
+
+        @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
+        def visit_BinaryComparisonOperation(self, expr, state=None, evaluation=None):
+            raise ValueError(f"Unexpected expression during sequence length computation.")
+
+    _length = LengthEvaluation()  # static class member shared between all instances

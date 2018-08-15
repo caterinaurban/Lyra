@@ -11,9 +11,9 @@ Lifting of a lattice to a set of program variables.
 from collections import defaultdict
 from typing import Dict, Any, Type, Set
 
-from lyra.core.expressions import VariableIdentifier
+from lyra.core.expressions import VariableIdentifier, LengthIdentifier
 from lyra.abstract_domains.lattice import Lattice
-from lyra.core.types import LyraType
+from lyra.core.types import LyraType, SequenceLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -55,7 +55,7 @@ class Store(Lattice):
 
     @property
     def lattices(self):
-        """Current dictionary fro variable types to the corresponding lattice types."""
+        """Current dictionary from variable types to the corresponding lattice types."""
         return self._lattices
 
     @property
