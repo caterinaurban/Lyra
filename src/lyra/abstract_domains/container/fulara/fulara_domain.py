@@ -10,7 +10,8 @@ Dictionaries are abstracted by a set of abstract segments.
 
 from collections import defaultdict
 from copy import deepcopy, copy
-from typing import Tuple, Set, Type, Callable, Dict, Iterator
+from enum import Enum
+from typing import Tuple, Set, Type, Callable, Dict, Iterator, Optional, List
 
 from lyra.abstract_domains.container.fulara.fulara_lattice import FularaLattice
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
@@ -33,6 +34,11 @@ v_name = "0v_v"
 
 scalar_types = {BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType}
 
+class Scope(Enum):
+    """Scope type. Either ``Branch`` or ``Loop``."""
+    Branch = 0
+    Loop = 1
+
 
 class InRelationState(State, BottomMixin):
     """'In' lattice element
@@ -51,10 +57,13 @@ class InRelationState(State, BottomMixin):
     .. automethod:: InRelationState._join
     .. automethod:: InRelationState._widening
     """
-    def __init__(self, tuple_set:
-                 Set[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]] = None):
+    def __init__(self,
+                 tuple_set: Set[Tuple[VariableIdentifier, Optional[VariableIdentifier],
+                                      Optional[VariableIdentifier]]] = None,
+                 scopes: List[Scope] = None):
         super().__init__()
         self._tuple_set = tuple_set or set()
+        self._scopes = scopes or list()
 
     @property
     def tuple_set(self):
@@ -63,6 +72,16 @@ class InRelationState(State, BottomMixin):
             return set()
 
         return self._tuple_set
+
+    @property
+    def scopes(self):
+        """Current stack of scope types."""
+        return self._scopes
+
+    @property
+    def scope(self):
+        """Current scope type."""
+        return self._scopes[-1]
 
     def __repr__(self):
         if self.is_bottom():
@@ -80,7 +99,7 @@ class InRelationState(State, BottomMixin):
     @copy_docstring(Lattice.top)
     def top(self):
         """The top lattice element is ``{}``."""
-        self._replace(InRelationState())
+        self._replace(InRelationState(scopes=self.scopes))
         return self
 
     @copy_docstring(Lattice.is_top)
@@ -97,13 +116,13 @@ class InRelationState(State, BottomMixin):
     def _join(self, other: 'InRelationState') -> 'InRelationState':
         """Intersection of the tuple sets"""
         new_set = self.tuple_set.intersection(other.tuple_set)      # TODO: update?
-        return self._replace(InRelationState(new_set))
+        return self._replace(InRelationState(new_set, scopes=self.scopes))
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'InRelationState') -> 'InRelationState':
         """Union of the tuple sets"""
         new_set = self.tuple_set.union(other.tuple_set)
-        return self._replace(InRelationState(new_set))
+        return self._replace(InRelationState(new_set, scopes=self.scopes))
 
     @copy_docstring(Lattice._widening)
     def _widening(self, other: 'InRelationState') -> 'InRelationState':
@@ -112,7 +131,8 @@ class InRelationState(State, BottomMixin):
 
     # helpers
     def find_key(self, k: VariableIdentifier) \
-            -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
+            -> Iterator[Tuple[VariableIdentifier, VariableIdentifier,
+                              Optional[VariableIdentifier]]]:
         """Returns the tuples from the set that have k at the key position"""
         if self.is_bottom():
             return iter(())  # empty iterator
@@ -120,7 +140,8 @@ class InRelationState(State, BottomMixin):
         return filter(lambda t: (t[1] and t[1] == k), self.tuple_set)
 
     def find_value(self, v: VariableIdentifier) \
-            -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
+            -> Iterator[Tuple[VariableIdentifier, Optional[VariableIdentifier],
+                              VariableIdentifier]]:
         """Returns the tuples from the set that have v at the value position"""
         if self.is_bottom():
             return iter(())  # empty iterator
@@ -128,7 +149,8 @@ class InRelationState(State, BottomMixin):
         return filter(lambda t: (t[2] and t[2] == v), self.tuple_set)
 
     def find_var(self, v: VariableIdentifier) \
-            -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
+            -> Iterator[Tuple[VariableIdentifier, Optional[VariableIdentifier],
+                              Optional[VariableIdentifier]]]:
         """Returns the tuples from the set that have v at the dict OR key OR value position"""
         if self.is_bottom():
             return iter(())  # empty iterator
@@ -203,8 +225,8 @@ class InRelationState(State, BottomMixin):
         if isinstance(condition, BinaryComparisonOperation):  # TODO: boolean conjunctions of them?
             if condition.operator == 9:  # op 9 == In
                 if isinstance(condition.left, VariableIdentifier):
-                    # TODO: don't invalidate for ifs?
-                    self.forget_variable(condition.left)
+                    if self.scope == Scope.Loop:  # variable gets overwritten
+                        self.forget_variable(condition.left)
 
                     if isinstance(condition.right, Keys):
                         new_tuple = (condition.right.target_dict, condition.left, None)
@@ -214,11 +236,12 @@ class InRelationState(State, BottomMixin):
                         self.tuple_set.add(new_tuple)
                 elif isinstance(condition.left, TupleDisplay) \
                         and isinstance(condition.right, Items):
-                    # TODO: don't invalidate for ifs?
-                    self.forget_variable(condition.left.items[0])
-                    self.forget_variable(condition.left.items[1])
-
                     left_items = condition.left.items
+
+                    if self.scope == Scope.Loop:  # variables get overwritten
+                        self.forget_variable(left_items[0])
+                        self.forget_variable(left_items[1])
+
                     new_tuple = (condition.right.target_dict, left_items[0], left_items[1])
                     self.tuple_set.add(new_tuple)
             elif condition.operator == 10:       # NotIn
@@ -233,18 +256,22 @@ class InRelationState(State, BottomMixin):
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'InRelationState':
-        return self  # nothing to be done
+        self.scopes.append(Scope.Branch)
+        return self
 
     @copy_docstring(State.exit_if)
     def exit_if(self) -> 'InRelationState':
+        self.scopes.pop()
         return self  # nothing to be done
 
     @copy_docstring(State.enter_loop)
     def enter_loop(self) -> 'InRelationState':
-        return self  # nothing to be done
+        self.scopes.append(Scope.Loop)
+        return self
 
     @copy_docstring(State.exit_loop)
     def exit_loop(self) -> 'InRelationState':
+        self.scopes.pop()
         return self  # nothing to be done
 
     @copy_docstring(State._output)
@@ -437,7 +464,7 @@ class FularaState(State):
 
         self._in_relations = InRelationState()
 
-        self._loop_flag = False
+        self._scopes = list()  # stack of scope types
 
     @property
     def scalar_state(self) -> EnvironmentMixin:
@@ -488,6 +515,16 @@ class FularaState(State):
     def v_s_conv(self):
         """Function to convert from value domain elements to scalar domain elements"""
         return self._v_s_conv
+
+    @property
+    def scopes(self):
+        """Current stack of scope types."""
+        return self._scopes
+
+    @property
+    def scope(self):
+        """Current scope type."""
+        return self._scopes[-1]
 
     def __repr__(self):             # TODO: use join?
         return f"{self.scalar_state}, {self.dict_store}, {self.init_store}, {self.in_relations}"
@@ -793,7 +830,7 @@ class FularaState(State):
                     k_abs: KeyWrapper = d_lattice.get_keys_joined()
                     v_k = k_abs.k_var
 
-                    if self._loop_flag:  # loop condition -> overwrite old value
+                    if self.scope == Scope.Loop:  # -> overwrite old value
                         self.scalar_state.add_variable(v_k)
                         self.scalar_state.meet(self._k_s_conv(k_abs))
                         self.scalar_state.assign({condition.left}, {v_k})
@@ -821,7 +858,7 @@ class FularaState(State):
                     v_abs: ValueWrapper = d_lattice.get_values_joined()
                     v_v = v_abs.v_var
 
-                    if self._loop_flag:  # loop condition -> overwrite old value
+                    if self.scope == Scope.Loop:  # -> overwrite old value
                         self.scalar_state.add_variable(v_v)
                         self.scalar_state.meet(self._v_s_conv(v_abs))
                         self.scalar_state.assign({condition.left}, {v_v})
@@ -853,7 +890,7 @@ class FularaState(State):
                     v_abs = d_lattice.get_values_joined()
                     v_v = v_abs.v_var
 
-                    if self._loop_flag:  # loop condition -> overwrite old value
+                    if self.scope == Scope.Loop:  # -> overwrite old value
                         self.scalar_state.add_variable(v_k)
                         self.scalar_state.meet(self._k_s_conv(k_abs))
                         self.scalar_state.assign({condition.left.items[0]}, {v_k})
@@ -895,7 +932,7 @@ class FularaState(State):
                 # refine in_relations
                 self.in_relations.assume({condition})
 
-                if self._loop_flag:
+                if self.scope == Scope.Loop:
                     return self  # can have any value from before or in the loop
 
                 if isinstance(condition.right, Keys):
@@ -1017,20 +1054,32 @@ class FularaState(State):
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'FularaState':
-        self._loop_flag = False
+        if not self.is_bottom():    # not yet analyzed/unreachable
+            self.scopes.append(Scope.Branch)
+            self.in_relations.enter_if()
         return self  # nothing else to be done
 
     @copy_docstring(State.exit_if)
     def exit_if(self) -> 'FularaState':
+        if not self.is_bottom():    # not yet analyzed/unreachable
+            assert self.scope == Scope.Branch
+            self.scopes.pop()
+            self.in_relations.exit_if()
         return self  # nothing to be done
 
     @copy_docstring(State.enter_loop)
     def enter_loop(self) -> 'FularaState':
-        self._loop_flag = True
+        if not self.is_bottom():    # not yet analyzed/unreachable
+            self.scopes.append(Scope.Loop)
+            self.in_relations.enter_loop()
         return self  # nothing else to be done
 
     @copy_docstring(State.exit_loop)
     def exit_loop(self) -> 'FularaState':
+        if not self.is_bottom():    # not yet analyzed/unreachable
+            assert self.scope == Scope.Loop
+            self.scopes.pop()
+            self.in_relations.exit_loop()
         return self  # nothing to be done
 
     @copy_docstring(State._output)
