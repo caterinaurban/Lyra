@@ -842,7 +842,7 @@ class FularaState(State):
             # DICT WRITE
             d = left.target
 
-            k_abs = self.eval_key(left.key)
+            k_abs = self.eval_key(left.key)     # TODO: nested subscripts -> read_eval
 
             evaluation = dict()
             scalar_right = self._read_eval.visit(right, self, evaluation)
@@ -888,7 +888,7 @@ class FularaState(State):
                         and isinstance(condition.left, VariableIdentifier):
                     d = condition.right.target_dict
                     d_lattice: FularaLattice = self.dict_store.store[d]
-                    k_abs: KeyWrapper = d_lattice.get_keys_joined()
+                    k_abs: KeyWrapper = d_lattice.get_keys_joined()     # TODO: check if bottom?
                     v_k = k_abs.k_var
 
                     if self.scope == Scope.Loop:  # -> overwrite old value
