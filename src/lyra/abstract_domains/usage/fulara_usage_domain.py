@@ -45,7 +45,8 @@ class FularaUsageLattice(Lattice):
     - Usage domain state over all scalar variables, abstracting their usage status
     - Map from each dictionary variable to a DictSegmentLattice element with a given key domain K
        and the usage domain as value domain, abstracting the usage state of the dictionary segments
-    TODO: Map from each dictionary variable to a usage status for the usage of the dictionary length
+    TODO: Map from each dictionary variable to a usage status for the usage of the dictionary
+                                                                                        length
 
     All elements are *not used* (bottom) by default
 
