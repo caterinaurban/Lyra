@@ -258,10 +258,63 @@ class FularaLattice(BottomMixin):
             if not (key.is_bottom() or value.is_bottom()):
                 self.segments.add((key, value))
 
-    def normalized_add(self, key: Lattice, value: Lattice):
+    def partition_update(self, disjoint_segments: Set[Tuple[KeyWrapper, Lattice]]):
+        """Adds the given segments to self.segments.
+        Joins overlapping parts with already present segments,
+        creating a new segment containing only the overlap
+        (weak update with partitioning)"""
+        if not self.is_bottom():
+            rest_new = {s for s in disjoint_segments        # only add if not bottom
+                        if not (s[0].is_bottom() or s[1].is_bottom())}
+            old_segments = copy(self.segments)
+            for s in old_segments:
+                self.segments.remove(s)     # TODO: efficiency
+                rest_s = {s}
+                todo = itertools.product(copy(rest_new), copy(rest_s))
+                while True:
+                    try:
+                        (new, old) = next(todo)
+                    except StopIteration:   # no combination left to check
+                        break
+
+                    if new[0] == old[0]:     # for efficiency
+                        rest_new.remove(new)
+                        rest_s.remove(old)
+                        value = deepcopy(new[1]).join(old[1])
+                        self.segments.add((old[0], value))
+                        todo = itertools.product(copy(rest_new), copy(rest_s))
+                        continue
+
+                    overlap = deepcopy(new[0]).meet(deepcopy(old[0]))       # TODO: deepcopy old?
+                    if not overlap.is_bottom():
+                        rest_new.remove(new)
+                        if not new[1].less_equal(old[1]):  # will be changed by join -> partition
+                            rest_s.remove(old)
+                            # segments overlap -> partition, s.t. only overlapping part is updated
+                            # TODO: require KeyWrapper?
+                            # remaining parts of 'old'
+                            non_overlap = {(m, old[1]) for m in old[0].decomp(new[0])
+                                           if not m.is_bottom()}
+                            rest_s.update(non_overlap)
+
+                            new_value = deepcopy(new[1]).join(deepcopy(old[1]))   # TODO: deepcopy old?
+                            self.segments.add((overlap, new_value))
+                        elif overlap == old[0]:     # completely covered -> can keep segment
+                            self.segments.add(old)
+                            rest_s.remove(old)
+                        # compute remaining parts of 'new'
+                        rest_new.update({(m, new[1]) for m in new[0].decomp(overlap)
+                                         if not m.is_bottom()})
+                        # recompute product:
+                        todo = itertools.product(copy(rest_new), copy(rest_s))
+
+                self.segments.update(rest_s)    # add remaining parts of s (unmodified)
+            self.segments.update(rest_new)    # add non-overlapping parts of the new segment(s)
+
+    def normalized_add(self, key: KeyWrapper, value: Lattice):
         """Adds the given key-value-pair to the segment set (if key/value are not bottom)
         and applies the d_norm function (so the new segment may get joined with existing ones)
-        (weak update)"""
+        (weak update without partitioning)"""
         if not self.is_bottom():
             if not (key.is_bottom() or value.is_bottom()):
                 self._segments = d_norm({(key, value)}, self.segments)
