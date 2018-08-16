@@ -134,9 +134,11 @@ class FularaUsageLattice(Lattice):
 
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'FularaUsageLattice':
-        """Point-wise"""
+        """Point-wise, setting all elements to N"""
         self.scalar_usage.bottom()
-        self.dict_usage.bottom()
+        for d_lattice in self.dict_usage.store.values():
+            d_lattice: FularaLattice
+            d_lattice.empty()
         return self
 
     @copy_docstring(Lattice.top)
@@ -148,9 +150,9 @@ class FularaUsageLattice(Lattice):
 
     @copy_docstring(Lattice.is_bottom)
     def is_bottom(self) -> bool:
-        """Point-wise"""
+        """Point-wise, `all` elements map to N"""
         scalar_b = self.scalar_usage.is_bottom()
-        dict_b = self.dict_usage.is_bottom()
+        dict_b = all(d_lattice.is_empty() for d_lattice in self.dict_usage.store.values())
         return scalar_b and dict_b
 
     @copy_docstring(Lattice.is_top)
