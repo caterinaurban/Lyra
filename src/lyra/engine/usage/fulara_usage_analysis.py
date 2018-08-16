@@ -29,4 +29,4 @@ class FularaUsageAnalysis(Runner):
         scalar_vars = {v for v in self.variables if type(v.typ) in
                        fulara_usage_domain.scalar_types}
         dict_vars = {v for v in self.variables if type(v.typ) == DictLyraType}
-        return FularaUsageState(IntervalKWrapper, scalar_vars, dict_vars, precursory=init_forward)
+        return FularaUsageState(IntervalKWrapper, init_forward, scalar_vars, dict_vars)
