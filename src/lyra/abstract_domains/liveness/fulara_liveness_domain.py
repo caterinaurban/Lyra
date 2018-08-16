@@ -87,14 +87,6 @@ class FularaLivenessState(State):
             typ = dv.typ
             if isinstance(typ, DictLyraType):  # should be true
                 if typ not in arguments:
-                    # if issubclass(key_domain, Store):  # not relational -> don't need scalar vars
-                    #     key_vars = []
-                    # else:
-                    # key_vars = scalar_vars.copy()
-                    # if issubclass(value_domain, Store):
-                    #     value_vars = []
-                    # else:
-                    # value_vars = scalar_vars.copy()
                     k_var = VariableIdentifier(typ.key_typ, k_name)
 
                     arguments[typ] = {'key_domain': key_domain, 'value_domain': LivenessLattice,

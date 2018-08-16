@@ -42,4 +42,3 @@ for k in score_occurrences.keys():
 # STATE: a -> N, b -> N, k -> N, scores_gt_10 -> U, weight -> N, score_occurrences -> {}, scores -> {}
 print(scores_gt_10)
 # FINAL: a -> N, b -> N, k -> N, scores_gt_10 -> N, weight -> N, score_occurrences -> {}, scores -> {}
-# TODO: assignment to unused subscript?/ or only partially used
