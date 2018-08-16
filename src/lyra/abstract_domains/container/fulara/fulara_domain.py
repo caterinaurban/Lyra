@@ -158,17 +158,6 @@ class InRelationState(State, BottomMixin):
         return filter(lambda t: (t[0] == v) or (t[1] and t[1] == v) or (t[2] and t[2] == v),
                       self.tuple_set)
 
-    def loop_vars(self) -> Set[VariableIdentifier]:
-        """Returns the set of all key/value variables"""
-        if self.is_bottom():
-            return set()
-
-        result = set()
-        for t in self.tuple_set:
-            result.add(t[1])
-            result.add(t[2])
-        return result
-
     def k_v_tuples(self) \
             -> Iterator[Tuple[VariableIdentifier, VariableIdentifier, VariableIdentifier]]:
         """Returns all tuples without a None (i.e. with a key & a value variable)"""
@@ -199,8 +188,9 @@ class InRelationState(State, BottomMixin):
             return self
 
         if isinstance(left, VariableIdentifier):
-            # invalidate left, since overwritten
-            self.forget_variable(left)
+            if not isinstance(right, VariableIdentifier) or (left != right):
+                # invalidate left, since overwritten
+                self.forget_variable(left)
 
             # copy tuples of 'right'
             if isinstance(right, VariableIdentifier):    # TODO: are there other relevant cases?
@@ -246,12 +236,27 @@ class InRelationState(State, BottomMixin):
                     self.tuple_set.add(new_tuple)
             elif condition.operator == 10:       # NotIn
                 if isinstance(condition.left, VariableIdentifier):
-                    self.forget_variable(condition.left)
+                    if isinstance(condition.right, Keys):
+                        # forget the affected relation
+                        del_tuple = (condition.right.target_dict, condition.left, None)
+                        self.tuple_set.discard(del_tuple)
+                    elif isinstance(condition.right, Values):
+                        # forget the affected relation
+                        del_tuple = (condition.right.target_dict, None, condition.left)
+                        self.tuple_set.discard(del_tuple)
                 elif isinstance(condition.left, TupleDisplay) \
                         and isinstance(condition.right, Items):
-                    self.forget_variable(condition.left.items[0])
-                    self.forget_variable(condition.left.items[1])
-
+                    # forget the affected relations
+                    d = condition.right.target_dict
+                    k = condition.left.items[0]
+                    v = condition.left.items[1]
+                    remove_set = set()
+                    for t in self.tuple_set:
+                        if t[0] == d:
+                            if ((t[1] is not None) and (t[1] == k)) or t[1] is None:
+                                if ((t[2] is not None) and t[2] == v) or t[2] is None:
+                                    remove_set.add(t)
+                    self.tuple_set.difference_update(remove_set)
         return self
 
     @copy_docstring(State.enter_if)
