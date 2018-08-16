@@ -6,10 +6,11 @@ Generic lattice to abstract dictionaries as a set of abstract segments
 
 :Authors: Lowis Engel
 """
-
+import itertools
 from copy import deepcopy, copy
-from typing import List, Tuple, Set, Type, Dict, Any
+from typing import Tuple, Set, Type, Dict, Any
 
+from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
 from lyra.core.expressions import VariableIdentifier
 from lyra.core.utils import copy_docstring
@@ -43,9 +44,9 @@ class FularaLattice(BottomMixin):
     """
 
     # use typing.Generic instead of domains as parameter?
-    def __init__(self, key_domain: Type[Lattice], value_domain: Type[Lattice],
+    def __init__(self, key_domain: Type[KeyWrapper], value_domain: Type[Lattice],
                  key_d_args: Dict[str, Any] = None, value_d_args: Dict[str, Any] = None,
-                 segments: Set[Tuple[Lattice, Lattice]] = None):
+                 segments: Set[Tuple[KeyWrapper, Lattice]] = None):
         """
         :param key_domain: domain for abstraction of dictionary keys,
             ranges over the scalar variables and the special key variable v_k
@@ -81,12 +82,12 @@ class FularaLattice(BottomMixin):
         # TODO: add possibility to create bottom element?
 
     @property
-    def k_domain(self) -> Type[Lattice]:
+    def k_domain(self):
         """Domain for the abstract keys."""
         return self._k_domain
 
     @property
-    def v_domain(self) -> Type[Lattice]:
+    def v_domain(self):
         """Domain for the abstract values."""
         return self._v_domain
 
@@ -101,7 +102,7 @@ class FularaLattice(BottomMixin):
         return self._v_d_args
 
     @property
-    def segments(self) -> Set[Tuple[Lattice, Lattice]]:
+    def segments(self):
         """Set of all abstract segments."""
         if not self.is_bottom():
             return self._segments
@@ -239,8 +240,8 @@ class FularaLattice(BottomMixin):
                                     self.k_d_args, self.v_d_args, result_set))
         return self
 
-    # helper      # TODO: put helpers in DictContentDomain?
-    def partition_add(self, key: Lattice, value: Lattice):
+    # helper
+    def partition_add(self, key: KeyWrapper, value: Lattice):
         """Adds the given key-value-pair to the segments (if key/value are not bottom)
         and removes all overlapping parts of other segments (computes a new partition).
         (strong update)"""
@@ -251,8 +252,7 @@ class FularaLattice(BottomMixin):
                 if not s_meet_key.is_bottom():
                     # segments overlap -> partition, s.t. overlapping part is removed
                     self.segments.remove(s)
-                    # TODO: require KeyWrapper?
-                    non_overlapping = {(m, s[1]) for m in s[0].decomp(s[0], key)
+                    non_overlapping = {(m, s[1]) for m in s[0].decomp(key)
                                        if not m.is_bottom()}
                     self.segments.update(non_overlapping)       # union
             if not (key.is_bottom() or value.is_bottom()):
@@ -327,7 +327,7 @@ class FularaLattice(BottomMixin):
                 v.forget_variable(variable)
 
     # helper
-    def get_keys_joined(self) -> Lattice:
+    def get_keys_joined(self) -> KeyWrapper:
         if not self.is_bottom():
             result = self.k_domain(**self.k_d_args).bottom()
             for (k, v) in self.segments:
@@ -343,9 +343,9 @@ class FularaLattice(BottomMixin):
             return result
 
 
-def d_norm(segment_set: Set[Tuple[Lattice, Lattice]],
-           known_disjoint: Set[Tuple[Lattice, Lattice]] = None) \
-        -> Set[Tuple[Lattice, Lattice]]:
+def d_norm(segment_set: Set[Tuple[KeyWrapper, Lattice]],
+           known_disjoint: Set[Tuple[KeyWrapper, Lattice]] = None) \
+        -> Set[Tuple[KeyWrapper, Lattice]]:
     """disjoint normalization function:
     Computes a partition such that no two abstract keys overlap (i.e. their meet is bottom)
     (and the keys are minimal)"""
