@@ -106,15 +106,11 @@ class FularaLattice(BottomMixin):
         if not self.is_bottom():
             return self._segments
 
-    def sorted_segments(self) -> List[Tuple[Lattice, Lattice]]:
-        """List of all abstract segments ordered by their keys"""
-        if not self.is_bottom():
-            return sorted(self.segments, key=lambda t: t[0])
-
     def __repr__(self):
         if self.is_bottom():
             return "⊥"
-        str_segments = map(repr, self.sorted_segments())
+        sorted_segments = sorted(self.segments, key=lambda t: t[0])
+        str_segments = map(repr, sorted_segments)
         result = "{" + ", ".join(str_segments) + "}"
         return result
 
