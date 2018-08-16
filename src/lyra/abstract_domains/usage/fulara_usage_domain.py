@@ -344,15 +344,15 @@ class FularaUsageState(Stack, State):
                     for (d_var, k_var, v_var) in self.precursory.in_relations.find_value(expr):
                         d_lattice: FularaLattice = self.lattice.dict_usage.store[d_var]
                         if k_var is None:   # Values condition
-                            v_abs = self.precursory.eval_value(v_var)
-                            old_segments = copy(d_lattice.segments)
-                            for (k, v) in old_segments:
+                            v_abs = self.precursory.eval_value(expr)
+                            # determine possible keys for this v_abs
+                            pre_lattice: FularaLattice = self.precursory.dict_store.store[d_var]
+                            for (k, v) in pre_lattice.segments:
                                 value_meet_v = deepcopy(v_abs).meet(v)
                                 if not value_meet_v.is_bottom():  # value may be in this segment
                                     # mark segment as used
-                                    if not v.is_top():
-                                        d_lattice.segments.remove((k, v))
-                                        d_lattice.segments.add((k, UsageLattice(Status.U)))
+                                    # weak update = strong update (since setting to top)
+                                    d_lattice.partition_add(k, UsageLattice(Status.U))
                         else:      # Items condition
                             k_pre = self.precursory.eval_key(k_var)     # may be refined
                             k_abs = self._k_pre_k_conv(k_pre)
