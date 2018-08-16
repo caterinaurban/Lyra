@@ -42,7 +42,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin)
 
     def __init__(self, lower=-inf, upper=inf):
         super().__init__()
-        if lower <= upper and lower != inf and upper !=-inf:      # the interval is not empty
+        if lower <= upper and lower != inf and upper != -inf:      # the interval is not empty
             self._lower = lower
             self._upper = upper
         else:                   # the interval is empty
