@@ -3,14 +3,14 @@
 10|67|69|Expected condition(s): (Value on line 10) >= (Value on line 9)
 16|90|92|Expected condition(s): (Value on line 17) >= (Value on line 16)
 17|93|95|Expected condition(s): (Value on line 17) >= (Value on line 16)
-18|96|98|Value should be ≥0.
-19|99|101|This line depends on previous error value on line(s): 18
+18|96|98|Expected condition(s): (Value on line 18) >= 0;(Value on line 18) >= 0
 20|102|104|Expected condition(s): (Value on line 21) >= (Value on line 20)
 21|105|107|Expected condition(s): (Value on line 21) >= (Value on line 20)
-27|128|131|Expected type Float
+23|116|119|Expected type Integer
+24|120|122|This line depends on previous error value on line(s): 23
+27|128|131|Expected type Integer
 28|132|134|This line depends on previous error value on line(s): 27
-29|135|138|Value should be ≥0.
-30|139|141|This line depends on previous error value on line(s): 29
-32|150|154|Expected type Float
+29|135|138|Expected condition(s): (Value on line 29) >= 0;(Value on line 29) >= 0
+32|150|154|Expected type Integer
 33|155|157|This line depends on previous error value on line(s): 32
-38|169|171|At least 1 more inputs expected.
+38|169|171|At least 1 more input(s) expected on the next 1 line(s).

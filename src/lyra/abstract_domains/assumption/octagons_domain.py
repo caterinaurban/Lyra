@@ -251,6 +251,8 @@ class OctagonLattice(Lattice):
         elif lincons.constyp == ElinaConstyp.ELINA_CONS_EQ:
             string += " = "
         string += do(rhs)
+        if len(rhs) == 0:
+            string += "0"
         return string
 
     @staticmethod
@@ -287,24 +289,13 @@ class OctagonLattice(Lattice):
 
         # create elina linear expression
         linexpr = OctagonLattice.create_linear_expression(indexes, coefficients, constant)
-        # print("LINEAR EXPR")
-        # elina_linexpr0_print(linexpr, None)
-        # print()
         # create elina linear constraint array of size
         lincons_array = elina_lincons0_array_make(1)
         # the constraint uses the linear expression with constraint type of '>=' always
         lincons_array.p[0].constyp = ElinaConstyp.ELINA_CONS_SUPEQ
         lincons_array.p[0].linexpr0 = linexpr
-        # print("LINEAR CONS")
-        # elina_lincons0_array_print(lincons_array, None)
-        # print("************")
-        # create lattice element representing the linear constraint
         top = elina_abstract0_top(_elina_manager, 0, self.dimensions)
         abstract = elina_abstract0_meet_lincons_array(_elina_manager, False, top, lincons_array)
-        # print("************")
-        # print("ABSTRACT ELEMENT AFTER MEET")
-        # self.print_abstract(abstract)
-        # print("----------------")
         linear_constraint_element = OctagonLattice(self.variables, abstract)
         # perform meet between the linear constraint and the already existing constraints
         return self.meet(linear_constraint_element)
@@ -314,16 +305,8 @@ class OctagonLattice(Lattice):
         subs_index = self.indexes[subs_variable]
         indexes = [self.indexes[var] for var in variables]
         linexpr = OctagonLattice.create_linear_expression(indexes, coefficients, constant)
-        # print("SUBS VARIABLE {}, DIMENSION {}".format(subs_variable, subs_index))
-        # print("LINEAR EXPRESSION")
-        # elina_linexpr0_print(linexpr, None)
-        # print()
-        # print("ABSTRACT BEFORE")
-        # self.print_abstract(self.elina_abstract)
         abstract = elina_abstract0_substitute_linexpr(_elina_manager, False, self.elina_abstract,
                                                       ElinaDim(subs_index), linexpr, None)
-        # print("ABSTRACT AFTER")
-        # self.print_abstract(abstract)
         return self._replace(OctagonLattice(self.variables, abstract))
 
     def check_input(self, pp: VariableIdentifier, pp_value: Dict, line_errors: Dict):
@@ -369,10 +352,12 @@ class OctagonLattice(Lattice):
             raise ValueError
 
     def unify(self, other: 'OctagonLattice'):
-        if self.variables != other.variables:
+        # if self.variables != other.variables:
+        if any(var1 != var2 for var1, var2 in zip(self.variables, other.variables)):
             i = 0
             for self_var, other_var in zip(self.variables, other.variables):
-                if other_var.name < self_var.name:
+                # note: '3.1' > '10.1'
+                if other_var.name > self_var.name:
                     self.variables[i] = other_var
                 i += 1
             for var in other.variables:
@@ -486,10 +471,6 @@ class ConditionEvaluator(ExpressionVisitor):
                 else:
                     raise ZeroDivisionError
             return [], [], None
-                # denominator = BinaryComparisonOperation(expr.left.typ, expr.left,
-                #                                         BinaryComparisonOperation.Operator.NotEq,
-                #                                         Literal(IntegerLyraType, "0"))
-                # state.assume(denominator)
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
     def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation',

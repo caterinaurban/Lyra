@@ -468,6 +468,7 @@ class AssumptionState(State):
                 return self._replace(replaced)
 
             _state_names = dict()
+
             @copy_docstring(JSONMixin.to_json)
             def to_json(self) -> dict:
                 def do_multiplier(expression):
@@ -615,8 +616,6 @@ class AssumptionState(State):
                         error = CheckerError("Not enough information to continue checking after this line.")
                         line_errors[line_number].append(error)
                         end_of_constraints = True
-
-
 
                     if is_basic(constraint):
                         pp = constraint[0]
@@ -1034,7 +1033,7 @@ class SignOctagonStringAssumptionState(AssumptionState):
         from lyra.abstract_domains.assumption.type_domain import TypeState
         from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
         from lyra.abstract_domains.assumption.quantity_domain import QuantityState
-        states = [TypeState, QuantityState, OctagonState, AlphabetState]
+        states = [TypeState, OctagonState, AlphabetState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)
 

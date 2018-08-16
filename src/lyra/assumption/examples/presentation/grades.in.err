@@ -1,0 +1,13 @@
+|
+4|11|16|This value is allowed to contain *only* the characters: '1', '9', '2', '3', '7', '4', '8', '0', '6', '5'
+5|17|18|Expected condition(s): (Value on line 5) >= (Value on line 6)
+6|19|21|Expected condition(s): (Value on line 5) >= (Value on line 6)
+11|34|36|Expected condition(s): (Value on line 11) >= (Value on line 12)
+12|37|39|Expected condition(s): (Value on line 11) >= (Value on line 12)
+14|45|49|Expected type Float
+15|50|52|This line depends on previous error value on line(s): 14
+16|53|55|Expected condition(s): (Value on line 16) >= (Value on line 17)
+17|56|58|Expected condition(s): (Value on line 16) >= (Value on line 17)
+18|59|60|Expected condition(s): (Value on line 18) >= (Value on line 19)
+19|61|63|Expected condition(s): (Value on line 18) >= (Value on line 19)
+20|64|66|At least 1 more input(s) expected on the next 1 line(s).

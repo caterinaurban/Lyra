@@ -18,6 +18,7 @@ from lyra.core.expressions import Identifier, LengthIdentifier
 from lyra.core.types import ListLyraType, StringLyraType
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.runner import Runner
+from lyra.semantics.assumption import AssumptionDefaultBackwardSemantics
 from lyra.semantics.backward import DefaultBackwardSemantics
 
 
@@ -60,7 +61,7 @@ class AlphabetAnalysis(Runner):
 class TypeQuantityAssumptionAnalysis(Runner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfg, AssumptionDefaultBackwardSemantics(), 3)
 
     def state(self):
         return TypeQuantityAssumptionState(self.variables)
@@ -122,7 +123,7 @@ class AssumptionAnalysis(Runner):
         return sorted(variables, key=lambda x: x.name)
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfg, AssumptionDefaultBackwardSemantics(), 3)
 
     def state(self):
         return SignOctagonStringAssumptionState(self.variables)

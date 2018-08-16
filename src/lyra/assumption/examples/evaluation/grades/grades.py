@@ -16,7 +16,7 @@ for i in range(number_of_students):
         hw_grade_sum: float = hw_grade_sum + student_hw_grade
         max_grade_sum: float = max_grade_sum + max_hw_grade
 
-    avg_homework: float = hw_grade_sum / max_grade_sum * 100.0;
+    avg_homework: float = hw_grade_sum / max_grade_sum * 100;
     print("Student ID:")
     print(student_id)
     print("Average homework grade:")
@@ -25,6 +25,6 @@ for i in range(number_of_students):
     max_test_grade: float = float(input())
     if student_test_grade < 0 or student_test_grade > max_test_grade:
         raise ValueError
-    final_grade: float = student_hw_grade / max_test_grade * 100.0
+    final_grade: float = student_hw_grade / max_test_grade * 100
     print("Final test grade:")
     print(final_grade)

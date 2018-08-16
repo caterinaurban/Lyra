@@ -15,7 +15,10 @@ for i in range(students):
             raise ValueError
         sum: float = sum + grade
         max: float = max + best
-    print("Student ID: " + id)
+    if id.isdigit():
+        print("Student ID: " + id)
+    else:
+        raise ValueError("Invalid ID.")
     print("Total homework grades:")
     print(sum)
     print("out of")

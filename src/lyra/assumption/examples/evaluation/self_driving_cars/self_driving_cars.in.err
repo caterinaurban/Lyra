@@ -1,5 +1,5 @@
 |
-2|2|6|Expected relations:  -(Line8) + (Line2) + 0.0 >= 0
-8|21|23|Expected relations:  -(Line8) + (Line2) + 0.0 >= 0
+2|2|6|Expected condition(s): (Value on line 2) >= (Value on line 8)
+8|21|23|Expected condition(s): (Value on line 2) >= (Value on line 8)
 11|31|34|Expected type Integer
 12|35|39|Cannot calculate loop range.Errors on lines: 11.

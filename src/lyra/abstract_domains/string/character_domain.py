@@ -52,6 +52,21 @@ class CharacterLattice(BottomMixin, StringMixin):
             return cls(set(literal.val), set(literal.val))
         return cls()
 
+    @classmethod
+    def from_attribute(cls, attribute: AttributeReference) -> 'CharacterLattice':
+        name = attribute.attribute.name
+        if name == 'isalpha':
+            return cls(set(), set(string.ascii_letters))
+        if name == 'isalnum':
+            return cls(set(), set(string.ascii_letters).union(set(string.digits)))
+        if name == 'islower':
+            return cls(set(), set(string.ascii_lowercase))
+        if name == 'isupper':
+            return cls(set(), set(string.ascii_uppercase))
+        if name == 'isdecimal' or name == 'isdigit':
+            return cls(set(), set(string.digits))
+        return cls()
+
     @property
     def certainly(self):
         """Current set of must characters.
@@ -149,7 +164,10 @@ class CharacterState(Basis):
 
     @copy_docstring(Basis._assume)
     def _assume(self, condition: Expression) -> 'State':
-        if isinstance(condition, UnaryBooleanOperation):
+        if isinstance(condition, AttributeReference):
+            evaluation = self._evaluation.visit(condition, self, dict())
+            self.store[condition.target].meet(evaluation[condition])
+        elif isinstance(condition, UnaryBooleanOperation):
             if condition.operator == UnaryBooleanOperation.Operator.Neg:
                 expression = condition.expression
                 if isinstance(expression, BinaryComparisonOperation):
@@ -198,6 +216,12 @@ class CharacterState(Basis):
             if expr in evaluation:
                 return evaluation
             evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
+            return evaluation
+
+        def visit_AttributeReference(self, expr: AttributeReference, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation
+            evaluation[expr] = state.lattices[expr.typ].from_attribute(expr)
             return evaluation
 
     _evaluation = ExpressionEvaluation()  # static class member shared between all instances
