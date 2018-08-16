@@ -567,12 +567,12 @@ class FularaState(State):
 
     @copy_docstring(Lattice.is_bottom)
     def is_bottom(self) -> bool:
-        """The current state is bottom if `all` of its four elements are bottom"""
+        """The current state is bottom if `any` of its four elements is bottom"""
         scalar_b = self.scalar_state.is_bottom()
         dict_b = self.dict_store.is_bottom()
         init_b = self.init_store.is_bottom()
         in_b = self.in_relations.is_bottom()
-        return scalar_b and dict_b and init_b and in_b
+        return scalar_b or dict_b or init_b or in_b
 
     @copy_docstring(Lattice.is_top)
     def is_top(self) -> bool:
