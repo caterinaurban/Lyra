@@ -224,57 +224,35 @@ class FularaUsageLattice(Lattice):
         """
         self.scalar_usage.decrease(other.scalar_usage)
 
-        # weak update (could be strong for singletons + better partitioning)
-        self.dict_usage.join(other.dict_usage)      # TODO: correct?
+        # self.dict_usage.join(other.dict_usage)   # imprecise version
 
-        # self_d_store = self.dict_usage.store
-        # other_d_store = other.dict_usage.store
-        # for d in self_d_store.keys():        # should have the same dict_variables
-        #     self_lattice: FularaLattice = self_d_store[d]
-        #     other_lattice: FularaLattice = other_d_store[d]
-        #     self_segments = self_lattice.sorted_segments()      # TODO: deepcopy?
-        #     other_segments = other_lattice.sorted_segments()
-        #     result_segments = set()
-        #     for (k_s, v_s) in self_segments:
-        #         # k_partitions = []
-        #         # partition_segments = set()
-        #         next_start = 0
-        #         self_lattice.segments.remove((k_s, v_s))
-        #         v_new = deepcopy(v_s)       # copy to avoid modifying tuple
-        #         for i, (k_o, v_o) in enumerate(other_segments):
-        #             if k_s < k_o:   # => k_s not overlapping with k_o
-        #                 # => other = N at that point => keep self_segment
-        #                 break   # proceed in self_segments
-        #             elif k_o < k_s:
-        #                 next_start = i + 1       # don't need to look at it again
-        #                 continue    # proceed in other_segments
-        #             elif k_s == k_o:
-        #                 if v_s != v_o and (v_o.is_top() or v_o.is_written()):
-        #                     # replace by other segment
-        #                     v_new = v_o
-        #                     # self_lattice.segments.remove((k_s, v_s))
-        #                     # self_lattice.segments.add((k_o, v_o))
-        #                 next_start = i + 1  # don't need to look at it again
-        #                 break   # proceed in self_segments
-        #             else:   # segments overlap (?) check meet?
-        #                 if v_s != v_o and (v_o.is_top() or v_o.is_written()):
-        #                     # weak update without partitioning:
-        #                     v_new.join(deepcopy(v_o))
-        #                 # # partitioning:       # TODO: weak update with partitioning
-        #                 # overlap = deepcopy(k_s).meet(deepcopy(k_o))
-        #                 # k_partitions.append(overlap)
-        #                 # if v_s != v_o and (v_o.is_top() or v_o.is_written()):
-        #                 #     # weak update
-        #                 #     v_join = deepcopy(v_s).join(deepcopy(v_o))
-        #                 #     partition_segments.add((overlap, v_join))
-        #                 # else: # no update, just partition
-        #                 #     partition_segments.add((overlap, v_s))
-        #
-        #         # if k_partitions:    # non-empty
-        #         #     assert()
-        #
-        #
-        #         other_segments = other_segments[next_start:]
+        self_d_store = self.dict_usage.store
+        other_d_store = other.dict_usage.store
+        for d in self_d_store.keys():        # should have the same dict_variables
+            self_lattice: FularaLattice = self_d_store[d]
+            other_lattice: FularaLattice = other_d_store[d]
+
+            if self_lattice.is_bottom() or other_lattice.is_top():
+                self_lattice._replace(other_lattice)
+            elif other_lattice.is_bottom() or self_lattice.is_top():
+                pass    # keep self_lattice
+            else:
+                for o in other_lattice.segments:
+                    if o[1].is_top() or o[1].is_written():
+                        # strong update: add o to self_lattice
+                        # compute remaining parts of 'self'
+                        for s in copy(self_lattice.segments):
+                            overlap = deepcopy(s[0]).meet(o[0])
+                            if not overlap.is_bottom():
+                                self_lattice.segments.remove(s)
+                                non_overlap = {(m, s[1]) for m in s[0].decomp(o[0])
+                                               if not m.is_bottom()}
+                                self_lattice.segments.update(non_overlap)
+
+                        self_lattice.segments.add(o)
+                    else:  # o.is_scoped() -> must overlap with segments from self  TODO: ?
+                        pass
+                # keep all parts of self that do not overlap with a U/W segment of other
         return self
 
 
