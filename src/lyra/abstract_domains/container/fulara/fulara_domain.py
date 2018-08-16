@@ -981,45 +981,32 @@ class FularaState(State):
 
                 if isinstance(condition.right, Keys):
                     d = condition.right.target_dict
-                    d_lattice: FularaLattice = self.dict_store.store[d]
-                    k_abs: KeyWrapper = d_lattice.get_keys_joined()
+                    i_lattice: FularaLattice = self.init_store.store[d]
+                    # get possibly uninitialized keys
+                    k_abs: KeyWrapper = i_lattice.get_keys_joined()
                     v_k = k_abs.k_var
 
-                    s_current = deepcopy(self.scalar_state)
-                    s_current.add_variable(v_k)
-                    s_current.assign({v_k}, {condition.left})
-                    k_current = self.s_k_conv(s_current)
-                    key_complement = k_current.decomp(k_current, k_abs)
-                    joined_complement = k_current.big_join(list(key_complement))
-
-                    assign_state = self._k_s_conv(joined_complement)
+                    assign_state = self._k_s_conv(k_abs)
                     assign_state.assign({condition.left}, {v_k})
                     assign_state.remove_variable(v_k)
                     self.scalar_state.meet(assign_state)
-                    if self.scalar_state.is_bottom():   # not reachable
-                        return self.bottom()
-                    self._update_dict_from_refined_scalar()
+                    self.update_dict_from_scalar(self.dict_store, True)
+                    self.update_dict_from_scalar(self.init_store, False)
 
                     return self
                 elif isinstance(condition.right, Values):
-                    # TODO
+                    # TODO: refine value variable abstraction
                     return self
                 elif isinstance(condition.right, Items):
+                    # TODO: refine value variable abstraction
                     d = condition.right.target_dict
-                    d_lattice: FularaLattice = self.dict_store.store[d]
-                    k_abs: KeyWrapper = d_lattice.get_keys_joined()
+                    i_lattice: FularaLattice = self.init_store.store[d]
+                    # get possibly uninitialized keys
+                    k_abs: KeyWrapper = i_lattice.get_keys_joined()
                     v_k = k_abs.k_var
 
-                    s_current = deepcopy(self.scalar_state)
-                    s_current.add_variable(v_k)
-                    s_current.assign({v_k}, {condition.left.items[0]})
-                    k_current = self.s_k_conv(s_current)
-                    key_complement = k_current.decomp(k_current, k_abs)
-                    joined_complement = k_current.big_join(list(key_complement))
-
-                    # TODO: refine value abstraction?
-                    assign_state = self._k_s_conv(joined_complement)
-                    assign_state.assign({condition.left.items[0]}, {v_k})
+                    assign_state = self._k_s_conv(k_abs)
+                    assign_state.assign({condition.left}, {v_k})
                     assign_state.remove_variable(v_k)
                     self.scalar_state.meet(assign_state)
                     self.update_dict_from_scalar(self.dict_store, True)
