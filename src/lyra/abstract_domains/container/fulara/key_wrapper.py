@@ -35,12 +35,11 @@ class KeyWrapper(EnvironmentMixin, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def decomp(self, state: 'KeyWrapper', exclude: 'KeyWrapper') -> Set['KeyWrapper']:
+    def decomp(self, exclude: 'KeyWrapper') -> Set['KeyWrapper']:
         """
-        Computes a decomposition/partition of the given state into a set of rest states,
+        Computes a decomposition/partition of self into a set of rest states,
         excluding all parts that overlap (meet not bottom) with the 'exclude' state.
-        i.e.: 'subtracts the meet of state & exclude from state'
-        :param state: (current) state to be decomposed
+        i.e.: 'subtracts the meet of self & exclude from state'
         :param exclude: parts to be excluded
         :return: decomposition/partition of 'state' avoiding 'exclude'
         """

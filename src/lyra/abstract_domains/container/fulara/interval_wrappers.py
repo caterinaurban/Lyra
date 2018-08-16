@@ -47,26 +47,26 @@ class IntervalKWrapper(KeyWrapper, IntervalSWrapper):
         IntervalSWrapper.__init__(self, key_vars)
 
     @copy_docstring(KeyWrapper.decomp)
-    def decomp(self, state: 'IntervalKWrapper', exclude: 'IntervalKWrapper') \
+    def decomp(self, exclude: 'IntervalKWrapper') \
             -> Set['IntervalKWrapper']:
-        left = deepcopy(state)  # left & right non-exclude
-        right = deepcopy(state)
+        left = deepcopy(self)  # left & right non-exclude
+        right = deepcopy(self)
 
-        k_state = state.store[state.k_var]
-        k_exclude = exclude.store[state.k_var]
+        k_state = self.store[self.k_var]
+        k_exclude = exclude.store[self.k_var]
         if k_state.is_bottom():
-            left.store[state.k_var].bottom()
-            right.store[state.k_var].bottom()
+            left.store[self.k_var].bottom()
+            right.store[self.k_var].bottom()
         elif k_exclude.is_bottom():
-            left.store[state.k_var] = IntervalLattice(k_state.lower, k_state.upper)
-            right.store[state.k_var].bottom()
+            left.store[self.k_var] = IntervalLattice(k_state.lower, k_state.upper)
+            right.store[self.k_var].bottom()
         elif k_exclude.is_top():  # exclude everything
-            left.store[state.k_var].bottom()
-            right.store[state.k_var].bottom()
+            left.store[self.k_var].bottom()
+            right.store[self.k_var].bottom()
         else:
-            left.store[state.k_var] = IntervalLattice(k_state.lower,
+            left.store[self.k_var] = IntervalLattice(k_state.lower,
                                                       k_exclude.lower - 1)  # bottom if empty
-            right.store[state.k_var] = IntervalLattice(k_exclude.upper + 1,
+            right.store[self.k_var] = IntervalLattice(k_exclude.upper + 1,
                                                        k_state.upper)  # bottom if empty
 
         return {left, right}
