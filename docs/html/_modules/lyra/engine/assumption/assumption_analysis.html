@@ -1,0 +1,281 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>lyra.engine.assumption.assumption_analysis &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">lyra</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../../index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      
+    <li>lyra.engine.assumption.assumption_analysis</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for lyra.engine.assumption.assumption_analysis</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Assumption Analysis</span>
+<span class="sd">===================</span>
+
+<span class="sd">:Author: Caterina Urban and Madelin Schumacher</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.alphabet_domain</span> <span class="k">import</span> <span class="n">AlphabetState</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.assumption_domain</span> <span class="k">import</span> <span class="n">TypeRangeAssumptionState</span><span class="p">,</span> \
+    <span class="n">TypeAlphabetAssumptionState</span><span class="p">,</span> <span class="n">TypeRangeAlphabetAssumptionState</span><span class="p">,</span> <span class="n">TypeQuantityAssumptionState</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.quantity_domain</span> <span class="k">import</span> <span class="n">QuantityState</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.range_domain</span> <span class="k">import</span> <span class="n">RangeState</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.assumption.type_domain</span> <span class="k">import</span> <span class="n">TypeState</span>
+<span class="kn">from</span> <span class="nn">lyra.engine.backward</span> <span class="k">import</span> <span class="n">BackwardInterpreter</span>
+<span class="kn">from</span> <span class="nn">lyra.engine.runner</span> <span class="k">import</span> <span class="n">Runner</span>
+<span class="kn">from</span> <span class="nn">lyra.semantics.backward</span> <span class="k">import</span> <span class="n">DefaultBackwardSemantics</span>
+
+
+<div class="viewcode-block" id="TypeAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeAnalysis">[docs]</a><span class="k">class</span> <span class="nc">TypeAnalysis</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TypeAnalysis.interpreter"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeAnalysis.interpreter">[docs]</a>    <span class="k">def</span> <span class="nf">interpreter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">BackwardInterpreter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="n">DefaultBackwardSemantics</span><span class="p">(),</span> <span class="mi">3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TypeState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="QuantityAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.QuantityAnalysis">[docs]</a><span class="k">class</span> <span class="nc">QuantityAnalysis</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
+
+<div class="viewcode-block" id="QuantityAnalysis.interpreter"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.QuantityAnalysis.interpreter">[docs]</a>    <span class="k">def</span> <span class="nf">interpreter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">BackwardInterpreter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="n">DefaultBackwardSemantics</span><span class="p">(),</span> <span class="mi">3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="QuantityAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.QuantityAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">QuantityState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RangeAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.RangeAnalysis">[docs]</a><span class="k">class</span> <span class="nc">RangeAnalysis</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
+
+<div class="viewcode-block" id="RangeAnalysis.interpreter"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.RangeAnalysis.interpreter">[docs]</a>    <span class="k">def</span> <span class="nf">interpreter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">BackwardInterpreter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="n">DefaultBackwardSemantics</span><span class="p">(),</span> <span class="mi">3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RangeAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.RangeAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RangeState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="AlphabetAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.AlphabetAnalysis">[docs]</a><span class="k">class</span> <span class="nc">AlphabetAnalysis</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
+
+<div class="viewcode-block" id="AlphabetAnalysis.interpreter"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.AlphabetAnalysis.interpreter">[docs]</a>    <span class="k">def</span> <span class="nf">interpreter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">BackwardInterpreter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="n">DefaultBackwardSemantics</span><span class="p">(),</span> <span class="mi">3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AlphabetAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.AlphabetAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">AlphabetState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TypeQuantityAssumptionAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeQuantityAssumptionAnalysis">[docs]</a><span class="k">class</span> <span class="nc">TypeQuantityAssumptionAnalysis</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TypeQuantityAssumptionAnalysis.interpreter"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeQuantityAssumptionAnalysis.interpreter">[docs]</a>    <span class="k">def</span> <span class="nf">interpreter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">BackwardInterpreter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="n">DefaultBackwardSemantics</span><span class="p">(),</span> <span class="mi">3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeQuantityAssumptionAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeQuantityAssumptionAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TypeQuantityAssumptionState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TypeRangeAssumptionAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeRangeAssumptionAnalysis">[docs]</a><span class="k">class</span> <span class="nc">TypeRangeAssumptionAnalysis</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TypeRangeAssumptionAnalysis.interpreter"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeRangeAssumptionAnalysis.interpreter">[docs]</a>    <span class="k">def</span> <span class="nf">interpreter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">BackwardInterpreter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="n">DefaultBackwardSemantics</span><span class="p">(),</span> <span class="mi">3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeRangeAssumptionAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeRangeAssumptionAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TypeRangeAssumptionState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TypeAlphabetAssumptionAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeAlphabetAssumptionAnalysis">[docs]</a><span class="k">class</span> <span class="nc">TypeAlphabetAssumptionAnalysis</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TypeAlphabetAssumptionAnalysis.interpreter"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeAlphabetAssumptionAnalysis.interpreter">[docs]</a>    <span class="k">def</span> <span class="nf">interpreter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">BackwardInterpreter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="n">DefaultBackwardSemantics</span><span class="p">(),</span> <span class="mi">3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeAlphabetAssumptionAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeAlphabetAssumptionAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TypeAlphabetAssumptionState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TypeRangeAlphabetAssumptionAnalysis"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeRangeAlphabetAssumptionAnalysis">[docs]</a><span class="k">class</span> <span class="nc">TypeRangeAlphabetAssumptionAnalysis</span><span class="p">(</span><span class="n">Runner</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TypeRangeAlphabetAssumptionAnalysis.interpreter"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeRangeAlphabetAssumptionAnalysis.interpreter">[docs]</a>    <span class="k">def</span> <span class="nf">interpreter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">BackwardInterpreter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">,</span> <span class="n">DefaultBackwardSemantics</span><span class="p">(),</span> <span class="mi">3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TypeRangeAlphabetAssumptionAnalysis.state"><a class="viewcode-back" href="../../../../lyra.engine.assumption.html#lyra.engine.assumption.assumption_analysis.TypeRangeAlphabetAssumptionAnalysis.state">[docs]</a>    <span class="k">def</span> <span class="nf">state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TypeRangeAlphabetAssumptionState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

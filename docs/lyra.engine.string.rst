@@ -1,7 +1,7 @@
-lyra\.engine\.traces package
+lyra\.engine\.string package
 ============================
 
-.. automodule:: lyra.engine.traces
+.. automodule:: lyra.engine.string
     :members:
     :undoc-members:
     :show-inheritance:
@@ -9,7 +9,7 @@ lyra\.engine\.traces package
 Submodules
 ----------
 
-.. automodule:: lyra.engine.traces.traces_analysis
+.. automodule:: lyra.engine.string.character_analysis
     :members:
     :undoc-members:
     :show-inheritance:

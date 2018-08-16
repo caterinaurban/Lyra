@@ -524,26 +524,28 @@ class BooleanMixin(Lattice, metaclass=ABCMeta):
             return self._disj(other)
 
 
-class StringMixin(Lattice, metaclass=ABCMeta):
-    """Mixin to add string operations to a lattice."""
+class SequenceMixin(Lattice, metaclass=ABCMeta):
+    """Mixin to add sequence operations to a lattice."""
 
     @abstractmethod
-    def _concat(self, other: 'StringMixin') -> 'StringMixin':
+    def _concat(self, other: 'SequenceMixin') -> 'SequenceMixin':
         """Concatenation between two default lattice elements.
 
         :param other: other lattice element
         :return: current lattice element modified to be the concatenation
+
         """
 
-    def concat(self, other: 'StringMixin') -> 'StringMixin':
+    def concat(self, other: 'SequenceMixin') -> 'SequenceMixin':
         """Concatenation between two lattice elements.
 
         :param other: other lattice element
         :return: current lattice element modified to be the concatenation
+
         """
-        if self.is_bottom():
-            return self
-        elif other.is_bottom():
+        if self.is_bottom():        # self is the empty sequence
             return self._replace(other)
+        elif other.is_bottom():     # other is the empty sequence
+            return self
         else:
             return self._concat(other)

@@ -1,7 +1,7 @@
-lyra\.abstract\_domains\.traces package
+lyra\.abstract\_domains\.string package
 =======================================
 
-.. automodule:: lyra.abstract_domains.traces
+.. automodule:: lyra.abstract_domains.string
     :members:
     :undoc-members:
     :show-inheritance:
@@ -9,7 +9,7 @@ lyra\.abstract\_domains\.traces package
 Submodules
 ----------
 
-.. automodule:: lyra.abstract_domains.traces.traces_domain
+.. automodule:: lyra.abstract_domains.string.character_domain
     :members:
     :undoc-members:
     :show-inheritance:

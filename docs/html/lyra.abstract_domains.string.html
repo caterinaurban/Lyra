@@ -1,0 +1,508 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>lyra.abstract_domains.string package &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
+        <link rel="up" title="lyra.abstract_domains package" href="lyra.abstract_domains.html"/>
+        <link rel="next" title="lyra.abstract_domains.usage package" href="lyra.abstract_domains.usage.html"/>
+        <link rel="prev" title="lyra.abstract_domains.numerical package" href="lyra.abstract_domains.numerical.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.core.html">lyra.core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.engine.html">lyra.engine package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.frontend.html">lyra.frontend package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="lyra.semantics.html">lyra.semantics package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="lyra.html#module-lyra.main">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="modules.html">lyra</a> &raquo;</li>
+      
+          <li><a href="lyra.html">lyra package</a> &raquo;</li>
+      
+          <li><a href="lyra.abstract_domains.html">lyra.abstract_domains package</a> &raquo;</li>
+      
+    <li>lyra.abstract_domains.string package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/lyra.abstract_domains.string.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-lyra.abstract_domains.string">
+<span id="lyra-abstract-domains-string-package"></span><h1>lyra.abstract_domains.string package<a class="headerlink" href="#module-lyra.abstract_domains.string" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-lyra.abstract_domains.string.character_domain">
+<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-lyra.abstract_domains.string.character_domain" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="character-inclusion-abstract-domain">
+<h3>Character Inclusion Abstract Domain<a class="headerlink" href="#character-inclusion-abstract-domain" title="Permalink to this headline">¶</a></h3>
+<p>Non-relational abstract domain to be used for <strong>string analysis</strong>.
+The set of possible string values of a program variable in a program state
+is represented by the sets of characters that must and may form the string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Authors:</th><td class="field-body">Radwa Sherif Abdelbar and Caterina Urban</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterLattice">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.string.character_domain.</code><code class="descname">CharacterLattice</code><span class="sig-paren">(</span><em>certainly: typing.Set[str] = set()</em>, <em>maybe: typing.Set[str] = {‘&amp;’</em>, <em>‘8’</em>, <em>’</em>, <em>’</em>, <em>’$’</em>, <em>’n’</em>, <em>‘5’</em>, <em>’V’</em>, <em>’o’</em>, <em>’x’</em>, <em>’#’</em>, <em>’s’</em>, <em>’}’</em>, <em>’Q’</em>, <em>’)’</em>, <em>‘1’</em>, <em>’M’</em>, <em>’X’</em>, <em>’b’</em>, <em>’I’</em>, <em>’.’</em>, <em>’F’</em>, <em>’h’</em>, <em>’W’</em>, <em>’-‘</em>, <em>’H’</em>, <em>’T’</em>, <em>’l’</em>, <em>’?’</em>, <em>’_’</em>, <em>”’”</em>, <em>‘9’</em>, <em>’j’</em>, <em>‘7’</em>, <em>’O’</em>, <em>’&lt;’</em>, <em>’(‘</em>, <em>’p’</em>, <em>’{‘</em>, <em>’x0b’</em>, <em>’e’</em>, <em>’R’</em>, <em>’`’</em>, <em>’C’</em>, <em>’D’</em>, <em>’k’</em>, <em>’]’</em>, <em>’f’</em>, <em>’t’</em>, <em>’E’</em>, <em>’q’</em>, <em>’”’</em>, <em>‘2’</em>, <em>’i’</em>, <em>’=’</em>, <em>’~’</em>, <em>’B’</em>, <em>’|’</em>, <em>‘4’</em>, <em>‘0’</em>, <em>‘3’</em>, <em>’m’</em>, <em>’d’</em>, <em>’L’</em>, <em>’c’</em>, <em>’%’</em>, <em>’P’</em>, <em>’&#64;’</em>, <em>’a’</em>, <em>’U’</em>, <em>’[‘</em>, <em>’g’</em>, <em>’S’</em>, <em>’r’</em>, <em>’A’</em>, <em>’ ‘</em>, <em>’v’</em>, <em>’N’</em>, <em>’n’</em>, <em>’+’</em>, <em>’^’</em>, <em>’'</em>, <em>’r’</em>, <em>’Z’</em>, <em>’*’</em>, <em>’/’</em>, <em>’w’</em>, <em>’G’</em>, <em>’t’</em>, <em>’!’</em>, <em>’J’</em>, <em>’z’</em>, <em>’&gt;’</em>, <em>’y’</em>, <em>‘6’</em>, <em>’Y’</em>, <em>’;’</em>, <em>’u’</em>, <em>’K’</em>, <em>’:’</em>, <em>’x0c’}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterLattice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterLattice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.BottomMixin" title="lyra.abstract_domains.lattice.BottomMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.BottomMixin</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.lattice.SequenceMixin" title="lyra.abstract_domains.lattice.SequenceMixin"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.lattice.SequenceMixin</span></code></a></p>
+<p>Character inclusion lattice.</p>
+<p>The default abstraction is the unconstraining pair <code class="docutils literal"><span class="pre">(∅,</span> <span class="pre">Σ)</span></code>,
+where <code class="docutils literal"><span class="pre">Σ</span></code> denotes the entire alphabet.
+The bottom element of the lattice represents a contradiction.</p>
+<dl class="method">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterLattice._less_equal">
+<code class="descname">_less_equal</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.string.character_domain.CharacterLattice</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterLattice._less_equal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterLattice._less_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partial order between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">whether the current lattice element is less than or equal to the other element</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">(c1,</span> <span class="pre">m1)</span> <span class="pre">⊑</span> <span class="pre">(c2,</span> <span class="pre">m2)</span></code> if and only if <code class="docutils literal"><span class="pre">c2</span> <span class="pre">⊆</span> <span class="pre">c1</span></code> and <code class="docutils literal"><span class="pre">m1</span> <span class="pre">⊆</span> <span class="pre">m2</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterLattice._meet">
+<code class="descname">_meet</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.string.character_domain.CharacterLattice</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterLattice._meet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterLattice._meet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Greatest lower bound between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the greatest lower bound</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">(c1,</span> <span class="pre">m1)</span> <span class="pre">⊓</span> <span class="pre">(c2,</span> <span class="pre">m2)</span> <span class="pre">=</span> <span class="pre">(c1</span> <span class="pre">∪</span> <span class="pre">c2,</span> <span class="pre">m1</span> <span class="pre">∩</span> <span class="pre">m2)</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterLattice._join">
+<code class="descname">_join</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.string.character_domain.CharacterLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.string.character_domain.CharacterLattice<a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterLattice._join"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterLattice._join" title="Permalink to this definition">¶</a></dt>
+<dd><p>Least upper bound between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the least upper bound</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">(c1,</span> <span class="pre">m1)</span> <span class="pre">⊔</span> <span class="pre">(c2,</span> <span class="pre">m2)</span> <span class="pre">=</span> <span class="pre">(c1</span> <span class="pre">∩</span> <span class="pre">c2,</span> <span class="pre">m1</span> <span class="pre">∪</span> <span class="pre">m2)</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterLattice._widening">
+<code class="descname">_widening</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.string.character_domain.CharacterLattice</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterLattice._widening"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterLattice._widening" title="Permalink to this definition">¶</a></dt>
+<dd><p>Widening between default lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the widening</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">(c1,</span> <span class="pre">m1)</span> <span class="pre">▽</span> <span class="pre">(c2,</span> <span class="pre">m2)</span> <span class="pre">=</span> <span class="pre">(c1,</span> <span class="pre">m1)</span> <span class="pre">⊔</span> <span class="pre">(c2,</span> <span class="pre">m2)</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterLattice._concat">
+<code class="descname">_concat</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.string.character_domain.CharacterLattice</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.string.character_domain.CharacterLattice<a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterLattice._concat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterLattice._concat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concatenation between two lattice elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other</strong> – other lattice element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the concatenation</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal"><span class="pre">(c1,</span> <span class="pre">m1)</span> <span class="pre">+</span> <span class="pre">(c2,</span> <span class="pre">m2)</span> <span class="pre">=</span> <span class="pre">(c1</span> <span class="pre">∪</span> <span class="pre">c2,</span> <span class="pre">m1</span> <span class="pre">∪</span> <span class="pre">m2)</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterLattice.certainly">
+<code class="descname">certainly</code><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterLattice.certainly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current set of must characters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current set of must characters if there is no conflict, <code class="docutils literal"><span class="pre">None</span></code> otherwise</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterLattice.from_literal">
+<em class="property">classmethod </em><code class="descname">from_literal</code><span class="sig-paren">(</span><em>literal: lyra.core.expressions.Literal</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.string.character_domain.CharacterLattice<a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterLattice.from_literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterLattice.from_literal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterLattice.is_top">
+<code class="descname">is_top</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterLattice.is_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterLattice.is_top" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the lattice element is top.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether the lattice element is top</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterLattice.maybe">
+<code class="descname">maybe</code><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterLattice.maybe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current set of may characters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the current set of may characters if there is no conflict, <code class="docutils literal"><span class="pre">None</span></code> otherwise</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterLattice.top">
+<code class="descname">top</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterLattice.top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterLattice.top" title="Permalink to this definition">¶</a></dt>
+<dd><p>Top lattice element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">current lattice element modified to be the top lattice element</td>
+</tr>
+</tbody>
+</table>
+<p>The top lattice element is <code class="docutils literal"><span class="pre">(∅,</span> <span class="pre">Σ)</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterState">
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.string.character_domain.</code><code class="descname">CharacterState</code><span class="sig-paren">(</span><em>variables: typing.Set[lyra.core.expressions.VariableIdentifier], precursory: lyra.abstract_domains.state.State = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.basis.Basis" title="lyra.abstract_domains.basis.Basis"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.basis.Basis</span></code></a></p>
+<p>Character inclusion analysis state. An element of the character inclusion abstract domain.</p>
+<p>Map from each program variable to the sets of characters
+that must and may form its possible string values.
+The string value of all program variables is unconstrained by default.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Program variables storing lists are abstracted via summarization.</p>
+</div>
+<dl class="method">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterState._assign">
+<code class="descname">_assign</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.basis.Basis<a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterState._assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign an expression to another expression.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>left</strong> – expression to be assigned to</li>
+<li><strong>right</strong> – expression to assign</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the assignment</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterState._assume">
+<code class="descname">_assume</code><span class="sig-paren">(</span><em>condition: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.state.State<a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterState._assume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterState._assume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assume that some condition holds in the current state.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>condition</strong> – expression representing the assumed condition</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">current state modified to satisfy the assumption</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterState._substitute">
+<code class="descname">_substitute</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterState._substitute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substitute an expression to another expression.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>left</strong> – expression to be substituted</li>
+<li><strong>right</strong> – expression to substitute</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the substitution</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterState.ExpressionEvaluation">
+<em class="property">class </em><code class="descname">ExpressionEvaluation</code><a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterState.ExpressionEvaluation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterState.ExpressionEvaluation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.basis.ExpressionEvaluation</span></code></p>
+<p>Visitor that performs the evaluation of an expression in the character lattice.</p>
+<dl class="method">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterState.ExpressionEvaluation.visit_Literal">
+<code class="descname">visit_Literal</code><span class="sig-paren">(</span><em>expr</em>, <em>state=None</em>, <em>evaluation=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterState.ExpressionEvaluation.visit_Literal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterState.ExpressionEvaluation.visit_Literal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterState.ExpressionRefinement">
+<em class="property">class </em><code class="descname">ExpressionRefinement</code><a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterState.ExpressionRefinement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterState.ExpressionRefinement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.basis.ExpressionRefinement</span></code></p>
+<dl class="method">
+<dt id="lyra.abstract_domains.string.character_domain.CharacterState.ExpressionRefinement.visit_BinarySequenceOperation">
+<code class="descname">visit_BinarySequenceOperation</code><span class="sig-paren">(</span><em>expr</em>, <em>evaluation=None</em>, <em>value=None</em>, <em>state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/string/character_domain.html#CharacterState.ExpressionRefinement.visit_BinarySequenceOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.string.character_domain.CharacterState.ExpressionRefinement.visit_BinarySequenceOperation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="lyra.abstract_domains.usage.html" class="btn btn-neutral float-right" title="lyra.abstract_domains.usage package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="lyra.abstract_domains.numerical.html" class="btn btn-neutral" title="lyra.abstract_domains.numerical package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

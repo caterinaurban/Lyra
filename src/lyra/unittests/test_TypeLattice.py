@@ -78,7 +78,7 @@ class TestTypeLattice(AbstractTest.LatticeTest):
         self.assertEqual(self.string().add(self.boolean()), self.bottom())
         self.assertEqual(self.string().add(self.integer()), self.bottom())
         self.assertEqual(self.string().add(self.float()), self.bottom())
-        self.assertEqual(self.string().add(self.string()), self.string())
+        self.assertEqual(self.string().add(self.string()), self.bottom())
 
     def test_sub(self):
         self.assertEqual(self.boolean().sub(self.boolean()), self.integer())
@@ -102,17 +102,17 @@ class TestTypeLattice(AbstractTest.LatticeTest):
         self.assertEqual(self.boolean().mult(self.boolean()), self.integer())
         self.assertEqual(self.boolean().mult(self.integer()), self.integer())
         self.assertEqual(self.boolean().mult(self.float()), self.float())
-        self.assertEqual(self.boolean().mult(self.string()), self.string())
+        self.assertEqual(self.boolean().mult(self.string()), self.bottom())
         self.assertEqual(self.integer().mult(self.boolean()), self.integer())
         self.assertEqual(self.integer().mult(self.integer()), self.integer())
         self.assertEqual(self.integer().mult(self.float()), self.float())
-        self.assertEqual(self.integer().mult(self.string()), self.string())
+        self.assertEqual(self.integer().mult(self.string()), self.bottom())
         self.assertEqual(self.float().mult(self.boolean()), self.float())
         self.assertEqual(self.float().mult(self.integer()), self.float())
         self.assertEqual(self.float().mult(self.float()), self.float())
         self.assertEqual(self.float().mult(self.string()), self.bottom())
-        self.assertEqual(self.string().mult(self.boolean()), self.string())
-        self.assertEqual(self.string().mult(self.integer()), self.string())
+        self.assertEqual(self.string().mult(self.boolean()), self.bottom())
+        self.assertEqual(self.string().mult(self.integer()), self.bottom())
         self.assertEqual(self.string().mult(self.float()), self.bottom())
         self.assertEqual(self.string().mult(self.string()), self.bottom())
 
@@ -133,6 +133,24 @@ class TestTypeLattice(AbstractTest.LatticeTest):
         self.assertEqual(self.string().div(self.integer()), self.bottom())
         self.assertEqual(self.string().div(self.float()), self.bottom())
         self.assertEqual(self.string().div(self.string()), self.bottom())
+
+    def test_concat(self):
+        self.assertEqual(self.boolean().concat(self.boolean()), self.bottom())
+        self.assertEqual(self.boolean().concat(self.integer()), self.bottom())
+        self.assertEqual(self.boolean().concat(self.float()), self.bottom())
+        self.assertEqual(self.boolean().concat(self.string()), self.bottom())
+        self.assertEqual(self.integer().concat(self.boolean()), self.bottom())
+        self.assertEqual(self.integer().concat(self.integer()), self.bottom())
+        self.assertEqual(self.integer().concat(self.float()), self.bottom())
+        self.assertEqual(self.integer().concat(self.string()), self.bottom())
+        self.assertEqual(self.float().concat(self.boolean()), self.bottom())
+        self.assertEqual(self.float().concat(self.integer()), self.bottom())
+        self.assertEqual(self.float().concat(self.float()), self.bottom())
+        self.assertEqual(self.float().concat(self.string()), self.bottom())
+        self.assertEqual(self.string().concat(self.boolean()), self.bottom())
+        self.assertEqual(self.string().concat(self.integer()), self.bottom())
+        self.assertEqual(self.string().concat(self.float()), self.bottom())
+        self.assertEqual(self.string().concat(self.string()), self.string())
 
 
 if __name__ == '__main__':

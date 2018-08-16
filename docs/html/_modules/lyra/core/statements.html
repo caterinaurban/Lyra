@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lyra</a></li>
 </ul>
 
             
@@ -150,7 +150,7 @@
 <div class="viewcode-block" id="ProgramPoint"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.ProgramPoint">[docs]</a><span class="k">class</span> <span class="nc">ProgramPoint</span><span class="p">:</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Program point representation.</span>
-<span class="sd">        </span>
+
 <span class="sd">        :param line: line of the program</span>
 <span class="sd">        :param column: column of the program</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -187,10 +187,11 @@
 
 <span class="sd">    https://docs.python.org/3.4/reference/simple_stmts.html</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Statement construction.</span>
-<span class="sd">        </span>
-<span class="sd">        :param pp: program point associated with the statement  </span>
+
+<span class="sd">        :param pp: program point associated with the statement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pp</span> <span class="o">=</span> <span class="n">pp</span>
 
@@ -201,7 +202,7 @@
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Unambiguous string representation of the statement.</span>
-<span class="sd">        </span>
+
 <span class="sd">        :return: string representing the statement</span>
 <span class="sd">        &quot;&quot;&quot;</span></div>
 
@@ -214,6 +215,7 @@
 
 <div class="viewcode-block" id="LiteralEvaluation"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.LiteralEvaluation">[docs]</a><span class="k">class</span> <span class="nc">LiteralEvaluation</span><span class="p">(</span><span class="n">Statement</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Literal evaluation expression.&quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">literal</span><span class="p">:</span> <span class="n">Expression</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Literal evaluation construction.</span>
 
@@ -233,18 +235,32 @@
 
 <div class="viewcode-block" id="ExpressionAccess"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.ExpressionAccess">[docs]</a><span class="k">class</span> <span class="nc">ExpressionAccess</span><span class="p">(</span><span class="n">Statement</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Statement representation for statements that</span>
-<span class="sd">    can appear on the left-hand side of assignments.&quot;&quot;&quot;</span></div>
+<span class="sd">    can appear on the left-hand side of assignments.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Expression access construction.</span>
+
+<span class="sd">        :param pp: program point associated with the statement</span>
+<span class="sd">        :param typ: type of the expression</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_typ</span> <span class="o">=</span> <span class="n">typ</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">typ</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_typ</span></div>
 
 
 <div class="viewcode-block" id="VariableAccess"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.VariableAccess">[docs]</a><span class="k">class</span> <span class="nc">VariableAccess</span><span class="p">(</span><span class="n">ExpressionAccess</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Variable access representation.&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Variable access construction.</span>
 
 <span class="sd">        :param pp: program point associated with the variable access</span>
 <span class="sd">        :param variable: variable being accessed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_variable</span> <span class="o">=</span> <span class="n">variable</span>
 
     <span class="nd">@property</span>
@@ -257,13 +273,14 @@
 
 <div class="viewcode-block" id="ListDisplayAccess"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.ListDisplayAccess">[docs]</a><span class="k">class</span> <span class="nc">ListDisplayAccess</span><span class="p">(</span><span class="n">ExpressionAccess</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;List display access representation.&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Statement</span><span class="p">]):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Statement</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;List display access construction.</span>
 
 <span class="sd">        :param pp: program point associated with the list display access</span>
 <span class="sd">        :param items: list of items being displayed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_items</span> <span class="o">=</span> <span class="n">items</span>
 
     <span class="nd">@property</span>
@@ -274,16 +291,85 @@
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="TupleDisplayAccess"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.TupleDisplayAccess">[docs]</a><span class="k">class</span> <span class="nc">TupleDisplayAccess</span><span class="p">(</span><span class="n">ExpressionAccess</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tuple display (= expression list with comma, or ()) access representation.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Statement</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;tuple access construction.</span>
+
+<span class="sd">        :param pp: program point associated with the tuple access</span>
+<span class="sd">        :param items: list of items being displayed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_items</span> <span class="o">=</span> <span class="n">items</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_items</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">str_items</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">str_items</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span></div>
+
+
+<div class="viewcode-block" id="SetDisplayAccess"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.SetDisplayAccess">[docs]</a><span class="k">class</span> <span class="nc">SetDisplayAccess</span><span class="p">(</span><span class="n">ExpressionAccess</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Set display access representation.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Statement</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Set display access construction.</span>
+
+<span class="sd">        :param pp: program point associated with the set display access</span>
+<span class="sd">        :param items: list of items being displayed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_items</span> <span class="o">=</span> <span class="n">items</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_items</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">str_items</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;{&#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">str_items</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span></div>
+
+
+<div class="viewcode-block" id="DictDisplayAccess"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.DictDisplayAccess">[docs]</a><span class="k">class</span> <span class="nc">DictDisplayAccess</span><span class="p">(</span><span class="n">ExpressionAccess</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dictionary display access representation. ({k:v, ...})&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span>
+                 <span class="n">keys</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Statement</span><span class="p">],</span> <span class="n">values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Statement</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Dictionary display access construction.</span>
+
+<span class="sd">        :param pp: program point associated with the list display access</span>
+<span class="sd">        :param keys: list of keys being displayed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span> <span class="o">=</span> <span class="n">keys</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="n">values</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keys</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">str_keys</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">)</span>
+        <span class="n">str_values</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;{&#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39; : &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">str_keys</span><span class="p">,</span> <span class="n">str_values</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span></div>
+
+
 <div class="viewcode-block" id="SubscriptionAccess"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.SubscriptionAccess">[docs]</a><span class="k">class</span> <span class="nc">SubscriptionAccess</span><span class="p">(</span><span class="n">ExpressionAccess</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Subscription access representation.&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Statement</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Statement</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Statement</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Statement</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Subscription access construction.</span>
 
 <span class="sd">        :param pp: program point associated with the subscription access</span>
 <span class="sd">        :param target: target of the subscription access</span>
 <span class="sd">        :param key: index at which the target is begin subscripted</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">key</span>
 
@@ -301,9 +387,10 @@
 
 <div class="viewcode-block" id="SlicingAccess"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.SlicingAccess">[docs]</a><span class="k">class</span> <span class="nc">SlicingAccess</span><span class="p">(</span><span class="n">ExpressionAccess</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Slicing access representation.&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Statement</span><span class="p">,</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Statement</span><span class="p">,</span>
                  <span class="n">lower</span><span class="p">:</span> <span class="n">Statement</span><span class="p">,</span> <span class="n">upper</span><span class="p">:</span> <span class="n">Statement</span><span class="p">,</span> <span class="n">stride</span><span class="p">:</span> <span class="n">Statement</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span> <span class="o">=</span> <span class="n">lower</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_upper</span> <span class="o">=</span> <span class="n">upper</span>
@@ -331,10 +418,68 @@
         <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{0.target}</span><span class="s2">[</span><span class="si">{0.lower}</span><span class="s2">:</span><span class="si">{0.upper}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Assignment Statements.</span>
+<span class="sd">https://docs.python.org/3.4/reference/simple_stmts.html#assignment-statements</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="Assignment"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.Assignment">[docs]</a><span class="k">class</span> <span class="nc">Assignment</span><span class="p">(</span><span class="n">Statement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assignment Statements.</span>
+
+<span class="sd">    https://docs.python.org/3.4/reference/simple_stmts.html#assignment-statements</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">ExpressionAccess</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Statement</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Assignment statement representation.</span>
+
+<span class="sd">        :param pp: program point associated with the statement</span>
+<span class="sd">        :param left: left-hand side of the assignment</span>
+<span class="sd">        :param right: right-hand side of the assignment</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_left</span> <span class="o">=</span> <span class="n">left</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_right</span> <span class="o">=</span> <span class="n">right</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">left</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_left</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">right</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_right</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{0.left}</span><span class="s2">: </span><span class="si">{0.left.typ}</span><span class="s2"> = </span><span class="si">{0.right}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Raise Statements.</span>
+<span class="sd">https://docs.python.org/3.4/reference/simple_stmts.html#the-raise-statement</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="Raise"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.Raise">[docs]</a><span class="k">class</span> <span class="nc">Raise</span><span class="p">(</span><span class="n">Statement</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Raise statement representation.</span>
+
+<span class="sd">        :param pp: program point associated with the raise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;raise Exception&quot;</span></div>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Call Statements.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
 <div class="viewcode-block" id="Call"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.Call">[docs]</a><span class="k">class</span> <span class="nc">Call</span><span class="p">(</span><span class="n">Statement</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Statement</span><span class="p">],</span> <span class="n">typ</span><span class="p">:</span> <span class="n">LyraType</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Call statement representation.</span>
-<span class="sd">        </span>
+
 <span class="sd">        :param pp: program point associated with the call</span>
 <span class="sd">        :param name: name of the function/method being called</span>
 <span class="sd">        :param arguments: list of arguments of the call</span>
@@ -360,41 +505,6 @@
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">arguments</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">argument</span><span class="p">)</span> <span class="k">for</span> <span class="n">argument</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">(</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">arguments</span><span class="p">)</span></div>
-
-
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Assignment Statements.</span>
-<span class="sd">https://docs.python.org/3.4/reference/simple_stmts.html#assignment-statements</span>
-<span class="sd">&quot;&quot;&quot;</span>
-
-
-<div class="viewcode-block" id="Assignment"><a class="viewcode-back" href="../../../lyra.core.html#lyra.core.statements.Assignment">[docs]</a><span class="k">class</span> <span class="nc">Assignment</span><span class="p">(</span><span class="n">Statement</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Assignment Statements.</span>
-<span class="sd">    </span>
-<span class="sd">    https://docs.python.org/3.4/reference/simple_stmts.html#assignment-statements</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">:</span> <span class="n">ProgramPoint</span><span class="p">,</span> <span class="n">left</span><span class="p">:</span> <span class="n">ExpressionAccess</span><span class="p">,</span> <span class="n">right</span><span class="p">:</span> <span class="n">Statement</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Assignment statement representation.</span>
-
-<span class="sd">        :param pp: program point associated with the statement</span>
-<span class="sd">        :param left: left-hand side of the assignment</span>
-<span class="sd">        :param right: right-hand side of the assignment</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_left</span> <span class="o">=</span> <span class="n">left</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_right</span> <span class="o">=</span> <span class="n">right</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">left</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_left</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">right</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_right</span>
-
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{0.left}</span><span class="s2"> = </span><span class="si">{0.right}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

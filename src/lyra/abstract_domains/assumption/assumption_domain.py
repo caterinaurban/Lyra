@@ -16,7 +16,8 @@ from lyra.abstract_domains.state import State
 from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparisonOperation, \
     Range, Literal, NegationFreeNormalExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
     ExpressionVisitor, Input, ListDisplay, AttributeReference, Subscription, Slicing, \
-    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier
+    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, TupleDisplay, \
+    SetDisplay, DictDisplay, BinarySequenceOperation
 from lyra.core.statements import ProgramPoint
 from lyra.core.types import IntegerLyraType
 from lyra.core.utils import copy_docstring
@@ -132,17 +133,13 @@ class AssumptionState(State):
     .. automethod:: AssumptionState._substitute
     """
     class InputStack(Stack, State):
-        """Stack of assumptions on the input data.
-
-        .. document private methods
-        .. automethod:: InputStack._assume
-        .. automethod:: InputStack._substitute
-        """
+        """Stack of assumptions on the input data."""
         class InputLattice(BottomMixin):
             """Assumptions on the input data.
 
             Each assumption is a (possibly symbolic) repetition of constraints on the input data.
             A constraint can be:
+
             * a basic constraint, i.e., a tuple of lattices (l, ...)
               which indicates that an input data point is expected and restricts its possible value
             * a star constraint, i.e., ★
@@ -162,11 +159,6 @@ class AssumptionState(State):
                 ...
                 Ɣ(1 * []) = { ε }
 
-            .. document private methods
-            .. automethod:: InputLattice._less_equal
-            .. automethod:: InputLattice._meet
-            .. automethod:: InputLattice._join
-            .. automethod:: InputLattice._widening
             """
             InputLattice = 'AssumptionState.InputStack.InputLattice'
             StarConstraint = Tuple[ProgramPoint, ...]
@@ -379,11 +371,11 @@ class AssumptionState(State):
                 self.constraints.insert(0, constraint)
                 return self
 
-            def replace(self, variable: VariableIdentifier, expression: Expression):
-                """Replace a variable with an expression.
+            def replace(self, left: Expression, right: Expression):
+                """Replace an expression with another expression.
 
-                :param variable: variable to be replaced
-                :param expression: expression replacing the variable
+                :param left: expression to be replaced
+                :param right: expression to be used as replacement
                 :return: current lattice element modified to manifest the replacement
                 """
                 def do(constraint):
@@ -395,16 +387,120 @@ class AssumptionState(State):
                             lattices = list(constraint[1])
                             for i, lattice in enumerate(lattices):
                                 if hasattr(lattice, 'replace'):
-                                    lattices[i] = lattice.replace(variable, expression)
+                                    lattices[i] = lattice.replace(left, right)
                             return constraint[0], tuple(lattices)
                     else:   # the constraint is an InputLattice
-                        return constraint.replace(variable, expression)
-                multiplier = self.multiplier
-                if isinstance(multiplier, VariableIdentifier) and multiplier == variable:
-                    multiplier = expression
+                        return constraint.replace(left, right)
+                replacement = AssumptionState.InputStack.InputLattice.MultiplierReplacement()
+                multiplier = replacement.visit(self.multiplier, left, right)
                 constraints = [do(constraint) for constraint in self.constraints]
                 replaced = AssumptionState.InputStack.InputLattice(multiplier, constraints)
                 return self._replace(replaced)
+
+            class MultiplierReplacement(ExpressionVisitor):
+                """Visitor that replaces any occurrence of a (sub)expression
+                in a multiplier with another expression.
+                """
+
+                @copy_docstring(ExpressionVisitor.visit_Literal)
+                def visit_Literal(self, expr: Literal, left=None, right=None):
+                    return Literal(expr.typ, expr.val)
+
+                @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+                def visit_VariableIdentifier(self, expr, left=None, right=None):
+                    if isinstance(expr, type(left)) and expr == left:
+                        return right
+                    return VariableIdentifier(expr.typ, expr.name)
+
+                @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+                def visit_LengthIdentifier(self, expr: LengthIdentifier, left=None, right=None):
+                    expression = self.visit(expr.expression, left, right)
+                    return LengthIdentifier(expression)
+
+                @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+                def visit_ListDisplay(self, expr: ListDisplay, left=None, right=None):
+                    items = [self.visit(item, left, right) for item in expr.items]
+                    return ListDisplay(expr.typ, items)
+
+                @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+                def visit_TupleDisplay(self, expr: TupleDisplay, left=None, right=None):
+                    items = [self.visit(item, left, right) for item in expr.items]
+                    return TupleDisplay(expr.typ, items)
+
+                @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+                def visit_SetDisplay(self, expr: SetDisplay, left=None, right=None):
+                    items = [self.visit(item, left, right) for item in expr.items]
+                    return SetDisplay(expr.typ, items)
+
+                @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+                def visit_DictDisplay(self, expr: DictDisplay, left=None, right=None):
+                    keys = [self.visit(item, left, right) for item in expr.keys]
+                    values = [self.visit(item, left, right) for item in expr.values]
+                    return DictDisplay(expr.typ, keys, values)
+
+                @copy_docstring(ExpressionVisitor.visit_AttributeReference)
+                def visit_AttributeReference(self, expr, left=None, right=None):
+                    target = self.visit(expr.target, left, right)
+                    return AttributeReference(expr.typ, target, expr.attribute)
+
+                @copy_docstring(ExpressionVisitor.visit_Subscription)
+                def visit_Subscription(self, expr: Subscription, left=None, right=None):
+                    target = self.visit(expr.target, left, right)
+                    key = self.visit(expr.key, left, right)
+                    return Subscription(expr.typ, target, key)
+
+                @copy_docstring(ExpressionVisitor.visit_Slicing)
+                def visit_Slicing(self, expr: Slicing, left=None, right=None):
+                    target = self.visit(expr.target, left, right)
+                    lower = self.visit(expr.lower, left, right)
+                    upper = self.visit(expr.upper, left, right) if expr.upper else None
+                    stride = self.visit(expr.stride, left, right) if expr.stride else None
+                    return Slicing(expr.typ, target, lower, upper, stride)
+
+                @copy_docstring(ExpressionVisitor.visit_Input)
+                def visit_Input(self, expr: Input, left=None, right=None):
+                    return Input(expr.typ)
+
+                @copy_docstring(ExpressionVisitor.visit_Range)
+                def visit_Range(self, expr: Range, left=None, right=None):
+                    start = self.visit(expr.start, left, right)
+                    stop = self.visit(expr.stop, left, right)
+                    step = self.visit(expr.step, left, right)
+                    return Range(expr.typ, start, stop, step)
+
+                @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
+                def visit_UnaryArithmeticOperation(self, expr, left=None, right=None):
+                    expression = self.visit(expr.expression, left, right)
+                    return UnaryArithmeticOperation(expr.typ, expr.operator, expression)
+
+                @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
+                def visit_UnaryBooleanOperation(self, expr, left=None, right=None):
+                    expression = self.visit(expr.expression, left, right)
+                    return UnaryBooleanOperation(expr.typ, expr.operator, expression)
+
+                @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
+                def visit_BinaryArithmeticOperation(self, expr, left=None, right=None):
+                    left = self.visit(expr.left, left, right)
+                    right = self.visit(expr.right, left, right)
+                    return BinaryArithmeticOperation(expr.typ, left, expr.operator, right)
+
+                @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+                def visit_BinarySequenceOperation(self, expr, left=None, right=None):
+                    left = self.visit(expr.left, left, right)
+                    right = self.visit(expr.right, left, right)
+                    return BinarySequenceOperation(expr.typ, left, expr.operator, right)
+
+                @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
+                def visit_BinaryBooleanOperation(self, expr, left=None, right=None):
+                    left = self.visit(expr.left, left, right)
+                    right = self.visit(expr.right, left, right)
+                    return BinaryBooleanOperation(expr.typ, left, expr.operator, right)
+
+                @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
+                def visit_BinaryComparisonOperation(self, expr, left=None, right=None):
+                    left = self.visit(expr.left, left, right)
+                    right = self.visit(expr.right, left, right)
+                    return BinaryComparisonOperation(expr.typ, left, expr.operator, right)
 
         class Scope(Enum):
             """Scope type. Either ``Branch`` or ``Loop``."""
@@ -495,7 +591,7 @@ class AssumptionState(State):
 
         @copy_docstring(State._substitute)
         def _substitute(self, left: Expression, right: Expression) -> 'AssumptionState.InputStack':
-            if isinstance(left, VariableIdentifier):
+            if isinstance(left, (VariableIdentifier, Subscription, Slicing)):
                 replacement = AssumptionState.InputStack.InputReplacement(self.pp)
                 replaced: Expression = replacement.visit(right)
                 for i, lattice in enumerate(self.stack):
@@ -550,12 +646,28 @@ class AssumptionState(State):
 
             @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
             def visit_LengthIdentifier(self, expr: LengthIdentifier):
-                return LengthIdentifier(expr.variable)
+                return LengthIdentifier(expr.expression)
 
             @copy_docstring(ExpressionVisitor.visit_ListDisplay)
             def visit_ListDisplay(self, expr: ListDisplay):
                 items = [self.visit(item) for item in expr.items]
                 return ListDisplay(expr.typ, items)
+
+            @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+            def visit_TupleDisplay(self, expr: TupleDisplay):
+                items = [self.visit(item) for item in expr.items]
+                return TupleDisplay(expr.typ, items)
+
+            @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+            def visit_SetDisplay(self, expr: SetDisplay):
+                items = [self.visit(item) for item in expr.items]
+                return SetDisplay(expr.typ, items)
+
+            @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+            def visit_DictDisplay(self, expr: DictDisplay):
+                keys = [self.visit(item) for item in expr.keys]
+                values = [self.visit(item) for item in expr.values]
+                return DictDisplay(expr.typ, keys, values)
 
             @copy_docstring(ExpressionVisitor.visit_AttributeReference)
             def visit_AttributeReference(self, expr: AttributeReference):
@@ -566,13 +678,13 @@ class AssumptionState(State):
             def visit_Subscription(self, expr: Subscription):
                 target = self.visit(expr.target)
                 key = self.visit(expr.key)
-                return AttributeReference(expr.typ, target, key)
+                return Subscription(expr.typ, target, key)
 
             @copy_docstring(ExpressionVisitor.visit_Slicing)
             def visit_Slicing(self, expr: Slicing):
                 target = self.visit(expr.target)
                 lower = self.visit(expr.lower)
-                upper = self.visit(expr.upper)
+                upper = self.visit(expr.upper) if expr.upper else None
                 stride = self.visit(expr.stride) if expr.stride else None
                 return Slicing(expr.typ, target, lower, upper, stride)
 
@@ -603,6 +715,12 @@ class AssumptionState(State):
                 left = self.visit(expr.left)
                 right = self.visit(expr.right)
                 return BinaryArithmeticOperation(expr.typ, left, expr.operator, right)
+
+            @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+            def visit_BinarySequenceOperation(self, expr: BinarySequenceOperation):
+                left = self.visit(expr.left)
+                right = self.visit(expr.right)
+                return BinarySequenceOperation(expr.typ, left, expr.operator, right)
 
             @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
             def visit_BinaryBooleanOperation(self, expr: BinaryBooleanOperation):

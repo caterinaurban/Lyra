@@ -1,0 +1,413 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>lyra.abstract_domains.string.character_domain &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">lyra</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../../index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      
+    <li>lyra.abstract_domains.string.character_domain</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for lyra.abstract_domains.string.character_domain</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Character Inclusion Abstract Domain</span>
+<span class="sd">===================================</span>
+
+<span class="sd">Non-relational abstract domain to be used for **string analysis**.</span>
+<span class="sd">The set of possible string values of a program variable in a program state</span>
+<span class="sd">is represented by the sets of characters that must and may form the string.</span>
+
+<span class="sd">:Authors: Radwa Sherif Abdelbar and Caterina Urban</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.basis</span> <span class="k">import</span> <span class="n">Basis</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.lattice</span> <span class="k">import</span> <span class="n">BottomMixin</span><span class="p">,</span> <span class="n">SequenceMixin</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.state</span> <span class="k">import</span> <span class="n">State</span>
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">lyra.core.types</span> <span class="k">import</span> <span class="n">StringLyraType</span>
+<span class="kn">from</span> <span class="nn">lyra.core.utils</span> <span class="k">import</span> <span class="n">copy_docstring</span>
+
+
+<span class="n">_alphabet</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">printable</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CharacterLattice"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterLattice">[docs]</a><span class="k">class</span> <span class="nc">CharacterLattice</span><span class="p">(</span><span class="n">BottomMixin</span><span class="p">,</span> <span class="n">SequenceMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Character inclusion lattice.</span>
+
+<span class="sd">    The default abstraction is the unconstraining pair ``(∅, Σ)``,</span>
+<span class="sd">    where ``Σ`` denotes the entire alphabet.</span>
+<span class="sd">    The bottom element of the lattice represents a contradiction.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: CharacterLattice._less_equal</span>
+<span class="sd">    .. automethod:: CharacterLattice._meet</span>
+<span class="sd">    .. automethod:: CharacterLattice._join</span>
+<span class="sd">    .. automethod:: CharacterLattice._widening</span>
+<span class="sd">    .. automethod:: CharacterLattice._concat</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">certainly</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="n">maybe</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">_alphabet</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">certainly</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">maybe</span><span class="p">):</span>   <span class="c1"># the must and may sets of characters are in agreement</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_certainly</span> <span class="o">=</span> <span class="n">certainly</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_maybe</span> <span class="o">=</span> <span class="n">maybe</span>
+        <span class="k">else</span><span class="p">:</span>   <span class="c1"># the must and may sets of characters are in conflict</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CharacterLattice.from_literal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterLattice.from_literal">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_literal</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">literal</span><span class="p">:</span> <span class="n">Literal</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CharacterLattice&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">literal</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">StringLyraType</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">literal</span><span class="o">.</span><span class="n">val</span><span class="p">),</span> <span class="nb">set</span><span class="p">(</span><span class="n">literal</span><span class="o">.</span><span class="n">val</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">certainly</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Current set of must characters.</span>
+
+<span class="sd">        :return: the current set of must characters if there is no conflict, ``None`` otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_certainly</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">maybe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Current set of may characters.</span>
+
+<span class="sd">        :return: the current set of may characters if there is no conflict, ``None`` otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maybe</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">do</span><span class="p">(</span><span class="n">charset</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">charset</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;∅&quot;</span>
+            <span class="k">elif</span> <span class="n">charset</span> <span class="o">==</span> <span class="n">_alphabet</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;Σ&quot;</span>
+            <span class="n">charlist</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">charset</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s2">&quot;{&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">char</span><span class="p">)</span> <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">charlist</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;⊥&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;(&quot;</span> <span class="o">+</span> <span class="n">do</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">certainly</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span> <span class="o">+</span> <span class="n">do</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maybe</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+
+<div class="viewcode-block" id="CharacterLattice.top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterLattice.top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The top lattice element is ``(∅, Σ)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)())</span></div>
+
+<div class="viewcode-block" id="CharacterLattice.is_top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterLattice.is_top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">is_top</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">certainly</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe</span> <span class="o">==</span> <span class="n">_alphabet</span></div>
+
+<div class="viewcode-block" id="CharacterLattice._less_equal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterLattice._less_equal">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_less_equal</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_less_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;CharacterLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;``(c1, m1) ⊑ (c2, m2)`` if and only if ``c2 ⊆ c1`` and ``m1 ⊆ m2``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">certainly</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">certainly</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">maybe</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CharacterLattice._join"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterLattice._join">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_join</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;CharacterLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CharacterLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;``(c1, m1) ⊔ (c2, m2) = (c1 ∩ c2, m1 ∪ m2)``.&quot;&quot;&quot;</span>
+        <span class="n">certainly</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">certainly</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">certainly</span><span class="p">)</span>
+        <span class="n">maybe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">maybe</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">certainly</span><span class="p">,</span> <span class="n">maybe</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="CharacterLattice._meet"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterLattice._meet">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_meet</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_meet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;CharacterLattice&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;``(c1, m1) ⊓ (c2, m2) = (c1 ∪ c2, m1 ∩ m2)``.&quot;&quot;&quot;</span>
+        <span class="n">certainly</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">certainly</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">certainly</span><span class="p">)</span>
+        <span class="n">maybe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">maybe</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">certainly</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">maybe</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">certainly</span><span class="p">,</span> <span class="n">maybe</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CharacterLattice._widening"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterLattice._widening">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BottomMixin</span><span class="o">.</span><span class="n">_widening</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_widening</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;CharacterLattice&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;``(c1, m1) ▽ (c2, m2) = (c1, m1) ⊔ (c2, m2)``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_join</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+    <span class="c1"># string operations</span>
+
+<div class="viewcode-block" id="CharacterLattice._concat"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterLattice._concat">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">SequenceMixin</span><span class="o">.</span><span class="n">concat</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_concat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;CharacterLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CharacterLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;``(c1, m1) + (c2, m2) = (c1 ∪ c2, m1 ∪ m2)``.&quot;&quot;&quot;</span>
+        <span class="n">certainly</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">certainly</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">certainly</span><span class="p">)</span>
+        <span class="n">maybe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">maybe</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">certainly</span><span class="p">,</span> <span class="n">maybe</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="CharacterState"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterState">[docs]</a><span class="k">class</span> <span class="nc">CharacterState</span><span class="p">(</span><span class="n">Basis</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Character inclusion analysis state. An element of the character inclusion abstract domain.</span>
+
+<span class="sd">    Map from each program variable to the sets of characters</span>
+<span class="sd">    that must and may form its possible string values.</span>
+<span class="sd">    The string value of all program variables is unconstrained by default.</span>
+
+<span class="sd">    .. note:: Program variables storing lists are abstracted via summarization.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: CharacterState._assign</span>
+<span class="sd">    .. automethod:: CharacterState._assume</span>
+<span class="sd">    .. automethod:: CharacterState._substitute</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">],</span> <span class="n">precursory</span><span class="p">:</span> <span class="n">State</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">lattices</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">CharacterLattice</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">lattices</span><span class="p">,</span> <span class="n">precursory</span><span class="o">=</span><span class="n">precursory</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CharacterState._assume"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterState._assume">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Basis</span><span class="o">.</span><span class="n">_assume</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_assume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;State&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">UnaryBooleanOperation</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">condition</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">UnaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Neg</span><span class="p">:</span>
+                <span class="n">expression</span> <span class="o">=</span> <span class="n">condition</span><span class="o">.</span><span class="n">expression</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="p">):</span>
+                    <span class="n">typ</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">typ</span>
+                    <span class="n">left</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">left</span>
+                    <span class="n">operator</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">reverse_operator</span><span class="p">()</span>
+                    <span class="n">right</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">right</span>
+                    <span class="n">new_expression</span> <span class="o">=</span> <span class="n">BinaryComparisonOperation</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assume</span><span class="p">(</span><span class="n">new_expression</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="n">UnaryBooleanOperation</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">expression</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">UnaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Neg</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assume</span><span class="p">(</span><span class="n">expression</span><span class="o">.</span><span class="n">expression</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="n">BinaryBooleanOperation</span><span class="p">):</span>
+                    <span class="n">left</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">left</span>
+                    <span class="n">op</span> <span class="o">=</span> <span class="n">UnaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Neg</span>
+                    <span class="n">left</span> <span class="o">=</span> <span class="n">UnaryBooleanOperation</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">left</span><span class="p">)</span>
+                    <span class="n">operator</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">reverse_operator</span><span class="p">()</span>
+                    <span class="n">right</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">right</span>
+                    <span class="n">op</span> <span class="o">=</span> <span class="n">UnaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Neg</span>
+                    <span class="n">right</span> <span class="o">=</span> <span class="n">UnaryBooleanOperation</span><span class="p">(</span><span class="n">right</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+                    <span class="n">typ</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">typ</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assume</span><span class="p">(</span><span class="n">BinaryBooleanOperation</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">operator</span><span class="p">,</span> <span class="n">right</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">BinaryBooleanOperation</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">condition</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">And</span><span class="p">:</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_assume</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assume</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">left</span><span class="p">)</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">condition</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Or</span><span class="p">:</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_assume</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assume</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">left</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">condition</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinaryComparisonOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Eq</span><span class="p">:</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="n">condition</span><span class="o">.</span><span class="n">left</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="n">condition</span><span class="o">.</span><span class="n">right</span>
+                <span class="n">left_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluation</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+                <span class="n">right_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluation</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">condition</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_refinement</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">left_eval</span><span class="p">,</span> <span class="n">right_eval</span><span class="p">[</span><span class="n">right</span><span class="p">],</span> <span class="bp">self</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_refinement</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">right_eval</span><span class="p">,</span> <span class="n">left_eval</span><span class="p">[</span><span class="n">left</span><span class="p">],</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="c1"># expression evaluation</span>
+
+<div class="viewcode-block" id="CharacterState.ExpressionEvaluation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterState.ExpressionEvaluation">[docs]</a>    <span class="k">class</span> <span class="nc">ExpressionEvaluation</span><span class="p">(</span><span class="n">Basis</span><span class="o">.</span><span class="n">ExpressionEvaluation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Visitor that performs the evaluation of an expression in the character lattice.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CharacterState.ExpressionEvaluation.visit_Literal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterState.ExpressionEvaluation.visit_Literal">[docs]</a>        <span class="k">def</span> <span class="nf">visit_Literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">evaluation</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">evaluation</span>
+            <span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">lattices</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">]</span><span class="o">.</span><span class="n">from_literal</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">evaluation</span></div></div>
+
+    <span class="n">_evaluation</span> <span class="o">=</span> <span class="n">ExpressionEvaluation</span><span class="p">()</span>  <span class="c1"># static class member shared between all instances</span>
+
+    <span class="c1"># expression refinement</span>
+
+<div class="viewcode-block" id="CharacterState.ExpressionRefinement"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterState.ExpressionRefinement">[docs]</a>    <span class="k">class</span> <span class="nc">ExpressionRefinement</span><span class="p">(</span><span class="n">Basis</span><span class="o">.</span><span class="n">ExpressionRefinement</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CharacterState.ExpressionRefinement.visit_BinarySequenceOperation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.string.html#lyra.abstract_domains.assumption.alphabet_domain.CharacterState.ExpressionRefinement.visit_BinarySequenceOperation">[docs]</a>        <span class="k">def</span> <span class="nf">visit_BinarySequenceOperation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">BinarySequenceOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Concat</span><span class="p">:</span>
+                <span class="n">refined</span> <span class="o">=</span> <span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span><span class="o">.</span><span class="n">meet</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">refinement1</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">lattices</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">](</span><span class="n">maybe</span><span class="o">=</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">refined</span><span class="p">)</span><span class="o">.</span><span class="n">maybe</span><span class="p">)</span>
+                <span class="n">updated1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">refinement1</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+                <span class="n">refinement2</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">lattices</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">](</span><span class="n">maybe</span><span class="o">=</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">refined</span><span class="p">)</span><span class="o">.</span><span class="n">maybe</span><span class="p">)</span>
+                <span class="n">updated2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">refinement2</span><span class="p">,</span> <span class="n">updated1</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">updated2</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">visit_BinarySequenceOperation</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div></div>
+
+    <span class="n">_refinement</span> <span class="o">=</span> <span class="n">ExpressionRefinement</span><span class="p">()</span>  <span class="c1"># static class member shared between instances</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

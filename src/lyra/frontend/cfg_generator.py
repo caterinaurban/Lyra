@@ -485,6 +485,11 @@ class CFGVisitor(ast.NodeVisitor):
             return Call(pp, name, arguments, typ)
         elif isinstance(node.func, ast.Attribute):
             name: str = node.func.attr
+            if name == 'append':
+                arguments = [self.visit(node.func.value, types, None)]  # target of the call
+                args = [self.visit(arg, types, None) for arg in node.args]
+                arguments.extend(args)
+                return Call(pp, name, arguments, None)
             if name == "split":     # str.split([sep[, maxsplit]])
                 assert isinstance(typ, ListLyraType)    # we expect type to be a ListLyraType
                 arguments = [self.visit(node.func.value, types, typ.typ)]   # target of the call
@@ -551,7 +556,7 @@ class CFGVisitor(ast.NodeVisitor):
         elif isinstance(node.slice, ast.Slice):
             value = self.visit(node.value, types, None)
             lower = self.visit(node.slice.lower, types, None)
-            upper = self.visit(node.slice.upper, types, None)
+            upper = self.visit(node.slice.upper, types, None) if node.slice.upper else None
             step = self.visit(node.slice.step, types, None) if node.slice.step else None
             return SlicingAccess(pp, typ, value, lower, upper, step)
         raise NotImplementedError(f"Subscription {node.slice.__class__.__name__} is unsupported!")

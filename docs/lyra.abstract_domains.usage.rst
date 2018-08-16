@@ -9,17 +9,12 @@ lyra\.abstract\_domains\.usage package
 Submodules
 ----------
 
-.. automodule:: lyra.abstract_domains.usage.test_usedListStartLattice
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 .. automodule:: lyra.abstract_domains.usage.usage_domain
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: lyra.abstract_domains.usage.used_liststart
+.. automodule:: lyra.abstract_domains.usage.usage_lattice
     :members:
     :undoc-members:
     :show-inheritance:
