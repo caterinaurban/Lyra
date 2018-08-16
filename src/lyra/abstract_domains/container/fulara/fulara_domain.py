@@ -776,12 +776,16 @@ class FularaState(State):
             # update relations with scalar variables in dict stores
             for d_lattice in self.dict_store.store.values():
                 for (k1, v) in d_lattice.segments:
+                    d_lattice.segments.remove((k1, v))      # needed, because tuple is immutable?
                     k1.assign({left}, {right})
                     v.assign({left}, {right})
+                    d_lattice.segments.add((k1, v))
                 d_lattice.d_norm_own()
             for i_lattice in self.init_store.store.values():
                 for (k2, b) in i_lattice.segments:        # b must be True
+                    i_lattice.segments.remove((k2, b))      # needed, because tuple is immutable?
                     k2.assign({left}, {right})
+                    i_lattice.segments.add((k2, b))
                 i_lattice.d_norm_own()
 
         if isinstance(left, VariableIdentifier):
