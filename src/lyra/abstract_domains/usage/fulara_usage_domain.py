@@ -508,9 +508,11 @@ class FularaUsageState(Stack, State):
                         if v.is_top() or v.is_scoped():  # TODO: more efficient way?
                             left_u_s = True
                             left_lattice.partition_add(k_abs, UsageLattice(Status.W))   # strong update
-                    break   # there can only be one overlapping segment (since k_abs is singleton)
-            else:
-                for (k, v) in old_segments:
+                        # there can only be one overlapping segment (since k_abs is singleton)
+                        break
+            else:   # weak update
+                # left_lattice.partition_update({(k_abs, UsageLattice(Status.W))})
+                for (k, v) in old_segments:     # TODO: adapt from partition_update?
                     key_meet_k = deepcopy(k_abs).meet(k)
                     if not key_meet_k.is_bottom():  # key may be contained in this segment
                         if v.is_top():
@@ -519,8 +521,11 @@ class FularaUsageState(Stack, State):
                         elif v.is_scoped():
                             left_u_s = True
                             left_lattice.segments.remove((k, v))
-                            # weak update: W join S = U     # TODO: only update overlapping parts?
-                            left_lattice.segments.add((k, UsageLattice(Status.U)))
+                            # weak update with partitioning: W join S = U
+                            left_lattice.segments.add((key_meet_k, UsageLattice(Status.U)))
+                            non_overlapping = {(m, v) for m in k.decomp(k_abs)
+                                               if not m.is_bottom()}
+                            left_lattice.segments.update(non_overlapping)
 
             if left_u_s:      # make subscript used
                 self.make_used(left.key)
