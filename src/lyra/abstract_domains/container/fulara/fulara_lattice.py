@@ -134,6 +134,11 @@ class FularaLattice(BottomMixin):
                                     self.k_d_args, self.v_d_args, set()))
         return self
 
+    def is_empty(self) -> bool:
+        if not self.is_bottom():
+            return len(self.segments) == 0
+        return False
+
     @copy_docstring(BottomMixin._less_equal)
     def _less_equal(self, other: 'FularaLattice') -> bool:
         if self.k_domain != other.k_domain:
