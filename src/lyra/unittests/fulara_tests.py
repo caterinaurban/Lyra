@@ -105,4 +105,6 @@ def test_suite():
 
 if __name__ == '__main__':
     runner = unittest.TextTestRunner()
-    runner.run(test_suite())
+    result = runner.run(test_suite())
+    if not result.wasSuccessful():
+        sys.exit(1)

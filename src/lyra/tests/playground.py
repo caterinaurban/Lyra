@@ -15,8 +15,8 @@
 # from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
 # SimpleUsageAnalysis().main("usage/example.py")
 
-from lyra.engine.usage.fulara_usage_analysis import FularaUsageAnalysis
-FularaUsageAnalysis().main("usage/running_example.py")
+# from lyra.engine.usage.fulara_usage_analysis import FularaUsageAnalysis
+# FularaUsageAnalysis().main("usage/running_example.py")
 
 ######################
 # Numerical Analyses #
@@ -34,8 +34,8 @@ FularaUsageAnalysis().main("usage/running_example.py")
 # from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis
 # BackwardIntervalAnalysis().main("numerical/backward/example.py")
 
-# from lyra.engine.container.fulara.fulara_analysis import FularaAnalysis
-# FularaAnalysis().main("numerical/larger_expressions.py")
+from lyra.engine.container.fulara.fulara_analysis import FularaAnalysis
+FularaAnalysis().main("usage/running_example.py")
 
 ###################
 # String Analyses #
