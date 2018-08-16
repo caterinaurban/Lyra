@@ -437,18 +437,18 @@ class VariableIdentifier(Identifier):
 class LengthIdentifier(Identifier):
     """Sequence or collection length representation."""
 
-    def __init__(self, variable: VariableIdentifier):
+    def __init__(self, expression: Expression):
         """Sequence or collection length construction.
 
-        :param variable: sequence or collection the length of which is being constructed
+        :param expression: sequence or collection the length of which is being constructed
         """
-        name = "len({0.name})".format(variable)
+        name = "len({})".format(expression)
         super().__init__(IntegerLyraType(), name)
-        self._variable = variable
+        self._expression = expression
 
     @property
-    def variable(self):
-        return self._variable
+    def expression(self):
+        return self._expression
 
 
 class ListDisplay(Expression):
@@ -477,7 +477,8 @@ class ListDisplay(Expression):
         return hash((self.typ, str(self.items)))
 
     def __str__(self):
-        return str(self.items)
+        items = map(str, self.items)
+        return "[" + ", ".join(items) + "]"
 
 
 class TupleDisplay(Expression):
@@ -506,10 +507,10 @@ class TupleDisplay(Expression):
         return hash((self.typ, str(self.items)))
 
     def __str__(self):
-        str_items = map(str, self.items)
+        items = map(str, self.items)
         if len(self.items) == 1:
-            return f"({next(str_items)},)"      # add a trailing comma
-        return '(' + ', '.join(str_items) + ')'
+            return f"({next(items)},)"      # add a trailing comma
+        return '(' + ', '.join(items) + ')'
 
 
 class SetDisplay(Expression):
@@ -538,8 +539,8 @@ class SetDisplay(Expression):
         return hash((self.typ, str(self.items)))
 
     def __str__(self):
-        str_items = map(str, self.items)
-        return '{' + ', '.join(str_items) + '}'
+        items = map(str, self.items)
+        return "{" + ", ".join(items) + "}"
 
 
 class DictDisplay(Expression):
@@ -574,9 +575,9 @@ class DictDisplay(Expression):
         return hash((self.typ, str(self.keys), str(self.values)))
 
     def __str__(self):
-        str_keys = map(str, self.keys)
-        str_values = map(str, self.values)
-        return '{' + ', '.join(' : '.join(x) for x in zip(str_keys, str_values)) + '}'
+        keys = map(str, self.keys)
+        values = map(str, self.values)
+        return '{' + ', '.join(' : '.join(x) for x in zip(keys, values)) + '}'
 
 
 """

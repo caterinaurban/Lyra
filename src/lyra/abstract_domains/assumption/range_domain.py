@@ -15,7 +15,7 @@ from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONM
 from lyra.abstract_domains.numerical.interval_domain import IntervalState, \
     copy_docstring, Input, IntervalLattice
 from lyra.core.expressions import VariableIdentifier, Expression, LengthIdentifier
-from lyra.core.types import IntegerLyraType
+from lyra.core.types import IntegerLyraType, SequenceLyraType
 
 
 class RangeLattice(IntervalLattice, JSONMixin):
@@ -74,7 +74,8 @@ class RangeState(IntervalState, InputMixin):
         super(IntervalState, self).__init__(variables, lattices)
         InputMixin.__init__(self, precursory)
         for v in self.variables:
-            self.store[LengthIdentifier(v)] = lattices[IntegerLyraType()](lower=0)
+            if isinstance(v.typ, SequenceLyraType):
+                self.store[LengthIdentifier(v)] = lattices[IntegerLyraType()](lower=0)
 
     @copy_docstring(InputMixin.replace)
     def replace(self, variable: VariableIdentifier, expression: Expression) -> 'RangeState':

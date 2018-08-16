@@ -13,7 +13,7 @@ from enum import IntEnum
 from typing import Set
 
 from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONMixin
-from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin
+from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin, SequenceMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
@@ -21,11 +21,11 @@ from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisi
     UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, TupleDisplay, \
     SetDisplay, DictDisplay, BinarySequenceOperation
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
-    StringLyraType
+    StringLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
 
 
-class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
+class TypeLattice(BottomMixin, ArithmeticMixin, SequenceMixin, JSONMixin):
     """Type Lattice::
 
         String
@@ -96,11 +96,15 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
 
     @classmethod
     def from_lyra_type(cls, lyra_type: LyraType):
-        if isinstance(lyra_type, BooleanLyraType):
+        if isinstance(lyra_type, ListLyraType):
+            typ = lyra_type.typ
+        else:
+            typ = lyra_type
+        if isinstance(typ, BooleanLyraType):
             return cls(TypeLattice.Status.Boolean)
-        elif isinstance(lyra_type, IntegerLyraType):
+        elif isinstance(typ, IntegerLyraType):
             return cls(TypeLattice.Status.Integer)
-        elif isinstance(lyra_type, FloatLyraType):
+        elif isinstance(typ, FloatLyraType):
             return cls(TypeLattice.Status.Float)
         return cls(TypeLattice.Status.String)
 
@@ -226,12 +230,10 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
         String + Boolean = ⊥
         String + Integer = ⊥
         String + Float = ⊥
-        String + String = String
+        String + String = ⊥
         """
         if self.is_boolean() and other.is_boolean():
             return self._replace(TypeLattice(TypeLattice.Status.Integer))
-        elif self.is_top() and other.is_top():
-            return self
         elif self.is_top() or other.is_top():
             return self.bottom()
         return self._replace(TypeLattice(max(self.element, other.element)))
@@ -268,25 +270,23 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
         Boolean * Boolean = Integer
         Boolean * Integer = Integer
         Boolean * Float = Float
-        Boolean * String = String
+        Boolean * String = ⊥
         Integer * Boolean = Integer
         Integer * Integer = Integer
         Integer * Float = Float
-        Integer * String = String
+        Integer * String = ⊥
         Float * Boolean = Float
         Float * Integer = Float
         Float * Float = Float
         Float * String = ⊥
-        String * Boolean = String
-        String * Integer = String
+        String * Boolean = ⊥
+        String * Integer = ⊥
         String * Float = ⊥
         String * String = ⊥
         """
         if self.is_boolean() and other.is_boolean():
             return self._replace(TypeLattice(TypeLattice.Status.Integer))
-        elif self.is_top() and (other.is_float() or other.is_top()):
-            return self.bottom()
-        elif other.is_top() and (self.is_float() or self.is_top()):
+        elif self.is_top() or other.is_top():
             return self.bottom()
         return self._replace(TypeLattice(max(self.element, other.element)))
 
@@ -313,6 +313,34 @@ class TypeLattice(BottomMixin, ArithmeticMixin, JSONMixin):
         if self.is_top() or other.is_top():
             return self.bottom()
         return self._replace(TypeLattice(TypeLattice.Status.Float))
+
+    # sequence operations
+
+    @copy_docstring(SequenceMixin._concat)
+    def _concat(self, other: 'TypeLattice') -> 'TypeLattice':
+        """
+        Boolean + Boolean = ⊥
+        Boolean + Integer = ⊥
+        Boolean + Float = ⊥
+        Boolean + String = ⊥
+        Integer + Boolean = ⊥
+        Integer + Integer = ⊥
+        Integer + Float = ⊥
+        Integer + String = ⊥
+        Float + Boolean = ⊥
+        Float + Integer = ⊥
+        Float + Float = ⊥
+        Float + String = ⊥
+        String + Boolean = ⊥
+        String + Integer = ⊥
+        String + Float = ⊥
+        String + String = String
+        """
+        if self.is_top() and other.is_top():
+            return self
+        return self.bottom()
+
+    # json operations
 
     @copy_docstring(JSONMixin.to_json)
     def to_json(self) -> str:
@@ -346,6 +374,8 @@ class TypeState(Store, InputMixin):
     are stored in the class member ``inputs``, which is a map from each program point
     to the list of type assumptions on the inputs read at that point.
 
+    .. note:: Program variables storing lists are abstracted via summarization.
+
     .. document private methods
     .. automethod:: TypeState._assume
     .. automethod:: TypeState._substitute
@@ -359,8 +389,12 @@ class TypeState(Store, InputMixin):
         lattices = defaultdict(lambda: TypeLattice)
         arguments = defaultdict(lambda: {'type_status': TypeLattice.Status.String})
         arguments[BooleanLyraType()] = {'type_status': TypeLattice.Status.Boolean}
+        arguments[ListLyraType(BooleanLyraType())] = {'type_status': TypeLattice.Status.Boolean}
         arguments[IntegerLyraType()] = {'type_status': TypeLattice.Status.Integer}
+        arguments[ListLyraType(IntegerLyraType())] = {'type_status': TypeLattice.Status.Integer}
         arguments[FloatLyraType()] = {'type_status': TypeLattice.Status.Float}
+        arguments[ListLyraType(FloatLyraType())] = {'type_status': TypeLattice.Status.Float}
+
         super().__init__(variables, lattices, arguments)
         InputMixin.__init__(self, precursory)
 
@@ -394,55 +428,46 @@ class TypeState(Store, InputMixin):
 
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'TypeState':
-        if isinstance(left, VariableIdentifier):
-            if isinstance(left.typ, BooleanLyraType):
-                # record the current value of the substituted variable
-                value: TypeLattice = deepcopy(self.store[left])
+        def do(variable, expression):
+            is_list = isinstance(variable.typ, ListLyraType)
+            is_boolean_list = is_list and isinstance(variable.typ.typ, BooleanLyraType)
+            is_integer_list = is_list and isinstance(variable.typ.typ, IntegerLyraType)
+            is_float_list = is_list and isinstance(variable.typ.typ, FloatLyraType)
+            is_string_list = is_list and isinstance(variable.typ.typ, StringLyraType)
+            # record the current value of the substituted variable
+            value: TypeLattice = deepcopy(self.store[variable])
+            if isinstance(variable.typ, BooleanLyraType) or is_boolean_list:
                 # forget the current value of the substituted variable
-                self.store[left].boolean()
-                # evaluate the right-hand side bottom-up using the updated store and the Lyra types
-                evaluation = self._evaluation.visit(right, self, dict())
-                # restrict the value of the right-hand side using that of the substituted variable
-                refinement = evaluation[right].meet(value)
-                # refine the updated store proceeding top-down on the right-hand side
-                self._refinement.visit(right, evaluation, refinement, self)
-            elif isinstance(left.typ, IntegerLyraType):
-                # record the current value of the substituted variable
-                value: TypeLattice = deepcopy(self.store[left])
+                self.store[variable].boolean()
+            elif isinstance(variable.typ, IntegerLyraType) or is_integer_list:
                 # forget the current value of the substituted variable
-                self.store[left].integer()
-                # evaluate the right-hand side bottom-up using the updated store and the Lyra types
-                evaluation = self._evaluation.visit(right, self, dict())
-                # restrict the value of the right-hand side using that of the substituted variable
-                refinement = evaluation[right].meet(value)
-                # refine the updated store proceeding top-down on the right-hand side
-                self._refinement.visit(right, evaluation, refinement, self)
-            elif isinstance(left.typ, FloatLyraType):
-                # record the current value of the substituted variable
-                value: TypeLattice = deepcopy(self.store[left])
+                self.store[variable].integer()
+            elif isinstance(variable.typ, FloatLyraType) or is_float_list:
                 # forget the current value of the substituted variable
-                self.store[left].float()
-                # evaluate the right-hand side bottom-up using the updated store and the Lyra types
-                evaluation = self._evaluation.visit(right, self, dict())
-                # restrict the value of the right-hand side using that of the substituted variable
-                refinement = evaluation[right].meet(value)
-                # refine the updated store proceeding top-down on the right-hand side
-                self._refinement.visit(right, evaluation, refinement, self)
-            elif isinstance(left.typ, StringLyraType):
-                # record the current value of the substituted variable
-                value: TypeLattice = deepcopy(self.store[left])
+                self.store[variable].float()
+            elif isinstance(variable.typ, StringLyraType) or is_string_list:
                 # forget the current value of the substituted variable
-                self.store[left].top()
-                # evaluate the right-hand side bottom-up using the updated store and the Lyra types
-                evaluation = self._evaluation.visit(right, self, dict())
-                # restrict the value of the right-hand side using that of the substituted variable
-                refinement = evaluation[right].meet(value)
-                # refine the updated store proceeding top-down on the right-hand side
-                self._refinement.visit(right, evaluation, refinement, self)
+                self.store[variable].top()
             else:
                 raise ValueError(f"Variable type {left.typ} is unsupported!")
+            # evaluate the right-hand side bottom-up using the updated store and the Lyra types
+            evaluation = self._evaluation.visit(expression, self, dict())
+            # restrict the value of the right-hand side using that of the substituted variable
+            refinement = evaluation[expression].meet(value)
+            # refine the updated store proceeding top-down on the right-hand side
+            self._refinement.visit(expression, evaluation, refinement, self)
+        if isinstance(left, VariableIdentifier):
+            do(left, right)
+        elif isinstance(left, Subscription) or isinstance(left, Slicing):
+            # copy the current state
+            current: TypeState = deepcopy(self)
+            # perform the substitution on the copy of the current state
+            do(left.target, right)
+            # perform a weak update on the current state
+            self.join(current)
         else:
             raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
+
         # check whether the property ∀x. m(x) ≤ TypeLattice.from_lyra_type(x.typ) still holds
         store = self.store
         assert all(store[v].less_equal(TypeLattice.from_lyra_type(v.typ)) for v in store.keys())
@@ -495,53 +520,75 @@ class TypeState(Store, InputMixin):
         def visit_Literal(self, expr: Literal, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            typ = expr.typ
-            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
-                evaluation[expr] = TypeLattice.from_lyra_type(typ)
-                return evaluation
-            raise ValueError(f"Literal type {typ} is unsupported!")
+            evaluation[expr] = TypeLattice.from_lyra_type(expr.typ)
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            typ = expr.typ
-            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
-                value: TypeLattice = deepcopy(state.store[expr])
-                evaluation[expr] = value.meet(TypeLattice.from_lyra_type(typ))
-                return evaluation
-            raise ValueError(f"Variable type {typ} is unsupported!")
+            value: TypeLattice = deepcopy(state.store[expr])
+            evaluation[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
         def visit_LengthIdentifier(self, expr: LengthIdentifier, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            typ = expr.typ
-            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
-                value: TypeLattice = deepcopy(state.store[expr])
-                evaluation[expr] = value.meet(TypeLattice.from_lyra_type(typ))
-                return evaluation
-            raise ValueError(f"Variable type {typ} is unsupported!")
+            value: TypeLattice = deepcopy(state.store[expr])
+            evaluation[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            if expr in evaluation:
+                return evaluation   # nothing to be done
+            evaluated = evaluation
+            value: TypeLattice = TypeLattice().bottom()
+            for item in expr.items:
+                evaluated = self.visit(item, state, evaluated)
+                value = value.join(evaluated[item])
+            evaluation[expr] = value
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
         def visit_TupleDisplay(self, expr: TupleDisplay, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            if expr in evaluation:
+                return evaluation   # nothing to be done
+            evaluated = evaluation
+            value: TypeLattice = TypeLattice().bottom()
+            for item in expr.items:
+                evaluated = self.visit(item, state, evaluated)
+                value = value.join(evaluated[item])
+            evaluation[expr] = value
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_SetDisplay)
         def visit_SetDisplay(self, expr: SetDisplay, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            if expr in evaluation:
+                return evaluation   # nothing to be done
+            evaluated = evaluation
+            value: TypeLattice = TypeLattice().bottom()
+            for item in expr.items:
+                evaluated = self.visit(item, state, evaluated)
+                value = value.join(evaluated[item])
+            evaluation[expr] = value
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_DictDisplay)
         def visit_DictDisplay(self, expr: DictDisplay, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            if expr in evaluation:
+                return evaluation   # nothing to be done
+            evaluated = evaluation
+            value: TypeLattice = TypeLattice().bottom()
+            for key in expr.keys:
+                evaluated = self.visit(key, state, evaluated)
+                value = value.join(evaluated[key])
+            for val in expr.values:
+                evaluated = self.visit(val, state, evaluated)
+                value = value.join(evaluated[val])
+            evaluation[expr] = value
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
         def visit_AttributeReference(self, expr: AttributeReference, state=None, evaluation=None):
@@ -550,23 +597,26 @@ class TypeState(Store, InputMixin):
 
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: Subscription, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target, state, evaluation)
+            evaluation[expr] = evaluated.meet(TypeLattice.from_lyra_type(expr.target.typ))
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target, state, evaluation)
+            evaluation[expr] = evaluated.meet(TypeLattice.from_lyra_type(expr.target.typ))
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr: Input, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            typ = expr.typ
-            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
-                evaluation[expr] = TypeLattice.from_lyra_type(typ)
-                return evaluation
-            raise ValueError(f"Input type {expr.typ} is unsupported!")
+            evaluation[expr] = TypeLattice.from_lyra_type(expr.typ)
+            return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Range)
         def visit_Range(self, expr: Range, state=None, evaluation=None):
@@ -629,7 +679,7 @@ class TypeState(Store, InputMixin):
             evaluated1 = self.visit(expr.left, state, evaluation)
             evaluated2 = self.visit(expr.right, state, evaluated1)
             if expr.operator == BinarySequenceOperation.Operator.Concat:
-                value: TypeLattice = deepcopy(evaluated2[expr.left]).add(evaluated2[expr.right])
+                value: TypeLattice = deepcopy(evaluated2[expr.left]).concat(evaluated2[expr.right])
                 evaluated2[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
                 return evaluated2
             raise ValueError(f"Binary operator '{str(expr.operator)}' is unsupported!")
@@ -669,39 +719,49 @@ class TypeState(Store, InputMixin):
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):
-            typ = expr.typ
-            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
-                state.store[expr] = evaluation[expr].meet(value)
-                return state
-            raise ValueError(f"Variable type {expr.typ} is unsupported!")
+            refined = evaluation[expr].meet(value)
+            state.store[expr] = refined
+            return state
 
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
         def visit_LengthIdentifier(self, expr, evaluation=None, value=None, state=None):
-            typ = expr.typ
-            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
-                state.store[expr] = evaluation[expr].meet(value)
-                return state
-            raise ValueError(f"Variable type {expr.typ} is unsupported!")
+            refined = evaluation[expr].meet(value)
+            state.store[expr] = refined
+            return state
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
-            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for item in expr.items:
+                updated = self.visit(item, evaluation, refined, updated)
+            return updated
 
         @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
         def visit_TupleDisplay(self, expr: TupleDisplay, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for item in expr.items:
+                updated = self.visit(item, evaluation, refined, updated)
+            return updated
 
         @copy_docstring(ExpressionVisitor.visit_SetDisplay)
         def visit_SetDisplay(self, expr: SetDisplay, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for item in expr.items:
+                updated = self.visit(item, evaluation, refined, updated)
+            return updated
 
         @copy_docstring(ExpressionVisitor.visit_DictDisplay)
         def visit_DictDisplay(self, expr: DictDisplay, state=None, evaluation=None):
-            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for key in expr.keys:
+                updated = self.visit(key, evaluation, refined, updated)
+            for val in expr.values:
+                updated = self.visit(val, evaluation, refined, updated)
+            return updated
 
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
         def visit_AttributeReference(self, expr, evaluation=None, value=None, state=None):
@@ -710,13 +770,15 @@ class TypeState(Store, InputMixin):
 
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: Subscription, evaluation=None, value=None, state=None):
-            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            refined = evaluation[expr]  # weak update
+            state.store[expr.target] = refined
+            return state
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
-            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
-            raise ValueError(error)
+            refined = evaluation[expr]  # weak update
+            state.store[expr.target] = refined
+            return state
 
         @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
