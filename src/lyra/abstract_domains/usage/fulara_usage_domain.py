@@ -69,13 +69,8 @@ class FularaUsageLattice(Lattice):
         """
         super().__init__()
 
-        if scalar_vars is None:
-            scalar_vars = set()
-        if dict_vars is None:
-            dict_vars = set()
-
-        self._s_vars = scalar_vars
-        self._d_vars = dict_vars
+        self._s_vars = scalar_vars or set()
+        self._d_vars = dict_vars or set()
 
         self._k_domain = key_domain
 
@@ -273,13 +268,13 @@ class FularaUsageState(Stack, State):
     """
 
     def __init__(self, key_domain: Type[KeyWrapper],
+                 precursory: FularaState,
                  scalar_vars: Set[VariableIdentifier] = None,
                  dict_vars: Set[VariableIdentifier] = None,
                  k_k_pre_conv: Callable[[KeyWrapper], KeyWrapper]
                  = lambda x: x,
                  k_pre_k_conv: Callable[[KeyWrapper], KeyWrapper]
-                 = lambda x: x,
-                 precursory: FularaState = None):
+                 = lambda x: x):
         arguments = {'key_domain': key_domain, 'scalar_vars': scalar_vars, 'dict_vars': dict_vars}
         super().__init__(FularaUsageLattice, arguments)    # Stack
         State.__init__(self, precursory)
@@ -413,14 +408,7 @@ class FularaUsageState(Stack, State):
                         raise NotImplementedError(error)
                 # TODO: not in?
                 elif condition.operator == BinaryComparisonOperation.Operator.NotIn:
-                    return self     # do nothing
-                    # left = condition.left
-                    # if isinstance(left, VariableIdentifier) and type(left.typ) in scalar_types:
-                    #     self.make_used(condition.right)
-                    #     return self
-                    # else:
-                    #     error = f"The loop condition {condition} is not yet supported!"
-                    #     raise NotImplementedError(error)
+                    return self     # do nothing: no overwriting for loop exit
 
         # default:
         effect = False  # effect of the current nesting level on the outcome of the program
