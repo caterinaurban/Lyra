@@ -34,6 +34,7 @@ v_name = "0v_v"
 
 scalar_types = {BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType}
 
+
 class Scope(Enum):
     """Scope type. Either ``Branch`` or ``Loop``."""
     Branch = 0
@@ -87,8 +88,6 @@ class InRelationState(State, BottomMixin):
         if self.is_bottom():
             return "⊥"
 
-        result = "{"
-        first = True
         # output tuples sorted by their variable names
         str_tuples = map(lambda t: f"({t[0]}, {t[1]}, {t[2]})", self.tuple_set)
         str_tuples = sorted(str_tuples)
@@ -115,7 +114,7 @@ class InRelationState(State, BottomMixin):
     @copy_docstring(Lattice._join)
     def _join(self, other: 'InRelationState') -> 'InRelationState':
         """Intersection of the tuple sets"""
-        new_set = self.tuple_set.intersection(other.tuple_set)      # TODO: update?
+        new_set = self.tuple_set.intersection(other.tuple_set)
         return self._replace(InRelationState(new_set, scopes=self.scopes))
 
     @copy_docstring(Lattice._meet)
@@ -213,7 +212,7 @@ class InRelationState(State, BottomMixin):
             return self
 
         if isinstance(condition, BinaryComparisonOperation):  # TODO: boolean conjunctions of them?
-            if condition.operator == 9:  # op 9 == In
+            if condition.operator == BinaryComparisonOperation.Operator.In:
                 if isinstance(condition.left, VariableIdentifier):
                     if self.scope == Scope.Loop:  # variable gets overwritten
                         self.forget_variable(condition.left)
@@ -234,7 +233,7 @@ class InRelationState(State, BottomMixin):
 
                     new_tuple = (condition.right.target_dict, left_items[0], left_items[1])
                     self.tuple_set.add(new_tuple)
-            elif condition.operator == 10:       # NotIn
+            elif condition.operator == BinaryComparisonOperation.Operator.NotIn:
                 if isinstance(condition.left, VariableIdentifier):
                     if isinstance(condition.right, Keys):
                         # forget the affected relation
@@ -388,7 +387,7 @@ class FularaState(State):
     def __init__(self, scalar_domain: Type[EnvironmentMixin],
                  key_domain: Type[KeyWrapper],
                  value_domain: Type[ValueWrapper],
-                 update_key_from_scalar: Callable[[KeyWrapper, EnvironmentMixin], KeyWrapper],    # TODO: doc
+                 update_key_from_scalar: Callable[[KeyWrapper, EnvironmentMixin], KeyWrapper],
                  update_val_from_scalar: Callable[[ValueWrapper, EnvironmentMixin], ValueWrapper],
                  scalar_vars: Set[VariableIdentifier] = None,
                  dict_vars: Set[VariableIdentifier] = None,
@@ -410,6 +409,10 @@ class FularaState(State):
         :param value_domain: domain for abstraction of dictionary values,
             ranges over the scalar variables and the special value variable v_v
             and should therefore have a 'scalar_variables' and a 'v_var' argument in __init__
+        :param update_key_from_scalar: Function to update the scalar part of a given key_domain
+            element to the scalar_domain element, given as second argument
+        :param update_val_from_scalar: Function to update the scalar part of a given value_domain
+            element to the scalar_domain element, given as second argument
         :param scalar_vars: list of scalar variables, whose values should be abstracted
         :param dict_vars: list of dictionary variables, whose values should be abstracted
         :param scalar_k_conv: conversion function to convert from scalar domain elements
@@ -437,7 +440,7 @@ class FularaState(State):
             typ = dv.typ
             if isinstance(typ, DictLyraType):  # should be true
                 if typ not in arguments:
-                    # if issubclass(key_domain, Store):   # not relational -> don't need scalar vars
+                    # if issubclass(key_domain, Store):  # not relational -> don't need scalar vars
                     #     key_vars = []
                     # else:
                     # key_vars = scalar_vars.copy()
@@ -498,10 +501,14 @@ class FularaState(State):
 
     @property
     def update_k_from_s(self):
+        """Function to update the scalar part of a given key abstraction
+        to the scalar abstraction, given as second argument"""
         return self._update_k_from_s
 
     @property
     def update_v_from_s(self):
+        """Function to update the scalar part of a given value abstraction
+        to the scalar abstraction, given as second argument"""
         return self._update_v_from_s
 
     @property
@@ -544,7 +551,7 @@ class FularaState(State):
         """Current scope type."""
         return self._scopes[-1]
 
-    def __repr__(self):             # TODO: use join?
+    def __repr__(self):
         return f"{self.scalar_state}, {self.dict_store}, {self.init_store}, {self.in_relations}"
 
     @copy_docstring(Lattice.bottom)
@@ -592,10 +599,20 @@ class FularaState(State):
         in_le = self.in_relations.less_equal(other.in_relations)
         return scalar_le and dict_le and init_le and in_le
 
-
     def join_with_scalar(self, self_store: Store, other_store: Store, value_with_scalar: bool):
-        # adapted from Store.join and fulara_lattice._join/dnorm,    # TODO: doc
-        # adding update of scalar information for non-overlapping segments
+        """
+        Joins the two dictionary stores, setting the scalar information
+        for non-overlapping segments to the current scalar state.
+        The result is directly written to self_store.
+
+        (adapted from Store.join and fulara_lattice._join/dnorm,
+        adding update of scalar information for non-overlapping segments)
+
+        :param self_store: Store of FularaLattices to be overwritten by join
+        :param other_store: Store of FulararLattices to be joined with self_store
+        :param value_with_scalar: Indicates, if the value abstract domain
+                contains scalar information and so if it should be updated
+        """
 
         if other_store.is_bottom() or self_store.is_top():
             pass
@@ -627,7 +644,8 @@ class FularaState(State):
                         for r in result_set:
                             s_meet_r = deepcopy(s[0]).meet(r[0])
                             if not s_meet_r.is_bottom():  # not disjoint -> join segments
-                                s = (deepcopy(s[0]).join(deepcopy(r[0])), deepcopy(s[1]).join(deepcopy(r[1])))
+                                s = (deepcopy(s[0]).join(deepcopy(r[0])),
+                                     deepcopy(s[1]).join(deepcopy(r[1])))
                                 unjoined_result.discard(r)
                                 s_joined = True
                                 remove_set.add(r)
@@ -653,7 +671,6 @@ class FularaState(State):
 
                     self_lattice.segments.clear()
                     self_lattice.segments.update(result_set)
-
 
     @copy_docstring(Lattice._join)
     def _join(self, other: 'FularaState') -> 'FularaState':
@@ -748,8 +765,14 @@ class FularaState(State):
             current_temps.remove(var)
 
     def update_dict_from_scalar(self, store: Store, value_with_scalar: bool):
+        """Updates the scalar information of the given dictionary store to the current scalar state
+
+        :param store: Store of FularaLattices to be updated
+        :param value_with_scalar: Indicates, if the value abstract domain
+                contains scalar information and so if it should be updated
+        """
+        d_lattice: FularaLattice
         for d_lattice in store.store.values():
-            d_lattice: FularaLattice
             updated_segments = set()
             for (k, v) in d_lattice.segments:
                 new_k = self.update_k_from_s(k, self.scalar_state)
@@ -768,7 +791,7 @@ class FularaState(State):
 
         all_ids = left.ids().union(right.ids())
 
-        if all(type(id.typ) in scalar_types for id in all_ids):   # TODO: use not any?
+        if all(type(ident.typ) in scalar_types for ident in all_ids):   # TODO: use not any?
             # completely SCALAR STMT
             # update scalar part
             self.scalar_state.assign({left}, {right})
@@ -791,7 +814,7 @@ class FularaState(State):
         elif isinstance(left, VariableIdentifier):
             if type(left.typ) in scalar_types:  # assignment to scalar variable
                 evaluation = dict()
-                scalar_right = self._read_eval.visit(right, self, evaluation)
+                scalar_right = self.read_eval.visit(right, self, evaluation)
                 self.scalar_state.assign({left}, {scalar_right})
 
                 self._temp_cleanup(evaluation)
@@ -827,7 +850,7 @@ class FularaState(State):
                         # k_abs must be a singleton -> 'strong update'
                         left_lattice.partition_add(k_abs, v_abs)
                         left_i_lattice.partition_add(k_abs, BoolLattice(False))
-                elif isinstance(right, Input):      # TODO: not really possible
+                elif isinstance(right, Input):      # TODO: add special dictinput() function?
                     # everything set to top
                     self.dict_store.store[left].top()
                     self.init_store.store[left].top()
@@ -845,7 +868,7 @@ class FularaState(State):
             k_abs = self.eval_key(left.key)     # TODO: nested subscripts -> read_eval
 
             evaluation = dict()
-            scalar_right = self._read_eval.visit(right, self, evaluation)
+            scalar_right = self.read_eval.visit(right, self, evaluation)
             v_abs = self.eval_value(scalar_right)
             for temp in evaluation.values():
                 v_abs.remove_variable(temp)
@@ -859,8 +882,7 @@ class FularaState(State):
                 i_lattice: 'FularaLattice' = self.init_store.store[d]
                 i_lattice.partition_add(k_abs, BoolLattice(False))
             else:
-                # WEAK UPDATE
-                # add segment & normalize
+                # WEAK UPDATE (with partitioning)
                 d_lattice.partition_update({(k_abs, v_abs)})
         else:
             raise NotImplementedError(f"Assignment '{left} = {right}' is not yet supported")
@@ -1016,7 +1038,7 @@ class FularaState(State):
 
         # default: try in scalar domain
         evaluation = dict()
-        scalar_condition = self._read_eval.visit(condition, self, evaluation)
+        scalar_condition = self.read_eval.visit(condition, self, evaluation)
 
         self.scalar_state.assume({scalar_condition})
 
@@ -1135,8 +1157,9 @@ class FularaState(State):
         def visit(self, expr, *args, **kwargs):
             """
             :param expr: current expression
-            :param state: current FularaState
-            :param evaluation: dictionary mapping from dictionary read expressions,
+            :keyword arguments:
+                * *state* -- current FularaState
+                * *evaluation* -- dictionary mapping from dictionary read expressions,
                 that already got evaluated to temporary variables (VariableIdentifier)
             :return expression with replaced dictionary reads
             """
@@ -1186,7 +1209,7 @@ class FularaState(State):
 
         def default_visit(self, expr: Expression, state: 'FularaState' = None,
                           evaluation=None):
-            # default: visit & replace children (adapted from expressions._iter_child_exprs)
+            """default: visit & replace children (adapted from expressions._iter_child_exprs)"""
             new_expr = copy(expr)
             for name, field in new_expr.__dict__.items():
                 if isinstance(field, Expression):
@@ -1197,4 +1220,4 @@ class FularaState(State):
                             field[idx] = self.visit(item, state, evaluation)
             return new_expr
 
-    _read_eval = DictReadEvaluation()  # static class member shared between all instances
+    read_eval = DictReadEvaluation()  # static class member shared between all instances

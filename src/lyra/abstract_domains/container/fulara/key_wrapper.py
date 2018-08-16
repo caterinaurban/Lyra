@@ -25,6 +25,7 @@ class KeyWrapper(EnvironmentMixin, metaclass=ABCMeta):
 
     @property
     def k_var(self) -> VariableIdentifier:
+        """The special key variable of this abstraction"""
         return self._k_var
 
     @abstractmethod
@@ -52,4 +53,4 @@ class KeyWrapper(EnvironmentMixin, metaclass=ABCMeta):
     @abstractmethod
     def is_bottom(self) -> bool:
         """Should be true if the special key variable is bottom
-        (i.e. cannot have any concrete value)"""
+        (i.e. if it cannot have any concrete value)"""

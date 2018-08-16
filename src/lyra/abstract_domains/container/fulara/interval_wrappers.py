@@ -1,3 +1,10 @@
+"""
+Interval wrappers for the Fulara Domain
+===============================
+
+:Authors: Lowis Engel
+"""
+
 from copy import deepcopy, copy
 from typing import Set
 
@@ -65,9 +72,9 @@ class IntervalKWrapper(KeyWrapper, IntervalSWrapper):
             right.store[self.k_var].bottom()
         else:
             left.store[self.k_var] = IntervalLattice(k_state.lower,
-                                                      k_exclude.lower - 1)  # bottom if empty
+                                                     k_exclude.lower - 1)  # bottom if empty
             right.store[self.k_var] = IntervalLattice(k_exclude.upper + 1,
-                                                       k_state.upper)  # bottom if empty
+                                                      k_state.upper)  # bottom if empty
 
         return {left, right}
 

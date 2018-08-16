@@ -38,8 +38,8 @@ class FularaAnalysis(Runner):
             return k_state
 
         def k_s_conversion(k_state: IntervalKWrapper) -> IntervalSWrapper:
-            vars = copy(k_state.variables)
-            s_state = IntervalSWrapper(vars)
+            variables = copy(k_state.variables)
+            s_state = IntervalSWrapper(variables)
             s_state._store = deepcopy(k_state.store)
 
             return s_state
@@ -60,19 +60,21 @@ class FularaAnalysis(Runner):
             return v_state
 
         def v_s_conversion(v_state: IntervalVWrapper) -> IntervalSWrapper:
-            vars = copy(v_state.variables)
-            s_state = IntervalSWrapper(vars)
+            variables = copy(v_state.variables)
+            s_state = IntervalSWrapper(variables)
             s_state._store = deepcopy(v_state.store)
 
             return s_state
 
-        def update_k_from_scalar(k_state: IntervalKWrapper, s_state: IntervalSWrapper) -> IntervalKWrapper:
+        def update_k_from_scalar(k_state: IntervalKWrapper, s_state: IntervalSWrapper) \
+                -> IntervalKWrapper:
             result = deepcopy(k_state)
             for var in s_state.store:
                 result.store[var] = deepcopy(s_state.store[var])
             return result
 
-        def update_v_from_scalar(v_state: IntervalVWrapper, s_state: IntervalSWrapper) -> IntervalVWrapper:
+        def update_v_from_scalar(v_state: IntervalVWrapper, s_state: IntervalSWrapper) \
+                -> IntervalVWrapper:
             result = deepcopy(v_state)
             for var in s_state.store:
                 result.store[var] = deepcopy(s_state.store[var])

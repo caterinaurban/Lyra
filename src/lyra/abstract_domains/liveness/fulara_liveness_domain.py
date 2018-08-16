@@ -1,11 +1,11 @@
 """
-Fulara Syntactic Dictionary Usage Abstract Domain
+Fulara Dictionary Strongly Live Abstract Domain
 ===============================
 
-Abstract domain to be used for **input data usage analysis** using syntactic variable dependencies
-with support to analyze abstract dictionary segments.
-A program variable or dictionary segment
-can have value *U* (used), *S* (scoped), *W* (written), and *N* (not used).
+Abstract domain to be used for **strongly live analysis**.
+A program variable or dictionary segment is *strongly live* if
+it is used in an assignment to another strongly live variable or dictionary segment,
+or if is used in a statement other than an assignment.
 
 :Authors: Lowis Engel
 """
@@ -17,7 +17,7 @@ from lyra.abstract_domains.container.fulara.fulara_domain import FularaState
 from lyra.abstract_domains.container.fulara.fulara_lattice import FularaLattice
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
 from lyra.abstract_domains.lattice import Lattice
-from lyra.abstract_domains.liveness.liveness_domain import LivenessState, LivenessLattice
+from lyra.abstract_domains.liveness.liveness_domain import LivenessLattice, StrongLivenessState
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, \
@@ -36,13 +36,17 @@ scalar_types = {BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType}
 
 
 class FularaLivenessState(State):
-    """Live variable analysis state. STRONGLY!
-    An element of the live variable abstract domain.
+    """Fulara strongly liveness analysis state.
+    An element of the Fulara strongly live abstract domain.
 
-    Map from each program variable to its liveness status.
-    All program variables are *dead* by default.
+    It consists of the following 2 elements:
+    - Strongly Liveness domain state over all scalar variables, abstracting their liveness status
+    - Map from each dictionary variable to a DictSegmentLattice element with a given key domain K
+       and the liveness domain as value domain,
+       abstracting the liveness state of the dictionary segments
+    TODO: Map from each dictionary variable to a live status for the usage of the dictionary length
 
-    .. note:: Program variables storing lists are abstracted via summarization.
+    All elements are *dead*(bottom) by default.
 
     .. document private methods
     .. automethod:: FularaLivenessState._assign
@@ -55,10 +59,19 @@ class FularaLivenessState(State):
                  precursory: FularaState,
                  scalar_vars: Set[VariableIdentifier] = None,
                  dict_vars: Set[VariableIdentifier] = None,
-                 k_k_pre_conv: Callable[[KeyWrapper], KeyWrapper]
-                 = lambda x: x,
                  k_pre_k_conv: Callable[[KeyWrapper], KeyWrapper]
                  = lambda x: x):
+        """Map each program variable/dictionary segment to its liveness status.
+        :param key_domain: domain for abstraction of dictionary keys,
+            ranges over the scalar variables and the special key variable v_k,
+            should support backward assignments with _substitute
+        :param precursory: Forward analysis (Fulara analysis) result above the current statement
+        :param scalar_vars: list of scalar variables, whose liveness should be abstracted
+        :param dict_vars: list of dictionary variables, whose usage should be abstracted
+        :param k_pre_k_conv: Conversion function to convert from key domain elements of the
+                             precursory analysis to key domain elements of this analysis
+                             (if the domains differ)
+        """
 
         super().__init__(precursory)
 
@@ -67,7 +80,7 @@ class FularaLivenessState(State):
 
         self._k_domain = key_domain
 
-        self._scalar_liveness = LivenessState(scalar_vars)
+        self._scalar_liveness = StrongLivenessState(scalar_vars)
 
         arguments = {}
         for dv in dict_vars:
@@ -96,20 +109,12 @@ class FularaLivenessState(State):
         for var in dict_vars:
             self._dict_liveness.store[var].empty()
 
-        # self._loop_flag = False
         # self._length_usage # TODO
 
-        self._k_k_pre_conv = k_k_pre_conv
         self._k_pre_k_conv = k_pre_k_conv
 
-    # @property
-    # def scalar_vars(self) -> Set[VariableIdentifier]:
-    #     return self._s_vars
-
-    # TODO: properties?
-
     @property
-    def scalar_liveness(self) -> LivenessState:
+    def scalar_liveness(self) -> StrongLivenessState:
         """Liveness state of scalar variable values."""
         return self._scalar_liveness
 
@@ -118,15 +123,18 @@ class FularaLivenessState(State):
         """Abstract store of dictionary variable liveness information."""
         return self._dict_liveness
 
+    @property
+    def k_pre_k_conv(self):
+        return self._k_pre_k_conv
+
     def __repr__(self):
-        return f"{self.scalar_usage}, {self.dict_usage}"
+        return f"{self.scalar_liveness}, {self.dict_liveness}"
 
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'FularaLivenessState':
         """Point-wise, setting all elements to 'Dead'"""
         self.scalar_liveness.bottom()
         for d_lattice in self.dict_liveness.store.values():
-            d_lattice: FularaLattice
             d_lattice.empty()
         return self
 
@@ -193,9 +201,9 @@ class FularaLivenessState(State):
 
         def own_walk(e: Expression):
             """
-            Recursively yield all expressions in an expression tree
+            Recursively yield all expressions in an expression tree that we want to make live
             starting at ``expr`` (including ``expr`` itself),
-            in no specified order.# TODO: doc
+            in no specified order.
 
             adapted from _walk in expressions.py
             """
@@ -206,8 +214,12 @@ class FularaLivenessState(State):
                 if isinstance(e, Subscription):  # don't look at dictionary var
                     # still look at vars in subscript -> make them used
                     todo.extend(_iter_child_exprs(e.key))
-                elif isinstance(e, (Keys, Values, Items)):
-                    pass
+                elif isinstance(e, Keys):
+                    pass       # don't look at subexpressions
+                elif isinstance(e, (Values, Items)):
+                    # make the whole dictionary live, since there is always a corresponding
+                    # 'NotIn'-condition which uses all values (TODO: only use initialized values?)
+                    todo.extend(_iter_child_exprs(e.target_dict))
                 else:
                     todo.extend(_iter_child_exprs(e))
                 yield e
@@ -220,7 +232,7 @@ class FularaLivenessState(State):
                     # if variable occurred in a 'in-condition'
                     # only track value usage
                     for (d_var, k_var, v_var) in self.precursory.in_relations.find_value(expr):
-                        d_lattice: FularaLattice = self.dict_liveness.store[d_var]
+                        live_lattice: FularaLattice = self.dict_liveness.store[d_var]
                         if k_var is None:   # Values condition
                             v_abs = self.precursory.eval_value(expr)
                             # determine possible keys for this v_abs
@@ -230,12 +242,12 @@ class FularaLivenessState(State):
                                 if not value_meet_v.is_bottom():  # value may be in this segment
                                     # mark segment as live
                                     # weak update = strong update (since setting to top)
-                                    d_lattice.partition_add(k, LivenessLattice(Status.Live))
+                                    live_lattice.partition_add(k, LivenessLattice(Status.Live))
                         else:      # Items condition
                             k_pre = self.precursory.eval_key(k_var)  # may be refined by precursory
-                            k_abs = self._k_pre_k_conv(k_pre)
+                            k_abs = self.k_pre_k_conv(k_pre)
                             # weak update = strong update (since setting to top)
-                            d_lattice.partition_add(k_abs, LivenessLattice(Status.Live))
+                            live_lattice.partition_add(k_abs, LivenessLattice(Status.Live))
 
                 elif isinstance(expr.typ, DictLyraType):
                     self.dict_liveness.store[expr].top()
@@ -243,16 +255,16 @@ class FularaLivenessState(State):
                     raise NotImplementedError(
                         f"Type '{expr.typ}' of variable {expr} not supported")
             elif isinstance(expr, Subscription) and isinstance(expr.target.typ, DictLyraType):
-                d_lattice: FularaLattice = self.dict_liveness.store[expr.target]
+                live_lattice: FularaLattice = self.dict_liveness.store[expr.target]
                 pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
-                scalar_key = pre_copy._read_eval.visit(expr.key)
+                scalar_key = pre_copy.read_eval.visit(expr.key)
                 k_pre = pre_copy.eval_key(scalar_key)
-                k_abs = self._k_pre_k_conv(k_pre)
+                k_abs = self.k_pre_k_conv(k_pre)
                 # weak update = strong update (since setting to top)
-                d_lattice.partition_add(k_abs, LivenessLattice(Status.Live))
+                live_lattice.partition_add(k_abs, LivenessLattice(Status.Live))
             elif isinstance(expr, (Keys, Values, Items)):
                 # TODO: length usage
-                pass       # value usage done inside loop/branch by using InRelations
+                pass
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'FularaLivenessState':
@@ -260,7 +272,7 @@ class FularaLivenessState(State):
 
         # update key relations (adapted from fulara_domain._assign):
         all_ids = condition.ids()
-        if all(type(id.typ) in scalar_types for id in all_ids):
+        if all(type(ident.typ) in scalar_types for ident in all_ids):
             # update relations with scalar variables in dict stores
             for d_lattice in self.dict_liveness.store.values():
                 for (k, v) in d_lattice.segments:
@@ -275,7 +287,6 @@ class FularaLivenessState(State):
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'FularaLivenessState':
-        #self.loop_flag = False
         return self  # nothing to be done
 
     @copy_docstring(State.exit_if)
@@ -284,7 +295,6 @@ class FularaLivenessState(State):
 
     @copy_docstring(State.enter_loop)
     def enter_loop(self) -> 'FularaLivenessState':
-        # self.loop_flag = True
         return self  # nothing to be done
 
     @copy_docstring(State.exit_loop)
@@ -317,9 +327,9 @@ class FularaLivenessState(State):
         elif isinstance(left, Subscription) and isinstance(left.target.typ, DictLyraType):
             left_lattice: FularaLattice = self.dict_liveness.store[left.target]
             pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
-            scalar_key = pre_copy._read_eval.visit(left.key)
+            scalar_key = pre_copy.read_eval.visit(left.key)
             k_pre = pre_copy.eval_key(scalar_key)
-            k_abs = self._k_pre_k_conv(k_pre)
+            k_abs = self.k_pre_k_conv(k_pre)
 
             old_segments = copy(left_lattice.segments)
             if k_abs.is_singleton():    # strong update -> dead (if live)
@@ -353,7 +363,7 @@ class FularaLivenessState(State):
 
         # update key relations (adapted from fulara_domain._assign):
         all_ids = left.ids().union(right.ids())
-        if all(type(id.typ) in scalar_types for id in all_ids):
+        if all(type(ident.typ) in scalar_types for ident in all_ids):
             # update relations with scalar variables in dict stores
             for d_lattice in self.dict_liveness.store.values():
                 for (k, v) in d_lattice.segments:

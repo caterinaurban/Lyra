@@ -41,13 +41,13 @@ class FularaUsageLattice(Lattice):
     """Dictionary segment usage analysis state.
     An element of the dictionary segment usage abstract domain.
 
-    It consists of the following 3 elements:
+    It consists of the following 2 elements:
     - Usage domain state over all scalar variables, abstracting their usage status
-    - Map from each dictionary variables to a DictSegmentLattice element with a given key domain K
+    - Map from each dictionary variable to a DictSegmentLattice element with a given key domain K
        and the usage domain as value domain, abstracting the usage state of the dictionary segments
-    - Map from each dictionary variable to a usage status for the usage of the dictionary length
+    TODO: Map from each dictionary variable to a usage status for the usage of the dictionary length
 
-    All elements are *not used* by default
+    All elements are *not used* (bottom) by default
 
     .. document private methods
     .. automethod:: FularaUsageLattice._assign
@@ -113,11 +113,12 @@ class FularaUsageLattice(Lattice):
 
     @property
     def dict_usage(self) -> Store:
-        """Abstract store of dictionary variable contents."""
+        """Abstract store of dictionary variable usage information."""
         return self._dict_usage
 
     @property
     def loop_flag(self) -> bool:
+        """Indicates if the current scope is in a loop"""
         return self._loop_flag
 
     @loop_flag.setter
@@ -132,7 +133,6 @@ class FularaUsageLattice(Lattice):
         """Point-wise, setting all elements to N"""
         self.scalar_usage.bottom()
         for d_lattice in self.dict_usage.store.values():
-            d_lattice: FularaLattice
             d_lattice.empty()
         return self
 
@@ -200,7 +200,7 @@ class FularaUsageLattice(Lattice):
 
         d_store = self.dict_usage.store
         for d, d_lattice in d_store.items():
-            old_segments = copy(d_lattice.segments)     # TODO: deep?
+            old_segments = copy(d_lattice.segments)
             for (k, v) in old_segments:
                 d_lattice.segments.remove((k, v))
                 if not v.is_written():      # don't want to add a N segment
@@ -219,7 +219,7 @@ class FularaUsageLattice(Lattice):
         """
         self.scalar_usage.decrease(other.scalar_usage)
 
-        # self.dict_usage.join(other.dict_usage)   # imprecise version
+        # self.dict_usage.join(other.dict_usage)   # imprecise version$
 
         self_d_store = self.dict_usage.store
         other_d_store = other.dict_usage.store
@@ -252,42 +252,46 @@ class FularaUsageLattice(Lattice):
 
 
 class FularaUsageState(Stack, State):
-    """Input data usage analysis state.     # TODO: doc
-    An element of the syntactic usage abstract domain.
+    """Fulara data usage analysis state.
+    An element of the Fulara syntactic dictionary usage abstract domain.
 
-    Stack of maps from each program variable to its usage status.
+    Stack of FularaUsageAnalysisLattices
     The stack contains a single map by default.
 
-    .. note:: Program variables storing lists are abstracted via summarization.
-
     .. document private methods
-    .. automethod:: SimpleUsageState._assign
-    .. automethod:: SimpleUsageState._assume
-    .. automethod:: SimpleUsageState._output
-    .. automethod:: SimpleUsageState._substitute
+    .. automethod:: FularaUsageState._assign
+    .. automethod:: FularaUsageState._assume
+    .. automethod:: FularaUsageState._output
+    .. automethod:: FularaUsageState._substitute
     """
 
     def __init__(self, key_domain: Type[KeyWrapper],
                  precursory: FularaState,
                  scalar_vars: Set[VariableIdentifier] = None,
                  dict_vars: Set[VariableIdentifier] = None,
-                 k_k_pre_conv: Callable[[KeyWrapper], KeyWrapper]
-                 = lambda x: x,
                  k_pre_k_conv: Callable[[KeyWrapper], KeyWrapper]
                  = lambda x: x):
+        """
+        :param key_domain: domain for abstraction of dictionary keys,
+            ranges over the scalar variables and the special key variable v_k,
+            should support backward assignments with _substitute
+        :param precursory: Forward analysis (Fulara analysis) result above the current statement
+        :param scalar_vars: list of scalar variables, whose liveness should be abstracted
+        :param dict_vars: list of dictionary variables, whose usage should be abstracted
+        :param k_pre_k_conv: Conversion function to convert from key domain elements of the
+                             precursory analysis to key domain elements of this analysis
+                             (if the domains differ)"""
+
         arguments = {'key_domain': key_domain, 'scalar_vars': scalar_vars, 'dict_vars': dict_vars}
         super().__init__(FularaUsageLattice, arguments)    # Stack
         State.__init__(self, precursory)
 
         # self._s_vars = scalar_vars
-        self._k_k_pre_conv = k_k_pre_conv
         self._k_pre_k_conv = k_pre_k_conv
 
-    # @property
-    # def scalar_vars(self) -> Set[VariableIdentifier]:
-    #     return self._s_vars
-
-    # TODO: properties?
+    @property
+    def k_pre_k_conv(self):
+        return self._k_pre_k_conv
 
     @copy_docstring(Stack.push)
     def push(self):
@@ -310,11 +314,11 @@ class FularaUsageState(Stack, State):
 
     # helper:
     def make_used(self, expression: Expression):        # TODO: or use recursion?
-        """makes all variables / dictionary segment accessed in expr used"""
+        """makes all variables / dictionary segments accessed in expr used"""
 
         def own_walk(e: Expression):
             """
-            Recursively yield all expressions in an expression tree
+            Recursively yield all expressions in an expression tree that we want to make used
             starting at ``expr`` (including ``expr`` itself),
             in no specified order.
 
@@ -327,8 +331,14 @@ class FularaUsageState(Stack, State):
                 if isinstance(e, Subscription):  # don't look at dictionary var
                     # still look at vars in subscript -> make them used
                     todo.extend(_iter_child_exprs(e.key))
-                elif isinstance(e, (Keys, Values, Items)):
-                    pass
+                elif isinstance(e, Keys):
+                    pass       # don't look at subexpressions
+                    # TODO: length usage
+                elif isinstance(e, (Values, Items)):
+                    # make the whole dictionary used, since there is always a corresponding
+                    # 'NotIn'-condition which uses all values (TODO: only use initialized values?)
+                    todo.extend(_iter_child_exprs(e.target_dict))
+                    # TODO: length usage
                 else:
                     todo.extend(_iter_child_exprs(e))
                 yield e
@@ -337,14 +347,14 @@ class FularaUsageState(Stack, State):
             if isinstance(expr, VariableIdentifier):
                 if type(expr.typ) in scalar_types:
                     self.lattice.scalar_usage.store[expr].top()
+
                     # update dictionary usage at corresponding position
-                    # if variable occured in a 'in-condition'
+                    # if variable occurred in a 'in-condition'
                     # only track value usage
-                    # TODO: correct for if conditions?
                     for (d_var, k_var, v_var) in self.precursory.in_relations.find_value(expr):
-                        d_lattice: FularaLattice = self.lattice.dict_usage.store[d_var]
-                        if k_var is None:   # Values condition
-                            v_abs = self.precursory.eval_value(expr)
+                        use_lattice: FularaLattice = self.lattice.dict_usage.store[d_var]
+                        if k_var is None:   # Values condition; v_var == expr
+                            v_abs = self.precursory.eval_value(v_var)
                             # determine possible keys for this v_abs
                             pre_lattice: FularaLattice = self.precursory.dict_store.store[d_var]
                             for (k, v) in pre_lattice.segments:
@@ -352,12 +362,12 @@ class FularaUsageState(Stack, State):
                                 if not value_meet_v.is_bottom():  # value may be in this segment
                                     # mark segment as used
                                     # weak update = strong update (since setting to top)
-                                    d_lattice.partition_add(k, UsageLattice(Status.U))
+                                    use_lattice.partition_add(k, UsageLattice(Status.U))
                         else:      # Items condition
                             k_pre = self.precursory.eval_key(k_var)     # may be refined
-                            k_abs = self._k_pre_k_conv(k_pre)
+                            k_abs = self.k_pre_k_conv(k_pre)
                             # weak update = strong update, since U is top
-                            d_lattice.partition_add(k_abs, UsageLattice(Status.U))
+                            use_lattice.partition_add(k_abs, UsageLattice(Status.U))
 
                 elif isinstance(expr.typ, DictLyraType):
                     self.lattice.dict_usage.store[expr].top()
@@ -365,21 +375,20 @@ class FularaUsageState(Stack, State):
                     raise NotImplementedError(
                         f"Type '{expr.typ}' of variable {expr} not supported")
             elif isinstance(expr, Subscription) and isinstance(expr.target.typ, DictLyraType):
-                d_lattice: FularaLattice = self.lattice.dict_usage.store[expr.target]
+                use_lattice: FularaLattice = self.lattice.dict_usage.store[expr.target]
                 pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
-                scalar_key = pre_copy._read_eval.visit(expr.key)
+                scalar_key = pre_copy.read_eval.visit(expr.key)
                 k_pre = pre_copy.eval_key(scalar_key)
-                k_abs = self._k_pre_k_conv(k_pre)
+                k_abs = self.k_pre_k_conv(k_pre)
                 # weak update = strong update, since U is top
-                d_lattice.partition_add(k_abs, UsageLattice(Status.U))
+                use_lattice.partition_add(k_abs, UsageLattice(Status.U))
             elif isinstance(expr, (Keys, Values, Items)):
                 # TODO: length usage
-                pass       # value usage done inside loop/branch by using InRelations
+                pass
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'FularaUsageState':
         condition = NegationFreeNormalExpression().visit(condition)     # eliminate negations
-
         if self.lattice.loop_flag:     # not necessarily true for first iteration, but eventually
             if isinstance(condition, BinaryComparisonOperation):
                 if condition.operator == BinaryComparisonOperation.Operator.In:
@@ -389,24 +398,26 @@ class FularaUsageState(Stack, State):
                         # loop condition -> like assignment left := right
                         if left_state.is_scoped() or left_state.is_top():
                             left_state.written()
-                            self.make_used(condition.right)
+                            # value usage done inside loop by using InRelations
+                            # self.make_used(condition.right)
                         return self
                     elif isinstance(left, TupleDisplay) \
-                        and all(type(i.typ) in scalar_types for i in left.items):
+                            and all(type(i.typ) in scalar_types for i in left.items):
                         # loop condition -> like assignment left := right
-                        left_u_s = False
+                        # left_u_s = False
                         for i in left.items:
                             i_state = self.lattice.scalar_usage.store[i]
                             if i_state.is_scoped() or i_state.is_top():
                                 i_state.written()
-                                left_u_s = True
-                        if left_u_s:
-                            self.make_used(condition.right)
+                                # left_u_s = True
+                        # value usage done inside loop by using InRelations
+                        # if left_u_s:
+                        #     self.make_used(condition.right)
                         return self
                     else:
                         error = f"The loop condition {condition} is not yet supported!"
                         raise NotImplementedError(error)
-                # TODO: not in?
+                # TODO: not in correct?
                 elif condition.operator == BinaryComparisonOperation.Operator.NotIn:
                     return self     # do nothing: no overwriting for loop exit
 
@@ -433,7 +444,7 @@ class FularaUsageState(Stack, State):
 
         # update key relations (adapted from fulara_domain._assign):
         all_ids = condition.ids()
-        if all(type(id.typ) in scalar_types for id in all_ids):
+        if all(type(ident.typ) in scalar_types for ident in all_ids):
             # update relations with scalar variables in dict stores
             for d_lattice in self.lattice.dict_usage.store.values():
                 for (k, v) in d_lattice.segments:
@@ -496,18 +507,19 @@ class FularaUsageState(Stack, State):
         elif isinstance(left, Subscription) and isinstance(left.target.typ, DictLyraType):
             left_lattice: FularaLattice = self.lattice.dict_usage.store[left.target]
             pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
-            scalar_key = pre_copy._read_eval.visit(left.key)
+            scalar_key = pre_copy.read_eval.visit(left.key)
             k_pre = pre_copy.eval_key(scalar_key)
-            k_abs = self._k_pre_k_conv(k_pre)
+            k_abs = self.k_pre_k_conv(k_pre)
 
             old_segments = copy(left_lattice.segments)
             if k_abs.is_singleton():    # strong update -> W (if U/S)
                 for (k, v) in old_segments:
                     key_meet_k = deepcopy(k_abs).meet(k)
                     if not key_meet_k.is_bottom():    # key may be contained in this segment
-                        if v.is_top() or v.is_scoped():  # TODO: more efficient way?
+                        if v.is_top() or v.is_scoped():
                             left_u_s = True
-                            left_lattice.partition_add(k_abs, UsageLattice(Status.W))   # strong update
+                            # strong update
+                            left_lattice.partition_add(k_abs, UsageLattice(Status.W))
                         # there can only be one overlapping segment (since k_abs is singleton)
                         break
             else:   # weak update
@@ -539,7 +551,7 @@ class FularaUsageState(Stack, State):
 
         # update key relations (adapted from fulara_domain._assign):
         all_ids = left.ids().union(right.ids())
-        if all(type(id.typ) in scalar_types for id in all_ids):
+        if all(type(ident.typ) in scalar_types for ident in all_ids):
             # update relations with scalar variables in dict stores
             for d_lattice in self.lattice.dict_usage.store.values():
                 for (k, v) in d_lattice.segments:

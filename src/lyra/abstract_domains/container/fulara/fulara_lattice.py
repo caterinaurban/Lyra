@@ -136,6 +136,7 @@ class FularaLattice(BottomMixin):
         return self
 
     def is_empty(self) -> bool:
+        """Test whether the abstraction is empty (has an empty segment set)"""
         if not self.is_bottom():
             return len(self.segments) == 0
         return False
@@ -297,7 +298,8 @@ class FularaLattice(BottomMixin):
                                            if not m.is_bottom()}
                             rest_s.update(non_overlap)
 
-                            new_value = deepcopy(new[1]).join(deepcopy(old[1]))   # TODO: deepcopy old?
+                            # TODO: deepcopy old?
+                            new_value = deepcopy(new[1]).join(deepcopy(old[1]))
                             self.segments.add((overlap, new_value))
                         elif overlap == old[0]:     # completely covered -> can keep segment
                             self.segments.add(old)
@@ -321,6 +323,7 @@ class FularaLattice(BottomMixin):
 
     # helper
     def forget_variable(self, variable: VariableIdentifier):
+        """Forgets the variable in all segments (key & value part)"""
         if not self.is_bottom():
             for (k, v) in self.segments:
                 k.forget_variable(variable)
@@ -328,6 +331,7 @@ class FularaLattice(BottomMixin):
 
     # helper
     def get_keys_joined(self) -> KeyWrapper:
+        """Returns the join of all key abstractions of current segments"""
         if not self.is_bottom():
             result = self.k_domain(**self.k_d_args).bottom()
             for (k, v) in self.segments:
@@ -336,6 +340,7 @@ class FularaLattice(BottomMixin):
 
     # helper
     def get_values_joined(self) -> Lattice:
+        """Returns the join of all value abstractions of current segments"""
         if not self.is_bottom():
             result = self.v_domain(**self.v_d_args).bottom()
             for (k, v) in self.segments:
