@@ -788,7 +788,7 @@ class FularaState(State):
                     i_lattice.segments.add((k2, b))
                 i_lattice.d_norm_own()
 
-        if isinstance(left, VariableIdentifier):
+        elif isinstance(left, VariableIdentifier):
             if type(left.typ) in scalar_types:  # assignment to scalar variable
                 evaluation = dict()
                 scalar_right = self._read_eval.visit(right, self, evaluation)
@@ -972,9 +972,6 @@ class FularaState(State):
                         self.update_dict_from_scalar(self.init_store, False)
 
                     return self
-                else:
-                    # refine in_relations
-                    self.in_relations.assume({condition})
             elif condition.operator == BinaryComparisonOperation.Operator.NotIn:
                 # refine in_relations
                 self.in_relations.assume({condition})
