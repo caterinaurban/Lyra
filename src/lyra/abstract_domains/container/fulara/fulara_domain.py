@@ -388,6 +388,8 @@ class FularaState(State):
     def __init__(self, scalar_domain: Type[EnvironmentMixin],
                  key_domain: Type[KeyWrapper],
                  value_domain: Type[ValueWrapper],
+                 update_key_from_scalar: Callable[[KeyWrapper, EnvironmentMixin], KeyWrapper],    # TODO: doc
+                 update_val_from_scalar: Callable[[ValueWrapper, EnvironmentMixin], ValueWrapper],
                  scalar_vars: Set[VariableIdentifier] = None,
                  dict_vars: Set[VariableIdentifier] = None,
                  scalar_k_conv: Callable[[EnvironmentMixin], KeyWrapper]
@@ -462,6 +464,9 @@ class FularaState(State):
             del arguments[k]['value_d_args']
         self._init_store = Store(dict_vars, lattices, arguments)
 
+        self._update_k_from_s = update_key_from_scalar
+        self._update_v_from_s = update_val_from_scalar
+
         self._s_k_conv = scalar_k_conv
         self._k_s_conv = k_scalar_conv
         self._s_v_conv = scalar_v_conv
@@ -490,6 +495,14 @@ class FularaState(State):
     def in_relations(self) -> InRelationState:
         """Relational state storing relationships introduced by 'in'-conditions."""
         return self._in_relations
+
+    @property
+    def update_k_from_s(self):
+        return self._update_k_from_s
+
+    @property
+    def update_v_from_s(self):
+        return self._update_v_from_s
 
     @property
     def v_domain(self) -> Type[ValueWrapper]:
@@ -579,12 +592,78 @@ class FularaState(State):
         in_le = self.in_relations.less_equal(other.in_relations)
         return scalar_le and dict_le and init_le and in_le
 
+
+    def join_with_scalar(self, self_store: Store, other_store: Store, value_with_scalar: bool):
+        # adapted from Store.join and fulara_lattice._join/dnorm,    # TODO: doc
+        # adding update of scalar information for non-overlapping segments
+
+        if other_store.is_bottom() or self_store.is_top():
+            pass
+        elif self_store.is_bottom() or other_store.is_top():
+            self_store._replace(other_store)
+        else:
+            for var in self_store.store:
+                self_lattice: FularaLattice = self_store.store[var]
+                other_lattice: FularaLattice = other_store.store[var]
+
+                # states for var can't be bottom, because then the whole store would be bottom
+                if self_lattice.is_top():
+                    pass
+                elif other_lattice.is_top():
+                    self_lattice._replace(other_lattice)
+                else:
+                    if len(self_lattice.segments) > len(other_lattice.segments):
+                        segment_set = other_lattice.segments
+                        result_set = copy(self_lattice.segments)
+                    else:
+                        segment_set = self_lattice.segments
+                        result_set = copy(other_lattice.segments)
+
+                    unjoined_result = copy(result_set)
+
+                    for s in segment_set:
+                        remove_set = set()
+                        s_joined = False
+                        for r in result_set:
+                            s_meet_r = deepcopy(s[0]).meet(r[0])
+                            if not s_meet_r.is_bottom():  # not disjoint -> join segments
+                                s = (deepcopy(s[0]).join(deepcopy(r[0])), deepcopy(s[1]).join(deepcopy(r[1])))
+                                unjoined_result.discard(r)
+                                s_joined = True
+                                remove_set.add(r)
+                        result_set.difference_update(remove_set)
+                        if s_joined:
+                            result_set.add(s)
+                        else:
+                            new_k = self.update_k_from_s(s[0], self.scalar_state)
+                            if value_with_scalar:
+                                new_v = self.update_v_from_s(s[1], self.scalar_state)
+                            else:
+                                new_v = deepcopy(s[1])
+                            result_set.add((new_k, new_v))
+
+                    result_set.difference_update(unjoined_result)
+                    for r in unjoined_result:
+                        new_k = self.update_k_from_s(r[0], self.scalar_state)
+                        if value_with_scalar:
+                            new_v = self.update_v_from_s(r[1], self.scalar_state)
+                        else:
+                            new_v = deepcopy(r[1])
+                        result_set.add((new_k, new_v))
+
+                    self_lattice.segments.clear()
+                    self_lattice.segments.update(result_set)
+
+
     @copy_docstring(Lattice._join)
     def _join(self, other: 'FularaState') -> 'FularaState':
         """Defined point-wise"""
         self.scalar_state.join(other.scalar_state)
-        self.dict_store.join(other.dict_store)
-        self.init_store.join(other.init_store)
+
+        # self.dict_store.join(other.dict_store)
+        self.join_with_scalar(self.dict_store, other.dict_store, True)
+        # self.init_store.join(other.init_store)
+        self.join_with_scalar(self.init_store, other.init_store, False)
         self.in_relations.join(other.in_relations)
         return self
 
@@ -668,43 +747,19 @@ class FularaState(State):
             self.scalar_state.remove_variable(var)
             current_temps.remove(var)
 
-    def _update_dict_from_refined_scalar(self):
-        """update scalar variables in dictionary stores to conform with a refined scalar state"""
-        # TODO: too slow?
-        d_store = self.dict_store.store
-        d_lattice: FularaLattice
-        for d, d_lattice in d_store.items():
-            v_k = VariableIdentifier(d.typ.key_typ, k_name)
-            v_v = VariableIdentifier(d.typ.val_typ, v_name)
-            new_segments = set()
+    def update_dict_from_scalar(self, store: Store, value_with_scalar: bool):
+        for d_lattice in store.store.values():
+            d_lattice: FularaLattice
+            updated_segments = set()
             for (k, v) in d_lattice.segments:
-                k_s_state = deepcopy(self.scalar_state)
-                k_s_state.add_variable(v_k)
-                s_k_state = self.s_k_conv(k_s_state)
-                new_k = deepcopy(k).meet(s_k_state)
-
-                v_s_state = deepcopy(self.scalar_state)
-                v_s_state.add_variable(v_v)
-                s_v_state = self.s_v_conv(v_s_state)
-                new_v = deepcopy(v).meet(s_v_state)
-                new_segments.add((new_k, new_v))
-            d_store[d] = FularaLattice(d_lattice.k_domain, d_lattice.v_domain,
-                                       d_lattice.k_d_args, d_lattice.v_d_args, new_segments)
-
-        i_store = self.init_store.store
-        i_lattice: FularaLattice
-        for d, i_lattice in i_store.items():
-            v_k = VariableIdentifier(d.typ.key_typ, k_name)
-
-            new_segments = set()
-            for (k, b) in i_lattice.segments:
-                k_s_state = deepcopy(self.scalar_state)
-                k_s_state.add_variable(v_k)
-                s_k_state = self.s_k_conv(k_s_state)
-                new_k = deepcopy(k).meet(s_k_state)
-                new_segments.add((new_k, b))
-            i_store[d] = FularaLattice(i_lattice.k_domain, i_lattice.v_domain,
-                                       i_lattice.k_d_args, i_lattice.v_d_args, new_segments)
+                new_k = self.update_k_from_s(k, self.scalar_state)
+                if value_with_scalar:
+                    new_v = self.update_v_from_s(v, self.scalar_state)
+                else:
+                    new_v = deepcopy(v)
+                updated_segments.add((new_k, new_v))
+            d_lattice.segments.clear()
+            d_lattice.segments.update(updated_segments)
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression):
@@ -737,11 +792,8 @@ class FularaState(State):
 
                 self._temp_cleanup(evaluation)
 
-                # invalidate old left in dict stores                      # IMPRECISION!!
-                for d_lattice in self.dict_store.store.values():
-                    d_lattice.forget_variable(left)
-                for i_lattice in self.init_store.store.values():
-                    i_lattice.forget_variable(left)
+                self.update_dict_from_scalar(self.dict_store, True)
+                self.update_dict_from_scalar(self.init_store, False)
 
             elif isinstance(left.typ, DictLyraType):    # overwrite dictionary
                 if isinstance(right, VariableIdentifier):
@@ -841,19 +893,15 @@ class FularaState(State):
                         self.scalar_state.assign({condition.left}, {v_k})
                         self.scalar_state.remove_variable(v_k)
 
-                        # invalidate old left in dict stores                      # IMPRECISION!!
-                        for d_lattice in self.dict_store.store.values():
-                            d_lattice.forget_variable(condition.left)
-                        for i_lattice in self.init_store.store.values():
-                            i_lattice.forget_variable(condition.left)
+                        self.update_dict_from_scalar(self.dict_store, True)
+                        self.update_dict_from_scalar(self.init_store, False)
                     else:   # meet after assignment -> only refine old value
                         assign_state = self._k_s_conv(k_abs)
                         assign_state.assign({condition.left}, {v_k})
                         assign_state.remove_variable(v_k)
                         self.scalar_state.meet(assign_state)
-                        if self.scalar_state.is_bottom():   # not reachable
-                            return self.bottom()
-                        self._update_dict_from_refined_scalar()
+                        self.update_dict_from_scalar(self.dict_store, True)
+                        self.update_dict_from_scalar(self.init_store, False)
 
                     return self
                 elif isinstance(condition.right, Values) \
@@ -869,19 +917,15 @@ class FularaState(State):
                         self.scalar_state.assign({condition.left}, {v_v})
                         self.scalar_state.remove_variable(v_v)
 
-                        # invalidate old left in dict stores                      # IMPRECISION!!
-                        for d_lattice in self.dict_store.store.values():
-                            d_lattice.forget_variable(condition.left)
-                        for i_lattice in self.init_store.store.values():
-                            i_lattice.forget_variable(condition.left)
+                        self.update_dict_from_scalar(self.dict_store, True)
+                        self.update_dict_from_scalar(self.init_store, False)
                     else:   # meet after assignment -> only refine old value
                         assign_state = self._v_s_conv(v_abs)
                         assign_state.assign({condition.left}, {v_v})
                         assign_state.remove_variable(v_v)
                         self.scalar_state.meet(assign_state)
-                        if self.scalar_state.is_bottom():   # not reachable
-                            return self.bottom()
-                        self._update_dict_from_refined_scalar()
+                        self.update_dict_from_scalar(self.dict_store, True)
+                        self.update_dict_from_scalar(self.init_store, False)
 
                     return self
                 elif isinstance(condition.right, Items) \
@@ -906,13 +950,8 @@ class FularaState(State):
                         self.scalar_state.assign({condition.left.items[1]}, {v_v})
                         self.scalar_state.remove_variable(v_v)
 
-                        # invalidate old left in dict stores                      # IMPRECISION!!
-                        for d_lattice in self.dict_store.store.values():
-                            d_lattice.forget_variable(condition.left.items[0])
-                            d_lattice.forget_variable(condition.left.items[1])
-                        for i_lattice in self.init_store.store.values():
-                            i_lattice.forget_variable(condition.left.items[0])
-                            i_lattice.forget_variable(condition.left.items[1])
+                        self.update_dict_from_scalar(self.dict_store, True)
+                        self.update_dict_from_scalar(self.init_store, False)
                     else:
                         k_s_state = self.k_s_conv(k_abs)
                         k_s_state.assign({condition.left.items[0]}, {v_k})
@@ -925,9 +964,8 @@ class FularaState(State):
                         assign_state = k_s_state
                         assign_state.meet(v_s_state)
                         self.scalar_state.meet(assign_state)
-                        if self.scalar_state.is_bottom():   # not reachable
-                            return self.bottom()
-                        self._update_dict_from_refined_scalar()
+                        self.update_dict_from_scalar(self.dict_store, True)
+                        self.update_dict_from_scalar(self.init_store, False)
 
                     return self
                 else:
@@ -983,9 +1021,8 @@ class FularaState(State):
                     assign_state.assign({condition.left.items[0]}, {v_k})
                     assign_state.remove_variable(v_k)
                     self.scalar_state.meet(assign_state)
-                    if self.scalar_state.is_bottom():   # not reachable
-                        return self.bottom()
-                    self._update_dict_from_refined_scalar()
+                    self.update_dict_from_scalar(self.dict_store, True)
+                    self.update_dict_from_scalar(self.init_store, False)
 
                     return self
 
@@ -1052,7 +1089,8 @@ class FularaState(State):
 
                     self.scalar_state.meet(scalar_copy)
 
-        self._update_dict_from_refined_scalar()
+        self.update_dict_from_scalar(self.dict_store, True)
+        self.update_dict_from_scalar(self.init_store, False)
 
         # no 'in'-condition -> no need to update in_relations
         return self

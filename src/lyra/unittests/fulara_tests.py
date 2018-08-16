@@ -8,6 +8,7 @@ Fulara Analysis - Unit Tests
 
 import glob
 import os
+import sys
 import unittest
 from copy import copy, deepcopy
 
@@ -73,9 +74,22 @@ class FularaTest(TestRunner):
 
             return s_state
 
+        def update_k_from_scalar(k_state: IntervalKWrapper, s_state: IntervalSWrapper) -> IntervalKWrapper:
+            result = deepcopy(k_state)
+            for var in s_state.store:
+                result.store[var] = deepcopy(s_state.store[var])
+            return result
+
+        def update_v_from_scalar(v_state: IntervalVWrapper, s_state: IntervalSWrapper) -> IntervalVWrapper:
+            result = deepcopy(v_state)
+            for var in s_state.store:
+                result.store[var] = deepcopy(s_state.store[var])
+            return result
+
         scalar_vars = {v for v in self.variables if type(v.typ) in fulara_domain.scalar_types}
         dict_vars = {v for v in self.variables if type(v.typ) == DictLyraType}
         return FularaState(IntervalSWrapper, IntervalKWrapper, IntervalVWrapper,
+                           update_k_from_scalar, update_v_from_scalar,
                            scalar_vars, dict_vars, s_k_conversion, k_s_conversion,
                            s_v_conversion, v_s_conversion)
 
