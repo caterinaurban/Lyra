@@ -431,7 +431,20 @@ class FularaUsageState(Stack, State):
         if effect:  # the current nesting level has an effect on the outcome of the program
             self.make_used(condition)
 
-        # TODO: update key domain relations
+        # update key relations (adapted from fulara_domain._assign):
+        all_ids = condition.ids()
+        if all(type(id.typ) in scalar_types for id in all_ids):
+            # update relations with scalar variables in dict stores
+            for d_lattice in self.lattice.dict_usage.store.values():
+                for (k, v) in d_lattice.segments:
+                    d_lattice.segments.remove((k, v))  # needed, because tuple is immutable?
+                    k.assume({condition})
+                    d_lattice.segments.add((k, v))
+                d_lattice.d_norm_own()
+        else:
+            self.precursory.update_dict_from_scalar(self.lattice.dict_usage, False)
+        # TODO: other cases
+
         return self
 
     @copy_docstring(State.enter_if)
@@ -518,5 +531,22 @@ class FularaUsageState(Stack, State):
 
         if left_u_s:        # left is used or scoped -> right is used
             self.make_used(right)
+
+        # update key relations (adapted from fulara_domain._assign):
+        all_ids = left.ids().union(right.ids())
+        if all(type(id.typ) in scalar_types for id in all_ids):
+            # update relations with scalar variables in dict stores
+            for d_lattice in self.lattice.dict_usage.store.values():
+                for (k, v) in d_lattice.segments:
+                    d_lattice.segments.remove((k, v))      # needed, because tuple is immutable?
+                    k.substitute({left}, {right})
+                    d_lattice.segments.add((k, v))
+                d_lattice.d_norm_own()
+
+        elif isinstance(left, VariableIdentifier):
+            if type(left.typ) in scalar_types:  # assignment to scalar variable
+                # TODO: temp cleanup
+                self.precursory.update_dict_from_scalar(self.lattice.dict_usage, False)
+        # TODO: other cases
 
         return self
