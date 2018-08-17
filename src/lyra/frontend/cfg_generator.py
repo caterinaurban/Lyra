@@ -481,6 +481,9 @@ class CFGVisitor(ast.NodeVisitor):
             if name == 'bool' or name == 'int':
                 arguments = [self.visit(arg, types, typ) for arg in node.args]
                 return Call(pp, name, arguments, typ)
+            if name == 'range':
+                arguments = [self.visit(arg, types, IntegerLyraType()) for arg in node.args]
+                return Call(pp, name, arguments, ListLyraType(IntegerLyraType()))
             arguments = [self.visit(arg, types, None) for arg in node.args]
             return Call(pp, name, arguments, typ)
         elif isinstance(node.func, ast.Attribute):
@@ -489,14 +492,34 @@ class CFGVisitor(ast.NodeVisitor):
                 arguments = [self.visit(node.func.value, types, None)]  # target of the call
                 args = [self.visit(arg, types, None) for arg in node.args]
                 arguments.extend(args)
+                assert isinstance(arguments[0].typ, ListLyraType)
                 return Call(pp, name, arguments, arguments[0].typ)
-            if name == "split":     # str.split([sep[, maxsplit]])
+            if name == 'items':
+                arguments = [self.visit(node.func.value, types, None)]  # target of the call
+                args = [self.visit(arg, types, None) for arg in node.args]
+                arguments.extend(args)
+                assert isinstance(arguments[0].typ, DictLyraType)
+                tuple_typ = TupleLyraType([arguments[0].typ.key_typ, arguments[0].typ.val_typ])
+                return Call(pp, name, arguments, SetLyraType(tuple_typ))
+            if name == 'keys':
+                arguments = [self.visit(node.func.value, types, None)]  # target of the call
+                args = [self.visit(arg, types, None) for arg in node.args]
+                arguments.extend(args)
+                assert isinstance(arguments[0].typ, DictLyraType)
+                return Call(pp, name, arguments, SetLyraType(arguments[0].typ.key_typ))
+            if name == 'split':     # str.split([sep[, maxsplit]])
                 assert isinstance(typ, ListLyraType)    # we expect type to be a ListLyraType
                 arguments = [self.visit(node.func.value, types, typ.typ)]   # target of the call
                 args_typs = zip(node.args, [typ.typ, IntegerLyraType()])
                 args = [self.visit(arg, types, arg_typ) for arg, arg_typ in args_typs]
                 arguments.extend(args)
                 return Call(pp, name, arguments, typ)
+            if name == 'values':
+                arguments = [self.visit(node.func.value, types, None)]  # target of the call
+                args = [self.visit(arg, types, None) for arg in node.args]
+                arguments.extend(args)
+                assert isinstance(arguments[0].typ, DictLyraType)
+                return Call(pp, name, arguments, SetLyraType(arguments[0].typ.val_typ))
             arguments = [self.visit(node.func.value, types, None)]   # target of the call
             arguments.extend([self.visit(arg, types, None) for arg in node.args])
             return Call(pp, name, arguments, typ)
@@ -610,6 +633,9 @@ class CFGVisitor(ast.NodeVisitor):
     # Control Flow
 
     def visit_If(self, node, types=None, typ=None):
+        """Visitor function for an if statement.
+        The attribute test stores a single AST node.
+        The attributes body and orelse each store a list of AST nodes to be executed."""
         pp = ProgramPoint(node.test.lineno, node.test.col_offset)
 
         body = self._visit_body(node.body, types, typ)
@@ -621,7 +647,7 @@ class CFGVisitor(ast.NodeVisitor):
 
         if node.orelse:  # there is an else branch
             orelse = self._visit_body(node.orelse, types, typ)
-            not_test = Call(pp, "not", [test], BooleanLyraType())
+            not_test = Call(pp, 'not', [test], BooleanLyraType())
             orelse.add_edge(Conditional(None, not_test, orelse.in_node, Edge.Kind.IF_IN))
             if orelse.out_node:     # control flow can exit the else
                 # add an unconditional IF_OUT edge
@@ -639,7 +665,7 @@ class CFGVisitor(ast.NodeVisitor):
 
         else:   # there is no else branch
             orelse = LooseControlFlowGraph()
-            not_test = Call(pp, "not", [test], BooleanLyraType())
+            not_test = Call(pp, 'not', [test], BooleanLyraType())
             orelse.add_edge(Conditional(None, not_test, None, Edge.Kind.DEFAULT))
 
         # handle special edges
@@ -656,124 +682,106 @@ class CFGVisitor(ast.NodeVisitor):
         return cfg
 
     def visit_While(self, node, types=None, typ=None):
-        header_node = Loop(self._id_gen.next)
-
-        cfg = self._visit_body(node.body, types, typ)
-        body_in_node = cfg.in_node
-        body_out_node = cfg.out_node
-
+        """Visitor function for an while statement.
+        The attribute test stores a single AST node.
+        The attributes body and orelse each store a list of AST nodes to be executed."""
         pp = ProgramPoint(node.test.lineno, node.test.col_offset)
-        test = self.visit(node.test, types, BooleanLyraType())
-        neg_test = Call(pp, "not", [test], BooleanLyraType())
-
-        cfg.add_node(header_node)
-        cfg.in_node = header_node
-
-        cfg.add_edge(Conditional(header_node, test, body_in_node, Edge.Kind.LOOP_IN))
-        cfg.add_edge(Conditional(header_node, neg_test, None))
-        if body_out_node:
-            # if control flow can exit the body at all, add an unconditional LOOP_OUT edge
-            cfg.add_edge(Unconditional(body_out_node, header_node, Edge.Kind.LOOP_OUT))
-
-        if node.orelse:  # if there is else branch
-            orelse_cfg = self._visit_body(node.orelse, types)
-            if orelse_cfg.out_node:
-                # if control flow can exit the else at all, add an unconditional DEFAULT edge
-                orelse_cfg.add_edge(Unconditional(orelse_cfg.out_node, None, Edge.Kind.DEFAULT))
-            cfg.append(orelse_cfg)
-
-        for special_edge, edge_type in cfg.special_edges:
-            if edge_type == LooseControlFlowGraph.SpecialEdgeType.CONTINUE:
-                cfg.add_edge(Unconditional(special_edge.source, header_node, Edge.Kind.LOOP_OUT))
-            elif edge_type == LooseControlFlowGraph.SpecialEdgeType.BREAK:
-                cfg.add_edge(Unconditional(special_edge.source, None, Edge.Kind.LOOP_OUT))
-        cfg.special_edges.clear()
-
-        return cfg
-
-    def visit_For(self, node, types=None, typ=None):
-        pp = ProgramPoint(node.target.lineno, node.target.col_offset)
-
-        # don't provide result type
-        # (should be set before by a type annotation for variables/will be set later for calls)
-        iteration = self.visit(node.iter, types)        # rhs of 'in'
-
-        # set types: iteration._typ = type of object being iterated over,
-        #           target_type = type of iteration variable (i.e. element type of iteration._typ)
-        if isinstance(iteration, VariableAccess):
-            if isinstance(iteration.variable.typ, ListLyraType):  # iteration over list items
-                target_type = iteration.variable.typ.typ  # element type
-            if isinstance(iteration.variable.typ, DictLyraType):   # iteration over dictionary keys
-                target_type = iteration.variable.typ.key_typ
-                # conversion to .keys() call to be consistent:
-                iteration = Call(iteration.pp, "keys", [iteration], SetLyraType(target_type))
-                # TODO: return type necessary & correct?
-        elif isinstance(iteration, Call) and iteration.name == "range":
-            target_type = IntegerLyraType()
-            iteration._typ = ListLyraType(IntegerLyraType())    # TODO: necessary?
-        # Call.arguments[0] == target
-        elif isinstance(iteration, Call) and iteration.name == "items" \
-                and isinstance(iteration.arguments[0], VariableAccess):
-            # right now only handle single variables as target
-            called_on_type = types[iteration.arguments[0].variable.name]   # always called on Dict
-            target_type = TupleLyraType([called_on_type.key_typ, called_on_type.val_typ])
-            # items() actually returns 'view' object, but here for simplicity: Dict
-            iteration._typ = SetLyraType(target_type)      # TODO: necessary & correct ?
-        elif isinstance(iteration, Call) and iteration.name == "keys" \
-                and isinstance(iteration.arguments[0], VariableAccess):
-            # right now only handle single variables as target
-            called_on_type = types[iteration.arguments[0].variable.name]   # always called on Dict
-            target_type = called_on_type.key_typ
-            iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
-        elif isinstance(iteration, Call) and iteration.name == "values" \
-                and isinstance(iteration.arguments[0], VariableAccess):
-            # right now only handle single variables as target
-            called_on_type = types[iteration.arguments[0].variable.name]   # always called on Dict
-            target_type = called_on_type.val_typ
-            iteration._typ = SetLyraType(target_type)     # TODO: necessary & correct?
-        else:
-            error = f"The for loop iteration statment {iteration} is not yet translatable to CFG!"
-            raise NotImplementedError(error)
-
-        target = self.visit(node.target, types, target_type)
 
         body = self._visit_body(node.body, types, typ)
-        test = Call(pp, "in", [target, iteration], BooleanLyraType())
-        neg_test = Call(pp, "not", [test], BooleanLyraType())
+        test = self.visit(node.test, types, BooleanLyraType())
+        header = Loop(self._id_gen.next)
+        body_in_node = body.in_node
+        body_out_node = body.out_node
+        body.add_node(header)
+        body.in_node = header
+        body.add_edge(Conditional(header, test, body_in_node, Edge.Kind.LOOP_IN))
+        not_test = Call(pp, 'not', [test], BooleanLyraType())
+        body.add_edge(Conditional(header, not_test, None))
+        if body_out_node:   # control flow can exit the body
+            # add an unconditional LOOP_OUT edge
+            body.add_edge(Unconditional(body_out_node, header, Edge.Kind.LOOP_OUT))
 
-        header_node = Loop(self._id_gen.next)
+        if node.orelse:  # there is an else branch
+            orelse = self._visit_body(node.orelse, types)
+            if orelse.out_node:     # control flow can exit the else
+                # add an unconditional DEFAULT edge
+                orelse.add_edge(Unconditional(orelse.out_node, None, Edge.Kind.DEFAULT))
+            body.append(orelse)
 
-        cfg = self._visit_body(node.body, types, typ)
-        body_in_node = cfg.in_node
-        body_out_node = cfg.out_node
+        # handle special edges
+        for special, kind in body.special_edges:
+            if kind == LooseControlFlowGraph.SpecialEdgeType.CONTINUE:
+                body.add_edge(Unconditional(special.source, header, Edge.Kind.LOOP_OUT))
+            elif kind == LooseControlFlowGraph.SpecialEdgeType.BREAK:
+                body.add_edge(Unconditional(special.source, None, Edge.Kind.LOOP_OUT))
+        body.special_edges.clear()
 
-        cfg.add_node(header_node)
-        cfg.in_node = header_node
+        return body
 
-        cfg.add_edge(Conditional(header_node, test, body_in_node, Edge.Kind.LOOP_IN))
-        cfg.add_edge(Conditional(header_node, neg_test, None))
-        if body_out_node:
-            # if control flow can exit the body at all, add an unconditional LOOP_OUT edge
-            cfg.add_edge(Unconditional(body_out_node, header_node, Edge.Kind.LOOP_OUT))
+    def visit_For(self, node, types=None, typ=None):
+        """Visitor function for a for statement.
+        The attribute target stores the variable(s) the loop assigns to
+        (as a single Name, Tuple, or List node).
+        The attribute iter stores a single AST node representing the item to be looped over.
+        The attributes body and orelse each store a list of AST nodes to be executed."""
+        pp = ProgramPoint(node.target.lineno, node.target.col_offset)
 
-        if node.orelse:  # if there is else branch
-            orelse_cfg = self._visit_body(node.orelse, types)
-            if orelse_cfg.out_node:
-                # if control flow can exit the else at all, add an unconditional DEFAULT edge
-                orelse_cfg.add_edge(Unconditional(orelse_cfg.out_node, None, Edge.Kind.DEFAULT))
-            cfg.append(orelse_cfg)
+        iter = self.visit(node.iter, types, None)
+        target_typ = None
+        if isinstance(iter, VariableAccess):
+            if isinstance(iter.typ, ListLyraType):      # iteration over list items
+                target_typ = iter.typ.typ
+            elif isinstance(iter.typ, SetLyraType):     # iteration over set items
+                target_typ = iter.typ.typ
+            elif isinstance(iter.typ, DictLyraType):    # iteration over dictionary keys
+                iter = Call(iter.pp, 'keys', [iter], SetLyraType(iter.typ.key_typ))
+                target_typ = iter.typ.typ
+        elif isinstance(iter, Call):
+            if iter.name == 'range':
+                assert isinstance(iter.typ, ListLyraType)
+                target_typ = iter.typ.typ
+            elif iter.name == 'items' or iter.name == 'keys' or iter.name == 'values':
+                assert isinstance(iter.typ, SetLyraType)
+                target_typ = iter.typ.typ
+        else:
+            error = "The for iteration statment {} is not yet translatable to CFG!".format(iter)
+            raise NotImplementedError(error)
+        target = self.visit(node.target, types, target_typ)
 
-        for special_edge, edge_type in cfg.special_edges:
-            if edge_type == LooseControlFlowGraph.SpecialEdgeType.CONTINUE:
-                cfg.add_edge(Unconditional(special_edge.source, header_node, Edge.Kind.LOOP_OUT))
-            elif edge_type == LooseControlFlowGraph.SpecialEdgeType.BREAK:
-                cfg.add_edge(Unconditional(special_edge.source, None, Edge.Kind.LOOP_OUT))
-        cfg.special_edges.clear()
+        body = self._visit_body(node.body, types, typ)
+        test = Call(pp, 'in', [target, iter], BooleanLyraType())
+        header = Loop(self._id_gen.next)
+        body_in_node = body.in_node
+        body_out_node = body.out_node
+        body.add_node(header)
+        body.in_node = header
+        body.add_edge(Conditional(header, test, body_in_node, Edge.Kind.LOOP_IN))
+        not_test = Call(pp, 'not', [test], BooleanLyraType())
+        body.add_edge(Conditional(header, not_test, None))
+        if body_out_node:   # control flow can exit the body
+            # add an unconditional LOOP_OUT edge
+            body.add_edge(Unconditional(body_out_node, header, Edge.Kind.LOOP_OUT))
 
-        return cfg
+        if node.orelse:  # there is an else branch
+            orelse = self._visit_body(node.orelse, types)
+            if orelse.out_node:     # control flow can exit the else
+                # add an unconditional DEFAULT edge
+                orelse.add_edge(Unconditional(orelse.out_node, None, Edge.Kind.DEFAULT))
+            body.append(orelse)
+
+        # handle special edges
+        for special, kind in body.special_edges:
+            if kind == LooseControlFlowGraph.SpecialEdgeType.CONTINUE:
+                body.add_edge(Unconditional(special.source, header, Edge.Kind.LOOP_OUT))
+            elif kind == LooseControlFlowGraph.SpecialEdgeType.BREAK:
+                body.add_edge(Unconditional(special.source, None, Edge.Kind.LOOP_OUT))
+        body.special_edges.clear()
+
+        return body
 
     # noinspection PyUnusedLocal
     def visit_Break(self, _, types=None, typ=None):
+        "Visitor function for a break statement."
         dummy = _dummy(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
         # the type of the special edge is not yet known, set to DEFAULT for now
@@ -783,6 +791,7 @@ class CFGVisitor(ast.NodeVisitor):
 
     # noinspection PyUnusedLocal
     def visit_Continue(self, _, types=None, typ=None):
+        """Visitor function for a continue statement."""
         dummy = _dummy(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
         # the type of the special edge is not yet known, set to DEFAULT for now
@@ -850,7 +859,7 @@ class CFGVisitor(ast.NodeVisitor):
             elif isinstance(child, ast.Pass):
                 factory.append_cfg(_dummy_cfg(self._id_gen))
             else:
-                error = f"The statement {str(type(child))} is not yet translatable to CFG!"
+                error = "The statement {} is not yet translatable to CFG!".format(child)
                 raise NotImplementedError(error)
         factory.complete_basic_block()
 
