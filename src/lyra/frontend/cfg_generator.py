@@ -7,35 +7,7 @@ from lyra.core.expressions import Literal
 from lyra.core.statements import *
 from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
     FloatLyraType, ListLyraType, TupleLyraType, StringLyraType, DictLyraType, SetLyraType
-from lyra.visualization.graph_renderer import CfgRenderer
-
-
-def main(args):
-    optparser = optparse.OptionParser(
-        usage="python3.6 -m frontend.cfg_generator [options] [string]")
-    optparser.add_option("-f", "--file",
-                         help="Read a code snippet from the specified file")
-    optparser.add_option("-l", "--label",
-                         help="The label for the visualization")
-
-    options, args = optparser.parse_args(args)
-    if options.file:
-        with open(options.file) as instream:
-            code = instream.read()
-        label = options.file
-    elif len(args) == 2:
-        code = args[1] + "\n"
-        label = "<code read from command line parameter>"
-    else:
-        print("Expecting Python code on stdin...")
-        code = sys.stdin.read()
-        label = "<code read from stdin>"
-    if options.label:
-        label = options.label
-
-    cfg = source_to_cfg(code)
-
-    CfgRenderer().render(cfg, label=label)
+from lyra.visualization.graph_renderer import CFGRenderer
 
 
 class LooseControlFlowGraph:
@@ -222,12 +194,12 @@ class LooseControlFlowGraph:
         self.__dict__.update(other.__dict__)
 
 
-def _dummy(id_gen):
+def _dummy_node(id_gen):
     return Basic(id_gen.next)
 
 
 def _dummy_cfg(id_gen):
-    dummy = _dummy(id_gen)
+    dummy = _dummy_node(id_gen)
     return LooseControlFlowGraph({dummy}, dummy, dummy, set())
 
 
@@ -656,7 +628,7 @@ class CFGVisitor(ast.NodeVisitor):
             # handle special edges
             for special, _ in orelse.special_edges:
                 # create dummy node
-                dummy = _dummy(self._id_gen)
+                dummy = _dummy_node(self._id_gen)
                 orelse.add_node(dummy)
                 # add an unconditional IF_OUT edge to the newly created dummy node
                 orelse.add_edge(Unconditional(special.source, dummy, Edge.Kind.IF_OUT))
@@ -671,7 +643,7 @@ class CFGVisitor(ast.NodeVisitor):
         # handle special edges
         for special, edge_type in body.special_edges:
             # create dummy node
-            dummy = _dummy(self._id_gen)
+            dummy = _dummy_node(self._id_gen)
             body.add_node(dummy)
             # add an unconditional IF_OUT edge to the newly created dummy node
             body.add_edge(Unconditional(special.source, dummy, Edge.Kind.IF_OUT))
@@ -782,7 +754,7 @@ class CFGVisitor(ast.NodeVisitor):
     # noinspection PyUnusedLocal
     def visit_Break(self, _, types=None, typ=None):
         "Visitor function for a break statement."
-        dummy = _dummy(self._id_gen)
+        dummy = _dummy_node(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
         # the type of the special edge is not yet known, set to DEFAULT for now
         edge = Unconditional(dummy, None, Edge.Kind.DEFAULT)
@@ -792,7 +764,7 @@ class CFGVisitor(ast.NodeVisitor):
     # noinspection PyUnusedLocal
     def visit_Continue(self, _, types=None, typ=None):
         """Visitor function for a continue statement."""
-        dummy = _dummy(self._id_gen)
+        dummy = _dummy_node(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
         # the type of the special edge is not yet known, set to DEFAULT for now
         edge = Unconditional(dummy, None, Edge.Kind.DEFAULT)
@@ -879,24 +851,48 @@ class CFGVisitor(ast.NodeVisitor):
         return start.append(body).append(end) if body else start.append(end)
 
 
-def ast_to_cfg(root_node):
+def ast_to_cfg(root):
+    """Generate a CFG from an AST.
+
+    :param root: root node of the AST
+    :return: the CFG generated from the given AST
     """
-    Create the control flow graph from a ast node.
-    :param root_node: the root node of the AST to be translated to CFG
-    :return: the CFG of the passed AST.
-    """
-    loose_cfg = CFGVisitor().visit(root_node, dict())
+    loose_cfg = CFGVisitor().visit(root, dict())
     return loose_cfg.eject()
 
 
-def source_to_cfg(code):
-    """
-    Parses the given code and creates its control flow graph.
-    :param code: the code as a string
-    :return: the CFG of code
+def source_to_cfg(code: str):
+    """Generate a CFG from a Python program.
+
+    :param code: Python program
+    :return: the CFG generated from the given Python program
     """
     root_node = ast.parse(code)
     return ast_to_cfg(root_node)
+
+
+def main(args):
+    optparser = optparse.OptionParser(usage="python3 -m frontend.cfg_generator [options] [string]")
+    optparser.add_option("-f", "--file", help="Read a code snippet from the specified file")
+    optparser.add_option("-l", "--label", help="The label for the visualization")
+
+    options, args = optparser.parse_args(args)
+    if options.file:
+        with open(options.file) as instream:
+            code = instream.read()
+        label = options.file
+    elif len(args) == 2:
+        code = args[1] + "\n"
+        label = "<code read from command line parameter>"
+    else:
+        print("Expecting Python code on stdin...")
+        code = sys.stdin.read()
+        label = "<code read from stdin>"
+    if options.label:
+        label = options.label
+
+    cfg = source_to_cfg(code)
+    CFGRenderer().render(cfg, label=label)
 
 
 if __name__ == '__main__':
