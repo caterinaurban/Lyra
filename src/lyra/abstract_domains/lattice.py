@@ -228,12 +228,12 @@ class BottomMixin(KindMixin, metaclass=ABCMeta):
 
     @copy_docstring(Lattice.bottom)
     def bottom(self):
-        self._kind = KindMixin.Kind.BOTTOM
+        self.kind = KindMixin.Kind.BOTTOM
         return self
 
     @copy_docstring(Lattice.is_bottom)
     def is_bottom(self) -> bool:
-        return self._kind == KindMixin.Kind.BOTTOM
+        return self.kind == KindMixin.Kind.BOTTOM
 
 
 class TopMixin(KindMixin, metaclass=ABCMeta):
@@ -246,15 +246,15 @@ class TopMixin(KindMixin, metaclass=ABCMeta):
 
     @copy_docstring(Lattice.top)
     def top(self):
-        self._kind = KindMixin.Kind.TOP
+        self.kind = KindMixin.Kind.TOP
         return self
 
     @copy_docstring(Lattice.is_top)
     def is_top(self) -> bool:
-        return self._kind == KindMixin.Kind.TOP
+        return self.kind == KindMixin.Kind.TOP
 
 
-class BoundedLattice(TopMixin, BottomMixin, metaclass=ABCMeta):
+class BoundedLattice(KindMixin, metaclass=ABCMeta):
     """Mutable lattice element, with predefined bottom and top elements.
 
     .. warning::

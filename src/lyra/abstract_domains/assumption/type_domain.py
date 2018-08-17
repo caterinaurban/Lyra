@@ -738,7 +738,7 @@ class TypeState(Store, InputMixin):
             return updated
 
         @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
-        def visit_TupleDisplay(self, expr: TupleDisplay, state=None, evaluation=None):
+        def visit_TupleDisplay(self, expr: TupleDisplay, evaluation=None, value=None, state=None):
             refined = evaluation[expr].meet(value)
             updated = state
             for item in expr.items:
@@ -746,7 +746,7 @@ class TypeState(Store, InputMixin):
             return updated
 
         @copy_docstring(ExpressionVisitor.visit_SetDisplay)
-        def visit_SetDisplay(self, expr: SetDisplay, state=None, evaluation=None):
+        def visit_SetDisplay(self, expr: SetDisplay, evaluation=None, value=None, state=None):
             refined = evaluation[expr].meet(value)
             updated = state
             for item in expr.items:
@@ -754,7 +754,7 @@ class TypeState(Store, InputMixin):
             return updated
 
         @copy_docstring(ExpressionVisitor.visit_DictDisplay)
-        def visit_DictDisplay(self, expr: DictDisplay, state=None, evaluation=None):
+        def visit_DictDisplay(self, expr: DictDisplay, evaluation=None, value=None, state=None):
             refined = evaluation[expr].meet(value)
             updated = state
             for key in expr.keys:

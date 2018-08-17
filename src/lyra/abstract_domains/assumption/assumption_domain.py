@@ -166,10 +166,10 @@ class AssumptionState(State):
             InputConstraint = Union[StarConstraint, BasicConstraint, InputLattice]
 
             def __init__(self, multiplier: Expression = Literal(IntegerLyraType(), "1"),
-                         constraints: List[InputConstraint] = list()):
+                         constraints: List[InputConstraint] = None):
                 super().__init__()
                 self._multiplier = multiplier
-                self._constraints = constraints
+                self._constraints = constraints or list()
 
             @property
             def multiplier(self):

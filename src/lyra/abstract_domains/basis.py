@@ -39,7 +39,7 @@ class Basis(Store, State, metaclass=ABCMeta):
         """The current state is bottom if `any` non-summary variable maps to a bottom element,
         or if the length identifier of `any` summary variable maps to a bottom element."""
         for variable, element in self.store.items():
-            if isinstance(variable.typ, (SequenceLyraType)):
+            if isinstance(variable.typ, SequenceLyraType):
                 if element.is_bottom() and self.store[LengthIdentifier(variable)].is_bottom():
                     return True
             elif element.is_bottom():
