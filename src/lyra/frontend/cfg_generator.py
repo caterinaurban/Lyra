@@ -698,30 +698,30 @@ class CFGVisitor(ast.NodeVisitor):
         The attributes body and orelse each store a list of AST nodes to be executed."""
         pp = ProgramPoint(node.target.lineno, node.target.col_offset)
 
-        iter = self.visit(node.iter, types, None)
+        iterated = self.visit(node.iter, types, None)
         target_typ = None
-        if isinstance(iter, VariableAccess):
-            if isinstance(iter.typ, ListLyraType):      # iteration over list items
-                target_typ = iter.typ.typ
-            elif isinstance(iter.typ, SetLyraType):     # iteration over set items
-                target_typ = iter.typ.typ
-            elif isinstance(iter.typ, DictLyraType):    # iteration over dictionary keys
-                iter = Call(iter.pp, 'keys', [iter], SetLyraType(iter.typ.key_typ))
-                target_typ = iter.typ.typ
-        elif isinstance(iter, Call):
-            if iter.name == 'range':
-                assert isinstance(iter.typ, ListLyraType)
-                target_typ = iter.typ.typ
-            elif iter.name == 'items' or iter.name == 'keys' or iter.name == 'values':
-                assert isinstance(iter.typ, SetLyraType)
-                target_typ = iter.typ.typ
+        if isinstance(iterated, VariableAccess):
+            if isinstance(iterated.typ, ListLyraType):      # iteration over list items
+                target_typ = iterated.typ.typ
+            elif isinstance(iterated.typ, SetLyraType):     # iteration over set items
+                target_typ = iterated.typ.typ
+            elif isinstance(iterated.typ, DictLyraType):    # iteration over dictionary keys
+                iterated = Call(iterated.pp, 'keys', [iterated], SetLyraType(iterated.typ.key_typ))
+                target_typ = iterated.typ.typ
+        elif isinstance(iterated, Call):
+            if iterated.name == 'range':
+                assert isinstance(iterated.typ, ListLyraType)
+                target_typ = iterated.typ.typ
+            elif iterated.name == 'items' or iterated.name == 'keys' or iterated.name == 'values':
+                assert isinstance(iterated.typ, SetLyraType)
+                target_typ = iterated.typ.typ
         else:
-            error = "The for iteration statment {} is not yet translatable to CFG!".format(iter)
+            error = "The iteration attribute {} is not yet translatable to CFG!".format(iterated)
             raise NotImplementedError(error)
         target = self.visit(node.target, types, target_typ)
 
         body = self._visit_body(node.body, types, typ)
-        test = Call(pp, 'in', [target, iter], BooleanLyraType())
+        test = Call(pp, 'in', [target, iterated], BooleanLyraType())
         header = Loop(self._id_gen.next)
         body_in_node = body.in_node
         body_out_node = body.out_node
@@ -753,7 +753,7 @@ class CFGVisitor(ast.NodeVisitor):
 
     # noinspection PyUnusedLocal
     def visit_Break(self, _, types=None, typ=None):
-        "Visitor function for a break statement."
+        """Visitor function for a break statement."""
         dummy = _dummy_node(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
         # the type of the special edge is not yet known, set to DEFAULT for now
