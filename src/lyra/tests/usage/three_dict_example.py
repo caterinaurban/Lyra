@@ -4,7 +4,7 @@ v: int = 8
 
 dict_in: Dict[int,int] = {}
 dict_out: Dict[int,int] = {}
-dict_own: Dict[int,int] = {3:6}
+dict_own: Dict[int,int] = {3: 6}
 
 for key in range(v+1):
     value: int = int(input())

@@ -187,12 +187,14 @@ class InRelationState(State, BottomMixin):
             return self
 
         if isinstance(left, VariableIdentifier):
-            if not isinstance(right, VariableIdentifier) or (left != right):
+            if not isinstance(right, VariableIdentifier):
                 # invalidate left, since overwritten
                 self.forget_variable(left)
-
-            # copy tuples of 'right'
-            if isinstance(right, VariableIdentifier):    # TODO: are there other relevant cases?
+            else:    # TODO: are there other relevant cases?
+                if left != right:
+                    # invalidate left, since overwritten
+                    self.forget_variable(left)
+                # copy tuples of 'right'
                 new_tuples = set()
                 for right_tuple in self.find_var(right):
                     if right_tuple[0] == right:
@@ -203,7 +205,6 @@ class InRelationState(State, BottomMixin):
                         new_tuples.add((right_tuple[0], right_tuple[1], left))
 
                 self.tuple_set.update(new_tuples)
-
         return self
 
     @copy_docstring(State._assume)
@@ -824,9 +825,9 @@ class FularaState(State):
                     left_i_lattice: FularaLattice = self.init_store.store[left]
                     # erase all dict contents before:
                     left_lattice.empty()
+
                     # everything uninitialized,
                     # but scalars should conform with scalar state -> copy from scalar state:
-                    # TODO: use forget_variable?
                     v_k = VariableIdentifier(left.typ.key_typ, k_name)
                     s_state = deepcopy(self.scalar_state)
                     s_state.add_variable(v_k)
