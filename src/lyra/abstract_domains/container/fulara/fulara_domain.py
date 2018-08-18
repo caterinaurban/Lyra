@@ -844,9 +844,28 @@ class FularaState(State):
                         left_lattice.partition_add(k_abs, v_abs)
                         left_i_lattice.partition_add(k_abs, BoolLattice(False))
                 elif isinstance(right, Input):      # TODO: add special dictinput() function?
-                    # everything set to top
-                    self.dict_store.store[left].top()
-                    self.init_store.store[left].top()
+                    # everything set to top,
+                    # but copy from scalar state to have a more precise abstraction of it
+                    left_lattice: FularaLattice = self.dict_store.store[left]
+                    left_i_lattice: FularaLattice = self.init_store.store[left]
+
+                    v_k = VariableIdentifier(left.typ.key_typ, k_name)
+                    s_state = deepcopy(self.scalar_state)
+                    s_state.add_variable(v_k)
+                    top_k_state = self.s_k_conv(s_state)
+
+                    v_v = VariableIdentifier(left.typ.val_typ, v_name)
+                    s_state = deepcopy(self.scalar_state)
+                    s_state.add_variable(v_v)
+                    top_v_state = self.s_v_conv(s_state)
+
+                    left_lattice.segments.clear()
+                    top_segment = (top_k_state, top_v_state)
+                    left_lattice.segments.add(top_segment)
+
+                    left_i_lattice.segments.clear()
+                    top_bool_segment = (deepcopy(top_k_state), BoolLattice(True))
+                    left_i_lattice.segments.add(top_bool_segment)
                 else:
                     raise NotImplementedError(
                         f"Assignment '{left} = {right}' is not yet supported")
