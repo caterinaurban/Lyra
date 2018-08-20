@@ -918,7 +918,7 @@ class TypeRangeAssumptionState(AssumptionState):
 class TypeAlphabetAssumptionState(AssumptionState):
     """Type+alphabet assumption analysis state.
 
-    Reduced product of type and string constraining states,
+    Reduced product of type and alphabet constraining states,
     and a stack of assumptions on the input data.
 
     .. document private methods
@@ -934,10 +934,29 @@ class TypeAlphabetAssumptionState(AssumptionState):
         super().__init__(states, arguments, precursory)
 
 
+class TypeWordSetAssumptionState(AssumptionState):
+    """Type+word set assumption analysis state.
+
+    Reduced product of type and word set constraining states,
+    and a stack of assumptions on the input data.
+
+    .. document private methods
+    .. automethod:: TypeWordSetAssumptionState._assume
+    .. automethod:: TypeWordSetAssumptionState._substitute
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.wordset_domain import WordSetState
+        states = [TypeState, WordSetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
+
+
 class TypeRangeAlphabetAssumptionState(AssumptionState):
     """Type+range+alphabet assumption analysis state.
 
-    Reduced product of type, range, and string constraining states,
+    Reduced product of type, range, and alphabet constraining states,
     and a stack of assumptions on the input data.
 
     .. document private methods
@@ -950,5 +969,46 @@ class TypeRangeAlphabetAssumptionState(AssumptionState):
         from lyra.abstract_domains.assumption.range_domain import RangeState
         from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
         states = [TypeState, RangeState, AlphabetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
+
+
+class TypeRangeWordSetAssumptionState(AssumptionState):
+    """Type+range+word set assumption analysis state.
+
+    Reduced product of type, range, and word set constraining states,
+    and a stack of assumptions on the input data.
+
+    .. document private methods
+    .. automethod:: TypeRangeWordSetAssumptionState._assume
+    .. automethod:: TypeRangeWordSetAssumptionState._substitute
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.range_domain import RangeState
+        from lyra.abstract_domains.assumption.wordset_domain import WordSetState
+        states = [TypeState, RangeState, WordSetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
+
+
+class TypeRangeAlphabetWordSetAssumptionState(AssumptionState):
+    """Type+range+alphabet+word set assumption analysis state.
+
+    Reduced product of type, range, alphabet, and word set constraining states,
+    and a stack of assumptions on the input data.
+
+    .. document private methods
+    .. automethod:: TypeRangeAlphabetWordSetAssumptionState._assume
+    .. automethod:: TypeRangeAlphabetWordSetAssumptionState._substitute
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.range_domain import RangeState
+        from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
+        from lyra.abstract_domains.assumption.wordset_domain import WordSetState
+        states = [TypeState, RangeState, AlphabetState, WordSetState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)

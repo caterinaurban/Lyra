@@ -332,6 +332,8 @@ class IntervalState(Basis):
 
         @copy_docstring(ExpressionVisitor.visit_Literal)
         def visit_Literal(self, expr: Literal, state=None):
+            if isinstance(expr.typ, StringLyraType):
+                return state.lattices[IntegerLyraType()](len(expr.val), len(expr.val))
             raise ValueError(f"Unexpected expression during sequence length computation.")
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)

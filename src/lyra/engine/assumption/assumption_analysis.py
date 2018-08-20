@@ -6,7 +6,9 @@ Assumption Analysis
 """
 from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
 from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, \
-    TypeAlphabetAssumptionState, TypeRangeAlphabetAssumptionState, TypeQuantityAssumptionState
+    TypeAlphabetAssumptionState, TypeRangeAlphabetAssumptionState, TypeQuantityAssumptionState, \
+    TypeWordSetAssumptionState, TypeRangeWordSetAssumptionState, \
+    TypeRangeAlphabetWordSetAssumptionState
 from lyra.abstract_domains.assumption.quantity_domain import QuantityState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
@@ -78,6 +80,15 @@ class TypeAlphabetAssumptionAnalysis(Runner):
         return TypeAlphabetAssumptionState(self.variables)
 
 
+class TypeWordSetAssumptionAnalysis(Runner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return TypeWordSetAssumptionState(self.variables)
+
+
 class TypeRangeAlphabetAssumptionAnalysis(Runner):
 
     def interpreter(self):
@@ -85,3 +96,21 @@ class TypeRangeAlphabetAssumptionAnalysis(Runner):
 
     def state(self):
         return TypeRangeAlphabetAssumptionState(self.variables)
+
+
+class TypeRangeWordSetAssumptionAnalysis(Runner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return TypeRangeWordSetAssumptionState(self.variables)
+
+
+class TypeRangeAlphabetWordSetAssumptionAnalysis(Runner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return TypeRangeAlphabetWordSetAssumptionState(self.variables)

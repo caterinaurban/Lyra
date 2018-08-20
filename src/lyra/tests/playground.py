@@ -20,16 +20,16 @@
 ######################
 
 # from lyra.engine.numerical.sign_analysis import ForwardSignAnalysis
-# ForwardSignAnalysis().main("numerical/backward/example.py")
+# ForwardSignAnalysis().main("numerical/example.py")
 
 # from lyra.engine.numerical.sign_analysis import BackwardSignAnalysis
-# BackwardSignAnalysis().main("numerical/backward/example.py")
+# BackwardSignAnalysis().main("numerical/example.py")
 
 # from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
-# ForwardIntervalAnalysis().main("numerical/forward/example.py")
+# ForwardIntervalAnalysis().main("numerical/example.py")
 
 # from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis
-# BackwardIntervalAnalysis().main("numerical/backward/example.py")
+# BackwardIntervalAnalysis().main("numerical/example.py")
 
 # from lyra.engine.container.fulara.fulara_analysis import FularaAnalysis
 # FularaAnalysis().main("numerical/larger_expressions.py")
@@ -39,10 +39,16 @@
 ###################
 
 # from lyra.engine.string.character_analysis import ForwardCharacterAnalysis
-# ForwardCharacterAnalysis().main("assumption/example.py")
+# ForwardCharacterAnalysis().main("string/example.py")
 
 # from lyra.engine.string.character_analysis import BackwardCharacterAnalysis
-# BackwardCharacterAnalysis().main("assumption/example.py")
+# BackwardCharacterAnalysis().main("string/example.py")
+
+# from lyra.engine.string.stringset_analysis import ForwardStringSetAnalysis
+# ForwardStringSetAnalysis().main("string/example.py")
+
+# from lyra.engine.string.stringset_analysis import BackwardStringSetAnalysiss
+# BackwardStringSetAnalysiss().main("string/example.py")
 
 ##################################
 # Input Data Assumption Analyses #
@@ -65,6 +71,9 @@
 
 # from lyra.engine.assumption.assumption_analysis import TypeAlphabetAssumptionAnalysis
 # TypeAlphabetAssumptionAnalysis().main("assumption/example.py")
+
+# from lyra.engine.assumption.assumption_analysis import TypeWordSetAssumptionAnalysis
+# TypeWordSetAssumptionAnalysis().main("assumption/example.py")
 
 # from lyra.engine.assumption.assumption_analysis import TypeRangeAlphabetAssumptionAnalysis
 # TypeRangeAlphabetAssumptionAnalysis().main("assumption/example.py")

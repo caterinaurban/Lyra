@@ -148,7 +148,7 @@ class CharacterState(Basis):
         super().__init__(variables, lattices, precursory=precursory)
 
     @copy_docstring(Basis._assume)
-    def _assume(self, condition: Expression) -> 'State':
+    def _assume(self, condition: Expression) -> 'CharacterState':
         if isinstance(condition, UnaryBooleanOperation):
             if condition.operator == UnaryBooleanOperation.Operator.Neg:
                 expression = condition.expression
