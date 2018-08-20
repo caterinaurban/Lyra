@@ -930,17 +930,14 @@ class FularaState(State):
                         self.scalar_state.meet(self._k_s_conv(k_abs))
                         self.scalar_state.assign({condition.left}, {v_k})
                         self.scalar_state.remove_variable(v_k)
-
-                        self.update_dict_from_scalar(self.dict_store, True)
-                        self.update_dict_from_scalar(self.init_store, False)
                     else:   # meet after assignment -> only refine old value
                         assign_state = self._k_s_conv(k_abs)
                         assign_state.assign({condition.left}, {v_k})
                         assign_state.remove_variable(v_k)
                         self.scalar_state.meet(assign_state)
-                        self.update_dict_from_scalar(self.dict_store, True)
-                        self.update_dict_from_scalar(self.init_store, False)
 
+                    self.update_dict_from_scalar(self.dict_store, True)
+                    self.update_dict_from_scalar(self.init_store, False)
                     return self
                 elif isinstance(condition.right, Values) \
                         and isinstance(condition.left, VariableIdentifier):
@@ -954,17 +951,14 @@ class FularaState(State):
                         self.scalar_state.meet(self._v_s_conv(v_abs))
                         self.scalar_state.assign({condition.left}, {v_v})
                         self.scalar_state.remove_variable(v_v)
-
-                        self.update_dict_from_scalar(self.dict_store, True)
-                        self.update_dict_from_scalar(self.init_store, False)
                     else:   # meet after assignment -> only refine old value
                         assign_state = self._v_s_conv(v_abs)
                         assign_state.assign({condition.left}, {v_v})
                         assign_state.remove_variable(v_v)
                         self.scalar_state.meet(assign_state)
-                        self.update_dict_from_scalar(self.dict_store, True)
-                        self.update_dict_from_scalar(self.init_store, False)
 
+                    self.update_dict_from_scalar(self.dict_store, True)
+                    self.update_dict_from_scalar(self.init_store, False)
                     return self
                 elif isinstance(condition.right, Items) \
                         and isinstance(condition.left, TupleDisplay):
@@ -987,9 +981,6 @@ class FularaState(State):
                         self.scalar_state.meet(self._v_s_conv(v_abs))
                         self.scalar_state.assign({condition.left.items[1]}, {v_v})
                         self.scalar_state.remove_variable(v_v)
-
-                        self.update_dict_from_scalar(self.dict_store, True)
-                        self.update_dict_from_scalar(self.init_store, False)
                     else:
                         k_s_state = self.k_s_conv(k_abs)
                         k_s_state.assign({condition.left.items[0]}, {v_k})
@@ -1002,9 +993,9 @@ class FularaState(State):
                         assign_state = k_s_state
                         assign_state.meet(v_s_state)
                         self.scalar_state.meet(assign_state)
-                        self.update_dict_from_scalar(self.dict_store, True)
-                        self.update_dict_from_scalar(self.init_store, False)
 
+                    self.update_dict_from_scalar(self.dict_store, True)
+                    self.update_dict_from_scalar(self.init_store, False)
                     return self
             elif condition.operator == BinaryComparisonOperation.Operator.NotIn:
                 # refine in_relations

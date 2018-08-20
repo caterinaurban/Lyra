@@ -262,7 +262,7 @@ class FularaLattice(BottomMixin):
     def partition_update(self, disjoint_segments: Set[Tuple[KeyWrapper, Lattice]]):
         """Adds the given segments to self.segments.
         Joins overlapping parts with already present segments,
-        creating a new segment containing only the overlap
+        creating new segments containing only the overlap
         (weak update with partitioning)"""
         if not self.is_bottom():
             rest_new = {s for s in disjoint_segments        # only add if not bottom
