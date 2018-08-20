@@ -352,7 +352,8 @@ class FularaUsageState(Stack, State):
                             pre_lattice: FularaLattice = self.precursory.dict_store.store[d_var]
                             for (k, v) in pre_lattice.segments:
                                 value_meet_v = deepcopy(v_abs).meet(v)
-                                if not value_meet_v.value_is_bottom():  # value may be in this segment
+                                if not value_meet_v.value_is_bottom():
+                                    # value may be in this segment
                                     # mark segment as used
                                     # weak update = strong update (since setting to top)
                                     use_lattice.partition_add(k, UsageLattice(Status.U))

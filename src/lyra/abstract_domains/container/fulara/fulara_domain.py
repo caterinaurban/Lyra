@@ -1136,7 +1136,8 @@ class FularaState(State):
                         v_abs = d_lattice.v_domain(scalar_vars, v_v).bottom()
                         for (k, v) in d_lattice.segments:
                             key_meet_k = deepcopy(k_abs).meet(k)
-                            if not key_meet_k.key_is_bottom():  # key may be contained in this segment
+                            if not key_meet_k.key_is_bottom():
+                                # key may be contained in this segment
                                 v_abs.join(deepcopy(v))
 
                         scalar_copy = deepcopy(self.scalar_state)
@@ -1158,7 +1159,8 @@ class FularaState(State):
                     k_abs = d_lattice.k_domain(scalar_vars, v_k).bottom()
                     for (k, v) in d_lattice.segments:
                         value_meet_v = deepcopy(v_abs).meet(v)
-                        if not value_meet_v.key_is_bottom():  # value may be contained in this segment
+                        if not value_meet_v.key_is_bottom():
+                            # value may be contained in this segment
                             k_abs.join(deepcopy(k))
 
                     scalar_copy = deepcopy(self.scalar_state)
