@@ -231,10 +231,10 @@ class FularaUsageLattice(Lattice):
                         # compute remaining parts of 'self'
                         for s in copy(self_lattice.segments):
                             overlap = deepcopy(s[0]).meet(o[0])
-                            if not overlap.is_bottom():
+                            if not overlap.key_is_bottom():
                                 self_lattice.segments.remove(s)
                                 non_overlap = {(m, s[1]) for m in s[0].decomp(o[0])
-                                               if not m.is_bottom()}
+                                               if not m.key_is_bottom()}
                                 self_lattice.segments.update(non_overlap)
 
                         self_lattice.segments.add(o)
@@ -352,7 +352,7 @@ class FularaUsageState(Stack, State):
                             pre_lattice: FularaLattice = self.precursory.dict_store.store[d_var]
                             for (k, v) in pre_lattice.segments:
                                 value_meet_v = deepcopy(v_abs).meet(v)
-                                if not value_meet_v.is_bottom():  # value may be in this segment
+                                if not value_meet_v.value_is_bottom():  # value may be in this segment
                                     # mark segment as used
                                     # weak update = strong update (since setting to top)
                                     use_lattice.partition_add(k, UsageLattice(Status.U))
@@ -508,7 +508,7 @@ class FularaUsageState(Stack, State):
             if k_abs.is_singleton():    # strong update -> W (if U/S)
                 for (k, v) in old_segments:
                     key_meet_k = deepcopy(k_abs).meet(k)
-                    if not key_meet_k.is_bottom():    # key may be contained in this segment
+                    if not key_meet_k.key_is_bottom():    # key may be contained in this segment
                         if v.is_top() or v.is_scoped():
                             left_u_s = True
                             # strong update
@@ -519,7 +519,7 @@ class FularaUsageState(Stack, State):
                 # left_lattice.partition_update({(k_abs, UsageLattice(Status.W))})
                 for (k, v) in old_segments:     # TODO: adapt from partition_update?
                     key_meet_k = deepcopy(k_abs).meet(k)
-                    if not key_meet_k.is_bottom():  # key may be contained in this segment
+                    if not key_meet_k.key_is_bottom():  # key may be contained in this segment
                         if v.is_top():
                             left_u_s = True
                             # no need to change usage (since weak update and W join U = U)
@@ -529,7 +529,7 @@ class FularaUsageState(Stack, State):
                             # weak update with partitioning: W join S = U
                             left_lattice.segments.add((key_meet_k, UsageLattice(Status.U)))
                             non_overlapping = {(m, v) for m in k.decomp(k_abs)
-                                               if not m.is_bottom()}
+                                               if not m.key_is_bottom()}
                             left_lattice.segments.update(non_overlapping)
 
             if left_u_s:      # make subscript used

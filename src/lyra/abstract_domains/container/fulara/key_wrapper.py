@@ -51,6 +51,6 @@ class KeyWrapper(EnvironmentMixin, metaclass=ABCMeta):
         Does not (need to) conform with Lattice's less_equal"""
 
     @abstractmethod
-    def is_bottom(self) -> bool:
+    def key_is_bottom(self) -> bool:
         """Should be true if the special key variable is bottom
         (i.e. if it cannot have any concrete value)"""

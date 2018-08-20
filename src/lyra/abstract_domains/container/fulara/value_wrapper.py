@@ -26,6 +26,6 @@ class ValueWrapper(EnvironmentMixin, metaclass=ABCMeta):
         return self._v_var
 
     @abstractmethod
-    def is_bottom(self) -> bool:
+    def value_is_bottom(self) -> bool:
         """Should be true if the special value variable is bottom
         (i.e. cannot have any concrete value)"""

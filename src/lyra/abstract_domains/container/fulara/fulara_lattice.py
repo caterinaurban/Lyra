@@ -159,7 +159,7 @@ class FularaLattice(BottomMixin):
             for (k1, v1) in self.segments:
                 for (k2, v2) in other.segments:
                     k_meet = deepcopy(k1).meet(k2)
-                    if not k_meet.is_bottom():      # segments overlap
+                    if not k_meet.key_is_bottom():      # segments overlap
                         if k1.less_equal(k2) and v1.less_equal(v2):
                             break   # self segment can only be contained in one other segment
                         return False  # (k1, v1) not fully contained in (k2, v2)
@@ -181,9 +181,9 @@ class FularaLattice(BottomMixin):
                     break   # there cannot be more segments in other that overlap with (k1, v1)
 
                 k_meet = deepcopy(k1).meet(deepcopy(k2))
-                if not k_meet.is_bottom():
+                if not k_meet.key_is_bottom():
                     v_meet = deepcopy(v1).meet(deepcopy(v2))
-                    if not v_meet.is_bottom():
+                    if not v_meet.value_is_bottom():
                         new_segments.add((k_meet, v_meet))
 
         self._replace(FularaLattice(self.k_domain, self.v_domain,
@@ -215,7 +215,7 @@ class FularaLattice(BottomMixin):
             o_overlaps = False
             for s in self.segments:
                 s_meet_o = deepcopy(s[0]).meet(o[0])
-                if not s_meet_o.is_bottom():    # segments overlap (cond. 1)
+                if not s_meet_o.key_is_bottom():    # segments overlap (cond. 1)
                     o_overlaps = True
                     # overlaps with some o (not cond. 2) -> needs to be widened
                     segment_set.discard(s)
@@ -250,13 +250,13 @@ class FularaLattice(BottomMixin):
             old_segments = copy(self.segments)
             for s in old_segments:
                 s_meet_key = deepcopy(s[0]).meet(key)
-                if not s_meet_key.is_bottom():
+                if not s_meet_key.key_is_bottom():
                     # segments overlap -> partition, s.t. overlapping part is removed
                     self.segments.remove(s)
                     non_overlapping = {(m, s[1]) for m in s[0].decomp(key)
-                                       if not m.is_bottom()}
+                                       if not m.key_is_bottom()}
                     self.segments.update(non_overlapping)       # union
-            if not (key.is_bottom() or value.is_bottom()):
+            if not (key.key_is_bottom() or value.is_bottom()):
                 self.segments.add((key, value))
 
     def partition_update(self, disjoint_segments: Set[Tuple[KeyWrapper, Lattice]]):
@@ -265,8 +265,8 @@ class FularaLattice(BottomMixin):
         creating new segments containing only the overlap
         (weak update with partitioning)"""
         if not self.is_bottom():
-            rest_new = {s for s in disjoint_segments        # only add if not bottom
-                        if not (s[0].is_bottom() or s[1].is_bottom())}
+            rest_new = {s for s in disjoint_segments  # only add if not bottom
+                        if not (s[0].key_is_bottom() or s[1].is_bottom())}
             old_segments = copy(self.segments)
             for s in old_segments:
                 self.segments.remove(s)     # TODO: efficiency
@@ -287,7 +287,7 @@ class FularaLattice(BottomMixin):
                         continue
 
                     overlap = deepcopy(new[0]).meet(deepcopy(old[0]))       # TODO: deepcopy old?
-                    if not overlap.is_bottom():
+                    if not overlap.key_is_bottom():
                         rest_new.remove(new)
                         if not new[1].less_equal(old[1]):  # will be changed by join -> partition
                             rest_s.remove(old)
@@ -295,7 +295,7 @@ class FularaLattice(BottomMixin):
                             # TODO: require KeyWrapper?
                             # remaining parts of 'old'
                             non_overlap = {(m, old[1]) for m in old[0].decomp(new[0])
-                                           if not m.is_bottom()}
+                                           if not m.key_is_bottom()}
                             rest_s.update(non_overlap)
 
                             # TODO: deepcopy old?
@@ -306,7 +306,7 @@ class FularaLattice(BottomMixin):
                             rest_s.remove(old)
                         # compute remaining parts of 'new'
                         rest_new.update({(m, new[1]) for m in new[0].decomp(overlap)
-                                         if not m.is_bottom()})
+                                         if not m.key_is_bottom()})
                         # recompute product:
                         todo = itertools.product(copy(rest_new), copy(rest_s))
 
@@ -318,7 +318,7 @@ class FularaLattice(BottomMixin):
         and applies the d_norm function (so the new segment may get joined with existing ones)
         (weak update without partitioning)"""
         if not self.is_bottom():
-            if not (key.is_bottom() or value.is_bottom()):
+            if not (key.key_is_bottom() or value.is_bottom()):
                 self._segments = d_norm({(key, value)}, self.segments)
 
     # helper
@@ -365,7 +365,7 @@ def d_norm(segment_set: Set[Tuple[KeyWrapper, Lattice]],
         remove_set = set()
         for r in result_set:
             s_meet_r = deepcopy(s[0]).meet(r[0])
-            if not s_meet_r.is_bottom():  # not disjoint -> join segments
+            if not s_meet_r.key_is_bottom():  # not disjoint -> join segments
                 s = (deepcopy(s[0]).join(deepcopy(r[0])), deepcopy(s[1]).join(deepcopy(r[1])))
                 remove_set.add(r)
         result_set.difference_update(remove_set)
