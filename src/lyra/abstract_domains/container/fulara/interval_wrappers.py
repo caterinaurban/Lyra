@@ -83,15 +83,6 @@ class IntervalKWrapper(KeyWrapper, IntervalSWrapper):
         key_interval = self.store[self.k_var]
         return (not key_interval.is_bottom()) and (key_interval.lower == key_interval.upper)
 
-    def __eq__(self, other: 'Lattice'):
-        return isinstance(other, self.__class__) and repr(self) == repr(other)
-
-    def __ne__(self, other: 'Lattice'):
-        return not (self == other)
-
-    def __hash__(self):
-        return hash(repr(self))
-
     @copy_docstring(KeyWrapper.__lt__)
     def __lt__(self, other):
         if isinstance(other, IntervalKWrapper):
@@ -128,12 +119,3 @@ class IntervalVWrapper(ValueWrapper, IntervalSWrapper):
     @copy_docstring(ValueWrapper.value_is_bottom)
     def value_is_bottom(self):
         return self.store[self.v_var].is_bottom()
-
-    def __eq__(self, other: 'Lattice'):
-        return isinstance(other, self.__class__) and repr(self) == repr(other)
-
-    def __ne__(self, other: 'Lattice'):
-        return not (self == other)
-
-    def __hash__(self):
-        return hash(repr(self))

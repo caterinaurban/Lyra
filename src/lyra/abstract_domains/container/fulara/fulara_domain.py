@@ -1097,12 +1097,12 @@ class FularaState(State):
                         k_abs: KeyWrapper = i_lattice.get_keys_joined()
                         v_k = k_abs.k_var
 
-                    assign_state = self._k_s_conv(k_abs)
-                    assign_state.assign({condition.left}, {v_k})
-                    assign_state.remove_variable(v_k)
-                    self.scalar_state.meet(assign_state)
-                    self.update_dict_from_scalar(self.dict_store, True)
-                    self.update_dict_from_scalar(self.init_store, False)
+                        assign_state = self._k_s_conv(k_abs)
+                        assign_state.assign({condition.left.items[0]}, {v_k})
+                        assign_state.remove_variable(v_k)
+                        self.scalar_state.meet(assign_state)
+                        self.update_dict_from_scalar(self.dict_store, True)
+                        self.update_dict_from_scalar(self.init_store, False)
 
                     return self
 
