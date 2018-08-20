@@ -1052,7 +1052,7 @@ class FularaState(State):
 
                             self.scalar_state.add_variable(v_v)
                             self.scalar_state.meet(self._v_s_conv(v_abs))
-                            self.scalar_state.assign({condition.left.items}, {v_v})
+                            self.scalar_state.assign({condition.left}, {v_v})
                             self.scalar_state.remove_variable(v_v)
 
                             self.update_dict_from_scalar(self.dict_store, True)
