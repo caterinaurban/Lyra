@@ -8,6 +8,9 @@
 # from lyra.engine.liveness.liveness_analysis import StrongLivenessAnalysis
 # StrongLivenessAnalysis().main("liveness/example.py")
 
+# from lyra.engine.liveness.fulara_liveness_analysis import FularaLivenessAnalysis
+# FularaLivenessAnalysis().main("usage/running_example.py")
+
 ##################
 # Usage Analyses #
 ##################
@@ -34,8 +37,8 @@
 # from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis
 # BackwardIntervalAnalysis().main("numerical/backward/example.py")
 
-from lyra.engine.container.fulara.fulara_analysis import FularaAnalysis
-FularaAnalysis().main("usage/running_example.py")
+# from lyra.engine.container.fulara.fulara_analysis import FularaAnalysis
+# FularaAnalysis().main("usage/running_example.py")
 
 ###################
 # String Analyses #

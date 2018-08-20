@@ -2,7 +2,7 @@
 Input Data Usage Analysis - Unit Tests
 ======================================
 
-:Authors: Caterina Urban and Simon Wehrli
+:Authors: Caterina Urban and Simon Wehrli and Lowis Engel
 """
 
 
@@ -14,6 +14,7 @@ import sys
 
 from lyra.abstract_domains.usage.usage_domain import SimpleUsageState
 from lyra.engine.backward import BackwardInterpreter
+from lyra.engine.usage.fulara_usage_analysis import FularaUsageAnalysis
 from lyra.semantics.backward import DefaultBackwardSemantics
 from lyra.unittests.runner import TestRunner
 
@@ -27,12 +28,29 @@ class UsageTest(TestRunner):
         return SimpleUsageState(self.variables)
 
 
+class FularaUsageTest(TestRunner):
+
+    def interpreter(self):
+        analysis = FularaUsageAnalysis()
+        analysis._cfg = self.cfg
+        return analysis.interpreter()
+
+    def state(self):  # initial state
+        analysis = FularaUsageAnalysis()
+        analysis._cfg = self.cfg
+        return analysis.state()
+
+
 def test_suite():
     suite = unittest.TestSuite()
     name = os.getcwd() + '/usage/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             suite.addTest(UsageTest(path))
+    name = os.getcwd() + '/usage/fulara/**.py'
+    for path in glob.iglob(name):
+        if os.path.basename(path) != "__init__.py":
+            suite.addTest(FularaUsageTest(path))
     return suite
 
 
