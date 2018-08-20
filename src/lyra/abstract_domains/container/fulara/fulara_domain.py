@@ -1001,34 +1001,101 @@ class FularaState(State):
                 # refine in_relations
                 self.in_relations.assume({condition})
 
-                if self.scope == Scope.Loop:
-                    return self  # can have any value from before or in the loop
-
                 if isinstance(condition.right, Keys):
                     d = condition.right.target_dict
                     i_lattice: FularaLattice = self.init_store.store[d]
-                    # get possibly uninitialized keys
-                    k_abs: KeyWrapper = i_lattice.get_keys_joined()
-                    v_k = k_abs.k_var
 
-                    assign_state = self._k_s_conv(k_abs)
-                    assign_state.assign({condition.left}, {v_k})
-                    assign_state.remove_variable(v_k)
-                    self.scalar_state.meet(assign_state)
-                    self.update_dict_from_scalar(self.dict_store, True)
-                    self.update_dict_from_scalar(self.init_store, False)
+                    if self.scope == Scope.Loop:
+                        # check for definitely initialized elements:
+                        if i_lattice.is_bottom() or len(i_lattice.segments) != 1:
+                            # v_k not top (don't do partition_update on init_store elements
+                            #           -> cannot have multiple segments whose keys add up to top)
+                            # -> loop is definitely executed at least once
+                            # -> loop var can only have values from the dictionary == IN case
+                            d_lattice: FularaLattice = self.dict_store.store[d]
+                            k_abs: KeyWrapper = d_lattice.get_keys_joined()
+                            v_k = k_abs.k_var
+
+                            self.scalar_state.add_variable(v_k)
+                            self.scalar_state.meet(self._k_s_conv(k_abs))
+                            self.scalar_state.assign({condition.left}, {v_k})
+                            self.scalar_state.remove_variable(v_k)
+
+                            self.update_dict_from_scalar(self.dict_store, True)
+                            self.update_dict_from_scalar(self.init_store, False)
+                        # else: can have any value from before or inside the loop -> return self
+                    else:
+                        # get possibly uninitialized keys
+                        k_abs: KeyWrapper = i_lattice.get_keys_joined()
+                        v_k = k_abs.k_var
+                        assign_state = self._k_s_conv(k_abs)
+                        assign_state.assign({condition.left}, {v_k})
+                        assign_state.remove_variable(v_k)
+                        self.scalar_state.meet(assign_state)
+                        self.update_dict_from_scalar(self.dict_store, True)
+                        self.update_dict_from_scalar(self.init_store, False)
 
                     return self
                 elif isinstance(condition.right, Values):
-                    # TODO: refine value variable abstraction
+                    if self.scope == Scope.Loop:
+                        d = condition.right.target_dict
+                        i_lattice: FularaLattice = self.init_store.store[d]
+                        # check for definitely initialized elements:
+                        if i_lattice.is_bottom() or len(i_lattice.segments) != 1:
+                            # v_k not top (don't do partition_update on init_store elements
+                            #           -> cannot have multiple segments whose keys add up to top)
+                            # -> loop is definitely executed at least once
+                            # -> loop var can only have values from the dictionary == IN case
+                            d_lattice: FularaLattice = self.dict_store.store[d]
+                            v_abs = d_lattice.get_values_joined()
+                            v_v = v_abs.v_var
+
+                            self.scalar_state.add_variable(v_v)
+                            self.scalar_state.meet(self._v_s_conv(v_abs))
+                            self.scalar_state.assign({condition.left.items[1]}, {v_v})
+                            self.scalar_state.remove_variable(v_v)
+
+                            self.update_dict_from_scalar(self.dict_store, True)
+                            self.update_dict_from_scalar(self.init_store, False)
+
+                    # else: TODO: refine value variable abstraction
                     return self
                 elif isinstance(condition.right, Items):
-                    # TODO: refine value variable abstraction
                     d = condition.right.target_dict
                     i_lattice: FularaLattice = self.init_store.store[d]
-                    # get possibly uninitialized keys
-                    k_abs: KeyWrapper = i_lattice.get_keys_joined()
-                    v_k = k_abs.k_var
+
+                    if self.scope == Scope.Loop:
+                        # check for definitely initialized elements:
+                        if i_lattice.is_bottom() or len(i_lattice.segments) != 1:
+                            # v_k not top (don't do partition_update on init_store elements
+                            #           -> cannot have multiple segments whose keys add up to top)
+                            # -> loop is definitely executed at least once
+                            # -> loop var can only have values from the dictionary == IN case
+                            d_lattice: FularaLattice = self.dict_store.store[d]
+                            k_abs: KeyWrapper = d_lattice.get_keys_joined()
+                            v_k = k_abs.k_var
+
+                            self.scalar_state.add_variable(v_k)
+                            self.scalar_state.meet(self._k_s_conv(k_abs))
+                            self.scalar_state.assign({condition.left.items[0]}, {v_k})
+                            self.scalar_state.remove_variable(v_k)
+
+                            v_abs = d_lattice.get_values_joined()
+                            v_v = v_abs.v_var
+
+                            self.scalar_state.add_variable(v_v)
+                            self.scalar_state.meet(self._v_s_conv(v_abs))
+                            self.scalar_state.assign({condition.left.items[1]}, {v_v})
+                            self.scalar_state.remove_variable(v_v)
+
+                            self.update_dict_from_scalar(self.dict_store, True)
+                            self.update_dict_from_scalar(self.init_store, False)
+                        # else: can have any value from before or inside the loop -> return self
+                    else:
+                        # TODO: refine value variable abstraction
+                        # get possibly uninitialized keys
+                        k_abs: KeyWrapper = i_lattice.get_keys_joined()
+                        v_k = k_abs.k_var
 
                     assign_state = self._k_s_conv(k_abs)
                     assign_state.assign({condition.left}, {v_k})
