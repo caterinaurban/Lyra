@@ -3,77 +3,77 @@
 #####################
 
 # from lyra.engine.liveness.liveness_analysis import LivenessAnalysis
-# LivenessAnalysis().main("liveness/example.py")
+# LivenessAnalysis().main("esop2018.py")
 
 # from lyra.engine.liveness.liveness_analysis import StrongLivenessAnalysis
-# StrongLivenessAnalysis().main("liveness/example.py")
+# StrongLivenessAnalysis().main("esop2018.py")
 
 ##################
 # Usage Analyses #
 ##################
 
 # from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
-# SimpleUsageAnalysis().main("usage/example.py")
+# SimpleUsageAnalysis().main("esop2018.py")
 
 ######################
 # Numerical Analyses #
 ######################
 
 # from lyra.engine.numerical.sign_analysis import ForwardSignAnalysis
-# ForwardSignAnalysis().main("numerical/example.py")
+# ForwardSignAnalysis().main("example.py")
 
 # from lyra.engine.numerical.sign_analysis import BackwardSignAnalysis
-# BackwardSignAnalysis().main("numerical/example.py")
+# BackwardSignAnalysis().main("example.py")
 
-# from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
-# ForwardIntervalAnalysis().main("numerical/example.py")
+from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
+ForwardIntervalAnalysis().main("example.py")
 
 # from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis
-# BackwardIntervalAnalysis().main("numerical/example.py")
+# BackwardIntervalAnalysis().main("example.py")
 
 # from lyra.engine.container.fulara.fulara_analysis import FularaAnalysis
-# FularaAnalysis().main("numerical/larger_expressions.py")
+# FularaAnalysis().main("larger_expressions.py")
 
 ###################
 # String Analyses #
 ###################
 
 # from lyra.engine.string.character_analysis import ForwardCharacterAnalysis
-# ForwardCharacterAnalysis().main("string/example.py")
+# ForwardCharacterAnalysis().main("example.py")
 
 # from lyra.engine.string.character_analysis import BackwardCharacterAnalysis
-# BackwardCharacterAnalysis().main("string/example.py")
+# BackwardCharacterAnalysis().main("example.py")
 
 # from lyra.engine.string.stringset_analysis import ForwardStringSetAnalysis
-# ForwardStringSetAnalysis().main("string/example.py")
+# ForwardStringSetAnalysis().main("example.py")
 
 # from lyra.engine.string.stringset_analysis import BackwardStringSetAnalysiss
-# BackwardStringSetAnalysiss().main("string/example.py")
+# BackwardStringSetAnalysiss().main("example.py")
 
 ##################################
 # Input Data Assumption Analyses #
 ##################################
 
 # from lyra.engine.assumption.assumption_analysis import TypeAnalysis
-# TypeAnalysis().main("assumption/example.py")
+# TypeAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import RangeAnalysis
-# RangeAnalysis().main("assumption/example.py")
+# RangeAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import AlphabetAnalysis
-# AlphabetAnalysis().main("assumption/example.py")
+# AlphabetAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import TypeQuantityAssumptionAnalysis
-# TypeQuantityAssumptionAnalysis().main("assumption/example.py")
+# TypeQuantityAssumptionAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import TypeRangeAssumptionAnalysis
-# TypeRangeAssumptionAnalysis().main("assumption/example.py")
+# TypeRangeAssumptionAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import TypeAlphabetAssumptionAnalysis
-# TypeAlphabetAssumptionAnalysis().main("assumption/example.py")
+# TypeAlphabetAssumptionAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import TypeWordSetAssumptionAnalysis
-# TypeWordSetAssumptionAnalysis().main("assumption/example.py")
+# TypeWordSetAssumptionAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import TypeRangeAlphabetAssumptionAnalysis
-# TypeRangeAlphabetAssumptionAnalysis().main("assumption/example.py")
+# TypeRangeAlphabetAssumptionAnalysis().main("example.py")
