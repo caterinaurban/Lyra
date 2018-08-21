@@ -272,7 +272,7 @@ class InRelationState(State, BottomMixin):
                                     self.tuple_set.add((t[0], None, t[2]))
                             elif (t[2] is not None) and (t[2] == v):
                                 self.tuple_set.remove(t)
-                                if t[1] is not None: # => (t[1] != k)
+                                if t[1] is not None:  # => (t[1] != k)
                                     # need to keep key relation (like forget)
                                     self.tuple_set.add((t[0], t[1], None))
         return self
