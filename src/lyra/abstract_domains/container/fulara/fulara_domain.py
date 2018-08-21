@@ -238,25 +238,36 @@ class InRelationState(State, BottomMixin):
                 if isinstance(condition.left, VariableIdentifier):
                     if isinstance(condition.right, Keys):
                         # forget the affected relation
-                        del_tuple = (condition.right.target_dict, condition.left, None)
-                        self.tuple_set.discard(del_tuple)
+                        d = condition.right.target_dict
+                        t_set = copy(self.tuple_set)
+                        for t in t_set:
+                            if (t[0] == d) and (t[1] is not None) and (t[1] == condition.left):
+                                self.tuple_set.remove(t)
+                                if t[2] is not None:
+                                    # need to keep value relation (like forget)
+                                    self.tuple_set.add((t[0], None, t[2]))
                     elif isinstance(condition.right, Values):
                         # forget the affected relation
-                        del_tuple = (condition.right.target_dict, None, condition.left)
-                        self.tuple_set.discard(del_tuple)
+                        d = condition.right.target_dict
+                        t_set = copy(self.tuple_set)
+                        for t in t_set:
+                            if (t[0] == d) and (t[2] is not None) and (t[2] == condition.left):
+                                self.tuple_set.remove(t)
+                                if t[1] is not None:
+                                    # need to keep key relation (like forget)
+                                    self.tuple_set.add((t[0], t[1], None))
                 elif isinstance(condition.left, TupleDisplay) \
                         and isinstance(condition.right, Items):
                     # forget the affected relations
                     d = condition.right.target_dict
                     k = condition.left.items[0]
                     v = condition.left.items[1]
-                    remove_set = set()
-                    for t in self.tuple_set:
+                    t_set = copy(self.tuple_set)
+                    for t in t_set:
                         if t[0] == d:
                             if ((t[1] is not None) and (t[1] == k)) or t[1] is None:
                                 if ((t[2] is not None) and t[2] == v) or t[2] is None:
-                                    remove_set.add(t)
-                    self.tuple_set.difference_update(remove_set)
+                                    self.tuple_set.remove(t)
         return self
 
     @copy_docstring(State.enter_if)
