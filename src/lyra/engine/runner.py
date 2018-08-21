@@ -14,9 +14,9 @@ from typing import Set
 from lyra.core.cfg import Loop
 from lyra.core.expressions import VariableIdentifier, LengthIdentifier
 from lyra.core.statements import Assignment, VariableAccess, Call, TupleDisplayAccess
-from lyra.core.types import ListLyraType, SequenceLyraType
+from lyra.core.types import SequenceLyraType
 from lyra.engine.result import AnalysisResult
-from lyra.frontend.cfg_generator import ast_to_cfg, StringLyraType
+from lyra.frontend.cfg_generator import ast_to_cfg
 from lyra.visualization.graph_renderer import AnalysisResultRenderer
 
 

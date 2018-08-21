@@ -236,10 +236,25 @@ class IntervalState(Basis):
 
     @copy_docstring(Basis._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
+        # update length identifiers, if appropriate
         if isinstance(left, VariableIdentifier) and isinstance(left.typ, SequenceLyraType):
             self.store[LengthIdentifier(left)] = self._length.visit(right, self)
+        elif isinstance(left, Subscription) and isinstance(left.target.typ, SequenceLyraType):
+            length = self.store[LengthIdentifier(left.target)]
+            key = deepcopy(self._evaluation.visit(left.key, self, dict())[left.key])
+            if key.less_equal(self.lattices[left.key.typ](lower=0)):    # key is positive
+                if length.upper < key.lower:    # key is definitely larger than length
+                    return self.bottom()
+                lower = self.lattices[left.key.typ](lower=key.lower)
+                self.store[LengthIdentifier(left.target)] = length.meet(lower)
+            elif key.less_equal(self.lattices[left.key.typ](upper=-1)):     # key is negative
+                if length.upper + key.upper < 0:    # key is definitely smaller than length
+                    return self.bottom()
+                upper = self.lattices[left.key.typ](lower=-key.upper)
+                self.store[LengthIdentifier(left.target)] = length.meet(upper)
         elif isinstance(left, Slicing) and isinstance(left.target.typ, SequenceLyraType):
             self.store[LengthIdentifier(left.target)] = self._length.visit(right, self)
+        # perform the assignment
         super()._assign(left, right)
         return self
 
@@ -317,6 +332,8 @@ class IntervalState(Basis):
 
         @copy_docstring(ExpressionVisitor.visit_Literal)
         def visit_Literal(self, expr: Literal, state=None):
+            if isinstance(expr.typ, StringLyraType):
+                return state.lattices[IntegerLyraType()](len(expr.val), len(expr.val))
             raise ValueError(f"Unexpected expression during sequence length computation.")
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)

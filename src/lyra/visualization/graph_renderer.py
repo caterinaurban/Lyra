@@ -138,7 +138,7 @@ class ListDictTreeRenderer(GraphRenderer):
             self._graph.edge(node_id, child_node_id, label=self._escape_label(str(idx)))
 
 
-class CfgRenderer(GraphRenderer):
+class CFGRenderer(GraphRenderer):
     """Graphviz rendering of a control flow graph."""
 
     def _node_color(self, node, cfg):
@@ -188,7 +188,7 @@ class CfgRenderer(GraphRenderer):
         self._render_edges(cfg)
 
 
-class AnalysisResultRenderer(CfgRenderer):
+class AnalysisResultRenderer(CFGRenderer):
     """Graphviz rendering of an analysis result on the analyzed control flow graph."""
 
     def _basic_node_label(self, node, result):

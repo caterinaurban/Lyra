@@ -146,7 +146,7 @@ class DictLyraType(ContainerLyraType):
         :param val_typ: type of the dictionary values
         """
         self._key_typ = key_typ
-        self._value_typ = val_typ
+        self._val_typ = val_typ
 
     @property
     def key_typ(self):
@@ -156,7 +156,7 @@ class DictLyraType(ContainerLyraType):
     @property
     def val_typ(self):
         """Type of the dictionary values."""
-        return self._value_typ
+        return self._val_typ
 
     def __repr__(self):
         return f"Dict[{repr(self.key_typ)}, {repr(self.val_typ)}]"
