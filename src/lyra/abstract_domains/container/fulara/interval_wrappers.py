@@ -9,11 +9,11 @@ from copy import deepcopy, copy
 from typing import Set
 
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
-from lyra.abstract_domains.state import EnvironmentMixin
 from lyra.abstract_domains.container.fulara.value_wrapper import ValueWrapper
-from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.numerical.interval_domain import IntervalState, IntervalLattice
-from lyra.core.expressions import VariableIdentifier
+from lyra.abstract_domains.state import EnvironmentMixin
+from lyra.core.expressions import VariableIdentifier, LengthIdentifier
+from lyra.core.types import SequenceLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -28,6 +28,10 @@ class IntervalSWrapper(IntervalState, EnvironmentMixin):
         if var not in self.store.keys():
             self.variables.add(var)
             self.store[var] = IntervalLattice()     # top
+            if isinstance(var.typ, SequenceLyraType):
+                length = LengthIdentifier(var)
+                self.variables.add(length)
+                self.store[length] = IntervalLattice(lower=0)
         else:
             raise ValueError(f"Variable can not be added to a store if it is already present")
 
@@ -36,12 +40,22 @@ class IntervalSWrapper(IntervalState, EnvironmentMixin):
         if var in self.store.keys():
             self.variables.remove(var)
             del self.store[var]
+            if isinstance(var.typ, SequenceLyraType):
+                length = LengthIdentifier(var)
+                self.variables.remove(length)
+                del self.store[length]
         else:
             raise ValueError(f"Variable can only be removed from a store if it is already present")
 
     @copy_docstring(EnvironmentMixin.forget_variable)
     def forget_variable(self, var: VariableIdentifier):
-        self.store[var].top()
+        if var in self.store.keys():
+            self.store[var].top()
+            if isinstance(var.typ, SequenceLyraType):
+                length = LengthIdentifier(var)
+                self.store[length] = IntervalLattice(lower=0)
+        else:
+            raise ValueError(f"Variable can only be forgotten if it is abstracted in the store")
 
 
 class IntervalKWrapper(KeyWrapper, IntervalSWrapper):
