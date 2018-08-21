@@ -265,9 +265,16 @@ class InRelationState(State, BottomMixin):
                     t_set = copy(self.tuple_set)
                     for t in t_set:
                         if t[0] == d:
-                            if ((t[1] is not None) and (t[1] == k)) or t[1] is None:
-                                if ((t[2] is not None) and t[2] == v) or t[2] is None:
-                                    self.tuple_set.remove(t)
+                            if (t[1] is not None) and (t[1] == k):
+                                self.tuple_set.remove(t)
+                                if (t[2] is not None) and (t[2] != v):
+                                    # need to keep value relation (like forget)
+                                    self.tuple_set.add((t[0], None, t[2]))
+                            elif (t[2] is not None) and (t[2] == v):
+                                self.tuple_set.remove(t)
+                                if t[1] is not None: # => (t[1] != k)
+                                    # need to keep key relation (like forget)
+                                    self.tuple_set.add((t[0], t[1], None))
         return self
 
     @copy_docstring(State.enter_if)
