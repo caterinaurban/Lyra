@@ -229,15 +229,7 @@ class FularaUsageLattice(Lattice):
                     if o[1].is_top() or o[1].is_written():
                         # strong update: add o to self_lattice
                         # compute remaining parts of 'self'
-                        for s in copy(self_lattice.segments):
-                            overlap = deepcopy(s[0]).meet(o[0])
-                            if not overlap.key_is_bottom():
-                                self_lattice.segments.remove(s)
-                                non_overlap = {(m, s[1]) for m in s[0].decomp(o[0])
-                                               if not m.key_is_bottom()}
-                                self_lattice.segments.update(non_overlap)
-
-                        self_lattice.segments.add(o)
+                        self_lattice.partition_add(o[0], o[1])
                     else:  # o.is_scoped() -> must overlap with segments from self  TODO: ?
                         pass
                 # keep all parts of self that do not overlap with a U/W segment of other
@@ -505,20 +497,22 @@ class FularaUsageState(Stack, State):
             k_pre = pre_copy.eval_key(scalar_key)
             k_abs = self.k_pre_k_conv(k_pre)
 
-            old_segments = copy(left_lattice.segments)
+            # add k_abs -> W
             if k_abs.is_singleton():    # strong update -> W (if U/S)
+                old_segments = copy(left_lattice.segments)
                 for (k, v) in old_segments:
                     key_meet_k = deepcopy(k_abs).meet(k)
                     if not key_meet_k.key_is_bottom():    # key may be contained in this segment
                         if v.is_top() or v.is_scoped():
                             left_u_s = True
-                            # strong update
+                            # strong update # TODO: directly do here -> no additional loop
                             left_lattice.partition_add(k_abs, UsageLattice(Status.W))
                         # there can only be one overlapping segment (since k_abs is singleton)
                         break
             else:   # weak update
-                # left_lattice.partition_update({(k_abs, UsageLattice(Status.W))})
-                for (k, v) in old_segments:     # TODO: adapt from partition_update?
+                # "left_lattice.partition_update({(k_abs, UsageLattice(Status.W))})"
+                new_segments = copy(left_lattice.segments)
+                for (k, v) in left_lattice.segments:
                     key_meet_k = deepcopy(k_abs).meet(k)
                     if not key_meet_k.key_is_bottom():  # key may be contained in this segment
                         if v.is_top():
@@ -526,13 +520,22 @@ class FularaUsageState(Stack, State):
                             # no need to change usage (since weak update and W join U = U)
                         elif v.is_scoped():
                             left_u_s = True
-                            left_lattice.segments.remove((k, v))
+                            k_decomp = k.decomp(k_abs)
+                            if k_decomp is None:
+                                # partitioning not possible
+                                # => perform weak update without partitioning
+                                left_lattice.normalized_add(k_abs, UsageLattice(Status.W))
+                                break
+                            new_segments.remove((k, v))
                             # weak update with partitioning: W join S = U
-                            left_lattice.segments.add((key_meet_k, UsageLattice(Status.U)))
-                            non_overlapping = {(m, v) for m in k.decomp(k_abs)
-                                               if not m.key_is_bottom()}
-                            left_lattice.segments.update(non_overlapping)
-
+                            new_segments.add((key_meet_k, UsageLattice(Status.U)))
+                            non_overlapping = {(m, v) for m in k_decomp if not m.is_bottom()}
+                            new_segments.update(non_overlapping)
+                # non-overlapping parts of key can be ignored,
+                # since there the dictionary is not used and so we don't need to change left_u_s
+                # or mark them as W
+                left_lattice.segments.clear()
+                left_lattice.segments.update(new_segments)
             if left_u_s:      # make subscript used
                 self.make_used(left.key)
 

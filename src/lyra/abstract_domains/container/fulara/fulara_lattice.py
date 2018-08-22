@@ -247,17 +247,23 @@ class FularaLattice(BottomMixin):
         and removes all overlapping parts of other segments (computes a new partition).
         (strong update)"""
         if not self.is_bottom():
-            old_segments = copy(self.segments)
-            for s in old_segments:
+            new_segments = copy(self.segments)
+            for s in self.segments:
                 s_meet_key = deepcopy(s[0]).meet(key)
                 if not s_meet_key.key_is_bottom():
                     # segments overlap -> partition, s.t. overlapping part is removed
-                    self.segments.remove(s)
-                    non_overlapping = {(m, s[1]) for m in s[0].decomp(key)
-                                       if not m.key_is_bottom()}
-                    self.segments.update(non_overlapping)       # union
-            if not (key.key_is_bottom() or value.is_bottom()):
-                self.segments.add((key, value))
+                    decompostion = s[0].decomp(key)
+                    if decompostion is None:
+                        # strong update not possible -> perform weak update (without partitioning)
+                        self.normalized_add(key, value)
+                        return
+                    new_segments.remove(s)
+                    non_overlapping = {(m, s[1]) for m in decompostion if not m.is_bottom()}
+                    new_segments.update(non_overlapping)       # union
+            if not (key.is_bottom() or value.is_bottom()):
+                new_segments.add((key, value))
+            self.segments.clear()
+            self.segments.update(new_segments)
 
     def partition_update(self, disjoint_segments: Set[Tuple[KeyWrapper, Lattice]]):
         """Adds the given segments to self.segments.

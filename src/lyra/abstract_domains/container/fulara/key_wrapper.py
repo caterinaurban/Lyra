@@ -36,11 +36,22 @@ class KeyWrapper(EnvironmentMixin, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def decomp(self, exclude: 'KeyWrapper') -> Set['KeyWrapper']:
+    def decomp(self, exclude: 'KeyWrapper') -> Optional[Set['KeyWrapper']]:
         """
         Computes a decomposition/partition of self into a set of rest states,
         excluding all parts that overlap (meet not bottom) with the 'exclude' state.
         i.e.: 'subtracts the meet of self & exclude from state'
+        Needs to fulfil these conditions:
+        - the meet of any two KeyWrappers from the returned set
+            and the meet of 'exclude' with any KeyWrapper from the returned set must be bottom
+        - the union of all concretizations of 'exclude' and every element in the returned set
+            must be the same as the concretization of self
+        (- 'exclude' is not in the return set)
+
+        If a decomposition is not possible, the function should return None,
+        but then no strong updates with partitioning are possible.
+        Remember to return the empty set if self == 'exclude', which should always be possible
+
         :param exclude: parts to be excluded
         :return: decomposition/partition of 'state' avoiding 'exclude'
         """
