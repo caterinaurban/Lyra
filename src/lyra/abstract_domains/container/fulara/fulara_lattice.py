@@ -265,59 +265,73 @@ class FularaLattice(BottomMixin):
             self.segments.clear()
             self.segments.update(new_segments)
 
-    def partition_update(self, disjoint_segments: Set[Tuple[KeyWrapper, Lattice]]):
-        """Adds the given segments to self.segments.
+    def partition_update(self, key: KeyWrapper, value: Lattice):
+        """Adds the given segment (key, value) to self.segments.
         Joins overlapping parts with already present segments,
         creating new segments containing only the overlap
         (weak update with partitioning)"""
         if not self.is_bottom():
-            rest_new = {s for s in disjoint_segments  # only add if not bottom
-                        if not (s[0].key_is_bottom() or s[1].is_bottom())}
-            old_segments = copy(self.segments)
-            for s in old_segments:
-                self.segments.remove(s)     # TODO: efficiency
-                rest_s = {s}
-                todo = itertools.product(copy(rest_new), copy(rest_s))
-                while True:
-                    try:
-                        (new, old) = next(todo)
-                    except StopIteration:   # no combination left to check
-                        break
+            if not (key.is_bottom() or value.is_bottom()):
+                rest_new = {(key, value)}
+                new_segments = copy(self.segments)
+                for s in self.segments:
+                    new_segments.remove(s)     # TODO: efficiency
+                    rest_s = {s}
+                    todo = itertools.product(copy(rest_new), copy(rest_s))
+                    while True:
+                        try:
+                            (new, old) = next(todo)
+                        except StopIteration:   # no combination left to check
+                            break
 
-                    if new[0] == old[0]:     # for efficiency
-                        rest_new.remove(new)
-                        rest_s.remove(old)
-                        value = deepcopy(new[1]).join(old[1])
-                        self.segments.add((old[0], value))
-                        todo = itertools.product(copy(rest_new), copy(rest_s))
-                        continue
-
-                    overlap = deepcopy(new[0]).meet(deepcopy(old[0]))       # TODO: deepcopy old?
-                    if not overlap.key_is_bottom():
-                        rest_new.remove(new)
-                        if not new[1].less_equal(old[1]):  # will be changed by join -> partition
+                        if new[0] == old[0]:     # for efficiency
+                            rest_new.remove(new)
                             rest_s.remove(old)
-                            # segments overlap -> partition, s.t. only overlapping part is updated
-                            # TODO: require KeyWrapper?
-                            # remaining parts of 'old'
-                            non_overlap = {(m, old[1]) for m in old[0].decomp(new[0])
-                                           if not m.key_is_bottom()}
-                            rest_s.update(non_overlap)
+                            value = deepcopy(new[1]).join(old[1])
+                            new_segments.add((old[0], value))
+                            todo = itertools.product(copy(rest_new), copy(rest_s))
+                            continue
 
-                            # TODO: deepcopy old?
-                            new_value = deepcopy(new[1]).join(deepcopy(old[1]))
-                            self.segments.add((overlap, new_value))
-                        elif overlap == old[0]:     # completely covered -> can keep segment
-                            self.segments.add(old)
-                            rest_s.remove(old)
-                        # compute remaining parts of 'new'
-                        rest_new.update({(m, new[1]) for m in new[0].decomp(overlap)
-                                         if not m.key_is_bottom()})
-                        # recompute product:
-                        todo = itertools.product(copy(rest_new), copy(rest_s))
+                        overlap = deepcopy(new[0]).meet(deepcopy(old[0]))    # TODO: deepcopy old?
+                        if not overlap.is_bottom():
+                            rest_new.remove(new)
+                            if not new[1].less_equal(old[1]):
+                                # will be changed by join
+                                # -> partition, s.t. only overlapping part is updated
 
-                self.segments.update(rest_s)    # add remaining parts of s (unmodified)
-            self.segments.update(rest_new)    # add non-overlapping parts of the new segment(s)
+                                old_decomp = old[0].decomp(new[0])
+                                if old_decomp is None:
+                                    # partitioning not possible
+                                    # => perform weak update without partitioning
+                                    self.normalized_add(key, value)
+                                    return
+                                rest_s.remove(old)
+                                # remaining parts of 'old'
+                                non_overlap = {(m, old[1]) for m in old_decomp
+                                               if not m.is_bottom()}
+                                rest_s.update(non_overlap)
+
+                                # TODO: deepcopy old?
+                                new_value = deepcopy(new[1]).join(deepcopy(old[1]))
+                                new_segments.add((overlap, new_value))
+                            elif overlap == old[0]:     # completely covered -> can keep segment
+                                new_segments.add(old)
+                                rest_s.remove(old)
+                            # compute remaining parts of 'new'
+                            new_decomp = new[0].decomp(overlap)
+                            if new_decomp is None:
+                                # partitioning not possible
+                                # => perform weak update without partitioning
+                                self.normalized_add(key, value)
+                                return
+                            rest_new.update({(m, new[1]) for m in new_decomp if not m.is_bottom()})
+                            # recompute product:
+                            todo = itertools.product(copy(rest_new), copy(rest_s))
+
+                    new_segments.update(rest_s)    # add remaining parts of s (unmodified)
+                new_segments.update(rest_new)    # add non-overlapping parts of the new segment(s)
+                self.segments.clear()
+                self.segments.update(new_segments)
 
     def normalized_add(self, key: KeyWrapper, value: Lattice):
         """Adds the given key-value-pair to the segment set (if key/value are not bottom)

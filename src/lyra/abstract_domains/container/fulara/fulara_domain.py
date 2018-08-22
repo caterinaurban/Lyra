@@ -768,7 +768,7 @@ class FularaState(State):
                 # WEAK UPDATE
                 # -> meet
                 assign_lattice = deepcopy(d_lattice)
-                assign_lattice.partition_update({(k_abs, v_abs)})
+                assign_lattice.partition_update(k_abs, v_abs)
                 d_lattice.meet(assign_lattice)
 
             # remove temporary var
@@ -913,7 +913,7 @@ class FularaState(State):
                 i_lattice.partition_add(k_abs, BoolLattice(False))
             else:
                 # WEAK UPDATE (with partitioning)
-                d_lattice.partition_update({(k_abs, v_abs)})
+                d_lattice.partition_update(k_abs, v_abs)
         else:
             raise NotImplementedError(f"Assignment '{left} = {right}' is not yet supported")
         # TODO: other stmts
