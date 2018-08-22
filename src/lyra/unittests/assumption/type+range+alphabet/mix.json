@@ -1,0 +1,438 @@
+{
+    "multiplier": {
+        "type": [
+            "literal",
+            "int"
+        ],
+        "value": "1"
+    },
+    "constraints": [
+        {
+            "pp": [
+                3,
+                0
+            ],
+            "lattice_elements": [
+                {
+                    "domain": "TypeLattice",
+                    "element": "Integer"
+                },
+                {
+                    "domain": "OctagonState",
+                    "element": {
+                        "dimensions": 6,
+                        "variables": [
+                            [
+                                "T",
+                                "int"
+                            ],
+                            [
+                                "i",
+                                "int"
+                            ],
+                            [
+                                "len(y)",
+                                "int"
+                            ],
+                            [
+                                "x",
+                                "float"
+                            ],
+                            [
+                                "y",
+                                "string"
+                            ],
+                            [
+                                "3.1",
+                                "int"
+                            ]
+                        ],
+                        "indexes": {
+                            "T": 0,
+                            "i": 1,
+                            "len(y)": 2,
+                            "x": 3,
+                            "y": 4,
+                            "3.1": 5
+                        },
+                        "lincons_array": []
+                    }
+                },
+                {
+                    "domain": "AlphabetLattice",
+                    "element": {
+                        "certainly": [],
+                        "maybe": [
+                            "Y",
+                            "z",
+                            "!",
+                            "}",
+                            ".",
+                            "G",
+                            "<",
+                            "U",
+                            "P",
+                            "h",
+                            "v",
+                            "[",
+                            "V",
+                            "0",
+                            "\"",
+                            "k",
+                            ")",
+                            "^",
+                            "\\",
+                            "$",
+                            "3",
+                            "{",
+                            "6",
+                            "g",
+                            "#",
+                            ">",
+                            " ",
+                            "b",
+                            "q",
+                            "R",
+                            "W",
+                            "2",
+                            "u",
+                            "4",
+                            "o",
+                            "I",
+                            "5",
+                            "Q",
+                            "t",
+                            "A",
+                            "/",
+                            "l",
+                            "|",
+                            "8",
+                            "w",
+                            "?",
+                            "f",
+                            ":",
+                            "D",
+                            "i",
+                            "S",
+                            "\t",
+                            "9",
+                            "E",
+                            "M",
+                            "*",
+                            "d",
+                            "H",
+                            "a",
+                            "+",
+                            "J",
+                            "c",
+                            "x",
+                            "%",
+                            "=",
+                            "_",
+                            "N",
+                            "'",
+                            "s",
+                            "C",
+                            "B",
+                            "F",
+                            "~",
+                            "\r",
+                            "&",
+                            "(",
+                            "`",
+                            "\n",
+                            "j",
+                            "7",
+                            "m",
+                            "X",
+                            "K",
+                            "y",
+                            "]",
+                            "\f",
+                            "L",
+                            "n",
+                            "-",
+                            "e",
+                            "p",
+                            ";",
+                            ",",
+                            "Z",
+                            "O",
+                            "1",
+                            "@",
+                            "r",
+                            "T",
+                            "\u000b"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "multiplier": {
+                "type": [
+                    "identifier",
+                    "int"
+                ],
+                "value": "3.1"
+            },
+            "constraints": [
+                {
+                    "pp": [
+                        6,
+                        4
+                    ],
+                    "lattice_elements": [
+                        {
+                            "domain": "TypeLattice",
+                            "element": "Float"
+                        },
+                        {
+                            "domain": "OctagonState",
+                            "element": {
+                                "dimensions": 7,
+                                "variables": [
+                                    [
+                                        "T",
+                                        "int"
+                                    ],
+                                    [
+                                        "i",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(y)",
+                                        "int"
+                                    ],
+                                    [
+                                        "x",
+                                        "float"
+                                    ],
+                                    [
+                                        "y",
+                                        "string"
+                                    ],
+                                    [
+                                        "6.1",
+                                        "float"
+                                    ],
+                                    [
+                                        "3.1",
+                                        "int"
+                                    ]
+                                ],
+                                "indexes": {
+                                    "T": 0,
+                                    "i": 1,
+                                    "len(y)": 2,
+                                    "x": 3,
+                                    "y": 4,
+                                    "6.1": 5,
+                                    "3.1": 6
+                                },
+                                "lincons_array": [
+                                    {
+                                        "variables": [
+                                            5
+                                        ],
+                                        "signs": [
+                                            1
+                                        ],
+                                        "constraint_type": 1,
+                                        "constant": -11.0
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "domain": "AlphabetLattice",
+                            "element": {
+                                "certainly": [],
+                                "maybe": [
+                                    "Y",
+                                    "z",
+                                    "!",
+                                    "}",
+                                    ".",
+                                    "G",
+                                    "<",
+                                    "U",
+                                    "P",
+                                    "h",
+                                    "v",
+                                    "[",
+                                    "V",
+                                    "0",
+                                    "\"",
+                                    "k",
+                                    ")",
+                                    "^",
+                                    "\\",
+                                    "$",
+                                    "3",
+                                    "{",
+                                    "6",
+                                    "g",
+                                    "#",
+                                    ">",
+                                    " ",
+                                    "b",
+                                    "q",
+                                    "R",
+                                    "W",
+                                    "2",
+                                    "u",
+                                    "4",
+                                    "o",
+                                    "I",
+                                    "5",
+                                    "Q",
+                                    "t",
+                                    "A",
+                                    "/",
+                                    "l",
+                                    "|",
+                                    "8",
+                                    "w",
+                                    "?",
+                                    "f",
+                                    ":",
+                                    "D",
+                                    "i",
+                                    "S",
+                                    "\t",
+                                    "9",
+                                    "E",
+                                    "M",
+                                    "*",
+                                    "d",
+                                    "H",
+                                    "a",
+                                    "+",
+                                    "J",
+                                    "c",
+                                    "x",
+                                    "%",
+                                    "=",
+                                    "_",
+                                    "N",
+                                    "'",
+                                    "s",
+                                    "C",
+                                    "B",
+                                    "F",
+                                    "~",
+                                    "\r",
+                                    "&",
+                                    "(",
+                                    "`",
+                                    "\n",
+                                    "j",
+                                    "7",
+                                    "m",
+                                    "X",
+                                    "K",
+                                    "y",
+                                    "]",
+                                    "\f",
+                                    "L",
+                                    "n",
+                                    "-",
+                                    "e",
+                                    "p",
+                                    ";",
+                                    ",",
+                                    "Z",
+                                    "O",
+                                    "1",
+                                    "@",
+                                    "r",
+                                    "T",
+                                    "\u000b"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "pp": [
+                        7,
+                        4
+                    ],
+                    "lattice_elements": [
+                        {
+                            "domain": "TypeLattice",
+                            "element": "String"
+                        },
+                        {
+                            "domain": "OctagonState",
+                            "element": {
+                                "dimensions": 8,
+                                "variables": [
+                                    [
+                                        "T",
+                                        "int"
+                                    ],
+                                    [
+                                        "i",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(y)",
+                                        "int"
+                                    ],
+                                    [
+                                        "x",
+                                        "float"
+                                    ],
+                                    [
+                                        "y",
+                                        "string"
+                                    ],
+                                    [
+                                        "7.1",
+                                        "string"
+                                    ],
+                                    [
+                                        "6.1",
+                                        "float"
+                                    ],
+                                    [
+                                        "3.1",
+                                        "int"
+                                    ]
+                                ],
+                                "indexes": {
+                                    "T": 0,
+                                    "i": 1,
+                                    "len(y)": 2,
+                                    "x": 3,
+                                    "y": 4,
+                                    "7.1": 5,
+                                    "6.1": 6,
+                                    "3.1": 7
+                                },
+                                "lincons_array": []
+                            }
+                        },
+                        {
+                            "domain": "AlphabetLattice",
+                            "element": {
+                                "certainly": [
+                                    "b",
+                                    "a",
+                                    "d"
+                                ],
+                                "maybe": [
+                                    "b",
+                                    "a",
+                                    "d"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

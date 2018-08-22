@@ -1,5 +1,5 @@
 |
-4|11|16|This value is allowed to contain *only* the characters: '1', '9', '2', '3', '7', '4', '8', '0', '6', '5'
+4|11|16|This value is allowed to contain *only* the characters: '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
 5|17|18|Expected condition(s): (Value on line 5) >= (Value on line 6)
 6|19|21|Expected condition(s): (Value on line 5) >= (Value on line 6)
 11|34|36|Expected condition(s): (Value on line 11) >= (Value on line 12)

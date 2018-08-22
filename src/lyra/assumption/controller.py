@@ -90,8 +90,8 @@ class Controller (metaclass= ABCMeta):
     def main(self):
         """ Run the controller """
         # if code has been modified
-        # if self.code_modified() or not self.handler.file_exists():
-        if True:
+        if self.code_modified() or not self.handler.file_exists():
+        # if True:
             print("Running analysis")
             result = self.run_analysis()
             print("RESULT", result)
@@ -133,5 +133,7 @@ if __name__ == '__main__':
     # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/evaluation/dna_frequency/dna_frequency.py').main()
     # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/evaluation/self_driving_cars/self_driving_cars.py').main()
     # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/evaluation/convert/convert.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/presentation/grades.py').main()
-    AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type_mix.py').main()
+    AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/presentation/grades.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/thesis/concat.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type_mix.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/unittests/assumption/type+range+alphabet/mix.py').main()

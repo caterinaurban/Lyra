@@ -498,9 +498,10 @@ class AssumptionState(State):
                         js['pp'] = [constraint[0].line, constraint[0].column]
                         js['lattice_elements'] = []
                         for element in constraint[1]:
-                            AssumptionState.InputStack.InputLattice._state_names[type(element).__name__] = type(element)
+                            # AssumptionState.InputStack.InputLattice._state_names[type(element).__name__] = type(element)
                             js['lattice_elements'].append({
                                 'domain': str(type(element).__name__),
+                                'module': element.__module__,
                                 'element': element.to_json()
                             })
 
@@ -551,7 +552,12 @@ class AssumptionState(State):
                         pp = ProgramPoint(js['pp'][0], js['pp'][1])
                         cons = []
                         for element in js['lattice_elements']:
-                            state = AssumptionState.InputStack.InputLattice._state_names[element['domain']]
+                            # state = AssumptionState.InputStack.InputLattice._state_names[element['domain']]
+                            #TODO call state without dict
+                            import importlib
+                            # Load "module.submodule.MyClass"
+                            state = getattr(importlib.import_module(element["module"]), element["domain"])
+
                             cons.append(state.from_json(element['element']))
                         cons = tuple(cons)
                         return pp, cons
@@ -1072,6 +1078,7 @@ class TypeRangeAlphabetAssumptionState(AssumptionState):
         from lyra.abstract_domains.assumption.type_domain import TypeState
         from lyra.abstract_domains.assumption.range_domain import RangeState
         from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
-        states = [TypeState, RangeState, AlphabetState]
+        from lyra.abstract_domains.assumption.quantity_domain import QuantityState
+        states = [TypeState, QuantityState, RangeState, AlphabetState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)

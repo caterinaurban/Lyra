@@ -352,13 +352,20 @@ class OctagonLattice(Lattice):
             raise ValueError
 
     def unify(self, other: 'OctagonLattice'):
-        # if self.variables != other.variables:
-        if any(var1 != var2 for var1, var2 in zip(self.variables, other.variables)):
+        def cmp(varname1:str, varname2:str):
+            v1 = varname1.replace('.', '')
+            v2 = varname2.replace('.', '')
+            if v1.isdecimal() and v2.isdecimal():
+                return int(v1) < int(v2)
+            return varname1 < varname2
+
+        if self.variables != other.variables:
             i = 0
             for self_var, other_var in zip(self.variables, other.variables):
-                # note: '3.1' > '10.1'
-                if other_var.name > self_var.name:
+                if cmp(other_var.name, self_var.name):
                     self.variables[i] = other_var
+                    del self.indexes[self_var.name]
+                    self.indexes[other_var.name] = i
                 i += 1
             for var in other.variables:
                 if var not in self.variables:

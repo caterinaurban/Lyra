@@ -313,8 +313,7 @@ class SignState(Basis):
             evaluation = self._evaluation.visit(normal.left, self, dict())
             nonpositive = self.lattices[normal.typ](True, True, False)
             return self._refinement.visit(normal.left, evaluation, nonpositive, self)
-        error = f"Assumption of a {normal.__class__.__name__} expression is unsupported!"
-        raise ValueError(error)
+        return self
 
     # expression evaluation
 
