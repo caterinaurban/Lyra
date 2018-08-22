@@ -112,8 +112,8 @@ class IntervalKWrapper(KeyWrapper, IntervalSWrapper):
         # other variables do not matter, since it the state is not relational
         return repr(self.store[self.k_var])
 
-    @copy_docstring(KeyWrapper.key_is_bottom)
-    def key_is_bottom(self):
+    @copy_docstring(KeyWrapper.is_bottom)
+    def is_bottom(self):
         return self.store[self.k_var].is_bottom()
 
 
@@ -130,6 +130,6 @@ class IntervalVWrapper(ValueWrapper, IntervalSWrapper):
         # other variables do not matter, since it the state is not relational
         return repr(self.store[self.v_var])
 
-    @copy_docstring(ValueWrapper.value_is_bottom)
-    def value_is_bottom(self):
+    @copy_docstring(ValueWrapper.is_bottom)
+    def is_bottom(self):
         return self.store[self.v_var].is_bottom()

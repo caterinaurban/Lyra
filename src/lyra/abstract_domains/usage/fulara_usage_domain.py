@@ -344,7 +344,7 @@ class FularaUsageState(Stack, State):
                             pre_lattice: FularaLattice = self.precursory.dict_store.store[d_var]
                             for (k, v) in pre_lattice.segments:
                                 value_meet_v = deepcopy(v_abs).meet(v)
-                                if not value_meet_v.value_is_bottom():
+                                if not value_meet_v.is_bottom():
                                     # value may be in this segment
                                     # mark segment as used
                                     # weak update = strong update (since setting to top)
@@ -502,7 +502,7 @@ class FularaUsageState(Stack, State):
                 old_segments = copy(left_lattice.segments)
                 for (k, v) in old_segments:
                     key_meet_k = deepcopy(k_abs).meet(k)
-                    if not key_meet_k.key_is_bottom():    # key may be contained in this segment
+                    if not key_meet_k.is_bottom():    # key may be contained in this segment
                         if v.is_top() or v.is_scoped():
                             left_u_s = True
                             # strong update # TODO: directly do here -> no additional loop
@@ -514,7 +514,7 @@ class FularaUsageState(Stack, State):
                 new_segments = copy(left_lattice.segments)
                 for (k, v) in left_lattice.segments:
                     key_meet_k = deepcopy(k_abs).meet(k)
-                    if not key_meet_k.key_is_bottom():  # key may be contained in this segment
+                    if not key_meet_k.is_bottom():  # key may be contained in this segment
                         if v.is_top():
                             left_u_s = True
                             # no need to change usage (since weak update and W join U = U)

@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-from typing import Set
-
+from typing import Set, Optional
 
 # (Class) Adapter pattern
 from lyra.abstract_domains.state import EnvironmentMixin
@@ -31,7 +30,7 @@ class KeyWrapper(EnvironmentMixin, metaclass=ABCMeta):
     @abstractmethod
     def is_singleton(self) -> bool:
         """
-        Returns true, if in the current state k_var represents a single concrete value.
+        Returns true if in the current state k_var represents a single concrete value.
         (needed for strong updates)
         """
 
@@ -62,6 +61,6 @@ class KeyWrapper(EnvironmentMixin, metaclass=ABCMeta):
         Does not (need to) conform with Lattice's less_equal"""
 
     @abstractmethod
-    def key_is_bottom(self) -> bool:
+    def is_bottom(self) -> bool:
         """Should be true if the special key variable is bottom
         (i.e. if it cannot have any concrete value)"""

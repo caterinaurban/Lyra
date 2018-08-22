@@ -231,7 +231,7 @@ class FularaLivenessState(State):
                             pre_lattice: FularaLattice = self.precursory.dict_store.store[d_var]
                             for (k, v) in pre_lattice.segments:
                                 value_meet_v = deepcopy(v_abs).meet(v)
-                                if not value_meet_v.value_is_bottom():
+                                if not value_meet_v.is_bottom():
                                     # value may be in this segment
                                     # mark segment as live
                                     # weak update = strong update (since setting to top)
@@ -328,7 +328,7 @@ class FularaLivenessState(State):
             if k_abs.is_singleton():    # strong update -> dead (if live)
                 for (k, v) in old_segments:
                     key_meet_k = deepcopy(k_abs).meet(k)
-                    if not key_meet_k.key_is_bottom():    # key may be contained in this segment
+                    if not key_meet_k.is_bottom():    # key may be contained in this segment
                         if v.is_top():
                             left_live = True
                             # strong update:
@@ -336,9 +336,9 @@ class FularaLivenessState(State):
                         # there can only be one overlapping segment (since k_abs is singleton)
                         break
             else:   # weak update
-                for (k, v) in old_segments:     # TODO: adapt from partition_update?
+                for (k, v) in old_segments:
                     key_meet_k = deepcopy(k_abs).meet(k)
-                    if not key_meet_k.key_is_bottom():  # key may be contained in this segment
+                    if not key_meet_k.is_bottom():  # key may be contained in this segment
                         if v.is_top():
                             left_live = True
                             # no need to change liveness

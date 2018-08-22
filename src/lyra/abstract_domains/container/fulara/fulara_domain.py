@@ -654,7 +654,7 @@ class FularaState(State):
                         s_joined = False
                         for r in result_set:
                             s_meet_r = deepcopy(s[0]).meet(r[0])
-                            if not s_meet_r.key_is_bottom():  # not disjoint -> join segments
+                            if not s_meet_r.is_bottom():  # not disjoint -> join segments
                                 s = (deepcopy(s[0]).join(deepcopy(r[0])),
                                      deepcopy(s[1]).join(deepcopy(r[1])))
                                 unjoined_result.discard(r)
@@ -1154,7 +1154,7 @@ class FularaState(State):
                         v_abs = d_lattice.v_domain(scalar_vars, v_v).bottom()
                         for (k, v) in d_lattice.segments:
                             key_meet_k = deepcopy(k_abs).meet(k)
-                            if not key_meet_k.key_is_bottom():
+                            if not key_meet_k.is_bottom():
                                 # key may be contained in this segment
                                 v_abs.join(deepcopy(v))
 
@@ -1177,7 +1177,7 @@ class FularaState(State):
                     k_abs = d_lattice.k_domain(scalar_vars, v_k).bottom()
                     for (k, v) in d_lattice.segments:
                         value_meet_v = deepcopy(v_abs).meet(v)
-                        if not value_meet_v.key_is_bottom():
+                        if not value_meet_v.is_bottom():
                             # value may be contained in this segment
                             k_abs.join(deepcopy(k))
 
@@ -1276,7 +1276,7 @@ class FularaState(State):
                     v_abs = d_lattice.v_domain(scalar_vars, v_var).bottom()
                     for (k, v) in d_lattice.segments:
                         key_meet_k = deepcopy(k_abs).meet(k)
-                        if not key_meet_k.key_is_bottom():  # key may be contained in this segment
+                        if not key_meet_k.is_bottom():  # key may be contained in this segment
                             v_abs.join(deepcopy(v))
 
                     for old_temp in evaluation.values():    # add already added temp vars
