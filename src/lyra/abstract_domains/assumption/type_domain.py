@@ -600,7 +600,7 @@ class TypeState(Store, InputMixin):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.target, state, evaluation)
-            evaluation[expr] = evaluated.meet(TypeLattice.from_lyra_type(expr.target.typ))
+            evaluation[expr] = evaluated[expr.target].meet(TypeLattice.from_lyra_type(expr.typ))
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
@@ -608,7 +608,7 @@ class TypeState(Store, InputMixin):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.target, state, evaluation)
-            evaluation[expr] = evaluated.meet(TypeLattice.from_lyra_type(expr.target.typ))
+            evaluation[expr] = evaluated[expr.target].meet(TypeLattice.from_lyra_type(expr.typ))
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Input)

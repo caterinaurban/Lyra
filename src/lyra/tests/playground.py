@@ -83,3 +83,6 @@
 
 # from lyra.engine.assumption.assumption_analysis import TypeRangeAlphabetAssumptionAnalysis
 # TypeRangeAlphabetAssumptionAnalysis().main("example.py")
+
+# from lyra.engine.assumption.assumption_analysis import TypeRangeWordSetAssumptionAnalysis
+# TypeRangeWordSetAssumptionAnalysis().main("example.py")
