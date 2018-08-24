@@ -324,8 +324,10 @@ class CFGVisitor(ast.NodeVisitor):
         The elts attribute stores a list of nodes representing the elements.
         The ctx attribute is Store if the container is an assignment target, and Load otherwise."""
         pp = ProgramPoint(node.lineno, node.col_offset)
-        assert isinstance(typ, ListLyraType)    # we expect typ to be a ListLyraType
-        items = [self.visit(item, types, typ.typ) for item in node.elts]
+        if isinstance(typ, ListLyraType):
+            items = [self.visit(item, types, typ.typ) for item in node.elts]
+        else:
+            items = [self.visit(item, types, None) for item in node.elts]
         return ListDisplayAccess(pp, typ, items)
 
     def visit_Tuple(self, node, types=None, typ=None):
@@ -333,16 +335,20 @@ class CFGVisitor(ast.NodeVisitor):
         The elts attribute stores a list of nodes representing the elements.
         The ctx attribute is Store if the container is an assignment target, and Load otherwise."""
         pp = ProgramPoint(node.lineno, node.col_offset)
-        assert isinstance(typ, TupleLyraType)   # we expect typ to be a TupleLyraType
-        items = [self.visit(item, types, item_typ) for item, item_typ in zip(node.elts, typ.typs)]
+        if isinstance(typ, TupleLyraType):
+            items = [self.visit(item, types, i_typ) for item, i_typ in zip(node.elts, typ.typs)]
+        else:
+            items = [self.visit(item, types, None) for item in node.elts]
         return TupleDisplayAccess(pp, typ, items)
 
     def visit_Set(self, node, types=None, typ=None):
         """Visitor function for a set.
         The elts attribute stores a list of nodes representing the elements."""
         pp = ProgramPoint(node.lineno, node.col_offset)
-        assert isinstance(typ, SetLyraType)     # we expect typ to be a SetLyraType
-        items = [self.visit(item, types, typ.typ) for item in node.elts]
+        if isinstance(typ, SetLyraType):
+            items = [self.visit(item, types, typ.typ) for item in node.elts]
+        else:
+            items = [self.visit(item, types, None) for item in node.elts]
         return SetDisplayAccess(pp, typ, items)
 
     def visit_Dict(self, node, types=None, typ=None):
@@ -350,9 +356,12 @@ class CFGVisitor(ast.NodeVisitor):
         The attributes keys and values store lists of nodes with matching order
         representing the keys and the values, respectively."""
         pp = ProgramPoint(node.lineno, node.col_offset)
-        assert isinstance(typ, DictLyraType)    # we expect typ to be a DictLyraType
-        keys = [self.visit(key, types, typ.key_typ) for key in node.keys]
-        values = [self.visit(value, types, typ.val_typ) for value in node.values]
+        if isinstance(typ, DictLyraType):
+            keys = [self.visit(key, types, typ.key_typ) for key in node.keys]
+            values = [self.visit(value, types, typ.val_typ) for value in node.values]
+        else:
+            keys = [self.visit(key, types, None) for key in node.keys]
+            values = [self.visit(value, types, None) for value in node.values]
         return DictDisplayAccess(pp, typ, keys, values)
 
     # noinspection PyUnusedLocal
@@ -453,6 +462,9 @@ class CFGVisitor(ast.NodeVisitor):
             if name == 'bool' or name == 'int':
                 arguments = [self.visit(arg, types, typ) for arg in node.args]
                 return Call(pp, name, arguments, typ)
+            if name == 'input':
+                arguments = [self.visit(arg, types, StringLyraType()) for arg in node.args]
+                return Call(pp, name, arguments, StringLyraType())
             if name == 'range':
                 arguments = [self.visit(arg, types, IntegerLyraType()) for arg in node.args]
                 return Call(pp, name, arguments, ListLyraType(IntegerLyraType()))

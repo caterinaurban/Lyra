@@ -248,7 +248,7 @@ class AssumptionState(State):
                 def do(constraint1, constraint2):
                     if isinstance(constraint1, tuple) and isinstance(constraint2, tuple):
                         # the constraints are StarConstraints or BasicConstraints
-                        if not constraint1 and not constraint2:
+                        if not constraint1 or not constraint2:
                             # the constraints are StarConstraints
                             return ()
                         else:   # the constraints are BasicConstraints
@@ -272,7 +272,7 @@ class AssumptionState(State):
                             return ()
                         else:
                             m = Literal(IntegerLyraType(), "1")
-                            c2 = AssumptionState.InputStack.InputLattice(m, [constraint1])
+                            c2 = AssumptionState.InputStack.InputLattice(m, [constraint2])
                             return do(constraint1, c2)
                     else:   # the constraints are InputLattices
                         assert isinstance(constraint1, AssumptionState.InputStack.InputLattice)
@@ -298,13 +298,8 @@ class AssumptionState(State):
                             c = [do(x, y) for x, y in zip(c1, c2)]
                             c.append(())  # add a star constraint
                         return AssumptionState.InputStack.InputLattice(m, c)
-                multiplier1 = self.multiplier
-                multiplier2 = other.multiplier
-                assert isinstance(multiplier1, Literal) and multiplier1.val == "1"
-                assert isinstance(multiplier2, Literal) and multiplier2.val == "1"
-                constraints = [do(x, y) for x, y in zip(self.constraints, other.constraints)]
-                one = Literal(IntegerLyraType(), "1")
-                return self._replace(AssumptionState.InputStack.InputLattice(one, constraints))
+                done = do(self, other)
+                return self._replace(done)
 
             @copy_docstring(BottomMixin._meet)
             def _meet(self, other: InputLattice) -> InputLattice:   # TODO
@@ -314,6 +309,13 @@ class AssumptionState(State):
             def _widening(self, other: InputLattice) -> InputLattice:
                 """``self \/ other = self ▽ other``."""
                 return self._join(other)
+
+            def is_empty(self) -> bool:
+                """Test whether the current list of constraints is empty.
+
+                :return: whether the current list of constraints is empty
+                """
+                return len(self.constraints) == 0
 
             def repeat(self, multiplier: Expression) -> InputLattice:
                 """Repeat the current assumption on the input data.
@@ -337,11 +339,23 @@ class AssumptionState(State):
                 """
                 def do(constraint1, constraint2):
                     if isinstance(constraint1, tuple) and isinstance(constraint2, tuple):
-                        # the constraints are BasicConstraints about the same program point
-                        assert constraint1 and constraint2 and constraint1[0] == constraint2[0]
+                        # the constraints are BasicConstraints
+                        pp1: ProgramPoint = constraint1[0]
+                        pp2: ProgramPoint = constraint2[0]
+                        pp: ProgramPoint = pp1 if pp1.line <= pp2.line else pp2
                         l1: Tuple[JSONMixin, ...] = constraint1[1]
                         l2: Tuple[JSONMixin, ...] = constraint2[1]
-                        return constraint1[0], tuple(x.join(y) for x, y in zip(l1, l2))
+                        return pp, tuple(x.join(y) for x, y in zip(l1, l2))
+                    elif isinstance(constraint1, tuple):
+                        assert isinstance(constraint2, AssumptionState.InputStack.InputLattice)
+                        m = Literal(IntegerLyraType(), "1")
+                        c1 = AssumptionState.InputStack.InputLattice(m, [constraint1])
+                        return do(c1, constraint2)
+                    elif isinstance(constraint2, tuple):
+                        assert isinstance(constraint1, AssumptionState.InputStack.InputLattice)
+                        m = Literal(IntegerLyraType(), "1")
+                        c2 = AssumptionState.InputStack.InputLattice(m, [constraint2])
+                        return do(constraint1, c2)
                     else:   # the constraints are InputLattices
                         constraints1 = constraint1.constraints
                         constraints2 = constraint2.constraints
@@ -554,7 +568,8 @@ class AssumptionState(State):
                         if isinstance(normal.right, Range):
                             self.lattice.repeat(normal.right.stop)
                             return self
-                self.lattice.top()      # default to the star constraint ★
+                if not self.lattice.is_empty():
+                    self.lattice.top()  # default to ★
             return self
 
         @copy_docstring(State.enter_if)
