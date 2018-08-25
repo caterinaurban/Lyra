@@ -10,17 +10,20 @@ Lyra's internal semantics of statements.
 
 import itertools
 import re
-from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slicing, \
-    LengthIdentifier, VariableIdentifier, Range, Expression
-from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
-from lyra.core.expressions import UnaryOperation
-from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
-from lyra.core.expressions import BinaryBooleanOperation, Input, ListDisplay, Literal
+
 from lyra.abstract_domains.state import State
+from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slicing, \
+    LengthIdentifier, VariableIdentifier, Range, Expression, BinarySequenceOperation
+from lyra.core.expressions import BinaryBooleanOperation, Input, TupleDisplay, ListDisplay, \
+    Literal, SetDisplay, DictDisplay, Items, Keys, Values
+from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
+from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
+from lyra.core.expressions import UnaryOperation
 from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, \
-    ListDisplayAccess, SubscriptionAccess, SlicingAccess, Raise
+    TupleDisplayAccess, ListDisplayAccess, SetDisplayAccess, DictDisplayAccess, \
+    SubscriptionAccess, SlicingAccess
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
-    ListLyraType, StringLyraType
+    StringLyraType, TupleLyraType, ListLyraType, SetLyraType, DictLyraType
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -91,8 +94,58 @@ class ExpressionSemantics(Semantics):
         items = [self.semantics(item, state).result for item in stmt.items]
         result = set()
         for combination in itertools.product(*items):
-            display = ListDisplay(ListLyraType(combination[0].typ), list(combination))
+            display = ListDisplay(stmt.typ, list(combination))
             result.add(display)
+        state.result = result
+        return state
+
+    def tuple_display_access_semantics(self, stmt: TupleDisplayAccess, state: State) -> State:
+        """Semantics of a tuple display access.
+
+                :param stmt: tuple display access statement to be executed
+                :param state: state before executing the tuple display access
+                :return: state modified by the tuple display access
+                """
+        items = [self.semantics(item, state).result for item in stmt.items]
+        result = set()
+        for combination in itertools.product(*items):
+            display = TupleDisplay(stmt.typ, list(combination))
+            result.add(display)
+        state.result = result
+        return state
+
+    def set_display_access_semantics(self, stmt: SetDisplayAccess, state: State) -> State:
+        """Semantics of a set display access.
+
+        :param stmt: set display access statement to be executed
+        :param state: state before executing the set display access
+        :return: state modified by the set display access
+        """
+        items = [self.semantics(item, state).result for item in stmt.items]
+        result = set()
+        for combination in itertools.product(*items):
+            display = SetDisplay(stmt.typ, list(combination))
+            result.add(display)
+        state.result = result
+        return state
+
+    def dict_display_access_semantics(self, stmt: DictDisplayAccess, state: State) -> State:
+        """Semantics of a list display access.
+
+        :param stmt: dictionary display access statement to be executed
+        :param state: state before executing the dictionary display access
+        :return: state modified by the dictionary display access
+        """
+        keys = [self.semantics(k, state).result for k in stmt.keys]  # List[Set[Expression]]
+        values = [self.semantics(v, state).result for v in stmt.values]
+        result = set()
+        if keys:  # not empty
+            for combination in itertools.product(*map(itertools.product, keys, values)):
+                unzip = list(zip(*combination))  # to create two separate lists for keys and values
+                display = DictDisplay(stmt.typ, list(unzip[0]), list(unzip[1]))
+                result.add(display)
+        else:
+            result.add(DictDisplay(stmt.typ, list(), list()))
         state.result = result
         return state
 
@@ -107,8 +160,18 @@ class ExpressionSemantics(Semantics):
         key = self.semantics(stmt.key, state).result
         result = set()
         for primary, index in itertools.product(target, key):
-            subscription = Subscription(primary.typ, primary, index)
-            result.add(subscription)
+            if isinstance(primary.typ, StringLyraType):
+                subscription = Subscription(primary.typ, primary, index)
+                result.add(subscription)
+            elif isinstance(primary.typ, (ListLyraType, SetLyraType)):
+                subscription = Subscription(primary.typ.typ, primary, index)
+                result.add(subscription)
+            elif isinstance(primary.typ, DictLyraType):
+                subscription = Subscription(primary.typ.key_typ, primary, index)
+                result.add(subscription)
+            else:
+                error = f"Semantics for subscription of {primary} is not yet implemented!"
+                raise NotImplementedError(error)
         state.result = result
         return state
 
@@ -121,7 +184,7 @@ class ExpressionSemantics(Semantics):
         """
         target = self.semantics(stmt.target, state).result
         lower = self.semantics(stmt.lower, state).result
-        upper = self.semantics(stmt.upper, state).result
+        upper = self.semantics(stmt.upper, state).result if stmt.upper else {None}
         stride = self.semantics(stmt.stride, state).result if stmt.stride else {None}
         result = set()
         for primary, start, stop, step in itertools.product(target, lower, upper, stride):
@@ -204,16 +267,79 @@ class BuiltInCallSemantics(CallSemantics):
         """
         return self._cast_call_semantics(stmt, state, FloatLyraType())
 
-    # noinspection PyMethodMayBeStatic
-    def input_call_semantics(self, stmt: Call, state: State) -> State:
-        """Semantics of a calls to 'input'.
+    def list_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of a call to 'list'.
 
-        :param stmt: call to 'input' to be executed
+        :param stmt: call to 'list' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        state.result = {Input(stmt.typ)}
-        return state
+        if not stmt.arguments:
+            state.result = {ListDisplay(stmt.typ, list())}
+            return state
+        assert len(stmt.arguments) == 1  # exactly one argument is expected
+        argument = stmt.arguments[0]
+        if isinstance(argument, VariableAccess):
+            variable = argument.variable
+            if isinstance(variable.typ, StringLyraType):
+                typ = ListLyraType(variable.typ)
+                state.result = {VariableIdentifier(typ, variable.name)}
+                return state
+            elif isinstance(variable.typ, ListLyraType):
+                state.result = {variable}
+                return state
+            elif isinstance(variable.typ, SetLyraType):
+                typ = ListLyraType(variable.typ.typ)
+                state.result = {VariableIdentifier(typ, variable.name)}
+                return state
+            elif isinstance(variable.typ, DictLyraType):
+                typ = ListLyraType(variable.typ.key_typ)
+                state.result = {VariableIdentifier(typ, variable.name)}
+                return state
+        elif isinstance(argument, Call):
+            if isinstance(argument.typ, StringLyraType):
+                typ = ListLyraType(argument.typ)
+                call = Call(argument.pp, argument.name, argument.arguments, typ)
+                state.result = self.semantics(call, state).result
+                return state
+            elif isinstance(argument.typ, ListLyraType):
+                state.result = self.semantics(argument, state).result
+                return state
+            elif isinstance(argument.typ, SetLyraType):
+                typ = ListLyraType(argument.typ.typ)
+                call = Call(argument.pp, argument.name, argument.arguments, typ)
+                state.result = self.semantics(call, state).result
+                return state
+            elif isinstance(argument.typ, DictLyraType):
+                typ = ListLyraType(argument.typ.key_typ)
+                call = Call(argument.pp, argument.name, argument.arguments, typ)
+                state.result = self.semantics(call, state).result
+                return state
+        raise NotImplementedError(f"Semantics for {stmt} is not yet implemented!")
+
+    def set_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of a call to 'set'.
+
+        :param stmt: call to 'set' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        if not stmt.arguments:
+            state.result = {SetDisplay(stmt.typ, list())}
+            return state
+        raise NotImplementedError(f"Semantics for {stmt} is not yet implemented!")
+
+    def dict_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of a call to 'dict'.
+
+        :param stmt: call to 'dict' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        if not stmt.arguments:
+            state.result = {SetDisplay(stmt.typ, list())}
+            return state
+        raise NotImplementedError(f"Semantics for {stmt} is not yet implemented!")
 
     def len_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'len'.
@@ -256,6 +382,17 @@ class BuiltInCallSemantics(CallSemantics):
             error = f"Call to {stmt.name} of unexpected argument!"
             raise ValueError(error)
         state.result = result
+        return state
+
+    # noinspection PyMethodMayBeStatic
+    def input_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of a calls to 'input'.
+
+        :param stmt: call to 'input' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        state.result = {Input(stmt.typ)}
         return state
 
     def print_call_semantics(self, stmt: Call, state: State) -> State:
@@ -303,10 +440,66 @@ class BuiltInCallSemantics(CallSemantics):
         error = f"Call to {stmt.name} with unexpected number of arguments!"
         raise ValueError(error)
 
-    def raise_semantics(self, stmt: Raise, state: State) -> State:
+    def items_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of calls to 'items'.
+
+        :param stmt: call to 'items' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        if isinstance(stmt.arguments[0], VariableAccess):  # target
+            state.result = {Items(stmt.typ, stmt.arguments[0].variable)}
+        else:
+            error = f"Semantics for items() call on non-variable {stmt.arguments[0]} is not yet " \
+                    f"implemented!"
+            raise NotImplementedError(error)
+        return state
+
+    def keys_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of calls to 'keys'.
+
+        :param stmt: call to 'keys' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        if isinstance(stmt.arguments[0], VariableAccess):  # target
+            state.result = {Keys(stmt.typ, stmt.arguments[0].variable)}
+        else:
+            error = f"Semantics for keys() call on non-variable {stmt.arguments[0]} is not yet " \
+                    f"implemented!"
+            raise NotImplementedError(error)
+        return state
+
+    def values_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of calls to 'values'.
+
+        :param stmt: call to 'values' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        if isinstance(stmt.arguments[0], VariableAccess):     # target
+            state.result = {Values(stmt.typ, stmt.arguments[0].variable)}
+        else:
+            error = f"Semantics for values() call on non-variable {stmt.arguments[0]} is not yet "\
+                    f"implemented!"
+            raise NotImplementedError(error)
+        return state
+
+    # TODO: define default call semantics instead for usage?
+    def lower_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of calls to 'lower'.
+
+        :param stmt: call to 'lower' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        # treat as just the target expression (forget about call)
+        return self.semantics(stmt.arguments[0], state)     # target
+
+    def raise_semantics(self, _, state: State) -> State:
         """Semantics of raising an Error.
 
-        :param stmt: raise statement to be executed
+        :param _: raise statement to be executed
         :param state: state before executing the raise Error
         :return: state modified by the raise
         """
@@ -386,6 +579,13 @@ class BuiltInCallSemantics(CallSemantics):
                     right = product[i]
                     operation = BinaryArithmeticOperation(stmt.typ, operation, operator, right)
                 result.add(operation)
+        elif isinstance(operator, BinarySequenceOperation.Operator):
+            for product in itertools.product(*arguments):
+                operation = product[0]
+                for i in range(1, len(arguments)):
+                    right = product[i]
+                    operation = BinarySequenceOperation(stmt.typ, operation, operator, right)
+                result.add(operation)
         elif isinstance(operator, BinaryComparisonOperation.Operator):
             for product in itertools.product(*arguments):
                 operation = product[0]
@@ -407,12 +607,14 @@ class BuiltInCallSemantics(CallSemantics):
         return state
 
     def add_call_semantics(self, stmt: Call, state: State) -> State:
-        """Semantics of a call to '+' (addition, not concatenation).
+        """Semantics of a call to '+' (addition or concatenation).
 
         :param stmt: call to '+' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
+        if isinstance(stmt.typ, (StringLyraType, ListLyraType, TupleLyraType)):
+            return self._binary_operation(stmt, BinarySequenceOperation.Operator.Concat, state)
         return self._binary_operation(stmt, BinaryArithmeticOperation.Operator.Add, state)
 
     def sub_call_semantics(self, stmt: Call, state: State) -> State:
@@ -516,7 +718,7 @@ class BuiltInCallSemantics(CallSemantics):
     def in_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'in' (membership).
 
-        :param stmt: call to 'is' to be executed
+        :param stmt: call to 'in' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """

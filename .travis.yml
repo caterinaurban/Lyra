@@ -25,6 +25,7 @@ jobs:
         - python liveness_tests.py
         - python usage_tests.py
         - python assumption_tests.py
+        - python fulara_tests.py
     - stage: linter
       name: "PEP 8 Coding Style"
       script:

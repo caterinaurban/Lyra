@@ -236,12 +236,12 @@ class BottomMixin(KindMixin, metaclass=ABCMeta):
 
     @copy_docstring(Lattice.bottom)
     def bottom(self):
-        self._kind = KindMixin.Kind.BOTTOM
+        self.kind = KindMixin.Kind.BOTTOM
         return self
 
     @copy_docstring(Lattice.is_bottom)
     def is_bottom(self) -> bool:
-        return self._kind == KindMixin.Kind.BOTTOM
+        return self.kind == KindMixin.Kind.BOTTOM
 
 
 class TopMixin(KindMixin, metaclass=ABCMeta):
@@ -254,15 +254,15 @@ class TopMixin(KindMixin, metaclass=ABCMeta):
 
     @copy_docstring(Lattice.top)
     def top(self):
-        self._kind = KindMixin.Kind.TOP
+        self.kind = KindMixin.Kind.TOP
         return self
 
     @copy_docstring(Lattice.is_top)
     def is_top(self) -> bool:
-        return self._kind == KindMixin.Kind.TOP
+        return self.kind == KindMixin.Kind.TOP
 
 
-class BoundedLattice(TopMixin, BottomMixin, metaclass=ABCMeta):
+class BoundedLattice(KindMixin, metaclass=ABCMeta):
     """Mutable lattice element, with predefined bottom and top elements.
 
     .. warning::
@@ -532,30 +532,28 @@ class BooleanMixin(Lattice, metaclass=ABCMeta):
             return self._disj(other)
 
 
-class StringMixin(Lattice, metaclass=ABCMeta):
-    """Mixin to add string operations to a lattice."""
+class SequenceMixin(Lattice, metaclass=ABCMeta):
+    """Mixin to add sequence operations to a lattice."""
 
     @abstractmethod
-    def _concat(self, other: 'StringMixin') -> 'StringMixin':
+    def _concat(self, other: 'SequenceMixin') -> 'SequenceMixin':
         """Concatenation between two default lattice elements.
 
         :param other: other lattice element
         :return: current lattice element modified to be the concatenation
+
         """
 
-    def concat(self, other: 'StringMixin') -> 'StringMixin':
+    def concat(self, other: 'SequenceMixin') -> 'SequenceMixin':
         """Concatenation between two lattice elements.
 
         :param other: other lattice element
         :return: current lattice element modified to be the concatenation
+
         """
-        if self.is_bottom():
-            return self
-        elif other.is_bottom():
+        if self.is_bottom():        # self is the empty sequence
             return self._replace(other)
+        elif other.is_bottom():     # other is the empty sequence
+            return self
         else:
             return self._concat(other)
-
-    @abstractmethod
-    def negate(self) -> 'StringMixin':
-        """ The negation of a lattice element"""

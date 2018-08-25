@@ -11,8 +11,10 @@ Subpackages
 
 .. toctree::
 
+    lyra.engine.assumption
     lyra.engine.liveness
     lyra.engine.numerical
+    lyra.engine.string
     lyra.engine.usage
 
 Submodules

@@ -13,7 +13,7 @@ from collections import defaultdict
 from copy import deepcopy
 
 from lyra.abstract_domains.basis import Basis
-from lyra.abstract_domains.lattice import BottomMixin, StringMixin
+from lyra.abstract_domains.lattice import BottomMixin, SequenceMixin
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import *
 from lyra.core.types import StringLyraType
@@ -23,7 +23,7 @@ from lyra.core.utils import copy_docstring
 _alphabet = set(string.printable)
 
 
-class CharacterLattice(BottomMixin, StringMixin):
+class CharacterLattice(BottomMixin, SequenceMixin):
     """Character inclusion lattice.
 
     The default abstraction is the unconstraining pair ``(∅, Σ)``,
@@ -136,14 +136,13 @@ class CharacterLattice(BottomMixin, StringMixin):
 
     # string operations
 
-    @copy_docstring(StringMixin.concat)
+    @copy_docstring(SequenceMixin.concat)
     def _concat(self, other: 'CharacterLattice') -> 'CharacterLattice':
         """``(c1, m1) + (c2, m2) = (c1 ∪ c2, m1 ∪ m2)``."""
         certainly = self.certainly.union(other.certainly)
         maybe = self.maybe.union(other.maybe)
         return self._replace(type(self)(certainly, maybe))
 
-    @copy_docstring(StringMixin.negate)
     def negate(self):
         """The negation of an element ``(c, m)`` is ``(∅, _alphabet - m)`` """
         maybe = _alphabet.difference(self.maybe)
@@ -239,14 +238,14 @@ class CharacterState(Basis):
 
     class ExpressionRefinement(Basis.ExpressionRefinement):
 
-        def visit_BinaryArithmeticOperation(self, expr, evaluation=None, value=None, state=None):
-            if expr.operator == BinaryArithmeticOperation.Operator.Add:
+        def visit_BinarySequenceOperation(self, expr, evaluation=None, value=None, state=None):
+            if expr.operator == BinarySequenceOperation.Operator.Concat:
                 refined = evaluation[expr].meet(value)
                 refinement1 = state.lattices[expr.typ](maybe=deepcopy(refined).maybe)
                 updated1 = self.visit(expr.left, evaluation, refinement1, state)
                 refinement2 = state.lattices[expr.typ](maybe=deepcopy(refined).maybe)
                 updated2 = self.visit(expr.right, evaluation, refinement2, updated1)
                 return updated2
-            return super().visit_BinaryArithmeticOperation(expr, evaluation, value, state)
+            return super().visit_BinarySequenceOperation(expr, evaluation, value, state)
 
     _refinement = ExpressionRefinement()  # static class member shared between instances

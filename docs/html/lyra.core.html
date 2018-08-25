@@ -87,7 +87,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
@@ -132,7 +132,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">src</a> &raquo;</li>
+          <li><a href="modules.html">lyra</a> &raquo;</li>
       
           <li><a href="lyra.html">lyra package</a> &raquo;</li>
       
@@ -564,6 +564,51 @@
 </dd></dl>
 
 <dl class="class">
+<dt id="lyra.core.expressions.BinarySequenceOperation">
+<em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">BinarySequenceOperation</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em>, <em>left: lyra.core.expressions.Expression</em>, <em>operator: lyra.core.expressions.BinarySequenceOperation.Operator</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#BinarySequenceOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.BinarySequenceOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.BinaryOperation" title="lyra.core.expressions.BinaryOperation"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.BinaryOperation</span></code></a></p>
+<p>Binary sequence operation expression representation.</p>
+<dl class="class">
+<dt id="lyra.core.expressions.BinarySequenceOperation.Operator">
+<em class="property">class </em><code class="descname">Operator</code><a class="reference internal" href="_modules/lyra/core/expressions.html#BinarySequenceOperation.Operator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.BinarySequenceOperation.Operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Operator</span></code></p>
+<p>Binary sequence operator representation.</p>
+<dl class="attribute">
+<dt id="lyra.core.expressions.BinarySequenceOperation.Operator.Concat">
+<code class="descname">Concat</code><em class="property"> = 1</em><a class="headerlink" href="#lyra.core.expressions.BinarySequenceOperation.Operator.Concat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.expressions.Call">
+<em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">Call</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#Call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Expression" title="lyra.core.expressions.Expression"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Expression</span></code></a></p>
+<p>Call representation.</p>
+<p><a class="reference external" href="https://docs.python.org/3.4/reference/expressions.html#calls">https://docs.python.org/3.4/reference/expressions.html#calls</a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.expressions.DictDisplay">
+<em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">DictDisplay</code><span class="sig-paren">(</span><em>typ: lyra.core.types.DictLyraType</em>, <em>keys: typing.List[lyra.core.expressions.Expression] = None</em>, <em>values: typing.List[lyra.core.expressions.Expression] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#DictDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.DictDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Expression" title="lyra.core.expressions.Expression"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Expression</span></code></a></p>
+<p>Dictionary display representation.</p>
+<p><a class="reference external" href="https://docs.python.org/3/reference/expressions.html#dictionary-displays">https://docs.python.org/3/reference/expressions.html#dictionary-displays</a></p>
+<dl class="attribute">
+<dt id="lyra.core.expressions.DictDisplay.keys">
+<code class="descname">keys</code><a class="headerlink" href="#lyra.core.expressions.DictDisplay.keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.core.expressions.DictDisplay.values">
+<code class="descname">values</code><a class="headerlink" href="#lyra.core.expressions.DictDisplay.values" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="lyra.core.expressions.Expression">
 <em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">Expression</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#Expression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Expression" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
@@ -639,9 +684,27 @@ a <cite>NotImplementedError</cite> is raised.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="lyra.core.expressions.ExpressionVisitor.visit_BinarySequenceOperation">
+<code class="descname">visit_BinarySequenceOperation</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.BinarySequenceOperation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#ExpressionVisitor.visit_BinarySequenceOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.ExpressionVisitor.visit_BinarySequenceOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a binary sequence operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.core.expressions.ExpressionVisitor.visit_DictDisplay">
+<code class="descname">visit_DictDisplay</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.DictDisplay</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#ExpressionVisitor.visit_DictDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.ExpressionVisitor.visit_DictDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of dictionary display.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="lyra.core.expressions.ExpressionVisitor.visit_Input">
 <code class="descname">visit_Input</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Input</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#ExpressionVisitor.visit_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.ExpressionVisitor.visit_Input" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of an input expression.</p>
+<dd><p>Visit of an input call expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.core.expressions.ExpressionVisitor.visit_LengthIdentifier">
+<code class="descname">visit_LengthIdentifier</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.LengthIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#ExpressionVisitor.visit_LengthIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.ExpressionVisitor.visit_LengthIdentifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a sequence or collection length.</p>
 </dd></dl>
 
 <dl class="method">
@@ -657,6 +720,18 @@ a <cite>NotImplementedError</cite> is raised.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="lyra.core.expressions.ExpressionVisitor.visit_Range">
+<code class="descname">visit_Range</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Range</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#ExpressionVisitor.visit_Range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.ExpressionVisitor.visit_Range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a range call expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.core.expressions.ExpressionVisitor.visit_SetDisplay">
+<code class="descname">visit_SetDisplay</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.SetDisplay</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#ExpressionVisitor.visit_SetDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.ExpressionVisitor.visit_SetDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a set display.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="lyra.core.expressions.ExpressionVisitor.visit_Slicing">
 <code class="descname">visit_Slicing</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Slicing</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#ExpressionVisitor.visit_Slicing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.ExpressionVisitor.visit_Slicing" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visit of a slicing expression.</p>
@@ -666,6 +741,12 @@ a <cite>NotImplementedError</cite> is raised.</p>
 <dt id="lyra.core.expressions.ExpressionVisitor.visit_Subscription">
 <code class="descname">visit_Subscription</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Subscription</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#ExpressionVisitor.visit_Subscription"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.ExpressionVisitor.visit_Subscription" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visit of a subscription expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.core.expressions.ExpressionVisitor.visit_TupleDisplay">
+<code class="descname">visit_TupleDisplay</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.TupleDisplay</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#ExpressionVisitor.visit_TupleDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.ExpressionVisitor.visit_TupleDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a tuple display.</p>
 </dd></dl>
 
 <dl class="method">
@@ -704,8 +785,32 @@ a <cite>NotImplementedError</cite> is raised.</p>
 <dl class="class">
 <dt id="lyra.core.expressions.Input">
 <em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">Input</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Input" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Expression" title="lyra.core.expressions.Expression"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Expression</span></code></a></p>
-<p>Input expression representation.</p>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Call" title="lyra.core.expressions.Call"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Call</span></code></a></p>
+<p>Input call representation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.expressions.Items">
+<em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">Items</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em>, <em>target_dict: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#Items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Call" title="lyra.core.expressions.Call"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Call</span></code></a></p>
+<p>Items call representation</p>
+<dl class="attribute">
+<dt id="lyra.core.expressions.Items.target_dict">
+<code class="descname">target_dict</code><a class="headerlink" href="#lyra.core.expressions.Items.target_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.expressions.Keys">
+<em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">Keys</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em>, <em>target_dict: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#Keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Call" title="lyra.core.expressions.Call"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Call</span></code></a></p>
+<p>Keys call representation</p>
+<dl class="attribute">
+<dt id="lyra.core.expressions.Keys.target_dict">
+<code class="descname">target_dict</code><a class="headerlink" href="#lyra.core.expressions.Keys.target_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -713,11 +818,16 @@ a <cite>NotImplementedError</cite> is raised.</p>
 <em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">LengthIdentifier</code><span class="sig-paren">(</span><em>variable: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#LengthIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.LengthIdentifier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Identifier" title="lyra.core.expressions.Identifier"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Identifier</span></code></a></p>
 <p>Sequence or collection length representation.</p>
+<dl class="attribute">
+<dt id="lyra.core.expressions.LengthIdentifier.variable">
+<code class="descname">variable</code><a class="headerlink" href="#lyra.core.expressions.LengthIdentifier.variable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="lyra.core.expressions.ListDisplay">
-<em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">ListDisplay</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em>, <em>items: typing.List[lyra.core.expressions.Expression] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#ListDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.ListDisplay" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">ListDisplay</code><span class="sig-paren">(</span><em>typ: lyra.core.types.ListLyraType</em>, <em>items: typing.List[lyra.core.expressions.Expression] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#ListDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.ListDisplay" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Expression" title="lyra.core.expressions.Expression"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Expression</span></code></a></p>
 <p>List display representation.</p>
 <p><a class="reference external" href="https://docs.python.org/3/reference/expressions.html#list-displays">https://docs.python.org/3/reference/expressions.html#list-displays</a></p>
@@ -748,9 +858,9 @@ a <cite>NotImplementedError</cite> is raised.</p>
 <p>An expression visitor that:</p>
 <ol class="arabic simple">
 <li>removes negations using De Morgan’s law, and</li>
+<li>puts all boolean comparison operations with <code class="docutils literal"><span class="pre">=</span></code>, <code class="docutils literal"><span class="pre">!=</span></code>, <code class="docutils literal"><span class="pre">&lt;</span></code>, <code class="docutils literal"><span class="pre">&lt;=</span></code>, <code class="docutils literal"><span class="pre">&gt;</span></code>, and <code class="docutils literal"><span class="pre">&gt;=</span></code>
+in the normal form <code class="docutils literal"><span class="pre">expr</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code>.</li>
 </ol>
-<p>2. puts in the normal form <code class="docutils literal"><span class="pre">expr</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code>
-all boolean comparison operations with <code class="docutils literal"><span class="pre">=</span></code>, <code class="docutils literal"><span class="pre">!=</span></code>, <code class="docutils literal"><span class="pre">&lt;</span></code>, <code class="docutils literal"><span class="pre">&lt;=</span></code>, <code class="docutils literal"><span class="pre">&gt;</span></code>, and <code class="docutils literal"><span class="pre">&gt;=</span></code> .</p>
 <dl class="method">
 <dt id="lyra.core.expressions.NegationFreeNormalExpression.visit_AttributeReference">
 <code class="descname">visit_AttributeReference</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.AttributeReference</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#NegationFreeNormalExpression.visit_AttributeReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.NegationFreeNormalExpression.visit_AttributeReference" title="Permalink to this definition">¶</a></dt>
@@ -776,9 +886,27 @@ all boolean comparison operations with <code class="docutils literal"><span clas
 </dd></dl>
 
 <dl class="method">
+<dt id="lyra.core.expressions.NegationFreeNormalExpression.visit_BinarySequenceOperation">
+<code class="descname">visit_BinarySequenceOperation</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.BinarySequenceOperation</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#NegationFreeNormalExpression.visit_BinarySequenceOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.NegationFreeNormalExpression.visit_BinarySequenceOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a binary sequence operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.core.expressions.NegationFreeNormalExpression.visit_DictDisplay">
+<code class="descname">visit_DictDisplay</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.DictDisplay</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#NegationFreeNormalExpression.visit_DictDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.NegationFreeNormalExpression.visit_DictDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of dictionary display.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="lyra.core.expressions.NegationFreeNormalExpression.visit_Input">
 <code class="descname">visit_Input</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Input</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#NegationFreeNormalExpression.visit_Input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.NegationFreeNormalExpression.visit_Input" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit of an input expression.</p>
+<dd><p>Visit of an input call expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.core.expressions.NegationFreeNormalExpression.visit_LengthIdentifier">
+<code class="descname">visit_LengthIdentifier</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.LengthIdentifier</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#NegationFreeNormalExpression.visit_LengthIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.NegationFreeNormalExpression.visit_LengthIdentifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a sequence or collection length.</p>
 </dd></dl>
 
 <dl class="method">
@@ -794,6 +922,18 @@ all boolean comparison operations with <code class="docutils literal"><span clas
 </dd></dl>
 
 <dl class="method">
+<dt id="lyra.core.expressions.NegationFreeNormalExpression.visit_Range">
+<code class="descname">visit_Range</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Range</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#NegationFreeNormalExpression.visit_Range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.NegationFreeNormalExpression.visit_Range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a range call expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.core.expressions.NegationFreeNormalExpression.visit_SetDisplay">
+<code class="descname">visit_SetDisplay</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.SetDisplay</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#NegationFreeNormalExpression.visit_SetDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.NegationFreeNormalExpression.visit_SetDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a set display.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="lyra.core.expressions.NegationFreeNormalExpression.visit_Slicing">
 <code class="descname">visit_Slicing</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Slicing</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#NegationFreeNormalExpression.visit_Slicing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.NegationFreeNormalExpression.visit_Slicing" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visit of a slicing expression.</p>
@@ -803,6 +943,12 @@ all boolean comparison operations with <code class="docutils literal"><span clas
 <dt id="lyra.core.expressions.NegationFreeNormalExpression.visit_Subscription">
 <code class="descname">visit_Subscription</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.Subscription</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#NegationFreeNormalExpression.visit_Subscription"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.NegationFreeNormalExpression.visit_Subscription" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visit of a subscription expression.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.core.expressions.NegationFreeNormalExpression.visit_TupleDisplay">
+<code class="descname">visit_TupleDisplay</code><span class="sig-paren">(</span><em>expr: lyra.core.expressions.TupleDisplay</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#NegationFreeNormalExpression.visit_TupleDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.NegationFreeNormalExpression.visit_TupleDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visit of a tuple display.</p>
 </dd></dl>
 
 <dl class="method">
@@ -830,6 +976,41 @@ all boolean comparison operations with <code class="docutils literal"><span clas
 <em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">Operation</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#Operation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Operation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Expression" title="lyra.core.expressions.Expression"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Expression</span></code></a></p>
 <p>Operation representation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.expressions.Range">
+<em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">Range</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em>, <em>start: lyra.core.expressions.Expression</em>, <em>stop: lyra.core.expressions.Expression</em>, <em>step: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#Range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Call" title="lyra.core.expressions.Call"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Call</span></code></a></p>
+<p>Range call representation.</p>
+<dl class="attribute">
+<dt id="lyra.core.expressions.Range.start">
+<code class="descname">start</code><a class="headerlink" href="#lyra.core.expressions.Range.start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.core.expressions.Range.step">
+<code class="descname">step</code><a class="headerlink" href="#lyra.core.expressions.Range.step" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.core.expressions.Range.stop">
+<code class="descname">stop</code><a class="headerlink" href="#lyra.core.expressions.Range.stop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.expressions.SetDisplay">
+<em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">SetDisplay</code><span class="sig-paren">(</span><em>typ: lyra.core.types.SetLyraType</em>, <em>items: typing.List[lyra.core.expressions.Expression] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#SetDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.SetDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Expression" title="lyra.core.expressions.Expression"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Expression</span></code></a></p>
+<p>Set display representation.</p>
+<p><a class="reference external" href="https://docs.python.org/3/reference/expressions.html#set-displays">https://docs.python.org/3/reference/expressions.html#set-displays</a></p>
+<dl class="attribute">
+<dt id="lyra.core.expressions.SetDisplay.items">
+<code class="descname">items</code><a class="headerlink" href="#lyra.core.expressions.SetDisplay.items" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -874,6 +1055,19 @@ all boolean comparison operations with <code class="docutils literal"><span clas
 <dl class="attribute">
 <dt id="lyra.core.expressions.Subscription.target">
 <code class="descname">target</code><a class="headerlink" href="#lyra.core.expressions.Subscription.target" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.expressions.TupleDisplay">
+<em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">TupleDisplay</code><span class="sig-paren">(</span><em>typ: lyra.core.types.TupleLyraType</em>, <em>items: typing.List[lyra.core.expressions.Expression] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#TupleDisplay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.TupleDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Expression" title="lyra.core.expressions.Expression"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Expression</span></code></a></p>
+<p>Tuple display (= expression list with comma or ()) representation.</p>
+<p><a class="reference external" href="https://docs.python.org/3/reference/expressions.html#expression-lists">https://docs.python.org/3/reference/expressions.html#expression-lists</a></p>
+<dl class="attribute">
+<dt id="lyra.core.expressions.TupleDisplay.items">
+<code class="descname">items</code><a class="headerlink" href="#lyra.core.expressions.TupleDisplay.items" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -948,6 +1142,18 @@ all boolean comparison operations with <code class="docutils literal"><span clas
 </dd></dl>
 
 <dl class="class">
+<dt id="lyra.core.expressions.Values">
+<em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">Values</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em>, <em>target_dict: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#Values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.Values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Call" title="lyra.core.expressions.Call"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Call</span></code></a></p>
+<p>Values call representation</p>
+<dl class="attribute">
+<dt id="lyra.core.expressions.Values.target_dict">
+<code class="descname">target_dict</code><a class="headerlink" href="#lyra.core.expressions.Values.target_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="lyra.core.expressions.VariableIdentifier">
 <em class="property">class </em><code class="descclassname">lyra.core.expressions.</code><code class="descname">VariableIdentifier</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em>, <em>name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/expressions.html#VariableIdentifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.expressions.VariableIdentifier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.expressions.Identifier" title="lyra.core.expressions.Identifier"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.expressions.Identifier</span></code></a></p>
@@ -1006,16 +1212,38 @@ all boolean comparison operations with <code class="docutils literal"><span clas
 </dd></dl>
 
 <dl class="class">
+<dt id="lyra.core.statements.DictDisplayAccess">
+<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">DictDisplayAccess</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint, typ: lyra.core.types.LyraType, keys: typing.List[lyra.core.statements.Statement], values: typing.List[lyra.core.statements.Statement]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#DictDisplayAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.DictDisplayAccess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.statements.ExpressionAccess" title="lyra.core.statements.ExpressionAccess"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.statements.ExpressionAccess</span></code></a></p>
+<p>Dictionary display access representation. ({k:v, …})</p>
+<dl class="attribute">
+<dt id="lyra.core.statements.DictDisplayAccess.keys">
+<code class="descname">keys</code><a class="headerlink" href="#lyra.core.statements.DictDisplayAccess.keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.core.statements.DictDisplayAccess.values">
+<code class="descname">values</code><a class="headerlink" href="#lyra.core.statements.DictDisplayAccess.values" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="lyra.core.statements.ExpressionAccess">
-<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">ExpressionAccess</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#ExpressionAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.ExpressionAccess" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">ExpressionAccess</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint</em>, <em>typ: lyra.core.types.LyraType</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#ExpressionAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.ExpressionAccess" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.statements.Statement" title="lyra.core.statements.Statement"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.statements.Statement</span></code></a></p>
 <p>Statement representation for statements that
 can appear on the left-hand side of assignments.</p>
+<dl class="attribute">
+<dt id="lyra.core.statements.ExpressionAccess.typ">
+<code class="descname">typ</code><a class="headerlink" href="#lyra.core.statements.ExpressionAccess.typ" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="lyra.core.statements.ListDisplayAccess">
-<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">ListDisplayAccess</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint, items: typing.List[lyra.core.statements.Statement]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#ListDisplayAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.ListDisplayAccess" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">ListDisplayAccess</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint, typ: lyra.core.types.LyraType, items: typing.List[lyra.core.statements.Statement]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#ListDisplayAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.ListDisplayAccess" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.statements.ExpressionAccess" title="lyra.core.statements.ExpressionAccess"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.statements.ExpressionAccess</span></code></a></p>
 <p>List display access representation.</p>
 <dl class="attribute">
@@ -1054,8 +1282,26 @@ can appear on the left-hand side of assignments.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="lyra.core.statements.Raise">
+<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">Raise</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#Raise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.Raise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.statements.Statement" title="lyra.core.statements.Statement"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.statements.Statement</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.statements.SetDisplayAccess">
+<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">SetDisplayAccess</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint, typ: lyra.core.types.LyraType, items: typing.List[lyra.core.statements.Statement]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#SetDisplayAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.SetDisplayAccess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.statements.ExpressionAccess" title="lyra.core.statements.ExpressionAccess"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.statements.ExpressionAccess</span></code></a></p>
+<p>Set display access representation.</p>
+<dl class="attribute">
+<dt id="lyra.core.statements.SetDisplayAccess.items">
+<code class="descname">items</code><a class="headerlink" href="#lyra.core.statements.SetDisplayAccess.items" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="lyra.core.statements.SlicingAccess">
-<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">SlicingAccess</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint</em>, <em>target: lyra.core.statements.Statement</em>, <em>lower: lyra.core.statements.Statement</em>, <em>upper: lyra.core.statements.Statement</em>, <em>stride: lyra.core.statements.Statement = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#SlicingAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.SlicingAccess" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">SlicingAccess</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint</em>, <em>typ: lyra.core.types.LyraType</em>, <em>target: lyra.core.statements.Statement</em>, <em>lower: lyra.core.statements.Statement</em>, <em>upper: lyra.core.statements.Statement</em>, <em>stride: lyra.core.statements.Statement = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#SlicingAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.SlicingAccess" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.statements.ExpressionAccess" title="lyra.core.statements.ExpressionAccess"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.statements.ExpressionAccess</span></code></a></p>
 <p>Slicing access representation.</p>
 <dl class="attribute">
@@ -1095,7 +1341,7 @@ can appear on the left-hand side of assignments.</p>
 
 <dl class="class">
 <dt id="lyra.core.statements.SubscriptionAccess">
-<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">SubscriptionAccess</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint</em>, <em>target: lyra.core.statements.Statement</em>, <em>key: lyra.core.statements.Statement</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#SubscriptionAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.SubscriptionAccess" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">SubscriptionAccess</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint</em>, <em>typ: lyra.core.types.LyraType</em>, <em>target: lyra.core.statements.Statement</em>, <em>key: lyra.core.statements.Statement</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#SubscriptionAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.SubscriptionAccess" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.statements.ExpressionAccess" title="lyra.core.statements.ExpressionAccess"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.statements.ExpressionAccess</span></code></a></p>
 <p>Subscription access representation.</p>
 <dl class="attribute">
@@ -1111,8 +1357,20 @@ can appear on the left-hand side of assignments.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="lyra.core.statements.TupleDisplayAccess">
+<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">TupleDisplayAccess</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint, typ: lyra.core.types.LyraType, items: typing.List[lyra.core.statements.Statement]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#TupleDisplayAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.TupleDisplayAccess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.statements.ExpressionAccess" title="lyra.core.statements.ExpressionAccess"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.statements.ExpressionAccess</span></code></a></p>
+<p>Tuple display (= expression list with comma, or ()) access representation.</p>
+<dl class="attribute">
+<dt id="lyra.core.statements.TupleDisplayAccess.items">
+<code class="descname">items</code><a class="headerlink" href="#lyra.core.statements.TupleDisplayAccess.items" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="lyra.core.statements.VariableAccess">
-<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">VariableAccess</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint</em>, <em>variable: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#VariableAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.VariableAccess" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lyra.core.statements.</code><code class="descname">VariableAccess</code><span class="sig-paren">(</span><em>pp: lyra.core.statements.ProgramPoint</em>, <em>typ: lyra.core.types.LyraType</em>, <em>variable: lyra.core.expressions.VariableIdentifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/statements.html#VariableAccess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.statements.VariableAccess" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.statements.ExpressionAccess" title="lyra.core.statements.ExpressionAccess"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.statements.ExpressionAccess</span></code></a></p>
 <p>Variable access representation.</p>
 <dl class="attribute">
@@ -1142,6 +1400,39 @@ can appear on the left-hand side of assignments.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="lyra.core.types.ContainerLyraType">
+<em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">ContainerLyraType</code><a class="reference internal" href="_modules/lyra/core/types.html#ContainerLyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.ContainerLyraType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.LyraType" title="lyra.core.types.LyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.LyraType</span></code></a></p>
+<p>Container type representation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.types.DictLyraType">
+<em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">DictLyraType</code><span class="sig-paren">(</span><em>key_typ: lyra.core.types.LyraType</em>, <em>val_typ: lyra.core.types.LyraType</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/types.html#DictLyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.DictLyraType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.ContainerLyraType" title="lyra.core.types.ContainerLyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.ContainerLyraType</span></code></a></p>
+<p>Dictionary type representation.</p>
+<dl class="attribute">
+<dt id="lyra.core.types.DictLyraType.key_typ">
+<code class="descname">key_typ</code><a class="headerlink" href="#lyra.core.types.DictLyraType.key_typ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of the dictionary keys.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lyra.core.types.DictLyraType.val_typ">
+<code class="descname">val_typ</code><a class="headerlink" href="#lyra.core.types.DictLyraType.val_typ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of the dictionary values.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.types.FloatLyraType">
+<em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">FloatLyraType</code><a class="reference internal" href="_modules/lyra/core/types.html#FloatLyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.FloatLyraType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.LyraType" title="lyra.core.types.LyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.LyraType</span></code></a></p>
+<p>Float type representation.</p>
+</dd></dl>
+
+<dl class="class">
 <dt id="lyra.core.types.IntegerLyraType">
 <em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">IntegerLyraType</code><a class="reference internal" href="_modules/lyra/core/types.html#IntegerLyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.IntegerLyraType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.core.types.LyraType" title="lyra.core.types.LyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.LyraType</span></code></a></p>
@@ -1151,7 +1442,7 @@ can appear on the left-hand side of assignments.</p>
 <dl class="class">
 <dt id="lyra.core.types.ListLyraType">
 <em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">ListLyraType</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/types.html#ListLyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.ListLyraType" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.LyraType" title="lyra.core.types.LyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.LyraType</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.SequenceLyraType" title="lyra.core.types.SequenceLyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.SequenceLyraType</span></code></a>, <a class="reference internal" href="#lyra.core.types.ContainerLyraType" title="lyra.core.types.ContainerLyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.ContainerLyraType</span></code></a></p>
 <p>List type representation.</p>
 <dl class="attribute">
 <dt id="lyra.core.types.ListLyraType.typ">
@@ -1169,10 +1460,43 @@ can appear on the left-hand side of assignments.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="lyra.core.types.SequenceLyraType">
+<em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">SequenceLyraType</code><a class="reference internal" href="_modules/lyra/core/types.html#SequenceLyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.SequenceLyraType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.LyraType" title="lyra.core.types.LyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.LyraType</span></code></a></p>
+<p>Sequence type representation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.types.SetLyraType">
+<em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">SetLyraType</code><span class="sig-paren">(</span><em>typ: lyra.core.types.LyraType</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/types.html#SetLyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.SetLyraType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.ContainerLyraType" title="lyra.core.types.ContainerLyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.ContainerLyraType</span></code></a></p>
+<p>Set type representation.</p>
+<dl class="attribute">
+<dt id="lyra.core.types.SetLyraType.typ">
+<code class="descname">typ</code><a class="headerlink" href="#lyra.core.types.SetLyraType.typ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type of the set elements.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="lyra.core.types.StringLyraType">
 <em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">StringLyraType</code><a class="reference internal" href="_modules/lyra/core/types.html#StringLyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.StringLyraType" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.LyraType" title="lyra.core.types.LyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.LyraType</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.SequenceLyraType" title="lyra.core.types.SequenceLyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.SequenceLyraType</span></code></a></p>
 <p>String type representation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="lyra.core.types.TupleLyraType">
+<em class="property">class </em><code class="descclassname">lyra.core.types.</code><code class="descname">TupleLyraType</code><span class="sig-paren">(</span><em>typs: typing.List[lyra.core.types.LyraType]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/core/types.html#TupleLyraType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.core.types.TupleLyraType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lyra.core.types.SequenceLyraType" title="lyra.core.types.SequenceLyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.SequenceLyraType</span></code></a>, <a class="reference internal" href="#lyra.core.types.ContainerLyraType" title="lyra.core.types.ContainerLyraType"><code class="xref py py-class docutils literal"><span class="pre">lyra.core.types.ContainerLyraType</span></code></a></p>
+<p>Tuple type representation.</p>
+<dl class="attribute">
+<dt id="lyra.core.types.TupleLyraType.typs">
+<code class="descname">typs</code><a class="headerlink" href="#lyra.core.types.TupleLyraType.typs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Types of the tuple elements.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">

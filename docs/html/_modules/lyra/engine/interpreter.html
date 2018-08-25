@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lyra</a></li>
 </ul>
 
             
@@ -148,23 +148,26 @@
 
 
 <div class="viewcode-block" id="Interpreter"><a class="viewcode-back" href="../../../lyra.engine.html#lyra.engine.interpreter.Interpreter">[docs]</a><span class="k">class</span> <span class="nc">Interpreter</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">ControlFlowGraph</span><span class="p">,</span> <span class="n">semantics</span><span class="p">:</span> <span class="n">Semantics</span><span class="p">,</span> <span class="n">widening</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">ControlFlowGraph</span><span class="p">,</span> <span class="n">semantics</span><span class="p">,</span> <span class="n">widening</span><span class="p">,</span> <span class="n">precursory</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Control flow graph interpreter.</span>
-<span class="sd">        </span>
+
 <span class="sd">        :param cfg: control flow graph to analyze</span>
-<span class="sd">        :param widening: number of iterations before widening </span>
+<span class="sd">        :param semantics: semantics of statements in the control flow graph</span>
+<span class="sd">        :param widening: number of iterations before widening</span>
+<span class="sd">        :param precursory: precursory control flow graph interpreter</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_result</span> <span class="o">=</span> <span class="n">AnalysisResult</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_semantics</span> <span class="o">=</span> <span class="n">semantics</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_widening</span> <span class="o">=</span> <span class="n">widening</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_semantics</span><span class="p">:</span> <span class="n">Semantics</span> <span class="o">=</span> <span class="n">semantics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widening</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">widening</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_precursory</span><span class="p">:</span> <span class="s1">&#39;Interpreter&#39;</span> <span class="o">=</span> <span class="n">precursory</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">cfg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">cfg</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -174,10 +177,14 @@
     <span class="k">def</span> <span class="nf">widening</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widening</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">precursory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_precursory</span>
+
 <div class="viewcode-block" id="Interpreter.analyze"><a class="viewcode-back" href="../../../lyra.engine.html#lyra.engine.interpreter.Interpreter.analyze">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResult</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Run the analysis.</span>
-<span class="sd">        </span>
+
 <span class="sd">        :param initial: initial analysis state</span>
 <span class="sd">        :return: result of the analysis</span>
 <span class="sd">        &quot;&quot;&quot;</span></div></div>

@@ -87,7 +87,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
@@ -132,7 +132,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">src</a> &raquo;</li>
+          <li><a href="modules.html">lyra</a> &raquo;</li>
       
           <li><a href="lyra.html">lyra package</a> &raquo;</li>
       
@@ -158,9 +158,11 @@
 <dt id="lyra.frontend.cfg_generator.CFGFactory">
 <em class="property">class </em><code class="descclassname">lyra.frontend.cfg_generator.</code><code class="descname">CFGFactory</code><span class="sig-paren">(</span><em>id_gen</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGFactory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGFactory" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p>A helper class that encapsulates a partial CFG and possibly some statements not yet attached to CFG.</p>
+<p>A helper class that encapsulates a partial CFG
+and possibly some statements not yet attached to CFG.</p>
 <p>Whenever the
-method <cite>complete_basic_block()</cite> is called, it is ensured that all unattached statements are properly attached to
+method <cite>complete_basic_block()</cite> is called,
+it is ensured that all unattached statements are properly attached to
 partial CFG. The partial CFG can be retrieved at any time by property <cite>cfg</cite>.</p>
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGFactory.add_stmts">
@@ -201,8 +203,19 @@ partial CFG. The partial CFG can be retrieved at any time by property <cite>cfg<
 <dt id="lyra.frontend.cfg_generator.CFGVisitor">
 <em class="property">class </em><code class="descclassname">lyra.frontend.cfg_generator.</code><code class="descname">CFGVisitor</code><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ast.NodeVisitor</span></code></p>
-<p>This AST visitor generates a CFG recursively.</p>
-<p>Overwritten methods return either a partial CFG or a statement/expression, depending on the type of node.</p>
+<p>AST visitor that generates a CFG.</p>
+<dl class="class">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.NodeIdentifierGenerator">
+<em class="property">class </em><code class="descname">NodeIdentifierGenerator</code><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.NodeIdentifierGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.NodeIdentifierGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Helper class that generates an increasing sequence of node identifiers.</p>
+<dl class="attribute">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.NodeIdentifierGenerator.next">
+<code class="descname">next</code><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.NodeIdentifierGenerator.next" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.generic_visit">
 <code class="descname">generic_visit</code><span class="sig-paren">(</span><em>node</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.generic_visit" title="Permalink to this definition">¶</a></dt>
@@ -211,23 +224,68 @@ partial CFG. The partial CFG can be retrieved at any time by property <cite>cfg<
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit">
 <code class="descname">visit</code><span class="sig-paren">(</span><em>node</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Visit a node.</p>
+<dd><p>Visit an AST node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>node</strong> – node to be visited</li>
+<li><strong>arguments</strong> – <ul>
+<li><em>types</em> – dictionary mapping (variable) names to their corresponding (lyra) type</li>
+<li><em>typ</em> – type of the current node</li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">either a statement or a partial CFG, depending on the visited node</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_AnnAssign">
 <code class="descname">visit_AnnAssign</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_AnnAssign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_AnnAssign" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Visitor function for an assignment with a type annotation.
+The attribute target stores the target of the assignment (a Name, Attribute, or Subscript).
+The attribute annotation stores the type annotation (a Str or Name).
+The attribute value opionally stores the assigned value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Assign">
+<code class="descname">visit_Assign</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visitor function for an assignment.
+The attribute targets stores a list of targets of the assignment.
+The attribute value stores the assigned value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_AugAssign">
+<code class="descname">visit_AugAssign</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_AugAssign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_AugAssign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visitor function for an augmented assignment.
+The attribute target stores the target of the assignment (a Name, Attribute, or Subscript).
+The attributes op and value store the operation and the assigned value, respectively.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_BinOp">
 <code class="descname">visit_BinOp</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_BinOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_BinOp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Visitor function for a binary operation.
+The attributes op, left, and right store the operator
+and any expression nodes, respectively.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_BoolOp">
 <code class="descname">visit_BoolOp</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_BoolOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_BoolOp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Visitor function for a boolean operation.
+The attributes op and values store the operand
+and a list of any expression node representing the operand involed, respectively.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Break">
@@ -237,12 +295,18 @@ partial CFG. The partial CFG can be retrieved at any time by property <cite>cfg<
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Call">
 <code class="descname">visit_Call</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Call" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Visitor function for a call.
+The attribute func stores the function being called (often a Name or Attribute object).
+The attribute args stores a list fo the arguments passed by position.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Compare">
 <code class="descname">visit_Compare</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Compare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Compare" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Visitor function for a comparison operation.
+The attributes left, ops, and comparators store the first value in the comparison,
+the list of operators, and the list of compared values after the first.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Continue">
@@ -250,8 +314,23 @@ partial CFG. The partial CFG can be retrieved at any time by property <cite>cfg<
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Dict">
+<code class="descname">visit_Dict</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visitor function for a dictionary.
+The attributes keys and values store lists of nodes with matching order
+representing the keys and the values, respectively.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Expr">
 <code class="descname">visit_Expr</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Expr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visitor function for an expression statement (whose return value is unused).
+The attribute value stored another AST node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_For">
+<code class="descname">visit_For</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_For"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_For" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -260,44 +339,94 @@ partial CFG. The partial CFG can be retrieved at any time by property <cite>cfg<
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_IfExp">
+<code class="descname">visit_IfExp</code><span class="sig-paren">(</span><em>node</em>, <em>targets</em>, <em>op=None</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_IfExp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_IfExp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visitor function for an if expression.
+The components of the expression are stored in the attributes test, body, and orelse.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_List">
 <code class="descname">visit_List</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_List"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_List" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Visitor function for a list.
+The elts attribute stores a list of nodes representing the elements.
+The ctx attribute is Store if the container is an assignment target, and Load otherwise.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Module">
 <code class="descname">visit_Module</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Module" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Visitor function for a Python module.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Name">
 <code class="descname">visit_Name</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Name" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Visitor function for a variable name.
+The attribute id stores the name as a string.
+The attribute ctx is Store (to assign a new value to the variable),
+Load (to load the value of the variable), or Del (to delete the variable).</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_NameConstant">
 <code class="descname">visit_NameConstant</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_NameConstant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_NameConstant" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Visitor function for True, False or None.
+The value attribute stores the constant.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Num">
 <code class="descname">visit_Num</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Num"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Num" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Visitor function for a number (integer, float, or complex).
+The n attribute stores the value, already converted to the relevant type.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Raise">
+<code class="descname">visit_Raise</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Raise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Raise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visitor function for an exception raise.
+The attribute exc stores the exception object to be raised
+(normally a Call or Name, or None for a standalone raise).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Set">
+<code class="descname">visit_Set</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visitor function for a set.
+The elts attribute stores a list of nodes representing the elements.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Str">
 <code class="descname">visit_Str</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Str" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Visitor function for a string. The s attribute stores the value.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Subscript">
 <code class="descname">visit_Subscript</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Subscript"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Subscript" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Visitor function for a subscript.
+The attribute value stores the target of the subscript (often a Name).
+The attribute slice is one of Index, Slice, or ExtSlice.
+The attribute ctx is Load, Store, or Del.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_Tuple">
+<code class="descname">visit_Tuple</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_Tuple"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_Tuple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visitor function for a tuple.
+The elts attribute stores a list of nodes representing the elements.
+The ctx attribute is Store if the container is an assignment target, and Load otherwise.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_UnaryOp">
 <code class="descname">visit_UnaryOp</code><span class="sig-paren">(</span><em>node</em>, <em>types=None</em>, <em>typ=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#CFGVisitor.visit_UnaryOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.CFGVisitor.visit_UnaryOp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Visitor function for a unary operation.
+The attributes op and operand store the operator
+and any expression node, respectively.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="lyra.frontend.cfg_generator.CFGVisitor.visit_While">
@@ -406,18 +535,6 @@ partial CFG. The partial CFG can be retrieved at any time by property <cite>cfg<
 <dl class="attribute">
 <dt id="lyra.frontend.cfg_generator.LooseControlFlowGraph.special_edges">
 <code class="descname">special_edges</code><a class="headerlink" href="#lyra.frontend.cfg_generator.LooseControlFlowGraph.special_edges" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="lyra.frontend.cfg_generator.NodeIdentifierGenerator">
-<em class="property">class </em><code class="descclassname">lyra.frontend.cfg_generator.</code><code class="descname">NodeIdentifierGenerator</code><a class="reference internal" href="_modules/lyra/frontend/cfg_generator.html#NodeIdentifierGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.frontend.cfg_generator.NodeIdentifierGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p>A helper class to generate a increasing sequence of node identifiers.</p>
-<dl class="attribute">
-<dt id="lyra.frontend.cfg_generator.NodeIdentifierGenerator.next">
-<code class="descname">next</code><a class="headerlink" href="#lyra.frontend.cfg_generator.NodeIdentifierGenerator.next" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

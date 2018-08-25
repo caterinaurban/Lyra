@@ -55,7 +55,7 @@ class Store(Lattice):
 
     @property
     def lattices(self):
-        """Current dictionary fro variable types to the corresponding lattice types."""
+        """Current dictionary from variable types to the corresponding lattice types."""
         return self._lattices
 
     @property

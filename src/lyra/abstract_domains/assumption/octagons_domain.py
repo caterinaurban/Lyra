@@ -424,6 +424,18 @@ class ConditionEvaluator(ExpressionVisitor):
     def visit_Slicing(self, expr: 'Slicing', state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
+    def visit_TupleDisplay(self, expr, state=None):
+        raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
+
+    def visit_SetDisplay(self, expr, state=None):
+        raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
+
+    def visit_DictDisplay(self, expr, state=None):
+        raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
+
+    def visit_BinarySequenceOperation(self, expr, state=None):
+        raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
+
     def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', state=None):
         coeff = 1 if expr.operator == UnaryArithmeticOperation.Operator.Add else -1
         expr = expr.expression

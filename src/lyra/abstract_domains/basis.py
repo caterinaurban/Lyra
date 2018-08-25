@@ -11,14 +11,14 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import Set, Dict, Type, Any
 
-from lyra.abstract_domains.lattice import Lattice, ArithmeticMixin, BooleanMixin, StringMixin
+from lyra.abstract_domains.lattice import Lattice, ArithmeticMixin, BooleanMixin, SequenceMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing, \
     BinaryBooleanOperation, ExpressionVisitor, Literal, LengthIdentifier, ListDisplay, \
     AttributeReference, Input, Range, UnaryArithmeticOperation, BinaryArithmeticOperation, \
-    UnaryBooleanOperation
-from lyra.core.types import LyraType, BooleanLyraType
+    UnaryBooleanOperation, TupleDisplay, SetDisplay, DictDisplay, BinarySequenceOperation
+from lyra.core.types import LyraType, BooleanLyraType, SequenceLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -33,6 +33,18 @@ class Basis(Store, State, metaclass=ABCMeta):
                  precursory: State = None):
         super().__init__(variables, lattices, arguments)
         State.__init__(self, precursory)
+
+    @copy_docstring(State.is_bottom)
+    def is_bottom(self) -> bool:
+        """The current state is bottom if `any` non-summary variable maps to a bottom element,
+        or if the length identifier of `any` summary variable maps to a bottom element."""
+        for variable, element in self.store.items():
+            if isinstance(variable.typ, SequenceLyraType):
+                if element.is_bottom() and self.store[LengthIdentifier(variable)].is_bottom():
+                    return True
+            elif element.is_bottom():
+                return True
+        return False
 
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'Basis':
@@ -95,10 +107,8 @@ class Basis(Store, State, metaclass=ABCMeta):
             self.store[left].top()
             # evaluate the right-hand side proceeding bottom-up using the updated store
             evaluation = self._evaluation.visit(right, self, dict())
-            # restrict the value of the right-hand side using that of the substituted variable
-            refinement = evaluation[right].meet(value)
             # refine the updated store proceeding top-down on the right-hand side
-            self._refinement.visit(right, evaluation, refinement, self)
+            self._refinement.visit(right, evaluation, value, self)
             return self
         elif isinstance(left, Subscription) or isinstance(left, Slicing):
             # copy the current state
@@ -108,8 +118,7 @@ class Basis(Store, State, metaclass=ABCMeta):
             value: Basis = deepcopy(current.store[target])
             current.store[target].top()
             evaluation = current._evaluation.visit(right, current, dict())
-            refinement = evaluation[right].meet(value)
-            current._refinement.visit(right, evaluation, refinement, current)
+            current._refinement.visit(right, evaluation, value, current)
             # perform a weak update on the current state
             return self.join(current)
         raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
@@ -149,6 +158,45 @@ class Basis(Store, State, metaclass=ABCMeta):
             for item in expr.items:
                 evaluated = self.visit(item, state, evaluated)
                 value = value.join(evaluated[item])
+            evaluation[expr] = value
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+        def visit_TupleDisplay(self, expr: TupleDisplay, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = evaluation
+            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            for item in expr.items:
+                evaluated = self.visit(item, state, evaluated)
+                value = value.join(evaluated[item])
+            evaluation[expr] = value
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+        def visit_SetDisplay(self, expr: SetDisplay, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = evaluation
+            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            for item in expr.items:
+                evaluated = self.visit(item, state, evaluated)
+                value = value.join(evaluated[item])
+            evaluation[expr] = value
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+        def visit_DictDisplay(self, expr: DictDisplay, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = evaluation
+            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            for key in expr.keys:
+                evaluated = self.visit(key, state, evaluated)
+                value = value.join(evaluated[key])
+            for val in expr.values:
+                evaluated = self.visit(val, state, evaluated)
+                value = value.join(evaluated[val])
             evaluation[expr] = value
             return evaluation
 
@@ -235,8 +283,6 @@ class Basis(Store, State, metaclass=ABCMeta):
             if expr.operator == BinaryArithmeticOperation.Operator.Add:
                 if isinstance(value1, ArithmeticMixin):
                     evaluated2[expr] = deepcopy(value1).add(value2)
-                elif isinstance(value1, StringMixin):
-                    evaluated2[expr] = deepcopy(value1).concat(value2)
                 else:
                     evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
                 return evaluated2
@@ -259,6 +305,22 @@ class Basis(Store, State, metaclass=ABCMeta):
                     evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
                 return evaluated2
             raise ValueError(f"Binary arithmetic operator '{str(expr.operator)}' is unsupported!")
+
+        @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+        def visit_BinarySequenceOperation(self, expr, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated1 = self.visit(expr.left, state, evaluation)
+            evaluated2 = self.visit(expr.right, state, evaluated1)
+            value1 = evaluated2[expr.left]
+            value2 = evaluated2[expr.right]
+            if expr.operator == BinarySequenceOperation.Operator.Concat:
+                if isinstance(value1, SequenceMixin):
+                    evaluated2[expr] = deepcopy(value1).concat(value2)
+                else:
+                    evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
+                return evaluated2
+            raise ValueError(f"Binary sequence operator '{str(expr.operator)}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
         def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
@@ -322,6 +384,32 @@ class Basis(Store, State, metaclass=ABCMeta):
             updated = state
             for item in expr.items:
                 updated = self.visit(item, evaluation, refined, updated)
+            return updated
+
+        @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+        def visit_TupleDisplay(self, expr: TupleDisplay, evaluation=None, value=None, state=None):
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for item in expr.items:
+                updated = self.visit(item, evaluation, refined, updated)
+            return updated
+
+        @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+        def visit_SetDisplay(self, expr: SetDisplay, evaluation=None, value=None, state=None):
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for item in expr.items:
+                updated = self.visit(item, evaluation, refined, updated)
+            return updated
+
+        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+        def visit_DictDisplay(self, expr: DictDisplay, evaluation=None, value=None, state=None):
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for key in expr.keys:
+                updated = self.visit(key, evaluation, refined, updated)
+            for val in expr.values:
+                updated = self.visit(val, evaluation, refined, updated)
             return updated
 
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
@@ -432,6 +520,17 @@ class Basis(Store, State, metaclass=ABCMeta):
                     refinement2 = deepcopy(evaluation[expr.left]).div(refined)
                 else:
                     refinement2 = deepcopy(refined).top()
+                updated2 = self.visit(expr.right, evaluation, refinement2, updated1)
+                return updated2
+            raise ValueError(f"Binary arithmetic operator '{expr.operator}' is unsupported!")
+
+        @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+        def visit_BinarySequenceOperation(self, expr, evaluation=None, value=None, state=None):
+            if expr.operator == BinarySequenceOperation.Operator.Concat:
+                refined = evaluation[expr].meet(value)
+                refinement1 = deepcopy(refined).top()
+                updated1 = self.visit(expr.left, evaluation, refinement1, state)
+                refinement2 = deepcopy(refined).top()
                 updated2 = self.visit(expr.right, evaluation, refinement2, updated1)
                 return updated2
             raise ValueError(f"Binary arithmetic operator '{expr.operator}' is unsupported!")

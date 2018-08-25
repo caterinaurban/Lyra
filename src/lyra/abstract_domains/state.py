@@ -14,7 +14,7 @@ from copy import deepcopy
 from typing import Set, Optional
 
 from lyra.abstract_domains.lattice import Lattice
-from lyra.core.expressions import Expression
+from lyra.core.expressions import Expression, VariableIdentifier
 from lyra.core.statements import ProgramPoint
 
 
@@ -65,6 +65,9 @@ class State(Lattice, metaclass=ABCMeta):
     def _assign(self, left: Expression, right: Expression) -> 'State':
         """Assign an expression to another expression.
 
+        .. warning::
+            The current state could also be bottom or top.
+
         :param left: expression to be assigned to
         :param right: expression to assign
         :return: current state modified by the assignment
@@ -86,6 +89,9 @@ class State(Lattice, metaclass=ABCMeta):
     @abstractmethod
     def _assume(self, condition: Expression) -> 'State':
         """Assume that some condition holds in the current state.
+
+        .. warning::
+            The current state could also be bottom or top.
 
         :param condition: expression representing the assumed condition
         :return: current state modified to satisfy the assumption
@@ -118,6 +124,9 @@ class State(Lattice, metaclass=ABCMeta):
     def enter_if(self) -> 'State':
         """Enter a conditional if statement.
 
+        .. warning::
+            The current state could also be bottom or top.
+
         :return: current state modified to enter a conditional if statement
 
         """
@@ -125,6 +134,9 @@ class State(Lattice, metaclass=ABCMeta):
     @abstractmethod
     def exit_if(self) -> 'State':
         """Exit a conditional if statement.
+
+        .. warning::
+            The current state could also be bottom or top.
 
         :return: current state modified to enter a conditional if statement
 
@@ -134,6 +146,9 @@ class State(Lattice, metaclass=ABCMeta):
     def enter_loop(self) -> 'State':
         """Enter a loop.
 
+        .. warning::
+            The current state could also be bottom or top.
+
         :return: current state modified to enter a loop
 
         """
@@ -141,6 +156,9 @@ class State(Lattice, metaclass=ABCMeta):
     @abstractmethod
     def exit_loop(self) -> 'State':
         """Exit a loop.
+
+        .. warning::
+            The current state could also be bottom or top.
 
         :return: current state modified to exit a loop
 
@@ -159,6 +177,9 @@ class State(Lattice, metaclass=ABCMeta):
     @abstractmethod
     def _output(self, output: Expression) -> 'State':
         """Outputs something in the current state.
+
+        .. warning::
+            The current state could also be bottom or top.
 
         :param output: expression representing the output
         :return: current state modified by the output
@@ -188,6 +209,9 @@ class State(Lattice, metaclass=ABCMeta):
     def _substitute(self, left: Expression, right: Expression) -> 'State':
         """Substitute an expression to another expression.
 
+        .. warning::
+            The current state could also be bottom or top.
+
         :param left: expression to be substituted
         :param right: expression to substitute
         :return: current state modified by the substitution
@@ -205,3 +229,31 @@ class State(Lattice, metaclass=ABCMeta):
         self.big_join([deepcopy(self)._substitute(l, r) for l in left for r in right])
         self.result = set()  # assignments have no result, only side-effects
         return self
+
+
+class EnvironmentMixin(State, metaclass=ABCMeta):
+    """Mixin to add environment modification operations to another state."""
+
+    @abstractmethod
+    def add_variable(self, variable: VariableIdentifier):
+        """Add a variable.
+
+        :param variable: variable to be added
+        :return: current state modified by the variable addition
+        """
+
+    @abstractmethod
+    def forget_variable(self, variable: VariableIdentifier):
+        """Forget the value of a variable.
+
+        :param variable: variable whose value is to be forgotten
+        :return: current state modified to have value top for the forgotten variable
+        """
+
+    @abstractmethod
+    def remove_variable(self, variable: VariableIdentifier):
+        """Remove a variable.
+
+        :param variable: variable to be removed
+        :return: current state modified by the variable removal
+        """

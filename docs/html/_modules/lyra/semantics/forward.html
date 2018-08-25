@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lyra</a></li>
 </ul>
 
             
@@ -139,8 +139,8 @@
 
 <span class="sd">:Authors: Caterina Urban</span>
 <span class="sd">&quot;&quot;&quot;</span>
-
-
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="n">BinarySequenceOperation</span><span class="p">,</span> <span class="n">ListDisplay</span>
+<span class="kn">from</span> <span class="nn">lyra.core.types</span> <span class="k">import</span> <span class="n">ListLyraType</span>
 <span class="kn">from</span> <span class="nn">lyra.semantics.semantics</span> <span class="k">import</span> <span class="n">Semantics</span><span class="p">,</span> <span class="n">DefaultSemantics</span>
 
 <span class="kn">from</span> <span class="nn">lyra.abstract_domains.state</span> <span class="k">import</span> <span class="n">State</span>
@@ -149,7 +149,18 @@
 
 <div class="viewcode-block" id="ForwardSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.forward.ForwardSemantics">[docs]</a><span class="k">class</span> <span class="nc">ForwardSemantics</span><span class="p">(</span><span class="n">Semantics</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Forward semantics of statements.&quot;&quot;&quot;</span>
-    <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="ForwardSemantics.append_call_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.forward.ForwardSemantics.append_call_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">append_call_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Call</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">BinarySequenceOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Concat</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semantics</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+        <span class="n">rhs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                <span class="n">display</span> <span class="o">=</span> <span class="n">ListDisplay</span><span class="p">(</span><span class="n">ListLyraType</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">typ</span><span class="p">),</span> <span class="p">[</span><span class="n">value</span><span class="p">])</span>
+                <span class="n">rhs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">BinarySequenceOperation</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">display</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="UserDefinedCallSemantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.forward.UserDefinedCallSemantics">[docs]</a><span class="k">class</span> <span class="nc">UserDefinedCallSemantics</span><span class="p">(</span><span class="n">ForwardSemantics</span><span class="p">):</span>
@@ -171,8 +182,8 @@
     <span class="sd">&quot;&quot;&quot;Forward semantics of assignments.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="AssignmentSemantics.assignment_semantics"><a class="viewcode-back" href="../../../lyra.semantics.html#lyra.semantics.forward.AssignmentSemantics.assignment_semantics">[docs]</a>    <span class="k">def</span> <span class="nf">assignment_semantics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">:</span> <span class="n">Assignment</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Forward semantics of an assignment. </span>
-<span class="sd">        </span>
+        <span class="sd">&quot;&quot;&quot;Forward semantics of an assignment.</span>
+
 <span class="sd">        :param stmt: assignment statement to be executed</span>
 <span class="sd">        :param state: state before executing the assignment</span>
 <span class="sd">        :return: state modified by the assignment</span>

@@ -19,7 +19,8 @@ from lyra.assumption.error import CheckerError
 from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparisonOperation, \
     Range, Literal, NegationFreeNormalExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
     ExpressionVisitor, Input, ListDisplay, AttributeReference, Subscription, Slicing, \
-    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, Identifier
+    UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, TupleDisplay, \
+    SetDisplay, DictDisplay, BinarySequenceOperation, Identifier
 from lyra.core.statements import ProgramPoint
 from lyra.core.types import IntegerLyraType, FloatLyraType, StringLyraType, BooleanLyraType, \
     ListLyraType
@@ -38,7 +39,7 @@ class JSONMixin(Lattice, metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def from_json(json: dict) -> 'JSONMixin':
+    def from_json(json: Union[str, dict]) -> 'JSONMixin':
         """Reconstruct a lattice element from its JSON format.
 
         :param json: JSON format of a lattice element
@@ -213,17 +214,13 @@ class AssumptionState(State):
     .. automethod:: AssumptionState._substitute
     """
     class InputStack(Stack, State):
-        """Stack of assumptions on the input data.
-
-        .. document private methods
-        .. automethod:: InputStack._assume
-        .. automethod:: InputStack._substitute
-        """
+        """Stack of assumptions on the input data."""
         class InputLattice(BottomMixin):
             """Assumptions on the input data.
 
             Each assumption is a (possibly symbolic) repetition of constraints on the input data.
             A constraint can be:
+
             * a basic constraint, i.e., a tuple of lattices (l, ...)
               which indicates that an input data point is expected and restricts its possible value
             * a star constraint, i.e., ★
@@ -243,11 +240,6 @@ class AssumptionState(State):
                 ...
                 Ɣ(1 * []) = { ε }
 
-            .. document private methods
-            .. automethod:: InputLattice._less_equal
-            .. automethod:: InputLattice._meet
-            .. automethod:: InputLattice._join
-            .. automethod:: InputLattice._widening
             """
             InputLattice = 'AssumptionState.InputStack.InputLattice'
             StarConstraint = Tuple[ProgramPoint, ...]
@@ -255,10 +247,10 @@ class AssumptionState(State):
             InputConstraint = Union[StarConstraint, BasicConstraint, InputLattice]
 
             def __init__(self, multiplier: Expression = Literal(IntegerLyraType(), "1"),
-                         constraints: List[InputConstraint] = list()):
+                         constraints: List[InputConstraint] = None):
                 super().__init__()
                 self._multiplier = multiplier
-                self._constraints = constraints
+                self._constraints = constraints or list()
 
             @property
             def multiplier(self):
@@ -276,9 +268,9 @@ class AssumptionState(State):
                         # the constraint is a StarConstraint or a BasicConstraint
                         if not constraint:  # the constraint is a StarConstraint
                             return "★"
-                        else:  # the constraint is a BasicConstraint
+                        else:   # the constraint is a BasicConstraint
                             return "{}:{}".format(constraint[0].line, constraint[1])
-                    else:  # the constraint is an InputLattice
+                    else:   # the constraint is an InputLattice
                         return "{}".format(constraint) if constraint.constraints else ""
                 multiplier = self.multiplier
                 is_one = isinstance(multiplier, Literal) and multiplier.val == "1"
@@ -337,7 +329,7 @@ class AssumptionState(State):
                 def do(constraint1, constraint2):
                     if isinstance(constraint1, tuple) and isinstance(constraint2, tuple):
                         # the constraints are StarConstraints or BasicConstraints
-                        if not constraint1 and not constraint2:
+                        if not constraint1 or not constraint2:
                             # the constraints are StarConstraints
                             return ()
                         else:   # the constraints are BasicConstraints
@@ -347,6 +339,22 @@ class AssumptionState(State):
                             l1: Tuple[JSONMixin, ...] = constraint1[1]
                             l2: Tuple[JSONMixin, ...] = constraint2[1]
                             return pp, tuple(x.join(y) for x, y in zip(l1, l2))
+                    elif isinstance(constraint1, tuple):
+                        assert isinstance(constraint2, AssumptionState.InputStack.InputLattice)
+                        if not constraint1:
+                            return ()
+                        else:
+                            m = Literal(IntegerLyraType(), "1")
+                            c1 = AssumptionState.InputStack.InputLattice(m, [constraint1])
+                            return do(c1, constraint2)
+                    elif isinstance(constraint2, tuple):
+                        assert isinstance(constraint1, AssumptionState.InputStack.InputLattice)
+                        if not constraint2:
+                            return ()
+                        else:
+                            m = Literal(IntegerLyraType(), "1")
+                            c2 = AssumptionState.InputStack.InputLattice(m, [constraint2])
+                            return do(constraint1, c2)
                     else:   # the constraints are InputLattices
                         assert isinstance(constraint1, AssumptionState.InputStack.InputLattice)
                         assert isinstance(constraint2, AssumptionState.InputStack.InputLattice)
@@ -361,20 +369,18 @@ class AssumptionState(State):
                             c = [do(x, y) for x, y in zip(c1, c2)]
                             if len(c1) != len(c2):  # lengths of list of constraints are different
                                 c.append(())  # add a star constraint
-                        else:
-                            assert m1 == m2
+                        elif m1 == m2:
                             m: Expression = m1
                             c = [do(x, y) for x, y in zip(c1, c2)]
                             c.extend(c1[len(c2):])
                             c.extend(c2[len(c1):])
+                        else:   # m1 != m2
+                            m = Literal(IntegerLyraType(), "1")
+                            c = [do(x, y) for x, y in zip(c1, c2)]
+                            c.append(())  # add a star constraint
                         return AssumptionState.InputStack.InputLattice(m, c)
-                multiplier1 = self.multiplier
-                multiplier2 = other.multiplier
-                assert isinstance(multiplier1, Literal) and multiplier1.val == "1"
-                assert isinstance(multiplier2, Literal) and multiplier2.val == "1"
-                constraints = [do(x, y) for x, y in zip(self.constraints, other.constraints)]
-                one = Literal(IntegerLyraType(), "1")
-                return self._replace(AssumptionState.InputStack.InputLattice(one, constraints))
+                done = do(self, other)
+                return self._replace(done)
 
             @copy_docstring(BottomMixin._meet)
             def _meet(self, other: InputLattice) -> InputLattice:   # TODO
@@ -384,6 +390,13 @@ class AssumptionState(State):
             def _widening(self, other: InputLattice) -> InputLattice:
                 """``self \/ other = self ▽ other``."""
                 return self._join(other)
+
+            def is_empty(self) -> bool:
+                """Test whether the current list of constraints is empty.
+
+                :return: whether the current list of constraints is empty
+                """
+                return len(self.constraints) == 0
 
             def repeat(self, multiplier: Expression) -> InputLattice:
                 """Repeat the current assumption on the input data.
@@ -407,11 +420,23 @@ class AssumptionState(State):
                 """
                 def do(constraint1, constraint2):
                     if isinstance(constraint1, tuple) and isinstance(constraint2, tuple):
-                        # the constraints are BasicConstraints about the same program point
-                        assert constraint1 and constraint2 and constraint1[0] == constraint2[0]
+                        # the constraints are BasicConstraints
+                        pp1: ProgramPoint = constraint1[0]
+                        pp2: ProgramPoint = constraint2[0]
+                        pp: ProgramPoint = pp1 if pp1.line <= pp2.line else pp2
                         l1: Tuple[JSONMixin, ...] = constraint1[1]
                         l2: Tuple[JSONMixin, ...] = constraint2[1]
-                        return constraint1[0], tuple(x.join(y) for x, y in zip(l1, l2))
+                        return pp, tuple(x.join(y) for x, y in zip(l1, l2))
+                    elif isinstance(constraint1, tuple):
+                        assert isinstance(constraint2, AssumptionState.InputStack.InputLattice)
+                        m = Literal(IntegerLyraType(), "1")
+                        c1 = AssumptionState.InputStack.InputLattice(m, [constraint1])
+                        return do(c1, constraint2)
+                    elif isinstance(constraint2, tuple):
+                        assert isinstance(constraint1, AssumptionState.InputStack.InputLattice)
+                        m = Literal(IntegerLyraType(), "1")
+                        c2 = AssumptionState.InputStack.InputLattice(m, [constraint2])
+                        return do(constraint1, c2)
                     else:   # the constraints are InputLattices
                         constraints1 = constraint1.constraints
                         constraints2 = constraint2.constraints
@@ -441,11 +466,11 @@ class AssumptionState(State):
                 self.constraints.insert(0, constraint)
                 return self
 
-            def replace(self, variable: VariableIdentifier, expression: Expression):
-                """Replace a variable with an expression.
+            def replace(self, left: Expression, right: Expression):
+                """Replace an expression with another expression.
 
-                :param variable: variable to be replaced
-                :param expression: expression replacing the variable
+                :param left: expression to be replaced
+                :param right: expression to be used as replacement
                 :return: current lattice element modified to manifest the replacement
                 """
                 def do(constraint):
@@ -457,16 +482,120 @@ class AssumptionState(State):
                             lattices = list(constraint[1])
                             for i, lattice in enumerate(lattices):
                                 if hasattr(lattice, 'replace'):
-                                    lattices[i] = lattice.replace(variable, expression)
+                                    lattices[i] = lattice.replace(left, right)
                             return constraint[0], tuple(lattices)
                     else:   # the constraint is an InputLattice
-                        return constraint.replace(variable, expression)
-                multiplier = self.multiplier
-                if isinstance(multiplier, VariableIdentifier) and multiplier == variable:
-                    multiplier = expression
+                        return constraint.replace(left, right)
+                replacement = AssumptionState.InputStack.InputLattice.MultiplierReplacement()
+                multiplier = replacement.visit(self.multiplier, left, right)
                 constraints = [do(constraint) for constraint in self.constraints]
                 replaced = AssumptionState.InputStack.InputLattice(multiplier, constraints)
                 return self._replace(replaced)
+
+            class MultiplierReplacement(ExpressionVisitor):
+                """Visitor that replaces any occurrence of a (sub)expression
+                in a multiplier with another expression.
+                """
+
+                @copy_docstring(ExpressionVisitor.visit_Literal)
+                def visit_Literal(self, expr: Literal, left=None, right=None):
+                    return Literal(expr.typ, expr.val)
+
+                @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+                def visit_VariableIdentifier(self, expr, left=None, right=None):
+                    if isinstance(expr, type(left)) and expr == left:
+                        return right
+                    return VariableIdentifier(expr.typ, expr.name)
+
+                @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+                def visit_LengthIdentifier(self, expr: LengthIdentifier, left=None, right=None):
+                    expression = self.visit(expr.expression, left, right)
+                    return LengthIdentifier(expression)
+
+                @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+                def visit_ListDisplay(self, expr: ListDisplay, left=None, right=None):
+                    items = [self.visit(item, left, right) for item in expr.items]
+                    return ListDisplay(expr.typ, items)
+
+                @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+                def visit_TupleDisplay(self, expr: TupleDisplay, left=None, right=None):
+                    items = [self.visit(item, left, right) for item in expr.items]
+                    return TupleDisplay(expr.typ, items)
+
+                @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+                def visit_SetDisplay(self, expr: SetDisplay, left=None, right=None):
+                    items = [self.visit(item, left, right) for item in expr.items]
+                    return SetDisplay(expr.typ, items)
+
+                @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+                def visit_DictDisplay(self, expr: DictDisplay, left=None, right=None):
+                    keys = [self.visit(item, left, right) for item in expr.keys]
+                    values = [self.visit(item, left, right) for item in expr.values]
+                    return DictDisplay(expr.typ, keys, values)
+
+                @copy_docstring(ExpressionVisitor.visit_AttributeReference)
+                def visit_AttributeReference(self, expr, left=None, right=None):
+                    target = self.visit(expr.target, left, right)
+                    return AttributeReference(expr.typ, target, expr.attribute)
+
+                @copy_docstring(ExpressionVisitor.visit_Subscription)
+                def visit_Subscription(self, expr: Subscription, left=None, right=None):
+                    target = self.visit(expr.target, left, right)
+                    key = self.visit(expr.key, left, right)
+                    return Subscription(expr.typ, target, key)
+
+                @copy_docstring(ExpressionVisitor.visit_Slicing)
+                def visit_Slicing(self, expr: Slicing, left=None, right=None):
+                    target = self.visit(expr.target, left, right)
+                    lower = self.visit(expr.lower, left, right)
+                    upper = self.visit(expr.upper, left, right) if expr.upper else None
+                    stride = self.visit(expr.stride, left, right) if expr.stride else None
+                    return Slicing(expr.typ, target, lower, upper, stride)
+
+                @copy_docstring(ExpressionVisitor.visit_Input)
+                def visit_Input(self, expr: Input, left=None, right=None):
+                    return Input(expr.typ)
+
+                @copy_docstring(ExpressionVisitor.visit_Range)
+                def visit_Range(self, expr: Range, left=None, right=None):
+                    start = self.visit(expr.start, left, right)
+                    stop = self.visit(expr.stop, left, right)
+                    step = self.visit(expr.step, left, right)
+                    return Range(expr.typ, start, stop, step)
+
+                @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
+                def visit_UnaryArithmeticOperation(self, expr, left=None, right=None):
+                    expression = self.visit(expr.expression, left, right)
+                    return UnaryArithmeticOperation(expr.typ, expr.operator, expression)
+
+                @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
+                def visit_UnaryBooleanOperation(self, expr, left=None, right=None):
+                    expression = self.visit(expr.expression, left, right)
+                    return UnaryBooleanOperation(expr.typ, expr.operator, expression)
+
+                @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
+                def visit_BinaryArithmeticOperation(self, expr, left=None, right=None):
+                    left = self.visit(expr.left, left, right)
+                    right = self.visit(expr.right, left, right)
+                    return BinaryArithmeticOperation(expr.typ, left, expr.operator, right)
+
+                @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+                def visit_BinarySequenceOperation(self, expr, left=None, right=None):
+                    left = self.visit(expr.left, left, right)
+                    right = self.visit(expr.right, left, right)
+                    return BinarySequenceOperation(expr.typ, left, expr.operator, right)
+
+                @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
+                def visit_BinaryBooleanOperation(self, expr, left=None, right=None):
+                    left = self.visit(expr.left, left, right)
+                    right = self.visit(expr.right, left, right)
+                    return BinaryBooleanOperation(expr.typ, left, expr.operator, right)
+
+                @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
+                def visit_BinaryComparisonOperation(self, expr, left=None, right=None):
+                    left = self.visit(expr.left, left, right)
+                    right = self.visit(expr.right, left, right)
+                    return BinaryComparisonOperation(expr.typ, left, expr.operator, right)
 
             _state_names = dict()
 
@@ -691,7 +820,8 @@ class AssumptionState(State):
                         if isinstance(normal.right, Range):
                             self.lattice.repeat(normal.right.stop)
                             return self
-                self.lattice.top()      # default to the star constraint ★
+                if not self.lattice.is_empty():
+                    self.lattice.top()  # default to ★
             return self
 
         @copy_docstring(State.enter_if)
@@ -728,7 +858,7 @@ class AssumptionState(State):
 
         @copy_docstring(State._substitute)
         def _substitute(self, left: Expression, right: Expression) -> 'AssumptionState.InputStack':
-            if isinstance(left, VariableIdentifier):
+            if isinstance(left, (VariableIdentifier, Subscription, Slicing)):
                 replacement = AssumptionState.InputStack.InputReplacement(self.pp)
                 replaced: Expression = replacement.visit(right)
                 for i, lattice in enumerate(self.stack):
@@ -783,12 +913,28 @@ class AssumptionState(State):
 
             @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
             def visit_LengthIdentifier(self, expr: LengthIdentifier):
-                return LengthIdentifier(expr.variable)
+                return LengthIdentifier(expr.expression)
 
             @copy_docstring(ExpressionVisitor.visit_ListDisplay)
             def visit_ListDisplay(self, expr: ListDisplay):
                 items = [self.visit(item) for item in expr.items]
                 return ListDisplay(expr.typ, items)
+
+            @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+            def visit_TupleDisplay(self, expr: TupleDisplay):
+                items = [self.visit(item) for item in expr.items]
+                return TupleDisplay(expr.typ, items)
+
+            @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+            def visit_SetDisplay(self, expr: SetDisplay):
+                items = [self.visit(item) for item in expr.items]
+                return SetDisplay(expr.typ, items)
+
+            @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+            def visit_DictDisplay(self, expr: DictDisplay):
+                keys = [self.visit(item) for item in expr.keys]
+                values = [self.visit(item) for item in expr.values]
+                return DictDisplay(expr.typ, keys, values)
 
             @copy_docstring(ExpressionVisitor.visit_AttributeReference)
             def visit_AttributeReference(self, expr: AttributeReference):
@@ -799,13 +945,13 @@ class AssumptionState(State):
             def visit_Subscription(self, expr: Subscription):
                 target = self.visit(expr.target)
                 key = self.visit(expr.key)
-                return AttributeReference(expr.typ, target, key)
+                return Subscription(expr.typ, target, key)
 
             @copy_docstring(ExpressionVisitor.visit_Slicing)
             def visit_Slicing(self, expr: Slicing):
                 target = self.visit(expr.target)
                 lower = self.visit(expr.lower)
-                upper = self.visit(expr.upper)
+                upper = self.visit(expr.upper) if expr.upper else None
                 stride = self.visit(expr.stride) if expr.stride else None
                 return Slicing(expr.typ, target, lower, upper, stride)
 
@@ -837,6 +983,12 @@ class AssumptionState(State):
                 right = self.visit(expr.right)
                 return BinaryArithmeticOperation(expr.typ, left, expr.operator, right)
 
+            @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+            def visit_BinarySequenceOperation(self, expr: BinarySequenceOperation):
+                left = self.visit(expr.left)
+                right = self.visit(expr.right)
+                return BinarySequenceOperation(expr.typ, left, expr.operator, right)
+
             @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
             def visit_BinaryBooleanOperation(self, expr: BinaryBooleanOperation):
                 left = self.visit(expr.left)
@@ -867,7 +1019,7 @@ class AssumptionState(State):
         return self._stack
 
     def __repr__(self):
-        return "{}||{}".format(self.states, self.stack)
+        return "{}".format(self.stack)
 
     @copy_docstring(State.bottom)
     def bottom(self) -> 'AssumptionState':
@@ -1043,9 +1195,9 @@ class SignOctagonStringAssumptionState(AssumptionState):
 
 
 class TypeAlphabetAssumptionState(AssumptionState):
-    """Type+string assumption analysis state.
+    """Type+alphabet assumption analysis state.
 
-    Reduced product of type and string constraining states,
+    Reduced product of type and alphabet constraining states,
     and a stack of assumptions on the input data.
 
     .. document private methods
@@ -1061,10 +1213,29 @@ class TypeAlphabetAssumptionState(AssumptionState):
         super().__init__(states, arguments, precursory)
 
 
-class TypeRangeAlphabetAssumptionState(AssumptionState):
-    """Type+string assumption analysis state.
+class TypeWordSetAssumptionState(AssumptionState):
+    """Type+word set assumption analysis state.
 
-    Reduced product of type, range, and string constraining states,
+    Reduced product of type and word set constraining states,
+    and a stack of assumptions on the input data.
+
+    .. document private methods
+    .. automethod:: TypeWordSetAssumptionState._assume
+    .. automethod:: TypeWordSetAssumptionState._substitute
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.wordset_domain import WordSetState
+        states = [TypeState, WordSetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
+
+
+class TypeRangeAlphabetAssumptionState(AssumptionState):
+    """Type+range+alphabet assumption analysis state.
+
+    Reduced product of type, range, and alphabet constraining states,
     and a stack of assumptions on the input data.
 
     .. document private methods
@@ -1078,5 +1249,46 @@ class TypeRangeAlphabetAssumptionState(AssumptionState):
         from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
         from lyra.abstract_domains.assumption.quantity_domain import QuantityState
         states = [TypeState, QuantityState, RangeState, AlphabetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
+
+
+class TypeRangeWordSetAssumptionState(AssumptionState):
+    """Type+range+word set assumption analysis state.
+
+    Reduced product of type, range, and word set constraining states,
+    and a stack of assumptions on the input data.
+
+    .. document private methods
+    .. automethod:: TypeRangeWordSetAssumptionState._assume
+    .. automethod:: TypeRangeWordSetAssumptionState._substitute
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.range_domain import RangeState
+        from lyra.abstract_domains.assumption.wordset_domain import WordSetState
+        states = [TypeState, RangeState, WordSetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
+
+
+class TypeRangeAlphabetWordSetAssumptionState(AssumptionState):
+    """Type+range+alphabet+word set assumption analysis state.
+
+    Reduced product of type, range, alphabet, and word set constraining states,
+    and a stack of assumptions on the input data.
+
+    .. document private methods
+    .. automethod:: TypeRangeAlphabetWordSetAssumptionState._assume
+    .. automethod:: TypeRangeAlphabetWordSetAssumptionState._substitute
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.range_domain import RangeState
+        from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
+        from lyra.abstract_domains.assumption.wordset_domain import WordSetState
+        states = [TypeState, RangeState, AlphabetState, WordSetState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)

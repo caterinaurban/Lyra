@@ -120,8 +120,9 @@ class AssumptionController(Controller):
             return result
 
         def write_result(self, result: 'AnalysisResult'):
-            with(self.script_path + '.txt', 'w') as f:
-                f.write(result)
+            p = self.script_path.split('.')[0] + '.txt'
+            with open(p, 'w') as f:
+                f.write(str(result))
             self.handler.write_result(result)
 
         def read_result(self):

@@ -36,7 +36,7 @@
     <link rel="top" title="Lyra 0.1 documentation" href="index.html"/>
         <link rel="up" title="lyra.abstract_domains package" href="lyra.abstract_domains.html"/>
         <link rel="next" title="lyra.abstract_domains.numerical package" href="lyra.abstract_domains.numerical.html"/>
-        <link rel="prev" title="lyra.abstract_domains package" href="lyra.abstract_domains.html"/> 
+        <link rel="prev" title="lyra.abstract_domains.assumption package" href="lyra.abstract_domains.assumption.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -87,7 +87,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lyra</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="lyra.html">lyra package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="lyra.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="lyra.abstract_domains.html">lyra.abstract_domains package</a></li>
@@ -132,7 +132,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="modules.html">src</a> &raquo;</li>
+          <li><a href="modules.html">lyra</a> &raquo;</li>
       
           <li><a href="lyra.html">lyra package</a> &raquo;</li>
       
@@ -187,7 +187,7 @@ or if is used in a statement other than an assignment.</p>
 <dl class="method">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessLattice._less_equal">
 <code class="descname">_less_equal</code><span class="sig-paren">(</span><em>other: lyra.abstract_domains.liveness.liveness_domain.LivenessLattice</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessLattice._less_equal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessLattice._less_equal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Partial order between lattice elements.</p>
+<dd><p>Partial order between default lattice elements.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -333,7 +333,7 @@ or if is used in a statement other than an assignment.</p>
 
 <dl class="class">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.liveness.liveness_domain.</code><code class="descname">LivenessState</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.liveness.liveness_domain.</code><code class="descname">LivenessState</code><span class="sig-paren">(</span><em>variables: typing.Set[lyra.core.expressions.VariableIdentifier], precursory: lyra.abstract_domains.state.State = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.store.Store" title="lyra.abstract_domains.store.Store"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.store.Store</span></code></a>, <a class="reference internal" href="lyra.abstract_domains.html#lyra.abstract_domains.state.State" title="lyra.abstract_domains.state.State"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.state.State</span></code></a></p>
 <p>Live variable analysis state.
 An element of the live variable abstract domain.</p>
@@ -347,6 +347,10 @@ All program variables are <em>dead</em> by default.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState._assign">
 <code class="descname">_assign</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState._assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState._assign" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign an expression to another expression.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -357,7 +361,7 @@ All program variables are <em>dead</em> by default.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable assignment</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the assignment</p>
 </td>
 </tr>
 </tbody>
@@ -368,6 +372,10 @@ All program variables are <em>dead</em> by default.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState._assume">
 <code class="descname">_assume</code><span class="sig-paren">(</span><em>condition: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState._assume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState._assume" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assume that some condition holds in the current state.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -384,6 +392,10 @@ All program variables are <em>dead</em> by default.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState._output">
 <code class="descname">_output</code><span class="sig-paren">(</span><em>output: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState._output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState._output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Outputs something in the current state.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -400,6 +412,10 @@ All program variables are <em>dead</em> by default.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState._substitute">
 <code class="descname">_substitute</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState._substitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState._substitute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Substitute an expression to another expression.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -410,7 +426,7 @@ All program variables are <em>dead</em> by default.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable substitution</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the substitution</p>
 </td>
 </tr>
 </tbody>
@@ -421,6 +437,10 @@ All program variables are <em>dead</em> by default.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState.enter_if">
 <code class="descname">enter_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState.enter_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState.enter_if" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enter a conditional if statement.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -435,6 +455,10 @@ All program variables are <em>dead</em> by default.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState.enter_loop">
 <code class="descname">enter_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState.enter_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState.enter_loop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enter a loop.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -449,6 +473,10 @@ All program variables are <em>dead</em> by default.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState.exit_if">
 <code class="descname">exit_if</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState.exit_if"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState.exit_if" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exit a conditional if statement.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -463,6 +491,10 @@ All program variables are <em>dead</em> by default.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.LivenessState.exit_loop">
 <code class="descname">exit_loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#LivenessState.exit_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState.exit_loop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exit a loop.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -492,7 +524,7 @@ All program variables are <em>dead</em> by default.</p>
 
 <dl class="class">
 <dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState">
-<em class="property">class </em><code class="descclassname">lyra.abstract_domains.liveness.liveness_domain.</code><code class="descname">StrongLivenessState</code><span class="sig-paren">(</span><em>variables: typing.List[lyra.core.expressions.VariableIdentifier]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#StrongLivenessState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lyra.abstract_domains.liveness.liveness_domain.</code><code class="descname">StrongLivenessState</code><span class="sig-paren">(</span><em>variables: typing.Set[lyra.core.expressions.VariableIdentifier], precursory: lyra.abstract_domains.state.State = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#StrongLivenessState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#lyra.abstract_domains.liveness.liveness_domain.LivenessState" title="lyra.abstract_domains.liveness.liveness_domain.LivenessState"><code class="xref py py-class docutils literal"><span class="pre">lyra.abstract_domains.liveness.liveness_domain.LivenessState</span></code></a></p>
 <p>Strongly live variable analysis state.
 An element of the strongly live variable abstract domain.</p>
@@ -506,6 +538,10 @@ All program variables are <em>dead</em> by default.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assign">
 <code class="descname">_assign</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assign" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign an expression to another expression.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -516,7 +552,7 @@ All program variables are <em>dead</em> by default.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable assignment</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the assignment</p>
 </td>
 </tr>
 </tbody>
@@ -527,6 +563,10 @@ All program variables are <em>dead</em> by default.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assume">
 <code class="descname">_assume</code><span class="sig-paren">(</span><em>condition: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.LivenessState<a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._assume" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assume that some condition holds in the current state.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -543,6 +583,10 @@ All program variables are <em>dead</em> by default.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._output">
 <code class="descname">_output</code><span class="sig-paren">(</span><em>output: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#StrongLivenessState._output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Outputs something in the current state.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -559,6 +603,10 @@ All program variables are <em>dead</em> by default.</p>
 <dt id="lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._substitute">
 <code class="descname">_substitute</code><span class="sig-paren">(</span><em>left: lyra.core.expressions.Expression</em>, <em>right: lyra.core.expressions.Expression</em><span class="sig-paren">)</span> &#x2192; lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState<a class="reference internal" href="_modules/lyra/abstract_domains/liveness/liveness_domain.html#StrongLivenessState._substitute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lyra.abstract_domains.liveness.liveness_domain.StrongLivenessState._substitute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Substitute an expression to another expression.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current state could also be bottom or top.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -569,7 +617,7 @@ All program variables are <em>dead</em> by default.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the variable substitution</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">current state modified by the substitution</p>
 </td>
 </tr>
 </tbody>
@@ -592,7 +640,7 @@ All program variables are <em>dead</em> by default.</p>
         <a href="lyra.abstract_domains.numerical.html" class="btn btn-neutral float-right" title="lyra.abstract_domains.numerical package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="lyra.abstract_domains.html" class="btn btn-neutral" title="lyra.abstract_domains package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="lyra.abstract_domains.assumption.html" class="btn btn-neutral" title="lyra.abstract_domains.assumption package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

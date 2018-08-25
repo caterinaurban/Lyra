@@ -1,0 +1,525 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>lyra.abstract_domains.numerical.sign_domain &mdash; Lyra 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../../search.html"/>
+    <link rel="top" title="Lyra 0.1 documentation" href="../../../../index.html"/>
+        <link rel="up" title="Module code" href="../../../index.html"/> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> Lyra
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">lyra</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../../index.html">Lyra</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      
+    <li>lyra.abstract_domains.numerical.sign_domain</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for lyra.abstract_domains.numerical.sign_domain</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Sign Abstract Domain</span>
+<span class="sd">====================</span>
+
+<span class="sd">Non-relational abstract domain to be used for **numerical analysis**.</span>
+<span class="sd">The set of possible numerical values of a program variable in a program state</span>
+<span class="sd">is represented by their sign (negative, zero, positive, ...).</span>
+
+<span class="sd">:Author: Jérôme Dohrau and Caterina Urban</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.basis</span> <span class="k">import</span> <span class="n">Basis</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.lattice</span> <span class="k">import</span> <span class="n">ArithmeticMixin</span><span class="p">,</span> <span class="n">BooleanMixin</span>
+<span class="kn">from</span> <span class="nn">lyra.abstract_domains.state</span> <span class="k">import</span> <span class="n">State</span>
+<span class="kn">from</span> <span class="nn">lyra.core.expressions</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">lyra.core.types</span> <span class="k">import</span> <span class="n">FloatLyraType</span>
+
+<span class="kn">from</span> <span class="nn">lyra.core.utils</span> <span class="k">import</span> <span class="n">copy_docstring</span>
+
+
+<div class="viewcode-block" id="SignLattice"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice">[docs]</a><span class="k">class</span> <span class="nc">SignLattice</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="p">,</span> <span class="n">BooleanMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sign lattice.</span>
+
+<span class="sd">    .. image:: _static/sign.png</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: SignLattice._less_equal</span>
+<span class="sd">    .. automethod:: SignLattice._meet</span>
+<span class="sd">    .. automethod:: SignLattice._join</span>
+<span class="sd">    .. automethod:: SignLattice._widening</span>
+<span class="sd">    .. automethod:: SignLattice._neg</span>
+<span class="sd">    .. automethod:: SignLattice._add</span>
+<span class="sd">    .. automethod:: SignLattice._sub</span>
+<span class="sd">    .. automethod:: SignLattice._mult</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">negative</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_negative</span> <span class="o">=</span> <span class="n">negative</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zero</span> <span class="o">=</span> <span class="n">zero</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_positive</span> <span class="o">=</span> <span class="n">positive</span>
+
+<div class="viewcode-block" id="SignLattice.from_literal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.from_literal">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_literal</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">literal</span><span class="p">:</span> <span class="n">Literal</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">literal</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">BooleanLyraType</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">literal</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;True&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">literal</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;False&quot;</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">literal</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">IntegerLyraType</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">literal</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">literal</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">FloatLyraType</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">literal</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">value</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">negative</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Current negative flag.</span>
+
+<span class="sd">        :return: the current negative flag</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_negative</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Current zero flag.</span>
+
+<span class="sd">        :return: the current zero flag</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zero</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">positive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Current positive flag.</span>
+
+<span class="sd">        :return: the current positive flag</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_positive</span>
+
+<div class="viewcode-block" id="SignLattice.is_negative"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.is_negative">[docs]</a>    <span class="k">def</span> <span class="nf">is_negative</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the element is certainly negative.</span>
+
+<span class="sd">        :return: ``True`` if the element is negative.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span></div>
+
+<div class="viewcode-block" id="SignLattice.is_zero"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.is_zero">[docs]</a>    <span class="k">def</span> <span class="nf">is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the element is certainly zero.</span>
+
+<span class="sd">        :return: ``True`` if the element is zero.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span></div>
+
+<div class="viewcode-block" id="SignLattice.is_positive"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.is_positive">[docs]</a>    <span class="k">def</span> <span class="nf">is_positive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the element is certainly positive.</span>
+
+<span class="sd">        :return: ``True`` if the element is positive.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span></div>
+
+<div class="viewcode-block" id="SignLattice.maybe_negative"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.maybe_negative">[docs]</a>    <span class="k">def</span> <span class="nf">maybe_negative</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the element may be negative.</span>
+
+<span class="sd">        :return: ``True`` if the element may be negative.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative</span></div>
+
+<div class="viewcode-block" id="SignLattice.maybe_zero"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.maybe_zero">[docs]</a>    <span class="k">def</span> <span class="nf">maybe_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the element may be zero.</span>
+
+<span class="sd">        :return: ``True`` if the element may be zero.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span></div>
+
+<div class="viewcode-block" id="SignLattice.maybe_positive"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.maybe_positive">[docs]</a>    <span class="k">def</span> <span class="nf">maybe_positive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the element may be positive.</span>
+
+<span class="sd">        :return: ``True`` if the element may be positive.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive</span></div>
+
+<div class="viewcode-block" id="SignLattice.maybe_non_negative"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.maybe_non_negative">[docs]</a>    <span class="k">def</span> <span class="nf">maybe_non_negative</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the element may be non-negative.</span>
+
+<span class="sd">        :return: ``True`` if the element may be non-negative.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive</span></div>
+
+<div class="viewcode-block" id="SignLattice.maybe_non_zero"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.maybe_non_zero">[docs]</a>    <span class="k">def</span> <span class="nf">maybe_non_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the element may be non-zero.</span>
+
+<span class="sd">        :return: ``True`` if the element may be non-zero.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive</span></div>
+
+<div class="viewcode-block" id="SignLattice.maybe_non_positive"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.maybe_non_positive">[docs]</a>    <span class="k">def</span> <span class="nf">maybe_non_positive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Indicates whether the element may be non-positive.</span>
+
+<span class="sd">        :return: ``True`` if the element may be non-positive.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_top</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;⊤&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;≤0&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;≥0&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;≠0&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;&lt;0&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;&gt;0&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;=0&quot;</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># self.is_bottom()</span>
+            <span class="k">return</span> <span class="s2">&quot;⊥&quot;</span>
+
+<div class="viewcode-block" id="SignLattice.bottom"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.bottom">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SignLattice.top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">top</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SignLattice.is_bottom"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.is_bottom">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">is_bottom</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_bottom</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span></div>
+
+<div class="viewcode-block" id="SignLattice.is_top"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.is_top">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">is_top</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_top</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span></div>
+
+<div class="viewcode-block" id="SignLattice._less_equal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice._less_equal">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_less_equal</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_less_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">negative</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span>
+        <span class="n">zero</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">()</span>
+        <span class="n">positive</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">negative</span> <span class="ow">and</span> <span class="n">zero</span> <span class="ow">and</span> <span class="n">positive</span></div>
+
+<div class="viewcode-block" id="SignLattice._join"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice._join">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_join</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_join</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="n">negative</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span>
+        <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">()</span>
+        <span class="n">positive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">negative</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span class="n">positive</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SignLattice._meet"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice._meet">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_meet</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_meet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="n">negative</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span>
+        <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">()</span>
+        <span class="n">positive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">negative</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span class="n">positive</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SignLattice._widening"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice._widening">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_widening</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_widening</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_join</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+    <span class="c1"># arithmetic operations</span>
+
+<div class="viewcode-block" id="SignLattice._neg"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice._neg">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">ArithmeticMixin</span><span class="o">.</span><span class="n">_neg</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_neg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="n">negative</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span>
+        <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">()</span>
+        <span class="n">positive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">negative</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span class="n">positive</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SignLattice._add"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice._add">[docs]</a>    <span class="k">def</span> <span class="nf">_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="n">negative</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span>
+        <span class="n">positive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span>
+        <span class="n">zero</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">())</span> <span class="ow">or</span> \
+               <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">())</span> <span class="ow">or</span> \
+               <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">negative</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span class="n">positive</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SignLattice._sub"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice._sub">[docs]</a>    <span class="k">def</span> <span class="nf">_sub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="n">negative</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span>
+        <span class="n">positive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span>
+        <span class="n">zero</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">())</span> <span class="ow">or</span> \
+               <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">())</span> <span class="ow">or</span> \
+               <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">negative</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span class="n">positive</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SignLattice._mult"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice._mult">[docs]</a>    <span class="k">def</span> <span class="nf">_mult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="n">negative</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">())</span> <span class="ow">or</span> \
+                   <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">())</span>
+        <span class="n">positive</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_negative</span><span class="p">())</span> <span class="ow">or</span> \
+                   <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_positive</span><span class="p">())</span>
+        <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">()</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">maybe_zero</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">negative</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span class="n">positive</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">_div</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)())</span>
+
+    <span class="c1"># boolean operations</span>
+
+<div class="viewcode-block" id="SignLattice.false"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.false">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BooleanMixin</span><span class="o">.</span><span class="n">false</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">false</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The false lattice element is ``=0``.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="SignLattice.true"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.true">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BooleanMixin</span><span class="o">.</span><span class="n">true</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">true</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The true lattice element is ``&gt;0``.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="SignLattice.maybe"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.maybe">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BooleanMixin</span><span class="o">.</span><span class="n">maybe</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">maybe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignLattice&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The maybe lattice element is ``≥0``.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="SignLattice.is_false"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.is_false">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BooleanMixin</span><span class="o">.</span><span class="n">is_false</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_false</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive</span></div>
+
+<div class="viewcode-block" id="SignLattice.is_true"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.is_true">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BooleanMixin</span><span class="o">.</span><span class="n">is_true</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_true</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive</span></div>
+
+<div class="viewcode-block" id="SignLattice.is_maybe"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignLattice.is_maybe">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">BooleanMixin</span><span class="o">.</span><span class="n">is_maybe</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_maybe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive</span></div></div>
+
+
+<div class="viewcode-block" id="SignState"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignState">[docs]</a><span class="k">class</span> <span class="nc">SignState</span><span class="p">(</span><span class="n">Basis</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sign analysis state. An element of the sign abstract domain.</span>
+
+<span class="sd">    Map from each program variable to the sign representing its value.</span>
+
+<span class="sd">    .. document private methods</span>
+<span class="sd">    .. automethod:: SignState._assign</span>
+<span class="sd">    .. automethod:: SignState._assume</span>
+<span class="sd">    .. automethod:: SignState._output</span>
+<span class="sd">    .. automethod:: SignState._substitute</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">VariableIdentifier</span><span class="p">],</span> <span class="n">precursory</span><span class="p">:</span> <span class="n">State</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Map each program variable to the sign representing its value.</span>
+
+<span class="sd">        :param variables: set of program variables</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lattices</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">SignLattice</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">lattices</span><span class="p">,</span> <span class="n">precursory</span><span class="o">=</span><span class="n">precursory</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SignState._assume"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignState._assume">[docs]</a>    <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">State</span><span class="o">.</span><span class="n">_assume</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_assume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Expression</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SignState&#39;</span><span class="p">:</span>
+        <span class="n">normal</span> <span class="o">=</span> <span class="n">NegationFreeNormalExpression</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">normal</span><span class="o">.</span><span class="n">typ</span><span class="p">,</span> <span class="n">BooleanLyraType</span><span class="p">):</span>
+            <span class="n">evaluation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluation</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+            <span class="n">true</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattices</span><span class="p">[</span><span class="n">normal</span><span class="o">.</span><span class="n">typ</span><span class="p">](</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="n">normal</span><span class="o">.</span><span class="n">typ</span><span class="p">])</span><span class="o">.</span><span class="n">true</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refinement</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">true</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">UnaryBooleanOperation</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">normal</span><span class="o">.</span><span class="n">operator</span> <span class="o">==</span> <span class="n">UnaryBooleanOperation</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">Neg</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">normal</span><span class="o">.</span><span class="n">expression</span><span class="p">,</span> <span class="n">VariableIdentifier</span><span class="p">):</span>
+                    <span class="n">typ</span> <span class="o">=</span> <span class="n">normal</span><span class="o">.</span><span class="n">expression</span><span class="o">.</span><span class="n">typ</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="n">BooleanLyraType</span><span class="p">):</span>
+                        <span class="n">evaluation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluation</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+                        <span class="n">false</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattices</span><span class="p">[</span><span class="n">typ</span><span class="p">](</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="n">typ</span><span class="p">])</span><span class="o">.</span><span class="n">false</span><span class="p">()</span>
+                        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refinement</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">normal</span><span class="o">.</span><span class="n">expression</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">false</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">BinaryBooleanOperation</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assume_binarybooleanoperation</span><span class="p">(</span><span class="n">normal</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">BinaryComparisonOperation</span><span class="p">):</span>
+            <span class="n">evaluation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluation</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">normal</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+            <span class="n">nonpositive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattices</span><span class="p">[</span><span class="n">normal</span><span class="o">.</span><span class="n">typ</span><span class="p">](</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refinement</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">normal</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">nonpositive</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Assumption of a </span><span class="si">{normal.__class__.__name__}</span><span class="s2"> expression is unsupported!&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+    <span class="c1"># expression evaluation</span>
+
+<div class="viewcode-block" id="SignState.ExpressionEvaluation"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignState.ExpressionEvaluation">[docs]</a>    <span class="k">class</span> <span class="nc">ExpressionEvaluation</span><span class="p">(</span><span class="n">Basis</span><span class="o">.</span><span class="n">ExpressionEvaluation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Visitor that performs the evaluation of an expression in the sign lattice.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SignState.ExpressionEvaluation.visit_Literal"><a class="viewcode-back" href="../../../../lyra.abstract_domains.numerical.html#lyra.abstract_domains.assumption.quantity_domain.SignState.ExpressionEvaluation.visit_Literal">[docs]</a>        <span class="nd">@copy_docstring</span><span class="p">(</span><span class="n">Basis</span><span class="o">.</span><span class="n">ExpressionEvaluation</span><span class="o">.</span><span class="n">visit_Literal</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">visit_Literal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">evaluation</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">evaluation</span>  <span class="c1"># nothing to be done</span>
+            <span class="n">evaluation</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">lattices</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">typ</span><span class="p">]</span><span class="o">.</span><span class="n">from_literal</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">evaluation</span></div></div>
+
+    <span class="n">_evaluation</span> <span class="o">=</span> <span class="n">ExpressionEvaluation</span><span class="p">()</span>  <span class="c1"># static class member shared between instances</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Caterina Urban.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

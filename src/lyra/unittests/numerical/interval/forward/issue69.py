@@ -4,10 +4,10 @@ a: bool = False
 # STATE: a -> [0, 0]
 if a:
     # STATE: a -> ⊥
-    a: bool = a
+    a = a
     # STATE: a -> ⊥
 else:
     # STATE: a -> [0, 0]
-    a: bool = a
+    a = a
     # STATE: a -> [0, 0]
 # FINAL: a -> [0, 0]

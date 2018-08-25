@@ -85,7 +85,7 @@
             
                 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">src</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">lyra</a></li>
 </ul>
 
             
@@ -141,7 +141,7 @@
 <div class="viewcode-block" id="AnalysisResult"><a class="viewcode-back" href="../../../lyra.engine.html#lyra.engine.result.AnalysisResult">[docs]</a><span class="k">class</span> <span class="nc">AnalysisResult</span><span class="p">:</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">ControlFlowGraph</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Analysis result representation.</span>
-<span class="sd">        </span>
+
 <span class="sd">        :param cfg: analyzed control flow graph</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span> <span class="o">=</span> <span class="n">cfg</span>
@@ -157,7 +157,7 @@
 
 <div class="viewcode-block" id="AnalysisResult.get_node_result"><a class="viewcode-back" href="../../../lyra.engine.html#lyra.engine.result.AnalysisResult.get_node_result">[docs]</a>    <span class="k">def</span> <span class="nf">get_node_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">State</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Get the analysis result for a node.</span>
-<span class="sd">        </span>
+
 <span class="sd">        :param node: analyzed node</span>
 <span class="sd">        :return: list of states representing the result of the analysis for the block</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -165,7 +165,7 @@
 
 <div class="viewcode-block" id="AnalysisResult.set_node_result"><a class="viewcode-back" href="../../../lyra.engine.html#lyra.engine.result.AnalysisResult.set_node_result">[docs]</a>    <span class="k">def</span> <span class="nf">set_node_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span> <span class="n">states</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">State</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Set the analysis result for a node.</span>
-<span class="sd">        </span>
+
 <span class="sd">        :param node: analyzed node</span>
 <span class="sd">        :param states: list of states representing the result of the analysis for the block</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -173,7 +173,7 @@
 
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Analysis result string representation.</span>
-<span class="sd">        </span>
+
 <span class="sd">        :return: string representing the result of the analysis</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">visited</span><span class="p">,</span> <span class="n">pending</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">list</span><span class="p">()</span>
