@@ -12,11 +12,13 @@ import sys
 
 from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
 from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, \
-    TypeAlphabetAssumptionState, TypeRangeAlphabetAssumptionState, TypeQuantityAssumptionState
+    TypeAlphabetAssumptionState, TypeRangeAlphabetAssumptionState, TypeQuantityAssumptionState, \
+    SignOctagonStringAssumptionState
 from lyra.abstract_domains.assumption.quantity_domain import QuantityState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
 from lyra.engine.backward import BackwardInterpreter
+from lyra.semantics.assumption import AssumptionBackwardSemantics
 from lyra.semantics.backward import DefaultBackwardSemantics
 from lyra.unittests.runner import TestRunner
 
@@ -93,6 +95,15 @@ class TypeRangeAlphabetAssumptionTest(TestRunner):
         return TypeRangeAlphabetAssumptionState(self.variables)
 
 
+class SignOctagonStringAssumptionTest(TestRunner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, AssumptionBackwardSemantics(), 3)
+
+    def state(self):
+        return SignOctagonStringAssumptionState(self.variables)
+
+
 def test_suite():
     suite = unittest.TestSuite()
     name = os.getcwd() + '/assumption/type/**.py'
@@ -126,7 +137,8 @@ def test_suite():
     name = os.getcwd() + '/assumption/type+range+alphabet/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
-            suite.addTest(TypeRangeAlphabetAssumptionTest(path))
+            # suite.addTest(TypeRangeAlphabetAssumptionTest(path))
+            suite.addTest(SignOctagonStringAssumptionTest(path))
     return suite
 
 

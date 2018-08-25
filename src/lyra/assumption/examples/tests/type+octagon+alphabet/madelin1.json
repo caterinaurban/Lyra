@@ -1,0 +1,1031 @@
+{
+    "multiplier": {
+        "type": [
+            "literal",
+            "int"
+        ],
+        "value": "1"
+    },
+    "constraints": [
+        {
+            "pp": [
+                2,
+                0
+            ],
+            "lattice_elements": [
+                {
+                    "domain": "TypeLattice",
+                    "module": "lyra.abstract_domains.assumption.type_domain",
+                    "element": "Integer"
+                },
+                {
+                    "domain": "QuantityLattice",
+                    "module": "lyra.abstract_domains.assumption.quantity_domain",
+                    "element": "\u22a4"
+                },
+                {
+                    "domain": "OctagonState",
+                    "module": "lyra.abstract_domains.assumption.octagons_domain",
+                    "element": {
+                        "dimensions": 9,
+                        "variables": [
+                            [
+                                "day",
+                                "int"
+                            ],
+                            [
+                                "day_string",
+                                "string"
+                            ],
+                            [
+                                "food",
+                                "float"
+                            ],
+                            [
+                                "i",
+                                "int"
+                            ],
+                            [
+                                "len(day_string)",
+                                "int"
+                            ],
+                            [
+                                "other_day",
+                                "float"
+                            ],
+                            [
+                                "weight_per_day1",
+                                "int"
+                            ],
+                            [
+                                "weight_per_day2",
+                                "int"
+                            ],
+                            [
+                                "2.1",
+                                "int"
+                            ]
+                        ],
+                        "indexes": {
+                            "day": 0,
+                            "day_string": 1,
+                            "food": 2,
+                            "i": 3,
+                            "len(day_string)": 4,
+                            "other_day": 5,
+                            "weight_per_day1": 6,
+                            "weight_per_day2": 7,
+                            "2.1": 8
+                        },
+                        "lincons_array": []
+                    }
+                },
+                {
+                    "domain": "AlphabetLattice",
+                    "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                    "element": {
+                        "certainly": [],
+                        "maybe": [
+                            "/",
+                            "&",
+                            "6",
+                            "e",
+                            "k",
+                            "M",
+                            ";",
+                            "d",
+                            "2",
+                            "4",
+                            "C",
+                            "w",
+                            "`",
+                            " ",
+                            "_",
+                            "%",
+                            "Y",
+                            "D",
+                            "A",
+                            "N",
+                            "m",
+                            "i",
+                            "z",
+                            "{",
+                            "]",
+                            "1",
+                            "O",
+                            "S",
+                            "7",
+                            "?",
+                            ">",
+                            "\u000b",
+                            "b",
+                            "g",
+                            "3",
+                            "K",
+                            "\n",
+                            "\r",
+                            "-",
+                            "r",
+                            "I",
+                            "!",
+                            ")",
+                            "9",
+                            ",",
+                            "+",
+                            "$",
+                            "U",
+                            "<",
+                            "\"",
+                            "\\",
+                            "\t",
+                            "}",
+                            "l",
+                            "E",
+                            "a",
+                            "#",
+                            "V",
+                            "H",
+                            "'",
+                            "p",
+                            "P",
+                            "s",
+                            "Q",
+                            "=",
+                            "c",
+                            ":",
+                            "o",
+                            "~",
+                            "L",
+                            "5",
+                            "n",
+                            "@",
+                            "G",
+                            "t",
+                            "|",
+                            "Z",
+                            "J",
+                            "y",
+                            "j",
+                            "x",
+                            "R",
+                            "h",
+                            "8",
+                            "*",
+                            "(",
+                            "T",
+                            ".",
+                            "B",
+                            "[",
+                            "X",
+                            "q",
+                            "W",
+                            "0",
+                            "u",
+                            "F",
+                            "f",
+                            "\f",
+                            "^",
+                            "v"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "pp": [
+                3,
+                0
+            ],
+            "lattice_elements": [
+                {
+                    "domain": "TypeLattice",
+                    "module": "lyra.abstract_domains.assumption.type_domain",
+                    "element": "Integer"
+                },
+                {
+                    "domain": "QuantityLattice",
+                    "module": "lyra.abstract_domains.assumption.quantity_domain",
+                    "element": "\u22a4"
+                },
+                {
+                    "domain": "OctagonState",
+                    "module": "lyra.abstract_domains.assumption.octagons_domain",
+                    "element": {
+                        "dimensions": 10,
+                        "variables": [
+                            [
+                                "day",
+                                "int"
+                            ],
+                            [
+                                "day_string",
+                                "string"
+                            ],
+                            [
+                                "food",
+                                "float"
+                            ],
+                            [
+                                "i",
+                                "int"
+                            ],
+                            [
+                                "len(day_string)",
+                                "int"
+                            ],
+                            [
+                                "other_day",
+                                "float"
+                            ],
+                            [
+                                "weight_per_day1",
+                                "int"
+                            ],
+                            [
+                                "weight_per_day2",
+                                "int"
+                            ],
+                            [
+                                "3.1",
+                                "int"
+                            ],
+                            [
+                                "2.1",
+                                "int"
+                            ]
+                        ],
+                        "indexes": {
+                            "day": 0,
+                            "day_string": 1,
+                            "food": 2,
+                            "i": 3,
+                            "len(day_string)": 4,
+                            "other_day": 5,
+                            "weight_per_day1": 6,
+                            "weight_per_day2": 7,
+                            "3.1": 8,
+                            "2.1": 9
+                        },
+                        "lincons_array": []
+                    }
+                },
+                {
+                    "domain": "AlphabetLattice",
+                    "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                    "element": {
+                        "certainly": [],
+                        "maybe": [
+                            "/",
+                            "&",
+                            "6",
+                            "e",
+                            "k",
+                            "M",
+                            ";",
+                            "d",
+                            "2",
+                            "4",
+                            "C",
+                            "w",
+                            "`",
+                            " ",
+                            "_",
+                            "%",
+                            "Y",
+                            "D",
+                            "A",
+                            "N",
+                            "m",
+                            "i",
+                            "z",
+                            "{",
+                            "]",
+                            "1",
+                            "O",
+                            "S",
+                            "7",
+                            "?",
+                            ">",
+                            "\u000b",
+                            "b",
+                            "g",
+                            "3",
+                            "K",
+                            "\n",
+                            "\r",
+                            "-",
+                            "r",
+                            "I",
+                            "!",
+                            ")",
+                            "9",
+                            ",",
+                            "+",
+                            "$",
+                            "U",
+                            "<",
+                            "\"",
+                            "\\",
+                            "\t",
+                            "}",
+                            "l",
+                            "E",
+                            "a",
+                            "#",
+                            "V",
+                            "H",
+                            "'",
+                            "p",
+                            "P",
+                            "s",
+                            "Q",
+                            "=",
+                            "c",
+                            ":",
+                            "o",
+                            "~",
+                            "L",
+                            "5",
+                            "n",
+                            "@",
+                            "G",
+                            "t",
+                            "|",
+                            "Z",
+                            "J",
+                            "y",
+                            "j",
+                            "x",
+                            "R",
+                            "h",
+                            "8",
+                            "*",
+                            "(",
+                            "T",
+                            ".",
+                            "B",
+                            "[",
+                            "X",
+                            "q",
+                            "W",
+                            "0",
+                            "u",
+                            "F",
+                            "f",
+                            "\f",
+                            "^",
+                            "v"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "pp": [
+                4,
+                0
+            ],
+            "lattice_elements": [
+                {
+                    "domain": "TypeLattice",
+                    "module": "lyra.abstract_domains.assumption.type_domain",
+                    "element": "Integer"
+                },
+                {
+                    "domain": "QuantityLattice",
+                    "module": "lyra.abstract_domains.assumption.quantity_domain",
+                    "element": "\u22a4"
+                },
+                {
+                    "domain": "OctagonState",
+                    "module": "lyra.abstract_domains.assumption.octagons_domain",
+                    "element": {
+                        "dimensions": 11,
+                        "variables": [
+                            [
+                                "day",
+                                "int"
+                            ],
+                            [
+                                "day_string",
+                                "string"
+                            ],
+                            [
+                                "food",
+                                "float"
+                            ],
+                            [
+                                "i",
+                                "int"
+                            ],
+                            [
+                                "len(day_string)",
+                                "int"
+                            ],
+                            [
+                                "other_day",
+                                "float"
+                            ],
+                            [
+                                "weight_per_day1",
+                                "int"
+                            ],
+                            [
+                                "weight_per_day2",
+                                "int"
+                            ],
+                            [
+                                "4.1",
+                                "string"
+                            ],
+                            [
+                                "3.1",
+                                "int"
+                            ],
+                            [
+                                "2.1",
+                                "int"
+                            ]
+                        ],
+                        "indexes": {
+                            "day": 0,
+                            "day_string": 1,
+                            "food": 2,
+                            "i": 3,
+                            "len(day_string)": 4,
+                            "other_day": 5,
+                            "weight_per_day1": 6,
+                            "weight_per_day2": 7,
+                            "4.1": 8,
+                            "3.1": 9,
+                            "2.1": 10
+                        },
+                        "lincons_array": []
+                    }
+                },
+                {
+                    "domain": "AlphabetLattice",
+                    "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                    "element": {
+                        "certainly": [],
+                        "maybe": [
+                            "/",
+                            "&",
+                            "6",
+                            "e",
+                            "k",
+                            "M",
+                            ";",
+                            "d",
+                            "4",
+                            "2",
+                            "C",
+                            "w",
+                            "`",
+                            " ",
+                            "_",
+                            "%",
+                            "Y",
+                            "D",
+                            "A",
+                            "N",
+                            "m",
+                            "i",
+                            "z",
+                            "{",
+                            "]",
+                            "1",
+                            "O",
+                            "S",
+                            "7",
+                            "?",
+                            ">",
+                            "\u000b",
+                            "b",
+                            "g",
+                            "3",
+                            "K",
+                            "\n",
+                            "\r",
+                            "-",
+                            "r",
+                            "I",
+                            "!",
+                            ")",
+                            "9",
+                            ",",
+                            "+",
+                            "$",
+                            "U",
+                            "<",
+                            "\"",
+                            "\\",
+                            "\t",
+                            "}",
+                            "l",
+                            "E",
+                            "a",
+                            "#",
+                            "V",
+                            "H",
+                            "'",
+                            "p",
+                            "P",
+                            "s",
+                            "Q",
+                            "=",
+                            "c",
+                            ":",
+                            "o",
+                            "~",
+                            "L",
+                            "5",
+                            "n",
+                            "@",
+                            "G",
+                            "t",
+                            "|",
+                            "Z",
+                            "J",
+                            "y",
+                            "j",
+                            "x",
+                            "R",
+                            "h",
+                            "8",
+                            "*",
+                            "(",
+                            "T",
+                            ".",
+                            "B",
+                            "[",
+                            "X",
+                            "q",
+                            "W",
+                            "0",
+                            "u",
+                            "F",
+                            "f",
+                            "\f",
+                            "^",
+                            "v"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "multiplier": {
+                "type": [
+                    "literal",
+                    "int"
+                ],
+                "value": "10"
+            },
+            "constraints": [
+                {
+                    "pp": [
+                        7,
+                        4
+                    ],
+                    "lattice_elements": [
+                        {
+                            "domain": "TypeLattice",
+                            "module": "lyra.abstract_domains.assumption.type_domain",
+                            "element": "Float"
+                        },
+                        {
+                            "domain": "QuantityLattice",
+                            "module": "lyra.abstract_domains.assumption.quantity_domain",
+                            "element": "\u22650"
+                        },
+                        {
+                            "domain": "OctagonState",
+                            "module": "lyra.abstract_domains.assumption.octagons_domain",
+                            "element": {
+                                "dimensions": 12,
+                                "variables": [
+                                    [
+                                        "day",
+                                        "int"
+                                    ],
+                                    [
+                                        "day_string",
+                                        "string"
+                                    ],
+                                    [
+                                        "food",
+                                        "float"
+                                    ],
+                                    [
+                                        "i",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(day_string)",
+                                        "int"
+                                    ],
+                                    [
+                                        "other_day",
+                                        "float"
+                                    ],
+                                    [
+                                        "weight_per_day1",
+                                        "int"
+                                    ],
+                                    [
+                                        "weight_per_day2",
+                                        "int"
+                                    ],
+                                    [
+                                        "7.1",
+                                        "float"
+                                    ],
+                                    [
+                                        "4.1",
+                                        "string"
+                                    ],
+                                    [
+                                        "3.1",
+                                        "int"
+                                    ],
+                                    [
+                                        "2.1",
+                                        "int"
+                                    ]
+                                ],
+                                "indexes": {
+                                    "day": 0,
+                                    "day_string": 1,
+                                    "food": 2,
+                                    "i": 3,
+                                    "len(day_string)": 4,
+                                    "other_day": 5,
+                                    "weight_per_day1": 6,
+                                    "weight_per_day2": 7,
+                                    "7.1": 8,
+                                    "4.1": 9,
+                                    "3.1": 10,
+                                    "2.1": 11
+                                },
+                                "lincons_array": [
+                                    {
+                                        "variables": [
+                                            8
+                                        ],
+                                        "signs": [
+                                            1
+                                        ],
+                                        "constraint_type": 1,
+                                        "constant": 0.0
+                                    },
+                                    {
+                                        "variables": [
+                                            8,
+                                            9
+                                        ],
+                                        "signs": [
+                                            1,
+                                            -1
+                                        ],
+                                        "constraint_type": 1,
+                                        "constant": 0.0
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "domain": "AlphabetLattice",
+                            "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                            "element": {
+                                "certainly": [],
+                                "maybe": [
+                                    "/",
+                                    "&",
+                                    "6",
+                                    "e",
+                                    "k",
+                                    "M",
+                                    ";",
+                                    "d",
+                                    "2",
+                                    "4",
+                                    "C",
+                                    "w",
+                                    "`",
+                                    " ",
+                                    "_",
+                                    "%",
+                                    "Y",
+                                    "D",
+                                    "A",
+                                    "N",
+                                    "m",
+                                    "i",
+                                    "z",
+                                    "{",
+                                    "]",
+                                    "1",
+                                    "O",
+                                    "S",
+                                    "7",
+                                    "?",
+                                    ">",
+                                    "\u000b",
+                                    "b",
+                                    "g",
+                                    "3",
+                                    "K",
+                                    "\n",
+                                    "\r",
+                                    "-",
+                                    "r",
+                                    "I",
+                                    "!",
+                                    ")",
+                                    "9",
+                                    ",",
+                                    "+",
+                                    "$",
+                                    "U",
+                                    "<",
+                                    "\"",
+                                    "\\",
+                                    "\t",
+                                    "}",
+                                    "l",
+                                    "E",
+                                    "a",
+                                    "#",
+                                    "V",
+                                    "H",
+                                    "'",
+                                    "p",
+                                    "P",
+                                    "s",
+                                    "Q",
+                                    "=",
+                                    "c",
+                                    ":",
+                                    "o",
+                                    "~",
+                                    "L",
+                                    "5",
+                                    "n",
+                                    "@",
+                                    "G",
+                                    "t",
+                                    "|",
+                                    "Z",
+                                    "J",
+                                    "y",
+                                    "j",
+                                    "x",
+                                    "R",
+                                    "h",
+                                    "8",
+                                    "*",
+                                    "(",
+                                    "T",
+                                    ".",
+                                    "B",
+                                    "[",
+                                    "X",
+                                    "q",
+                                    "W",
+                                    "0",
+                                    "u",
+                                    "F",
+                                    "f",
+                                    "\f",
+                                    "^",
+                                    "v"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "multiplier": {
+                        "type": [
+                            "literal",
+                            "int"
+                        ],
+                        "value": "1"
+                    },
+                    "constraints": [
+                        {
+                            "pp": [
+                                11,
+                                8
+                            ],
+                            "lattice_elements": [
+                                {
+                                    "domain": "TypeLattice",
+                                    "module": "lyra.abstract_domains.assumption.type_domain",
+                                    "element": "Float"
+                                },
+                                {
+                                    "domain": "QuantityLattice",
+                                    "module": "lyra.abstract_domains.assumption.quantity_domain",
+                                    "element": "\u22a4"
+                                },
+                                {
+                                    "domain": "OctagonState",
+                                    "module": "lyra.abstract_domains.assumption.octagons_domain",
+                                    "element": {
+                                        "dimensions": 14,
+                                        "variables": [
+                                            [
+                                                "day",
+                                                "int"
+                                            ],
+                                            [
+                                                "day_string",
+                                                "string"
+                                            ],
+                                            [
+                                                "food",
+                                                "float"
+                                            ],
+                                            [
+                                                "i",
+                                                "int"
+                                            ],
+                                            [
+                                                "len(day_string)",
+                                                "int"
+                                            ],
+                                            [
+                                                "other_day",
+                                                "float"
+                                            ],
+                                            [
+                                                "weight_per_day1",
+                                                "int"
+                                            ],
+                                            [
+                                                "weight_per_day2",
+                                                "int"
+                                            ],
+                                            [
+                                                "11.1",
+                                                "int"
+                                            ],
+                                            [
+                                                "13.1",
+                                                "float"
+                                            ],
+                                            [
+                                                "7.1",
+                                                "float"
+                                            ],
+                                            [
+                                                "4.1",
+                                                "string"
+                                            ],
+                                            [
+                                                "3.1",
+                                                "int"
+                                            ],
+                                            [
+                                                "2.1",
+                                                "int"
+                                            ]
+                                        ],
+                                        "indexes": {
+                                            "day": 0,
+                                            "day_string": 1,
+                                            "food": 2,
+                                            "i": 3,
+                                            "len(day_string)": 4,
+                                            "other_day": 5,
+                                            "weight_per_day1": 6,
+                                            "weight_per_day2": 7,
+                                            "11.1": 8,
+                                            "13.1": 9,
+                                            "7.1": 10,
+                                            "4.1": 11,
+                                            "3.1": 12,
+                                            "2.1": 13
+                                        },
+                                        "lincons_array": []
+                                    }
+                                },
+                                {
+                                    "domain": "AlphabetLattice",
+                                    "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                                    "element": {
+                                        "certainly": [],
+                                        "maybe": [
+                                            "/",
+                                            "&",
+                                            "6",
+                                            "e",
+                                            "k",
+                                            "M",
+                                            ";",
+                                            "d",
+                                            "4",
+                                            "2",
+                                            "C",
+                                            "w",
+                                            "`",
+                                            " ",
+                                            "_",
+                                            "%",
+                                            "Y",
+                                            "D",
+                                            "A",
+                                            "N",
+                                            "m",
+                                            "i",
+                                            "z",
+                                            "{",
+                                            "]",
+                                            "1",
+                                            "O",
+                                            "S",
+                                            "7",
+                                            "?",
+                                            ">",
+                                            "\u000b",
+                                            "b",
+                                            "g",
+                                            "3",
+                                            "K",
+                                            "\n",
+                                            "\r",
+                                            "-",
+                                            "r",
+                                            "I",
+                                            "!",
+                                            ")",
+                                            "9",
+                                            ",",
+                                            "+",
+                                            "$",
+                                            "U",
+                                            "<",
+                                            "\"",
+                                            "\\",
+                                            "\t",
+                                            "}",
+                                            "l",
+                                            "E",
+                                            "a",
+                                            "#",
+                                            "V",
+                                            "H",
+                                            "'",
+                                            "p",
+                                            "P",
+                                            "s",
+                                            "Q",
+                                            "=",
+                                            "c",
+                                            ":",
+                                            "o",
+                                            "~",
+                                            "L",
+                                            "5",
+                                            "n",
+                                            "@",
+                                            "G",
+                                            "t",
+                                            "|",
+                                            "Z",
+                                            "J",
+                                            "y",
+                                            "j",
+                                            "x",
+                                            "R",
+                                            "h",
+                                            "8",
+                                            "*",
+                                            "(",
+                                            "T",
+                                            ".",
+                                            "B",
+                                            "[",
+                                            "X",
+                                            "q",
+                                            "W",
+                                            "0",
+                                            "u",
+                                            "F",
+                                            "f",
+                                            "\f",
+                                            "^",
+                                            "v"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

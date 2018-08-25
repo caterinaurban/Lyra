@@ -4,6 +4,7 @@
     A controller class responsible for running data quality analysis, checkers and outputting results
 
 """
+import glob
 import json
 import os
 from abc import ABCMeta, abstractmethod
@@ -91,14 +92,13 @@ class Controller (metaclass= ABCMeta):
         """ Run the controller """
         # if code has been modified
         if self.code_modified() or not self.handler.file_exists():
-        # if True:
             print("Running analysis")
             result = self.run_analysis()
             print("RESULT", result)
             self.write_result(result)
         parsed_result = self.read_result()
         print("PARSED RESULT", parsed_result)
-        self.run_checker(parsed_result)
+        # self.run_checker(parsed_result)
 
 
 class AssumptionController(Controller):
@@ -120,6 +120,8 @@ class AssumptionController(Controller):
             return result
 
         def write_result(self, result: 'AnalysisResult'):
+            with(self.script_path + '.txt', 'w') as f:
+                f.write(result)
             self.handler.write_result(result)
 
         def read_result(self):
@@ -130,10 +132,23 @@ class AssumptionController(Controller):
 
 
 if __name__ == '__main__':
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/evaluation/dna_frequency/dna_frequency.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/evaluation/self_driving_cars/self_driving_cars.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/evaluation/convert/convert.py').main()
-    AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/presentation/grades.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/thesis/concat.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type_mix.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/unittests/assumption/type+range+alphabet/mix.py').main()
+    name = os.getcwd() + '/examples/tests/octagons/**.py'
+    print(name)
+    for path in glob.iglob(name):
+        if os.path.basename(path) != "__init__.py":
+            AssumptionController(path).main()
+
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/cars.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/convert.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/dna.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/dna-l.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/filter.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/grades.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/lost.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/madelin1.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/mix.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/str_func.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/noinfo.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/triangle_area.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/unification.py').main()
+    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/type_merge.py').main()

@@ -1,0 +1,700 @@
+{
+    "multiplier": {
+        "type": [
+            "literal",
+            "int"
+        ],
+        "value": "1"
+    },
+    "constraints": [
+        {
+            "pp": [
+                3,
+                0
+            ],
+            "lattice_elements": [
+                {
+                    "domain": "TypeLattice",
+                    "module": "lyra.abstract_domains.assumption.type_domain",
+                    "element": "Integer"
+                },
+                {
+                    "domain": "QuantityLattice",
+                    "module": "lyra.abstract_domains.assumption.quantity_domain",
+                    "element": ">0"
+                },
+                {
+                    "domain": "OctagonState",
+                    "module": "lyra.abstract_domains.assumption.octagons_domain",
+                    "element": {
+                        "dimensions": 13,
+                        "variables": [
+                            [
+                                "a",
+                                "int"
+                            ],
+                            [
+                                "base",
+                                "string"
+                            ],
+                            [
+                                "c",
+                                "int"
+                            ],
+                            [
+                                "g",
+                                "int"
+                            ],
+                            [
+                                "i",
+                                "int"
+                            ],
+                            [
+                                "len(base)",
+                                "int"
+                            ],
+                            [
+                                "len(separator)",
+                                "int"
+                            ],
+                            [
+                                "length",
+                                "int"
+                            ],
+                            [
+                                "s",
+                                "int"
+                            ],
+                            [
+                                "separator",
+                                "string"
+                            ],
+                            [
+                                "sequences",
+                                "int"
+                            ],
+                            [
+                                "t",
+                                "int"
+                            ],
+                            [
+                                "3.1",
+                                "int"
+                            ]
+                        ],
+                        "indexes": {
+                            "a": 0,
+                            "base": 1,
+                            "c": 2,
+                            "g": 3,
+                            "i": 4,
+                            "len(base)": 5,
+                            "len(separator)": 6,
+                            "length": 7,
+                            "s": 8,
+                            "separator": 9,
+                            "sequences": 10,
+                            "t": 11,
+                            "3.1": 12
+                        },
+                        "lincons_array": [
+                            {
+                                "variables": [
+                                    12
+                                ],
+                                "signs": [
+                                    1
+                                ],
+                                "constraint_type": 1,
+                                "constant": -1.0
+                            }
+                        ]
+                    }
+                },
+                {
+                    "domain": "AlphabetLattice",
+                    "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                    "element": {
+                        "certainly": [],
+                        "maybe": [
+                            "v",
+                            "J",
+                            "E",
+                            "g",
+                            "x",
+                            "2",
+                            "j",
+                            "4",
+                            "\r",
+                            "3",
+                            "Z",
+                            "H",
+                            "}",
+                            "z",
+                            "|",
+                            ":",
+                            "6",
+                            "V",
+                            ")",
+                            "#",
+                            "l",
+                            "i",
+                            "W",
+                            "%",
+                            ",",
+                            "B",
+                            "`",
+                            "n",
+                            "'",
+                            "*",
+                            "r",
+                            "\u000b",
+                            "A",
+                            "P",
+                            "t",
+                            "d",
+                            "\n",
+                            "s",
+                            "a",
+                            "\f",
+                            "=",
+                            "T",
+                            "?",
+                            "G",
+                            "b",
+                            "_",
+                            "D",
+                            "f",
+                            "F",
+                            ";",
+                            "C",
+                            "<",
+                            "0",
+                            "q",
+                            "/",
+                            "w",
+                            "L",
+                            "{",
+                            "R",
+                            "7",
+                            "c",
+                            "O",
+                            "1",
+                            "5",
+                            "M",
+                            "X",
+                            "e",
+                            "!",
+                            "+",
+                            "&",
+                            "~",
+                            "\"",
+                            " ",
+                            "@",
+                            "N",
+                            "^",
+                            "I",
+                            ".",
+                            "\\",
+                            "(",
+                            "Q",
+                            "S",
+                            "o",
+                            "m",
+                            "$",
+                            "[",
+                            "p",
+                            "K",
+                            "\t",
+                            "]",
+                            ">",
+                            "u",
+                            "y",
+                            "9",
+                            "-",
+                            "U",
+                            "8",
+                            "k",
+                            "Y",
+                            "h"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "multiplier": {
+                "type": [
+                    "identifier",
+                    "int"
+                ],
+                "value": "3.1"
+            },
+            "constraints": [
+                {
+                    "pp": [
+                        7,
+                        4
+                    ],
+                    "lattice_elements": [
+                        {
+                            "domain": "TypeLattice",
+                            "module": "lyra.abstract_domains.assumption.type_domain",
+                            "element": "Integer"
+                        },
+                        {
+                            "domain": "QuantityLattice",
+                            "module": "lyra.abstract_domains.assumption.quantity_domain",
+                            "element": "\u22a4"
+                        },
+                        {
+                            "domain": "OctagonState",
+                            "module": "lyra.abstract_domains.assumption.octagons_domain",
+                            "element": {
+                                "dimensions": 14,
+                                "variables": [
+                                    [
+                                        "a",
+                                        "int"
+                                    ],
+                                    [
+                                        "base",
+                                        "string"
+                                    ],
+                                    [
+                                        "c",
+                                        "int"
+                                    ],
+                                    [
+                                        "g",
+                                        "int"
+                                    ],
+                                    [
+                                        "i",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(base)",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(separator)",
+                                        "int"
+                                    ],
+                                    [
+                                        "length",
+                                        "int"
+                                    ],
+                                    [
+                                        "s",
+                                        "int"
+                                    ],
+                                    [
+                                        "separator",
+                                        "string"
+                                    ],
+                                    [
+                                        "sequences",
+                                        "int"
+                                    ],
+                                    [
+                                        "t",
+                                        "int"
+                                    ],
+                                    [
+                                        "7.1",
+                                        "int"
+                                    ],
+                                    [
+                                        "3.1",
+                                        "int"
+                                    ]
+                                ],
+                                "indexes": {
+                                    "a": 0,
+                                    "base": 1,
+                                    "c": 2,
+                                    "g": 3,
+                                    "i": 4,
+                                    "len(base)": 5,
+                                    "len(separator)": 6,
+                                    "length": 7,
+                                    "s": 8,
+                                    "separator": 9,
+                                    "sequences": 10,
+                                    "t": 11,
+                                    "7.1": 12,
+                                    "3.1": 13
+                                },
+                                "lincons_array": []
+                            }
+                        },
+                        {
+                            "domain": "AlphabetLattice",
+                            "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                            "element": {
+                                "certainly": [],
+                                "maybe": [
+                                    "v",
+                                    "J",
+                                    "E",
+                                    "g",
+                                    "x",
+                                    "2",
+                                    "j",
+                                    "4",
+                                    "\r",
+                                    "3",
+                                    "Z",
+                                    "H",
+                                    "}",
+                                    "z",
+                                    "|",
+                                    ":",
+                                    "6",
+                                    "V",
+                                    ")",
+                                    "#",
+                                    "l",
+                                    "i",
+                                    "W",
+                                    "%",
+                                    ",",
+                                    "B",
+                                    "`",
+                                    "n",
+                                    "'",
+                                    "*",
+                                    "r",
+                                    "\u000b",
+                                    "A",
+                                    "P",
+                                    "t",
+                                    "d",
+                                    "s",
+                                    "\n",
+                                    "a",
+                                    "\f",
+                                    "=",
+                                    "T",
+                                    "?",
+                                    "G",
+                                    "b",
+                                    "_",
+                                    "D",
+                                    "f",
+                                    "F",
+                                    ";",
+                                    "C",
+                                    "<",
+                                    "0",
+                                    "q",
+                                    "/",
+                                    "w",
+                                    "L",
+                                    "{",
+                                    "R",
+                                    "7",
+                                    "c",
+                                    "O",
+                                    "1",
+                                    "5",
+                                    "M",
+                                    "X",
+                                    "e",
+                                    "!",
+                                    "+",
+                                    "&",
+                                    "~",
+                                    "\"",
+                                    " ",
+                                    "@",
+                                    "N",
+                                    "^",
+                                    "I",
+                                    ".",
+                                    "\\",
+                                    "(",
+                                    "Q",
+                                    "S",
+                                    "o",
+                                    "m",
+                                    "$",
+                                    "[",
+                                    "p",
+                                    "K",
+                                    "\t",
+                                    "]",
+                                    ">",
+                                    "u",
+                                    "y",
+                                    "9",
+                                    "-",
+                                    "U",
+                                    "8",
+                                    "k",
+                                    "Y",
+                                    "h"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "multiplier": {
+                        "type": [
+                            "identifier",
+                            "int"
+                        ],
+                        "value": "7.1"
+                    },
+                    "constraints": [
+                        {
+                            "pp": [
+                                13,
+                                8
+                            ],
+                            "lattice_elements": [
+                                {
+                                    "domain": "TypeLattice",
+                                    "module": "lyra.abstract_domains.assumption.type_domain",
+                                    "element": "String"
+                                },
+                                {
+                                    "domain": "QuantityLattice",
+                                    "module": "lyra.abstract_domains.assumption.quantity_domain",
+                                    "element": "\u22a4"
+                                },
+                                {
+                                    "domain": "OctagonState",
+                                    "module": "lyra.abstract_domains.assumption.octagons_domain",
+                                    "element": {
+                                        "dimensions": 16,
+                                        "variables": [
+                                            [
+                                                "a",
+                                                "int"
+                                            ],
+                                            [
+                                                "base",
+                                                "string"
+                                            ],
+                                            [
+                                                "c",
+                                                "int"
+                                            ],
+                                            [
+                                                "g",
+                                                "int"
+                                            ],
+                                            [
+                                                "i",
+                                                "int"
+                                            ],
+                                            [
+                                                "len(base)",
+                                                "int"
+                                            ],
+                                            [
+                                                "len(separator)",
+                                                "int"
+                                            ],
+                                            [
+                                                "length",
+                                                "int"
+                                            ],
+                                            [
+                                                "s",
+                                                "int"
+                                            ],
+                                            [
+                                                "separator",
+                                                "string"
+                                            ],
+                                            [
+                                                "sequences",
+                                                "int"
+                                            ],
+                                            [
+                                                "t",
+                                                "int"
+                                            ],
+                                            [
+                                                "13.1",
+                                                "string"
+                                            ],
+                                            [
+                                                "7.1",
+                                                "int"
+                                            ],
+                                            [
+                                                "3.1",
+                                                "int"
+                                            ],
+                                            [
+                                                "3.1",
+                                                "int"
+                                            ]
+                                        ],
+                                        "indexes": {
+                                            "a": 0,
+                                            "base": 1,
+                                            "c": 2,
+                                            "g": 3,
+                                            "i": 4,
+                                            "len(base)": 5,
+                                            "len(separator)": 6,
+                                            "length": 7,
+                                            "s": 8,
+                                            "separator": 9,
+                                            "sequences": 10,
+                                            "t": 11,
+                                            "13.1": 12,
+                                            "7.1": 13,
+                                            "3.1": 14
+                                        },
+                                        "lincons_array": []
+                                    }
+                                },
+                                {
+                                    "domain": "AlphabetLattice",
+                                    "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                                    "element": {
+                                        "certainly": [],
+                                        "maybe": [
+                                            "G",
+                                            "T",
+                                            "C",
+                                            "A"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "pp": [
+                        24,
+                        4
+                    ],
+                    "lattice_elements": [
+                        {
+                            "domain": "TypeLattice",
+                            "module": "lyra.abstract_domains.assumption.type_domain",
+                            "element": "String"
+                        },
+                        {
+                            "domain": "QuantityLattice",
+                            "module": "lyra.abstract_domains.assumption.quantity_domain",
+                            "element": "\u22a4"
+                        },
+                        {
+                            "domain": "OctagonState",
+                            "module": "lyra.abstract_domains.assumption.octagons_domain",
+                            "element": {
+                                "dimensions": 16,
+                                "variables": [
+                                    [
+                                        "a",
+                                        "int"
+                                    ],
+                                    [
+                                        "base",
+                                        "string"
+                                    ],
+                                    [
+                                        "c",
+                                        "int"
+                                    ],
+                                    [
+                                        "g",
+                                        "int"
+                                    ],
+                                    [
+                                        "i",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(base)",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(separator)",
+                                        "int"
+                                    ],
+                                    [
+                                        "length",
+                                        "int"
+                                    ],
+                                    [
+                                        "s",
+                                        "int"
+                                    ],
+                                    [
+                                        "separator",
+                                        "string"
+                                    ],
+                                    [
+                                        "sequences",
+                                        "int"
+                                    ],
+                                    [
+                                        "t",
+                                        "int"
+                                    ],
+                                    [
+                                        "24.1",
+                                        "string"
+                                    ],
+                                    [
+                                        "13.1",
+                                        "string"
+                                    ],
+                                    [
+                                        "7.1",
+                                        "int"
+                                    ],
+                                    [
+                                        "3.1",
+                                        "int"
+                                    ]
+                                ],
+                                "indexes": {
+                                    "a": 0,
+                                    "base": 1,
+                                    "c": 2,
+                                    "g": 3,
+                                    "i": 4,
+                                    "len(base)": 5,
+                                    "len(separator)": 6,
+                                    "length": 7,
+                                    "s": 8,
+                                    "separator": 9,
+                                    "sequences": 10,
+                                    "t": 11,
+                                    "24.1": 12,
+                                    "13.1": 13,
+                                    "7.1": 14,
+                                    "3.1": 15
+                                },
+                                "lincons_array": []
+                            }
+                        },
+                        {
+                            "domain": "AlphabetLattice",
+                            "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                            "element": {
+                                "certainly": [],
+                                "maybe": [
+                                    ".",
+                                    "#"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

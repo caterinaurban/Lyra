@@ -1,5 +1,5 @@
 from lyra.engine.assumption.assumption_analysis import TypeAnalysis, RangeAnalysis, \
-    TypeRangeAssumptionAnalysis, CharacterDomainAnalysis
+    TypeRangeAssumptionAnalysis
 from lyra.engine.liveness.liveness_analysis import LivenessAnalysis, StrongLivenessAnalysis
 from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
 from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis
@@ -17,7 +17,7 @@ from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
 # BackwardSignAnalysis().main("numerical/backward/example.py")
 #
 # # BackwardIntervalAnalysis().main("assumption/example.py")
-# TypeAnalysis().main("assumption/example.py")
+TypeAnalysis().main("/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/madelin1.py")
 # RangeAnalysis().main("assumption/example.py")
 # TypeRangeAssumptionAnalysis().main("assumption/example.py")
 

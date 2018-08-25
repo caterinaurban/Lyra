@@ -555,3 +555,7 @@ class StringMixin(Lattice, metaclass=ABCMeta):
             return self._replace(other)
         else:
             return self._concat(other)
+
+    @abstractmethod
+    def negate(self) -> 'StringMixin':
+        """ The negation of a lattice element"""

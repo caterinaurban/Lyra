@@ -355,8 +355,9 @@ class OctagonLattice(Lattice):
         def cmp(varname1:str, varname2:str):
             v1 = varname1.replace('.', '')
             v2 = varname2.replace('.', '')
+            # if varname1 and varname2 are castable to float
             if v1.isdecimal() and v2.isdecimal():
-                return int(v1) < int(v2)
+                return float(varname1) < int(varname2)
             return varname1 < varname2
 
         if self.variables != other.variables:
@@ -396,9 +397,9 @@ class ConditionEvaluator(ExpressionVisitor):
         return [], [], None
 
     def visit_VariableIdentifier(self, expr: 'VariableIdentifier', state=None):
-        if expr.typ in [FloatLyraType(), IntegerLyraType(), BooleanLyraType()]:
-            return [expr.name], [1], 0
-        return [], [], None
+        # if expr.typ in [FloatLyraType(), IntegerLyraType(), BooleanLyraType()]:
+        return [expr.name], [1], 0
+        # return [], [], None
 
     def visit_LengthIdentifier(self, expr: 'VariableIdentifier', state=None):
         if expr.typ in [FloatLyraType(), IntegerLyraType(), BooleanLyraType()]:
@@ -418,7 +419,7 @@ class ConditionEvaluator(ExpressionVisitor):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
     def visit_Subscription(self, expr: 'Subscription', state=None):
-        raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
+        return [], [], None
 
     def visit_Slicing(self, expr: 'Slicing', state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
@@ -477,8 +478,8 @@ class ConditionEvaluator(ExpressionVisitor):
                     return variables1, l, constant1 / constant2
                 else:
                     raise ZeroDivisionError
-            return [], [], None
-        raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
+        return [], [], None
+
 
     def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation',
                                         lattice_element=None, state=None):

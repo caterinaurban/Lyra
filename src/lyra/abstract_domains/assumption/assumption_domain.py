@@ -6,9 +6,9 @@ Abstract domains to be used for **input data assumption analysis**.
 
 :Authors: Caterina Urban and Radwa Sherif Abdelbar
 """
+import importlib
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
-from copy import deepcopy
 from enum import Enum
 from typing import List, Dict, Type, Any, Union, Tuple, Set, Optional, Generator
 
@@ -24,6 +24,7 @@ from lyra.core.statements import ProgramPoint
 from lyra.core.types import IntegerLyraType, FloatLyraType, StringLyraType, BooleanLyraType, \
     ListLyraType
 from lyra.core.utils import copy_docstring
+
 
 class JSONMixin(Lattice, metaclass=ABCMeta):
     """Mixin to add a mechanism for converting a lattice to and from JSON format."""
@@ -553,9 +554,6 @@ class AssumptionState(State):
                         cons = []
                         for element in js['lattice_elements']:
                             # state = AssumptionState.InputStack.InputLattice._state_names[element['domain']]
-                            #TODO call state without dict
-                            import importlib
-                            # Load "module.submodule.MyClass"
                             state = getattr(importlib.import_module(element["module"]), element["domain"])
 
                             cons.append(state.from_json(element['element']))
@@ -1039,7 +1037,7 @@ class SignOctagonStringAssumptionState(AssumptionState):
         from lyra.abstract_domains.assumption.type_domain import TypeState
         from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
         from lyra.abstract_domains.assumption.quantity_domain import QuantityState
-        states = [TypeState, OctagonState, AlphabetState]
+        states = [TypeState, QuantityState, OctagonState, AlphabetState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)
 

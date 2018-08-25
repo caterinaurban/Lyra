@@ -143,6 +143,12 @@ class CharacterLattice(BottomMixin, StringMixin):
         maybe = self.maybe.union(other.maybe)
         return self._replace(type(self)(certainly, maybe))
 
+    @copy_docstring(StringMixin.negate)
+    def negate(self):
+        """The negation of an element ``(c, m)`` is ``(∅, _alphabet - m)`` """
+        maybe = _alphabet.difference(self.maybe)
+        return self._replace(type(self)(maybe))
+
 
 class CharacterState(Basis):
     """Character inclusion analysis state. An element of the character inclusion abstract domain.
@@ -205,6 +211,9 @@ class CharacterState(Basis):
                 right_eval = self._evaluation.visit(condition.right, self, dict())
                 self._refinement.visit(left, left_eval, right_eval[right], self)
                 self._refinement.visit(right, right_eval, left_eval[left], self)
+        elif isinstance(condition, AttributeReference):  # example: not x.isalpha()
+            evaluation = self._evaluation.visit(condition, self, dict())
+            self.store[condition.target].meet(evaluation[condition].negate())
         return self
 
     # expression evaluation

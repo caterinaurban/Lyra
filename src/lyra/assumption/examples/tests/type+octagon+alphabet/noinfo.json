@@ -1,0 +1,165 @@
+{
+    "multiplier": {
+        "type": [
+            "literal",
+            "int"
+        ],
+        "value": "1"
+    },
+    "constraints": [
+        {
+            "pp": [
+                3,
+                0
+            ],
+            "lattice_elements": [
+                {
+                    "domain": "TypeLattice",
+                    "module": "lyra.abstract_domains.assumption.type_domain",
+                    "element": "String"
+                },
+                {
+                    "domain": "QuantityLattice",
+                    "module": "lyra.abstract_domains.assumption.quantity_domain",
+                    "element": "\u22a4"
+                },
+                {
+                    "domain": "OctagonState",
+                    "module": "lyra.abstract_domains.assumption.octagons_domain",
+                    "element": {
+                        "dimensions": 3,
+                        "variables": [
+                            [
+                                "a",
+                                "string"
+                            ],
+                            [
+                                "len(a)",
+                                "int"
+                            ],
+                            [
+                                "3.1",
+                                "string"
+                            ]
+                        ],
+                        "indexes": {
+                            "a": 0,
+                            "len(a)": 1,
+                            "3.1": 2
+                        },
+                        "lincons_array": []
+                    }
+                },
+                {
+                    "domain": "AlphabetLattice",
+                    "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                    "element": {
+                        "certainly": [],
+                        "maybe": [
+                            "\\",
+                            "O",
+                            "!",
+                            "o",
+                            "e",
+                            "s",
+                            "$",
+                            "u",
+                            "Y",
+                            "F",
+                            "r",
+                            "S",
+                            "\"",
+                            "J",
+                            "T",
+                            "-",
+                            "b",
+                            "x",
+                            "R",
+                            "+",
+                            "5",
+                            "4",
+                            ")",
+                            "v",
+                            "{",
+                            "q",
+                            "P",
+                            "t",
+                            "3",
+                            "l",
+                            "9",
+                            "Q",
+                            "X",
+                            "[",
+                            "=",
+                            "`",
+                            "*",
+                            "d",
+                            "\n",
+                            "\r",
+                            "M",
+                            "Z",
+                            "?",
+                            "C",
+                            "p",
+                            "I",
+                            "<",
+                            ".",
+                            "k",
+                            "~",
+                            "7",
+                            "_",
+                            "g",
+                            "^",
+                            "\u000b",
+                            "U",
+                            "]",
+                            "}",
+                            "c",
+                            "6",
+                            "/",
+                            "h",
+                            "B",
+                            "H",
+                            "&",
+                            "m",
+                            ":",
+                            "|",
+                            ";",
+                            "@",
+                            "0",
+                            "j",
+                            "#",
+                            ">",
+                            "E",
+                            "n",
+                            "1",
+                            "\f",
+                            "w",
+                            "a",
+                            "y",
+                            "'",
+                            "2",
+                            "V",
+                            "N",
+                            "L",
+                            "z",
+                            "i",
+                            ",",
+                            "W",
+                            "8",
+                            "f",
+                            "G",
+                            " ",
+                            "%",
+                            "\t",
+                            "(",
+                            "D",
+                            "K",
+                            "A"
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
