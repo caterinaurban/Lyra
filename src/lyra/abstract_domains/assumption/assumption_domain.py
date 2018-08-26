@@ -721,11 +721,12 @@ class AssumptionState(State):
                         m = assumption.multiplier
                         mult = MultiplierEvaluator().visit(m, pp_value, lines_involved)
                         # check for valid multiplier
-                        message = ""
+                        # to be annotated as warning
+                        message = "*"
                         if mult is None:
                             lines_message = ','.join([str(l) for l in lines_involved])
-                            message += "Cannot calculate loop range."
-                            message += "Errors on lines: {}.".format(lines_message)
+                            message += "Cannot calculate loop range. "
+                            message += "Error(s) on line(s): {}.".format(lines_message)
                         elif not isinstance(mult, int):
                             message += "Loop range must be an integer."
                         if len(message) > 0:
@@ -758,7 +759,7 @@ class AssumptionState(State):
                         break
 
                     if is_star(constraint):  # information loss, cannot continue checking
-                        error = CheckerError("Not enough information to continue checking after this line.")
+                        error = CheckerError("*Not enough information to continue checking after this line.")
                         line_errors[line_number].append(error)
                         end_of_constraints = True
 
