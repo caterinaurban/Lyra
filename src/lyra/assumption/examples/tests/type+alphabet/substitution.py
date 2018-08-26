@@ -1,4 +1,4 @@
-
+# 3:(String, ⊤, ⊤, ({'a', 'b', 'c'}, {'a', 'b', 'c'})), 5:(String, ⊤, ⊤, ({'a', 'b', 'c'}, {'a', 'b', 'c'})), 7:(String, ⊤, ⊤, (∅, ∅))
 # INITIAL: 3:(String, ({'a', 'b', 'c'}, {'a', 'b', 'c'})), 5:(String, ({'a', 'b', 'c'}, {'a', 'b', 'c'})), 7:(String, (∅, ∅))
 a: str = input()
 # STATE: 5:(String, ({'a', 'b', 'c'}, {'a', 'b', 'c'})), 7:(String, (∅, ∅))

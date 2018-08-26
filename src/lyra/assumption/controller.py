@@ -91,7 +91,8 @@ class Controller (metaclass= ABCMeta):
     def main(self):
         """ Run the controller """
         # if code has been modified
-        if self.code_modified() or not self.handler.file_exists():
+        if True:
+        # if self.code_modified() or not self.handler.file_exists():
             print("Running analysis")
             result = self.run_analysis()
             print("RESULT", result)
@@ -113,7 +114,6 @@ class AssumptionController(Controller):
             super().__init__(**args)
             assert self.script_path.endswith('.py'), "{} is not a python file!".format(self.script_path)
 
-
         def run_analysis(self) -> 'Lattice':
             result = self.runner().main(self.script_path)
             result = result.get_node_result(Basic(1, None))[0].stack.stack[0]
@@ -133,23 +133,31 @@ class AssumptionController(Controller):
 
 
 if __name__ == '__main__':
-    name = os.getcwd() + '/examples/tests/octagons/**.py'
+    # name = os.getcwd() + '/examples/tests/octagons/**.py'
+    # print(name)
+    # for path in glob.iglob(name):
+    #     if os.path.basename(path) != "__init__.py":
+    #         AssumptionController(path).main()
+    # name = os.getcwd() + '/examples/tests/type/**.py'
+    # print(name)
+    # for path in glob.iglob(name):
+    #     if os.path.basename(path) != "__init__.py":
+    #         AssumptionController(path).main()
+    #
+    # name = os.getcwd() + '/examples/tests/type+alphabet/**.py'
+    # print(name)
+    # for path in glob.iglob(name):
+    #     if os.path.basename(path) != "__init__.py":
+    #         AssumptionController(path).main()
+
+    # name = os.getcwd() + '/examples/tests/type+octagon+alphabet/**.py'
+    # print(name)
+    # for path in glob.iglob(name):
+    #     if os.path.basename(path) != "__init__.py":
+    #         AssumptionController(path).main()
+
+    name = os.getcwd() + '/examples/tests/type+range/**.py'
     print(name)
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             AssumptionController(path).main()
-
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/cars.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/convert.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/dna.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/dna-l.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/filter.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/grades.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/lost.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/madelin1.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/mix.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/str_func.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/noinfo.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/triangle_area.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/unification.py').main()
-    # AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/tests/type+octagon+alphabet/type_merge.py').main()

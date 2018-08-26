@@ -1,4 +1,4 @@
-
+# ASSUMPTIONS: 3:(String, ⊤, ⊤, (∅, {'a', 'b', 'c', 'd'})), 5:(String, ⊤, ⊤, (∅, {'a', 'b', 'c', 'd'}))
 # INITIAL: 3:(String, (∅, {'a', 'b', 'c', 'd'})), 5:(String, (∅, {'a', 'b', 'c', 'd'}))
 b: str = input()
 # STATE: 5:(String, (∅, {'a', 'b', 'c', 'd'}))

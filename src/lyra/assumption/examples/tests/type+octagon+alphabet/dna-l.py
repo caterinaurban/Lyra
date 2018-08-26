@@ -1,6 +1,6 @@
 number_of_sequences: int = int(input())
 max_length: int = int(input())
-if number_of_sequences <= 0 :
+if number_of_sequences <= 0:
     raise ValueError("Expecting at least one DNA sequence")
 for s in range(number_of_sequences):
     sequence_length: int = int(input())
@@ -28,6 +28,4 @@ for s in range(number_of_sequences):
     else:
         raise ValueError
 
-# 1:(Integer, >0, OCT(1.1 - 1.0 >= 0), (∅, Σ)), 2:(Integer, ⊤, OCT(1.1 - 1.0 >= 0), (∅, Σ)),
-# 1.1 * [6:(Integer, ⊤, OCT(2.1 >= 6.1), (∅, Σ)), 6.1 * 14:(String, ⊤, T, (∅, {'A', 'C', 'G',
-# 'T'})), 25:(String, ⊤, T, (∅, {'#', '.'}))]
+# 1:(Integer, >0, OCT(1.1 - 1.0 >= 0), (∅, Σ)), 2:(Integer, ⊤, OCT(1.1 - 1.0 >= 0), (∅, Σ)), 1.1 * [6:(Integer, ⊤, OCT(2.1 >= 6.1), (∅, Σ)), 6.1 * 14:(String, ⊤, ⊤, (∅, {'A', 'C', 'G', 'T'})), 25:(String, ⊤, ⊤, (∅, {'#', '.'}))]

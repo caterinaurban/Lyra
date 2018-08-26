@@ -146,7 +146,7 @@ class CharacterLattice(BottomMixin, SequenceMixin):
     def negate(self):
         """The negation of an element ``(c, m)`` is ``(∅, _alphabet - m)`` """
         maybe = _alphabet.difference(self.maybe)
-        return self._replace(type(self)(maybe))
+        return self._replace(type(self)(maybe=maybe))
 
 
 class CharacterState(Basis):
@@ -195,6 +195,9 @@ class CharacterState(Basis):
                     right = UnaryBooleanOperation(right.typ, op, right)
                     typ = expression.typ
                     return self._assume(BinaryBooleanOperation(typ, left, operator, right))
+                elif isinstance(expression, AttributeReference):  # example: not x.isalpha()
+                    evaluation = self._evaluation.visit(expression, self, dict())
+                    self.store[expression.target].meet(evaluation[expression].negate())
         elif isinstance(condition, BinaryBooleanOperation):
             if condition.operator == BinaryBooleanOperation.Operator.And:
                 right = deepcopy(self)._assume(condition.right)
@@ -210,9 +213,6 @@ class CharacterState(Basis):
                 right_eval = self._evaluation.visit(condition.right, self, dict())
                 self._refinement.visit(left, left_eval, right_eval[right], self)
                 self._refinement.visit(right, right_eval, left_eval[left], self)
-        elif isinstance(condition, AttributeReference):  # example: not x.isalpha()
-            evaluation = self._evaluation.visit(condition, self, dict())
-            self.store[condition.target].meet(evaluation[condition].negate())
         return self
 
     # expression evaluation

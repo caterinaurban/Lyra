@@ -50,7 +50,6 @@ class AssumptionChecker(Checker):
 
     def check(self, assumption: 'AssumptionState.InputStack.InputLattice'):
         line_offset: Dict[int, Tuple[int, int]] = dict()
-
         def input_generator():
             with open(self.input_path, 'r') as file:
                 start_offset, end_offset, line_number = 0, 0, 1

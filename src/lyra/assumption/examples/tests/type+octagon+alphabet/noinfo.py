@@ -1,4 +1,4 @@
-
+# 3:(String, ⊤, ⊤, (∅, Σ))
 # INITIAL: 3:(String, [-inf, inf], (∅, Σ))
 a: str = input()
 if int(a[0]) != 3:

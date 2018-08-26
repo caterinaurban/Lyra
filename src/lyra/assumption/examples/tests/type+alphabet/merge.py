@@ -1,4 +1,4 @@
-
+# 3:(Integer, ⊤, ⊤, (∅, Σ)), 3.1 * [6:(Integer, ⊤, ⊤, (∅, Σ)), 8:(String, ⊤, ⊤, (∅, Σ))]
 # INITIAL: 3:(Integer, (∅, Σ)), 3.1 * [6:(Integer, (∅, Σ)), 8:(String, (∅, Σ))]
 T: int = int(input())
 # STATE: T * [6:(Integer, (∅, Σ)), 8:(String, (∅, Σ))]

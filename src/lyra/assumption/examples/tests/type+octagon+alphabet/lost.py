@@ -1,4 +1,4 @@
-
+# 3:(Integer, ⊤, ⊤, (∅, Σ)), 7:(Integer, ⊤, ⊤, (∅, Σ)), ★
 # INITIAL: 3:(Integer, [-inf, inf]), 7:(Integer, [-inf, inf]), ★
 x: str = input()
 y: float = int(x)

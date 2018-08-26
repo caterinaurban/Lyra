@@ -26,7 +26,8 @@ from lyra.assumption.error import CheckerError, RelationalError, DependencyError
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
     UnaryArithmeticOperation, UnaryBooleanOperation, BinaryBooleanOperation, \
     BinaryComparisonOperation, \
-    BinaryArithmeticOperation, NegationFreeNormalExpression, LengthIdentifier, Identifier
+    BinaryArithmeticOperation, NegationFreeNormalExpression, LengthIdentifier, Identifier, \
+    BinarySequenceOperation
 from lyra.core.types import IntegerLyraType, FloatLyraType, BooleanLyraType, StringLyraType
 from lyra.core.utils import copy_docstring
 
@@ -78,7 +79,7 @@ class OctagonLattice(Lattice):
 
     def __repr__(self):
         if self.is_top():
-            return "T"
+            return "⊤"
         if self.is_bottom():
             return "⊥"
         linear_constraints = self.elina_linear_constraints
@@ -352,12 +353,12 @@ class OctagonLattice(Lattice):
             raise ValueError
 
     def unify(self, other: 'OctagonLattice'):
-        def cmp(varname1:str, varname2:str):
+        def cmp(varname1: str, varname2: str):
             v1 = varname1.replace('.', '')
             v2 = varname2.replace('.', '')
             # if varname1 and varname2 are castable to float
             if v1.isdecimal() and v2.isdecimal():
-                return float(varname1) < int(varname2)
+                return float(varname1) < float(varname2)
             return varname1 < varname2
 
         if self.variables != other.variables:
@@ -390,10 +391,10 @@ class ConditionEvaluator(ExpressionVisitor):
         return [], [], None
 
     def visit_Input(self, expr: 'Input', state=None):
-        if expr.typ == IntegerLyraType() or expr.typ == FloatLyraType() or expr.typ == BooleanLyraType():
-            state.record(deepcopy(state))
-        else:
-            state.record(deepcopy(state).top())
+        # if expr.typ == IntegerLyraType() or expr.typ == FloatLyraType() or expr.typ == BooleanLyraType():
+        state.record(deepcopy(state))
+        # else:
+        #     state.record(deepcopy(state).top())
         return [], [], None
 
     def visit_VariableIdentifier(self, expr: 'VariableIdentifier', state=None):
@@ -434,19 +435,30 @@ class ConditionEvaluator(ExpressionVisitor):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
     def visit_BinarySequenceOperation(self, expr, state=None):
-        raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
+        variables1, coefficients1, constant1 = self.visit(expr.left, state)
+        if constant1 is None:
+            return [], [], None
+        variables2, coefficients2, constant2 = self.visit(expr.right, state)
+        if constant2 is None:
+            return [], [], None
+        if expr.operator in [BinaryArithmeticOperation.Operator.Add,
+                             BinaryArithmeticOperation.Operator.Sub]:
+            variables = variables1 + variables2
+            coefficients = coefficients1 + coefficients2
+            constant = constant1 + constant2
+            return variables, coefficients, constant
 
-    def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', state=None):
+    def visit_UnaryArithmeticOperation(self, expr, state=None):
         coeff = 1 if expr.operator == UnaryArithmeticOperation.Operator.Add else -1
         expr = expr.expression
         variables, coefficients, constant = self.visit(expr, state)
         return variables, list(map(lambda x: coeff * x), coefficients), coeff * constant
 
-    def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', lattice_element=None,
+    def visit_UnaryBooleanOperation(self, expr, lattice_element=None,
                                     state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', state=None):
+    def visit_BinaryArithmeticOperation(self, expr, state=None):
         coeff = None
         variables1, coefficients1, constant1 = self.visit(expr.left, state)
         if constant1 is None:
@@ -484,7 +496,7 @@ class ConditionEvaluator(ExpressionVisitor):
                 else:
                     raise ZeroDivisionError
             elif len(variables1) > 0 and len(variables2) == 0:
-            # variables divided by constant, e.g. (x + y + 5)/2 = x * 0.5 + y * 0.5 + 2.5
+                # variables divided by constant, e.g. (x + y + 5)/2 = x * 0.5 + y * 0.5 + 2.5
                 if constant2 != 0:
                     l = list(map(lambda x: x / constant2, coefficients1))
                     return variables1, l, constant1 / constant2
@@ -492,13 +504,10 @@ class ConditionEvaluator(ExpressionVisitor):
                     raise ZeroDivisionError
         return [], [], None
 
-
-    def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation',
-                                        lattice_element=None, state=None):
+    def visit_BinaryComparisonOperation(self, expr, state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation', lattice_element=None,
-                                     state=None):
+    def visit_BinaryBooleanOperation(self, expr, state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
 
@@ -627,7 +636,7 @@ class OctagonState(InputMixin, JSONMixin):
     def _substitute(self, left: Expression, right: Expression) -> 'OctagonState':
         if isinstance(left, VariableIdentifier):
             variables, coefficients, constant = _evaluator.visit(right, self)
-            if constant is not None: # non-input expression
+            if constant is not None:  # non-input expression
                 self.lattice_element.substitution(left.name, variables, coefficients, constant)
             else:
                 self.lattice_element.project(left)

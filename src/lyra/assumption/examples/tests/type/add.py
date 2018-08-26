@@ -1,4 +1,4 @@
-
+# 2:(Integer, ⊤, ⊤, (∅, Σ)), 3:(Integer, ⊤, ⊤, (∅, Σ))
 x1: str = input()
 x2: str = input()
 # STATE: len(x) -> Integer, len(x1) -> Integer, len(x2) -> Integer, x -> String, x1 -> Integer, x2 -> Integer, y -> Float

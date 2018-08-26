@@ -1,4 +1,4 @@
-
+# 3:(Integer, ⊤, ⊤, (∅, Σ)), 3.1 * 9:(Integer, >0, OCT(9.1 - 1.0 >= 0,3.0 >= 9.1), (∅, Σ))
 # INITIAL:  3:(Integer, [-inf, inf]), 3.1 * 9:(Integer, [1, 3])
 N: int = int(input())
 one: int = 0

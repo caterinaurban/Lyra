@@ -1,4 +1,4 @@
-# 3:(Integer, T, (∅, Σ)), 3.1 * [5:(Float, OCT(5.1 >= 0), (∅, Σ)), 8:(Integer, T, (∅, Σ)), 8.1 * [11:(Integer, OCT(5.1 >= 11.1), (∅, Σ)), 14:(Float, OCT(14.1 >= 0), (∅, Σ))]]
+# 3:(Integer, ⊤, ⊤, (∅, Σ)), 3.1 * [5:(Float, ≥0, OCT(5.1 >= 0), (∅, Σ)), 8:(Integer, ⊤, ⊤, (∅, Σ)), 8.1 * [11:(Integer, ⊤, OCT(5.1 >= 11.1), (∅, Σ)), 14:(Float, >0, OCT(14.1 >= 0), (∅, Σ))]]
 
 cases: int = int(input())
 for case in range(cases):

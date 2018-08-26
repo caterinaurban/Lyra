@@ -1,0 +1,481 @@
+{
+    "multiplier": {
+        "type": [
+            "literal",
+            "int"
+        ],
+        "value": "1"
+    },
+    "constraints": [
+        {
+            "pp": [
+                3,
+                0
+            ],
+            "lattice_elements": [
+                {
+                    "domain": "TypeLattice",
+                    "module": "lyra.abstract_domains.assumption.type_domain",
+                    "element": "String"
+                },
+                {
+                    "domain": "QuantityLattice",
+                    "module": "lyra.abstract_domains.assumption.quantity_domain",
+                    "element": "\u22a4"
+                },
+                {
+                    "domain": "OctagonState",
+                    "module": "lyra.abstract_domains.assumption.octagons_domain",
+                    "element": {
+                        "dimensions": 8,
+                        "variables": [
+                            [
+                                "i",
+                                "int"
+                            ],
+                            [
+                                "len(x)",
+                                "int"
+                            ],
+                            [
+                                "len(y)",
+                                "int"
+                            ],
+                            [
+                                "len(z)",
+                                "int"
+                            ],
+                            [
+                                "x",
+                                "string"
+                            ],
+                            [
+                                "y",
+                                "string"
+                            ],
+                            [
+                                "z",
+                                "string"
+                            ],
+                            [
+                                "3.1",
+                                "string"
+                            ]
+                        ],
+                        "indexes": {
+                            "i": 0,
+                            "len(x)": 1,
+                            "len(y)": 2,
+                            "len(z)": 3,
+                            "x": 4,
+                            "y": 5,
+                            "z": 6,
+                            "3.1": 7
+                        },
+                        "lincons_array": []
+                    }
+                },
+                {
+                    "domain": "AlphabetLattice",
+                    "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                    "element": {
+                        "certainly": [],
+                        "maybe": [
+                            "'",
+                            "r",
+                            "T",
+                            "\u000b",
+                            "n",
+                            ",",
+                            "h",
+                            "2",
+                            ":",
+                            "M",
+                            "R",
+                            "5",
+                            "-",
+                            "f",
+                            "Y",
+                            "C",
+                            "\f",
+                            "g",
+                            "=",
+                            "(",
+                            "q",
+                            "6",
+                            "d",
+                            "p",
+                            "N",
+                            "}",
+                            ".",
+                            "u",
+                            "J",
+                            "E",
+                            "j",
+                            "!",
+                            "z",
+                            "1",
+                            ">",
+                            "#",
+                            "$",
+                            "&",
+                            ";",
+                            "V",
+                            "+",
+                            "\"",
+                            "D",
+                            "Z",
+                            "0",
+                            "I",
+                            "7",
+                            "%",
+                            "*",
+                            "A",
+                            "\n",
+                            "s",
+                            "3",
+                            "W",
+                            "4",
+                            "_",
+                            "e",
+                            "^",
+                            "i",
+                            ")",
+                            "y",
+                            "a",
+                            "x",
+                            "8",
+                            "\\",
+                            "L",
+                            "B",
+                            "|",
+                            "G",
+                            "\r",
+                            "H",
+                            "O",
+                            "K",
+                            "o",
+                            "w",
+                            "9",
+                            "P",
+                            "@",
+                            "c",
+                            "m",
+                            "~",
+                            " ",
+                            "t",
+                            "b",
+                            "]",
+                            "Q",
+                            "[",
+                            "<",
+                            "S",
+                            "k",
+                            "v",
+                            "`",
+                            "?",
+                            "/",
+                            "X",
+                            "l",
+                            "\t",
+                            "F",
+                            "{",
+                            "U"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "multiplier": {
+                "type": [
+                    "literal",
+                    "int"
+                ],
+                "value": "5"
+            },
+            "constraints": [
+                {
+                    "pp": [
+                        5,
+                        4
+                    ],
+                    "lattice_elements": [
+                        {
+                            "domain": "TypeLattice",
+                            "module": "lyra.abstract_domains.assumption.type_domain",
+                            "element": "String"
+                        },
+                        {
+                            "domain": "QuantityLattice",
+                            "module": "lyra.abstract_domains.assumption.quantity_domain",
+                            "element": "\u22a4"
+                        },
+                        {
+                            "domain": "OctagonState",
+                            "module": "lyra.abstract_domains.assumption.octagons_domain",
+                            "element": {
+                                "dimensions": 9,
+                                "variables": [
+                                    [
+                                        "i",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(x)",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(y)",
+                                        "int"
+                                    ],
+                                    [
+                                        "len(z)",
+                                        "int"
+                                    ],
+                                    [
+                                        "x",
+                                        "string"
+                                    ],
+                                    [
+                                        "y",
+                                        "string"
+                                    ],
+                                    [
+                                        "z",
+                                        "string"
+                                    ],
+                                    [
+                                        "5.1",
+                                        "string"
+                                    ],
+                                    [
+                                        "3.1",
+                                        "string"
+                                    ]
+                                ],
+                                "indexes": {
+                                    "i": 0,
+                                    "len(x)": 1,
+                                    "len(y)": 2,
+                                    "len(z)": 3,
+                                    "x": 4,
+                                    "y": 5,
+                                    "z": 6,
+                                    "5.1": 7,
+                                    "3.1": 8
+                                },
+                                "lincons_array": []
+                            }
+                        },
+                        {
+                            "domain": "AlphabetLattice",
+                            "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                            "element": {
+                                "certainly": [
+                                    "a",
+                                    "b",
+                                    "c"
+                                ],
+                                "maybe": [
+                                    "a",
+                                    "b",
+                                    "c"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "pp": [
+                10,
+                0
+            ],
+            "lattice_elements": [
+                {
+                    "domain": "TypeLattice",
+                    "module": "lyra.abstract_domains.assumption.type_domain",
+                    "element": "String"
+                },
+                {
+                    "domain": "QuantityLattice",
+                    "module": "lyra.abstract_domains.assumption.quantity_domain",
+                    "element": "\u22a4"
+                },
+                {
+                    "domain": "OctagonState",
+                    "module": "lyra.abstract_domains.assumption.octagons_domain",
+                    "element": {
+                        "dimensions": 10,
+                        "variables": [
+                            [
+                                "i",
+                                "int"
+                            ],
+                            [
+                                "len(x)",
+                                "int"
+                            ],
+                            [
+                                "len(y)",
+                                "int"
+                            ],
+                            [
+                                "len(z)",
+                                "int"
+                            ],
+                            [
+                                "x",
+                                "string"
+                            ],
+                            [
+                                "y",
+                                "string"
+                            ],
+                            [
+                                "z",
+                                "string"
+                            ],
+                            [
+                                "10.1",
+                                "string"
+                            ],
+                            [
+                                "5.1",
+                                "string"
+                            ],
+                            [
+                                "3.1",
+                                "string"
+                            ]
+                        ],
+                        "indexes": {
+                            "i": 0,
+                            "len(x)": 1,
+                            "len(y)": 2,
+                            "len(z)": 3,
+                            "x": 4,
+                            "y": 5,
+                            "z": 6,
+                            "10.1": 7,
+                            "5.1": 8,
+                            "3.1": 9
+                        },
+                        "lincons_array": []
+                    }
+                },
+                {
+                    "domain": "AlphabetLattice",
+                    "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                    "element": {
+                        "certainly": [],
+                        "maybe": [
+                            "'",
+                            "r",
+                            "T",
+                            "\u000b",
+                            "n",
+                            ",",
+                            "h",
+                            "2",
+                            ":",
+                            "M",
+                            "R",
+                            "5",
+                            "-",
+                            "f",
+                            "Y",
+                            "C",
+                            "\f",
+                            "g",
+                            "=",
+                            "(",
+                            "q",
+                            "6",
+                            "d",
+                            "p",
+                            "N",
+                            "}",
+                            ".",
+                            "u",
+                            "J",
+                            "E",
+                            "j",
+                            "!",
+                            "z",
+                            "1",
+                            ">",
+                            "#",
+                            "$",
+                            "&",
+                            ";",
+                            "V",
+                            "+",
+                            "\"",
+                            "D",
+                            "Z",
+                            "0",
+                            "I",
+                            "7",
+                            "%",
+                            "*",
+                            "A",
+                            "\n",
+                            "s",
+                            "3",
+                            "W",
+                            "4",
+                            "_",
+                            "e",
+                            "^",
+                            "i",
+                            ")",
+                            "y",
+                            "a",
+                            "x",
+                            "8",
+                            "\\",
+                            "L",
+                            "B",
+                            "|",
+                            "G",
+                            "\r",
+                            "H",
+                            "O",
+                            "K",
+                            "o",
+                            "w",
+                            "9",
+                            "P",
+                            "@",
+                            "c",
+                            "m",
+                            "~",
+                            " ",
+                            "t",
+                            "b",
+                            "]",
+                            "Q",
+                            "[",
+                            "<",
+                            "S",
+                            "k",
+                            "v",
+                            "`",
+                            "?",
+                            "/",
+                            "X",
+                            "l",
+                            "\t",
+                            "F",
+                            "{",
+                            "U"
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
