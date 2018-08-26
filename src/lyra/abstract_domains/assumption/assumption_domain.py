@@ -168,6 +168,18 @@ class MultiplierEvaluator(ExpressionVisitor):
     def visit_Slicing(self, expr: 'Slicing', pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
+    def visit_BinarySequenceOperation(self, expr, pp_value=None, lines_involved=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
+    def visit_DictDisplay(self, expr, pp_value=None, lines_involved=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
+    def visit_SetDisplay(self, expr, pp_value=None, lines_involved=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
+    def visit_TupleDisplay(self, expr, pp_value=None, lines_involved=None):
+        raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
+
     def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', pp_value=None, lines_involved=None):
         eval = self.visit(expr.expression, pp_value)
         if eval is None or expr.operator == UnaryArithmeticOperation.Operator.Add:

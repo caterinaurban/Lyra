@@ -99,7 +99,7 @@ class Controller (metaclass= ABCMeta):
             self.write_result(result)
         parsed_result = self.read_result()
         print("PARSED RESULT", parsed_result)
-        # self.run_checker(parsed_result)
+        self.run_checker(parsed_result)
 
 
 class AssumptionController(Controller):
@@ -156,8 +156,10 @@ if __name__ == '__main__':
     #     if os.path.basename(path) != "__init__.py":
     #         AssumptionController(path).main()
 
-    name = os.getcwd() + '/examples/tests/type+range/**.py'
-    print(name)
-    for path in glob.iglob(name):
-        if os.path.basename(path) != "__init__.py":
-            AssumptionController(path).main()
+    # name = os.getcwd() + '/examples/tests/type+range/**.py'
+    # print(name)
+    # for path in glob.iglob(name):
+    #     if os.path.basename(path) != "__init__.py":
+    #         AssumptionController(path).main()
+
+    AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/store_test.py').main()

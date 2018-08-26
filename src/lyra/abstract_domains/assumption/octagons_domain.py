@@ -317,6 +317,11 @@ class OctagonLattice(Lattice):
             value = 0
             ignore_constraint = False
             lines_involved = []
+            # is this constraint being checked for the correct program point
+            # for cases when the same octagons is stored multiple times due to
+            # multiple variables which are not involved in its constraints being read
+            # before the variables in the constraint are read
+            corresponding_line = False
             for j in range(lincons.linexpr0.contents.size):
                 linterm = lincons.linexpr0.contents.p.linterm[j]
                 coeff = linterm.coeff
@@ -326,6 +331,9 @@ class OctagonLattice(Lattice):
                 if variable not in pp_value:
                     ignore_constraint = True
                     break
+                # at least one of the variables of this constraint is the current program point
+                if variable == pp:
+                    corresponding_line = True
                 input_line = pp_value[variable][0]
                 input_value = pp_value[variable][1]
                 if input_value is not None:
@@ -337,7 +345,8 @@ class OctagonLattice(Lattice):
                     for line in lines_involved:
                         line_errors[line].append(dependency_error)
             # contains non-input variable or depends on wrong value
-            if ignore_constraint:
+            # or none of the variables is the current program point being checked
+            if ignore_constraint or not corresponding_line:
                 continue
             const_dbl = lincons.linexpr0.contents.cst.val.scalar.contents.val.dbl
             value += const_dbl

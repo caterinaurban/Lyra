@@ -41,7 +41,6 @@ class AssumptionChecker(Checker):
     def __init__(self, script_path: str, input_path: str):
         folder, name = os.path.split(script_path)
         name = name.split('.')[0]
-        # os.makedirs("{}/errors".format(folder), exist_ok=True)
         input_path = "{}/{}.in".format(folder, name) if input_path is None else input_path
         error_path = "{}.err".format(input_path)
         self.line_offset = None
@@ -80,8 +79,10 @@ class AssumptionChecker(Checker):
 
             source_lines = set([str(err.source_line) for err in set(errors) if isinstance(err, DependencyError) and err.source_line != line_number])
             message = ', '.join(source_lines)
+
             if len(message) > 0:
-                message = "This line depends on previous error value on line(s): {}".format(message)
+                # added * to mark this as warning not error
+                message = "*This line is linked to previous error on line(s): {}".format(message)
                 messages.append(message)
 
             message = '. '.join([err.message for err in errors if not (isinstance(err, RelationalError) or isinstance(err, DependencyError))])
