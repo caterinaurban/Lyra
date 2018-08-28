@@ -39,7 +39,7 @@ class JSONMixin(Lattice, metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def from_json(json: Union[str, dict]) -> 'JSONMixin':
+    def from_json(json) -> 'JSONMixin':
         """Reconstruct a lattice element from its JSON format.
 
         :param json: JSON format of a lattice element

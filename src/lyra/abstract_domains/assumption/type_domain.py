@@ -10,7 +10,7 @@ The set of possible values of a program variable in a state is represented as a 
 from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum
-from typing import Set, Tuple, Dict, List, Any
+from typing import Set
 
 from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONMixin
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin, SequenceMixin

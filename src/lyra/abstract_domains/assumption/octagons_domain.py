@@ -49,7 +49,7 @@ class OctagonLattice(Lattice):
         self._indexes = {var.name: i for i, var in enumerate(self.variables)}
         self._elina_abstract = None
         self._elina_linear_constraints = None
-        top = elina_abstract0_top(_elina_manager, 0, self.dimensions)
+        top = elina_abstract0_top(_elina_manager, c_ulong(0), c_ulong(self.dimensions))
         # setting property sets both the elina abstract element and elina lincons array
         self.elina_abstract = top if elina_abstract is None else elina_abstract
 
@@ -97,12 +97,12 @@ class OctagonLattice(Lattice):
 
     @copy_docstring(Lattice.bottom)
     def bottom(self):
-        bottom = elina_abstract0_bottom(_elina_manager, 0, self.dimensions)
+        bottom = elina_abstract0_bottom(_elina_manager, c_ulong(0), c_ulong(self.dimensions))
         return self._replace(OctagonLattice(self.variables, bottom))
 
     @copy_docstring(Lattice.top)
     def top(self):
-        top = elina_abstract0_top(_elina_manager, 0, self.dimensions)
+        top = elina_abstract0_top(_elina_manager, c_ulong(0), c_ulong(self.dimensions))
         return self._replace(OctagonLattice(self.variables, top))
 
     @copy_docstring(Lattice.is_bottom)
@@ -121,14 +121,14 @@ class OctagonLattice(Lattice):
     @copy_docstring(Lattice._join)
     def _join(self, other: 'OctagonLattice') -> 'OctagonLattice':
         self.size_equality(other)
-        elina_abstract = elina_abstract0_join(_elina_manager, False, self.elina_abstract,
+        elina_abstract = elina_abstract0_join(_elina_manager, c_bool(False), self.elina_abstract,
                                               other.elina_abstract)
         return self._replace(OctagonLattice(self.variables, elina_abstract))
 
     @copy_docstring(Lattice._meet)
     def _meet(self, other: 'OctagonLattice'):
         self.size_equality(other)
-        elina_abstract = elina_abstract0_meet(_elina_manager, False, self.elina_abstract,
+        elina_abstract = elina_abstract0_meet(_elina_manager, c_bool(False), self.elina_abstract,
                                               other.elina_abstract)
         return self._replace(OctagonLattice(self.variables, elina_abstract))
 
@@ -184,8 +184,8 @@ class OctagonLattice(Lattice):
         :param
         """
         dim = self.indexes[variable.name]
-        abstract = elina_abstract0_forget_array(_elina_manager, False, self.elina_abstract,
-                                                ElinaDim(dim), 1, False)
+        abstract = elina_abstract0_forget_array(_elina_manager, c_bool(False), self.elina_abstract,
+                                                ElinaDim(dim), 1, c_bool(False))
         # print("AFTER PROJECTION")
         # elina_abstract0_fprint(cstdout, _elina_manager, abstract, None)
         return self._replace(OctagonLattice(self.variables, abstract))
@@ -193,11 +193,11 @@ class OctagonLattice(Lattice):
     def add_dimension(self, variable: VariableIdentifier):
         if variable in self.variables:
             return self
-        dimchange = elina_dimchange_alloc(0, 1)
+        dimchange = elina_dimchange_alloc(c_ulong(0), c_ulong(1))
         dimchange.contents.dim[0] = self.dimensions
         # add the new dimension to Elina
-        abstract = elina_abstract0_add_dimensions(_elina_manager, False, self.elina_abstract,
-                                                  dimchange, False)
+        abstract = elina_abstract0_add_dimensions(_elina_manager, c_bool(False),
+                                                  self.elina_abstract, dimchange, c_bool(False))
         # update dictionary of Elina with the new variable
         self.variables.append(variable)
         return self._replace(OctagonLattice(self.variables, abstract))
@@ -258,22 +258,22 @@ class OctagonLattice(Lattice):
         return string
 
     @staticmethod
-    def create_linear_expression(indexes: List[int], coefficients: List[int], constant: int):
+    def create_linear_expression(indexes: List[int], coefficients: List[int], constant):
         if len(indexes) != len(coefficients):
             raise ValueError("var and sign should have the same length")
         size = len(indexes)
-        linexpr = elina_linexpr0_alloc(ElinaLinexprDiscr.ELINA_LINEXPR_SPARSE, size)
+        linexpr = elina_linexpr0_alloc(ElinaLinexprDiscr.ELINA_LINEXPR_SPARSE, c_ulong(size))
         # print(f"LINEXP{indexes}, {coefficients}, {constant}")
         if constant is not None:
             cst = pointer(linexpr.contents.cst)
             # set the constant of the expression to c
-            elina_scalar_set_double(cst.contents.val.scalar, float(constant))
+            elina_scalar_set_double(cst.contents.val.scalar, c_double(float(constant)))
         # set the variables and coefficients (signs) of the linear expression
         for i in range(size):
             linterm = pointer(linexpr.contents.p.linterm[i])
             linterm.contents.dim = ElinaDim(indexes[i])
             coeff = pointer(linterm.contents.coeff)
-            elina_scalar_set_double(coeff.contents.val.scalar, float(coefficients[i]))
+            elina_scalar_set_double(coeff.contents.val.scalar, c_double(float(coefficients[i])))
         # elina_linexpr0_print(linexpr, None)
         # print()
         return linexpr
@@ -289,12 +289,13 @@ class OctagonLattice(Lattice):
         # create elina linear expression
         linexpr = OctagonLattice.create_linear_expression(indexes, coefficients, constant)
         # create elina linear constraint array of size
-        lincons_array = elina_lincons0_array_make(1)
+        lincons_array = elina_lincons0_array_make(c_ulong(1))
         # the constraint uses the linear expression with constraint type of '>=' always
         lincons_array.p[0].constyp = ElinaConstyp.ELINA_CONS_SUPEQ
         lincons_array.p[0].linexpr0 = linexpr
-        top = elina_abstract0_top(_elina_manager, 0, self.dimensions)
-        abstract = elina_abstract0_meet_lincons_array(_elina_manager, False, top, lincons_array)
+        top = elina_abstract0_top(_elina_manager, c_ulong(0), c_ulong(self.dimensions))
+        abstract = elina_abstract0_meet_lincons_array(_elina_manager,
+                                                      c_bool(False), top, lincons_array)
         linear_constraint_element = OctagonLattice(self.variables, abstract)
         # perform meet between the linear constraint and the already existing constraints
         return self.meet(linear_constraint_element)
@@ -304,8 +305,9 @@ class OctagonLattice(Lattice):
         subs_index = self.indexes[subs_variable]
         indexes = [self.indexes[var] for var in variables]
         linexpr = OctagonLattice.create_linear_expression(indexes, coefficients, constant)
-        abstract = elina_abstract0_substitute_linexpr(_elina_manager, False, self.elina_abstract,
-                                                      ElinaDim(subs_index), linexpr, None)
+        abstract = elina_abstract0_substitute_linexpr(_elina_manager, c_bool(False),
+                                                      self.elina_abstract, ElinaDim(subs_index),
+                                                      linexpr, None)
         return self._replace(OctagonLattice(self.variables, abstract))
 
     def check_input(self, pp: VariableIdentifier, pp_value: Dict, line_errors: Dict):
