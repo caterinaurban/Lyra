@@ -23,7 +23,7 @@ from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, C
     TupleDisplayAccess, ListDisplayAccess, SetDisplayAccess, DictDisplayAccess, \
     SubscriptionAccess, SlicingAccess
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
-    StringLyraType, TupleLyraType, ListLyraType
+    StringLyraType, TupleLyraType, ListLyraType, SetLyraType, DictLyraType
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -160,8 +160,18 @@ class ExpressionSemantics(Semantics):
         key = self.semantics(stmt.key, state).result
         result = set()
         for primary, index in itertools.product(target, key):
-            subscription = Subscription(primary.typ, primary, index)
-            result.add(subscription)
+            if isinstance(primary.typ, StringLyraType):
+                subscription = Subscription(primary.typ, primary, index)
+                result.add(subscription)
+            elif isinstance(primary.typ, (ListLyraType, SetLyraType)):
+                subscription = Subscription(primary.typ.typ, primary, index)
+                result.add(subscription)
+            elif isinstance(primary.typ, DictLyraType):
+                subscription = Subscription(primary.typ.key_typ, primary, index)
+                result.add(subscription)
+            else:
+                error = f"Semantics for subscription of {primary} is not yet implemented!"
+                raise NotImplementedError(error)
         state.result = result
         return state
 
@@ -267,6 +277,44 @@ class BuiltInCallSemantics(CallSemantics):
         if not stmt.arguments:
             state.result = {ListDisplay(stmt.typ, list())}
             return state
+        assert len(stmt.arguments) == 1  # exactly one argument is expected
+        argument = stmt.arguments[0]
+        if isinstance(argument, VariableAccess):
+            variable = argument.variable
+            if isinstance(variable.typ, StringLyraType):
+                typ = ListLyraType(variable.typ)
+                state.result = {VariableIdentifier(typ, variable.name)}
+                return state
+            elif isinstance(variable.typ, ListLyraType):
+                state.result = {variable}
+                return state
+            elif isinstance(variable.typ, SetLyraType):
+                typ = ListLyraType(variable.typ.typ)
+                state.result = {VariableIdentifier(typ, variable.name)}
+                return state
+            elif isinstance(variable.typ, DictLyraType):
+                typ = ListLyraType(variable.typ.key_typ)
+                state.result = {VariableIdentifier(typ, variable.name)}
+                return state
+        elif isinstance(argument, Call):
+            if isinstance(argument.typ, StringLyraType):
+                typ = ListLyraType(argument.typ)
+                call = Call(argument.pp, argument.name, argument.arguments, typ)
+                state.result = self.semantics(call, state).result
+                return state
+            elif isinstance(argument.typ, ListLyraType):
+                state.result = self.semantics(argument, state).result
+                return state
+            elif isinstance(argument.typ, SetLyraType):
+                typ = ListLyraType(argument.typ.typ)
+                call = Call(argument.pp, argument.name, argument.arguments, typ)
+                state.result = self.semantics(call, state).result
+                return state
+            elif isinstance(argument.typ, DictLyraType):
+                typ = ListLyraType(argument.typ.key_typ)
+                call = Call(argument.pp, argument.name, argument.arguments, typ)
+                state.result = self.semantics(call, state).result
+                return state
         raise NotImplementedError(f"Semantics for {stmt} is not yet implemented!")
 
     def set_call_semantics(self, stmt: Call, state: State) -> State:

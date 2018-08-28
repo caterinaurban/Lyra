@@ -107,10 +107,8 @@ class Basis(Store, State, metaclass=ABCMeta):
             self.store[left].top()
             # evaluate the right-hand side proceeding bottom-up using the updated store
             evaluation = self._evaluation.visit(right, self, dict())
-            # restrict the value of the right-hand side using that of the substituted variable
-            refinement = evaluation[right].meet(value)
             # refine the updated store proceeding top-down on the right-hand side
-            self._refinement.visit(right, evaluation, refinement, self)
+            self._refinement.visit(right, evaluation, value, self)
             return self
         elif isinstance(left, Subscription) or isinstance(left, Slicing):
             # copy the current state
@@ -120,8 +118,7 @@ class Basis(Store, State, metaclass=ABCMeta):
             value: Basis = deepcopy(current.store[target])
             current.store[target].top()
             evaluation = current._evaluation.visit(right, current, dict())
-            refinement = evaluation[right].meet(value)
-            current._refinement.visit(right, evaluation, refinement, current)
+            current._refinement.visit(right, evaluation, value, current)
             # perform a weak update on the current state
             return self.join(current)
         raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
