@@ -317,14 +317,14 @@ class FularaUsageState(Stack, State):
                 e = todo.popleft()
                 if isinstance(e, Subscription):  # don't look at dictionary var
                     # still look at vars in subscript -> make them used
-                    todo.extend(_iter_child_exprs(e.key))
+                    todo.extend(own_walk(e.key))
                 elif isinstance(e, Keys):
-                    pass       # don't look at subexpressions
+                    pass       # don't look at dictionary (no value usage)
                     # TODO: length usage
                 elif isinstance(e, (Values, Items)):
                     # make the whole dictionary used, since there is always a corresponding
                     # 'NotIn'-condition which uses all values (TODO: only use initialized values?)
-                    todo.extend(_iter_child_exprs(e.target_dict))
+                    todo.extend(own_walk(e.target_dict))
                     # TODO: length usage
                 else:
                     todo.extend(_iter_child_exprs(e))
@@ -350,7 +350,8 @@ class FularaUsageState(Stack, State):
                                     # value may be in this segment
                                     # mark segment as used
                                     # weak update = strong update (since setting to top)
-                                    use_lattice.partition_add(k, UsageLattice(Status.U))
+                                    k_abs = self.k_pre_k_conv(k)
+                                    use_lattice.partition_add(k_abs, UsageLattice(Status.U))
                         else:      # Items condition
                             k_pre = self.precursory.eval_key(k_var)     # may be refined
                             k_abs = self.k_pre_k_conv(k_pre)
@@ -377,7 +378,22 @@ class FularaUsageState(Stack, State):
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'FularaUsageState':
         condition = NegationFreeNormalExpression().visit(condition)     # eliminate negations
-        if self.lattice.loop_flag:     # not necessarily true for first iteration, but eventually
+
+        # update key relations (adapted from fulara_domain._assume:
+        all_ids = condition.ids()
+        if all(type(ident.typ) in scalar_types for ident in all_ids):
+            # update relations with scalar variables in dict stores
+            for d_lattice in self.lattice.dict_usage.store.values():
+                for (k, v) in d_lattice.segments:
+                    d_lattice.segments.remove((k, v))  # needed, because tuple is immutable?
+                    k.assume({condition})
+                    d_lattice.segments.add((k, v))
+                d_lattice.d_norm_own()
+        else:
+            self.precursory.update_dict_from_scalar(self.lattice.dict_usage, False)
+        # TODO: more precision
+
+        if self.lattice.loop_flag:     # not necessarily true for first iteration, but eventually?
             if isinstance(condition, BinaryComparisonOperation):
                 if condition.operator == BinaryComparisonOperation.Operator.In:
                     left = condition.left
@@ -430,20 +446,6 @@ class FularaUsageState(Stack, State):
         if effect:  # the current nesting level has an effect on the outcome of the program
             self.make_used(condition)
 
-        # update key relations (adapted from fulara_domain._assign):
-        all_ids = condition.ids()
-        if all(type(ident.typ) in scalar_types for ident in all_ids):
-            # update relations with scalar variables in dict stores
-            for d_lattice in self.lattice.dict_usage.store.values():
-                for (k, v) in d_lattice.segments:
-                    d_lattice.segments.remove((k, v))  # needed, because tuple is immutable?
-                    k.assume({condition})
-                    d_lattice.segments.add((k, v))
-                d_lattice.d_norm_own()
-        else:
-            self.precursory.update_dict_from_scalar(self.lattice.dict_usage, False)
-        # TODO: other cases
-
         return self
 
     @copy_docstring(State.enter_if)
@@ -473,6 +475,22 @@ class FularaUsageState(Stack, State):
 
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'FularaUsageState':
+        # update key relations (adapted from fulara_domain._assign):
+        all_ids = left.ids().union(right.ids())
+        if all(type(ident.typ) in scalar_types for ident in all_ids):
+            # update relations with scalar variables in dict stores
+            for d_lattice in self.lattice.dict_usage.store.values():
+                for (k, v) in d_lattice.segments:
+                    d_lattice.segments.remove((k, v))  # needed, because tuple is immutable?
+                    k.substitute({left}, {right})
+                    d_lattice.segments.add((k, v))
+                d_lattice.d_norm_own()
+        elif isinstance(left, VariableIdentifier):
+            if type(left.typ) in scalar_types:  # assignment to scalar variable
+                # TODO: temp cleanup
+                self.precursory.update_dict_from_scalar(self.lattice.dict_usage, False)
+        # TODO: other cases
+
         left_u_s = False    # flag for left expression is used or scoped
         if isinstance(left, VariableIdentifier):
             if type(left.typ) in scalar_types:
@@ -521,7 +539,7 @@ class FularaUsageState(Stack, State):
                             # no need to change usage (since weak update and W join U = U)
                         elif v.is_scoped():
                             left_u_s = True
-                            k_decomp = k.decomp(k_abs)
+                            k_decomp = k.decomp(key_meet_k)
                             if k_decomp is None:
                                 # partitioning not possible
                                 # => perform weak update without partitioning
@@ -546,22 +564,5 @@ class FularaUsageState(Stack, State):
 
         if left_u_s:        # left is used or scoped -> right is used
             self.make_used(right)
-
-        # update key relations (adapted from fulara_domain._assign):
-        all_ids = left.ids().union(right.ids())
-        if all(type(ident.typ) in scalar_types for ident in all_ids):
-            # update relations with scalar variables in dict stores
-            for d_lattice in self.lattice.dict_usage.store.values():
-                for (k, v) in d_lattice.segments:
-                    d_lattice.segments.remove((k, v))      # needed, because tuple is immutable?
-                    k.substitute({left}, {right})
-                    d_lattice.segments.add((k, v))
-                d_lattice.d_norm_own()
-
-        elif isinstance(left, VariableIdentifier):
-            if type(left.typ) in scalar_types:  # assignment to scalar variable
-                # TODO: temp cleanup
-                self.precursory.update_dict_from_scalar(self.lattice.dict_usage, False)
-        # TODO: other cases
 
         return self

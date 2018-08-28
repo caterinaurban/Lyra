@@ -207,13 +207,13 @@ class FularaLivenessState(State):
                 e = todo.popleft()
                 if isinstance(e, Subscription):  # don't look at dictionary var
                     # still look at vars in subscript -> make them used
-                    todo.extend(_iter_child_exprs(e.key))
+                    todo.extend(own_walk(e.key))
                 elif isinstance(e, Keys):
                     pass       # don't look at subexpressions
                 elif isinstance(e, (Values, Items)):
                     # make the whole dictionary live, since there is always a corresponding
                     # 'NotIn'-condition which uses all values (TODO: only use initialized values?)
-                    todo.extend(_iter_child_exprs(e.target_dict))
+                    todo.extend(own_walk(e.target_dict))
                 else:
                     todo.extend(_iter_child_exprs(e))
                 yield e
@@ -237,7 +237,8 @@ class FularaLivenessState(State):
                                     # value may be in this segment
                                     # mark segment as live
                                     # weak update = strong update (since setting to top)
-                                    live_lattice.partition_add(k, LivenessLattice(Status.Live))
+                                    k_abs = self.k_pre_k_conv(k)
+                                    live_lattice.partition_add(k_abs, LivenessLattice(Status.Live))
                         else:      # Items condition
                             k_pre = self.precursory.eval_key(k_var)  # may be refined by precursory
                             k_abs = self.k_pre_k_conv(k_pre)
@@ -263,9 +264,7 @@ class FularaLivenessState(State):
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression) -> 'FularaLivenessState':
-        self.make_live(condition)
-
-        # update key relations (adapted from fulara_domain._assign):
+        # update key relations (adapted from fulara_domain.assume):
         all_ids = condition.ids()
         if all(type(ident.typ) in scalar_types for ident in all_ids):
             # update relations with scalar variables in dict stores
@@ -277,7 +276,9 @@ class FularaLivenessState(State):
                 d_lattice.d_norm_own()
         else:
             self.precursory.update_dict_from_scalar(self.dict_liveness, False)
-        # TODO: other cases
+        # TODO: more precision
+
+        self.make_live(condition)       # TODO: not for loops?
         return self
 
     @copy_docstring(State.enter_if)
@@ -303,6 +304,22 @@ class FularaLivenessState(State):
 
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'FularaLivenessState':
+        # update key relations (adapted from fulara_domain._assign):
+        all_ids = left.ids().union(right.ids())
+        if all(type(ident.typ) in scalar_types for ident in all_ids):
+            # update relations with scalar variables in dict stores
+            for d_lattice in self.dict_liveness.store.values():
+                for (k, v) in d_lattice.segments:
+                    d_lattice.segments.remove((k, v))  # needed, because tuple is immutable?
+                    k.substitute({left}, {right})
+                    d_lattice.segments.add((k, v))
+                d_lattice.d_norm_own()
+
+        elif isinstance(left, VariableIdentifier):
+            if type(left.typ) in scalar_types:  # assignment to scalar variable
+                # TODO: temp cleanup
+                self.precursory.update_dict_from_scalar(self.dict_liveness, False)
+
         left_live = False    # flag for left expression is live
         if isinstance(left, VariableIdentifier):
             if type(left.typ) in scalar_types:
@@ -345,7 +362,7 @@ class FularaLivenessState(State):
                             left_live = True
                             # no need to change liveness
                             # (since weak update and dead join live = live)
-                            break   # nothing more to be done
+                            break   # nothing more to be done (weak update would not change state)
 
             if left_live:      # make subscript live
                 self.make_live(left.key)
@@ -355,21 +372,5 @@ class FularaLivenessState(State):
 
         if left_live:        # left is strongly live -> right is strongly live
             self.make_live(right)
-
-        # update key relations (adapted from fulara_domain._assign):
-        all_ids = left.ids().union(right.ids())
-        if all(type(ident.typ) in scalar_types for ident in all_ids):
-            # update relations with scalar variables in dict stores
-            for d_lattice in self.dict_liveness.store.values():
-                for (k, v) in d_lattice.segments:
-                    d_lattice.segments.remove((k, v))  # needed, because tuple is immutable?
-                    k.substitute({left}, {right})
-                    d_lattice.segments.add((k, v))
-                d_lattice.d_norm_own()
-
-        elif isinstance(left, VariableIdentifier):
-            if type(left.typ) in scalar_types:  # assignment to scalar variable
-                # TODO: temp cleanup
-                self.precursory.update_dict_from_scalar(self.dict_liveness, False)
 
         return self
