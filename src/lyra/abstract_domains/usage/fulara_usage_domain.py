@@ -224,7 +224,7 @@ class FularaUsageLattice(Lattice):
 
             if self_lattice.is_bottom() or other_lattice.is_top():
                 self_lattice._replace(other_lattice)
-            elif other_lattice.is_bottom() or self_lattice.is_top():
+            elif other_lattice.is_bottom():
                 pass    # keep self_lattice
             else:
                 for o in other_lattice.segments:
