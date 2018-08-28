@@ -4,7 +4,6 @@ python:
   - "3.6"
 before_install:
   - sudo apt-get install graphviz
-  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 install:
   - pip install -r requirements.txt
 stages:
@@ -18,6 +17,7 @@ jobs:
         - cd src/lyra/unittests/
         - PYTHONPATH="${PYTHONPATH}:../../"
         - export PYTHONPATH
+        - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
         - python -m unittest test_SignLattice.py
         - python -m unittest test_IntervalLattice.py
         - python -m unittest test_UsageLattice.py
