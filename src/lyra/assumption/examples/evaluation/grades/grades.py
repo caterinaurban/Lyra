@@ -1,6 +1,6 @@
 # PARSED RESULT 5:(String, ⊤, T, (∅, Σ)), 6:(Integer, ⊤, T, (∅, Σ)), 7:(Integer, ⊤, T, (∅, Σ)), 7.1 * [9:(String, ⊤, T, (∅, Σ)), 6.1 * [13:(Float, ⊤, OCT( +13.1 + 0.0 >= 0), (∅, Σ)), 14:(Float, ≥0, OCT( +14.1 + 0.0 >= 0, -14.1 + 13.1 + 0.0 >= 0, +14.1 + 13.1 + 0.0 >= 0, +13.1 + 0.0 >= 0), (∅, Σ))], 26:(Float, ⊤, OCT( +26.1 + 0.0 >= 0), (∅, Σ)), 27:(Float, ≥0, OCT( +27.1 + 0.0 >= 0, -27.1 + 26.1 + 0.0 >= 0, +27.1 + 26.1 + 0.0 >= 0, +26.1 + 0.0 >= 0), (∅, Σ))]
-import sys
-sys.stdin = open('grades.in', 'r')
+# import sys
+# sys.stdin = open('grades.in', 'r')
 subject: str = input()
 homeworks: int = int(input())
 number_of_students: int = int(input())

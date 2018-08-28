@@ -53,6 +53,7 @@ class JSONMixin(Lattice, metaclass=ABCMeta):
         :return:
         """
 
+
 class InputMixin(State, metaclass=ABCMeta):
     """Mixin to add a mechanism for recording and retrieving constraints on the input data.
 
@@ -140,32 +141,32 @@ class MultiplierEvaluator(ExpressionVisitor):
 
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_Input(self, expr: 'Input', pp_value=None, lines_involved=None):
+    def visit_Input(self, expr, pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_VariableIdentifier(self, expr: 'VariableIdentifier', pp_value=None, lines_involved=None):
+    def visit_VariableIdentifier(self, expr, pp_value=None, lines_involved=None):
         if expr in pp_value:
             (line_number, input_value) = pp_value[expr]
             if input_value is None:
                 lines_involved.append(line_number)
             return input_value
 
-    def visit_LengthIdentifier(self, expr: 'LengthIdentifier', pp_value=None, lines_involved=None):
+    def visit_LengthIdentifier(self, expr, pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_ListDisplay(self, expr: 'ListDisplay', pp_value=None, lines_involved=None):
+    def visit_ListDisplay(self, expr, pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_Range(self, expr: 'Range', pp_value=None, lines_involved=None):
+    def visit_Range(self, expr, pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_AttributeReference(self, expr: 'AttributeReference', pp_value=None, lines_involved=None):
+    def visit_AttributeReference(self, expr, pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_Subscription(self, expr: 'Subscription', pp_value=None, lines_involved=None):
+    def visit_Subscription(self, expr, pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_Slicing(self, expr: 'Slicing', pp_value=None, lines_involved=None):
+    def visit_Slicing(self, expr, pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
     def visit_BinarySequenceOperation(self, expr, pp_value=None, lines_involved=None):
@@ -180,18 +181,18 @@ class MultiplierEvaluator(ExpressionVisitor):
     def visit_TupleDisplay(self, expr, pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', pp_value=None, lines_involved=None):
-        eval = self.visit(expr.expression, pp_value)
-        if eval is None or expr.operator == UnaryArithmeticOperation.Operator.Add:
-            return eval
+    def visit_UnaryArithmeticOperation(self, expr, pp_value=None, lines_involved=None):
+        evaluation = self.visit(expr.expression, pp_value)
+        if evaluation is None or expr.operator == UnaryArithmeticOperation.Operator.Add:
+            return evaluation
         if expr.operator == UnaryArithmeticOperation.Operator.Sub:
-            return -eval
+            return -evaluation
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', pp_value=None, lines_involved=None):
+    def visit_UnaryBooleanOperation(self, expr, pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', pp_value=None, lines_involved=None):
+    def visit_BinaryArithmeticOperation(self, expr, pp_value=None, lines_involved=None):
         left = self.visit(expr.left, pp_value)
         right = self.visit(expr.right, pp_value)
         if left is None or right is None:
@@ -206,10 +207,10 @@ class MultiplierEvaluator(ExpressionVisitor):
         if op == BinaryArithmeticOperation.Operator.Div:
             return left / right
 
-    def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation', pp_value=None, lines_involved=None):
+    def visit_BinaryBooleanOperation(self, expr, pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
-    def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation', pp_value=None, lines_involved=None):
+    def visit_BinaryComparisonOperation(self, expr, pp_value=None, lines_involved=None):
         raise NotImplementedError("Multiplier evaluator not define for type {}".format(expr.typ))
 
 
@@ -616,17 +617,18 @@ class AssumptionState(State):
                 def do_multiplier(expression):
                     numerical_types = [IntegerLyraType(), FloatLyraType()]
                     if isinstance(expression, Identifier):
-                        return {'type': ['identifier', str(expression.typ)], 'value': expression.name}
+                        typ = str(expression.typ)
+                        return {'type': ['identifier', typ], 'value': expression.name}
                     if isinstance(expression, Literal) and expression.typ in numerical_types:
                         return {'type': ['literal', str(expression.typ)], 'value': expression.val}
-                    js = dict()
+                    json = dict()
                     if isinstance(expression, BinaryArithmeticOperation):
-                        js['type'] = ['binary_arithmetic', str(expression.typ)]
-                        js['left'] = do_multiplier(expression.left)
-                        js['operator'] = expression.operator
-                        js['right'] = do_multiplier(expression.right)
-                        return js
-                    raise ValueError("JSON conversion not supported for multiplier {}".format(expression))
+                        json['type'] = ['binary_arithmetic', str(expression.typ)]
+                        json['left'] = do_multiplier(expression.left)
+                        json['operator'] = expression.operator
+                        json['right'] = do_multiplier(expression.right)
+                        return json
+                    raise ValueError("Cannot convert to JSON {}".format(expression))
 
                 def is_star(constraint): return isinstance(constraint, tuple) and not constraint
 
@@ -636,18 +638,17 @@ class AssumptionState(State):
                     if is_star(constraint):
                         return '*'
                     if is_basic(constraint):
-                        js = dict()
-                        js['pp'] = [constraint[0].line, constraint[0].column]
-                        js['lattice_elements'] = []
+                        json = dict()
+                        json['pp'] = [constraint[0].line, constraint[0].column]
+                        json['lattice_elements'] = []
                         for element in constraint[1]:
-                            # AssumptionState.InputStack.InputLattice._state_names[type(element).__name__] = type(element)
-                            js['lattice_elements'].append({
+                            json['lattice_elements'].append({
                                 'domain': str(type(element).__name__),
                                 'module': element.__module__,
                                 'element': element.to_json()
                             })
 
-                        return js
+                        return json
                     if isinstance(constraint, AssumptionState.InputStack.InputLattice):
                         return constraint.to_json()
                 js = dict()
@@ -657,9 +658,9 @@ class AssumptionState(State):
 
             @staticmethod
             @copy_docstring(JSONMixin.from_json)
-            def from_json(json: dict) -> 'JSONMixin':
+            def from_json(json: dict) -> 'AssumptionState.InputStack.InputLattice':
 
-                def do_type(typ:str):
+                def do_type(typ: str):
                     if typ == 'int':
                         return IntegerLyraType()
                     if typ == 'float':
@@ -673,7 +674,6 @@ class AssumptionState(State):
                         return ListLyraType(do_type(typ))
 
                 def do_multiplier(js):
-                    types = {'int': IntegerLyraType, 'float': FloatLyraType, 'string': StringLyraType}
                     if js['type'][0] == 'identifier':
                         typ = do_type(js['type'][1])
                         return VariableIdentifier(typ, js['value'])
@@ -694,8 +694,8 @@ class AssumptionState(State):
                         pp = ProgramPoint(js['pp'][0], js['pp'][1])
                         cons = []
                         for element in js['lattice_elements']:
-                            # state = AssumptionState.InputStack.InputLattice._state_names[element['domain']]
-                            state = getattr(importlib.import_module(element["module"]), element["domain"])
+                            module = importlib.import_module(element["module"])
+                            state = getattr(module, element["domain"])
 
                             cons.append(state.from_json(element['element']))
                         cons = tuple(cons)
@@ -709,17 +709,17 @@ class AssumptionState(State):
             @copy_docstring(JSONMixin.check_input)
             def check_input(self, input_generator: Generator, pp_value, line_errors):
 
-                def is_star(constraint): return isinstance(constraint, tuple) and not constraint
+                def is_star(c): return isinstance(c, tuple) and not c
 
-                def is_basic(constraint): return isinstance(constraint, tuple) and constraint
+                def is_basic(c): return isinstance(c, tuple) and c
 
                 def gen(assumption):
                     if is_star(assumption) or is_basic(assumption):
                         yield assumption
                     else:
                         lines_involved = []
-                        m = assumption.multiplier
-                        mult = MultiplierEvaluator().visit(m, pp_value, lines_involved)
+                        am = assumption.multiplier
+                        mult = MultiplierEvaluator().visit(am, pp_value, lines_involved)
                         # check for valid multiplier
                         # to be annotated as warning
                         message = ""
@@ -733,12 +733,15 @@ class AssumptionState(State):
                             mult_error = CheckerError(message)
                             raise ValueError(mult_error)
                         for _ in range(mult):
-                            for cons in assumption.constraints:
-                                yield from gen(cons)
+                            for c in assumption.constraints:
+                                yield from gen(c)
 
                 constraint_generator = gen(self)
                 end_of_constraints, end_of_input = False, False
                 line_number = 1
+                # CI
+                constraint = None
+                input_value = None
                 while not end_of_input and not end_of_constraints:
                     try:
                         line_number, input_value = next(input_generator)
@@ -759,7 +762,8 @@ class AssumptionState(State):
                         break
 
                     if is_star(constraint):  # information loss, cannot continue checking
-                        error = CheckerError("*Not enough information to continue checking after this line.")
+                        m = "*Not enough information to continue checking after this line."
+                        error = CheckerError(m)
                         line_errors[line_number].append(error)
                         end_of_constraints = True
 
@@ -770,14 +774,15 @@ class AssumptionState(State):
                         for cons in constraint[1]:
                             cons.check_input(pp, pp_value, line_errors)
                 if end_of_input and not end_of_constraints:
-                    constraints_left = 0
+                    remaining = 0
                     while not end_of_constraints:
-                        constraints_left += 1
+                        remaining += 1
                         try:
                             next(constraint_generator)
                         except StopIteration:
                             end_of_constraints = True
-                    msg = "At least {} more input(s) expected on the next {} line(s).".format(constraints_left, constraints_left)
+                    msg = "At least {0} more input(s) expected on the next {0} line(s)."\
+                        .format(remaining)
                     error = CheckerError(msg)
                     line_errors[line_number].append(error)
 

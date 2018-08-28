@@ -163,3 +163,11 @@ if __name__ == '__main__':
     #         AssumptionController(path).main()
 
     AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/evaluation/dna_frequency/dna_frequency.py').main()
+    AssumptionController(
+        '/home/radwa/Lyra/src/lyra/assumption/examples/evaluation/convert/convert.py').main()
+
+    AssumptionController(
+        '/home/radwa/Lyra/src/lyra/assumption/examples/evaluation/grades/grades.py').main()
+
+    AssumptionController(
+        '/home/radwa/Lyra/src/lyra/assumption/examples/evaluation/self_driving_cars/self_driving_cars.py').main()

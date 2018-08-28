@@ -58,7 +58,8 @@ class AlphabetLattice(CharacterLattice, JSONMixin):
                 if len(error_message) > 0:
                     error_message += "; \n"
                 s = ', '.join(['\'' + c + '\'' for c in sorted(self.maybe)])
-                error_message += "This value is allowed to contain *only* the characters: {}".format(s)
+                error_message += "This value is allowed to contain only the characters: {}"\
+                    .format(s)
             if len(error_message) > 0:
                 error = CheckerError(error_message)
                 line_errors[input_line].append(error)
