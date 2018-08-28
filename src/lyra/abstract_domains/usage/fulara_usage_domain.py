@@ -99,7 +99,7 @@ class FularaUsageLattice(Lattice):
             self._dict_usage.store[var].empty()
 
         self._loop_flag = False
-        # self._length_usage # TODO
+        # self._length_usage
 
     @property
     def scalar_usage(self) -> SimpleUsageStore:
@@ -232,7 +232,7 @@ class FularaUsageLattice(Lattice):
                         # strong update: add o to self_lattice
                         # compute remaining parts of 'self'
                         self_lattice.partition_add(o[0], o[1])
-                    else:  # o.is_scoped() -> must overlap with segments from self  TODO: ?
+                    else:  # o.is_scoped() -> must overlap with segments from self
                         pass
                 # keep all parts of self that do not overlap with a U/W segment of other
         return self
@@ -365,7 +365,7 @@ class FularaUsageState(Stack, State):
                         f"Type '{expr.typ}' of variable {expr} not supported")
             elif isinstance(expr, Subscription) and type(expr.target.typ) in map_types:
                 use_lattice: FularaLattice = self.lattice.dict_usage.store[expr.target]
-                pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
+                pre_copy: FularaState = deepcopy(self.precursory)
                 scalar_key = pre_copy.read_eval.visit(expr.key)
                 k_pre = pre_copy.eval_key(scalar_key)
                 k_abs = self.k_pre_k_conv(k_pre)
@@ -487,9 +487,7 @@ class FularaUsageState(Stack, State):
                 d_lattice.d_norm_own()
         elif isinstance(left, VariableIdentifier):
             if type(left.typ) in scalar_types:  # assignment to scalar variable
-                # TODO: temp cleanup
                 self.precursory.update_dict_from_scalar(self.lattice.dict_usage, False)
-        # TODO: other cases
 
         left_u_s = False    # flag for left expression is used or scoped
         if isinstance(left, VariableIdentifier):
@@ -524,7 +522,7 @@ class FularaUsageState(Stack, State):
                 raise NotImplementedError(error)
         elif isinstance(left, Subscription) and type(left.target.typ) in map_types:
             left_lattice: FularaLattice = self.lattice.dict_usage.store[left.target]
-            pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
+            pre_copy: FularaState = deepcopy(self.precursory)
             scalar_key = pre_copy.read_eval.visit(left.key)
             k_pre = pre_copy.eval_key(scalar_key)
             k_abs = self.k_pre_k_conv(k_pre)
@@ -537,7 +535,7 @@ class FularaUsageState(Stack, State):
                     if not key_meet_k.is_bottom():    # key may be contained in this segment
                         if v.is_top() or v.is_scoped():
                             left_u_s = True
-                            # strong update # TODO: directly do here -> no additional loop
+                            # strong update
                             left_lattice.partition_add(k_abs, UsageLattice(Status.W))
                         # there can only be one overlapping segment (since k_abs is singleton)
                         break

@@ -68,18 +68,7 @@ class FularaLattice(BottomMixin):
             self._segments = {(key_domain(**self.k_d_args).top(),
                                value_domain(**self.v_d_args).top())}
         else:
-            # for s in segments:      # TODO: remove?
-            #     if len(s) != 2:
-            #         raise TypeError(f"Segment {s} needs to have exactly two elements,
-            #                         but has {len(s)}")
-            #     if not isinstance(s[0], key_domain):
-            #         raise TypeError(f"The key type of the segment {s}
-            #                         does not match the provided key domain {key_domain}")
-            #     if not isinstance(s[1], value_domain):
-            #         raise TypeError(f"The value type of the segment {s}
-            #                         does not match the provided value domain {value_domain}")
             self._segments = segments
-        # TODO: add possibility to create bottom element?
 
     @property
     def k_domain(self):
@@ -151,7 +140,7 @@ class FularaLattice(BottomMixin):
                             f"value abstractions ({self.v_domain}, {other.v_domain})")
 
         # le <=> same or more 'boundaries'
-        if self.segments == other.segments:     # TODO: needed (efficiency?)
+        if self.segments == other.segments:
             return True
         else:
             # all segments of self need to be contained in some segment of other
@@ -275,7 +264,7 @@ class FularaLattice(BottomMixin):
                 rest_new = {(key, value)}
                 new_segments = copy(self.segments)
                 for s in self.segments:
-                    new_segments.remove(s)     # TODO: efficiency
+                    new_segments.remove(s)
                     rest_s = {s}
                     todo = itertools.product(copy(rest_new), copy(rest_s))
                     while True:
@@ -292,7 +281,7 @@ class FularaLattice(BottomMixin):
                             todo = itertools.product(copy(rest_new), copy(rest_s))
                             continue
 
-                        overlap = deepcopy(new[0]).meet(deepcopy(old[0]))    # TODO: deepcopy old?
+                        overlap = deepcopy(new[0]).meet(deepcopy(old[0]))
                         if not overlap.is_bottom():
                             rest_new.remove(new)
                             if not new[1].less_equal(old[1]):
@@ -311,7 +300,6 @@ class FularaLattice(BottomMixin):
                                                if not m.is_bottom()}
                                 rest_s.update(non_overlap)
 
-                                # TODO: deepcopy old?
                                 new_value = deepcopy(new[1]).join(deepcopy(old[1]))
                                 new_segments.add((overlap, new_value))
                             elif overlap == old[0]:     # completely covered -> can keep segment
@@ -375,7 +363,6 @@ def d_norm(segment_set: Set[Tuple[KeyWrapper, Lattice]],
     Computes a partition such that no two abstract keys overlap (i.e. their meet is bottom)
     (and the keys are minimal)"""
     # TODO: make faster? (sorted segments?)
-    # TODO: assert same domains?
     if known_disjoint:      # not empty & not None
         result_set = copy(known_disjoint)
     else:

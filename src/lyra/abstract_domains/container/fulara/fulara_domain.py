@@ -191,7 +191,7 @@ class InRelationState(State, BottomMixin):
             if not isinstance(right, VariableIdentifier):
                 # invalidate left, since overwritten
                 self.forget_variable(left)
-            else:    # TODO: are there other relevant cases?
+            else:
                 if left != right:
                     # invalidate left, since overwritten
                     self.forget_variable(left)
@@ -213,7 +213,7 @@ class InRelationState(State, BottomMixin):
         if self.is_bottom():
             return self
 
-        if isinstance(condition, BinaryComparisonOperation):  # TODO: boolean conjunctions of them?
+        if isinstance(condition, BinaryComparisonOperation):
             if condition.operator == BinaryComparisonOperation.Operator.In:
                 if isinstance(condition.left, VariableIdentifier):
                     if self.scope == Scope.Loop:  # variable gets overwritten
@@ -732,7 +732,7 @@ class FularaState(State):
     def eval_key(self, key_expr: Expression) -> KeyWrapper:
         """evaluates key_expr in the scalar_state and assigns it to v_k in a key state"""
         scalar_copy = deepcopy(self.scalar_state)
-        v_k = VariableIdentifier(key_expr.typ, k_name)       # TODO: type?
+        v_k = VariableIdentifier(key_expr.typ, k_name)
         scalar_copy.add_variable(v_k)
         scalar_copy.assign({v_k}, {key_expr})
 
@@ -742,7 +742,7 @@ class FularaState(State):
     def eval_value(self, value_expr: Expression) -> ValueWrapper:
         """evaluates value_expr in the scalar_state and assigns it to v_v in a value state"""
         scalar_copy = deepcopy(self.scalar_state)
-        v_v = VariableIdentifier(value_expr.typ, v_name)  # TODO: type?
+        v_v = VariableIdentifier(value_expr.typ, v_name)
         scalar_copy.add_variable(v_v)
         scalar_copy.assign({v_v}, {value_expr})
 
@@ -762,7 +762,7 @@ class FularaState(State):
             v_abs = self.eval_value(var)
 
             # temporary variables not needed in dict abstractions
-            for temp in current_temps:     # TODO: better way?
+            for temp in current_temps:
                 k_abs.remove_variable(temp)
                 v_abs.remove_variable(temp)
 
@@ -811,7 +811,7 @@ class FularaState(State):
 
         all_ids = left.ids().union(right.ids())
 
-        if all(type(ident.typ) in scalar_types for ident in all_ids):   # TODO: use not any?
+        if all(type(ident.typ) in scalar_types for ident in all_ids):
             # completely SCALAR STMT
             # update scalar part
             self.scalar_state.assign({left}, {right})
@@ -933,14 +933,14 @@ class FularaState(State):
             # DICT WRITE
             d = left.target
 
-            k_abs = self.eval_key(left.key)     # TODO: nested subscripts -> read_eval
+            k_abs = self.eval_key(left.key)
 
             evaluation = dict()
             scalar_right = self.read_eval.visit(right, self, evaluation)
             v_abs = self.eval_value(scalar_right)
             for temp in evaluation.values():
                 v_abs.remove_variable(temp)
-            self._temp_cleanup(evaluation)      # TODO: no assign needed?
+            self._temp_cleanup(evaluation)
 
             d_lattice: 'FularaLattice' = self.dict_store.store[d]
 
@@ -954,7 +954,6 @@ class FularaState(State):
                 d_lattice.partition_update(k_abs, v_abs)
         else:
             raise NotImplementedError(f"Assignment '{left} = {right}' is not yet supported")
-        # TODO: other stmts
 
         # update relations
         self.in_relations.assign({left}, {right})
@@ -978,7 +977,7 @@ class FularaState(State):
                         and isinstance(condition.left, VariableIdentifier):
                     d = condition.right.target_dict
                     d_lattice: FularaLattice = self.dict_store.store[d]
-                    k_abs: KeyWrapper = d_lattice.get_keys_joined()     # TODO: check if bottom?
+                    k_abs: KeyWrapper = d_lattice.get_keys_joined()
                     v_k = k_abs.k_var
 
                     if self.scope == Scope.Loop:  # -> overwrite old value
@@ -1263,7 +1262,7 @@ class FularaState(State):
         return self  # nothing to be done
 
     @copy_docstring(State.enter_loop)
-    def enter_loop(self) -> 'FularaState':
+    def enter_loop(self) -> 'FularaState':  # TODO: distinguish between for & while loops!
         if not self.is_bottom():    # not yet analyzed/unreachable
             self.scopes.append(Scope.Loop)
             self.in_relations.enter_loop()

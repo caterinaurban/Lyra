@@ -103,7 +103,7 @@ class FularaLivenessState(State):
         for var in map_vars:
             self._dict_liveness.store[var].empty()
 
-        # self._length_usage # TODO
+        # self._length_usage
 
         self._k_pre_k_conv = k_pre_k_conv
 
@@ -252,7 +252,7 @@ class FularaLivenessState(State):
                         f"Type '{expr.typ}' of variable {expr} not supported")
             elif isinstance(expr, Subscription) and type(expr.target.typ) in map_types:
                 live_lattice: FularaLattice = self.dict_liveness.store[expr.target]
-                pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
+                pre_copy: FularaState = deepcopy(self.precursory)
                 scalar_key = pre_copy.read_eval.visit(expr.key)
                 k_pre = pre_copy.eval_key(scalar_key)
                 k_abs = self.k_pre_k_conv(k_pre)
@@ -278,7 +278,7 @@ class FularaLivenessState(State):
             self.precursory.update_dict_from_scalar(self.dict_liveness, False)
         # TODO: more precision
 
-        self.make_live(condition)       # TODO: not for loops?
+        self.make_live(condition)
         return self
 
     @copy_docstring(State.enter_if)
@@ -317,7 +317,6 @@ class FularaLivenessState(State):
 
         elif isinstance(left, VariableIdentifier):
             if type(left.typ) in scalar_types:  # assignment to scalar variable
-                # TODO: temp cleanup
                 self.precursory.update_dict_from_scalar(self.dict_liveness, False)
 
         left_live = False    # flag for left expression is live
@@ -347,7 +346,7 @@ class FularaLivenessState(State):
                 raise NotImplementedError(error)
         elif isinstance(left, Subscription) and type(left.target.typ) in map_types:
             left_lattice: FularaLattice = self.dict_liveness.store[left.target]
-            pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
+            pre_copy: FularaState = deepcopy(self.precursory)
             scalar_key = pre_copy.read_eval.visit(left.key)
             k_pre = pre_copy.eval_key(scalar_key)
             k_abs = self.k_pre_k_conv(k_pre)
