@@ -1,7 +1,7 @@
-# https://cambridgespark.com/content/tutorials/interactively-analyse-100GB-of-JSON-data-with-Spark/index.html
-# RESULT 2:(Integer, T, T), 2.1 * [6:(String, T, T), 7:(Integer, OCT( +7.1 - 1.0 >= 0), T), 10:(String, T, (set(), {'i', '.', 'z', 'm', 'e', 'd', 'n', 's', 'g', 'o', 'r', 'a', 'u', 'l', 'c', 'b', 'p', 'k'})), ★]
-# import sys
-# sys.stdin = open('convert.in', 'r')
+# https://cambridgespark.com/content/tutorials/interactively-analyse-100GB-of-JSON-data-with
+# -Spark/index.html RESULT 2:(Integer, T, T), 2.1 * [6:(String, T, T), 7:(Integer, OCT( +7.1 -
+# 1.0 >= 0), T), 10:(String, T, (set(), {'i', '.', 'z', 'm', 'e', 'd', 'n', 's', 'g', 'o', 'r',
+# 'a', 'u', 'l', 'c', 'b', 'p', 'k'})), ★] import sys sys.stdin = open('convert.in', 'r')
 number_of_items: int = int(input())
 if number_of_items == 0:
     raise ValueError

@@ -1,7 +1,7 @@
 import os
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
-from typing import List, Tuple, Dict, Union, Any
+from typing import List, Tuple, Dict, Any
 
 from lyra.abstract_domains.assumption.assumption_domain import AssumptionState
 from lyra.abstract_domains.lattice import Lattice
@@ -49,6 +49,7 @@ class AssumptionChecker(Checker):
 
     def check(self, assumption: 'AssumptionState.InputStack.InputLattice'):
         line_offset: Dict[int, Tuple[int, int]] = dict()
+
         def input_generator():
             with open(self.input_path, 'r') as file:
                 start_offset, end_offset, line_number = 0, 0, 1
@@ -70,22 +71,25 @@ class AssumptionChecker(Checker):
 
     def write_errors(self, errors):
 
-        def do(errors, line_number):
+        def do(errors_, line_number):
+            r = RelationalError
+            d = DependencyError
             messages = []
-            message = ';'.join([err.message for err in errors if isinstance(err, RelationalError)])
+            message = ';'.join([err.message for err in errors_ if isinstance(err, r)])
             if len(message) > 0:
                 message = "Expected condition(s): {}".format(message)
                 messages.append(message)
-
-            source_lines = set([str(err.source_line) for err in set(errors) if isinstance(err, DependencyError) and err.source_line != line_number])
+            source_lines = set([str(err.source_line) for err in set(errors_)
+                                if isinstance(err, d) and err.source_line != line_number])
             message = ', '.join(source_lines)
 
             if len(message) > 0:
                 # added * to mark this as warning not error
                 message = "*This line is linked to previous error on line(s): {}".format(message)
                 messages.append(message)
-
-            message = '. '.join([err.message for err in errors if not (isinstance(err, RelationalError) or isinstance(err, DependencyError))])
+            err_l = [err.message for err in errors_ if not (isinstance(err, r)
+                                                            or isinstance(err, d))]
+            message = '. '.join(err_l)
             if len(message) > 0:
                 messages.append(message)
 

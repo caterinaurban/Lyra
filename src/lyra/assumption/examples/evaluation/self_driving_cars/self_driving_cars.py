@@ -1,5 +1,5 @@
-# 2:(Integer, T, T), 2.1 * [4:(Float, OCT( +4.1 + 0.0 >= 0), T), 7:(Integer, T, T), 7.1 * [10:(Integer, OCT( -10.1 + 4.1 + 0.0 >= 0), T), 13:(Float, OCT( +13.1 + 0.0 >= 0), T)]]
-# import sys
+# 2:(Integer, T, T), 2.1 * [4:(Float, OCT( +4.1 + 0.0 >= 0), T), 7:(Integer, T, T), 7.1 * [10:(
+# Integer, OCT( -10.1 + 4.1 + 0.0 >= 0), T), 13:(Float, OCT( +13.1 + 0.0 >= 0), T)]] import sys
 # sys.stdin = open('self_driving_cars.in', 'r')
 cases: int = int(input())
 for cc in range(cases):

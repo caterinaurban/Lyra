@@ -1,6 +1,0 @@
-|
-4|11|16|This value is allowed to contain *only* the characters: '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
-9|28|30|Expected condition(s): (Value on line 10) >= (Value on line 9)
-10|31|33|Expected condition(s): (Value on line 10) >= (Value on line 9)
-12|39|43|Expected type Float
-13|44|46|This line depends on previous error value on line(s): 12

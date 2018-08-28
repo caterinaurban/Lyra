@@ -13,4 +13,5 @@ else:
         raise ValueError
     if m > 20:
         raise ValueError
-# Assumptions: 1:(Integer, ⊤, ⊤, (∅, Σ)), 3:(Float, ⊤, OCT(3.1 + 1.1 - 11.0 >= 0), (∅, Σ)), 6:(Integer, ⊤, OCT(30.0 >= 6.1), (∅, Σ))
+# Assumptions: 1:(Integer, ⊤, ⊤, (∅, Σ)), 3:(Float, ⊤, OCT(3.1 + 1.1 - 11.0 >= 0), (∅, Σ)),
+# 6:(Integer, ⊤, OCT(30.0 >= 6.1), (∅, Σ))

@@ -45,6 +45,7 @@ class WordSetLattice(StringSetLattice, JSONMixin):
     def check_input(self, *args):
         pass
 
+
 class WordSetState(StringSetState, InputMixin):
     """Word set analysis state. An element of the word set abstract domain.
 

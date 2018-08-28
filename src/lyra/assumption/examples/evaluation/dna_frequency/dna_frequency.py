@@ -1,7 +1,7 @@
 # http://rosalind.info/problems/dna/
 
-# RESULT   2:(Integer, OCT( +2.1 - 1.0 >= 0), T), 2.1 * [6:(Integer, T, T), 6.1 * [12:(String, T, (set(), {'G', 'T', 'A', 'C'})), ★], 23:(String, T, (set(), {'.', '#'}))]
-# import sys
+# RESULT   2:(Integer, OCT( +2.1 - 1.0 >= 0), T), 2.1 * [6:(Integer, T, T), 6.1 * [12:(String,
+# T, (set(), {'G', 'T', 'A', 'C'})), ★], 23:(String, T, (set(), {'.', '#'}))] import sys
 # sys.stdin = open('dna_frequency.in', 'r')
 number_of_sequences: int = int(input())
 if number_of_sequences < 1:

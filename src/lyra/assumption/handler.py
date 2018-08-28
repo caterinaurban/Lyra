@@ -4,26 +4,23 @@
 
 :Authors: Radwa Sherif Abdelbar
 """
-import os
 import json
-
+import os
 from abc import ABCMeta, abstractmethod
 
 from lyra.abstract_domains.assumption.assumption_domain import AssumptionState
-from lyra.core.cfg import Basic
 from lyra.core.utils import copy_docstring
 from lyra.engine.result import AnalysisResult
 
 
 class Handler (metaclass=ABCMeta):
     """
-        File I/O interface for the assumptions of a program. Reads and write analysis result from file.
+    File I/O interface for the assumptions of a program. Reads and write analysis result from
+    file.
     """
 
     def __init__(self):
         """
-
-        :param extensionless_path: path to the python script being analyzed without .py extension
         """
         self._assumption_file = None
 

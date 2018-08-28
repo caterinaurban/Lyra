@@ -1,4 +1,5 @@
-# 2:(Integer, ⊤, ⊤, (∅, Σ)), 3:(Integer, ⊤, ⊤, (∅, Σ)), 4:(Integer, ⊤, ⊤, (∅, Σ)), 10 * [7:(Float, ≥0, OCT(7.1 >= 0,7.1 >= 4.1), (∅, Σ)), 11:(Float, ⊤, ⊤, (∅, Σ))]
+# 2:(Integer, ⊤, ⊤, (∅, Σ)), 3:(Integer, ⊤, ⊤, (∅, Σ)), 4:(Integer, ⊤, ⊤, (∅, Σ)), 10 * [7:(
+# Float, ≥0, OCT(7.1 >= 0,7.1 >= 4.1), (∅, Σ)), 11:(Float, ⊤, ⊤, (∅, Σ))]
 weight_per_day1: int = int(input())
 weight_per_day2: int = int(input())
 day_string: str = input()
