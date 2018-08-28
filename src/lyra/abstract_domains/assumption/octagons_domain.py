@@ -8,10 +8,8 @@ TODO
 """
 import typing
 from copy import deepcopy
-from ctypes import util
 from typing import List, Set, Tuple, Dict
 
-Union = typing.Union
 from elina.python_interface.elina_abstract0 import *
 from elina.python_interface.elina_dimension import *
 from elina.python_interface.elina_lincons0 import *
@@ -26,12 +24,19 @@ from lyra.assumption.error import CheckerError, RelationalError, DependencyError
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
     UnaryArithmeticOperation, UnaryBooleanOperation, BinaryBooleanOperation, \
     BinaryComparisonOperation, \
-    BinaryArithmeticOperation, NegationFreeNormalExpression, LengthIdentifier, Identifier, \
-    BinarySequenceOperation
+    BinaryArithmeticOperation, NegationFreeNormalExpression, LengthIdentifier, Identifier
 from lyra.core.types import IntegerLyraType, FloatLyraType, BooleanLyraType, StringLyraType
 from lyra.core.utils import copy_docstring
 
+Union = typing.Union
+
 _elina_manager = opt_oct_manager_alloc()
+
+
+# def print_abstract(abstract):
+#     libc = CDLL(util.find_library('c'))
+#     cstdout = c_void_p.in_dll(libc, 'stdout')
+#     elina_abstract0_fprint(cstdout, _elina_manager, abstract, None)
 
 
 class OctagonLattice(Lattice):
@@ -134,7 +139,8 @@ class OctagonLattice(Lattice):
                                                   other.elina_abstract)
         return self._replace(OctagonLattice(self.variables, elina_abstract))
 
-    def __deepcopy__(self, memo={}):
+    # CI
+    def __deepcopy__(self, memo):
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
@@ -196,11 +202,6 @@ class OctagonLattice(Lattice):
         self.variables.append(variable)
         return self._replace(OctagonLattice(self.variables, abstract))
 
-    def print_abstract(self, abstract):
-        libc = CDLL(util.find_library('c'))
-        cstdout = c_void_p.in_dll(libc, 'stdout')
-        elina_abstract0_fprint(cstdout, _elina_manager, abstract, None)
-
     def lincons_to_string(self, lincons, pp_value=None):
         """
         Forms a string representation of an Elina linear constraint
@@ -212,11 +213,11 @@ class OctagonLattice(Lattice):
 
         def do(l: list):
             res = ""
-            for i, (c, var) in enumerate(l):
+            for k, (c, var) in enumerate(l):
                 if c >= 0:
-                    res += ' + ' if i > 0 else ''
+                    res += ' + ' if k > 0 else ''
                 else:
-                    res += ' - ' if i > 0 else '-'
+                    res += ' - ' if k > 0 else '-'
                 if pp_value is None:
                     res += str(var)
                 else:
@@ -279,13 +280,10 @@ class OctagonLattice(Lattice):
 
     def add_linear_constraint(self, indexes: List[int], coefficients: List[int], constant: float):
         """
-        Adds a new linear constraint represented by a list of variables and their coefficients. **Important note**:
-        NegationFreeNormalExpression creates constraints of the form 'variables + constant <= 0', while ELINA
-        supports constraints of the form 'variables + constant>= 0'.
-        :param indexes:
-        :param coefficients:
-        :param constant:
-        :return:
+        Adds a new linear constraint represented by a list of variables and their coefficients.
+        **Important note**: NegationFreeNormalExpression creates constraints of the form
+        'variables + constant <= 0', while ELINA supports constraints of the form 'variables +
+        constant>= 0'. :param indexes: :param coefficients: :param constant: :return:
         """
 
         # create elina linear expression
@@ -389,7 +387,8 @@ _normalizer = NegationFreeNormalExpression()  # puts comparison expressions in t
 class ConditionEvaluator(ExpressionVisitor):
 
     def visit_Literal(self, expr: 'Literal', state=None):
-        if expr.typ == IntegerLyraType() or expr.typ is FloatLyraType() or expr.typ is BooleanLyraType():
+        if expr.typ == IntegerLyraType() or expr.typ is FloatLyraType() \
+                or expr.typ is BooleanLyraType():
             type_cast = {
                 'int': int,
                 'float': float,
@@ -399,39 +398,36 @@ class ConditionEvaluator(ExpressionVisitor):
             return [], [], type_cast[str(expr.typ)](expr.val)
         return [], [], None
 
-    def visit_Input(self, expr: 'Input', state=None):
-        # if expr.typ == IntegerLyraType() or expr.typ == FloatLyraType() or expr.typ == BooleanLyraType():
+    def visit_Input(self, expr, state=None):
         state.record(deepcopy(state))
-        # else:
-        #     state.record(deepcopy(state).top())
         return [], [], None
 
-    def visit_VariableIdentifier(self, expr: 'VariableIdentifier', state=None):
+    def visit_VariableIdentifier(self, expr, state=None):
         # if expr.typ in [FloatLyraType(), IntegerLyraType(), BooleanLyraType()]:
         return [expr.name], [1], 0
         # return [], [], None
 
-    def visit_LengthIdentifier(self, expr: 'VariableIdentifier', state=None):
+    def visit_LengthIdentifier(self, expr, state=None):
         if expr.typ in [FloatLyraType(), IntegerLyraType(), BooleanLyraType()]:
             return [expr.name], [1], 0
         return [], [], None
 
-    def visit_ListDisplay(self, expr: 'ListDisplay', state=None):
+    def visit_ListDisplay(self, expr, state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_Range(self, expr: 'Range', state=None):
+    def visit_Range(self, expr, state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_Split(self, expr: 'Split', state=None):
+    def visit_Split(self, expr, state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_AttributeReference(self, expr: 'AttributeReference', state=None):
+    def visit_AttributeReference(self, expr, state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
-    def visit_Subscription(self, expr: 'Subscription', state=None):
+    def visit_Subscription(self, expr, state=None):
         return [], [], None
 
-    def visit_Slicing(self, expr: 'Slicing', state=None):
+    def visit_Slicing(self, expr, state=None):
         raise NotImplementedError(f"Condition evaluator for expression {expr} is not implemented.")
 
     def visit_TupleDisplay(self, expr, state=None):
@@ -507,8 +503,8 @@ class ConditionEvaluator(ExpressionVisitor):
             elif len(variables1) > 0 and len(variables2) == 0:
                 # variables divided by constant, e.g. (x + y + 5)/2 = x * 0.5 + y * 0.5 + 2.5
                 if constant2 != 0:
-                    l = list(map(lambda x: x / constant2, coefficients1))
-                    return variables1, l, constant1 / constant2
+                    ls = list(map(lambda x: x / constant2, coefficients1))
+                    return variables1, ls, constant1 / constant2
                 else:
                     raise ZeroDivisionError
         return [], [], None
@@ -616,7 +612,7 @@ class OctagonState(InputMixin, JSONMixin):
                 if isinstance(normal.right, Literal) and normal.right == Literal(IntegerLyraType(),
                                                                                  "0"):
                     variables, coefficients, constant = _evaluator.visit(normal.left, self)
-                    if not constant is None:
+                    if constant is not None:
                         indexes = [self.lattice_element.indexes[var] for var in variables]
                         coefficients = list(map(lambda x: -x, coefficients))
                         constant *= -1
