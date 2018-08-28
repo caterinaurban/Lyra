@@ -459,7 +459,7 @@ class ConditionEvaluator(ExpressionVisitor):
         coeff = 1 if expr.operator == UnaryArithmeticOperation.Operator.Add else -1
         expr = expr.expression
         variables, coefficients, constant = self.visit(expr, state)
-        return variables, list(map(lambda x: coeff * x), coefficients), coeff * constant
+        return variables, list(map(lambda x: coeff * x, coefficients)), coeff * constant
 
     def visit_UnaryBooleanOperation(self, expr, lattice_element=None,
                                     state=None):
