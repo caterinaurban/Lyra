@@ -503,10 +503,22 @@ class FularaUsageState(Stack, State):
                 left_u_s = any(v.is_top() or v.is_scoped() for (_, v) in left_lattice.segments)
 
                 # U/W/S segments (all) -> overwritten (W) (if any):
-                old_segments = copy(left_lattice.segments)
-                left_lattice.segments.clear()
-                for (k, v) in old_segments:
-                    left_lattice.segments.add((k, UsageLattice(Status.W)))
+                left_segments = copy(left_lattice.segments)
+                if isinstance(right, VariableIdentifier) and type(right.typ) in map_types:
+                    right_lattice: FularaLattice = self.lattice.dict_usage.store[right]
+                    # mark segments that are U or S in the left dictionary as U
+                    # & as W in left_lattice
+                    for (k, v) in left_segments:
+                        if v.is_top() or v.is_scoped():
+                            left_lattice.segments.remove((k, v))
+                            left_lattice.segments.add((k, UsageLattice(Status.W)))
+                            right_lattice.partition_add(k, UsageLattice(Status.U))
+                    return self
+                else:
+                    # U/W/S segments (all) -> overwritten (W) (if any):
+                    left_lattice.segments.clear()
+                    for (k, v) in left_segments:
+                        left_lattice.segments.add((k, UsageLattice(Status.W)))
             else:
                 error = f"Substitution for {left} is not yet implemented!"
                 raise NotImplementedError(error)

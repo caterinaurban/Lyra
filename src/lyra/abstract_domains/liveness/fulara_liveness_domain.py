@@ -331,8 +331,17 @@ class FularaLivenessState(State):
                 left_lattice: FularaLattice = self.dict_liveness.store[left]
                 left_live = any(v.is_top() for (_, v) in left_lattice.segments)
 
+                left_segments = copy(left_lattice.segments)
                 # whole dictionary dead
-                left_lattice.bottom()
+                left_lattice.empty()
+
+                if isinstance(right, VariableIdentifier) and type(right.typ) in map_types:
+                    right_lattice: FularaLattice = self.dict_liveness.store[right]
+                    # copy live segments
+                    for (k, v) in left_segments:
+                        if v.is_top():
+                            right_lattice.partition_add(k, LivenessLattice(Status.Live))
+                    return self
             else:
                 error = f"Substitution for {left} is not yet implemented!"
                 raise NotImplementedError(error)
