@@ -69,7 +69,7 @@ class Controller(metaclass=ABCMeta):
         db_path = os.getcwd() + '/db'
         try:
             ld = pickle.load(open(db_path, 'rb'))
-        except EOFError:
+        except (EOFError, FileNotFoundError):
             ld = []
         db = dict(ld)
         path = self.script_path

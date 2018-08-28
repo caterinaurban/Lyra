@@ -1,5 +1,3 @@
 |
-2|2|6|Expected condition(s): (Value on line 2) >= (Value on line 8)
-8|21|23|Expected condition(s): (Value on line 2) >= (Value on line 8)
 11|31|34|Expected type Integer
 12|35|39|*Cannot calculate loop range. Error(s) on line(s): 11.
