@@ -33,7 +33,7 @@ for k in score_occurrences.keys():
     a = a
     # STATE: a -> N, b -> N, k -> U, scores_gt_10 -> U, weight -> N, score_occurrences -> {([100, inf], U)}, scores -> {} | a -> N, b -> N, k -> W, scores_gt_10 -> U, weight -> N, score_occurrences -> {([100, inf], U)}, scores -> {}
     if k > 10:
-        # STATE: a -> N, b -> N, k -> N, scores_gt_10 -> U, weight -> N, score_occurrences -> {([100, inf], U)}, scores -> {} | a -> N, b -> N, k -> N, scores_gt_10 -> S, weight -> N, score_occurrences -> {([100, inf], S)}, scores -> {} | a -> N, b -> N, k -> W, scores_gt_10 -> U, weight -> N, score_occurrences -> {([100, inf], U)}, scores -> {}
+        # STATE: a -> N, b -> N, k -> U, scores_gt_10 -> U, weight -> N, score_occurrences -> {([100, inf], U)}, scores -> {} | a -> N, b -> N, k -> N, scores_gt_10 -> S, weight -> N, score_occurrences -> {([100, inf], S)}, scores -> {} | a -> N, b -> N, k -> W, scores_gt_10 -> U, weight -> N, score_occurrences -> {([100, inf], U)}, scores -> {}
         scores_gt_10 += score_occurrences[k]
         # STATE: a -> N, b -> N, k -> N, scores_gt_10 -> S, weight -> N, score_occurrences -> {([100, inf], S)}, scores -> {} | a -> N, b -> N, k -> N, scores_gt_10 -> S, weight -> N, score_occurrences -> {([100, inf], S)}, scores -> {} | a -> N, b -> N, k -> W, scores_gt_10 -> U, weight -> N, score_occurrences -> {([100, inf], U)}, scores -> {}
     # STATE: a -> N, b -> N, k -> N, scores_gt_10 -> S, weight -> N, score_occurrences -> {([100, inf], S)}, scores -> {} | a -> N, b -> N, k -> W, scores_gt_10 -> U, weight -> N, score_occurrences -> {([100, inf], U)}, scores -> {}

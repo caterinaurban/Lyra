@@ -18,8 +18,6 @@ from lyra.abstract_domains.container.fulara.interval_wrappers import IntervalSWr
     IntervalKWrapper, IntervalVWrapper
 from lyra.engine.forward import ForwardInterpreter
 from lyra.semantics.forward import DefaultForwardSemantics
-
-from lyra.abstract_domains.numerical.interval_domain import DictLyraType
 from lyra.unittests.runner import TestRunner
 
 
@@ -39,7 +37,7 @@ class FularaTest(TestRunner):
                     s_vars.remove(k_var)
             if not k_var:
                 raise ValueError(f"The key variable {fulara_domain.k_name} "
-                    f"must be added to the scalar store before conversion")
+                                 f"must be added to the scalar store before conversion")
             k_state = IntervalKWrapper(s_vars, k_var)
             k_state._store = deepcopy(s_state.store)
 
@@ -61,7 +59,7 @@ class FularaTest(TestRunner):
                     s_vars.remove(v_var)
             if not v_var:
                 raise ValueError(f"The value variable {fulara_domain.v_name} "
-                    f"must be added to the scalar store before conversion")
+                                 f"must be added to the scalar store before conversion")
             v_state = IntervalVWrapper(s_vars, v_var)
             v_state._store = deepcopy(s_state.store)
 
