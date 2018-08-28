@@ -84,9 +84,8 @@ class Controller(metaclass=ABCMeta):
 
     def main(self):
         """ Run the controller """
-        # if code has been modified
-        if True:
-            # if self.code_modified() or not self.handler.file_exists():
+        # if code has been modified or assumptions have been deleted
+        if self.code_modified() or not self.handler.file_exists():
             print("Running analysis")
             result = self.run_analysis()
             print("RESULT", result)
