@@ -5,20 +5,15 @@ Backward Semantics for the Assumption Analysis
 
 :Authors: Radwa Sherif and Caterina Urban
 """
-from lyra.core.expressions import AttributeReference, VariableIdentifier, Identifier
-from lyra.core.types import BooleanLyraType, StringLyraType
-from lyra.semantics.semantics import Semantics, DefaultSemantics
-
 from lyra.abstract_domains.state import State
+from lyra.core.expressions import AttributeReference, Identifier
 from lyra.core.statements import Assignment, Call
+from lyra.core.types import BooleanLyraType, StringLyraType
+from lyra.semantics.backward import BackwardSemantics
+from lyra.semantics.semantics import DefaultSemantics
 
 
-class AssumptionBackwardSemantics(Semantics):
-    """Backward semantics of statements."""
-    pass
-
-
-class AssumptionUserDefinedCallSemantics(AssumptionBackwardSemantics):
+class AssumptionUserDefinedCallSemantics(BackwardSemantics):
     """Backward semantics of user-defined function/method calls."""
 
     # noinspection PyUnusedLocal
@@ -39,7 +34,7 @@ class AssumptionUserDefinedCallSemantics(AssumptionBackwardSemantics):
         raise NotImplementedError(error)
 
 
-class AssumptionAssignmentSemantics(AssumptionBackwardSemantics):
+class AssumptionAssignmentSemantics(BackwardSemantics):
     """Backward semantics of assignments."""
 
     def assignment_semantics(self, stmt: Assignment, state: State) -> State:
@@ -55,6 +50,7 @@ class AssumptionAssignmentSemantics(AssumptionBackwardSemantics):
 
 
 # noinspection PyAbstractClass
-class AssumptionDefaultBackwardSemantics(DefaultSemantics, AssumptionUserDefinedCallSemantics, AssumptionAssignmentSemantics):
+class AssumptionDefaultBackwardSemantics(DefaultSemantics, AssumptionUserDefinedCallSemantics,
+                                         AssumptionAssignmentSemantics):
     """Default backward semantics of statements."""
     pass

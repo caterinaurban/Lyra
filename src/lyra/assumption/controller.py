@@ -162,4 +162,4 @@ if __name__ == '__main__':
     #     if os.path.basename(path) != "__init__.py":
     #         AssumptionController(path).main()
 
-    AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/store_test.py').main()
+    AssumptionController('/home/radwa/Lyra/src/lyra/assumption/examples/evaluation/dna_frequency/dna_frequency.py').main()

@@ -9,7 +9,7 @@ for i in range(10):
     if other_day > 2:
         food: int = int(input())
     else:
-        food = float = float(input())
+        food: float = float(input())
     print(food)
 
 if day == 1:

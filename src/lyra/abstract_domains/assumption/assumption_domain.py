@@ -722,13 +722,13 @@ class AssumptionState(State):
                         mult = MultiplierEvaluator().visit(m, pp_value, lines_involved)
                         # check for valid multiplier
                         # to be annotated as warning
-                        message = "*"
+                        message = ""
                         if mult is None:
                             lines_message = ','.join([str(l) for l in lines_involved])
-                            message += "Cannot calculate loop range. "
+                            message += "*Cannot calculate loop range. "
                             message += "Error(s) on line(s): {}.".format(lines_message)
                         elif not isinstance(mult, int):
-                            message += "Loop range must be an integer."
+                            message += "*Loop range must be an integer."
                         if len(message) > 0:
                             mult_error = CheckerError(message)
                             raise ValueError(mult_error)

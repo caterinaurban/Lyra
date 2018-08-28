@@ -49,6 +49,10 @@ class RangeLattice(IntervalLattice, JSONMixin):
         upper = int(upper) if upper != 'inf' else inf
         return RangeLattice(lower, upper)
 
+    @copy_docstring(JSONMixin.check_input)
+    def check_input(self, *args):
+        pass
+
 
 class RangeState(IntervalState, InputMixin):
     """Range assumption analysis state. An element of the range assumption abstract domain.
