@@ -22,9 +22,9 @@ from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, DictDisplay, \
     BinaryComparisonOperation, Keys, Items, Values, TupleDisplay, ExpressionVisitor, \
-    NegationFreeNormalExpression, Input
+    NegationFreeNormalExpression, Input, ListDisplay, Literal
 from lyra.core.types import DictLyraType, BooleanLyraType, IntegerLyraType, \
-    FloatLyraType, StringLyraType
+    FloatLyraType, StringLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
 
 # special variable names:
@@ -33,6 +33,7 @@ v_name = "0v_v"
 
 
 scalar_types = {BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType}
+map_types = {DictLyraType, ListLyraType}
 
 
 class Scope(Enum):
@@ -224,6 +225,9 @@ class InRelationState(State, BottomMixin):
                     elif isinstance(condition.right, Values):
                         new_tuple = (condition.right.target_dict, None, condition.left)
                         self.tuple_set.add(new_tuple)
+                    elif isinstance(condition.right, ListLyraType):
+                        new_tuple = (condition.right, None, condition.left)
+                        self.tuple_set.add(new_tuple)
                 elif isinstance(condition.left, TupleDisplay) \
                         and isinstance(condition.right, Items):
                     left_items = condition.left.items
@@ -246,9 +250,12 @@ class InRelationState(State, BottomMixin):
                                 if t[2] is not None:
                                     # need to keep value relation (like forget)
                                     self.tuple_set.add((t[0], None, t[2]))
-                    elif isinstance(condition.right, Values):
+                    elif isinstance(condition.right, (ListLyraType, Values)):
                         # forget the affected relation
-                        d = condition.right.target_dict
+                        if isinstance(condition.right, ListLyraType):
+                            d = condition.right
+                        else:
+                            d = condition.right.target_dict
                         t_set = copy(self.tuple_set)
                         for t in t_set:
                             if (t[0] == d) and (t[2] is not None) and (t[2] == condition.left):
@@ -376,19 +383,19 @@ class BoolLattice(Lattice):
 
 
 class FularaState(State):
-    """Dictionary content analysis state.
-    An element of the dictionary content abstract domain.
+    """Map data structure content analysis state.
+    An element of the map data structure content abstract domain.
 
     It consists of the following 4 elements:
     - Abstract state from a given domain A over all scalar variables,
         abstracting their values
-    - Map from each dictionary variables to a FularaLattice-element with a given key domain K
-        and value domain V, abstracting the contents of the dictionaries
-    - Map from each dictionary variables to a FularaLattice-element with a given key domain K
+    - Map from each map variable to a FularaLattice-element with a given key domain K
+        and value domain V, abstracting the contents of the map
+    - Map from each map variable to a FularaLattice-element with a given key domain K
         and the BoolLattice as value domain,
-        abstracting the initialization info of the dictionary elements
+        abstracting the initialization info of the map elements
         (True = may be uninitialized, False/Not present = definitely initialized)
-    - Relational InRelationState to cover relations between variables and dictionaries
+    - Relational InRelationState to cover relations between variables and map data structures
         introduced by 'in' conditions
 
     Everything is Top by default
@@ -409,7 +416,7 @@ class FularaState(State):
                  update_key_from_scalar: Callable[[KeyWrapper, EnvironmentMixin], KeyWrapper],
                  update_val_from_scalar: Callable[[ValueWrapper, EnvironmentMixin], ValueWrapper],
                  scalar_vars: Set[VariableIdentifier] = None,
-                 dict_vars: Set[VariableIdentifier] = None,
+                 map_vars: Set[VariableIdentifier] = None,
                  scalar_k_conv: Callable[[EnvironmentMixin], KeyWrapper]
                  = lambda x: x,
                  k_scalar_conv: Callable[[KeyWrapper], EnvironmentMixin]
@@ -446,7 +453,7 @@ class FularaState(State):
         super().__init__()
 
         self._s_vars = scalar_vars or set()
-        self._d_vars = dict_vars or set()
+        self._m_vars = map_vars or set()
 
         self._k_domain = key_domain
         self._v_domain = value_domain
@@ -455,28 +462,30 @@ class FularaState(State):
         self._scalar_state = scalar_domain(scalar_vars)         # require as input?
 
         arguments = {}
-        for dv in dict_vars:
+        for dv in map_vars:
             typ = dv.typ
-            if isinstance(typ, DictLyraType):  # should be true
-                if typ not in arguments:
-                    k_var = VariableIdentifier(typ.key_typ, k_name)
-                    v_var = VariableIdentifier(typ.val_typ, v_name)
-
-                    arguments[typ] = {'key_domain': key_domain, 'value_domain': value_domain,
-                                      'key_d_args': {'scalar_variables': scalar_vars,
-                                                     'k_var': k_var},
-                                      'value_d_args': {'scalar_variables': scalar_vars,
-                                                       'v_var': v_var}}
+            if isinstance(typ, DictLyraType):
+                k_var = VariableIdentifier(typ.key_typ, k_name)
+                v_var = VariableIdentifier(typ.val_typ, v_name)
+            elif isinstance(typ, ListLyraType):
+                k_var = VariableIdentifier(IntegerLyraType(), k_name)
+                v_var = VariableIdentifier(typ.typ, v_name)
             else:
-                raise TypeError("Dictionary variables should be of DictLyraType")
+                raise TypeError("Map variables should be of type DictLyraType or ListLyraType")
+
+            if typ not in arguments:
+                arguments[typ] = {'key_domain': key_domain, 'value_domain': value_domain,
+                                  'key_d_args': {'scalar_variables': scalar_vars, 'k_var': k_var},
+                                  'value_d_args': {'scalar_variables': scalar_vars,
+                                                   'v_var': v_var}}
 
         lattices = defaultdict(lambda: FularaLattice)
-        self._dict_store = Store(dict_vars, lattices, arguments)
+        self._dict_store = Store(map_vars, lattices, arguments)
 
         for k in arguments.keys():
             arguments[k]['value_domain'] = BoolLattice
             del arguments[k]['value_d_args']
-        self._init_store = Store(dict_vars, lattices, arguments)
+        self._init_store = Store(map_vars, lattices, arguments)
 
         self._update_k_from_s = update_key_from_scalar
         self._update_v_from_s = update_val_from_scalar
@@ -833,7 +842,7 @@ class FularaState(State):
                 self.update_dict_from_scalar(self.dict_store, True)
                 self.update_dict_from_scalar(self.init_store, False)
 
-            elif isinstance(left.typ, DictLyraType):    # overwrite dictionary
+            elif type(left.typ) in map_types:    # overwrite dictionary
                 if isinstance(right, VariableIdentifier):
                     self.dict_store.store[left] = deepcopy(self.dict_store.store[right])
                     self.init_store.store[left] = deepcopy(self.init_store.store[right])
@@ -861,18 +870,47 @@ class FularaState(State):
                         # k_abs must be a singleton -> 'strong update'
                         left_lattice.partition_add(k_abs, v_abs)
                         left_i_lattice.partition_add(k_abs, BoolLattice(False))
+                elif isinstance(right, ListDisplay):
+                    # "NEW LIST"
+                    left_lattice: FularaLattice = self.dict_store.store[left]
+                    left_i_lattice: FularaLattice = self.init_store.store[left]
+                    # erase all list contents before:
+                    left_lattice.empty()
+
+                    # everything uninitialized,
+                    # but scalars should conform with scalar state -> copy from scalar state:
+                    v_k = VariableIdentifier(IntegerLyraType(), k_name)
+                    s_state = deepcopy(self.scalar_state)
+                    s_state.add_variable(v_k)
+                    top_state = self.s_k_conv(s_state)
+                    top_segment = (top_state, BoolLattice(True))
+                    left_i_lattice.segments.clear()
+                    left_i_lattice.segments.add(top_segment)
+
+                    for i in range(len(right.items)):  # similar to write
+                        k_abs = self.eval_key(Literal(IntegerLyraType(), str(i)))
+                        v_abs = self.eval_value(right.items[i])
+
+                        # k_abs must be a singleton -> 'strong update'
+                        left_lattice.partition_add(k_abs, v_abs)
+                        left_i_lattice.partition_add(k_abs, BoolLattice(False))
                 elif isinstance(right, Input):      # TODO: add special dictinput() function?
                     # everything set to top,
                     # but copy from scalar state to have a more precise abstraction of it
                     left_lattice: FularaLattice = self.dict_store.store[left]
                     left_i_lattice: FularaLattice = self.init_store.store[left]
 
-                    v_k = VariableIdentifier(left.typ.key_typ, k_name)
+                    if isinstance(left, ListLyraType):
+                        v_k = VariableIdentifier(IntegerLyraType(), k_name)
+                        v_v = VariableIdentifier(left.typ.typ, v_name)
+                    else:   # DictLyraType
+                        v_k = VariableIdentifier(left.typ.key_typ, k_name)
+                        v_v = VariableIdentifier(left.typ.val_typ, v_name)
+
                     s_state = deepcopy(self.scalar_state)
                     s_state.add_variable(v_k)
                     top_k_state = self.s_k_conv(s_state)
 
-                    v_v = VariableIdentifier(left.typ.val_typ, v_name)
                     s_state = deepcopy(self.scalar_state)
                     s_state.add_variable(v_v)
                     top_v_state = self.s_v_conv(s_state)
@@ -891,7 +929,7 @@ class FularaState(State):
                 raise NotImplementedError(
                     f"Assignment '{left} = {right}' is not yet supported")
 
-        elif isinstance(left, Subscription) and isinstance(left.target.typ, DictLyraType):
+        elif isinstance(left, Subscription) and type(left.target.typ) in map_types:
             # DICT WRITE
             d = left.target
 
@@ -957,9 +995,13 @@ class FularaState(State):
                     self.update_dict_from_scalar(self.dict_store, True)
                     self.update_dict_from_scalar(self.init_store, False)
                     return self
-                elif isinstance(condition.right, Values) \
+                elif isinstance(condition.right, (Values, ListLyraType)) \
                         and isinstance(condition.left, VariableIdentifier):
-                    d = condition.right.target_dict
+                    if isinstance(condition.right, ListLyraType):
+                        d = condition.right
+                    else:   # Values
+                        d = condition.right.target_dict
+
                     d_lattice: FularaLattice = self.dict_store.store[d]
                     v_abs: ValueWrapper = d_lattice.get_values_joined()
                     v_v = v_abs.v_var
@@ -979,7 +1021,7 @@ class FularaState(State):
                     self.update_dict_from_scalar(self.init_store, False)
                     return self
                 elif isinstance(condition.right, Items) \
-                        and isinstance(condition.left, TupleDisplay):
+                        and isinstance(condition.left, TupleDisplay):  # TODO: or enumerate
                     d = condition.right.target_dict
                     d_lattice: FularaLattice = self.dict_store.store[d]
 
@@ -1054,9 +1096,13 @@ class FularaState(State):
                         self.update_dict_from_scalar(self.init_store, False)
 
                     return self
-                elif isinstance(condition.right, Values):
+                elif isinstance(condition.right, (Values, ListLyraType)):
                     if self.scope == Scope.Loop:
-                        d = condition.right.target_dict
+                        if isinstance(condition.right, ListLyraType):
+                            d = condition.right
+                        else:  # Values
+                            d = condition.right.target_dict
+
                         i_lattice: FularaLattice = self.init_store.store[d]
                         # check for definitely initialized elements:
                         if i_lattice.is_bottom() or len(i_lattice.segments) != 1:
@@ -1078,7 +1124,7 @@ class FularaState(State):
 
                     # else: TODO: refine value variable abstraction
                     return self
-                elif isinstance(condition.right, Items):
+                elif isinstance(condition.right, Items):    # TODO: enumerate
                     d = condition.right.target_dict
                     i_lattice: FularaLattice = self.init_store.store[d]
 
@@ -1150,7 +1196,10 @@ class FularaState(State):
 
                     if not k_abs.is_top():          # TODO: check for less_equal old?
                         scalar_vars = self._s_vars.copy()
-                        v_v = VariableIdentifier(d_var.typ.val_typ, v_name)
+                        if isinstance(d_var.typ, ListLyraType):
+                            v_v = VariableIdentifier(d_var.typ.typ, v_name)
+                        else:   # DictLyraType
+                            v_v = VariableIdentifier(d_var.typ.val_typ, v_name)
                         v_abs = d_lattice.v_domain(scalar_vars, v_v).bottom()
                         for (k, v) in d_lattice.segments:
                             key_meet_k = deepcopy(k_abs).meet(k)
@@ -1173,7 +1222,10 @@ class FularaState(State):
 
                 if not v_abs.is_top():  # TODO: check for less_equal old?
                     scalar_vars = self._s_vars.copy()
-                    v_k = VariableIdentifier(d_var.typ.key_typ, k_name)
+                    if isinstance(d_var.typ, ListLyraType):
+                        v_k = VariableIdentifier(IntegerLyraType(), k_name)
+                    else:  # DictLyraType
+                        v_k = VariableIdentifier(d_var.typ.key_typ, k_name)
                     k_abs = d_lattice.k_domain(scalar_vars, v_k).bottom()
                     for (k, v) in d_lattice.segments:
                         value_meet_v = deepcopy(v_abs).meet(v)
@@ -1259,7 +1311,7 @@ class FularaState(State):
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: Subscription, state: 'FularaState' = None,
                                evaluation=None):
-            if isinstance(expr.target.typ, DictLyraType):
+            if isinstance(expr.target.typ, (DictLyraType, ListLyraType)):
                 if expr in evaluation:  # already evaluated
                     return evaluation[expr]
                 else:
@@ -1272,7 +1324,10 @@ class FularaState(State):
                         k_abs.remove_variable(old_temp)
 
                     scalar_vars = state._s_vars.copy()
-                    v_var = VariableIdentifier(d.typ.val_typ, v_name)
+                    if isinstance(d.typ, ListLyraType):
+                        v_var = VariableIdentifier(d.typ.typ, v_name)
+                    else:
+                        v_var = VariableIdentifier(d.typ.val_typ, v_name)
                     v_abs = d_lattice.v_domain(scalar_vars, v_var).bottom()
                     for (k, v) in d_lattice.segments:
                         key_meet_k = deepcopy(k_abs).meet(k)
@@ -1286,7 +1341,7 @@ class FularaState(State):
                     state.scalar_state.meet(state.v_s_conv(v_abs))
 
                     # use increasing numbers for temp_var names
-                    temp_var = VariableIdentifier(d.typ.val_typ, str(len(evaluation)) + "v")
+                    temp_var = VariableIdentifier(v_var.typ, str(len(evaluation)) + "v")
                     state.scalar_state.add_variable(temp_var)
 
                     state.scalar_state.assign({temp_var}, {v_var})

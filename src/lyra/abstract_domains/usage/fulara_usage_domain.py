@@ -26,7 +26,7 @@ from lyra.core.expressions import VariableIdentifier, Expression, Subscription, 
     _iter_child_exprs, NegationFreeNormalExpression, Keys, Values, \
     Items, BinaryComparisonOperation, TupleDisplay
 from lyra.core.types import BooleanLyraType, IntegerLyraType, StringLyraType, \
-    FloatLyraType, DictLyraType
+    FloatLyraType, DictLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
 
 Status = UsageLattice.Status
@@ -35,6 +35,7 @@ Status = UsageLattice.Status
 k_name = "0v_k"
 
 scalar_types = {BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType}
+map_types = {DictLyraType, ListLyraType}
 
 
 class FularaUsageLattice(Lattice):
@@ -60,40 +61,41 @@ class FularaUsageLattice(Lattice):
     # here the Union type means a logical AND: Domains should inherit from both Wrapper and State
     def __init__(self, key_domain: Type[Union[KeyWrapper, State]],
                  scalar_vars: Set[VariableIdentifier] = None,
-                 dict_vars: Set[VariableIdentifier] = None):
+                 map_vars: Set[VariableIdentifier] = None):
         """Map each program variable/dictionary segment to its usage status.
 
         :param key_domain: domain for abstraction of dictionary keys,
             ranges over the scalar variables and the special key variable v_k
         :param scalar_vars: list of scalar variables, whose usage should be abstracted
-        :param dict_vars: list of dictionary variables, whose usage should be abstracted
+        :param map_vars: list of map variables, whose usage should be abstracted
         """
         super().__init__()
 
         self._s_vars = scalar_vars or set()
-        self._d_vars = dict_vars or set()
+        self._m_vars = map_vars or set()
 
         self._k_domain = key_domain
 
         self._scalar_usage = SimpleUsageStore(scalar_vars)
 
         arguments = {}
-        for dv in dict_vars:
+        for dv in map_vars:
             typ = dv.typ
-            if isinstance(typ, DictLyraType):  # should be true
-                if typ not in arguments:
-                    k_var = VariableIdentifier(typ.key_typ, k_name)
-
-                    arguments[typ] = {'key_domain': key_domain, 'value_domain': UsageLattice,
-                                      'key_d_args': {'scalar_variables': scalar_vars,
-                                                     'k_var': k_var}}
+            if isinstance(typ, DictLyraType):
+                k_var = VariableIdentifier(typ.key_typ, k_name)
+            elif isinstance(typ, ListLyraType):
+                k_var = VariableIdentifier(IntegerLyraType(), k_name)
             else:
-                raise TypeError("Dictionary variables should be of DictLyraType")
+                raise TypeError("Map variables should be of type DictLyraType or ListLyraType")
+
+            if typ not in arguments:
+                arguments[typ] = {'key_domain': key_domain, 'value_domain': UsageLattice,
+                                  'key_d_args': {'scalar_variables': scalar_vars, 'k_var': k_var}}
 
         lattices = defaultdict(lambda: FularaLattice)
-        self._dict_usage = Store(dict_vars, lattices, arguments)
+        self._dict_usage = Store(map_vars, lattices, arguments)
         # start with 'not used'
-        for var in dict_vars:
+        for var in map_vars:
             self._dict_usage.store[var].empty()
 
         self._loop_flag = False
@@ -253,7 +255,7 @@ class FularaUsageState(Stack, State):
     def __init__(self, key_domain: Type[KeyWrapper],
                  precursory: FularaState,
                  scalar_vars: Set[VariableIdentifier] = None,
-                 dict_vars: Set[VariableIdentifier] = None,
+                 map_vars: Set[VariableIdentifier] = None,
                  k_pre_k_conv: Callable[[KeyWrapper], KeyWrapper]
                  = lambda x: x):
         """
@@ -262,12 +264,12 @@ class FularaUsageState(Stack, State):
             should support backward assignments with _substitute
         :param precursory: Forward analysis (Fulara analysis) result above the current statement
         :param scalar_vars: list of scalar variables, whose liveness should be abstracted
-        :param dict_vars: list of dictionary variables, whose usage should be abstracted
+        :param map_vars: list of map variables, whose usage should be abstracted
         :param k_pre_k_conv: Conversion function to convert from key domain elements of the
                              precursory analysis to key domain elements of this analysis
                              (if the domains differ)"""
 
-        arguments = {'key_domain': key_domain, 'scalar_vars': scalar_vars, 'dict_vars': dict_vars}
+        arguments = {'key_domain': key_domain, 'scalar_vars': scalar_vars, 'map_vars': map_vars}
         super().__init__(FularaUsageLattice, arguments)    # Stack
         State.__init__(self, precursory)
 
@@ -355,12 +357,12 @@ class FularaUsageState(Stack, State):
                             # weak update = strong update, since U is top
                             use_lattice.partition_add(k_abs, UsageLattice(Status.U))
 
-                elif isinstance(expr.typ, DictLyraType):
+                elif type(expr.typ) in map_types:
                     self.lattice.dict_usage.store[expr].top()
                 else:
                     raise NotImplementedError(
                         f"Type '{expr.typ}' of variable {expr} not supported")
-            elif isinstance(expr, Subscription) and isinstance(expr.target.typ, DictLyraType):
+            elif isinstance(expr, Subscription) and type(expr.target.typ) in map_types:
                 use_lattice: FularaLattice = self.lattice.dict_usage.store[expr.target]
                 pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
                 scalar_key = pre_copy.read_eval.visit(expr.key)
@@ -414,7 +416,7 @@ class FularaUsageState(Stack, State):
             if value.is_written() or value.is_top():
                 effect = True
                 break
-        else:   # no scalar variable effected
+        else:   # no scalar variable affected
             d_store = self.lattice.dict_usage.store
             for d, d_lattice in d_store.items():
                 for (_, v) in d_lattice.segments:
@@ -478,7 +480,7 @@ class FularaUsageState(Stack, State):
                 if left_state.is_top() or left_state.is_scoped():
                     left_u_s = True
                     left_state.written()      # left overwritten
-            elif isinstance(left.typ, DictLyraType):
+            elif type(left.typ) in map_types:
                 left_lattice: FularaLattice = self.lattice.dict_usage.store[left]
                 left_u_s = any(v.is_top() or v.is_scoped() for (_, v) in left_lattice.segments)
 
@@ -490,7 +492,7 @@ class FularaUsageState(Stack, State):
             else:
                 error = f"Substitution for {left} is not yet implemented!"
                 raise NotImplementedError(error)
-        elif isinstance(left, Subscription) and isinstance(left.target.typ, DictLyraType):
+        elif isinstance(left, Subscription) and type(left.target.typ) in map_types:
             left_lattice: FularaLattice = self.lattice.dict_usage.store[left.target]
             pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
             scalar_key = pre_copy.read_eval.visit(left.key)
@@ -510,7 +512,6 @@ class FularaUsageState(Stack, State):
                         # there can only be one overlapping segment (since k_abs is singleton)
                         break
             else:   # weak update
-                # "left_lattice.partition_update({(k_abs, UsageLattice(Status.W))})"
                 new_segments = copy(left_lattice.segments)
                 for (k, v) in left_lattice.segments:
                     key_meet_k = deepcopy(k_abs).meet(k)

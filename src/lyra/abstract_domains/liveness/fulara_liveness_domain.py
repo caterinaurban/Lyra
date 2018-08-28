@@ -24,7 +24,7 @@ from lyra.core.expressions import VariableIdentifier, Expression, Subscription, 
     _iter_child_exprs, Keys, Values, \
     Items
 from lyra.core.types import BooleanLyraType, IntegerLyraType, StringLyraType, \
-    FloatLyraType, DictLyraType
+    FloatLyraType, DictLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
 
 Status = LivenessLattice.Status
@@ -33,6 +33,7 @@ Status = LivenessLattice.Status
 k_name = "0v_k"
 
 scalar_types = {BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType}
+map_types = {DictLyraType, ListLyraType}
 
 
 class FularaLivenessState(State):
@@ -58,7 +59,7 @@ class FularaLivenessState(State):
     def __init__(self, key_domain: Type[KeyWrapper],
                  precursory: FularaState,
                  scalar_vars: Set[VariableIdentifier] = None,
-                 dict_vars: Set[VariableIdentifier] = None,
+                 map_vars: Set[VariableIdentifier] = None,
                  k_pre_k_conv: Callable[[KeyWrapper], KeyWrapper]
                  = lambda x: x):
         """Map each program variable/dictionary segment to its liveness status.
@@ -67,7 +68,7 @@ class FularaLivenessState(State):
             should support backward assignments with _substitute
         :param precursory: Forward analysis (Fulara analysis) result above the current statement
         :param scalar_vars: list of scalar variables, whose liveness should be abstracted
-        :param dict_vars: list of dictionary variables, whose usage should be abstracted
+        :param map_vars: list of map variables, whose usage should be abstracted
         :param k_pre_k_conv: Conversion function to convert from key domain elements of the
                              precursory analysis to key domain elements of this analysis
                              (if the domains differ)
@@ -76,29 +77,30 @@ class FularaLivenessState(State):
         super().__init__(precursory)
 
         self._s_vars = scalar_vars or set()
-        self._d_vars = dict_vars or set()
+        self._m_vars = map_vars or set()
 
         self._k_domain = key_domain
 
         self._scalar_liveness = StrongLivenessState(scalar_vars)
 
         arguments = {}
-        for dv in dict_vars:
+        for dv in map_vars:
             typ = dv.typ
-            if isinstance(typ, DictLyraType):  # should be true
-                if typ not in arguments:
-                    k_var = VariableIdentifier(typ.key_typ, k_name)
-
-                    arguments[typ] = {'key_domain': key_domain, 'value_domain': LivenessLattice,
-                                      'key_d_args': {'scalar_variables': scalar_vars,
-                                                     'k_var': k_var}}
+            if isinstance(typ, DictLyraType):
+                k_var = VariableIdentifier(typ.key_typ, k_name)
+            elif isinstance(typ, ListLyraType):
+                k_var = VariableIdentifier(IntegerLyraType(), k_name)
             else:
-                raise TypeError("Dictionary variables should be of DictLyraType")
+                raise TypeError("Map variables should be of type DictLyraType or ListLyraType")
+
+            if typ not in arguments:
+                arguments[typ] = {'key_domain': key_domain, 'value_domain': LivenessLattice,
+                                  'key_d_args': {'scalar_variables': scalar_vars, 'k_var': k_var}}
 
         lattices = defaultdict(lambda: FularaLattice)
-        self._dict_liveness = Store(dict_vars, lattices, arguments)
+        self._dict_liveness = Store(map_vars, lattices, arguments)
         # start with 'dead'
-        for var in dict_vars:
+        for var in map_vars:
             self._dict_liveness.store[var].empty()
 
         # self._length_usage # TODO
@@ -242,12 +244,12 @@ class FularaLivenessState(State):
                             # weak update = strong update (since setting to top)
                             live_lattice.partition_add(k_abs, LivenessLattice(Status.Live))
 
-                elif isinstance(expr.typ, DictLyraType):
+                elif type(expr.typ) in map_types:
                     self.dict_liveness.store[expr].top()
                 else:
                     raise NotImplementedError(
                         f"Type '{expr.typ}' of variable {expr} not supported")
-            elif isinstance(expr, Subscription) and isinstance(expr.target.typ, DictLyraType):
+            elif isinstance(expr, Subscription) and type(expr.target.typ) in map_types:
                 live_lattice: FularaLattice = self.dict_liveness.store[expr.target]
                 pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
                 scalar_key = pre_copy.read_eval.visit(expr.key)
@@ -304,11 +306,11 @@ class FularaLivenessState(State):
         left_live = False    # flag for left expression is live
         if isinstance(left, VariableIdentifier):
             if type(left.typ) in scalar_types:
-                left_state = self.scalar_liveness.store[left]
+                left_state: LivenessLattice = self.scalar_liveness.store[left]
                 if left_state.is_top():
                     left_live = True
                     left_state.bottom()     # dead
-            elif isinstance(left.typ, DictLyraType):
+            elif type(left.typ) in map_types:
                 left_lattice: FularaLattice = self.dict_liveness.store[left]
                 left_live = any(v.is_top() for (_, v) in left_lattice.segments)
 
@@ -317,7 +319,7 @@ class FularaLivenessState(State):
             else:
                 error = f"Substitution for {left} is not yet implemented!"
                 raise NotImplementedError(error)
-        elif isinstance(left, Subscription) and isinstance(left.target.typ, DictLyraType):
+        elif isinstance(left, Subscription) and type(left.target.typ) in map_types:
             left_lattice: FularaLattice = self.dict_liveness.store[left.target]
             pre_copy: FularaState = deepcopy(self.precursory)  # TODO: copy needed?
             scalar_key = pre_copy.read_eval.visit(left.key)
@@ -351,7 +353,7 @@ class FularaLivenessState(State):
             error = f"Substitution for {left} is not yet implemented!"
             raise NotImplementedError(error)
 
-        if left_live:        # left is used or scoped -> right is used
+        if left_live:        # left is strongly live -> right is strongly live
             self.make_live(right)
 
         # update key relations (adapted from fulara_domain._assign):
