@@ -66,13 +66,14 @@ class Controller(metaclass=ABCMeta):
         import hashlib  # instead of md5
 
         modified = False
-        db_path = os.getcwd() + '/db'
+        path = self.script_path
+        folder, _ = os.path.split(path)
+        db_path = folder + '/db'
         try:
             ld = pickle.load(open(db_path, 'rb'))
         except (EOFError, FileNotFoundError):
             ld = []
         db = dict(ld)
-        path = self.script_path
         # this converts the hash to text
         checksum = hashlib.md5(open(path).read().encode('utf-8')).hexdigest()
         if db.get(path, None) != checksum:
@@ -84,8 +85,13 @@ class Controller(metaclass=ABCMeta):
 
     def main(self):
         """ Run the controller """
+        try:
+            code_modified = self.code_modified()
+        except (PermissionError, EOFError, FileNotFoundError):
+            # if something goes wrong with db file, run the analysis
+            code_modified = True
         # if code has been modified or assumptions have been deleted
-        if self.code_modified() or not self.handler.file_exists():
+        if code_modified or not self.handler.file_exists():
             print("Running analysis")
             result = self.run_analysis()
             print("RESULT", result)
