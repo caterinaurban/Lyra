@@ -52,6 +52,21 @@ class CharacterLattice(BottomMixin, SequenceMixin):
             return cls(set(literal.val), set(literal.val))
         return cls()
 
+    @classmethod
+    def from_attribute(cls, attribute: AttributeReference) -> 'CharacterLattice':
+        name = attribute.attribute.name
+        if name == 'isalpha':
+            return cls(set(), set(string.ascii_letters))
+        if name == 'isalnum':
+            return cls(set(), set(string.ascii_letters).union(set(string.digits)))
+        if name == 'islower':
+            return cls(set(), set(string.ascii_lowercase))
+        if name == 'isupper':
+            return cls(set(), set(string.ascii_uppercase))
+        if name == 'isdecimal' or name == 'isdigit':
+            return cls(set(), set(string.digits))
+        return cls()
+
     @property
     def certainly(self):
         """Current set of must characters.
@@ -128,6 +143,11 @@ class CharacterLattice(BottomMixin, SequenceMixin):
         maybe = self.maybe.union(other.maybe)
         return self._replace(type(self)(certainly, maybe))
 
+    def negate(self):
+        """The negation of an element ``(c, m)`` is ``(∅, _alphabet - m)`` """
+        maybe = _alphabet.difference(self.maybe)
+        return self._replace(type(self)(maybe=maybe))
+
 
 class CharacterState(Basis):
     """Character inclusion analysis state. An element of the character inclusion abstract domain.
@@ -148,8 +168,11 @@ class CharacterState(Basis):
         super().__init__(variables, lattices, precursory=precursory)
 
     @copy_docstring(Basis._assume)
-    def _assume(self, condition: Expression) -> 'CharacterState':
-        if isinstance(condition, UnaryBooleanOperation):
+    def _assume(self, condition: Expression) -> 'State':
+        if isinstance(condition, AttributeReference):
+            evaluation = self._evaluation.visit(condition, self, dict())
+            self.store[condition.target].meet(evaluation[condition])
+        elif isinstance(condition, UnaryBooleanOperation):
             if condition.operator == UnaryBooleanOperation.Operator.Neg:
                 expression = condition.expression
                 if isinstance(expression, BinaryComparisonOperation):
@@ -172,6 +195,9 @@ class CharacterState(Basis):
                     right = UnaryBooleanOperation(right.typ, op, right)
                     typ = expression.typ
                     return self._assume(BinaryBooleanOperation(typ, left, operator, right))
+                elif isinstance(expression, AttributeReference):  # example: not x.isalpha()
+                    evaluation = self._evaluation.visit(expression, self, dict())
+                    self.store[expression.target].meet(evaluation[expression].negate())
         elif isinstance(condition, BinaryBooleanOperation):
             if condition.operator == BinaryBooleanOperation.Operator.And:
                 right = deepcopy(self)._assume(condition.right)
@@ -198,6 +224,12 @@ class CharacterState(Basis):
             if expr in evaluation:
                 return evaluation
             evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
+            return evaluation
+
+        def visit_AttributeReference(self, expr: AttributeReference, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation
+            evaluation[expr] = state.lattices[expr.typ].from_attribute(expr)
             return evaluation
 
     _evaluation = ExpressionEvaluation()  # static class member shared between all instances

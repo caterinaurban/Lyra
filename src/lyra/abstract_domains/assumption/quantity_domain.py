@@ -9,10 +9,11 @@ is represented by their sign (negative, zero, positive, ...)
 :Authors: Caterina Urban
 """
 from collections import defaultdict
-from typing import Set
+from typing import Set, Dict, List, Tuple, Any
 
 from lyra.abstract_domains.assumption.assumption_domain import JSONMixin, InputMixin
 from lyra.abstract_domains.numerical.sign_domain import SignLattice, SignState
+from lyra.assumption.error import CheckerError
 from lyra.core.expressions import VariableIdentifier, Expression, Input, \
     BinaryArithmeticOperation, BinaryComparisonOperation, Literal
 from lyra.core.types import BooleanLyraType, IntegerLyraType
@@ -49,6 +50,54 @@ class QuantityLattice(SignLattice, JSONMixin):
         if json == '≥0' or json == '≠0' or json == '>0' or json == '⊤':
             positive = True
         return QuantityLattice(negative, zero, positive)
+
+    @copy_docstring(JSONMixin.check_input)
+    def check_input(self, pp: str, pp_value: Dict[str, Tuple[int, Any]],
+                    line_errors: Dict[int, List[CheckerError]]):
+        """
+        If sign check fails, the value passed to the next state's check_input through
+        **pp_value** is None to indicate that this value is uncheckable.
+        Errors are added the respective lines in **line_errors**.
+
+        :param pp: Program point of the current constraint
+        :param pp_value: Mapping from program point to the last value read from it
+        :param line_errors: errors present on each line
+        :return:
+        """
+        error = None
+        input_line = pp_value[pp][0]
+        input_value = pp_value[pp][1]
+        correct_value = None
+        if input_value is None:
+            return
+        if self.is_top():
+            return
+        elif self.maybe_negative() and self.maybe_zero():
+            if not input_value <= 0:
+                error = CheckerError("Value should be ≤0.")
+        elif self.maybe_zero() and self.maybe_positive():
+            if not input_value >= 0:
+                error = CheckerError("Value should be ≥0.")
+        elif self.maybe_negative() and self.maybe_positive():
+            if not input_value != 0:
+                error = CheckerError("Value should not be zero.")
+        elif self.maybe_negative():
+            if not input_value < 0:
+                error = CheckerError("Value should be <0.")
+        elif self.maybe_positive():
+            if not input_value > 0:
+                error = CheckerError("Value should be >0.")
+        elif self.maybe_zero():
+            if not input_value == 0:
+                error = CheckerError("Value should be zero.")
+        else:  # self.is_bottom()
+                error = CheckerError("Sign error.")
+
+        if error is not None:
+            line_errors[input_line].append(error)
+        else:
+            correct_value = input_value
+        pp_value[pp] = (input_line, correct_value)
 
 
 class QuantityState(SignState, InputMixin):

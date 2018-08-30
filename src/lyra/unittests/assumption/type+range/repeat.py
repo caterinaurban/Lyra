@@ -7,4 +7,9 @@ for i in range(x):
         print(y)
     else:
         raise ValueError
+    if x <= 10:
+        print(x)
+    else:
+        raise ValueError
+
 z: str = input()

@@ -14,6 +14,7 @@ from typing import Set
 
 from lyra.abstract_domains.assumption.assumption_domain import JSONMixin, InputMixin
 from lyra.abstract_domains.string.character_domain import CharacterLattice, CharacterState
+from lyra.assumption.error import CheckerError, DependencyError
 from lyra.core.expressions import VariableIdentifier, Expression
 from lyra.core.utils import copy_docstring
 
@@ -38,9 +39,33 @@ class AlphabetLattice(CharacterLattice, JSONMixin):
         return {'certainly': list(self.certainly), 'maybe': list(self.maybe)}
 
     @staticmethod
-    @copy_docstring(JSONMixin.from_json)
     def from_json(json: dict) -> 'JSONMixin':
         return AlphabetLattice(set(json['certainly']), set(json['maybe']))
+
+    def check_input(self,  pp: VariableIdentifier, pp_value: dict, line_errors: dict):
+        if self.is_top():
+            return
+        input_line = pp_value[pp][0]
+        input_value = pp_value[pp][1]
+        if input_value is not None:
+            input_value = set(input_value)
+            error_message = ""
+            if not input_value.issuperset(self.certainly):
+                s = ', '.join(['\'' + c + '\'' for c in sorted(self.certainly)])
+                error_message += "This value must contain *all* the characters: {}".format(s)
+
+            if not input_value.issubset(self.maybe):
+                if len(error_message) > 0:
+                    error_message += "; \n"
+                s = ', '.join(['\'' + c + '\'' for c in sorted(self.maybe)])
+                error_message += "This value is allowed to contain only the characters: {}"\
+                    .format(s)
+            if len(error_message) > 0:
+                error = CheckerError(error_message)
+                line_errors[input_line].append(error)
+        else:
+            error = DependencyError(input_line)
+            line_errors[input_line].append(error)
 
 
 class AlphabetState(CharacterState, InputMixin):

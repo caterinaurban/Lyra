@@ -9,20 +9,23 @@ for i in range(students):
     sum: float = 0
     max: float = 0
     for j in range(homeworks):
-        best: float = float(input())
         grade: float = float(input())
+        best: float = float(input())
         if grade < 0 or grade > best:
             raise ValueError
         sum: float = sum + grade
         max: float = max + best
-    print("Student ID: " + id)
+    if id.isdigit():
+        print("Student ID: " + id)
+    else:
+        raise ValueError("Invalid ID.")
     print("Total homework grades:")
     print(sum)
     print("out of")
     print(best)
 
-    best: float = float(input())
     grade: float = float(input())
+    best: float = float(input())
     if grade < 0 or grade > best:
         raise ValueError
     print("Final test grades:")

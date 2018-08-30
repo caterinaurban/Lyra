@@ -8,6 +8,7 @@ Interface of a lattice. Lattice elements support lattice operations.
 """
 
 from abc import ABCMeta, abstractmethod
+from copy import deepcopy
 from enum import Enum
 from functools import reduce
 from typing import List
@@ -193,6 +194,13 @@ class Lattice(metaclass=ABCMeta):
         """
         self.__dict__.update(other.__dict__)
         return self
+
+    def copy(self):
+        """
+            Copies the lattice element.
+        :return: copy of the current lattice element
+        """
+        return deepcopy(self)
 
 
 class KindMixin(Lattice, metaclass=ABCMeta):

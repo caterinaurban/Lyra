@@ -41,6 +41,10 @@ class WordSetLattice(StringSetLattice, JSONMixin):
     def from_json(json: dict) -> 'JSONMixin':
         return WordSetLattice(set(json['strings']))
 
+    @copy_docstring(JSONMixin.check_input)
+    def check_input(self, *args):
+        pass
+
 
 class WordSetState(StringSetState, InputMixin):
     """Word set analysis state. An element of the word set abstract domain.

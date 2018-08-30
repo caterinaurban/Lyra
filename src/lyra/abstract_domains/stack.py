@@ -10,7 +10,7 @@ Stack of lattices.
 from abc import ABCMeta, abstractmethod
 from typing import Type, Dict, Any
 
-from lyra.abstract_domains.lattice import BoundedLattice
+from lyra.abstract_domains.lattice import BoundedLattice, Lattice
 from lyra.core.utils import copy_docstring
 
 

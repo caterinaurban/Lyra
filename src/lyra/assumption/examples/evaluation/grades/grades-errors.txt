@@ -1,0 +1,38 @@
+CS 101: Introduction to Computer Science
+3
+4
+34-8342
+9
+10
+12
+12
+11  Error: 11 > 10
+10
+45
+50
+34-14002
+6
+10
+13 Error: 13 > 12
+12
+-9  Error: -9 < 0
+10
+51  Error: 51 > 50
+50
+31-1234
+5.5
+10
+9
+12
+10#  Error: Expected integer
+10
+-43  Error: -43 < 0
+50
+34-2373
+6..5 Error: Expected Integer
+10
+11
+12
+7
+10
+48  Error missing line after this line

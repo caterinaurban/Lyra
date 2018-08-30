@@ -1,4 +1,3 @@
-
 # INITIAL: 3:(Integer, [-inf, inf]), 5:(Integer, [-inf, 5]), 6:(Integer, [3, inf])
 z: int = int(input())
 if z <= 3:

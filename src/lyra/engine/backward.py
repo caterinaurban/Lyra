@@ -10,12 +10,11 @@ from copy import deepcopy
 from queue import Queue
 from typing import List, Optional
 
+from lyra.abstract_domains.state import State
+from lyra.core.cfg import Basic, Loop, Conditional, Edge, Node
 from lyra.engine.interpreter import Interpreter
 from lyra.engine.result import AnalysisResult
 from lyra.semantics.backward import BackwardSemantics
-
-from lyra.abstract_domains.state import State
-from lyra.core.cfg import Basic, Loop, Conditional, Edge, Node
 
 
 class BackwardInterpreter(Interpreter):
@@ -56,22 +55,22 @@ class BackwardInterpreter(Interpreter):
 
             # retrieve the previous exit state of the node
             if current in self.result.result:
-                previous = deepcopy(self.result.get_node_result(current)[-1])
+                previous = self.result.get_node_result(current)[-1].copy()
             else:
                 previous = None
 
             # compute the current exit state of the current node
-            entry = deepcopy(initial)
+            entry = initial.copy()
             if current.identifier != self.cfg.out_node.identifier:
                 entry.bottom()
                 # join incoming states
                 edges = self.cfg.out_edges(current)
                 for edge in edges:
                     if edge.target in self.result.result:
-                        successor = deepcopy(self.result.get_node_result(edge.target)[0])
+                        successor = self.result.get_node_result(edge.target)[0].copy()
                     else:
-                        successor = deepcopy(initial).bottom()
-                    # handle unconditional non-default edges
+                        successor = initial.copy().bottom()
+                    # handle unconditional non-default edge
                     if edge.kind == Edge.Kind.IF_OUT:
                         successor = successor.enter_if()
                     elif edge.kind == Edge.Kind.LOOP_OUT:
@@ -128,16 +127,16 @@ class BackwardInterpreter(Interpreter):
                         successor = self.semantics.semantics(edge.condition, successor).filter()
                         successor = successor.exit_loop()
                     entry = entry.join(successor)
+
                 # widening
                 if isinstance(current, Loop) and self.widening < iteration:
-                    entry = deepcopy(previous).widening(entry)
+                    entry = previous.copy().widening(entry)
 
             # check for termination and execute block
             if previous is None or not entry.less_equal(previous):
                 states = deque([entry])
                 if isinstance(current, Basic):
                     successor = entry
-
                     if pre_result:     # a precursory analysis was run
                         pre_states: List[Optional[State]] = pre_result.get_node_result(current)
                         if isinstance(self.precursory, ForwardInterpreter):

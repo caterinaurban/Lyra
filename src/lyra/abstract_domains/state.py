@@ -202,8 +202,9 @@ class State(Lattice, metaclass=ABCMeta):
 
         :return: current state modified to be the bottom state
         """
-        return self.bottom()
-
+        # return self.bottom()
+        self.bottom()
+        return self
     @abstractmethod
     def _substitute(self, left: Expression, right: Expression) -> 'State':
         """Substitute an expression to another expression.

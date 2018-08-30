@@ -1,0 +1,172 @@
+{
+    "multiplier": {
+        "type": [
+            "literal",
+            "int"
+        ],
+        "value": "1"
+    },
+    "constraints": [
+        {
+            "pp": [
+                3,
+                0
+            ],
+            "lattice_elements": [
+                {
+                    "domain": "TypeLattice",
+                    "module": "lyra.abstract_domains.assumption.type_domain",
+                    "element": "String"
+                },
+                {
+                    "domain": "QuantityLattice",
+                    "module": "lyra.abstract_domains.assumption.quantity_domain",
+                    "element": "\u22a4"
+                },
+                {
+                    "domain": "OctagonState",
+                    "module": "lyra.abstract_domains.assumption.octagons_domain",
+                    "element": {
+                        "dimensions": 7,
+                        "variables": [
+                            [
+                                "a",
+                                "string"
+                            ],
+                            [
+                                "b",
+                                "string"
+                            ],
+                            [
+                                "c",
+                                "string"
+                            ],
+                            [
+                                "len(a)",
+                                "int"
+                            ],
+                            [
+                                "len(b)",
+                                "int"
+                            ],
+                            [
+                                "len(c)",
+                                "int"
+                            ],
+                            [
+                                "3.1",
+                                "string"
+                            ]
+                        ],
+                        "indexes": {
+                            "a": 0,
+                            "b": 1,
+                            "c": 2,
+                            "len(a)": 3,
+                            "len(b)": 4,
+                            "len(c)": 5,
+                            "3.1": 6
+                        },
+                        "lincons_array": []
+                    }
+                },
+                {
+                    "domain": "AlphabetLattice",
+                    "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                    "element": {
+                        "certainly": [],
+                        "maybe": [
+                            "b",
+                            "c",
+                            "a",
+                            "d"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "pp": [
+                5,
+                0
+            ],
+            "lattice_elements": [
+                {
+                    "domain": "TypeLattice",
+                    "module": "lyra.abstract_domains.assumption.type_domain",
+                    "element": "String"
+                },
+                {
+                    "domain": "QuantityLattice",
+                    "module": "lyra.abstract_domains.assumption.quantity_domain",
+                    "element": "\u22a4"
+                },
+                {
+                    "domain": "OctagonState",
+                    "module": "lyra.abstract_domains.assumption.octagons_domain",
+                    "element": {
+                        "dimensions": 8,
+                        "variables": [
+                            [
+                                "a",
+                                "string"
+                            ],
+                            [
+                                "b",
+                                "string"
+                            ],
+                            [
+                                "c",
+                                "string"
+                            ],
+                            [
+                                "len(a)",
+                                "int"
+                            ],
+                            [
+                                "len(b)",
+                                "int"
+                            ],
+                            [
+                                "len(c)",
+                                "int"
+                            ],
+                            [
+                                "5.1",
+                                "string"
+                            ],
+                            [
+                                "3.1",
+                                "string"
+                            ]
+                        ],
+                        "indexes": {
+                            "a": 0,
+                            "b": 1,
+                            "c": 2,
+                            "len(a)": 3,
+                            "len(b)": 4,
+                            "len(c)": 5,
+                            "5.1": 6,
+                            "3.1": 7
+                        },
+                        "lincons_array": []
+                    }
+                },
+                {
+                    "domain": "AlphabetLattice",
+                    "module": "lyra.abstract_domains.assumption.alphabet_domain",
+                    "element": {
+                        "certainly": [],
+                        "maybe": [
+                            "b",
+                            "c",
+                            "a",
+                            "d"
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
