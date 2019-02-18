@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-from typing import Set
-
+from typing import Set, Optional
 
 # (Class) Adapter pattern
 from lyra.abstract_domains.state import EnvironmentMixin
@@ -25,22 +24,33 @@ class KeyWrapper(EnvironmentMixin, metaclass=ABCMeta):
 
     @property
     def k_var(self) -> VariableIdentifier:
+        """The special key variable of this abstraction"""
         return self._k_var
 
     @abstractmethod
     def is_singleton(self) -> bool:
         """
-        Returns true, if in the current state k_var represents a single concrete value.
+        Returns true if in the current state k_var represents a single concrete value.
         (needed for strong updates)
         """
 
     @abstractmethod
-    def decomp(self, state: 'KeyWrapper', exclude: 'KeyWrapper') -> Set['KeyWrapper']:
+    def decomp(self, exclude: 'KeyWrapper') -> Optional[Set['KeyWrapper']]:
         """
-        Computes a decomposition/partition of the given state into a set of rest states,
+        Computes a decomposition/partition of self into a set of rest states,
         excluding all parts that overlap (meet not bottom) with the 'exclude' state.
-        i.e.: 'subtracts the meet of state & exclude from state'
-        :param state: (current) state to be decomposed
+        i.e.: 'subtracts the meet of self & exclude from state'
+        Needs to fulfil these conditions:
+        - the meet of any two KeyWrappers from the returned set
+            and the meet of 'exclude' with any KeyWrapper from the returned set must be bottom
+        - the union of all concretizations of 'exclude' and every element in the returned set
+            must be the same as the concretization of self
+        (- 'exclude' is not in the return set)
+
+        If a decomposition is not possible, the function should return None,
+        but then no strong updates with partitioning are possible.
+        Remember to return the empty set if self == 'exclude', which should always be possible
+
         :param exclude: parts to be excluded
         :return: decomposition/partition of 'state' avoiding 'exclude'
         """
@@ -53,4 +63,4 @@ class KeyWrapper(EnvironmentMixin, metaclass=ABCMeta):
     @abstractmethod
     def is_bottom(self) -> bool:
         """Should be true if the special key variable is bottom
-        (i.e. cannot have any concrete value)"""
+        (i.e. if it cannot have any concrete value)"""

@@ -22,6 +22,7 @@ class ValueWrapper(EnvironmentMixin, metaclass=ABCMeta):
 
     @property
     def v_var(self) -> VariableIdentifier:
+        """The special value variable of this abstraction"""
         return self._v_var
 
     @abstractmethod

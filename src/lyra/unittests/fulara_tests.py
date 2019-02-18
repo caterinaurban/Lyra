@@ -8,6 +8,7 @@ Fulara Analysis - Unit Tests
 
 import glob
 import os
+import sys
 import unittest
 from copy import copy, deepcopy
 
@@ -17,8 +18,6 @@ from lyra.abstract_domains.container.fulara.interval_wrappers import IntervalSWr
     IntervalKWrapper, IntervalVWrapper
 from lyra.engine.forward import ForwardInterpreter
 from lyra.semantics.forward import DefaultForwardSemantics
-
-from lyra.abstract_domains.numerical.interval_domain import DictLyraType
 from lyra.unittests.runner import TestRunner
 
 
@@ -37,8 +36,8 @@ class FularaTest(TestRunner):
                     k_var = var
                     s_vars.remove(k_var)
             if not k_var:
-                raise ValueError(
-                    f"The key variable {fulara_domain.k_name} must be added to the scalar store before conversion")
+                raise ValueError(f"The key variable {fulara_domain.k_name} "
+                                 f"must be added to the scalar store before conversion")
             k_state = IntervalKWrapper(s_vars, k_var)
             k_state._store = deepcopy(s_state.store)
 
@@ -59,8 +58,8 @@ class FularaTest(TestRunner):
                     v_var = var
                     s_vars.remove(v_var)
             if not v_var:
-                raise ValueError(
-                    f"The value variable {fulara_domain.v_name} must be added to the scalar store before conversion")
+                raise ValueError(f"The value variable {fulara_domain.v_name} "
+                                 f"must be added to the scalar store before conversion")
             v_state = IntervalVWrapper(s_vars, v_var)
             v_state._store = deepcopy(s_state.store)
 
@@ -73,10 +72,25 @@ class FularaTest(TestRunner):
 
             return s_state
 
+        def update_k_from_scalar(k_state: IntervalKWrapper, s_state: IntervalSWrapper) \
+                -> IntervalKWrapper:
+            result = deepcopy(k_state)
+            for var in s_state.store:
+                result.store[var] = deepcopy(s_state.store[var])
+            return result
+
+        def update_v_from_scalar(v_state: IntervalVWrapper, s_state: IntervalSWrapper) \
+                -> IntervalVWrapper:
+            result = deepcopy(v_state)
+            for var in s_state.store:
+                result.store[var] = deepcopy(s_state.store[var])
+            return result
+
         scalar_vars = {v for v in self.variables if type(v.typ) in fulara_domain.scalar_types}
-        dict_vars = {v for v in self.variables if type(v.typ) == DictLyraType}
+        map_vars = {v for v in self.variables if type(v.typ) in fulara_domain.map_types}
         return FularaState(IntervalSWrapper, IntervalKWrapper, IntervalVWrapper,
-                           scalar_vars, dict_vars, s_k_conversion, k_s_conversion,
+                           update_k_from_scalar, update_v_from_scalar,
+                           scalar_vars, map_vars, s_k_conversion, k_s_conversion,
                            s_v_conversion, v_s_conversion)
 
 
@@ -91,4 +105,6 @@ def test_suite():
 
 if __name__ == '__main__':
     runner = unittest.TextTestRunner()
-    runner.run(test_suite())
+    result = runner.run(test_suite())
+    if not result.wasSuccessful():
+        sys.exit(1)

@@ -8,12 +8,18 @@
 # from lyra.engine.liveness.liveness_analysis import StrongLivenessAnalysis
 # StrongLivenessAnalysis().main("esop2018.py")
 
+# from lyra.engine.liveness.fulara_liveness_analysis import FularaIntervalLivenessAnalysis
+# FularaIntervalLivenessAnalysis().main("usage/running_example.py")
+
 ##################
 # Usage Analyses #
 ##################
 
 # from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
 # SimpleUsageAnalysis().main("esop2018.py")
+
+# from lyra.engine.usage.fulara_usage_analysis import FularaIntervalUsageAnalysis
+# FularaIntervalUsageAnalysis().main("usage/running_example.py")
 
 ######################
 # Numerical Analyses #
@@ -31,8 +37,8 @@
 # from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis
 # BackwardIntervalAnalysis().main("example.py")
 
-# from lyra.engine.container.fulara.fulara_analysis import FularaAnalysis
-# FularaAnalysis().main("larger_expressions.py")
+# from lyra.engine.container.fulara.fulara_analysis import FularaIntervalAnalysis
+# FularaIntervalAnalysis().main("larger_expressions.py")
 
 ###################
 # String Analyses #
