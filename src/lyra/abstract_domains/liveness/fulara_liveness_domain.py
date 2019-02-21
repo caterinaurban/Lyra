@@ -263,7 +263,7 @@ class FularaLivenessState(State):
                 pass
 
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression) -> 'FularaLivenessState':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'FularaLivenessState':
         # update key relations (adapted from fulara_domain.assume):
         all_ids = condition.ids()
         if all(type(ident.typ) in scalar_types for ident in all_ids):
@@ -271,7 +271,7 @@ class FularaLivenessState(State):
             for d_lattice in self.dict_liveness.store.values():
                 for (k, v) in d_lattice.segments:
                     d_lattice.segments.remove((k, v))  # needed, because tuple is immutable?
-                    k.assume({condition})
+                    k.assume({condition}, bwd=bwd)
                     d_lattice.segments.add((k, v))
                 d_lattice.d_norm_own()
         else:

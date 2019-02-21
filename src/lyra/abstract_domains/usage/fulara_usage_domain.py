@@ -376,7 +376,7 @@ class FularaUsageState(Stack, State):
                 pass
 
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression) -> 'FularaUsageState':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'FularaUsageState':
         condition = NegationFreeNormalExpression().visit(condition)     # eliminate negations
 
         # update key relations (adapted from fulara_domain._assume:
@@ -386,7 +386,7 @@ class FularaUsageState(Stack, State):
             for d_lattice in self.lattice.dict_usage.store.values():
                 for (k, v) in d_lattice.segments:
                     d_lattice.segments.remove((k, v))  # needed, because tuple is immutable?
-                    k.assume({condition})
+                    k.assume({condition}, bwd=bwd)
                     d_lattice.segments.add((k, v))
                 d_lattice.d_norm_own()
         else:

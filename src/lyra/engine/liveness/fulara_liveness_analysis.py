@@ -8,7 +8,6 @@ Fulara Liveness Analysis
 from lyra.abstract_domains.container.fulara.interval_wrappers import IntervalKWrapper
 from lyra.abstract_domains.liveness import fulara_liveness_domain
 from lyra.abstract_domains.liveness.fulara_liveness_domain import FularaLivenessState
-from lyra.core.types import DictLyraType
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.container.fulara.fulara_analysis import FularaIntervalAnalysis
 from lyra.engine.forward import ForwardInterpreter
