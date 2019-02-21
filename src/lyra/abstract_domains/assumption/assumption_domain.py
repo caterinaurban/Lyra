@@ -555,7 +555,7 @@ class AssumptionState(State):
             raise RuntimeError("Unexpected assignment in a backward analysis!")
 
         @copy_docstring(State._assume)
-        def _assume(self, condition: Expression) -> 'AssumptionState.InputStack':
+        def _assume(self, condition: Expression, bwd: bool = False) -> 'AssumptionState.InputStack':
             loop = AssumptionState.InputStack.Scope.Loop
             if not self.is_bottom() and self.scope == loop:      # the current scope is a loop
                 negation_free_normal_expression = NegationFreeNormalExpression()
@@ -822,10 +822,10 @@ class AssumptionState(State):
         raise RuntimeError("Unexpected assignment in a backward analysis!")
 
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression) -> 'AssumptionState':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'AssumptionState':
         for i, state in enumerate(self.states):
-            self.states[i] = state.assume({condition})
-        self.stack.assume({condition})
+            self.states[i] = state.assume({condition}, bwd=bwd)
+        self.stack.assume({condition}, bwd=bwd)
         return self
 
     @copy_docstring(State.before)

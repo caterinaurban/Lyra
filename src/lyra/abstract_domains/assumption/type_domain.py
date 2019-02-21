@@ -403,7 +403,7 @@ class TypeState(Store, InputMixin):
         raise RuntimeError("Unexpected assignment in a backward analysis!")
 
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression) -> 'TypeState':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'TypeState':
         return self
 
     @copy_docstring(State.enter_if)

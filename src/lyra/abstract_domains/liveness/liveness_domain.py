@@ -131,7 +131,7 @@ class LivenessState(Store, State):
         raise RuntimeError("Unexpected assignment in a backward analysis!")
 
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression) -> 'LivenessState':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'LivenessState':
         for identifier in condition.ids():
             self.store[identifier].top()
         return self

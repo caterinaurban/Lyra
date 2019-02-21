@@ -87,25 +87,27 @@ class State(Lattice, metaclass=ABCMeta):
         return self
 
     @abstractmethod
-    def _assume(self, condition: Expression) -> 'State':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'State':
         """Assume that some condition holds in the current state.
 
         .. warning::
             The current state could also be bottom or top.
 
         :param condition: expression representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
         :return: current state modified to satisfy the assumption
 
         """
 
-    def assume(self, condition: Set[Expression]) -> 'State':
+    def assume(self, condition: Set[Expression], bwd: bool = False) -> 'State':
         """Assume that some condition holds in the current state.
 
         :param condition: set of expressions representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
         :return: current state modified to satisfy the assumption
 
         """
-        self.big_join([deepcopy(self)._assume(expr) for expr in condition])
+        self.big_join([deepcopy(self)._assume(expr, bwd=bwd) for expr in condition])
         return self
 
     def before(self, pp: ProgramPoint, precursory: Optional['State']) -> 'State':
@@ -164,13 +166,14 @@ class State(Lattice, metaclass=ABCMeta):
 
         """
 
-    def filter(self) -> 'State':
+    def filter(self, bwd: bool = False) -> 'State':
         """Assume that the current result holds in the current state.
 
+        :param bwd: whether the filtering happens in a backward analysis (default: False)
         :return: current state modified to satisfy the current result
 
         """
-        self.assume(self.result)
+        self.assume(self.result, bwd=bwd)
         self.result = set()  # filtering has no result, only side-effects
         return self
 

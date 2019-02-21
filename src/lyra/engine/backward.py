@@ -94,7 +94,8 @@ class BackwardInterpreter(Interpreter):
                             precursory = None
 
                         successor = successor.before(edge.condition.pp, precursory)
-                        successor = self.semantics.semantics(edge.condition, successor).filter()
+                        successor = self.semantics.semantics(edge.condition, successor)
+                        successor = successor.filter(bwd=True)
                         successor = successor.exit_if() if branch else successor
                         successor = successor.exit_loop() if loop else successor
                     elif edge.kind == Edge.Kind.IF_IN:
@@ -110,7 +111,8 @@ class BackwardInterpreter(Interpreter):
                             precursory = None
 
                         successor = successor.before(edge.condition.pp, precursory)
-                        successor = self.semantics.semantics(edge.condition, successor).filter()
+                        successor = self.semantics.semantics(edge.condition, successor)
+                        successor = successor.filter(bwd=True)
                         successor = successor.exit_if()
                     elif edge.kind == Edge.Kind.LOOP_IN:
                         assert isinstance(edge, Conditional)
@@ -125,7 +127,8 @@ class BackwardInterpreter(Interpreter):
                             precursory = None
 
                         successor = successor.before(edge.condition.pp, precursory)
-                        successor = self.semantics.semantics(edge.condition, successor).filter()
+                        successor = self.semantics.semantics(edge.condition, successor)
+                        successor = successor.filter(bwd=True)
                         successor = successor.exit_loop()
                     entry = entry.join(successor)
                 # widening

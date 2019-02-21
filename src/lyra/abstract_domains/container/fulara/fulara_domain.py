@@ -196,7 +196,7 @@ class InRelationState(State, BottomMixin):
         return self
 
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression) -> 'InRelationState':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'InRelationState':
         if self.is_bottom():
             return self
 
@@ -762,7 +762,7 @@ class FularaState(State):
         return self
 
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression) -> 'FularaState':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'FularaState':
         if self.is_bottom():      # unreachable
             return self
 

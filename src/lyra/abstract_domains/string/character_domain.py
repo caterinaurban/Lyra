@@ -148,7 +148,7 @@ class CharacterState(Basis):
         super().__init__(variables, lattices, precursory=precursory)
 
     @copy_docstring(Basis._assume)
-    def _assume(self, condition: Expression) -> 'CharacterState':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'CharacterState':
         if isinstance(condition, UnaryBooleanOperation):
             if condition.operator == UnaryBooleanOperation.Operator.Neg:
                 expression = condition.expression
@@ -158,10 +158,10 @@ class CharacterState(Basis):
                     operator = expression.operator.reverse_operator()
                     right = expression.right
                     new_expression = BinaryComparisonOperation(typ, left, operator, right)
-                    return self._assume(new_expression)
+                    return self._assume(new_expression, bwd=bwd)
                 elif isinstance(expression, UnaryBooleanOperation):
                     if expression.operator == UnaryBooleanOperation.Operator.Neg:
-                        return self._assume(expression.expression)
+                        return self._assume(expression.expression, bwd=bwd)
                 elif isinstance(expression, BinaryBooleanOperation):
                     left = expression.left
                     op = UnaryBooleanOperation.Operator.Neg
@@ -171,14 +171,15 @@ class CharacterState(Basis):
                     op = UnaryBooleanOperation.Operator.Neg
                     right = UnaryBooleanOperation(right.typ, op, right)
                     typ = expression.typ
-                    return self._assume(BinaryBooleanOperation(typ, left, operator, right))
+                    new_expression = BinaryBooleanOperation(typ, left, operator, right)
+                    return self._assume(new_expression, bwd=bwd)
         elif isinstance(condition, BinaryBooleanOperation):
             if condition.operator == BinaryBooleanOperation.Operator.And:
-                right = deepcopy(self)._assume(condition.right)
-                return self._assume(condition.left).meet(right)
+                right = deepcopy(self)._assume(condition.right, bwd=bwd)
+                return self._assume(condition.left, bwd=bwd).meet(right)
             if condition.operator == BinaryBooleanOperation.Operator.Or:
-                right = deepcopy(self)._assume(condition.right)
-                return self._assume(condition.left).join(right)
+                right = deepcopy(self)._assume(condition.right, bwd=bwd)
+                return self._assume(condition.left, bwd=bwd).join(right)
         elif isinstance(condition, BinaryComparisonOperation):
             if condition.operator == BinaryComparisonOperation.Operator.Eq:
                 left = condition.left

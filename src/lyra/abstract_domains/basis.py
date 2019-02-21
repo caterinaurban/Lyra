@@ -62,19 +62,21 @@ class Basis(Store, State, metaclass=ABCMeta):
             return self.join(current)
         raise NotImplementedError(f"Assignment to {left.__class__.__name__} is unsupported!")
 
-    def _assume_binarybooleanoperation(self, condition: BinaryBooleanOperation) -> 'Basis':
+    def _assume_binarybooleanoperation(self, condition: BinaryBooleanOperation,
+                                       bwd: bool = False) -> 'Basis':
         """Assume that some binary boolean condition holds in the current state.
 
         :param condition: expression representing the assumed binary boolean condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
         :return: current state modified to satisfy the assumption
 
         """
         if condition.operator == BinaryBooleanOperation.Operator.And:
-            right = deepcopy(self)._assume(condition.right)
-            return self._assume(condition.left).meet(right)
+            right = deepcopy(self)._assume(condition.right, bwd=bwd)
+            return self._assume(condition.left, bwd=bwd).meet(right)
         if condition.operator == BinaryBooleanOperation.Operator.Or:
-            right = deepcopy(self)._assume(condition.right)
-            return self._assume(condition.left).join(right)
+            right = deepcopy(self)._assume(condition.right, bwd=bwd)
+            return self._assume(condition.left, bwd=bwd).join(right)
         error = f"Assumption of a boolean condition with {condition.operator} is unsupported!"
         raise ValueError(error)
 

@@ -131,7 +131,7 @@ class SimpleUsageState(Stack, State):
         raise RuntimeError("Unexpected assignment in a backward analysis!")
 
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression) -> 'SimpleUsageState':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'SimpleUsageState':
         effect = False      # effect of the current nesting level on the outcome of the program
         for variable in self.lattice.variables:
             value = self.lattice.store[variable]

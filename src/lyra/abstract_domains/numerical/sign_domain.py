@@ -293,7 +293,7 @@ class SignState(Basis):
         super().__init__(variables, lattices, precursory=precursory)
 
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression) -> 'SignState':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'SignState':
         normal = NegationFreeNormalExpression().visit(condition)
         if isinstance(normal, VariableIdentifier) and isinstance(normal.typ, BooleanLyraType):
             evaluation = self._evaluation.visit(normal, self, dict())
@@ -308,7 +308,7 @@ class SignState(Basis):
                         false = self.lattices[typ](**self.arguments[typ]).false()
                         return self._refinement.visit(normal.expression, evaluation, false, self)
         elif isinstance(normal, BinaryBooleanOperation):
-            return self._assume_binarybooleanoperation(normal)
+            return self._assume_binarybooleanoperation(normal, bwd=bwd)
         elif isinstance(normal, BinaryComparisonOperation):
             evaluation = self._evaluation.visit(normal.left, self, dict())
             nonpositive = self.lattices[normal.typ](True, True, False)

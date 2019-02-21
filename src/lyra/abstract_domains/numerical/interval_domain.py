@@ -259,7 +259,7 @@ class IntervalState(Basis):
         return self
 
     @copy_docstring(Basis._assume)
-    def _assume(self, condition: Expression) -> 'IntervalState':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'IntervalState':
         normal = NegationFreeNormalExpression().visit(condition)
         if isinstance(normal, VariableIdentifier) and isinstance(normal.typ, BooleanLyraType):
             evaluation = self._evaluation.visit(normal, self, dict())
@@ -275,7 +275,7 @@ class IntervalState(Basis):
                         false = self.lattices[typ](**self.arguments[typ]).false()
                         return self._refinement.visit(expression, evaluation, false, self)
         elif isinstance(normal, BinaryBooleanOperation):
-            return self._assume_binarybooleanoperation(normal)
+            return self._assume_binarybooleanoperation(normal, bwd=bwd)
         elif isinstance(normal, BinaryComparisonOperation):
             if normal.operator == BinaryComparisonOperation.Operator.Is:
                 error = f"Assumption of a comparison with {normal.operator} is unsupported!"
@@ -293,8 +293,15 @@ class IntervalState(Basis):
                     upper_operator = BinaryComparisonOperation.Operator.Lt
                     upper_right = normal.right.stop
                     upper = BinaryComparisonOperation(typ, left, upper_operator, upper_right)
-                    right = deepcopy(self)._assume(upper)
-                    return self._assume(lower).meet(right)
+                    right = deepcopy(self)._assume(upper, bwd=bwd)
+                    return self._assume(lower, bwd=bwd).meet(right)
+                else:
+                    typ = BooleanLyraType()
+                    left = normal.left
+                    operator = BinaryComparisonOperation.Operator.Eq
+                    right = normal.right
+                    comparison = BinaryComparisonOperation(typ, left, operator, right)
+                    return self._assume(comparison, bwd=bwd)
             elif normal.operator == BinaryComparisonOperation.Operator.NotIn:
                 if isinstance(normal.right, Range):
                     typ = BooleanLyraType()
@@ -305,8 +312,15 @@ class IntervalState(Basis):
                     upper_operator = BinaryComparisonOperation.Operator.GtE
                     upper_right = normal.right.stop
                     upper = BinaryComparisonOperation(typ, left, upper_operator, upper_right)
-                    right = deepcopy(self)._assume(upper)
-                    return self._assume(lower).join(right)
+                    right = deepcopy(self)._assume(upper, bwd=bwd)
+                    return self._assume(lower, bwd=bwd).join(right)
+                else:
+                    typ = BooleanLyraType()
+                    left = normal.left
+                    operator = BinaryComparisonOperation.Operator.NotEq
+                    right = normal.right
+                    comparison = BinaryComparisonOperation(typ, left, operator, right)
+                    return self._assume(comparison, bwd=bwd)
             evaluation = self._evaluation.visit(normal.left, self, dict())
             nonpositive = self.lattices[normal.typ](upper=0)
             return self._refinement.visit(normal.left, evaluation, nonpositive, self)

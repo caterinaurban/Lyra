@@ -998,18 +998,21 @@ class BinaryOperation(Operation):
             :return: string representing the operator
             """
 
-    def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
+    def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression,
+                 forloop: bool = False):
         """Binary operation construction.
 
         :param typ: type of the operation
         :param left: left expression of the operation
         :param operator: operator of the operation
         :param right: right expression of the operation
+        :param forloop: whether the call happens in a for loop condition (default: False)
         """
         super().__init__(typ)
         self._left = left
         self._operator = operator
         self._right = right
+        self._forloop = forloop
 
     @property
     def left(self):
@@ -1022,6 +1025,10 @@ class BinaryOperation(Operation):
     @property
     def right(self):
         return self._right
+
+    @property
+    def forloop(self):
+        return self._forloop
 
     def __eq__(self, other: 'BinaryOperation'):
         typ = self.typ == other.typ
@@ -1195,12 +1202,14 @@ class BinaryComparisonOperation(BinaryOperation):
             elif self.value == 10:
                 return "not in"
 
-    def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
+    def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression,
+                 forloop: bool = False):
         """Binary comparison operation expression representation.
 
         :param typ: type of the operation
         :param left: left expression of the operation
         :param operator: operator of the operation
         :param right: right expression of the operation
+        :param forloop: whether the call happens in a for loop condition (default: False)
         """
-        super().__init__(typ, left, operator, right)
+        super().__init__(typ, left, operator, right, forloop)

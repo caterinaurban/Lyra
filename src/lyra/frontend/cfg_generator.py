@@ -733,14 +733,14 @@ class CFGVisitor(ast.NodeVisitor):
         target = self.visit(node.target, types, target_typ)
 
         body = self._visit_body(node.body, types, typ)
-        test = Call(pp, 'in', [target, iterated], BooleanLyraType())
+        test = Call(pp, 'in', [target, iterated], BooleanLyraType(), forloop=True)
         header = Loop(self._id_gen.next)
         body_in_node = body.in_node
         body_out_node = body.out_node
         body.add_node(header)
         body.in_node = header
         body.add_edge(Conditional(header, test, body_in_node, Edge.Kind.LOOP_IN))
-        not_test = Call(pp, 'not', [test], BooleanLyraType())
+        not_test = Call(pp, 'notin', [target, iterated], BooleanLyraType(), forloop=True)
         body.add_edge(Conditional(header, not_test, None))
         if body_out_node:   # control flow can exit the body
             # add an unconditional LOOP_OUT edge
