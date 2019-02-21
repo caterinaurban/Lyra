@@ -1,12 +1,19 @@
+"""
+Interval wrappers for the Fulara Domain
+===============================
+
+:Authors: Lowis Engel
+"""
+
 from copy import deepcopy, copy
 from typing import Set
 
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
-from lyra.abstract_domains.state import EnvironmentMixin
 from lyra.abstract_domains.container.fulara.value_wrapper import ValueWrapper
-from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.numerical.interval_domain import IntervalState, IntervalLattice
-from lyra.core.expressions import VariableIdentifier
+from lyra.abstract_domains.state import EnvironmentMixin
+from lyra.core.expressions import VariableIdentifier, LengthIdentifier
+from lyra.core.types import SequenceLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -21,6 +28,10 @@ class IntervalSWrapper(IntervalState, EnvironmentMixin):
         if var not in self.store.keys():
             self.variables.add(var)
             self.store[var] = IntervalLattice()     # top
+            if isinstance(var.typ, SequenceLyraType):
+                length = LengthIdentifier(var)
+                self.variables.add(length)
+                self.store[length] = IntervalLattice(lower=0)
         else:
             raise ValueError(f"Variable can not be added to a store if it is already present")
 
@@ -29,12 +40,22 @@ class IntervalSWrapper(IntervalState, EnvironmentMixin):
         if var in self.store.keys():
             self.variables.remove(var)
             del self.store[var]
+            if isinstance(var.typ, SequenceLyraType):
+                length = LengthIdentifier(var)
+                self.variables.remove(length)
+                del self.store[length]
         else:
             raise ValueError(f"Variable can only be removed from a store if it is already present")
 
     @copy_docstring(EnvironmentMixin.forget_variable)
     def forget_variable(self, var: VariableIdentifier):
-        self.store[var].top()
+        if var in self.store.keys():
+            self.store[var].top()
+            if isinstance(var.typ, SequenceLyraType):
+                length = LengthIdentifier(var)
+                self.store[length] = IntervalLattice(lower=0)
+        else:
+            raise ValueError(f"Variable can only be forgotten if it is abstracted in the store")
 
 
 class IntervalKWrapper(KeyWrapper, IntervalSWrapper):
@@ -47,27 +68,27 @@ class IntervalKWrapper(KeyWrapper, IntervalSWrapper):
         IntervalSWrapper.__init__(self, key_vars)
 
     @copy_docstring(KeyWrapper.decomp)
-    def decomp(self, state: 'IntervalKWrapper', exclude: 'IntervalKWrapper') \
+    def decomp(self, exclude: 'IntervalKWrapper') \
             -> Set['IntervalKWrapper']:
-        left = deepcopy(state)  # left & right non-exclude
-        right = deepcopy(state)
+        left = deepcopy(self)  # left & right non-exclude
+        right = deepcopy(self)
 
-        k_state = state.store[state.k_var]
-        k_exclude = exclude.store[state.k_var]
+        k_state = self.store[self.k_var]
+        k_exclude = exclude.store[self.k_var]
         if k_state.is_bottom():
-            left.store[state.k_var].bottom()
-            right.store[state.k_var].bottom()
+            left.store[self.k_var].bottom()
+            right.store[self.k_var].bottom()
         elif k_exclude.is_bottom():
-            left.store[state.k_var] = IntervalLattice(k_state.lower, k_state.upper)
-            right.store[state.k_var].bottom()
+            left.store[self.k_var] = IntervalLattice(k_state.lower, k_state.upper)
+            right.store[self.k_var].bottom()
         elif k_exclude.is_top():  # exclude everything
-            left.store[state.k_var].bottom()
-            right.store[state.k_var].bottom()
+            left.store[self.k_var].bottom()
+            right.store[self.k_var].bottom()
         else:
-            left.store[state.k_var] = IntervalLattice(k_state.lower,
-                                                      k_exclude.lower - 1)  # bottom if empty
-            right.store[state.k_var] = IntervalLattice(k_exclude.upper + 1,
-                                                       k_state.upper)  # bottom if empty
+            left.store[self.k_var] = IntervalLattice(k_state.lower,
+                                                     k_exclude.lower - 1)  # bottom if empty
+            right.store[self.k_var] = IntervalLattice(k_exclude.upper + 1,
+                                                      k_state.upper)  # bottom if empty
 
         return {left, right}
 
@@ -75,15 +96,6 @@ class IntervalKWrapper(KeyWrapper, IntervalSWrapper):
     def is_singleton(self) -> bool:
         key_interval = self.store[self.k_var]
         return (not key_interval.is_bottom()) and (key_interval.lower == key_interval.upper)
-
-    def __eq__(self, other: 'Lattice'):
-        return isinstance(other, self.__class__) and repr(self) == repr(other)
-
-    def __ne__(self, other: 'Lattice'):
-        return not (self == other)
-
-    def __hash__(self):
-        return hash(repr(self))
 
     @copy_docstring(KeyWrapper.__lt__)
     def __lt__(self, other):
@@ -118,15 +130,6 @@ class IntervalVWrapper(ValueWrapper, IntervalSWrapper):
         # other variables do not matter, since it the state is not relational
         return repr(self.store[self.v_var])
 
-    @copy_docstring(KeyWrapper.is_bottom)
+    @copy_docstring(ValueWrapper.is_bottom)
     def is_bottom(self):
         return self.store[self.v_var].is_bottom()
-
-    def __eq__(self, other: 'Lattice'):
-        return isinstance(other, self.__class__) and repr(self) == repr(other)
-
-    def __ne__(self, other: 'Lattice'):
-        return not (self == other)
-
-    def __hash__(self):
-        return hash(repr(self))

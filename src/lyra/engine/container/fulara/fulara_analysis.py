@@ -10,13 +10,12 @@ from lyra.abstract_domains.container.fulara import fulara_domain
 from lyra.abstract_domains.container.fulara.fulara_domain import FularaState
 from lyra.abstract_domains.container.fulara.interval_wrappers import IntervalSWrapper, \
     IntervalKWrapper, IntervalVWrapper
-from lyra.core.types import DictLyraType
 from lyra.engine.forward import ForwardInterpreter
 from lyra.engine.runner import Runner
 from lyra.semantics.forward import DefaultForwardSemantics
 
 
-class FularaAnalysis(Runner):
+class FularaIntervalAnalysis(Runner):
     def interpreter(self):
         return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
 
@@ -38,8 +37,8 @@ class FularaAnalysis(Runner):
             return k_state
 
         def k_s_conversion(k_state: IntervalKWrapper) -> IntervalSWrapper:
-            vars = copy(k_state.variables)
-            s_state = IntervalSWrapper(vars)
+            variables = copy(k_state.variables)
+            s_state = IntervalSWrapper(variables)
             s_state._store = deepcopy(k_state.store)
 
             return s_state
@@ -60,15 +59,30 @@ class FularaAnalysis(Runner):
             return v_state
 
         def v_s_conversion(v_state: IntervalVWrapper) -> IntervalSWrapper:
-            vars = copy(v_state.variables)
-            s_state = IntervalSWrapper(vars)
+            variables = copy(v_state.variables)
+            s_state = IntervalSWrapper(variables)
             s_state._store = deepcopy(v_state.store)
 
             return s_state
 
+        def update_k_from_scalar(k_state: IntervalKWrapper, s_state: IntervalSWrapper) \
+                -> IntervalKWrapper:
+            result = deepcopy(k_state)
+            for var in s_state.store:
+                result.store[var] = deepcopy(s_state.store[var])
+            return result
+
+        def update_v_from_scalar(v_state: IntervalVWrapper, s_state: IntervalSWrapper) \
+                -> IntervalVWrapper:
+            result = deepcopy(v_state)
+            for var in s_state.store:
+                result.store[var] = deepcopy(s_state.store[var])
+            return result
+
         scalar_vars = {v for v in self.variables if type(v.typ) in
                        fulara_domain.scalar_types}
-        dict_vars = {v for v in self.variables if type(v.typ) == DictLyraType}
+        map_vars = {v for v in self.variables if type(v.typ) in fulara_domain.map_types}
         return FularaState(IntervalSWrapper, IntervalKWrapper, IntervalVWrapper,
-                           scalar_vars, dict_vars,
+                           update_k_from_scalar, update_v_from_scalar,
+                           scalar_vars, map_vars,
                            s_k_conversion, k_s_conversion, s_v_conversion, v_s_conversion)
