@@ -108,38 +108,47 @@ def test_suite():
     name = os.getcwd() + '/assumption/type/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('type/' + os.path.basename(path))
             suite.addTest(TypeTest(path))
     name = os.getcwd() + '/assumption/quantity/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('quantity/' + os.path.basename(path))
             suite.addTest(QuantityTest(path))
     name = os.getcwd() + '/assumption/range/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('range/' + os.path.basename(path))
             suite.addTest(RangeTest(path))
     name = os.getcwd() + '/assumption/alphabet/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('alphabet/' + os.path.basename(path))
             suite.addTest(AlphabetTest(path))
     name = os.getcwd() + '/assumption/type+quantity/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('type+quantity/' + os.path.basename(path))
             suite.addTest(TypeQuantityAssumptionTest(path))
     name = os.getcwd() + '/assumption/type+range/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('type+range/' + os.path.basename(path))
             suite.addTest(TypeRangeAssumptionTest(path))
     name = os.getcwd() + '/assumption/type+alphabet/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('type+alphabet/' + os.path.basename(path))
             suite.addTest(TypeAlphabetAssumptionTest(path))
     name = os.getcwd() + '/assumption/type+wordset/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('type+wordset/' + os.path.basename(path))
             suite.addTest(TypeWordSetAssumptionTest(path))
     name = os.getcwd() + '/assumption/type+range+alphabet/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('type+range+alphabet/' + os.path.basename(path))
             suite.addTest(TypeRangeAlphabetAssumptionTest(path))
     return suite
 

@@ -577,11 +577,10 @@ class CFGVisitor(ast.NodeVisitor):
         pp = ProgramPoint(node.lineno, node.col_offset)
         assert typ is None     # we expect typ to be None
         assignments = list()
-        value = self.visit(node.value, types, None)
-        for target in node.targets:
-            target = self.visit(target, types, None)
-            assignments.append(Assignment(pp, target, value))
-        return assignments
+        assert len(node.targets) == 1
+        target = self.visit(node.targets[0], types, None)
+        value = self.visit(node.value, types, target.typ)
+        return Assignment(pp, target, value)
 
     def visit_AnnAssign(self, node, types=None, typ=None):
         """Visitor function for an assignment with a type annotation.

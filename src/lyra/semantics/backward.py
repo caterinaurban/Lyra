@@ -6,8 +6,8 @@ Lyra's internal backward semantics of statements.
 
 :Authors: Caterina Urban
 """
-
-
+from lyra.core.expressions import BinarySequenceOperation, ListDisplay
+from lyra.core.types import ListLyraType
 from lyra.semantics.semantics import Semantics, DefaultSemantics
 
 from lyra.abstract_domains.state import State
@@ -16,7 +16,18 @@ from lyra.core.statements import Assignment, Call
 
 class BackwardSemantics(Semantics):
     """Backward semantics of statements."""
-    pass
+
+    def append_call_semantics(self, stmt: Call, state: State) -> State:
+        assert len(stmt.arguments) == 2
+        targets = self.semantics(stmt.arguments[0], state).result
+        op = BinarySequenceOperation.Operator.Concat
+        values = self.semantics(stmt.arguments[1], state).result
+        rhs = set()
+        for target in targets:
+            for value in values:
+                display = ListDisplay(ListLyraType(value.typ), [value])
+                rhs.add(BinarySequenceOperation(target.typ, target, op, display))
+        return state.substitute(targets, rhs)
 
 
 class UserDefinedCallSemantics(BackwardSemantics):

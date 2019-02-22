@@ -591,7 +591,8 @@ class BuiltInCallSemantics(CallSemantics):
                 operation = product[0]
                 for i in range(1, len(arguments)):
                     right = product[i]
-                    operation = BinaryComparisonOperation(stmt.typ, operation, operator, right)
+                    BCO = BinaryComparisonOperation
+                    operation = BCO(stmt.typ, operation, operator, right, forloop=stmt.forloop)
                 result.add(operation)
         elif isinstance(operator, BinaryBooleanOperation.Operator):
             for product in itertools.product(*arguments):

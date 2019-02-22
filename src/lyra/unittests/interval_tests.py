@@ -39,21 +39,31 @@ class BackwardIntervalTest(TestRunner):
         return IntervalState(self.variables)
 
 
-def test_suite():
+def forward():
     suite = unittest.TestSuite()
     name = os.getcwd() + '/numerical/interval/forward/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('forward/' + os.path.basename(path))
             suite.addTest(ForwardIntervalTest(path))
+    return suite
+
+
+def backward():
+    suite = unittest.TestSuite()
     name = os.getcwd() + '/numerical/interval/backward/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('backward/' + os.path.basename(path))
             suite.addTest(BackwardIntervalTest(path))
     return suite
 
 
 if __name__ == '__main__':
     runner = unittest.TextTestRunner()
-    result = runner.run(test_suite())
-    if not result.wasSuccessful():
+    result1 = runner.run(forward())
+    success1 = result1.wasSuccessful()
+    result2 = runner.run(backward())
+    success2 = result2.wasSuccessful()
+    if not success1 or not success2:
         sys.exit(1)

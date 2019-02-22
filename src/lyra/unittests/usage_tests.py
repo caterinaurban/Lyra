@@ -46,10 +46,12 @@ def test_suite():
     name = os.getcwd() + '/usage/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print(os.path.basename(path))
             suite.addTest(UsageTest(path))
     name = os.getcwd() + '/usage/fulara/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('fulara/' + os.path.basename(path))
             suite.addTest(FularaIntervalUsageTest(path))
     return suite
 

@@ -37,21 +37,31 @@ class BackwardSignTest(TestRunner):
         return SignState(self.variables)
 
 
-def test_suite():
+def forward():
     suite = unittest.TestSuite()
-    name = os.getcwd() + "/numerical/sign/forward/**.py"
+    name = os.getcwd() + '/numerical/sign/forward/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('forward/' + os.path.basename(path))
             suite.addTest(ForwardSignTest(path))
+    return suite
+
+
+def backward():
+    suite = unittest.TestSuite()
     name = os.getcwd() + '/numerical/sign/backward/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print('backward/' + os.path.basename(path))
             suite.addTest(BackwardSignTest(path))
     return suite
 
 
 if __name__ == '__main__':
     runner = unittest.TextTestRunner()
-    result = runner.run(test_suite())
-    if not result.wasSuccessful():
+    result1 = runner.run(forward())
+    success1 = result1.wasSuccessful()
+    result2 = runner.run(backward())
+    success2 = result2.wasSuccessful()
+    if not success1 or not success2:
         sys.exit(1)

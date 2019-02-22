@@ -33,6 +33,7 @@ def test_suite():
     name = os.getcwd() + '/liveness/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
+            print(os.path.basename(path))
             suite.addTest(StrongLivenessTest(path))
     return suite
 

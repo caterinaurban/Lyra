@@ -350,9 +350,9 @@ class NegationFreeNormalExpression(ExpressionVisitor):
             operator = BinaryComparisonOperation.Operator.LtE
             return BinaryComparisonOperation(expr.typ, right, operator, zero)
         elif operator == BinaryComparisonOperation.Operator.In:
-            return BinaryComparisonOperation(expr.typ, left, operator, right)
+            return BinaryComparisonOperation(expr.typ, left, operator, right, expr.forloop)
         elif operator == BinaryComparisonOperation.Operator.NotIn:
-            return BinaryComparisonOperation(expr.typ, left, operator, right)
+            return BinaryComparisonOperation(expr.typ, left, operator, right, expr.forloop)
         raise ValueError(f"Boolean comparison operator {expr} is unsupported!")
 
 
