@@ -110,7 +110,10 @@ class Runner:
         return self.run()
 
     def run(self) -> AnalysisResult:
+        start = time.time()
         result = self.interpreter().analyze(self.state())
+        end = time.time()
+        print('Time: {}s'.format(end - start))
         self.render(result)
         return result
 

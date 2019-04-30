@@ -284,43 +284,15 @@ class IntervalState(Basis):
                 error = f"Assumption of a comparison with {normal.operator} is unsupported!"
                 raise ValueError(error)
             elif normal.operator == BinaryComparisonOperation.Operator.In:
-                if isinstance(normal.right, Range):
-                    typ = BooleanLyraType()
-                    left = normal.left
-                    lower_operator = BinaryComparisonOperation.Operator.GtE
-                    lower_right = normal.right.start
-                    lower = BinaryComparisonOperation(typ, left, lower_operator, lower_right)
-                    upper_operator = BinaryComparisonOperation.Operator.Lt
-                    upper_right = normal.right.stop
-                    upper = BinaryComparisonOperation(typ, left, upper_operator, upper_right)
-                    right = deepcopy(self)._assume(upper, bwd=bwd)
-                    return self._assume(lower, bwd=bwd).meet(right)
-                else:
-                    typ = BooleanLyraType()
-                    left = normal.left
-                    operator = BinaryComparisonOperation.Operator.Eq
-                    right = normal.right
-                    comparison = BinaryComparisonOperation(typ, left, operator, right)
-                    return self._assume(comparison, bwd=bwd)
+                if normal.forloop and not bwd:  # assumption in a for loop during forward analysis
+                    top = self.lattices[normal.left.typ](**self.arguments[normal.left.typ]).top()
+                    left = defaultdict(lambda: top)
+                else:   # normal assumption
+                    left = self._evaluation.visit(normal.left, self, dict())
+                right = self._evaluation.visit(normal.right, self, dict())
+                return self._refinement.visit(normal.left, left, right[normal.right], self)
             elif normal.operator == BinaryComparisonOperation.Operator.NotIn:
-                if isinstance(normal.right, Range):
-                    typ = BooleanLyraType()
-                    left = normal.left
-                    lower_operator = BinaryComparisonOperation.Operator.Lt
-                    lower_right = normal.right.start
-                    lower = BinaryComparisonOperation(typ, left, lower_operator, lower_right)
-                    upper_operator = BinaryComparisonOperation.Operator.GtE
-                    upper_right = normal.right.stop
-                    upper = BinaryComparisonOperation(typ, left, upper_operator, upper_right)
-                    right = deepcopy(self)._assume(upper, bwd=bwd)
-                    return self._assume(lower, bwd=bwd).join(right)
-                else:
-                    typ = BooleanLyraType()
-                    left = normal.left
-                    operator = BinaryComparisonOperation.Operator.NotEq
-                    right = normal.right
-                    comparison = BinaryComparisonOperation(typ, left, operator, right)
-                    return self._assume(comparison, bwd=bwd)
+                return self
             evaluation = self._evaluation.visit(normal.left, self, dict())
             nonpositive = self.lattices[normal.typ](upper=0)
             return self._refinement.visit(normal.left, evaluation, nonpositive, self)
@@ -337,6 +309,27 @@ class IntervalState(Basis):
             if expr in evaluation:
                 return evaluation    # nothing to be done
             evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
+            return evaluation
+
+        @copy_docstring(Basis.ExpressionEvaluation.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+
+            evaluated = evaluation
+            evaluated = self.visit(expr.start, state, evaluated)
+            sub = BinaryArithmeticOperation.Operator.Sub
+            one = Literal(expr.stop.typ, '1')
+            stop = BinaryArithmeticOperation(expr.stop.typ, expr.stop, sub, one)
+            evaluated = self.visit(stop, state, evaluated)
+
+            if not evaluated[expr.start].is_bottom() and not evaluated[stop].is_bottom():
+                lower = evaluated[expr.start].lower
+                upper = evaluated[stop].upper
+                value = state.lattices[expr.typ](lower=lower, upper=upper)
+                evaluation[expr] = value
+            else:
+                evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
             return evaluation
 
     _evaluation = ExpressionEvaluation()  # static class member shared between all instances
