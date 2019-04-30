@@ -3,11 +3,11 @@ from abc import ABCMeta, abstractmethod
 from typing import Set, Optional
 
 # (Class) Adapter pattern
-from lyra.abstract_domains.state import EnvironmentMixin
+from lyra.abstract_domains.lattice import EnvironmentMixin
 from lyra.core.expressions import VariableIdentifier
 
 
-class KeyWrapper(EnvironmentMixin, metaclass=ABCMeta):
+class KeyWrapper(metaclass=ABCMeta):
     """
     (Abstract) wrapper around a domain with some extra functions,
     that are needed for the key state of a FularaState.

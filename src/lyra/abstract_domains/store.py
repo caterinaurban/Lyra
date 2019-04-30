@@ -12,12 +12,12 @@ from collections import defaultdict
 from typing import Dict, Any, Type, Set
 
 from lyra.core.expressions import VariableIdentifier
-from lyra.abstract_domains.lattice import Lattice
+from lyra.abstract_domains.lattice import Lattice, EnvironmentMixin
 from lyra.core.types import LyraType
 from lyra.core.utils import copy_docstring
 
 
-class Store(Lattice):
+class Store(EnvironmentMixin):
     """Mutable element of a store ``Var -> L``,
     lifting a lattice ``L`` to a set of program variables ``Var``.
 
@@ -30,8 +30,9 @@ class Store(Lattice):
     .. automethod:: Store._join
     """
 
-    def __init__(self, variables: Set[VariableIdentifier], lattices: Dict[LyraType, Type[Lattice]],
-                 arguments: Dict[LyraType, Dict[str, Any]] = defaultdict(lambda: dict())):
+    def __init__(self, variables: Set[VariableIdentifier],
+                 lattices: Dict[LyraType, Type[Lattice]],
+                 arguments: Dict[LyraType, Dict[str, Any]] = None):
         """Create a mapping Var -> L from each variable in Var to the corresponding element in L.
 
         :param variables: set of program variables
@@ -41,9 +42,9 @@ class Store(Lattice):
         super().__init__()
         self._variables = variables
         self._lattices = lattices
-        self._arguments = arguments
+        self._arguments = defaultdict(lambda: dict()) if arguments is None else arguments
         try:
-            self._store = {v: lattices[v.typ](**arguments[v.typ]) for v in variables}
+            self._store = {v: lattices[v.typ](**self._arguments[v.typ]) for v in variables}
         except KeyError as key:
             error = f"Missing lattice for variable type {repr(key.args[0])}!"
             raise ValueError(error)
@@ -94,6 +95,13 @@ class Store(Lattice):
         """The current store is top if `all` of its variables map to a top element."""
         return all(element.is_top() for element in self.store.values())
 
+    @copy_docstring(EnvironmentMixin.unify)
+    def unify(self, other: 'Store'):
+        for variable in other.variables:
+            if variable not in self.variables:
+                self.add_variable(variable)
+        return self
+
     @copy_docstring(Lattice._less_equal)
     def _less_equal(self, other: 'Store') -> bool:
         """The comparison is performed point-wise for each variable."""
@@ -118,4 +126,17 @@ class Store(Lattice):
         """The widening is performed point-wise for each variable."""
         for var in self.store:
             self.store[var].widening(other.store[var])
+        return self
+
+    @copy_docstring(EnvironmentMixin.add_variable)
+    def add_variable(self, variable: VariableIdentifier):
+        self.variables.add(variable)
+        typ = type(variable.typ)
+        self.store[variable] = self.lattices[typ](**self.arguments[typ]).bottom()
+        return self
+
+    @copy_docstring(EnvironmentMixin.remove_variable)
+    def remove_variable(self, variable: VariableIdentifier):
+        self.variables.remove(variable)
+        del self.store[variable]
         return self

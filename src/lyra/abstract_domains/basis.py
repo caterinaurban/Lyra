@@ -28,8 +28,9 @@ class Basis(Store, State, metaclass=ABCMeta):
     .. warning::
         Lattice operations and statements modify the current state.
     """
-    def __init__(self, variables: Set[VariableIdentifier], lattices: Dict[LyraType, Type[Lattice]],
-                 arguments: Dict[LyraType, Dict[str, Any]] = defaultdict(lambda: dict()),
+    def __init__(self, variables: Set[VariableIdentifier],
+                 lattices: Dict[LyraType, Type[Lattice]],
+                 arguments: Dict[LyraType, Dict[str, Any]] = None,
                  precursory: State = None):
         super().__init__(variables, lattices, arguments)
         State.__init__(self, precursory)

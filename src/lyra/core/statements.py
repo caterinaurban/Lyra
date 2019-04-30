@@ -81,7 +81,7 @@ https://docs.python.org/3.4/reference/simple_stmts.html#expression-statements
 
 
 class LiteralEvaluation(Statement):
-    """Literal evaluation expression."""
+    """Literal evaluation representation."""
 
     def __init__(self, pp: ProgramPoint, literal: Expression):
         """Literal evaluation construction.
@@ -101,8 +101,7 @@ class LiteralEvaluation(Statement):
 
 
 class ExpressionAccess(Statement, metaclass=ABCMeta):
-    """Statement representation for statements that
-    can appear on the left-hand side of assignments."""
+    """Expression access representation."""
 
     def __init__(self, pp: ProgramPoint, typ: LyraType):
         """Expression access construction.

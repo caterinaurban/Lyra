@@ -11,13 +11,13 @@ from typing import Set
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
 from lyra.abstract_domains.container.fulara.value_wrapper import ValueWrapper
 from lyra.abstract_domains.numerical.interval_domain import IntervalState, IntervalLattice
-from lyra.abstract_domains.state import EnvironmentMixin
+from lyra.abstract_domains.lattice import EnvironmentMixin
 from lyra.core.expressions import VariableIdentifier, LengthIdentifier
 from lyra.core.types import SequenceLyraType
 from lyra.core.utils import copy_docstring
 
 
-class IntervalSWrapper(IntervalState, EnvironmentMixin):
+class IntervalSWrapper(IntervalState):
     """Wrapper around IntervalState for scalar domain of FularaState"""
 
     def __init__(self, scalar_variables: Set[VariableIdentifier]):
@@ -47,7 +47,6 @@ class IntervalSWrapper(IntervalState, EnvironmentMixin):
         else:
             raise ValueError(f"Variable can only be removed from a store if it is already present")
 
-    @copy_docstring(EnvironmentMixin.forget_variable)
     def forget_variable(self, var: VariableIdentifier):
         if var in self.store.keys():
             self.store[var].top()

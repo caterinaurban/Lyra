@@ -16,8 +16,7 @@ from typing import Tuple, Set, Type, Callable, Dict, Iterator, Optional, List
 from lyra.abstract_domains.container.fulara.fulara_lattice import FularaLattice
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
 from lyra.abstract_domains.container.fulara.value_wrapper import ValueWrapper
-from lyra.abstract_domains.lattice import Lattice, BottomMixin
-from lyra.abstract_domains.state import EnvironmentMixin
+from lyra.abstract_domains.lattice import Lattice, BottomMixin, EnvironmentMixin
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, DictDisplay, \

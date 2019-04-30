@@ -12,6 +12,7 @@ from enum import Enum
 from functools import reduce
 from typing import List
 
+from lyra.core.expressions import VariableIdentifier
 from lyra.core.utils import copy_docstring
 
 
@@ -549,3 +550,63 @@ class SequenceMixin(Lattice, metaclass=ABCMeta):
             return self
         else:
             return self._concat(other)
+
+
+class EnvironmentMixin(Lattice, metaclass=ABCMeta):
+    """Mixin to add environment modification operations to another lattice."""
+
+    @abstractmethod
+    def unify(self, other: 'EnvironmentMixin') -> 'EnvironmentMixin':
+        """Unification between (environments of) lattice elements.
+
+        :param other: other lattice element
+        :return: current lattice element updated to have the least common environment
+        """
+
+    def less_equal(self, other: 'EnvironmentMixin') -> bool:
+        if self.is_bottom() or other.is_top():
+            return True
+        elif other.is_bottom() or self.is_top():
+            return False
+        else:
+            return self.unify(other)._less_equal(other.unify(self))
+
+    def join(self, other: 'EnvironmentMixin') -> 'EnvironmentMixin':
+        if self.is_bottom() or other.is_top():
+            return self._replace(other)
+        elif other.is_bottom() or self.is_top():
+            return self
+        else:
+            return self.unify(other)._join(other.unify(self))
+
+    def meet(self, other: 'EnvironmentMixin') -> 'EnvironmentMixin':
+        if self.is_top() or other.is_bottom():
+            return self._replace(other)
+        elif other.is_top() or self.is_bottom():
+            return self
+        else:
+            return self.unify(other)._meet(other.unify(self))
+
+    def widening(self, other: 'EnvironmentMixin') -> 'EnvironmentMixin':
+        if self.is_bottom() or other.is_top():
+            return self._replace(other)
+        elif other.is_bottom() or self.is_top():
+            return self
+        else:
+            return self.unify(other)._widening(other.unify(self))
+
+    @abstractmethod
+    def add_variable(self, variable: VariableIdentifier) -> 'EnvironmentMixin':
+        """Add a variable.
+
+        :param variable: variable to be added
+        :return: current lattice modified by the variable addition
+        """
+
+    @abstractmethod
+    def remove_variable(self, variable: VariableIdentifier) -> 'EnvironmentMixin':
+        """Remove a variable.
+
+        :param variable: variable to be removed
+        :return: current lattice modified by the variable removal
+        """
