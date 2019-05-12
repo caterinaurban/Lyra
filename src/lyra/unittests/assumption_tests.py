@@ -13,7 +13,7 @@ import sys
 from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
 from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, \
     TypeAlphabetAssumptionState, TypeRangeAlphabetAssumptionState, TypeQuantityAssumptionState, \
-    TypeWordSetAssumptionState
+    TypeWordSetAssumptionState, QuantityRangeWordSetAssumptionState
 from lyra.abstract_domains.assumption.quantity_domain import QuantityState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
@@ -103,6 +103,15 @@ class TypeRangeAlphabetAssumptionTest(TestRunner):
         return TypeRangeAlphabetAssumptionState(self.variables)
 
 
+class QuantityRangeWordSetAssumptionTest(TestRunner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return QuantityRangeWordSetAssumptionState(self.variables)
+
+
 def test_suite():
     suite = unittest.TestSuite()
     name = os.getcwd() + '/assumption/type/**.py'
@@ -150,6 +159,11 @@ def test_suite():
         if os.path.basename(path) != "__init__.py":
             print('type+range+alphabet/' + os.path.basename(path))
             suite.addTest(TypeRangeAlphabetAssumptionTest(path))
+    name = os.getcwd() + '/assumption/quantity+range+wordset/**.py'
+    for path in glob.iglob(name):
+        if os.path.basename(path) != "__init__.py":
+            print('quantity+range+wordset/' + os.path.basename(path))
+            suite.addTest(QuantityRangeWordSetAssumptionTest(path))
     return suite
 
 

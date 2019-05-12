@@ -10,12 +10,14 @@ Abstract domain elements support lattice operations and program statements.
 
 
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
 from copy import deepcopy
-from typing import Set, Optional
+from typing import Set, Optional, List, Type, Dict, Any
 
 from lyra.abstract_domains.lattice import Lattice
 from lyra.core.expressions import Expression, VariableIdentifier
 from lyra.core.statements import ProgramPoint
+from lyra.core.utils import copy_docstring
 
 
 class State(Lattice, metaclass=ABCMeta):
@@ -259,3 +261,124 @@ class EnvironmentMixin(State, metaclass=ABCMeta):
         :param variable: variable to be removed
         :return: current state modified by the variable removal
         """
+
+
+class ProductState(State):
+    """Product analysis state. A mutable element of a product abstract domain.
+    
+    .. warning::
+        Lattice operations and statements modify the current state.
+    """
+    
+    def __init__(self, states: List[Type[State]], arguments=None, precursory: State = None):
+        super().__init__(precursory)
+        if arguments is None:
+            arguments: Dict[Type, Dict[str, Any]] = defaultdict(lambda: dict())
+        self._states = [state(**arguments[state]) for state in states]
+
+    @property
+    def states(self):
+        """Current list of states."""
+        return self._states
+    
+    def __repr__(self):
+        if self.is_bottom():
+            return "⊥"
+        return "\n".join(str(state) for state in self.states)
+
+    @copy_docstring(State.bottom)
+    def bottom(self) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state.bottom()
+        return self
+
+    @copy_docstring(State.top)
+    def top(self) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state.top()
+        return self
+
+    @copy_docstring(State.is_bottom)
+    def is_bottom(self) -> bool:
+        return any(state.is_bottom() for state in self.states)
+
+    @copy_docstring(State.is_top)
+    def is_top(self) -> bool:
+        return all(state.is_top() for state in self.states)
+
+    @copy_docstring(State._less_equal)
+    def _less_equal(self, other: 'ProductState') -> bool:
+        return all(state.less_equal(other.states[i]) for i, state in enumerate(self.states))
+
+    @copy_docstring(State._join)
+    def _join(self, other: 'ProductState') -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state.join(other.states[i])
+        return self
+
+    @copy_docstring(State._meet)
+    def _meet(self, other: 'ProductState'):
+        for i, state in enumerate(self.states):
+            self.states[i] = state.meet(other.states[i])
+        return self
+
+    @copy_docstring(State._widening)
+    def _widening(self, other: 'ProductState'):
+        for i, state in enumerate(self.states):
+            self.states[i] = state.widening(other.states[i])
+        return self
+
+    @copy_docstring(State._assign)
+    def _assign(self, left: Expression, right: Expression) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assign(left, right)
+        return self
+
+    @copy_docstring(State._assume)
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume(condition, bwd=bwd)
+        return self
+
+    @copy_docstring(State.before)
+    def before(self, pp: ProgramPoint, precursory: Optional['State']) -> 'ProductState':
+        super().before(pp, precursory)
+        for i, state in enumerate(self.states):
+            self.states[i] = state.before(pp, precursory)
+        return self
+
+    @copy_docstring(State.enter_if)
+    def enter_if(self) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state.enter_if()
+        return self
+
+    @copy_docstring(State.exit_if)
+    def exit_if(self) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state.exit_if()
+        return self
+
+    @copy_docstring(State.enter_loop)
+    def enter_loop(self) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state.enter_loop()
+        return self
+
+    @copy_docstring(State.exit_loop)
+    def exit_loop(self) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state.exit_loop()
+        return self
+
+    @copy_docstring(State._output)
+    def _output(self, output: Expression) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state.output({output})
+        return self
+
+    @copy_docstring(State._substitute)
+    def _substitute(self, left: Expression, right: Expression) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._substitute(left, right)
+        return self

@@ -201,6 +201,93 @@ class ExpressionVisitor(metaclass=ABCMeta):
             f"Define handling for a {expr.__class__.__name__} expression explicitly!")
 
 
+class NegationFreeExpression(ExpressionVisitor):
+    """Expression visitor that removes negations using De Morgan's law."""
+
+    @copy_docstring(ExpressionVisitor.visit_Literal)
+    def visit_Literal(self, expr: 'Literal', invert=False):
+        return expr    # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+    def visit_VariableIdentifier(self, expr: 'VariableIdentifier', invert=False):
+        if isinstance(expr.typ, BooleanLyraType) and invert:
+            operator = UnaryBooleanOperation.Operator.Neg
+            return UnaryBooleanOperation(BooleanLyraType(), operator, expr)
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+    def visit_LengthIdentifier(self, expr: 'LengthIdentifier', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+    def visit_ListDisplay(self, expr: 'ListDisplay', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+    def visit_TupleDisplay(self, expr: 'TupleDisplay', invert=False):
+        return expr  # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+    def visit_SetDisplay(self, expr: 'SetDisplay', invert=False):
+        return expr  # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+    def visit_DictDisplay(self, expr: 'DictDisplay', invert=False):
+        return expr  # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_AttributeReference)
+    def visit_AttributeReference(self, expr: 'AttributeReference', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Subscription)
+    def visit_Subscription(self, expr: 'Subscription', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Slicing)
+    def visit_Slicing(self, expr: 'Slicing', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Input)
+    def visit_Input(self, expr: 'Input', invert=False):
+        return expr
+
+    @copy_docstring(ExpressionVisitor.visit_Range)
+    def visit_Range(self, expr: 'Range', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
+    def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
+    def visit_UnaryBooleanOperation(self, expr: 'UnaryBooleanOperation', invert=False):
+        if expr.operator == UnaryBooleanOperation.Operator.Neg:
+            return self.visit(expr.expression, invert=not invert)
+        raise ValueError(f"Unary boolean operator {expr.operator} is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
+    def visit_BinaryArithmeticOperation(self, expr: 'BinaryArithmeticOperation', invert=False):
+        return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+    def visit_BinarySequenceOperation(self, expr: 'BinarySequenceOperation', invert=False):
+        return expr  # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
+    def visit_BinaryBooleanOperation(self, expr: 'BinaryBooleanOperation', invert=False):
+        left = self.visit(expr.left, invert)
+        operator = expr.operator.reverse_operator() if invert else expr.operator
+        right = self.visit(expr.right, invert)
+        return BinaryBooleanOperation(expr.typ, left, operator, right)
+
+    @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
+    def visit_BinaryComparisonOperation(self, expr: 'BinaryComparisonOperation', invert=False):
+        left = expr.left
+        operator = expr.operator.reverse_operator() if invert else expr.operator
+        right = expr.right
+        return BinaryComparisonOperation(expr.typ, left, operator, right)
+
+
 class NegationFreeNormalExpression(ExpressionVisitor):
     """
     An expression visitor that:

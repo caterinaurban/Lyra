@@ -16,7 +16,7 @@ import os
 from abc import ABCMeta
 from math import inf
 
-from lyra.core.cfg import Conditional
+from lyra.core.cfg import Conditional, Edge
 from lyra.engine.runner import Runner
 from lyra.frontend.cfg_generator import ast_to_cfg
 from lyra.visualization.graph_renderer import AnalysisResultRenderer
@@ -104,7 +104,7 @@ class TestRunner(unittest.TestCase, Runner, metaclass=ABCMeta):
             return actual
         elif line < 0:
             for edge in self.cfg.edges.values():
-                if isinstance(edge, Conditional):
+                if isinstance(edge, Conditional) and edge.kind == Edge.Kind.LOOP_IN:
                     current = edge.condition.pp.line + line
                     if current < distance:
                         states = result.get_node_result(edge.source)

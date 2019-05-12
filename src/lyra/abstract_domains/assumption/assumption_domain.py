@@ -12,7 +12,7 @@ from enum import Enum
 from typing import List, Dict, Type, Any, Union, Tuple, Set, Optional
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
 from lyra.abstract_domains.stack import Stack
-from lyra.abstract_domains.state import State
+from lyra.abstract_domains.state import State, ProductState
 from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparisonOperation, \
     Range, Literal, NegationFreeNormalExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
     ExpressionVisitor, Input, ListDisplay, AttributeReference, Subscription, Slicing, \
@@ -750,10 +750,14 @@ class AssumptionState(State):
                 right = self.visit(expr.right)
                 return BinaryComparisonOperation(expr.typ, left, expr.operator, right)
 
-    def __init__(self, states: List[Type[InputMixin]],
-                 arguments: Dict[Type, Dict[str, Any]] = defaultdict(lambda: dict()),
-                 precursory: State = None):
+    def __init__(self, states: List[Type[InputMixin]], arguments=None, precursory: State = None):
+        if precursory:
+            assert isinstance(precursory, ProductState)
+            for i, state in enumerate(precursory.states):
+                assert issubclass(states[i], type(state))
         super().__init__(precursory)
+        if arguments is None:
+            arguments: Dict[Type, Dict[str, Any]] = defaultdict(lambda: dict())
         self._states = [state(**arguments[state]) for state in states]
         self._stack = AssumptionState.InputStack()
 
@@ -1026,5 +1030,36 @@ class TypeRangeAlphabetWordSetAssumptionState(AssumptionState):
         from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
         from lyra.abstract_domains.assumption.wordset_domain import WordSetState
         states = [TypeState, RangeState, AlphabetState, WordSetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
+
+
+class SignIntervalStringSetProductState(ProductState):
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.numerical.sign_domain import SignState
+        from lyra.abstract_domains.numerical.interval_domain import IntervalState
+        from lyra.abstract_domains.string.stringset_domain import StringSetState
+        states = [SignState, IntervalState, StringSetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
+
+
+class QuantityRangeWordSetAssumptionState(AssumptionState):
+    """Quantity+range+word set assumption analysis state.
+
+    Reduced product of quantity, range, and word set constraining states,
+    and a stack of assumptions on the input data.
+
+    .. document private methods
+    .. automethod:: QuantityRangeWordSetAssumptionState._assume
+    .. automethod:: QuantityRangeWordSetAssumptionState._substitute
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.quantity_domain import QuantityState
+        from lyra.abstract_domains.assumption.range_domain import RangeState
+        from lyra.abstract_domains.assumption.wordset_domain import WordSetState
+        states = [QuantityState, RangeState, WordSetState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)
