@@ -117,7 +117,7 @@ class PolyhedraState(State):
     def __repr__(self):
         if self.is_bottom():
             return "⊥"
-        return str(self.polka)
+        return '{}'.format(self.polka)
 
     @copy_docstring(State.is_bottom)
     def is_bottom(self) -> bool:
@@ -166,7 +166,7 @@ class PolyhedraState(State):
                 return self._assume(normal.left, bwd=bwd).join(right)
         elif isinstance(normal, BinaryComparisonOperation):
             cond = lyra2apron(self.environment, normal)
-            self.polka = self.polka.meet(PyTcons1Array([cond.tcons1]))
+            self.polka = self.polka.meet(PyTcons1Array([cond]))
             return self
         raise NotImplementedError(f"Assumption of {normal.__class__.__name__} is unsupported!")
 
