@@ -9,79 +9,22 @@ is represented by a conjunction of linear constraints.
 :Authors: Caterina Urban
 """
 from copy import deepcopy
-from typing import Set, Union
+from typing import Set
 
-from apronpy.coeff import PyMPQScalarCoeff, PyMPQIntervalCoeff
 from apronpy.environment import PyEnvironment
-from apronpy.interval import PyMPQInterval
-from apronpy.lincons0 import ConsTyp
+from apronpy.manager import FunId
 from apronpy.polka import PyPolkaMPQstrict
-from apronpy.tcons1 import PyTcons1Array, PyTcons1
-from apronpy.texpr0 import TexprOp, TexprRtype, TexprRdir
-from apronpy.texpr1 import PyTexpr1
+from apronpy.tcons1 import PyTcons1Array
 from apronpy.var import PyVar
 
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import VariableIdentifier, Expression, BinaryBooleanOperation, \
-    BinaryComparisonOperation, NegationFreeExpression, Literal, Input, UnaryArithmeticOperation, \
-    BinaryArithmeticOperation
+    BinaryComparisonOperation, NegationFreeExpression, Lyra2APRON
 from lyra.core.utils import copy_docstring
 
 
-def lyra2apron(environment, expression: Expression, usub = False) -> Union[PyTexpr1, PyTcons1]:
-    if isinstance(expression, Literal):
-        if usub:
-            cst = PyMPQScalarCoeff(-float(expression.val))
-        else:
-            cst = PyMPQScalarCoeff(float(expression.val))
-        return PyTexpr1.cst(environment, cst)
-    elif isinstance(expression, VariableIdentifier):
-        assert not usub
-        variable = PyVar(expression.name)
-        return PyTexpr1.var(environment, variable)
-    elif isinstance(expression, Input):
-        assert not usub
-        expr = PyMPQIntervalCoeff(PyMPQInterval.top())
-        return PyTexpr1.cst(environment, expr)
-    elif isinstance(expression, UnaryArithmeticOperation):
-        usub = expression.operator == UnaryArithmeticOperation.Operator.Sub
-        return lyra2apron(environment, expression.expression, usub)
-    elif isinstance(expression, BinaryArithmeticOperation):
-        assert not usub
-        expr1 = lyra2apron(environment, expression.left)
-        expr2 = lyra2apron(environment, expression.right)
-        op2op = {
-            BinaryArithmeticOperation.Operator.Add: TexprOp.AP_TEXPR_ADD,
-            BinaryArithmeticOperation.Operator.Sub: TexprOp.AP_TEXPR_SUB,
-            BinaryArithmeticOperation.Operator.Mult: TexprOp.AP_TEXPR_MUL,
-            BinaryArithmeticOperation.Operator.Div: TexprOp.AP_TEXPR_DIV
-        }
-        op = op2op[expression.operator]
-        return PyTexpr1.binop(op, expr1, expr2, TexprRtype.AP_RTYPE_REAL, TexprRdir.AP_RDIR_RND)
-    elif isinstance(expression, BinaryComparisonOperation):
-        assert not usub
-        # assert expression.left.typ == expression.right.typ
-        typ = expression.left.typ
-        left = expression.left
-        right = expression.right
-        sub = BinaryArithmeticOperation.Operator.Sub
-        if expression.operator == BinaryComparisonOperation.Operator.GtE:
-            expr = lyra2apron(environment, BinaryArithmeticOperation(typ, left, sub, right))
-            return PyTcons1.make(expr, ConsTyp.AP_CONS_SUPEQ)
-        elif expression.operator == BinaryComparisonOperation.Operator.Gt:
-            expr = lyra2apron(environment, BinaryArithmeticOperation(typ, left, sub, right))
-            return PyTcons1.make(expr, ConsTyp.AP_CONS_SUP)
-        elif expression.operator == BinaryComparisonOperation.Operator.LtE:
-            expr = lyra2apron(environment, BinaryArithmeticOperation(typ, right, sub, left))
-            return PyTcons1.make(expr, ConsTyp.AP_CONS_SUPEQ)
-        elif expression.operator == BinaryComparisonOperation.Operator.Lt:
-            expr = lyra2apron(environment, BinaryArithmeticOperation(typ, right, sub, left))
-            return PyTcons1.make(expr, ConsTyp.AP_CONS_SUP)
-    raise NotImplementedError(f"lyra2apron conversion for {expression} is not yet supported!")
-
-
 class PolyhedraState(State):
-    """Polyhedra analysis state. An element of the polyhedra abstract domain.
+    """Polyhedra analysis state based on APRON. An element of the polyhedra abstract domain.
 
     Conjunction of linear constraints constraining the value of each variable.
     The value of all program variables is unconstrained by default.
@@ -149,14 +92,14 @@ class PolyhedraState(State):
     @copy_docstring(State._assign)
     def _assign(self, left: Expression, right: Expression) -> 'PolyhedraState':
         if isinstance(left, VariableIdentifier):
-            expr = lyra2apron(self.environment, right)
+            expr = self._lyra2apron.visit(right, self.environment)
             self.polka = self.polka.assign(PyVar(left.name), expr)
             return self
         raise NotImplementedError(f"Assignment to {left.__class__.__name__} is unsupported!")
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression, bwd: bool = False) -> 'PolyhedraState':
-        normal = NegationFreeExpression().visit(condition)
+        normal = self._negation_free.visit(condition)
         if isinstance(normal, BinaryBooleanOperation):
             if normal.operator == BinaryBooleanOperation.Operator.And:
                 right = deepcopy(self)._assume(normal.right, bwd=bwd)
@@ -165,8 +108,9 @@ class PolyhedraState(State):
                 right = deepcopy(self)._assume(normal.right, bwd=bwd)
                 return self._assume(normal.left, bwd=bwd).join(right)
         elif isinstance(normal, BinaryComparisonOperation):
-            cond = lyra2apron(self.environment, normal)
-            self.polka = self.polka.meet(PyTcons1Array([cond]))
+            cond = self._lyra2apron.visit(normal, self.environment)
+            abstract1 = PyPolkaMPQstrict(self.environment, array=PyTcons1Array([cond]))
+            self.polka = self.polka.meet(abstract1)
             return self
         raise NotImplementedError(f"Assumption of {normal.__class__.__name__} is unsupported!")
 
@@ -193,7 +137,10 @@ class PolyhedraState(State):
     @copy_docstring(State._substitute)
     def _substitute(self, left: Expression, right: Expression) -> 'PolyhedraState':
         if isinstance(left, VariableIdentifier):
-            expr = lyra2apron(self.environment, right)
+            expr = self._lyra2apron.visit(right, self.environment)
             self.polka = self.polka.substitute(PyVar(left.name), expr)
             return self
         raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
+
+    _negation_free = NegationFreeExpression()
+    _lyra2apron = Lyra2APRON()
