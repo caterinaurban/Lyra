@@ -9,7 +9,15 @@ Lyra's internal representation of Python expressions.
 
 from abc import ABCMeta, abstractmethod
 from enum import IntEnum
-from typing import Set, List
+from typing import Set, List, Union
+
+from apronpy.coeff import PyMPQScalarCoeff, PyMPQIntervalCoeff
+from apronpy.interval import PyMPQInterval
+from apronpy.lincons0 import ConsTyp
+from apronpy.tcons1 import PyTcons1
+from apronpy.texpr0 import TexprOp, TexprRtype, TexprRdir
+from apronpy.texpr1 import PyTexpr1
+from apronpy.var import PyVar
 
 from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType, \
     DictLyraType, SetLyraType, ListLyraType, TupleLyraType
@@ -441,6 +449,115 @@ class NegationFreeNormalExpression(ExpressionVisitor):
         elif operator == BinaryComparisonOperation.Operator.NotIn:
             return BinaryComparisonOperation(expr.typ, left, operator, right, expr.forloop)
         raise ValueError(f"Boolean comparison operator {expr} is unsupported!")
+
+
+class Lyra2APRON(ExpressionVisitor):
+    """Expression visitor that yields APRON tree expressions and constraints."""
+
+    @copy_docstring(ExpressionVisitor.visit_Literal)
+    def visit_Literal(self, expr: 'Literal', environment=None, usub=False) -> PyTexpr1:
+        if usub:
+            cst = PyMPQScalarCoeff(-float(expr.val))
+        else:
+            cst = PyMPQScalarCoeff(float(expr.val))
+        return PyTexpr1.cst(environment, cst)
+
+    @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+    def visit_VariableIdentifier(self, expr, environment=None, usub=False) -> PyTexpr1:
+        assert not usub
+        return PyTexpr1.var(environment, PyVar(expr.name))
+
+    @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
+    def visit_LengthIdentifier(self, expr: 'LengthIdentifier', environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+    def visit_ListDisplay(self, expr: 'ListDisplay', environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+    def visit_TupleDisplay(self, expr: 'TupleDisplay', environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+    def visit_SetDisplay(self, expr: 'SetDisplay', environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+    def visit_DictDisplay(self, expr: 'DictDisplay', environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_AttributeReference)
+    def visit_AttributeReference(self, expr: 'AttributeReference', environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_Subscription)
+    def visit_Subscription(self, expr: 'Subscription', environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_Slicing)
+    def visit_Slicing(self, expr: 'Slicing', environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_Input)
+    def visit_Input(self, expr, environment=None, usub=False) -> PyTexpr1:
+        assert not usub
+        return PyTexpr1.cst(environment, PyMPQIntervalCoeff(PyMPQInterval.top()))
+
+    @copy_docstring(ExpressionVisitor.visit_Range)
+    def visit_Range(self, expr: 'Range', environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
+    def visit_UnaryArithmeticOperation(self, expr, environment=None, usub=False) -> PyTexpr1:
+        usub = expr.operator == UnaryArithmeticOperation.Operator.Sub
+        return self.visit(expr.expression, environment, usub)
+
+    @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
+    def visit_UnaryBooleanOperation(self, expr, environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
+    def visit_BinaryArithmeticOperation(self, expr, environment=None, usub=False) -> PyTexpr1:
+        assert not usub
+        expr1 = self.visit(expr.left, environment)
+        expr2 = self.visit(expr.right, environment)
+        op2op = {
+            BinaryArithmeticOperation.Operator.Add: TexprOp.AP_TEXPR_ADD,
+            BinaryArithmeticOperation.Operator.Sub: TexprOp.AP_TEXPR_SUB,
+            BinaryArithmeticOperation.Operator.Mult: TexprOp.AP_TEXPR_MUL,
+            BinaryArithmeticOperation.Operator.Div: TexprOp.AP_TEXPR_DIV
+        }
+        op = op2op[expr.operator]
+        return PyTexpr1.binop(op, expr1, expr2, TexprRtype.AP_RTYPE_REAL, TexprRdir.AP_RDIR_RND)
+
+    @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+    def visit_BinarySequenceOperation(self, expr, environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
+    def visit_BinaryBooleanOperation(self, expr, environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
+    def visit_BinaryComparisonOperation(self, expr, environment=None, usub=False) -> PyTcons1:
+        assert not usub
+        typ = expr.left.typ
+        left = expr.left
+        right = expr.right
+        sub = BinaryArithmeticOperation.Operator.Sub
+        if expr.operator == BinaryComparisonOperation.Operator.GtE:
+            expr = self.visit(BinaryArithmeticOperation(typ, left, sub, right), environment)
+            return PyTcons1.make(expr, ConsTyp.AP_CONS_SUPEQ)
+        elif expr.operator == BinaryComparisonOperation.Operator.Gt:
+            expr = self.visit(BinaryArithmeticOperation(typ, left, sub, right), environment)
+            return PyTcons1.make(expr, ConsTyp.AP_CONS_SUP)
+        elif expr.operator == BinaryComparisonOperation.Operator.LtE:
+            expr = self.visit(BinaryArithmeticOperation(typ, right, sub, left), environment)
+            return PyTcons1.make(expr, ConsTyp.AP_CONS_SUPEQ)
+        elif expr.operator == BinaryComparisonOperation.Operator.Lt:
+            expr = self.visit(BinaryArithmeticOperation(typ, right, sub, left), environment)
+            return PyTcons1.make(expr, ConsTyp.AP_CONS_SUP)
 
 
 """

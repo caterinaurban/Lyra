@@ -12,6 +12,10 @@ from collections import defaultdict
 from copy import deepcopy
 from math import inf
 
+from apronpy.box import PyBoxMPQ
+from apronpy.environment import PyEnvironment
+from apronpy.tcons1 import PyTcons1Array
+
 from lyra.abstract_domains.basis import Basis
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin
 from lyra.abstract_domains.state import State
@@ -444,3 +448,130 @@ class IntervalState(Basis):
             raise ValueError(f"Unexpected expression during sequence length computation.")
 
     _length = LengthEvaluation()  # static class member shared between all instances
+
+
+class BoxState(State):
+    """Interval analysis state based on APRON. An element of the interval abstract domain.
+
+    Conjunction of linear constraints constraining the value of each variable.
+    The value of all program variables is unconstrained by default.
+
+    .. note:: Program variables storing collections are abstracted via summarization.
+
+    .. document private methods
+    .. automethod:: BoxState._assign
+    .. automethod:: BoxState._assume
+    .. automethod:: BoxState._output
+    .. automethod:: BoxState._substitute
+
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        super().__init__(precursory=precursory)
+        r_vars = list()
+        for variable in variables:
+            r_vars.append(PyVar(variable.name))
+        self.environment = PyEnvironment([], r_vars)
+        self.box = PyBoxMPQ(self.environment)
+
+    @copy_docstring(State.bottom)
+    def bottom(self):
+        self.box = PyBoxMPQ.bottom(self.environment)
+        return self
+
+    @copy_docstring(State.top)
+    def top(self):
+        self.box = PyBoxMPQ.top(self.environment)
+        return self
+
+    def __repr__(self):
+        if self.is_bottom():
+            return "⊥"
+        return '{}'.format(self.box)
+
+    @copy_docstring(State.is_bottom)
+    def is_bottom(self) -> bool:
+        return self.box.is_bottom()
+
+    @copy_docstring(State.is_top)
+    def is_top(self) -> bool:
+        return self.box.is_top()
+
+    @copy_docstring(State._less_equal)
+    def _less_equal(self, other: 'BoxState') -> bool:
+        return self.box <= other.box
+
+    @copy_docstring(State._join)
+    def _join(self, other: 'BoxState') -> 'BoxState':
+        self.box = self.box.join(other.box)
+        return self
+
+    @copy_docstring(State._meet)
+    def _meet(self, other: 'BoxState') -> 'BoxState':
+        self.box = self.box.meet(other.box)
+        return self
+
+    @copy_docstring(State._widening)
+    def _widening(self, other: 'BoxState') -> 'BoxState':
+        self.box = self.box.widening(other.box)
+        return self
+
+    @copy_docstring(State._assign)
+    def _assign(self, left: Expression, right: Expression) -> 'BoxState':
+        if isinstance(left, VariableIdentifier):
+            expr = self._lyra2apron.visit(right, self.environment)
+            self.box = self.box.assign(PyVar(left.name), expr)
+            return self
+        raise NotImplementedError(f"Assignment to {left.__class__.__name__} is unsupported!")
+
+    @copy_docstring(State._assume)
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'BoxState':
+        normal = self._negation_free.visit(condition)
+        if isinstance(normal, BinaryBooleanOperation):
+            if normal.operator == BinaryBooleanOperation.Operator.And:
+                right = deepcopy(self)._assume(normal.right, bwd=bwd)
+                return self._assume(normal.left, bwd=bwd).meet(right)
+            if normal.operator == BinaryBooleanOperation.Operator.Or:
+                right = deepcopy(self)._assume(normal.right, bwd=bwd)
+                return self._assume(normal.left, bwd=bwd).join(right)
+        elif isinstance(normal, BinaryComparisonOperation):
+            cond = self._lyra2apron.visit(normal, self.environment)
+            array = PyTcons1Array([cond])
+            abstract1 = PyBoxMPQ(self.environment, array=array)
+            lincons1 = abstract1.to_lincons
+            tcons1 = abstract1.to_tcons
+            self.box = self.box.meet(tcons1)
+            string = repr(self.box)
+            return self
+        raise NotImplementedError(f"Assumption of {normal.__class__.__name__} is unsupported!")
+
+    @copy_docstring(State.enter_if)
+    def enter_if(self) -> 'BoxState':
+        return self     # nothing to be done
+
+    @copy_docstring(State.exit_if)
+    def exit_if(self) -> 'BoxState':
+        return self     # nothing to be done
+
+    @copy_docstring(State.enter_loop)
+    def enter_loop(self) -> 'BoxState':
+        return self     # nothing to be done
+
+    @copy_docstring(State.exit_loop)
+    def exit_loop(self) -> 'BoxState':
+        return self     # nothing to be done
+
+    @copy_docstring(State.output)
+    def _output(self, output: Expression) -> 'BoxState':
+        return self     # nothing to be done
+
+    @copy_docstring(State._substitute)
+    def _substitute(self, left: Expression, right: Expression) -> 'BoxState':
+        if isinstance(left, VariableIdentifier):
+            expr = self._lyra2apron.visit(right, self.environment)
+            self.box = self.box.substitute(PyVar(left.name), expr)
+            return self
+        raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
+
+    _negation_free = NegationFreeExpression()
+    _lyra2apron = Lyra2APRON()

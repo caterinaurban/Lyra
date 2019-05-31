@@ -7,6 +7,7 @@ Program Analysis
 
 import ast
 import os
+import time
 from abc import abstractmethod
 from queue import Queue
 from typing import Set
