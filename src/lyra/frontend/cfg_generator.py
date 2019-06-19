@@ -205,39 +205,45 @@ def _dummy_cfg(id_gen):
 
 class CFGFactory:
     """
-    A helper class that encapsulates a partial CFG
-    and possibly some statements not yet attached to CFG.
+    A helper class that encapsulates partial CFGs
+    and possibly some statements not yet attached to a CFG.
+    Each CFG corresponds to a function.
 
     Whenever the
     method `complete_basic_block()` is called,
-    it is ensured that all unattached statements are properly attached to
-    partial CFG. The partial CFG can be retrieved at any time by property `cfg`.
+    it is ensured that all unattached statements are properly attached to the corresponding
+    partial CFG. The partial CFG of the main function can be retrieved at any time by property `cfg`.
+    All the CFGs can be retrieved through the property 'cfgs'.
     """
 
     def __init__(self, id_gen):
         self._stmts = []
-        self._cfg = None
+        self._cfgs = {'main': None}
         self._id_gen = id_gen
 
     @property
     def cfg(self):
-        return self._cfg
+        return self._cfgs['main']
 
-    def prepend_cfg(self, other):
-        if self._cfg is not None:
-            self._cfg.prepend(other)
-        else:
-            self._cfg = other
-        return self._cfg
+    @property
+    def cfgs(self):
+        return self._cfgs
 
-    def append_cfg(self, other):
-        if self._cfg is not None:
-            if self._cfg.loose_out_edges and other.loose_in_edges:
-                self._cfg.append(_dummy_cfg(self._id_gen))
-            self._cfg.append(other)
+    def prepend_cfg(self, other, function_name='main'):
+        if self._cfgs[function_name] is not None:
+            self._cfgs[function_name].prepend(other)
         else:
-            self._cfg = other
-        return self._cfg
+            self._cfgs[function_name] = other
+        return self._cfgs[function_name]
+
+    def append_cfg(self, other, function_name='main'):
+        if self._cfgs[function_name] is not None:
+            if self._cfgs[function_name].loose_out_edges and other.loose_in_edges:
+                self._cfgs[function_name].append(_dummy_cfg(self._id_gen))
+            self._cfgs[function_name].append(other)
+        else:
+            self._cfgs[function_name] = other
+        return self._cfgs[function_name]
 
     def add_stmts(self, stmts):
         """
@@ -250,10 +256,10 @@ class CFGFactory:
         else:
             self._stmts.append(stmts)
 
-    def complete_basic_block(self):
+    def complete_basic_block(self, function_name='main'):
         if self._stmts:
             block = Basic(self._id_gen.next, self._stmts)
-            self.append_cfg(LooseControlFlowGraph({block}, block, block, set()))
+            self.append_cfg(LooseControlFlowGraph({block}, block, block, set()), function_name)
             self._stmts = []
 
     def incomplete_block(self):
@@ -508,7 +514,7 @@ class CFGVisitor(ast.NodeVisitor):
             arguments.extend([self.visit(arg, types, None) for arg in node.args])
             return Call(pp, name, arguments, typ)
 
-    def visit_IfExp(self, node, targets, op=None, types=None, typ=None):
+    def visit_IfExp(self, node, targets, op=None, types=None, typ=None, function_name='main'):
         """Visitor function for an if expression.
         The components of the expression are stored in the attributes test, body, and orelse."""
         pp = ProgramPoint(node.lineno, node.col_offset)
@@ -524,7 +530,7 @@ class CFGVisitor(ast.NodeVisitor):
             else:
                 assignments.append(Assignment(pp, self.visit(target, types, typ), body))
         then.add_stmts(assignments)
-        then.complete_basic_block()
+        then.complete_basic_block(function_name)
         then = then.cfg
         test = self.visit(node.test, types, BooleanLyraType())
         then.add_edge(Conditional(None, test, then.in_node, Edge.Kind.IF_IN))
@@ -615,13 +621,13 @@ class CFGVisitor(ast.NodeVisitor):
 
     # Control Flow
 
-    def visit_If(self, node, types=None, typ=None):
+    def visit_If(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for an if statement.
         The attribute test stores a single AST node.
         The attributes body and orelse each store a list of AST nodes to be executed."""
         pp = ProgramPoint(node.test.lineno, node.test.col_offset)
 
-        body = self._visit_body(node.body, types, typ)
+        body = self._visit_body(node.body, types, typ, function_name=function_name)
         test = self.visit(node.test, types, BooleanLyraType())
         body.add_edge(Conditional(None, test, body.in_node, Edge.Kind.IF_IN))
         if body.out_node:   # control flow can exit the body
@@ -629,7 +635,7 @@ class CFGVisitor(ast.NodeVisitor):
             body.add_edge(Unconditional(body.out_node, None, Edge.Kind.IF_OUT))
 
         if node.orelse:  # there is an else branch
-            orelse = self._visit_body(node.orelse, types, typ)
+            orelse = self._visit_body(node.orelse, types, typ, function_name=function_name)
             not_test = Call(pp, 'not', [test], BooleanLyraType())
             orelse.add_edge(Conditional(None, not_test, orelse.in_node, Edge.Kind.IF_IN))
             if orelse.out_node:     # control flow can exit the else
@@ -701,7 +707,7 @@ class CFGVisitor(ast.NodeVisitor):
 
         return body
 
-    def visit_For(self, node, types=None, typ=None):
+    def visit_For(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a for statement.
         The attribute target stores the variable(s) the loop assigns to
         (as a single Name, Tuple, or List node).
@@ -731,7 +737,7 @@ class CFGVisitor(ast.NodeVisitor):
             raise NotImplementedError(error)
         target = self.visit(node.target, types, target_typ)
 
-        body = self._visit_body(node.body, types, typ)
+        body = self._visit_body(node.body, types, function_name=function_name)
         test = Call(pp, 'in', [target, iterated], BooleanLyraType(), forloop=True)
         header = Loop(self._id_gen.next)
         body_in_node = body.in_node
@@ -746,7 +752,7 @@ class CFGVisitor(ast.NodeVisitor):
             body.add_edge(Unconditional(body_out_node, header, Edge.Kind.LOOP_OUT))
 
         if node.orelse:  # there is an else branch
-            orelse = self._visit_body(node.orelse, types)
+            orelse = self._visit_body(node.orelse, types, function_name=function_name)
             if orelse.out_node:     # control flow can exit the else
                 # add an unconditional DEFAULT edge
                 orelse.add_edge(Unconditional(orelse.out_node, None, Edge.Kind.DEFAULT))
@@ -782,15 +788,16 @@ class CFGVisitor(ast.NodeVisitor):
         cfg.special_edges.append((edge, LooseControlFlowGraph.SpecialEdgeType.CONTINUE))
         return cfg
 
-    def _visit_body(self, body, types, loose_in_edges=False, loose_out_edges=False):
+    def _visit_body(self, body, types, loose_in_edges=False, loose_out_edges=False, function_name='main'):
         factory = CFGFactory(self._id_gen)
+        factory.cfgs[function_name] = None
 
         for child in body:
             if isinstance(child, ast.Assign):
                 if isinstance(child.value, ast.IfExp):  # the value is a conditional expression
                     factory.complete_basic_block()
                     if_cfg = self.visit(child.value, child.targets, None, types)
-                    factory.append_cfg(if_cfg)
+                    factory.append_cfg(if_cfg, function_name)
                 else:  # normal assignment
                     factory.add_stmts(self.visit(child, types))
             elif isinstance(child, ast.AnnAssign):
@@ -804,54 +811,68 @@ class CFGVisitor(ast.NodeVisitor):
                     factory.complete_basic_block()
                     annotation = resolve_type_annotation(child.annotation)
                     if_cfg = self.visit(child.value, [child.target], None, types, annotation)
-                    factory.append_cfg(if_cfg)
+                    factory.append_cfg(if_cfg, function_name)
                 else:   # normal annotated assignment
                     factory.add_stmts(self.visit(child, types))
             elif isinstance(child, ast.AugAssign):
                 if isinstance(child.value, ast.IfExp):  # the value is a conditional expression
                     factory.complete_basic_block()
                     if_cfg = self.visit(child.value, [child.target], child.op, types)
-                    factory.append_cfg(if_cfg)
+                    factory.append_cfg(if_cfg, function_name)
                 else:  # normal augmented assignment
                     factory.add_stmts(self.visit(child, types))
             elif isinstance(child, (ast.Expr, ast.Raise)):
                 # check other options for AnnAssign (empty value, or IfExp as value)
                 factory.add_stmts(self.visit(child, types))
             elif isinstance(child, ast.If):
-                factory.complete_basic_block()
+                factory.complete_basic_block(function_name)
                 if_cfg = self.visit(child, types)
-                factory.append_cfg(if_cfg)
+                factory.append_cfg(if_cfg, function_name)
             elif isinstance(child, ast.While):
                 factory.complete_basic_block()
                 while_cfg = self.visit(child, types)
-                factory.append_cfg(while_cfg)
+                factory.append_cfg(while_cfg, function_name)
             elif isinstance(child, ast.For):
-                factory.complete_basic_block()
-                for_cfg = self.visit(child, types)
-                factory.append_cfg(for_cfg)
+                factory.complete_basic_block(function_name)
+                for_cfg = self.visit(child, types, function_name=function_name)
+                factory.append_cfg(for_cfg, function_name)
             elif isinstance(child, ast.Break):
-                factory.complete_basic_block()
+                factory.complete_basic_block(function_name)
                 break_cfg = self.visit(child, types)
-                factory.append_cfg(break_cfg)
+                factory.append_cfg(break_cfg, function_name)
             elif isinstance(child, ast.Continue):
-                factory.complete_basic_block()
+                factory.complete_basic_block(function_name)
                 cont_cfg = self.visit(child, types)
-                factory.append_cfg(cont_cfg)
+                factory.append_cfg(cont_cfg, function_name)
             elif isinstance(child, ast.Pass) and factory.incomplete_block():
                 pass
             elif isinstance(child, ast.Pass):
-                factory.append_cfg(_dummy_cfg(self._id_gen))
+                factory.append_cfg(_dummy_cfg(self._id_gen), function_name)
+            elif isinstance(child, ast.FunctionDef):
+                function_name = child.name
+                factory.cfgs[function_name] = None
+                function_cfg = self.visit_FunctionDef(child, types, function_name)
+                factory.append_cfg(function_cfg, function_name)
             else:
                 error = "The statement {} is not yet translatable to CFG!".format(child)
                 raise NotImplementedError(error)
-        factory.complete_basic_block()
+        factory.complete_basic_block(function_name)
 
         if not loose_in_edges and factory.cfg and factory.cfg.loose_in_edges:
-            factory.prepend_cfg(_dummy_cfg(self._id_gen))
+            factory.prepend_cfg(_dummy_cfg(self._id_gen), function_name)
         if not loose_out_edges and factory.cfg and factory.cfg.loose_out_edges:
-            factory.append_cfg(_dummy_cfg(self._id_gen))
+            factory.append_cfg(_dummy_cfg(self._id_gen), function_name)
 
-        return factory.cfg
+        return factory.cfgs[function_name]
+
+    def visit_FunctionDef(self, node, types, function_name):
+        for arg in node.args.args:
+            annotated = resolve_type_annotation(arg.annotation)
+            types[arg.arg] = annotated
+        start = _dummy_cfg(self._id_gen)
+        body = self._visit_body(node.body, types, loose_in_edges=True, loose_out_edges=True, function_name=function_name)
+        end = _dummy_cfg(self._id_gen)
+        return start.append(body).append(end) if body else start.append(end)
 
     # noinspection PyUnusedLocal
     def visit_Module(self, node, types=None, typ=None):
