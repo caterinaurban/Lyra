@@ -212,18 +212,13 @@ class CFGFactory:
     Whenever the
     method `complete_basic_block()` is called,
     it is ensured that all unattached statements are properly attached to the corresponding
-    partial CFG. The partial CFG of the main function can be retrieved at any time by property `cfg`.
-    All the CFGs can be retrieved through the property 'cfgs'.
+    partial CFG. The partial CFGs can be retrieved at any time by property `cfgs`.
     """
 
     def __init__(self, id_gen):
         self._stmts = []
-        self._cfgs = {'main': None}
+        self._cfgs = {}
         self._id_gen = id_gen
-
-    @property
-    def cfg(self):
-        return self._cfgs['main']
 
     @property
     def cfgs(self):
@@ -531,7 +526,7 @@ class CFGVisitor(ast.NodeVisitor):
                 assignments.append(Assignment(pp, self.visit(target, types, typ), body))
         then.add_stmts(assignments)
         then.complete_basic_block(function_name)
-        then = then.cfg
+        then = then.cfg[function_name]
         test = self.visit(node.test, types, BooleanLyraType())
         then.add_edge(Conditional(None, test, then.in_node, Edge.Kind.IF_IN))
         then.add_edge(Unconditional(then.out_node, None, Edge.Kind.IF_OUT))
@@ -548,7 +543,7 @@ class CFGVisitor(ast.NodeVisitor):
                 assignments.append(Assignment(pp, self.visit(target, types, typ), body))
         orelse.add_stmts(assignments)
         orelse.complete_basic_block()
-        orelse = orelse.cfg
+        orelse = orelse.cfg[function_name]
         not_test = Call(pp, 'not', [test], BooleanLyraType())
         orelse.add_edge(Conditional(None, not_test, orelse.in_node, Edge.Kind.IF_IN))
         orelse.add_edge(Unconditional(orelse.out_node, None, Edge.Kind.IF_OUT))
@@ -670,13 +665,13 @@ class CFGVisitor(ast.NodeVisitor):
         cfg = body.combine(orelse)
         return cfg
 
-    def visit_While(self, node, types=None, typ=None):
+    def visit_While(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for an while statement.
         The attribute test stores a single AST node.
         The attributes body and orelse each store a list of AST nodes to be executed."""
         pp = ProgramPoint(node.test.lineno, node.test.col_offset)
 
-        body = self._visit_body(node.body, types, typ)
+        body = self._visit_body(node.body, types, typ, function_name=function_name)
         test = self.visit(node.test, types, BooleanLyraType())
         header = Loop(self._id_gen.next)
         body_in_node = body.in_node
@@ -826,11 +821,11 @@ class CFGVisitor(ast.NodeVisitor):
                 factory.add_stmts(self.visit(child, types))
             elif isinstance(child, ast.If):
                 factory.complete_basic_block(function_name)
-                if_cfg = self.visit(child, types)
+                if_cfg = self.visit(child, types, function_name=function_name)
                 factory.append_cfg(if_cfg, function_name)
             elif isinstance(child, ast.While):
-                factory.complete_basic_block()
-                while_cfg = self.visit(child, types)
+                factory.complete_basic_block(function_name)
+                while_cfg = self.visit(child, types, function_name=function_name)
                 factory.append_cfg(while_cfg, function_name)
             elif isinstance(child, ast.For):
                 factory.complete_basic_block(function_name)
@@ -849,18 +844,18 @@ class CFGVisitor(ast.NodeVisitor):
             elif isinstance(child, ast.Pass):
                 factory.append_cfg(_dummy_cfg(self._id_gen), function_name)
             elif isinstance(child, ast.FunctionDef):
-                function_name = child.name
-                factory.cfgs[function_name] = None
-                function_cfg = self.visit_FunctionDef(child, types, function_name)
-                factory.append_cfg(function_cfg, function_name)
+                f_name = child.name
+                factory.cfgs[f_name] = None
+                function_cfg = self.visit_FunctionDef(child, types, f_name)
+                factory.append_cfg(function_cfg, f_name)
             else:
                 error = "The statement {} is not yet translatable to CFG!".format(child)
                 raise NotImplementedError(error)
         factory.complete_basic_block(function_name)
 
-        if not loose_in_edges and factory.cfg and factory.cfg.loose_in_edges:
+        if not loose_in_edges and factory.cfgs[function_name] and factory.cfgs[function_name].loose_in_edges:
             factory.prepend_cfg(_dummy_cfg(self._id_gen), function_name)
-        if not loose_out_edges and factory.cfg and factory.cfg.loose_out_edges:
+        if not loose_out_edges and factory.cfgs[function_name] and factory.cfgs[function_name].loose_out_edges:
             factory.append_cfg(_dummy_cfg(self._id_gen), function_name)
 
         return factory.cfgs[function_name]
