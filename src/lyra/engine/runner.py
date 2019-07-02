@@ -135,7 +135,7 @@ class Runner:
 
     def render(self, result):
         renderer = AnalysisResultRenderer()
-        data = (self.cfgs.values(), result)
+        data = (self.cfgs, result)
         name = os.path.splitext(os.path.basename(self.path))[0]
         label = f"CFG with Analysis Result for {name}"
         directory = os.path.dirname(self.path)
