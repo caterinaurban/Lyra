@@ -202,13 +202,14 @@ class AnalysisResultRenderer(CFGRenderer):
         return self._list2table(node_result, escape=False)
 
     def _render(self, data):
-        (cfg, result) = data
-        for node in cfg.nodes.values():
-            fillcolor = self._node_color(node, cfg)
-            if isinstance(node, (Basic, Loop)):
-                label = self._basic_node_label(node, result)
-                self._render_node(node, label, fillcolor)
-            else:
-                label = self._escape_label(self._shorten_label(str(node)))
-                self._render_node(node, label, fillcolor)
-        self._render_edges(cfg)
+        (cfgs, result) = data
+        for cfg in cfgs:
+            for node in cfg.nodes.values():
+                fillcolor = self._node_color(node, cfg)
+                if isinstance(node, (Basic, Loop)):
+                    label = self._basic_node_label(node, result)
+                    self._render_node(node, label, fillcolor)
+                else:
+                    label = self._escape_label(self._shorten_label(str(node)))
+                    self._render_node(node, label, fillcolor)
+            self._render_edges(cfg)

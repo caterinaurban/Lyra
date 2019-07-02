@@ -57,6 +57,7 @@ class UserDefinedCallSemantics(ForwardSemantics):
             state.assign(lhs, rhs)
 
         function_result = self._runner.interpreter().analyze(state)
+        self._runner.partial_result.update(function_result.result)
         return state
 
 

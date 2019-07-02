@@ -32,6 +32,7 @@ class Runner:
         self._cfg = None
         self._cfgs = None
         self._function_args = {}
+        self._partial_result = dict()
 
     @property
     def path(self):
@@ -64,6 +65,14 @@ class Runner:
     @cfg.setter
     def cfg(self, cfg):
         self._cfg = cfg
+
+    @property
+    def partial_result(self):
+        return self._partial_result
+
+    @partial_result.setter
+    def partial_result(self, partial_result):
+        self._partial_result = partial_result
 
     @abstractmethod
     def interpreter(self):
@@ -118,6 +127,7 @@ class Runner:
     def run(self) -> AnalysisResult:
         start = time.time()
         result = self.interpreter().analyze(self.state())
+        result.result.update(self.partial_result)
         end = time.time()
         print('Time: {}s'.format(end - start))
         self.render(result)
@@ -125,7 +135,7 @@ class Runner:
 
     def render(self, result):
         renderer = AnalysisResultRenderer()
-        data = (self.cfg, result)
+        data = (self.cfgs.values(), result)
         name = os.path.splitext(os.path.basename(self.path))[0]
         label = f"CFG with Analysis Result for {name}"
         directory = os.path.dirname(self.path)
