@@ -90,6 +90,10 @@ class LooseControlFlowGraph:
     def special_edges(self) -> List[Tuple[Edge, SpecialEdgeType]]:
         return self._special_edges
 
+    @property
+    def cfgs(self):
+        return self._cfgs
+
     def loose(self):
         loose = len(self.loose_in_edges) or len(self.loose_out_edges) or len(self.both_loose_edges)
         return loose or len(self.special_edges)
@@ -133,7 +137,7 @@ class LooseControlFlowGraph:
     def append(self, other):
         assert not (self.loose_out_edges and other.loose_in_edges)
         assert not self.both_loose_edges or (
-            not other.loose_in_edges and not other.both_loose_edges)
+                not other.loose_in_edges and not other.both_loose_edges)
 
         self.nodes.update(other.nodes)
         self.edges.update(other.edges)
@@ -263,7 +267,7 @@ class CFGFactory:
 
 # noinspection PyPep8Naming
 class CFGVisitor(ast.NodeVisitor):
-    """AST visitor that generates a CFG."""
+    """AST visitor that generates a CFG for each function."""
 
     class NodeIdentifierGenerator:
         """Helper class that generates an increasing sequence of node identifiers."""
@@ -279,6 +283,8 @@ class CFGVisitor(ast.NodeVisitor):
     def __init__(self):
         super().__init__()
         self._id_gen = CFGVisitor.NodeIdentifierGenerator()
+        self._cfgs = {}
+        self._function_defs = {}
 
     def visit(self, node, *args, **kwargs):
         """Visit an AST node.
@@ -440,7 +446,7 @@ class CFGVisitor(ast.NodeVisitor):
         The attributes left, ops, and comparators store the first value in the comparison,
         the list of operators, and the list of compared values after the first."""
         pp = ProgramPoint(node.lineno, node.col_offset)
-        assert isinstance(typ, BooleanLyraType)     # we expect typ to be a BooleanLyraType
+        assert isinstance(typ, BooleanLyraType)  # we expect typ to be a BooleanLyraType
         left = self.visit(node.left, types, None)
         name = type(node.ops[0]).__name__.lower()
         second = self.visit(node.comparators[0], types, None)
@@ -492,9 +498,9 @@ class CFGVisitor(ast.NodeVisitor):
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, DictLyraType)
                 return Call(pp, name, arguments, SetLyraType(arguments[0].typ.key_typ))
-            if name == 'split':     # str.split([sep[, maxsplit]])
-                assert isinstance(typ, ListLyraType)    # we expect type to be a ListLyraType
-                arguments = [self.visit(node.func.value, types, typ.typ)]   # target of the call
+            if name == 'split':  # str.split([sep[, maxsplit]])
+                assert isinstance(typ, ListLyraType)  # we expect type to be a ListLyraType
+                arguments = [self.visit(node.func.value, types, typ.typ)]  # target of the call
                 args_typs = zip(node.args, [typ.typ, IntegerLyraType()])
                 args = [self.visit(arg, types, arg_typ) for arg, arg_typ in args_typs]
                 arguments.extend(args)
@@ -505,7 +511,7 @@ class CFGVisitor(ast.NodeVisitor):
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, DictLyraType)
                 return Call(pp, name, arguments, SetLyraType(arguments[0].typ.val_typ))
-            arguments = [self.visit(node.func.value, types, None)]   # target of the call
+            arguments = [self.visit(node.func.value, types, None)]  # target of the call
             arguments.extend([self.visit(arg, types, None) for arg in node.args])
             return Call(pp, name, arguments, typ)
 
@@ -576,7 +582,7 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute targets stores a list of targets of the assignment.
         The attribute value stores the assigned value."""
         pp = ProgramPoint(node.lineno, node.col_offset)
-        assert typ is None     # we expect typ to be None
+        assert typ is None  # we expect typ to be None
         assignments = list()
         assert len(node.targets) == 1
         target = self.visit(node.targets[0], types, None)
@@ -589,7 +595,7 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute annotation stores the type annotation (a Str or Name).
         The attribute value opionally stores the assigned value."""
         pp = ProgramPoint(node.lineno, node.col_offset)
-        assert typ is None     # we expect typ to be None
+        assert typ is None  # we expect typ to be None
         annotated = resolve_type_annotation(node.annotation)
         target = self.visit(node.target, types, annotated)
         value = self.visit(node.value, types, annotated)
@@ -625,7 +631,7 @@ class CFGVisitor(ast.NodeVisitor):
         body = self._visit_body(node.body, types, typ, function_name=function_name)
         test = self.visit(node.test, types, BooleanLyraType())
         body.add_edge(Conditional(None, test, body.in_node, Edge.Kind.IF_IN))
-        if body.out_node:   # control flow can exit the body
+        if body.out_node:  # control flow can exit the body
             # add an unconditional IF_OUT edge
             body.add_edge(Unconditional(body.out_node, None, Edge.Kind.IF_OUT))
 
@@ -633,7 +639,7 @@ class CFGVisitor(ast.NodeVisitor):
             orelse = self._visit_body(node.orelse, types, typ, function_name=function_name)
             not_test = Call(pp, 'not', [test], BooleanLyraType())
             orelse.add_edge(Conditional(None, not_test, orelse.in_node, Edge.Kind.IF_IN))
-            if orelse.out_node:     # control flow can exit the else
+            if orelse.out_node:  # control flow can exit the else
                 # add an unconditional IF_OUT edge
                 orelse.add_edge(Unconditional(orelse.out_node, None, Edge.Kind.IF_OUT))
 
@@ -647,7 +653,7 @@ class CFGVisitor(ast.NodeVisitor):
                 # move the special edge after the dummy node
                 special._source = dummy
 
-        else:   # there is no else branch
+        else:  # there is no else branch
             orelse = LooseControlFlowGraph()
             not_test = Call(pp, 'not', [test], BooleanLyraType())
             orelse.add_edge(Conditional(None, not_test, None, Edge.Kind.DEFAULT))
@@ -681,13 +687,13 @@ class CFGVisitor(ast.NodeVisitor):
         body.add_edge(Conditional(header, test, body_in_node, Edge.Kind.LOOP_IN))
         not_test = Call(pp, 'not', [test], BooleanLyraType())
         body.add_edge(Conditional(header, not_test, None))
-        if body_out_node:   # control flow can exit the body
+        if body_out_node:  # control flow can exit the body
             # add an unconditional LOOP_OUT edge
             body.add_edge(Unconditional(body_out_node, header, Edge.Kind.LOOP_OUT))
 
         if node.orelse:  # there is an else branch
             orelse = self._visit_body(node.orelse, types)
-            if orelse.out_node:     # control flow can exit the else
+            if orelse.out_node:  # control flow can exit the else
                 # add an unconditional DEFAULT edge
                 orelse.add_edge(Unconditional(orelse.out_node, None, Edge.Kind.DEFAULT))
             body.append(orelse)
@@ -713,11 +719,11 @@ class CFGVisitor(ast.NodeVisitor):
         iterated = self.visit(node.iter, types, None)
         target_typ = None
         if isinstance(iterated, VariableAccess):
-            if isinstance(iterated.typ, ListLyraType):      # iteration over list items
+            if isinstance(iterated.typ, ListLyraType):  # iteration over list items
                 target_typ = iterated.typ.typ
-            elif isinstance(iterated.typ, SetLyraType):     # iteration over set items
+            elif isinstance(iterated.typ, SetLyraType):  # iteration over set items
                 target_typ = iterated.typ.typ
-            elif isinstance(iterated.typ, DictLyraType):    # iteration over dictionary keys
+            elif isinstance(iterated.typ, DictLyraType):  # iteration over dictionary keys
                 iterated = Call(iterated.pp, 'keys', [iterated], SetLyraType(iterated.typ.key_typ))
                 target_typ = iterated.typ.typ
         elif isinstance(iterated, Call):
@@ -742,13 +748,13 @@ class CFGVisitor(ast.NodeVisitor):
         body.add_edge(Conditional(header, test, body_in_node, Edge.Kind.LOOP_IN))
         not_test = Call(pp, 'notin', [target, iterated], BooleanLyraType(), forloop=True)
         body.add_edge(Conditional(header, not_test, None))
-        if body_out_node:   # control flow can exit the body
+        if body_out_node:  # control flow can exit the body
             # add an unconditional LOOP_OUT edge
             body.add_edge(Unconditional(body_out_node, header, Edge.Kind.LOOP_OUT))
 
         if node.orelse:  # there is an else branch
             orelse = self._visit_body(node.orelse, types, function_name=function_name)
-            if orelse.out_node:     # control flow can exit the else
+            if orelse.out_node:  # control flow can exit the else
                 # add an unconditional DEFAULT edge
                 orelse.add_edge(Unconditional(orelse.out_node, None, Edge.Kind.DEFAULT))
             body.append(orelse)
@@ -796,18 +802,18 @@ class CFGVisitor(ast.NodeVisitor):
                 else:  # normal assignment
                     factory.add_stmts(self.visit(child, types))
             elif isinstance(child, ast.AnnAssign):
-                if child.value is None:     # only a type annotation
+                if child.value is None:  # only a type annotation
                     annotation = resolve_type_annotation(child.annotation)
                     if isinstance(child.target, ast.Name):
                         types[child.target.id] = annotation
                     elif isinstance(child.target, (ast.Attribute, ast.Subscript)):
                         types[child.target.value] = annotation
-                elif isinstance(child.value, ast.IfExp):    # the value is a conditional expression
+                elif isinstance(child.value, ast.IfExp):  # the value is a conditional expression
                     factory.complete_basic_block()
                     annotation = resolve_type_annotation(child.annotation)
                     if_cfg = self.visit(child.value, [child.target], None, types, annotation)
                     factory.append_cfg(if_cfg, function_name)
-                else:   # normal annotated assignment
+                else:  # normal annotated assignment
                     factory.add_stmts(self.visit(child, types))
             elif isinstance(child, ast.AugAssign):
                 if isinstance(child.value, ast.IfExp):  # the value is a conditional expression
@@ -865,9 +871,12 @@ class CFGVisitor(ast.NodeVisitor):
             annotated = resolve_type_annotation(arg.annotation)
             types[arg.arg] = annotated
         start = _dummy_cfg(self._id_gen)
-        body = self._visit_body(node.body, types, loose_in_edges=True, loose_out_edges=True, function_name=function_name)
+        body = self._visit_body(node.body, types, loose_in_edges=True, loose_out_edges=True,
+                                function_name=function_name)
         end = _dummy_cfg(self._id_gen)
-        return start.append(body).append(end) if body else start.append(end)
+        function_cfg = start.append(body).append(end) if body else start.append(end)
+        self._cfgs[function_name] = function_cfg
+        return function_cfg
 
     # noinspection PyUnusedLocal
     def visit_Module(self, node, types=None, typ=None):
@@ -875,27 +884,64 @@ class CFGVisitor(ast.NodeVisitor):
         start = _dummy_cfg(self._id_gen)
         body = self._visit_body(node.body, types, loose_in_edges=True, loose_out_edges=True)
         end = _dummy_cfg(self._id_gen)
-        return start.append(body).append(end) if body else start.append(end)
+        main_cfg = start.append(body).append(end) if body else start.append(end)
+        self._cfgs['main'] = main_cfg
+        return self._cfgs
 
 
-def ast_to_cfg(root):
+def ast_to_cfg(root, function_name='main'):
     """Generate a CFG from an AST.
 
     :param root: root node of the AST
-    :return: the CFG generated from the given AST
+    :param function_name: the function whose CFG will be generated
+    :return: the CFG generated from the given AST for the function function_name
     """
-    loose_cfg = CFGVisitor().visit(root, dict())
-    return loose_cfg.eject()
+    return ast_to_cfgs(root)[function_name]
 
 
-def source_to_cfg(code: str):
+def ast_to_cfgs(root):
+    """Generate a CFG for each user-defined function from an AST.
+
+    :param root: root node of the AST
+    :return: a mapping of function names to the corresponding CFGs generated from the given AST and the corresponding
+    function definition
+    """
+    loose_cfgs = CFGVisitor().visit(root, dict())
+    cfgs = {name: loose_cfg.eject() for name, loose_cfg in loose_cfgs.items()}
+    return cfgs
+
+def ast_to_function_args(root):
+
+    function_args = {'main': None}
+    for child in root.body:
+        if isinstance(child, ast.FunctionDef):
+            function_name = child.name
+            args = []
+            for arg in child.args.args:
+                annotated = resolve_type_annotation(arg.annotation)
+                args.append(VariableIdentifier(annotated, arg.arg))
+            function_args[function_name] = args
+    return function_args
+
+
+def source_to_cfg(code: str, function_name='main'):
     """Generate a CFG from a Python program.
 
     :param code: Python program
-    :return: the CFG generated from the given Python program
+    :param function_name: the function whose CFG will be generated
+    :return: the CFG generated from the given Python program for the function function_name
+    """
+    return source_to_cfgs(code)[function_name]
+
+
+def source_to_cfgs(code: str):
+    """Generate a CFG for each user-defined function from a Python program.
+
+    :param code: Python program
+    :return: the CFG generated for each user-defined function from the given Python program
     """
     root_node = ast.parse(code)
-    return ast_to_cfg(root_node)
+    return ast_to_cfgs(root_node)
 
 
 def main(args):

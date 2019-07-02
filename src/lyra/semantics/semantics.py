@@ -24,6 +24,7 @@ from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, C
     SubscriptionAccess, SlicingAccess
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
     StringLyraType, TupleLyraType, ListLyraType, SetLyraType, DictLyraType
+from lyra.engine.runner import Runner
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -44,6 +45,9 @@ class Semantics:
 
     The semantics is independent of the direction (forward/backward) of the analysis.
     """
+
+    def __init__(self, runner: Runner = None):
+        self._runner = runner
 
     def semantics(self, stmt: Statement, state: State) -> State:
         """Semantics of a statement.

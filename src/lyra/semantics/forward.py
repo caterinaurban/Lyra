@@ -41,8 +41,23 @@ class UserDefinedCallSemantics(ForwardSemantics):
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        error = f"Forward semantics for call statement {stmt} not yet implemented!"
-        raise NotImplementedError(error)
+        function_name = stmt.name
+        function_cfg = self._runner.cfgs[function_name]
+        current_cfg = self._runner.cfg
+        self._runner.cfg = function_cfg
+
+        # map the actual parameters to the formal ones
+        actual_args = stmt.arguments
+        formal_args = self._runner.function_args[function_name]
+
+        old_state = state
+        for (actual_arg, formal_arg) in zip(actual_args, formal_args):
+            lhs = {formal_arg}
+            rhs = self.semantics(actual_arg, old_state).result
+            state.assign(lhs, rhs)
+
+        function_result = self._runner.interpreter().analyze(state)
+        return state
 
 
 class AssignmentSemantics(ForwardSemantics):

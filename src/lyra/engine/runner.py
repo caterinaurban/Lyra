@@ -17,7 +17,8 @@ from lyra.core.expressions import VariableIdentifier, LengthIdentifier
 from lyra.core.statements import Assignment, VariableAccess, Call, TupleDisplayAccess
 from lyra.core.types import SequenceLyraType
 from lyra.engine.result import AnalysisResult
-from lyra.frontend.cfg_generator import ast_to_cfg
+from lyra.frontend.cfg_generator import ast_to_cfgs
+from lyra.frontend.cfg_generator import ast_to_function_args
 from lyra.visualization.graph_renderer import AnalysisResultRenderer
 
 
@@ -29,6 +30,8 @@ class Runner:
         self._source = None
         self._tree = None
         self._cfg = None
+        self._cfgs = None
+        self._function_args = {}
 
     @property
     def path(self):
@@ -107,7 +110,9 @@ class Runner:
         with open(self.path, 'r') as source:
             self.source = source.read()
             self.tree = ast.parse(self.source)
-            self.cfg = ast_to_cfg(self.tree)
+            self.cfgs = ast_to_cfgs(self.tree)
+            self.cfg = self.cfgs['main']
+            self.function_args = ast_to_function_args(self.tree)
         return self.run()
 
     def run(self) -> AnalysisResult:

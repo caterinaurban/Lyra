@@ -15,8 +15,8 @@
 # Usage Analyses #
 ##################
 
-# from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
-# SimpleUsageAnalysis().main("esop2018.py")
+#from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
+#SimpleUsageAnalysis().main("esop2018.py")
 
 # from lyra.engine.usage.fulara_usage_analysis import FularaIntervalUsageAnalysis
 # FularaIntervalUsageAnalysis().main("usage/running_example.py")
@@ -31,8 +31,8 @@
 # from lyra.engine.numerical.sign_analysis import BackwardSignAnalysis
 # BackwardSignAnalysis().main("example.py")
 
-# from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
-# ForwardIntervalAnalysis().main("example.py")
+from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
+ForwardIntervalAnalysis().main("example.py")
 
 # from lyra.engine.numerical.interval_analysis import ForwardBoxAnalysis
 # ForwardBoxAnalysis().main("example.py")
