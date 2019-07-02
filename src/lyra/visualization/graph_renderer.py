@@ -193,8 +193,10 @@ class AnalysisResultRenderer(CFGRenderer):
 
     def _basic_node_label(self, node, result, function_name=""):
         state = '<font point-size="9">{} </font>'
-        states = [function_name] + list(map(lambda x: state.format(html.escape(str(x)).replace(
+        states = list(map(lambda x: state.format(html.escape(str(x)).replace(
             '\n', '<br />')), result.get_node_result(node)))
+        if function_name != "":
+            states = [function_name] + states
         stmt = '<font color="#ffffff" point-size="11">{}</font>'
         stmts = map(lambda x: stmt.format(html.escape(str(x))), node.stmts)
         node_result = [item for items in zip_longest(
@@ -211,7 +213,7 @@ class AnalysisResultRenderer(CFGRenderer):
                 if isinstance(node, (Basic, Loop)):
                     function_name = ""
                     if node == cfg.in_node:
-                        function_name = name # only the in_node has the function_name
+                        function_name = name # only the in_node has function_name
                     label = self._basic_node_label(node, result, function_name)
                     self._render_node(node, label, fillcolor)
                 else:

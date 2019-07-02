@@ -119,8 +119,8 @@ class Runner:
         with open(self.path, 'r') as source:
             self.source = source.read()
             self.tree = ast.parse(self.source)
-            self.cfgs = ast_to_cfgs(self.tree)
-            self.cfg = self.cfgs['main']
+            self.names_to_cfgs = ast_to_cfgs(self.tree)
+            self.cfg = self.names_to_cfgs['main']
             self.function_args = ast_to_function_args(self.tree)
         return self.run()
 
@@ -135,7 +135,7 @@ class Runner:
 
     def render(self, result):
         renderer = AnalysisResultRenderer()
-        data = (self.cfgs, result)
+        data = (self.names_to_cfgs, result)
         name = os.path.splitext(os.path.basename(self.path))[0]
         label = f"CFG with Analysis Result for {name}"
         directory = os.path.dirname(self.path)

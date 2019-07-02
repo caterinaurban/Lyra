@@ -13,6 +13,8 @@ from lyra.semantics.semantics import Semantics, DefaultSemantics
 from lyra.abstract_domains.state import State
 from lyra.core.statements import Assignment, Call
 
+from copy import deepcopy
+
 
 class ForwardSemantics(Semantics):
     """Forward semantics of statements."""
@@ -42,7 +44,7 @@ class UserDefinedCallSemantics(ForwardSemantics):
         :return: state modified by the call statement
         """
         function_name = stmt.name
-        function_cfg = self._runner.cfgs[function_name]
+        function_cfg = self._runner.names_to_cfgs[function_name]
         current_cfg = self._runner.cfg
         self._runner.cfg = function_cfg
 
@@ -50,13 +52,13 @@ class UserDefinedCallSemantics(ForwardSemantics):
         actual_args = stmt.arguments
         formal_args = self._runner.function_args[function_name]
 
-        old_state = state
+        function_state = deepcopy(state)
         for (actual_arg, formal_arg) in zip(actual_args, formal_args):
             lhs = {formal_arg}
-            rhs = self.semantics(actual_arg, old_state).result
-            state.assign(lhs, rhs)
+            rhs = self.semantics(actual_arg, state).result
+            function_state.assign(lhs, rhs)
 
-        function_result = self._runner.interpreter().analyze(state)
+        function_result = self._runner.interpreter().analyze(function_state)
         self._runner.partial_result.update(function_result.result)
         return state
 
