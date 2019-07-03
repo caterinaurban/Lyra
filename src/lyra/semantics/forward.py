@@ -11,9 +11,9 @@ from lyra.core.types import ListLyraType
 from lyra.semantics.semantics import Semantics, DefaultSemantics
 
 from lyra.abstract_domains.state import State
-from lyra.core.statements import Assignment, Call
+from lyra.core.statements import Assignment, Call, Return
 
-from copy import deepcopy
+from copy import copy
 
 
 class ForwardSemantics(Semantics):
@@ -52,11 +52,15 @@ class UserDefinedCallSemantics(ForwardSemantics):
         actual_args = stmt.arguments
         formal_args = self._runner.function_args[function_name]
 
-        function_state = deepcopy(state)
+        function_state = copy(state)
         for (actual_arg, formal_arg) in zip(actual_args, formal_args):
             lhs = {formal_arg}
             rhs = self.semantics(actual_arg, state).result
             function_state.assign(lhs, rhs)
+
+        extra_variables = [variable for variable in function_state.variables if variable not in formal_args]
+        for variable in extra_variables:
+            function_state.remove_variable(variable)
 
         function_result = self._runner.interpreter().analyze(function_state)
         self._runner.partial_result.update(function_result.result)
@@ -78,7 +82,21 @@ class AssignmentSemantics(ForwardSemantics):
         return state.assign(lhs, rhs)
 
 
+class ReturnSemantics(ForwardSemantics):
+    """Forward semantics of return statements."""
+
+    # noinspection PyUnusedLocal
+    def return_semantics(self, stmt: Return, state: State):
+        """Forward semantics of an return statement.
+
+        :param stmt: return statement to be executed
+        :param state: state before executing the return statement
+        :return: state modified by the return statement
+        """
+        return state.bottom()
+
+
 # noinspection PyAbstractClass
-class DefaultForwardSemantics(DefaultSemantics, UserDefinedCallSemantics, AssignmentSemantics):
+class DefaultForwardSemantics(DefaultSemantics, UserDefinedCallSemantics, AssignmentSemantics, ReturnSemantics):
     """Default forward semantics of statements."""
     pass

@@ -380,3 +380,29 @@ class Call(Statement):
     def __repr__(self):
         arguments = ", ".join("{}".format(argument) for argument in self.arguments)
         return "{}({})".format(self.name, arguments)
+
+
+"""
+Return Statements.
+https://docs.python.org/3.4/reference/simple_stmts.html#the-return-statement
+"""
+
+
+class Return(Statement):
+    def __init__(self, pp: ProgramPoint, expressions: List[Statement]):
+        """Return statement representation.
+
+        :param pp: program point associated with the raise
+        :param expressions: list of returned expressions
+        """
+        super().__init__(pp)
+        self._expressions = expressions
+
+    @property
+    def expressions(self):
+        return self._expressions
+
+    def __repr__(self):
+        expressions = ", ".join("{}".format(expression) for expression in self.expressions)
+        return "return (" + expressions + ")"
+

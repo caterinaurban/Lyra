@@ -616,7 +616,7 @@ class CFGVisitor(ast.NodeVisitor):
         return Assignment(pp, target, value)
 
     # noinspection PyMethodMayBeStatic, PyUnusedLocal
-    def visit_Raise(self, node, types=None, typ=None):
+    def visit_Raise(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for an exception raise.
         The attribute exc stores the exception object to be raised
         (normally a Call or Name, or None for a standalone raise)."""
@@ -791,6 +791,24 @@ class CFGVisitor(ast.NodeVisitor):
         cfg.special_edges.append((edge, LooseControlFlowGraph.SpecialEdgeType.CONTINUE))
         return cfg
 
+    def visit_FunctionDef(self, node, types, function_name):
+        for arg in node.args.args:
+            annotated = resolve_type_annotation(arg.annotation)
+            arg.arg = function_name + "#" + arg.arg
+            types[arg.arg] = annotated
+        start = _dummy_cfg(self._id_gen)
+        body = self._visit_body(node.body, types, loose_in_edges=True, loose_out_edges=True,
+                                function_name=function_name)
+        end = _dummy_cfg(self._id_gen)
+        function_cfg = start.append(body).append(end) if body else start.append(end)
+        self._cfgs[function_name] = function_cfg
+        return function_cfg
+
+    def visit_Return(self, node, types=None, function_name='main'):
+        """Visitor function for a return statement."""
+        expressions = self.visit(node.value, types, function_name=function_name)
+        return Return(ProgramPoint(node.lineno, node.col_offset), [expressions])
+
     def _visit_body(self, body, types, loose_in_edges=False, loose_out_edges=False, function_name='main'):
         factory = CFGFactory(self._id_gen)
 
@@ -826,6 +844,9 @@ class CFGVisitor(ast.NodeVisitor):
             elif isinstance(child, (ast.Expr, ast.Raise)):
                 # check other options for AnnAssign (empty value, or IfExp as value)
                 factory.add_stmts(self.visit(child, types, function_name=function_name))
+            elif isinstance(child, ast.Return):
+                factory.add_stmts(self.visit(child, types, function_name=function_name))
+                factory.complete_basic_block()
             elif isinstance(child, ast.If):
                 factory.complete_basic_block()
                 if_cfg = self.visit(child, types, function_name=function_name)
@@ -866,18 +887,7 @@ class CFGVisitor(ast.NodeVisitor):
 
         return factory.cfg
 
-    def visit_FunctionDef(self, node, types, function_name):
-        for arg in node.args.args:
-            annotated = resolve_type_annotation(arg.annotation)
-            arg.arg = function_name + "#" + arg.arg
-            types[arg.arg] = annotated
-        start = _dummy_cfg(self._id_gen)
-        body = self._visit_body(node.body, types, loose_in_edges=True, loose_out_edges=True,
-                                function_name=function_name)
-        end = _dummy_cfg(self._id_gen)
-        function_cfg = start.append(body).append(end) if body else start.append(end)
-        self._cfgs[function_name] = function_cfg
-        return function_cfg
+
 
     # noinspection PyUnusedLocal
     def visit_Module(self, node, types=None, typ=None):

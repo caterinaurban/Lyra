@@ -1,14 +1,13 @@
 def max(x: int, y: int):
   if x > y:
-    print(x)
+    return x
   else:
-    print(y)
+    return y
 
-a:int = 10
-b:int = 20
 
-c:int = 30
-d:int = 5
+a: int = 10
+b: int = 20
 
-max(a, b)
-max(c, d)
+c: int = max(a, b)
+d: int = max(c, 5)
+print(d)
