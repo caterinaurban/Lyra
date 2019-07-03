@@ -209,40 +209,39 @@ def _dummy_cfg(id_gen):
 
 class CFGFactory:
     """
-    A helper class that encapsulates partial CFGs
-    and possibly some statements not yet attached to a CFG.
-    Each CFG corresponds to a function.
+    A helper class that encapsulates a partial CFG
+    and possibly some statements not yet attached to the CFG.
 
     Whenever the
     method `complete_basic_block()` is called,
-    it is ensured that all unattached statements are properly attached to the corresponding
-    partial CFG. The partial CFGs can be retrieved at any time by property `cfgs`.
+    it is ensured that all unattached statements are properly attached to the
+    partial CFG. The partial CFG can be retrieved at any time by property `cfg`.
     """
 
     def __init__(self, id_gen):
         self._stmts = []
-        self._cfgs = {}
+        self._cfg = None
         self._id_gen = id_gen
 
     @property
-    def cfgs(self):
-        return self._cfgs
+    def cfg(self):
+        return self._cfg
 
-    def prepend_cfg(self, other, function_name='main'):
-        if self._cfgs[function_name] is not None:
-            self._cfgs[function_name].prepend(other)
+    def prepend_cfg(self, other):
+        if self._cfg is not None:
+            self._cfg.prepend(other)
         else:
-            self._cfgs[function_name] = other
-        return self._cfgs[function_name]
+            self._cfg = other
+        return self._cfg
 
-    def append_cfg(self, other, function_name='main'):
-        if self._cfgs[function_name] is not None:
-            if self._cfgs[function_name].loose_out_edges and other.loose_in_edges:
-                self._cfgs[function_name].append(_dummy_cfg(self._id_gen))
-            self._cfgs[function_name].append(other)
+    def append_cfg(self, other):
+        if self._cfg is not None:
+            if self._cfg.loose_out_edges and other.loose_in_edges:
+                self._cfg.append(_dummy_cfg(self._id_gen))
+            self._cfg.append(other)
         else:
-            self._cfgs[function_name] = other
-        return self._cfgs[function_name]
+            self._cfg = other
+        return self._cfg
 
     def add_stmts(self, stmts):
         """
@@ -255,10 +254,10 @@ class CFGFactory:
         else:
             self._stmts.append(stmts)
 
-    def complete_basic_block(self, function_name='main'):
+    def complete_basic_block(self):
         if self._stmts:
             block = Basic(self._id_gen.next, self._stmts)
-            self.append_cfg(LooseControlFlowGraph({block}, block, block, set()), function_name)
+            self.append_cfg(LooseControlFlowGraph({block}, block, block, set()))
             self._stmts = []
 
     def incomplete_block(self):
@@ -534,7 +533,7 @@ class CFGVisitor(ast.NodeVisitor):
             else:
                 assignments.append(Assignment(pp, self.visit(target, types, typ), body))
         then.add_stmts(assignments)
-        then.complete_basic_block(function_name)
+        then.complete_basic_block()
         then = then.cfg[function_name]
         test = self.visit(node.test, types, BooleanLyraType())
         then.add_edge(Conditional(None, test, then.in_node, Edge.Kind.IF_IN))
@@ -794,14 +793,13 @@ class CFGVisitor(ast.NodeVisitor):
 
     def _visit_body(self, body, types, loose_in_edges=False, loose_out_edges=False, function_name='main'):
         factory = CFGFactory(self._id_gen)
-        factory.cfgs[function_name] = None
 
         for child in body:
             if isinstance(child, ast.Assign):
                 if isinstance(child.value, ast.IfExp):  # the value is a conditional expression
                     factory.complete_basic_block()
                     if_cfg = self.visit(child.value, child.targets, None, types)
-                    factory.append_cfg(if_cfg, function_name)
+                    factory.append_cfg(if_cfg)
                 else:  # normal assignment
                     factory.add_stmts(self.visit(child, types))
             elif isinstance(child, ast.AnnAssign):
@@ -815,59 +813,58 @@ class CFGVisitor(ast.NodeVisitor):
                     factory.complete_basic_block()
                     annotation = resolve_type_annotation(child.annotation)
                     if_cfg = self.visit(child.value, [child.target], None, types, annotation, function_name)
-                    factory.append_cfg(if_cfg, function_name)
+                    factory.append_cfg(if_cfg)
                 else:  # normal annotated assignment
                     factory.add_stmts(self.visit(child, types, function_name=function_name))
             elif isinstance(child, ast.AugAssign):
                 if isinstance(child.value, ast.IfExp):  # the value is a conditional expression
                     factory.complete_basic_block()
                     if_cfg = self.visit(child.value, [child.target], child.op, types)
-                    factory.append_cfg(if_cfg, function_name)
+                    factory.append_cfg(if_cfg)
                 else:  # normal augmented assignment
                     factory.add_stmts(self.visit(child, types))
             elif isinstance(child, (ast.Expr, ast.Raise)):
                 # check other options for AnnAssign (empty value, or IfExp as value)
                 factory.add_stmts(self.visit(child, types, function_name=function_name))
             elif isinstance(child, ast.If):
-                factory.complete_basic_block(function_name)
+                factory.complete_basic_block()
                 if_cfg = self.visit(child, types, function_name=function_name)
-                factory.append_cfg(if_cfg, function_name)
+                factory.append_cfg(if_cfg)
             elif isinstance(child, ast.While):
-                factory.complete_basic_block(function_name)
+                factory.complete_basic_block()
                 while_cfg = self.visit(child, types, function_name=function_name)
-                factory.append_cfg(while_cfg, function_name)
+                factory.append_cfg(while_cfg)
             elif isinstance(child, ast.For):
-                factory.complete_basic_block(function_name)
+                factory.complete_basic_block()
                 for_cfg = self.visit(child, types, function_name=function_name)
-                factory.append_cfg(for_cfg, function_name)
+                factory.append_cfg(for_cfg)
             elif isinstance(child, ast.Break):
-                factory.complete_basic_block(function_name)
+                factory.complete_basic_block()
                 break_cfg = self.visit(child, types)
-                factory.append_cfg(break_cfg, function_name)
+                factory.append_cfg(break_cfg)
             elif isinstance(child, ast.Continue):
-                factory.complete_basic_block(function_name)
+                factory.complete_basic_block()
                 cont_cfg = self.visit(child, types)
-                factory.append_cfg(cont_cfg, function_name)
+                factory.append_cfg(cont_cfg)
             elif isinstance(child, ast.Pass) and factory.incomplete_block():
                 pass
             elif isinstance(child, ast.Pass):
-                factory.append_cfg(_dummy_cfg(self._id_gen), function_name)
+                factory.append_cfg(_dummy_cfg(self._id_gen))
             elif isinstance(child, ast.FunctionDef):
-                f_name = child.name
-                factory.cfgs[f_name] = None
-                function_cfg = self.visit_FunctionDef(child, types, f_name)
-                factory.append_cfg(function_cfg, f_name)
+                function_factory = CFGFactory(self._id_gen)
+                function_cfg = self.visit_FunctionDef(child, types, child.name)
+                function_factory.append_cfg(function_cfg)
             else:
                 error = "The statement {} is not yet translatable to CFG!".format(child)
                 raise NotImplementedError(error)
-        factory.complete_basic_block(function_name)
+        factory.complete_basic_block()
 
-        if not loose_in_edges and factory.cfgs[function_name] and factory.cfgs[function_name].loose_in_edges:
-            factory.prepend_cfg(_dummy_cfg(self._id_gen), function_name)
-        if not loose_out_edges and factory.cfgs[function_name] and factory.cfgs[function_name].loose_out_edges:
-            factory.append_cfg(_dummy_cfg(self._id_gen), function_name)
+        if not loose_in_edges and factory.cfg and factory.cfg.loose_in_edges:
+            factory.prepend_cfg(_dummy_cfg(self._id_gen))
+        if not loose_out_edges and factory.cfg and factory.cfg.loose_out_edges:
+            factory.append_cfg(_dummy_cfg(self._id_gen))
 
-        return factory.cfgs[function_name]
+        return factory.cfg
 
     def visit_FunctionDef(self, node, types, function_name):
         for arg in node.args.args:
