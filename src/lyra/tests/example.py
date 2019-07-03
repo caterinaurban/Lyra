@@ -1,4 +1,4 @@
-def my_function(x: int, y: int):
+def max(x: int, y: int):
   if x > y:
     print(x)
   else:
@@ -7,8 +7,8 @@ def my_function(x: int, y: int):
 a:int = 10
 b:int = 20
 
-#c:int = 30
-#d:int = 5
+c:int = 30
+d:int = 5
 
-my_function(a, b)
-#my_function(c, d)
+max(a, b)
+max(c, d)

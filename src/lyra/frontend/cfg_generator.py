@@ -307,7 +307,7 @@ class CFGVisitor(ast.NodeVisitor):
     # Literals
 
     # noinspection PyUnusedLocal
-    def visit_Num(self, node, types=None, typ=None):
+    def visit_Num(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a number (integer, float, or complex).
         The n attribute stores the value, already converted to the relevant type."""
         pp = ProgramPoint(node.lineno, node.col_offset)
@@ -383,11 +383,14 @@ class CFGVisitor(ast.NodeVisitor):
 
     # Variables
 
-    def visit_Name(self, node, types=None, typ=None):
+    def visit_Name(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a variable name.
         The attribute id stores the name as a string.
         The attribute ctx is Store (to assign a new value to the variable),
         Load (to load the value of the variable), or Del (to delete the variable)."""
+
+        node.id = function_name + "#" + node.id if function_name is not 'main' else node.id
+
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.ctx, ast.Store):
             if node.id not in types:
@@ -408,10 +411,10 @@ class CFGVisitor(ast.NodeVisitor):
     # Expressions
 
     # noinspection PyUnusedLocal
-    def visit_Expr(self, node, types=None, typ=None):
+    def visit_Expr(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for an expression statement (whose return value is unused).
         The attribute value stored another AST node."""
-        return self.visit(node.value, types)
+        return self.visit(node.value, types, function_name=function_name)
 
     def visit_UnaryOp(self, node, types=None, typ=None):
         """Visitor function for a unary operation.
@@ -441,15 +444,15 @@ class CFGVisitor(ast.NodeVisitor):
         arguments = [self.visit(val, types, typ) for val in node.values]
         return Call(pp, name, arguments, typ)
 
-    def visit_Compare(self, node, types=None, typ=None):
+    def visit_Compare(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a comparison operation.
         The attributes left, ops, and comparators store the first value in the comparison,
         the list of operators, and the list of compared values after the first."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         assert isinstance(typ, BooleanLyraType)  # we expect typ to be a BooleanLyraType
-        left = self.visit(node.left, types, None)
+        left = self.visit(node.left, types, None, function_name=function_name)
         name = type(node.ops[0]).__name__.lower()
-        second = self.visit(node.comparators[0], types, None)
+        second = self.visit(node.comparators[0], types, None, function_name=function_name)
         result = Call(pp, name, [left, second], typ)
         for op, comparator in zip(node.ops[1:], node.comparators[1:]):
             name = type(op).__name__.lower()
@@ -459,7 +462,7 @@ class CFGVisitor(ast.NodeVisitor):
             second = right
         return result
 
-    def visit_Call(self, node, types=None, typ=None):
+    def visit_Call(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a call.
         The attribute func stores the function being called (often a Name or Attribute object).
         The attribute args stores a list fo the arguments passed by position."""
@@ -475,7 +478,7 @@ class CFGVisitor(ast.NodeVisitor):
             if name == 'range':
                 arguments = [self.visit(arg, types, IntegerLyraType()) for arg in node.args]
                 return Call(pp, name, arguments, ListLyraType(IntegerLyraType()))
-            arguments = [self.visit(arg, types, None) for arg in node.args]
+            arguments = [self.visit(arg, types, None, function_name=function_name) for arg in node.args]
             return Call(pp, name, arguments, typ)
         elif isinstance(node.func, ast.Attribute):
             name: str = node.func.attr
@@ -589,16 +592,16 @@ class CFGVisitor(ast.NodeVisitor):
         value = self.visit(node.value, types, target.typ)
         return Assignment(pp, target, value)
 
-    def visit_AnnAssign(self, node, types=None, typ=None):
+    def visit_AnnAssign(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for an assignment with a type annotation.
         The attribute target stores the target of the assignment (a Name, Attribute, or Subscript).
         The attribute annotation stores the type annotation (a Str or Name).
-        The attribute value opionally stores the assigned value."""
+        The attribute value optionally stores the assigned value."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         assert typ is None  # we expect typ to be None
         annotated = resolve_type_annotation(node.annotation)
-        target = self.visit(node.target, types, annotated)
-        value = self.visit(node.value, types, annotated)
+        target = self.visit(node.target, types, annotated, function_name=function_name)
+        value = self.visit(node.value, types, annotated, function_name=function_name)
         return Assignment(pp, target, value)
 
     def visit_AugAssign(self, node, types=None, typ=None):
@@ -629,7 +632,7 @@ class CFGVisitor(ast.NodeVisitor):
         pp = ProgramPoint(node.test.lineno, node.test.col_offset)
 
         body = self._visit_body(node.body, types, typ, function_name=function_name)
-        test = self.visit(node.test, types, BooleanLyraType())
+        test = self.visit(node.test, types, BooleanLyraType(), function_name=function_name)
         body.add_edge(Conditional(None, test, body.in_node, Edge.Kind.IF_IN))
         if body.out_node:  # control flow can exit the body
             # add an unconditional IF_OUT edge
@@ -811,10 +814,10 @@ class CFGVisitor(ast.NodeVisitor):
                 elif isinstance(child.value, ast.IfExp):  # the value is a conditional expression
                     factory.complete_basic_block()
                     annotation = resolve_type_annotation(child.annotation)
-                    if_cfg = self.visit(child.value, [child.target], None, types, annotation)
+                    if_cfg = self.visit(child.value, [child.target], None, types, annotation, function_name)
                     factory.append_cfg(if_cfg, function_name)
                 else:  # normal annotated assignment
-                    factory.add_stmts(self.visit(child, types))
+                    factory.add_stmts(self.visit(child, types, function_name=function_name))
             elif isinstance(child, ast.AugAssign):
                 if isinstance(child.value, ast.IfExp):  # the value is a conditional expression
                     factory.complete_basic_block()
@@ -824,7 +827,7 @@ class CFGVisitor(ast.NodeVisitor):
                     factory.add_stmts(self.visit(child, types))
             elif isinstance(child, (ast.Expr, ast.Raise)):
                 # check other options for AnnAssign (empty value, or IfExp as value)
-                factory.add_stmts(self.visit(child, types))
+                factory.add_stmts(self.visit(child, types, function_name=function_name))
             elif isinstance(child, ast.If):
                 factory.complete_basic_block(function_name)
                 if_cfg = self.visit(child, types, function_name=function_name)
@@ -869,6 +872,7 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_FunctionDef(self, node, types, function_name):
         for arg in node.args.args:
             annotated = resolve_type_annotation(arg.annotation)
+            arg.arg = function_name + "#" + arg.arg
             types[arg.arg] = annotated
         start = _dummy_cfg(self._id_gen)
         body = self._visit_body(node.body, types, loose_in_edges=True, loose_out_edges=True,
