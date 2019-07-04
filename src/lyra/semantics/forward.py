@@ -13,7 +13,7 @@ from lyra.semantics.semantics import Semantics, DefaultSemantics
 from lyra.abstract_domains.state import State
 from lyra.core.statements import Assignment, Call, Return
 
-from copy import copy
+from copy import deepcopy
 
 
 class ForwardSemantics(Semantics):
@@ -52,7 +52,7 @@ class UserDefinedCallSemantics(ForwardSemantics):
         actual_args = stmt.arguments
         formal_args = self._runner.function_args[function_name]
 
-        function_state = copy(state)
+        function_state = deepcopy(state)
         for (actual_arg, formal_arg) in zip(actual_args, formal_args):
             lhs = {formal_arg}
             rhs = self.semantics(actual_arg, state).result
@@ -63,7 +63,11 @@ class UserDefinedCallSemantics(ForwardSemantics):
             function_state.remove_variable(variable)
 
         function_result = self._runner.interpreter().analyze(function_state)
-        self._runner.partial_result.update(function_result.result)
+        if function_name not in self._runner.result.keys():
+            self._runner.result[function_name] = function_result
+        else:
+            current_result = self._runner.result[function_name]
+            current_result.merge(function_result)
         return state
 
 
@@ -93,7 +97,8 @@ class ReturnSemantics(ForwardSemantics):
         :param state: state before executing the return statement
         :return: state modified by the return statement
         """
-        return state.bottom()
+        state = state.bottom()
+        return state
 
 
 # noinspection PyAbstractClass

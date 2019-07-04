@@ -193,30 +193,42 @@ class AnalysisResultRenderer(CFGRenderer):
 
     def _basic_node_label(self, node, result, function_name=""):
         state = '<font point-size="9">{} </font>'
-        states = list(map(lambda x: state.format(html.escape(str(x)).replace(
-            '\n', '<br />')), result.get_node_result(node)))
-        if function_name != "":
-            states = [function_name] + states
+        node_states = result.get_node_result(node)
         stmt = '<font color="#ffffff" point-size="11">{}</font>'
-        stmts = map(lambda x: stmt.format(html.escape(str(x))), node.stmts)
-        node_result = [item for items in zip_longest(
-            states, stmts) for item in items if item is not None]
+        stmts = list(map(lambda x: stmt.format(html.escape(str(x))), node.stmts))
+
+        node_result = []
+        number_of_states = len(node_states)
+        number_of_stmts = len(stmts)
+        for index in range(max(number_of_states, number_of_stmts)):
+            current_states_list = node_states[index]
+            if not isinstance(current_states_list, (list,)):
+                current_states_list = [current_states_list]
+            for current_state in current_states_list:
+                states = state.format(html.escape(str(current_state)).replace(
+                    '\n', '<br />'))
+                node_result.append(states)
+            if index < number_of_stmts:
+                node_result.append(stmts[index])
+        if function_name != "":
+            node_result = [function_name] + node_result
         return self._list2table(node_result, escape=False)
 
     def _render(self, data):
-        (names_to_cfgs, result) = data
+        (names_to_cfgs, results) = data
         names = names_to_cfgs.keys()
-        for name in names:
-            cfg = names_to_cfgs[name]
-            for node in cfg.nodes.values():
-                fillcolor = self._node_color(node, cfg)
+        for function_name in names:
+            function_cfg = names_to_cfgs[function_name]
+            function_result = results[function_name]
+            for node in function_cfg.nodes.values():
+                fillcolor = self._node_color(node, function_cfg)
                 if isinstance(node, (Basic, Loop)):
-                    function_name = ""
-                    if node == cfg.in_node:
-                        function_name = name # only the in_node has function_name
-                    label = self._basic_node_label(node, result, function_name)
+                    cfg_name = ""
+                    if node == function_cfg.in_node:
+                        cfg_name = function_name # only the in_node has function_name
+                    label = self._basic_node_label(node, function_result, cfg_name)
                     self._render_node(node, label, fillcolor)
                 else:
                     label = self._escape_label(self._shorten_label(str(node)))
                     self._render_node(node, label, fillcolor)
-            self._render_edges(cfg)
+            self._render_edges(function_cfg)
