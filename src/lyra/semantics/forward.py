@@ -64,10 +64,9 @@ class UserDefinedCallSemantics(ForwardSemantics):
 
         function_result = self._runner.interpreter().analyze(function_state)
         if function_name not in self._runner.result.keys():
-            self._runner.result[function_name] = function_result
+            self._runner.result[function_name] = [function_result]
         else:
-            current_result = self._runner.result[function_name]
-            current_result.merge(function_result)
+            self._runner.result[function_name].append(function_result)
         return state
 
 

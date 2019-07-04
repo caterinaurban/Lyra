@@ -10,7 +10,7 @@ import os
 import time
 from abc import abstractmethod
 from queue import Queue
-from typing import Set
+from typing import Dict, List, Set
 
 from lyra.core.cfg import Loop
 from lyra.core.expressions import VariableIdentifier, LengthIdentifier
@@ -32,7 +32,7 @@ class Runner:
         self._cfg = None
         self._cfgs = None
         self._function_args = {}
-        self._result = dict()
+        self._result: Dict[str, List[AnalysisResult]] = dict()
 
     @property
     def path(self):
@@ -127,7 +127,7 @@ class Runner:
     def run(self) -> AnalysisResult:
         start = time.time()
         main_result = self.interpreter().analyze(self.state())
-        self.result['main'] = main_result
+        self.result['main'] = [main_result]
         end = time.time()
         print('Time: {}s'.format(end - start))
         self.render(self.result)

@@ -193,18 +193,17 @@ class AnalysisResultRenderer(CFGRenderer):
 
     def _basic_node_label(self, node, result, function_name=""):
         state = '<font point-size="9">{} </font>'
-        node_states = result.get_node_result(node)
         stmt = '<font color="#ffffff" point-size="11">{}</font>'
         stmts = list(map(lambda x: stmt.format(html.escape(str(x))), node.stmts))
 
         node_result = []
+
+        node_states = result[0].get_node_result(node) # there should always be at least one result
         number_of_states = len(node_states)
         number_of_stmts = len(stmts)
         for index in range(max(number_of_states, number_of_stmts)):
-            current_states_list = node_states[index]
-            if not isinstance(current_states_list, (list,)):
-                current_states_list = [current_states_list]
-            for current_state in current_states_list:
+            for a_result in result:
+                current_state = a_result.get_node_result(node)[index]
                 states = state.format(html.escape(str(current_state)).replace(
                     '\n', '<br />'))
                 node_result.append(states)
@@ -219,14 +218,14 @@ class AnalysisResultRenderer(CFGRenderer):
         names = names_to_cfgs.keys()
         for function_name in names:
             function_cfg = names_to_cfgs[function_name]
-            function_result = results[function_name]
+            function_results = results[function_name]
             for node in function_cfg.nodes.values():
                 fillcolor = self._node_color(node, function_cfg)
                 if isinstance(node, (Basic, Loop)):
                     cfg_name = ""
                     if node == function_cfg.in_node:
                         cfg_name = function_name # only the in_node has function_name
-                    label = self._basic_node_label(node, function_result, cfg_name)
+                    label = self._basic_node_label(node, function_results, cfg_name)
                     self._render_node(node, label, fillcolor)
                 else:
                     label = self._escape_label(self._shorten_label(str(node)))
