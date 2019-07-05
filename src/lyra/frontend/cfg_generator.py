@@ -117,6 +117,33 @@ class LooseControlFlowGraph:
         else:
             self.edges[edge.source, edge.target] = edge
 
+    def remove_edge(self, edge):
+        del self.edges[(edge.source, edge.target)]
+
+    def remove_node(self, node):
+        """Remove a node and all its out edges from the CFG.
+        """
+        edges_to_be_removed = self.get_edges_with_source(node)
+        del self.nodes[node.identifier]
+
+        nodes_to_be_removed = []
+        for edge_to_be_removed in edges_to_be_removed:
+            target = edge_to_be_removed.target
+            self.remove_edge(edge_to_be_removed)
+            if target is not self.out_node and len(self.get_edges_with_target(target)) == 0:
+                nodes_to_be_removed.append(target)
+        for node_to_be_removed in nodes_to_be_removed:
+            self.remove_node(node_to_be_removed)
+
+
+
+
+    def get_edges_with_source(self, source):
+        return [edge for edge in self.edges.values() if edge.source is source]
+
+    def get_edges_with_target(self, target):
+        return [edge for edge in self.edges.values() if edge.target is target]
+
     def combine(self, other):
         assert not (self.in_node and other.in_node)
         assert not (self.out_node and other.out_node)
@@ -801,6 +828,7 @@ class CFGVisitor(ast.NodeVisitor):
                                 function_name=function_name)
         end = _dummy_cfg(self._id_gen)
         function_cfg = start.append(body).append(end) if body else start.append(end)
+        function_cfg = self._restructure_return_and_raise_edges(function_cfg)
         self._cfgs[function_name] = function_cfg
         return function_cfg
 
@@ -841,10 +869,10 @@ class CFGVisitor(ast.NodeVisitor):
                     factory.append_cfg(if_cfg)
                 else:  # normal augmented assignment
                     factory.add_stmts(self.visit(child, types))
-            elif isinstance(child, (ast.Expr, ast.Raise)):
+            elif isinstance(child, ast.Expr):
                 # check other options for AnnAssign (empty value, or IfExp as value)
                 factory.add_stmts(self.visit(child, types, function_name=function_name))
-            elif isinstance(child, ast.Return):
+            elif isinstance(child, (ast.Raise, ast.Return)):
                 factory.add_stmts(self.visit(child, types, function_name=function_name))
                 factory.complete_basic_block()
             elif isinstance(child, ast.If):
@@ -896,8 +924,24 @@ class CFGVisitor(ast.NodeVisitor):
         body = self._visit_body(node.body, types, loose_in_edges=True, loose_out_edges=True)
         end = _dummy_cfg(self._id_gen)
         main_cfg = start.append(body).append(end) if body else start.append(end)
+        main_cfg = self._restructure_return_and_raise_edges(main_cfg)
         self._cfgs['main'] = main_cfg
         return self._cfgs
+
+    def _restructure_return_and_raise_edges(self, cfg):
+        nodes_to_be_removed = []
+        for node in cfg.nodes.values():
+            if any(isinstance(stmt, (Raise, Return)) for stmt in node.stmts):
+                edges_to_be_removed = cfg.get_edges_with_source(node)
+                for edge_to_be_removed in edges_to_be_removed:
+                    target = edge_to_be_removed.target
+                    if len(cfg.get_edges_with_target(target)) == 1: # there is no other edge
+                        nodes_to_be_removed.append(edge_to_be_removed.target)
+                    cfg.remove_edge(edge_to_be_removed)
+                cfg.add_edge(Unconditional(node, cfg.out_node)) # connect the node to the exit node
+        for node_to_be_removed in nodes_to_be_removed:
+            cfg.remove_node(node_to_be_removed)
+        return cfg
 
 
 def ast_to_cfg(root, function_name='main'):

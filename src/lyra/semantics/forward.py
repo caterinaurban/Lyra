@@ -67,6 +67,7 @@ class UserDefinedCallSemantics(ForwardSemantics):
             self._runner.result[function_name] = [function_result]
         else:
             self._runner.result[function_name].append(function_result)
+        state.result = function_state.result
         return state
 
 
@@ -96,6 +97,8 @@ class ReturnSemantics(ForwardSemantics):
         :param state: state before executing the return statement
         :return: state modified by the return statement
         """
+
+        state.result = [self.semantics(expression, state).result for expression in stmt.expressions]
         state = state.bottom()
         return state
 
