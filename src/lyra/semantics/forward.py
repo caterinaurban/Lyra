@@ -6,7 +6,7 @@ Lyra's internal forward semantics of statements.
 
 :Authors: Caterina Urban
 """
-from lyra.core.expressions import BinarySequenceOperation, ListDisplay
+from lyra.core.expressions import BinarySequenceOperation, ListDisplay, VariableIdentifier
 from lyra.core.types import ListLyraType
 from lyra.semantics.semantics import Semantics, DefaultSemantics
 
@@ -54,6 +54,7 @@ class UserDefinedCallSemantics(ForwardSemantics):
 
         function_state = deepcopy(state)
         for (actual_arg, formal_arg) in zip(actual_args, formal_args):
+            function_state.add_variable(formal_arg)
             lhs = {formal_arg}
             rhs = self.semantics(actual_arg, state).result
             function_state.assign(lhs, rhs)
@@ -62,13 +63,19 @@ class UserDefinedCallSemantics(ForwardSemantics):
         for variable in extra_variables:
             function_state.remove_variable(variable)
 
+        # add a new variable for the result
+        result_variable = VariableIdentifier(stmt.typ, function_name + "#return_result")
+        function_state.add_variable(result_variable)
+
         function_result = self._runner.interpreter().analyze(function_state)
         if function_name not in self._runner.result.keys():
             self._runner.result[function_name] = [function_result]
         else:
             self._runner.result[function_name].append(function_result)
-        state.result = function_state.result
-        return state
+
+        function_final_state = function_result.result[function_cfg.out_node][0]
+        state.result = {result_variable}
+        return state.join(function_final_state)
 
 
 class AssignmentSemantics(ForwardSemantics):
@@ -98,8 +105,14 @@ class ReturnSemantics(ForwardSemantics):
         :return: state modified by the return statement
         """
 
-        state.result = [self.semantics(expression, state).result for expression in stmt.expressions]
-        state = state.bottom()
+        # propagate the return expressions and remove all the other variables
+        variables = state.variables
+        result_variable = {variable for variable in variables if "#return_result" in variable.name}
+        for expression in stmt.expressions:
+            state.assign(result_variable, self.semantics(expression, state).result)
+        for variable in variables:
+            if variable not in result_variable:
+                state.remove_variable(variable)
         return state
 
 

@@ -9,5 +9,5 @@ a: int = 10
 b: int = 20
 
 c: int = max(a, b)
-d: int = max(c, 5)
+d: int = max(c, 50)
 print(d)
