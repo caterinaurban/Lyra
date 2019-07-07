@@ -13,7 +13,7 @@ from lyra.semantics.semantics import Semantics, DefaultSemantics
 from lyra.abstract_domains.state import State
 from lyra.core.statements import Assignment, Call, Return
 
-from copy import deepcopy
+from copy import copy, deepcopy
 
 
 class ForwardSemantics(Semantics):
@@ -75,7 +75,8 @@ class UserDefinedCallSemantics(ForwardSemantics):
 
         function_final_state = function_result.result[function_cfg.out_node][0]
         state.result = {result_variable}
-        return state.join(function_final_state)
+        state_copy = deepcopy(function_final_state)
+        return state.join(state_copy)
 
 
 class AssignmentSemantics(ForwardSemantics):
@@ -90,7 +91,16 @@ class AssignmentSemantics(ForwardSemantics):
         """
         lhs = self.semantics(stmt.left, state).result    # lhs evaluation
         rhs = self.semantics(stmt.right, state).result   # rhs evaluation
-        return state.assign(lhs, rhs)
+
+        updated_state = state.assign(lhs, rhs)
+        if isinstance(stmt.right, Call):
+            # remove the result variable of the function call for user defined functions
+            variables = updated_state.variables
+            for variable in variables:
+                if "#return_result" in variable.name:
+                    updated_state.remove_variable(variable)
+                    break
+        return updated_state
 
 
 class ReturnSemantics(ForwardSemantics):
