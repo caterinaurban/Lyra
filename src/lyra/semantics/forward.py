@@ -47,24 +47,31 @@ class UserDefinedCallSemantics(ForwardSemantics):
         function_cfg = self._runner.names_to_cfgs[function_name]
         self._runner.cfg = function_cfg
 
-        # map the actual parameters to the formal ones
-        actual_args = stmt.arguments
-        formal_args = self._runner.function_args[function_name]
-
         function_state = deepcopy(state)
-        for (actual_arg, formal_arg) in zip(actual_args, formal_args):
-            function_state.add_variable(formal_arg)
-            lhs = {formal_arg}
-            rhs = self.semantics(actual_arg, state).result
-            function_state.assign(lhs, rhs)
+        local_variables = self._runner.variables
 
-        extra_variables = [variable for variable in function_state.variables if variable not in formal_args]
-        for variable in extra_variables:
-            function_state.remove_variable(variable)
+        # add the local variables and set them to top
+        for local_variable in local_variables:
+            function_state.add_variable(local_variable)
+            function_state.forget_variable(local_variable)
 
         # add a new variable for the result
         result_variable = VariableIdentifier(stmt.typ, function_name + "#return_result")
         function_state.add_variable(result_variable)
+
+        # map the actual parameters to the formal ones
+        actual_args = stmt.arguments
+        formal_args = self._runner.function_args[function_name]
+
+        for (actual_arg, formal_arg) in zip(actual_args, formal_args):
+            lhs = {formal_arg}
+            rhs = self.semantics(actual_arg, state).result
+            function_state.assign(lhs, rhs)
+
+        extra_variables = [variable for variable in function_state.variables if
+                           function_name + "#" not in variable.name]
+        for variable in extra_variables:
+            function_state.remove_variable(variable)
 
         function_result = self._runner.interpreter().analyze(function_state)
         if function_name not in self._runner.result.keys():
@@ -93,12 +100,14 @@ class AssignmentSemantics(ForwardSemantics):
 
         updated_state = state.assign(lhs, rhs)
         if isinstance(stmt.right, Call):
-            # remove the result variable of the function call for user defined functions
-            variables = updated_state.variables
-            for variable in variables:
-                if "#return_result" in variable.name:
-                    updated_state.remove_variable(variable)
-                    break
+            function_name = stmt.right.name
+            if function_name in self._runner.names_to_cfgs.keys():
+                # remove the result variable of the function call for user defined functions
+                variables = updated_state.variables
+                for variable in variables:
+                    if function_name + "#return_result" in variable.name:
+                        updated_state.remove_variable(variable)
+                        break
         return updated_state
 
 
@@ -119,7 +128,7 @@ class ReturnSemantics(ForwardSemantics):
         result_variable = {variable for variable in variables if "#return_result" in variable.name}
         for expression in stmt.expressions:
             state.assign(result_variable, self.semantics(expression, state).result)
-        for variable in variables:
+        for variable in variables.copy():
             if variable not in result_variable:
                 state.remove_variable(variable)
         return state

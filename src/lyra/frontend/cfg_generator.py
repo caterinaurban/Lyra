@@ -451,14 +451,14 @@ class CFGVisitor(ast.NodeVisitor):
         argument = self.visit(node.operand, types, typ)
         return Call(pp, name, [argument], typ)
 
-    def visit_BinOp(self, node, types=None, typ=None):
+    def visit_BinOp(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a binary operation.
         The attributes op, left, and right store the operator
         and any expression nodes, respectively."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         name = type(node.op).__name__.lower()
-        left = self.visit(node.left, types, typ)
-        right = self.visit(node.right, types, typ)
+        left = self.visit(node.left, types, typ, function_name=function_name)
+        right = self.visit(node.right, types, typ, function_name=function_name)
         return Call(pp, name, [left, right], typ)
 
     def visit_BoolOp(self, node, types=None, typ=None, function_name='main'):
@@ -606,7 +606,7 @@ class CFGVisitor(ast.NodeVisitor):
 
     # Statements
 
-    def visit_Assign(self, node, types=None, typ=None):
+    def visit_Assign(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for an assignment.
         The attribute targets stores a list of targets of the assignment.
         The attribute value stores the assigned value."""
@@ -614,8 +614,8 @@ class CFGVisitor(ast.NodeVisitor):
         assert typ is None  # we expect typ to be None
         assignments = list()
         assert len(node.targets) == 1
-        target = self.visit(node.targets[0], types, None)
-        value = self.visit(node.value, types, target.typ)
+        target = self.visit(node.targets[0], types, None, function_name=function_name)
+        value = self.visit(node.value, types, target.typ, function_name=function_name)
         return Assignment(pp, target, value)
 
     def visit_AnnAssign(self, node, types=None, typ=None, function_name='main'):
@@ -630,15 +630,15 @@ class CFGVisitor(ast.NodeVisitor):
         value = self.visit(node.value, types, annotated, function_name=function_name)
         return Assignment(pp, target, value)
 
-    def visit_AugAssign(self, node, types=None, typ=None):
+    def visit_AugAssign(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for an augmented assignment.
         The attribute target stores the target of the assignment (a Name, Attribute, or Subscript).
         The attributes op and value store the operation and the assigned value, respectively."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         assert typ is None  # we expect typ to be None
-        target = self.visit(node.target, types, None)
+        target = self.visit(node.target, types, None, function_name=function_name)
         name = type(node.op).__name__.lower()
-        right = self.visit(node.value, types, None)
+        right = self.visit(node.value, types, None, function_name=function_name)
         value = Call(pp, name, [target, right], target.typ)
         return Assignment(pp, target, value)
 
@@ -707,7 +707,7 @@ class CFGVisitor(ast.NodeVisitor):
         pp = ProgramPoint(node.test.lineno, node.test.col_offset)
 
         body = self._visit_body(node.body, types, typ, function_name=function_name)
-        test = self.visit(node.test, types, BooleanLyraType())
+        test = self.visit(node.test, types, BooleanLyraType(), function_name=function_name)
         header = Loop(self._id_gen.next)
         body_in_node = body.in_node
         body_out_node = body.out_node
@@ -745,7 +745,7 @@ class CFGVisitor(ast.NodeVisitor):
         The attributes body and orelse each store a list of AST nodes to be executed."""
         pp = ProgramPoint(node.target.lineno, node.target.col_offset)
 
-        iterated = self.visit(node.iter, types, None)
+        iterated = self.visit(node.iter, types, None, function_name=function_name)
         target_typ = None
         if isinstance(iterated, VariableAccess):
             if isinstance(iterated.typ, ListLyraType):  # iteration over list items
@@ -765,7 +765,7 @@ class CFGVisitor(ast.NodeVisitor):
         else:
             error = "The iteration attribute {} is not yet translatable to CFG!".format(iterated)
             raise NotImplementedError(error)
-        target = self.visit(node.target, types, target_typ)
+        target = self.visit(node.target, types, target_typ, function_name=function_name)
 
         body = self._visit_body(node.body, types, function_name=function_name)
         test = Call(pp, 'in', [target, iterated], BooleanLyraType(), forloop=True)
@@ -844,10 +844,10 @@ class CFGVisitor(ast.NodeVisitor):
             if isinstance(child, ast.Assign):
                 if isinstance(child.value, ast.IfExp):  # the value is a conditional expression
                     factory.complete_basic_block()
-                    if_cfg = self.visit(child.value, child.targets, None, types)
+                    if_cfg = self.visit(child.value, child.targets, None, types, function_name=function_name)
                     factory.append_cfg(if_cfg)
                 else:  # normal assignment
-                    factory.add_stmts(self.visit(child, types))
+                    factory.add_stmts(self.visit(child, types, function_name=function_name))
             elif isinstance(child, ast.AnnAssign):
                 if child.value is None:  # only a type annotation
                     annotation = resolve_type_annotation(child.annotation)
@@ -865,10 +865,10 @@ class CFGVisitor(ast.NodeVisitor):
             elif isinstance(child, ast.AugAssign):
                 if isinstance(child.value, ast.IfExp):  # the value is a conditional expression
                     factory.complete_basic_block()
-                    if_cfg = self.visit(child.value, [child.target], child.op, types)
+                    if_cfg = self.visit(child.value, [child.target], child.op, types, function_name=function_name)
                     factory.append_cfg(if_cfg)
                 else:  # normal augmented assignment
-                    factory.add_stmts(self.visit(child, types))
+                    factory.add_stmts(self.visit(child, types, function_name=function_name))
             elif isinstance(child, ast.Expr):
                 # check other options for AnnAssign (empty value, or IfExp as value)
                 factory.add_stmts(self.visit(child, types, function_name=function_name))

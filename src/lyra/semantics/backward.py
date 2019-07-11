@@ -48,14 +48,15 @@ class UserDefinedCallSemantics(BackwardSemantics):
         self._runner.cfg = function_cfg
 
         function_state = deepcopy(state)
-        formal_args = self._runner.function_args[function_name]
+        local_variables = self._runner.variables
 
-        # add variables for the formal parameters and set them to top
-        for formal_arg in formal_args:
-            function_state.add_variable(formal_arg)
-            function_state.forget_variable(formal_arg)
+        # add the local variables and set them to top
+        for local_variable in local_variables:
+            function_state.add_variable(local_variable)
+            function_state.forget_variable(local_variable)
 
-        extra_variables = [variable for variable in function_state.variables if variable not in formal_args and "#return_result" not in variable.name]
+        extra_variables = [variable for variable in function_state.variables if
+                           function_name + "#" not in variable.name]
         for variable in extra_variables:
             function_state.remove_variable(variable)
 
@@ -70,10 +71,11 @@ class UserDefinedCallSemantics(BackwardSemantics):
 
         # map the actual parameters to the formal ones
         actual_args = stmt.arguments
+        formal_args = self._runner.function_args[function_name]
 
         state = state.join(state_copy)
-        for (actual_arg, formal_arg) in zip(actual_args, formal_args):
-            lhs = {formal_arg}
+        for (actual_arg, local_variable) in zip(actual_args, formal_args):
+            lhs = {local_variable}
             rhs = self.semantics(actual_arg, state).result
             state.substitute(lhs, rhs)
 
@@ -83,11 +85,10 @@ class UserDefinedCallSemantics(BackwardSemantics):
                 result_variable = variable
                 break
         state.result = {result_variable}
+
         # remove all the local variables of the function (except the return result)
-        local_variables = [variable for variable in state.variables if function_name + "#" in variable.name]
         for variable in local_variables:
-            if variable is not result_variable:
-                state.remove_variable(variable)
+            state.remove_variable(variable)
         return state
 
 
@@ -109,15 +110,16 @@ class AssignmentSemantics(BackwardSemantics):
 
         if isinstance(stmt.right, Call):
             function_name = stmt.right.name
-            # add a new variable for the result of a user defined function
-            result_variable = VariableIdentifier(stmt.right.typ, function_name + "#return_result")
-            state.add_variable(result_variable)
-            state.assign({result_variable}, lhs)
+            if function_name in self._runner.names_to_cfgs.keys():
+                # add a new variable for the result of a user defined function
+                result_variable = VariableIdentifier(stmt.right.typ, function_name + "#return_result")
+                state.add_variable(result_variable)
+                state.assign({result_variable}, lhs)
 
         rhs = self.semantics(stmt.right, state).result   # rhs evaluation
         updated_state = state.substitute(lhs, rhs)
 
-        if isinstance(stmt.right, Call):
+        if result_variable is not None:
             # remove the result variable for a user defined function
             state.remove_variable(result_variable)
         return updated_state
