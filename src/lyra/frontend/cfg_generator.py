@@ -461,13 +461,13 @@ class CFGVisitor(ast.NodeVisitor):
         right = self.visit(node.right, types, typ)
         return Call(pp, name, [left, right], typ)
 
-    def visit_BoolOp(self, node, types=None, typ=None):
+    def visit_BoolOp(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a boolean operation.
         The attributes op and values store the operand
-        and a list of any expression node representing the operand involed, respectively."""
+        and a list of any expression node representing the operand involved, respectively."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         name = type(node.op).__name__.lower()
-        arguments = [self.visit(val, types, typ) for val in node.values]
+        arguments = [self.visit(val, types, typ, function_name=function_name) for val in node.values]
         return Call(pp, name, arguments, typ)
 
     def visit_Compare(self, node, types=None, typ=None, function_name='main'):

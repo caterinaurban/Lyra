@@ -13,7 +13,7 @@ from lyra.semantics.semantics import Semantics, DefaultSemantics
 from lyra.abstract_domains.state import State
 from lyra.core.statements import Assignment, Call, Return
 
-from copy import copy, deepcopy
+from copy import deepcopy
 
 
 class ForwardSemantics(Semantics):
@@ -45,7 +45,6 @@ class UserDefinedCallSemantics(ForwardSemantics):
         """
         function_name = stmt.name
         function_cfg = self._runner.names_to_cfgs[function_name]
-        current_cfg = self._runner.cfg
         self._runner.cfg = function_cfg
 
         # map the actual parameters to the formal ones
