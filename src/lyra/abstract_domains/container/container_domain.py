@@ -5,8 +5,8 @@ from typing import Set
 from lyra.abstract_domains.basis import Basis
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.lattice import BottomMixin
-from lyra.core.expressions import VariableIdentifier, Expression
-from lyra.core.types import LyraType, DictLyraType
+from lyra.core.expressions import VariableIdentifier, Expression, Subscription, LengthIdentifier
+from lyra.core.types import LyraType, DictLyraType, ListLyraType
 
 
 class ContainerLattice(BottomMixin):
@@ -100,12 +100,28 @@ class ContainerState(Basis):
             if isinstance(left.typ, DictLyraType):
                 keys = set(right.keys)
                 values = set(right.values)
+            elif isinstance(left.typ, ListLyraType):
+                length = len(right.items)
+                keys = set(range(0, length))
+                values = set(right.items)
             else:
                 # for other (non-container) types, there are no keys
                 keys = set()
-                evaluation = self._evaluation.visit(right, self, dict())
-                values = set(evaluation)
+                if isinstance(right, Subscription):
+                    # we do not keep track of the relation between the keys and the values
+                    values = set()
+                else:
+                    evaluation = self._evaluation.visit(right, self, dict())
+                    values = set(evaluation)
             self.store[left] = ContainerLattice(keys, values)
+            return self
+        elif isinstance(left, Subscription):
+            target = left.target
+            key = left.key
+            current_state = self.store[target]
+            keys = set(self._evaluation.visit(key, self, dict()))
+            values = set(self._evaluation.visit(right, self, dict()))
+            self.store[target] = ContainerLattice(current_state.keys.union(keys), current_state.values.union(values))
             return self
         else:
             return super()._assign(left, right)
