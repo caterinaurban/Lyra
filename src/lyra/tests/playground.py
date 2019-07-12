@@ -31,8 +31,8 @@
 # from lyra.engine.numerical.sign_analysis import BackwardSignAnalysis
 # BackwardSignAnalysis().main("example.py")
 
-# from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
-# ForwardIntervalAnalysis().main("example.py")
+#from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysis
+#ForwardIntervalAnalysis().main("example.py")
 
 # from lyra.engine.numerical.interval_analysis import ForwardBoxAnalysis
 # ForwardBoxAnalysis().main("example.py")
@@ -77,6 +77,9 @@
 
 # from lyra.engine.assumption.assumption_analysis import AlphabetAnalysis
 # AlphabetAnalysis().main("example.py")
+
+from lyra.engine.container.container_analysis import ForwardContainerAnalysis
+ForwardContainerAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import TypeQuantityAssumptionAnalysis
 # TypeQuantityAssumptionAnalysis().main("example.py")
