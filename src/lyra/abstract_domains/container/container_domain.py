@@ -5,7 +5,7 @@ from typing import Set
 from lyra.abstract_domains.basis import Basis
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.lattice import BottomMixin
-from lyra.core.expressions import VariableIdentifier, Expression, Subscription, LengthIdentifier
+from lyra.core.expressions import VariableIdentifier, Expression, Subscription, SetDisplay, ListDisplay
 from lyra.core.types import LyraType, DictLyraType, ListLyraType
 
 
@@ -93,37 +93,26 @@ class ContainerState(Basis):
         super().__init__(variables, lattices, precursory=precursory)
 
     def _assume(self, condition: Expression, bwd: bool = False) -> 'ContainerState':
-        pass
+        return self
 
-    def _assign(self, left: Expression, right: Expression) -> 'ContainerState':
-        if isinstance(left, VariableIdentifier):
-            if isinstance(left.typ, DictLyraType):
-                keys = set(right.keys)
-                values = set(right.values)
-            elif isinstance(left.typ, ListLyraType):
-                length = len(right.items)
-                keys = set(range(0, length))
-                values = set(right.items)
-            else:
-                # for other (non-container) types, there are no keys
-                keys = set()
-                if isinstance(right, Subscription):
-                    # we do not keep track of the relation between the keys and the values
-                    values = set()
-                else:
-                    evaluation = self._evaluation.visit(right, self, dict())
-                    values = set(evaluation)
-            self.store[left] = ContainerLattice(keys, values)
-            return self
-        elif isinstance(left, Subscription):
-            target = left.target
-            key = left.key
+    def _substitute(self, left: Expression, right: Expression) -> 'ContainerState':
+        if isinstance(right, Subscription):
+            target = right.target
+            key = right.key
             current_state = self.store[target]
             keys = set(self._evaluation.visit(key, self, dict()))
-            values = set(self._evaluation.visit(right, self, dict()))
-            self.store[target] = ContainerLattice(current_state.keys.union(keys), current_state.values.union(values))
+            self.store[target] = ContainerLattice(current_state.keys.union(keys), current_state.values)
+            return self
+        if isinstance(right, (SetDisplay, ListDisplay)):
+            # constant, so the dictionary/list becomes top
+            keys = set()
+            values = set()
+            self.store[left] = ContainerLattice(keys, values)
+            return self
+        if isinstance(left, Subscription):
+            # nothing changes, as we don't know if the key was there before or not
             return self
         else:
-            return super()._assign(left, right)
+            return super()._substitute(left, right)
 
 

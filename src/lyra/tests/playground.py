@@ -78,8 +78,8 @@
 # from lyra.engine.assumption.assumption_analysis import AlphabetAnalysis
 # AlphabetAnalysis().main("example.py")
 
-from lyra.engine.container.container_analysis import ForwardContainerAnalysis
-ForwardContainerAnalysis().main("example.py")
+from lyra.engine.assumption.assumption_analysis import ContainerAnalysis
+ContainerAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import TypeQuantityAssumptionAnalysis
 # TypeQuantityAssumptionAnalysis().main("example.py")
