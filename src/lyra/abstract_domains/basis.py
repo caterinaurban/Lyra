@@ -17,7 +17,7 @@ from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing, \
     BinaryBooleanOperation, ExpressionVisitor, Literal, LengthIdentifier, ListDisplay, \
     AttributeReference, Input, Range, UnaryArithmeticOperation, BinaryArithmeticOperation, \
-    UnaryBooleanOperation, TupleDisplay, SetDisplay, DictDisplay, BinarySequenceOperation
+    UnaryBooleanOperation, TupleDisplay, SetDisplay, DictDisplay, BinarySequenceOperation, Keys, Values
 from lyra.core.types import LyraType, BooleanLyraType, SequenceLyraType
 from lyra.core.utils import copy_docstring
 
@@ -244,6 +244,22 @@ class Basis(Store, State, metaclass=ABCMeta):
             evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
             return evaluation
 
+        @copy_docstring(ExpressionVisitor.visit_Keys)
+        def visit_Keys(self, expr: Keys, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target_dict, state, evaluation)
+            evaluation[expr] = evaluated[expr.target_dict]
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_Values)
+        def visit_Values(self, expr: Values, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target_dict, state, evaluation)
+            evaluation[expr] = evaluated[expr.target_dict]
+            return evaluation
+
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
         def visit_UnaryArithmeticOperation(self, expr, state=None, evaluation=None):
             if expr in evaluation:
@@ -440,6 +456,14 @@ class Basis(Store, State, metaclass=ABCMeta):
         def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Keys)
+        def visit_Keys(self, expr: Keys, evaluation=None, value=None, state=None):
+            return state  # nothing to be done
+
+        @copy_docstring(ExpressionVisitor.visit_Values)
+        def visit_Values(self, expr: Values, evaluation=None, value=None, state=None):
+            return state  # nothing to be done
 
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
         def visit_UnaryArithmeticOperation(self, expr, evaluation=None, value=None, state=None):

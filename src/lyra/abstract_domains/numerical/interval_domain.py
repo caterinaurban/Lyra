@@ -419,6 +419,14 @@ class IntervalState(Basis):
         def visit_Range(self, expr: Range, state=None):
             raise ValueError(f"Unexpected expression during sequence length computation.")
 
+        @copy_docstring(ExpressionVisitor.visit_Keys)
+        def visit_Keys(self, expr: Keys, state=None):
+            return state.lattices[IntegerLyraType()](lower=0)
+
+        @copy_docstring(ExpressionVisitor.visit_Values)
+        def visit_Values(self, expr: Values, state=None):
+            return state.lattices[IntegerLyraType()](lower=0)
+
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
         def visit_UnaryArithmeticOperation(self, expr, state=None):
             raise ValueError(f"Unexpected expression during sequence length computation.")

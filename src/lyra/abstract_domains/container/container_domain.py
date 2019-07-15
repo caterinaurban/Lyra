@@ -5,8 +5,9 @@ from typing import Set
 from lyra.abstract_domains.basis import Basis
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.lattice import BottomMixin
-from lyra.core.expressions import VariableIdentifier, Expression, Subscription, SetDisplay, ListDisplay
-from lyra.core.types import LyraType, DictLyraType, ListLyraType
+from lyra.core.expressions import VariableIdentifier, Expression, Subscription, SetDisplay, ListDisplay, \
+    BinaryComparisonOperation, Keys
+from lyra.core.types import LyraType
 
 
 class ContainerLattice(BottomMixin):
@@ -50,6 +51,8 @@ class ContainerLattice(BottomMixin):
         return self._values
 
     def __repr__(self):
+        if self.is_bottom():
+            return "⊥";
         if not self.keys:
             keys = "∅"
         else:
