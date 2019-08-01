@@ -13,7 +13,7 @@ from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumpti
 from lyra.abstract_domains.assumption.quantity_domain import QuantityState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
-from lyra.abstract_domains.container.container_domain import ContainerState
+from lyra.abstract_domains.assumption.container_domain import ContainerState
 from lyra.abstract_domains.numerical.interval_domain import IntervalState
 
 from lyra.engine.backward import BackwardInterpreter
