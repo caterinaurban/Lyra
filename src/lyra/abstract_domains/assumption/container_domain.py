@@ -6,10 +6,13 @@ from lyra.abstract_domains.assumption.assumption_domain import InputMixin
 from lyra.abstract_domains.basis import Basis
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.lattice import BottomMixin
+from lyra.abstract_domains.numerical.interval_domain import Input
+
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, SetDisplay, ListDisplay, \
     BinaryComparisonOperation, Keys, DictDisplay
 from lyra.core.types import LyraType
 from lyra.core.utils import copy_docstring
+
 
 
 class ContainerLattice(BottomMixin):
@@ -156,4 +159,25 @@ class ContainerState(Basis, InputMixin):
             self.variables.append(var)
             self.store[var] = self.lattices[type(var.typ)](**self.arguments[type(var.typ)])
         return self
+
+    # expression refinement
+
+    class ExpressionRefinement(Basis.ExpressionRefinement):
+
+        @copy_docstring(Basis.ExpressionRefinement.visit_Input)
+        def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
+            state.record(value)
+            return state  # nothing to be done
+
+        @copy_docstring(Basis.ExpressionRefinement.visit_BinaryArithmeticOperation)
+        def visit_BinaryArithmeticOperation(self, expr, evaluation=None, value=None, state=None):
+            if isinstance(expr.right, Subscription):
+                target = expr.right.target
+                key = expr.right.key
+                current_state = state.store[target]
+                keys = {key}
+                state.store[target] = ContainerLattice(current_state.keys.union(keys), current_state.values)
+            return state
+
+    _refinement = ExpressionRefinement()  # static class member shared between instances
 
