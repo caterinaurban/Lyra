@@ -346,59 +346,60 @@ class CFGVisitor(ast.NodeVisitor):
         raise NotImplementedError(f"Num of type {node.n.__class__.__name__} is unsupported!")
 
     # noinspection PyMethodMayBeStatic, PyUnusedLocal
-    def visit_Str(self, node, types=None, typ=None):
+    def visit_Str(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a string. The s attribute stores the value."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         expr = Literal(StringLyraType(), node.s)
         return LiteralEvaluation(pp, expr)
 
-    def visit_List(self, node, types=None, typ=None):
+    def visit_List(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a list.
         The elts attribute stores a list of nodes representing the elements.
         The ctx attribute is Store if the container is an assignment target, and Load otherwise."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(typ, ListLyraType):
-            items = [self.visit(item, types, typ.typ) for item in node.elts]
+            items = [self.visit(item, types, typ.typ, function_name=function_name) for item in node.elts]
         else:
-            items = [self.visit(item, types, None) for item in node.elts]
+            items = [self.visit(item, types, None, function_name=function_name) for item in node.elts]
         return ListDisplayAccess(pp, typ, items)
 
-    def visit_Tuple(self, node, types=None, typ=None):
+    def visit_Tuple(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a tuple.
         The elts attribute stores a list of nodes representing the elements.
         The ctx attribute is Store if the container is an assignment target, and Load otherwise."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(typ, TupleLyraType):
-            items = [self.visit(item, types, i_typ) for item, i_typ in zip(node.elts, typ.typs)]
+            items = [self.visit(item, types, i_typ, function_name=function_name)
+                     for item, i_typ in zip(node.elts, typ.typs)]
         else:
-            items = [self.visit(item, types, None) for item in node.elts]
+            items = [self.visit(item, types, None, function_name=function_name) for item in node.elts]
         return TupleDisplayAccess(pp, typ, items)
 
-    def visit_Set(self, node, types=None, typ=None):
+    def visit_Set(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a set.
         The elts attribute stores a list of nodes representing the elements."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(typ, SetLyraType):
-            items = [self.visit(item, types, typ.typ) for item in node.elts]
+            items = [self.visit(item, types, typ.typ, function_name=function_name) for item in node.elts]
         else:
-            items = [self.visit(item, types, None) for item in node.elts]
+            items = [self.visit(item, types, None, function_name=function_name) for item in node.elts]
         return SetDisplayAccess(pp, typ, items)
 
-    def visit_Dict(self, node, types=None, typ=None):
+    def visit_Dict(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a dictionary.
         The attributes keys and values store lists of nodes with matching order
         representing the keys and the values, respectively."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(typ, DictLyraType):
-            keys = [self.visit(key, types, typ.key_typ) for key in node.keys]
-            values = [self.visit(value, types, typ.val_typ) for value in node.values]
+            keys = [self.visit(key, types, typ.key_typ, function_name=function_name) for key in node.keys]
+            values = [self.visit(value, types, typ.val_typ, function_name=function_name) for value in node.values]
         else:
-            keys = [self.visit(key, types, None) for key in node.keys]
-            values = [self.visit(value, types, None) for value in node.values]
+            keys = [self.visit(key, types, None, function_name=function_name) for key in node.keys]
+            values = [self.visit(value, types, None, function_name=function_name) for value in node.values]
         return DictDisplayAccess(pp, typ, keys, values)
 
     # noinspection PyUnusedLocal
-    def visit_NameConstant(self, node, types=None, typ=None):
+    def visit_NameConstant(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for True, False or None.
         The value attribute stores the constant."""
         if isinstance(node.value, bool):
@@ -442,13 +443,13 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute value stored another AST node."""
         return self.visit(node.value, types, function_name=function_name)
 
-    def visit_UnaryOp(self, node, types=None, typ=None):
+    def visit_UnaryOp(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a unary operation.
         The attributes op and operand store the operator
         and any expression node, respectively."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         name = type(node.op).__name__.lower()
-        argument = self.visit(node.operand, types, typ)
+        argument = self.visit(node.operand, types, typ, function_name=function_name)
         return Call(pp, name, [argument], typ)
 
     def visit_BinOp(self, node, types=None, typ=None, function_name='main'):
@@ -482,7 +483,7 @@ class CFGVisitor(ast.NodeVisitor):
         result = Call(pp, name, [left, second], typ)
         for op, comparator in zip(node.ops[1:], node.comparators[1:]):
             name = type(op).__name__.lower()
-            right = self.visit(comparator, types, None)
+            right = self.visit(comparator, types, None, function_name=function_name)
             current = Call(pp, name, [second, right], typ)
             result = Call(pp, 'and', [result, current], typ)
             second = right
@@ -496,52 +497,54 @@ class CFGVisitor(ast.NodeVisitor):
         if isinstance(node.func, ast.Name):
             name: str = node.func.id
             if name == 'bool' or name == 'int':
-                arguments = [self.visit(arg, types, typ) for arg in node.args]
+                arguments = [self.visit(arg, types, typ, function_name=function_name) for arg in node.args]
                 return Call(pp, name, arguments, typ)
             if name == 'input':
-                arguments = [self.visit(arg, types, StringLyraType()) for arg in node.args]
+                arguments = [self.visit(arg, types, StringLyraType(), function_name=function_name) for arg in node.args]
                 return Call(pp, name, arguments, StringLyraType())
             if name == 'range':
-                arguments = [self.visit(arg, types, IntegerLyraType()) for arg in node.args]
+                arguments = [self.visit(arg, types, IntegerLyraType(), function_name=function_name)
+                             for arg in node.args]
                 return Call(pp, name, arguments, ListLyraType(IntegerLyraType()))
             arguments = [self.visit(arg, types, None, function_name=function_name) for arg in node.args]
             return Call(pp, name, arguments, typ)
         elif isinstance(node.func, ast.Attribute):
             name: str = node.func.attr
             if name == 'append':
-                arguments = [self.visit(node.func.value, types, None)]  # target of the call
-                args = [self.visit(arg, types, None) for arg in node.args]
+                arguments = [self.visit(node.func.value, types, None, function_name=function_name)] # target of the call
+                args = [self.visit(arg, types, None, function_name=function_name) for arg in node.args]
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, ListLyraType)
                 return Call(pp, name, arguments, arguments[0].typ)
             if name == 'items':
-                arguments = [self.visit(node.func.value, types, None)]  # target of the call
-                args = [self.visit(arg, types, None) for arg in node.args]
+                arguments = [self.visit(node.func.value, types, None, function_name=function_name)] # target of the call
+                args = [self.visit(arg, types, None, function_name=function_name) for arg in node.args]
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, DictLyraType)
                 tuple_typ = TupleLyraType([arguments[0].typ.key_typ, arguments[0].typ.val_typ])
                 return Call(pp, name, arguments, SetLyraType(tuple_typ))
             if name == 'keys':
-                arguments = [self.visit(node.func.value, types, None)]  # target of the call
-                args = [self.visit(arg, types, None) for arg in node.args]
+                arguments = [self.visit(node.func.value, types, None, function_name=function_name)] # target of the call
+                args = [self.visit(arg, types, None, function_name=function_name) for arg in node.args]
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, DictLyraType)
                 return Call(pp, name, arguments, SetLyraType(arguments[0].typ.key_typ))
             if name == 'split':  # str.split([sep[, maxsplit]])
                 assert isinstance(typ, ListLyraType)  # we expect type to be a ListLyraType
-                arguments = [self.visit(node.func.value, types, typ.typ)]  # target of the call
+                arguments = [self.visit(node.func.value, types, typ.typ, function_name=function_name)]
+                # target of the call
                 args_typs = zip(node.args, [typ.typ, IntegerLyraType()])
-                args = [self.visit(arg, types, arg_typ) for arg, arg_typ in args_typs]
+                args = [self.visit(arg, types, arg_typ, function_name=function_name) for arg, arg_typ in args_typs]
                 arguments.extend(args)
                 return Call(pp, name, arguments, typ)
             if name == 'values':
-                arguments = [self.visit(node.func.value, types, None)]  # target of the call
-                args = [self.visit(arg, types, None) for arg in node.args]
+                arguments = [self.visit(node.func.value, types, None, function_name=function_name)] # target of the call
+                args = [self.visit(arg, types, None, function_name=function_name) for arg in node.args]
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, DictLyraType)
                 return Call(pp, name, arguments, SetLyraType(arguments[0].typ.val_typ))
-            arguments = [self.visit(node.func.value, types, None)]  # target of the call
-            arguments.extend([self.visit(arg, types, None) for arg in node.args])
+            arguments = [self.visit(node.func.value, types, None, function_name=function_name)]  # target of the call
+            arguments.extend([self.visit(arg, types, None, function_name=function_name) for arg in node.args])
             return Call(pp, name, arguments, typ)
 
     def visit_IfExp(self, node, targets, op=None, types=None, typ=None, function_name='main'):
@@ -549,7 +552,7 @@ class CFGVisitor(ast.NodeVisitor):
         The components of the expression are stored in the attributes test, body, and orelse."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         then = CFGFactory(self._id_gen)
-        body = self.visit(node.body, types, typ)
+        body = self.visit(node.body, types, typ, function_name=function_name)
         assignments = list()
         for target in targets:
             if op:
@@ -558,19 +561,19 @@ class CFGVisitor(ast.NodeVisitor):
                 value = Call(pp, name, [left, body], left.typ)
                 assignments.append(Assignment(pp, left, value))
             else:
-                assignments.append(Assignment(pp, self.visit(target, types, typ), body))
+                assignments.append(Assignment(pp, self.visit(target, types, typ, function_name=function_name), body))
         then.add_stmts(assignments)
         then.complete_basic_block()
         then = then.cfg[function_name]
-        test = self.visit(node.test, types, BooleanLyraType())
+        test = self.visit(node.test, types, BooleanLyraType(), function_name=function_name)
         then.add_edge(Conditional(None, test, then.in_node, Edge.Kind.IF_IN))
         then.add_edge(Unconditional(then.out_node, None, Edge.Kind.IF_OUT))
         orelse = CFGFactory(self._id_gen)
-        body = self.visit(node.orelse, types, typ)
+        body = self.visit(node.orelse, types, typ, function_name=function_name)
         assignments = list()
         for target in targets:
             if op:
-                left = self.visit(target, types, typ)
+                left = self.visit(target, types, typ, function_name=function_name)
                 name = type(op).__name__.lower()
                 value = Call(pp, name, [left, body], left.typ)
                 assignments.append(Assignment(pp, left, value))
@@ -586,21 +589,21 @@ class CFGVisitor(ast.NodeVisitor):
 
     # Subscripting
 
-    def visit_Subscript(self, node, types=None, typ=None):
+    def visit_Subscript(self, node, types=None, typ=None, function_name='main'):
         """Visitor function for a subscript.
         The attribute value stores the target of the subscript (often a Name).
         The attribute slice is one of Index, Slice, or ExtSlice.
         The attribute ctx is Load, Store, or Del."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.slice, ast.Index):
-            target = self.visit(node.value, types, None)
-            key = self.visit(node.slice.value, types, None)
+            target = self.visit(node.value, types, None, function_name=function_name)
+            key = self.visit(node.slice.value, types, None, function_name=function_name)
             return SubscriptionAccess(pp, typ, target, key)
         elif isinstance(node.slice, ast.Slice):
-            value = self.visit(node.value, types, None)
-            lower = self.visit(node.slice.lower, types, None)
-            upper = self.visit(node.slice.upper, types, None) if node.slice.upper else None
-            step = self.visit(node.slice.step, types, None) if node.slice.step else None
+            value = self.visit(node.value, types, None, function_name=function_name)
+            lower = self.visit(node.slice.lower, types, None, function_name=function_name)
+            upper = self.visit(node.slice.upper, types, None, function_name=function_name) if node.slice.upper else None
+            step = self.visit(node.slice.step, types, None, function_name=function_name) if node.slice.step else None
             return SlicingAccess(pp, typ, value, lower, upper, step)
         raise NotImplementedError(f"Subscription {node.slice.__class__.__name__} is unsupported!")
 
@@ -721,7 +724,7 @@ class CFGVisitor(ast.NodeVisitor):
             body.add_edge(Unconditional(body_out_node, header, Edge.Kind.LOOP_OUT))
 
         if node.orelse:  # there is an else branch
-            orelse = self._visit_body(node.orelse, types)
+            orelse = self._visit_body(node.orelse, types, function_name=function_name)
             if orelse.out_node:  # control flow can exit the else
                 # add an unconditional DEFAULT edge
                 orelse.add_edge(Unconditional(orelse.out_node, None, Edge.Kind.DEFAULT))
@@ -799,7 +802,7 @@ class CFGVisitor(ast.NodeVisitor):
         return body
 
     # noinspection PyUnusedLocal
-    def visit_Break(self, _, types=None, typ=None):
+    def visit_Break(self, _, types=None, typ=None, function_name='main'):
         """Visitor function for a break statement."""
         dummy = _dummy_node(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
@@ -809,7 +812,7 @@ class CFGVisitor(ast.NodeVisitor):
         return cfg
 
     # noinspection PyUnusedLocal
-    def visit_Continue(self, _, types=None, typ=None):
+    def visit_Continue(self, _, types=None, typ=None, function_name='main'):
         """Visitor function for a continue statement."""
         dummy = _dummy_node(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
@@ -858,7 +861,8 @@ class CFGVisitor(ast.NodeVisitor):
                 elif isinstance(child.value, ast.IfExp):  # the value is a conditional expression
                     factory.complete_basic_block()
                     annotation = resolve_type_annotation(child.annotation)
-                    if_cfg = self.visit(child.value, [child.target], None, types, annotation, function_name)
+                    if_cfg = self.visit(child.value, [child.target], None, types, annotation,
+                                        function_name=function_name)
                     factory.append_cfg(if_cfg)
                 else:  # normal annotated assignment
                     factory.add_stmts(self.visit(child, types, function_name=function_name))
@@ -889,11 +893,11 @@ class CFGVisitor(ast.NodeVisitor):
                 factory.append_cfg(for_cfg)
             elif isinstance(child, ast.Break):
                 factory.complete_basic_block()
-                break_cfg = self.visit(child, types)
+                break_cfg = self.visit(child, types, function_name=function_name)
                 factory.append_cfg(break_cfg)
             elif isinstance(child, ast.Continue):
                 factory.complete_basic_block()
-                cont_cfg = self.visit(child, types)
+                cont_cfg = self.visit(child, types, function_name=function_name)
                 factory.append_cfg(cont_cfg)
             elif isinstance(child, ast.Pass) and factory.incomplete_block():
                 pass
