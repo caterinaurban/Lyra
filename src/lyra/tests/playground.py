@@ -80,6 +80,18 @@
 
 from lyra.engine.assumption.assumption_analysis import ContainerAnalysis
 ContainerAnalysis().main("example.py")
+#ContainerAnalysis().main("code_jam/alphabet_cake/cake_eduardische.py")
+#ContainerAnalysis().main("code_jam/alphabet_cake/cake_karlSt.py")
+#ContainerAnalysis().main("code_jam/alphabet_cake/cake_lades.py")
+#ContainerAnalysis().main("code_jam/beaming_with_joy/beaming_chevalierMalFet.py")
+#ContainerAnalysis().main("code_jam/beaming_with_joy/beaming_oneplusone.py")
+#ContainerAnalysis().main("code_jam/beaming_with_joy/beaming_romd.py")
+#ContainerAnalysis().main("code_jam/fashion_show/fashion_eirage.py")
+#ContainerAnalysis().main("code_jam/pancake_flipper/pancakes_bovard.py")
+#ContainerAnalysis().main("code_jam/pancake_flipper/pancakes_guig.py")
+#ContainerAnalysis().main("code_jam/pancake_flipper/pancakes_jsphkn.py")
+#ContainerAnalysis().main("code_jam/pancake_flipper/pancakes_mofhu.py")
+#ContainerAnalysis().main("code_jam/pancake_flipper/pancakes_trevorSwope.py")
 
 # from lyra.engine.assumption.assumption_analysis import TypeQuantityAssumptionAnalysis
 # TypeQuantityAssumptionAnalysis().main("example.py")

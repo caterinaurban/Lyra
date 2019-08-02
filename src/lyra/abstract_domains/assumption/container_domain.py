@@ -171,13 +171,18 @@ class ContainerState(Basis, InputMixin):
 
         @copy_docstring(Basis.ExpressionRefinement.visit_BinaryArithmeticOperation)
         def visit_BinaryArithmeticOperation(self, expr, evaluation=None, value=None, state=None):
+            if isinstance(expr.left, Subscription):
+                self.subscription_refinement(expr.left, state)
             if isinstance(expr.right, Subscription):
-                target = expr.right.target
-                key = expr.right.key
-                current_state = state.store[target]
-                keys = {key}
-                state.store[target] = ContainerLattice(current_state.keys.union(keys), current_state.values)
+                self.subscription_refinement(expr.right, state)
             return state
+
+        def subscription_refinement(self, expr, state):
+            target = expr.target
+            key = expr.key
+            current_state = state.store[target]
+            keys = {key}
+            state.store[target] = ContainerLattice(current_state.keys.union(keys), current_state.values)
 
     _refinement = ExpressionRefinement()  # static class member shared between instances
 
