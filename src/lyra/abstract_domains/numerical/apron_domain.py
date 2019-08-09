@@ -16,7 +16,7 @@ from apronpy.abstract1 import PyAbstract1
 from apronpy.environment import PyEnvironment
 from apronpy.linexpr1 import PyLinexpr1
 from apronpy.manager import PyManager
-from apronpy.tcons1 import PyTcons1Array
+from apronpy.tcons1 import PyTcons1Array, PyTcons1
 from apronpy.texpr1 import PyTexpr1
 from apronpy.var import PyVar
 
@@ -49,7 +49,7 @@ class APRONState(State, metaclass=ABCMeta):
         vars = list()
         for variable in variables:
             vars.append(PyVar(variable.name))
-        self.environment = PyEnvironment(vars, [])
+        self.environment = PyEnvironment([], vars)
         self.state = self.domain(self.manager, self.environment)
 
     @copy_docstring(State.bottom)
@@ -112,18 +112,18 @@ class APRONState(State, metaclass=ABCMeta):
         raise NotImplementedError(f"Assignment to {left.__class__.__name__} is unsupported!")
 
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression, manager: PyManager = None, bwd: bool = False) -> 'APRONState':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'APRONState':
         normal = self._negation_free.visit(condition)
         if isinstance(normal, BinaryBooleanOperation):
             if normal.operator == BinaryBooleanOperation.Operator.And:
-                right = deepcopy(self)._assume(normal.right, manager=manager, bwd=bwd)
-                return self._assume(normal.left, manager=manager, bwd=bwd).meet(right)
+                right = deepcopy(self)._assume(normal.right, bwd=bwd)
+                return self._assume(normal.left, bwd=bwd).meet(right)
             if normal.operator == BinaryBooleanOperation.Operator.Or:
-                right = deepcopy(self)._assume(normal.right, manager=manager, bwd=bwd)
-                return self._assume(normal.left, manager=manager, bwd=bwd).join(right)
+                right = deepcopy(self)._assume(normal.right, bwd=bwd)
+                return self._assume(normal.left, bwd=bwd).join(right)
         elif isinstance(normal, BinaryComparisonOperation):
             cond = self._lyra2apron.visit(normal, self.environment)
-            abstract1 = self.domain(manager, self.environment, array=PyTcons1Array([cond]))
+            abstract1 = self.domain(self.manager, self.environment, array=PyTcons1Array([cond]))
             self.state = self.state.meet(abstract1)
             return self
         raise NotImplementedError(f"Assumption of {normal.__class__.__name__} is unsupported!")
