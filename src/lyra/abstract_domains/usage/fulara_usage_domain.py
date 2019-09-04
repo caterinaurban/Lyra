@@ -24,7 +24,7 @@ from lyra.abstract_domains.usage.usage_domain import SimpleUsageStore
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, \
     _iter_child_exprs, NegationFreeNormalExpression, Keys, Values, \
-    Items, BinaryComparisonOperation, TupleDisplay
+    Items, BinaryComparisonOperation, TupleDisplay, Slicing
 from lyra.core.types import BooleanLyraType, IntegerLyraType, StringLyraType, \
     FloatLyraType, DictLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
@@ -251,6 +251,24 @@ class FularaUsageState(Stack, State):
     .. automethod:: FularaUsageState._output
     .. automethod:: FularaUsageState._substitute
     """
+
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
+        pass
+
+    def _assign_subscription(self, left: Subscription, right: Expression) -> 'State':
+        pass
+
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'State':
+        pass
+
+    def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
+        pass
+
+    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'State':
+        pass
+
+    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'State':
+        pass
 
     def __init__(self, key_domain: Type[KeyWrapper],
                  precursory: FularaState,

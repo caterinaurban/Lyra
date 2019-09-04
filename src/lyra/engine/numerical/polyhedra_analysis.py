@@ -4,7 +4,7 @@ Polyhedra Analysis
 
 :Author: Caterina Urban
 """
-from lyra.abstract_domains.numerical.polyhedra_domain import PolyhedraState
+from lyra.abstract_domains.numerical.polyhedra_domain import PolyhedraStateWithSummarization
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.forward import ForwardInterpreter
 from lyra.engine.runner import Runner
@@ -18,7 +18,7 @@ class ForwardPolyhedraAnalysis(Runner):
         return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
 
     def state(self):
-        return PolyhedraState(self.variables)
+        return PolyhedraStateWithSummarization(self.variables)
 
 
 class BackwardPolyhedraAnalysis(Runner):
@@ -27,4 +27,4 @@ class BackwardPolyhedraAnalysis(Runner):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        return PolyhedraState(self.variables)
+        return PolyhedraStateWithSummarization(self.variables)

@@ -4,7 +4,7 @@ Octagon Analysis
 
 :Author: Caterina Urban
 """
-from lyra.abstract_domains.numerical.octagon_domain import OctagonState
+from lyra.abstract_domains.numerical.octagon_domain import OctagonStateWithSummarization
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.forward import ForwardInterpreter
 from lyra.engine.runner import Runner
@@ -18,7 +18,7 @@ class ForwardOctagonAnalysis(Runner):
         return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
 
     def state(self):
-        return OctagonState(self.variables)
+        return OctagonStateWithSummarization(self.variables)
 
 
 class BackwardOctagonAnalysis(Runner):
@@ -27,4 +27,4 @@ class BackwardOctagonAnalysis(Runner):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        return OctagonState(self.variables)
+        return OctagonStateWithSummarization(self.variables)

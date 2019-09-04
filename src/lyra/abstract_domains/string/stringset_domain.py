@@ -12,7 +12,7 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import Set
 
-from lyra.abstract_domains.basis import Basis
+from lyra.abstract_domains.basis import BasisWithSummarization
 from lyra.abstract_domains.lattice import TopMixin, SequenceMixin
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import Literal, VariableIdentifier, Expression, UnaryBooleanOperation, \
@@ -101,7 +101,7 @@ class StringSetLattice(TopMixin, SequenceMixin):
         return self._replace(type(self)(strings))
 
 
-class StringSetState(Basis):
+class StringSetState(BasisWithSummarization):
     """String set analysis state. An element of the string set abstract domain.
 
     Map from each program variable to the set of its possible string values.
@@ -162,7 +162,7 @@ class StringSetState(Basis):
 
     # expression evaluation
 
-    class ExpressionEvaluation(Basis.ExpressionEvaluation):
+    class ExpressionEvaluation(BasisWithSummarization.ExpressionEvaluation):
         """Visitor that performs the evaluation of an expression in the string set lattice."""
 
         def visit_Literal(self, expr, state=None, evaluation=None):

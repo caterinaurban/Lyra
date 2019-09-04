@@ -10,29 +10,70 @@ is represented by a conjunction of (more of less complex) linear constraints.
 """
 from abc import ABCMeta
 from copy import deepcopy
-from typing import Set, Type
+from typing import Set, Type, Union
 
 from apronpy.abstract1 import PyAbstract1
+from apronpy.coeff import PyMPQIntervalCoeff
 from apronpy.environment import PyEnvironment
+from apronpy.interval import PyMPQInterval
 from apronpy.linexpr1 import PyLinexpr1
 from apronpy.manager import PyManager
 from apronpy.tcons1 import PyTcons1Array, PyTcons1
 from apronpy.texpr1 import PyTexpr1
 from apronpy.var import PyVar
 
-from lyra.abstract_domains.state import State
+from lyra.abstract_domains.state import State, StateWithSummarization
 from lyra.core.expressions import VariableIdentifier, Expression, BinaryBooleanOperation, \
-    BinaryComparisonOperation, NegationFreeExpression, Lyra2APRON
+    BinaryComparisonOperation, NegationFreeExpression, Lyra2APRON, Slicing, Subscription, LengthIdentifier, ListDisplay, \
+    TupleDisplay
 from lyra.core.utils import copy_docstring
 
 
-class APRONState(State, metaclass=ABCMeta):
+class Lyra2APRONWithSummarization(Lyra2APRON):
+
+    @copy_docstring(Lyra2APRON.visit_LengthIdentifier)
+    def visit_LengthIdentifier(self, expr: 'LengthIdentifier', environment=None, usub=False):
+        assert not usub
+        return PyTexpr1.cst(environment, PyMPQIntervalCoeff(PyMPQInterval.top()))
+
+    @copy_docstring(Lyra2APRON.visit_ListDisplay)
+    def visit_ListDisplay(self, expr: 'ListDisplay', environment=None, usub=False):
+        assert not usub
+        return PyTexpr1.cst(environment, PyMPQIntervalCoeff(PyMPQInterval.top()))
+
+    @copy_docstring(Lyra2APRON.visit_TupleDisplay)
+    def visit_TupleDisplay(self, expr: 'TupleDisplay', environment=None, usub=False):
+        assert not usub
+        return PyTexpr1.cst(environment, PyMPQIntervalCoeff(PyMPQInterval.top()))
+
+    @copy_docstring(Lyra2APRON.visit_SetDisplay)
+    def visit_SetDisplay(self, expr: 'SetDisplay', environment=None, usub=False):
+        assert not usub
+        return PyTexpr1.cst(environment, PyMPQIntervalCoeff(PyMPQInterval.top()))
+
+    @copy_docstring(Lyra2APRON.visit_DictDisplay)
+    def visit_DictDisplay(self, expr: 'DictDisplay', environment=None, usub=False):
+        assert not usub
+        return PyTexpr1.cst(environment, PyMPQIntervalCoeff(PyMPQInterval.top()))
+
+    @copy_docstring(Lyra2APRON.visit_Subscription)
+    def visit_Subscription(self, expr: 'Subscription', environment=None, usub=False):
+        assert not usub
+        return PyTexpr1.var(environment, PyVar(expr.target.name))
+
+    @copy_docstring(Lyra2APRON.visit_Slicing)
+    def visit_Slicing(self, expr: 'Slicing', environment=None, usub=False):
+        assert not usub
+        return PyTexpr1.var(environment, PyVar(expr.target.name))
+
+
+class APRONStateWithSummarization(StateWithSummarization, metaclass=ABCMeta):
     """Analysis state based on APRON. An element of the abstract domain.
 
     Conjunction of constraints constraining the value of each variable.
     The value of all program variables is unconstrained by default.
 
-    .. note:: Program variables storing collections are not supported yet.
+    .. note:: Program variables storing collections are abstracted via summarization.
 
     .. document private methods
     .. automethod:: APRONState._assign
@@ -85,34 +126,32 @@ class APRONState(State, metaclass=ABCMeta):
         return self.state.bound_texpr(texpr)
 
     @copy_docstring(State._less_equal)
-    def _less_equal(self, other: 'APRONState') -> bool:
+    def _less_equal(self, other: 'APRONStateWithSummarization') -> bool:
         return self.state <= other.state
 
     @copy_docstring(State._join)
-    def _join(self, other: 'APRONState') -> 'APRONState':
+    def _join(self, other: 'APRONStateWithSummarization') -> 'APRONStateWithSummarization':
         self.state = self.state.join(other.state)
         return self
 
     @copy_docstring(State._meet)
-    def _meet(self, other: 'APRONState') -> 'APRONState':
+    def _meet(self, other: 'APRONStateWithSummarization') -> 'APRONStateWithSummarization':
         self.state = self.state.meet(other.state)
         return self
 
     @copy_docstring(State._widening)
-    def _widening(self, other: 'APRONState') -> 'APRONState':
+    def _widening(self, other: 'APRONStateWithSummarization') -> 'APRONStateWithSummarization':
         self.state = self.state.widening(other.state)
         return self
 
-    @copy_docstring(State._assign)
-    def _assign(self, left: Expression, right: Expression) -> 'APRONState':
-        if isinstance(left, VariableIdentifier):
-            expr = self._lyra2apron.visit(right, self.environment)
-            self.state = self.state.assign(PyVar(left.name), expr)
-            return self
-        raise NotImplementedError(f"Assignment to {left.__class__.__name__} is unsupported!")
+    @copy_docstring(State._assign_variable)
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'APRONStateWithSummarization':
+        expr = self._lyra2apron.visit(right, self.environment)
+        self.state = self.state.assign(PyVar(left.name), expr)
+        return self
 
     @copy_docstring(State._assume)
-    def _assume(self, condition: Expression, bwd: bool = False) -> 'APRONState':
+    def _assume(self, condition: Expression, bwd: bool = False) -> 'APRONStateWithSummarization':
         normal = self._negation_free.visit(condition)
         if isinstance(normal, BinaryBooleanOperation):
             if normal.operator == BinaryBooleanOperation.Operator.And:
@@ -129,33 +168,31 @@ class APRONState(State, metaclass=ABCMeta):
         raise NotImplementedError(f"Assumption of {normal.__class__.__name__} is unsupported!")
 
     @copy_docstring(State.enter_if)
-    def enter_if(self) -> 'APRONState':
+    def enter_if(self) -> 'APRONStateWithSummarization':
         return self  # nothing to be done
 
     @copy_docstring(State.exit_if)
-    def exit_if(self) -> 'APRONState':
+    def exit_if(self) -> 'APRONStateWithSummarization':
         return self  # nothing to be done
 
     @copy_docstring(State.enter_loop)
-    def enter_loop(self) -> 'APRONState':
+    def enter_loop(self) -> 'APRONStateWithSummarization':
         return self  # nothing to be done
 
     @copy_docstring(State.exit_loop)
-    def exit_loop(self) -> 'APRONState':
+    def exit_loop(self) -> 'APRONStateWithSummarization':
         return self  # nothing to be done
 
     @copy_docstring(State.output)
-    def _output(self, output: Expression) -> 'APRONState':
+    def _output(self, output: Expression) -> 'APRONStateWithSummarization':
         return self  # nothing to be done
 
-    @copy_docstring(State._substitute)
-    def _substitute(self, left: Expression, right: Expression) -> 'APRONState':
-        if isinstance(left, VariableIdentifier):
-            expr = self._lyra2apron.visit(right, self.environment)
-            self.state = self.state.substitute(PyVar(left.name), expr)
-            return self
-        raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
+    @copy_docstring(State._substitute_variable)
+    def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'APRONStateWithSummarization':
+        expr = self._lyra2apron.visit(right, self.environment)
+        self.state = self.state.substitute(PyVar(left.name), expr)
+        return self
 
     _negation_free = NegationFreeExpression()
-    _lyra2apron = Lyra2APRON()
+    _lyra2apron = Lyra2APRONWithSummarization()
     manager: PyManager

@@ -15,9 +15,9 @@ from math import inf
 from apronpy.box import PyBox
 from apronpy.manager import PyManager, PyBoxMPQManager
 
-from lyra.abstract_domains.basis import Basis
+from lyra.abstract_domains.basis import BasisWithSummarization
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin
-from lyra.abstract_domains.numerical.apron_domain import APRONState
+from lyra.abstract_domains.numerical.apron_domain import APRONStateWithSummarization
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import *
 
@@ -211,7 +211,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin)
         return self.join(other)
 
 
-class IntervalState(Basis):
+class IntervalState(BasisWithSummarization):
     """Interval analysis state. An element of the interval abstract domain.
 
     Map from each program variable to the interval representing its value.
@@ -238,7 +238,7 @@ class IntervalState(Basis):
             if isinstance(v.typ, SequenceLyraType):
                 self.store[LengthIdentifier(v)] = lattices[IntegerLyraType()](lower=0)
 
-    @copy_docstring(Basis._assign)
+    @copy_docstring(BasisWithSummarization._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
         # update length identifiers, if appropriate
         if isinstance(left, VariableIdentifier) and isinstance(left.typ, SequenceLyraType):
@@ -262,7 +262,7 @@ class IntervalState(Basis):
         super()._assign(left, right)
         return self
 
-    @copy_docstring(Basis._assume)
+    @copy_docstring(BasisWithSummarization._assume)
     def _assume(self, condition: Expression, bwd: bool = False) -> 'IntervalState':
         normal = NegationFreeNormalExpression().visit(condition)
         if isinstance(normal, VariableIdentifier) and isinstance(normal.typ, BooleanLyraType):
@@ -305,17 +305,17 @@ class IntervalState(Basis):
 
     # expression evaluation
 
-    class ExpressionEvaluation(Basis.ExpressionEvaluation):
+    class ExpressionEvaluation(BasisWithSummarization.ExpressionEvaluation):
         """Visitor that performs the evaluation of an expression in the interval lattice."""
 
-        @copy_docstring(Basis.ExpressionEvaluation.visit_Literal)
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Literal)
         def visit_Literal(self, expr: Literal, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation    # nothing to be done
             evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
             return evaluation
 
-        @copy_docstring(Basis.ExpressionEvaluation.visit_Range)
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Range)
         def visit_Range(self, expr: Range, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
@@ -450,7 +450,7 @@ class IntervalState(Basis):
     _length = LengthEvaluation()  # static class member shared between all instances
 
 
-class BoxState(APRONState):
+class BoxStateWithSummarization(APRONStateWithSummarization):
     """Interval analysis state based on APRON. An element of the interval abstract domain.
 
     .. document private methods
@@ -470,7 +470,11 @@ class BoxState(APRONState):
         def itv(dim):
             bound = self.bound_variable(PyVar(var(dim)))
             interval = bound.interval.contents
-            return '[{}, {}]'.format(interval.inf.contents, interval.sup.contents)
+            inf = '{}'.format(interval.inf.contents)
+            lower = inf if inf != '-1/0' else '-oo'
+            sup = '{}'.format(interval.sup.contents)
+            upper = sup if sup != '1/0' else '+oo'
+            return '[{}, {}]'.format(lower, upper)
         if self.is_bottom():
             return "⊥"
         env = self.environment.environment.contents

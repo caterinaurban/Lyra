@@ -13,12 +13,12 @@ from typing import Set
 from apronpy.manager import PyManager, PyOctMPQManager
 from apronpy.oct import PyOct
 
-from lyra.abstract_domains.numerical.apron_domain import APRONState
+from lyra.abstract_domains.numerical.apron_domain import APRONStateWithSummarization
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import VariableIdentifier
 
 
-class OctagonState(APRONState):
+class OctagonStateWithSummarization(APRONStateWithSummarization):
     """Octagon analysis state based on APRON. An element of the octagon abstract domain.
 
     .. document private methods

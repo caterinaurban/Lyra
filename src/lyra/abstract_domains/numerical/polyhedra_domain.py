@@ -13,12 +13,12 @@ from typing import Set
 from apronpy.manager import PyManager, PyPolkaMPQstrictManager
 from apronpy.polka import PyPolka
 
-from lyra.abstract_domains.numerical.apron_domain import APRONState
+from lyra.abstract_domains.numerical.apron_domain import APRONStateWithSummarization
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import VariableIdentifier
 
 
-class PolyhedraState(APRONState):
+class PolyhedraStateWithSummarization(APRONStateWithSummarization):
     """Polyhedra analysis state based on APRON. An element of the polyhedra abstract domain.
 
     .. document private methods
