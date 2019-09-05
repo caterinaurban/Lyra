@@ -274,13 +274,7 @@ class BuiltInCallSemantics(CallSemantics):
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        if not stmt.arguments:
-            state.result = {ListDisplay(stmt.typ, list())}
-            return state
-        assert len(stmt.arguments) == 1  # exactly one argument is expected
-        argument = stmt.arguments[0]
-        if isinstance(argument, VariableAccess):
-            variable = argument.variable
+        def do(variable):
             if isinstance(variable.typ, StringLyraType):
                 typ = ListLyraType(variable.typ)
                 state.result = {VariableIdentifier(typ, variable.name)}
@@ -288,6 +282,8 @@ class BuiltInCallSemantics(CallSemantics):
             elif isinstance(variable.typ, ListLyraType):
                 state.result = {variable}
                 return state
+            elif isinstance(variable.typ, TupleLyraType):
+                raise NotImplementedError(f"Conversion to list of {variable.typ} is not yet implemented!")
             elif isinstance(variable.typ, SetLyraType):
                 typ = ListLyraType(variable.typ.typ)
                 state.result = {VariableIdentifier(typ, variable.name)}
@@ -296,6 +292,18 @@ class BuiltInCallSemantics(CallSemantics):
                 typ = ListLyraType(variable.typ.key_typ)
                 state.result = {VariableIdentifier(typ, variable.name)}
                 return state
+            raise TypeError(f"Unexpected type {variable.typ} for list conversion!")
+        if not stmt.arguments:
+            state.result = {ListDisplay(stmt.typ, list())}
+            return state
+        assert len(stmt.arguments) == 1  # exactly one argument is expected
+        argument = stmt.arguments[0]
+        if isinstance(argument, VariableAccess):
+            return do(argument.variable)
+        # elif isinstance(argument, SubscriptionAccess):
+        #     target = argument.target
+        #     if isinstance(target, VariableAccess):
+        #         return do(target.variable)
         elif isinstance(argument, Call):
             if isinstance(argument.typ, StringLyraType):
                 typ = ListLyraType(argument.typ)

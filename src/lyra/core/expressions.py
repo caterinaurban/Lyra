@@ -558,6 +558,7 @@ class Lyra2APRON(ExpressionVisitor):
         elif expr.operator == BinaryComparisonOperation.Operator.Lt:
             expr = self.visit(BinaryArithmeticOperation(typ, right, sub, left), environment)
             return PyTcons1.make(expr, ConsTyp.AP_CONS_SUP)
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
 
 
 """

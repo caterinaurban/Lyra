@@ -22,7 +22,7 @@ from lyra.abstract_domains.state import State
 from lyra.core.expressions import *
 
 from lyra.core.utils import copy_docstring
-from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType, SequenceLyraType
+from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType, SequenceLyraType, ContainerLyraType
 
 
 class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin):
@@ -241,7 +241,7 @@ class IntervalState(BasisWithSummarization):
     @copy_docstring(BasisWithSummarization._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
         # update length identifiers, if appropriate
-        if isinstance(left, VariableIdentifier) and isinstance(left.typ, SequenceLyraType):
+        if isinstance(left, VariableIdentifier) and isinstance(left.typ, (SequenceLyraType, ContainerLyraType)):
             self.store[LengthIdentifier(left)] = self._length.visit(right, self)
         elif isinstance(left, Subscription) and isinstance(left.target.typ, SequenceLyraType):
             length = self.store[LengthIdentifier(left.target)]
@@ -367,7 +367,7 @@ class IntervalState(BasisWithSummarization):
 
         @copy_docstring(ExpressionVisitor.visit_SetDisplay)
         def visit_SetDisplay(self, expr: SetDisplay, state=None):
-            raise ValueError(f"Unexpected expression during sequence length computation.")
+            return state.lattices[IntegerLyraType()](len(expr.items), len(expr.items))
 
         @copy_docstring(ExpressionVisitor.visit_DictDisplay)
         def visit_DictDisplay(self, expr: DictDisplay, state=None):
@@ -383,7 +383,7 @@ class IntervalState(BasisWithSummarization):
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, state=None):
-            lattice = state.lattices[IntegerLyraType()]
+            lattice: IntervalLattice = state.lattices[IntegerLyraType()]
 
             def is_one(stride):
                 literal = isinstance(stride, Literal)
@@ -417,6 +417,20 @@ class IntervalState(BasisWithSummarization):
 
         @copy_docstring(ExpressionVisitor.visit_Range)
         def visit_Range(self, expr: Range, state=None):
+            literal1 = isinstance(expr.start, Literal)
+            literal2 = isinstance(expr.stop, Literal)
+            variable2 = isinstance(expr.stop, VariableIdentifier)
+            literal3 = isinstance(expr.step, Literal)
+            if literal1 and literal2 and literal3:
+                start = int(expr.start.val)
+                stop = int(expr.stop.val)
+                step = int(expr.step.val)
+                length = len(range(start, stop, step))
+                return state.lattices[IntegerLyraType()](lower=length, upper=length)
+            elif literal1 and variable2 and literal3:
+                start = int(expr.start.val)
+                stop = state.store[expr.stop]
+                return state.lattices[IntegerLyraType()](lower=start).meet(stop)
             raise ValueError(f"Unexpected expression during sequence length computation.")
 
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -471,16 +485,16 @@ class BoxStateWithSummarization(APRONStateWithSummarization):
             bound = self.bound_variable(PyVar(var(dim)))
             interval = bound.interval.contents
             inf = '{}'.format(interval.inf.contents)
-            lower = inf if inf != '-1/0' else '-oo'
+            lower = inf if inf != '-1/0' else '-inf'
             sup = '{}'.format(interval.sup.contents)
-            upper = sup if sup != '1/0' else '+oo'
+            upper = sup if sup != '1/0' else 'inf'
             return '[{}, {}]'.format(lower, upper)
         if self.is_bottom():
             return "⊥"
         env = self.environment.environment.contents
         result = ', '.join('{}: {}'.format(var(i), itv(i)) for i in range(env.intdim))
         result += ', '.join(
-            '{}: {}'.format(var(env.intdim + i), itv(env.intdim + i)) for i in range(env.realdim)
+            '{} -> {}'.format(var(env.intdim + i), itv(env.intdim + i)) for i in range(env.realdim)
         )
         return result.replace('.0', '')
 
