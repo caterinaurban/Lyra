@@ -150,22 +150,16 @@ class APRONStateWithSummarization(StateWithSummarization, metaclass=ABCMeta):
         self.state = self.state.assign(PyVar(left.name), expr)
         return self
 
-    @copy_docstring(State._assume)
-    def _assume(self, condition: Expression, bwd: bool = False) -> 'APRONStateWithSummarization':
-        normal = self._negation_free.visit(condition)
-        if isinstance(normal, BinaryBooleanOperation):
-            if normal.operator == BinaryBooleanOperation.Operator.And:
-                right = deepcopy(self)._assume(normal.right, bwd=bwd)
-                return self._assume(normal.left, bwd=bwd).meet(right)
-            if normal.operator == BinaryBooleanOperation.Operator.Or:
-                right = deepcopy(self)._assume(normal.right, bwd=bwd)
-                return self._assume(normal.left, bwd=bwd).join(right)
-        elif isinstance(normal, BinaryComparisonOperation):
-            cond = self._lyra2apron.visit(normal, self.environment)
-            abstract1 = self.domain(self.manager, self.environment, array=PyTcons1Array([cond]))
-            self.state = self.state.meet(abstract1)
-            return self
-        raise NotImplementedError(f"Assumption of {normal.__class__.__name__} is unsupported!")
+    @copy_docstring(State._assume_variable)
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'State':
+        raise NotImplementedError(f"Assumption of {condition.__class__.__name__} is unsupported!")
+
+    @copy_docstring(State._assume_binary_comparison)
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        cond = self._lyra2apron.visit(condition, self.environment)
+        abstract1 = self.domain(self.manager, self.environment, array=PyTcons1Array([cond]))
+        self.state = self.state.meet(abstract1)
+        return self
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'APRONStateWithSummarization':

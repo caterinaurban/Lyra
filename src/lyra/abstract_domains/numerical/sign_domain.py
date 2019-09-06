@@ -11,7 +11,7 @@ is represented by their sign (negative, zero, positive, ...).
 from collections import defaultdict
 
 from lyra.abstract_domains.basis import BasisWithSummarization
-from lyra.abstract_domains.lattice import ArithmeticMixin, BooleanMixin
+from lyra.abstract_domains.lattice import ArithmeticMixin, BooleanMixin, Lattice
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import *
 from lyra.core.types import FloatLyraType
@@ -292,29 +292,91 @@ class SignState(BasisWithSummarization):
         lattices = defaultdict(lambda: SignLattice)
         super().__init__(variables, lattices, precursory=precursory)
 
-    @copy_docstring(State._assume)
-    def _assume(self, condition: Expression, bwd: bool = False) -> 'SignState':
-        normal = NegationFreeNormalExpression().visit(condition)
-        if isinstance(normal, VariableIdentifier) and isinstance(normal.typ, BooleanLyraType):
-            evaluation = self._evaluation.visit(normal, self, dict())
-            true = self.lattices[normal.typ](**self.arguments[normal.typ]).true()
-            return self._refinement.visit(normal, evaluation, true, self)
-        elif isinstance(normal, UnaryBooleanOperation):
-            if normal.operator == UnaryBooleanOperation.Operator.Neg:
-                if isinstance(normal.expression, VariableIdentifier):
-                    typ = normal.expression.typ
-                    if isinstance(typ, BooleanLyraType):
-                        evaluation = self._evaluation.visit(normal, self, dict())
-                        false = self.lattices[typ](**self.arguments[typ]).false()
-                        return self._refinement.visit(normal.expression, evaluation, false, self)
-        elif isinstance(normal, BinaryBooleanOperation):
-            return self._assume_binarybooleanoperation(normal, bwd=bwd)
-        elif isinstance(normal, BinaryComparisonOperation):
-            evaluation = self._evaluation.visit(normal.left, self, dict())
-            nonpositive = self.lattices[normal.typ](True, True, False)
-            return self._refinement.visit(normal.left, evaluation, nonpositive, self)
-        error = f"Assumption of a {normal.__class__.__name__} expression is unsupported!"
-        raise ValueError(error)
+    @copy_docstring(BasisWithSummarization._assume_variable)
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'SignState':
+        if isinstance(condition.typ, BooleanLyraType):
+            evaluation = self._evaluation.visit(condition, self, dict())
+            if neg:
+                value = self.lattices[condition.typ](**self.arguments[condition.typ]).false()
+            else:
+                value = self.lattices[condition.typ](**self.arguments[condition.typ]).true()
+            return self._refinement.visit(condition, evaluation, value, self)
+        raise ValueError(f"Assumption of variable {condition} is unsupported!")
+
+    @copy_docstring(BasisWithSummarization._assume_binary_comparison)
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SignState':
+        zero = Literal(IntegerLyraType(), "0")
+        if condition.operator == BinaryComparisonOperation.Operator.Eq:
+            # left == right -> left - right <= 0 && right - left <= 0
+            minus = BinaryArithmeticOperation.Operator.Sub
+            operator = BinaryComparisonOperation.Operator.LtE
+            expr1 = BinaryArithmeticOperation(condition.left.typ, condition.left, minus, condition.right)
+            expr1 = BinaryComparisonOperation(condition.typ, expr1, operator, zero)
+            expr2 = BinaryArithmeticOperation(condition.right.typ, condition.right, minus, condition.left)
+            expr2 = BinaryComparisonOperation(condition.typ, expr2, operator, zero)
+            conj = BinaryBooleanOperation.Operator.And
+            return self._assume_binary_boolean(BinaryBooleanOperation(condition.typ, expr1, conj, expr2), bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.NotEq:
+            # left != right -> left - (right - 1) <= 0 || right - (left - 1) <= 0
+            one = Literal(IntegerLyraType(), "1")
+            minus = BinaryArithmeticOperation.Operator.Sub
+            operator = BinaryComparisonOperation.Operator.LtE
+            expr1 = BinaryArithmeticOperation(condition.right.typ, condition.right, minus, one)
+            expr1 = BinaryArithmeticOperation(condition.left.typ, condition.left, minus, expr1)
+            expr1 = BinaryComparisonOperation(condition.typ, expr1, operator, zero)
+            expr2 = BinaryArithmeticOperation(condition.left.typ, condition.left, minus, one)
+            expr2 = BinaryArithmeticOperation(condition.right.typ, condition.right, minus, expr2)
+            expr2 = BinaryComparisonOperation(condition.typ, expr2, operator, zero)
+            disj = BinaryBooleanOperation.Operator.Or
+            return self._assume_binary_boolean(BinaryBooleanOperation(condition.typ, expr1, disj, expr2), bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.Lt:
+            # left < right -> left - (right - 1) <= 0
+            minus = BinaryArithmeticOperation.Operator.Sub
+            one = Literal(IntegerLyraType(), "1")
+            right = BinaryArithmeticOperation(condition.right.typ, condition.right, minus, one)
+            left = BinaryArithmeticOperation(condition.left.typ, condition.left, minus, right)
+            operator = BinaryComparisonOperation.Operator.LtE
+            normal = BinaryComparisonOperation(condition.typ, left, operator, zero)
+        elif condition.operator == BinaryComparisonOperation.Operator.LtE:
+            # left <= right -> left - right <= 0
+            if isinstance(condition.right, Literal) and condition.right == zero:
+                normal = condition
+            else:
+                minus = BinaryArithmeticOperation.Operator.Sub
+                left = BinaryArithmeticOperation(condition.left.typ, condition.left, minus, condition.right)
+                normal = BinaryComparisonOperation(condition.typ, left, condition.operator, zero)
+        elif condition.operator == BinaryComparisonOperation.Operator.Gt:
+            # left > right -> right - (left - 1) <= 0
+            one = Literal(IntegerLyraType(), "1")
+            minus = BinaryArithmeticOperation.Operator.Sub
+            left = BinaryArithmeticOperation(condition.left.typ, condition.left, minus, one)
+            right = BinaryArithmeticOperation(condition.right.typ, condition.right, minus, left)
+            operator = BinaryComparisonOperation.Operator.LtE
+            normal = BinaryComparisonOperation(condition.typ, right, operator, zero)
+        elif condition.operator == BinaryComparisonOperation.Operator.GtE:
+            # left >= right -> right - left <= 0
+            minus = BinaryArithmeticOperation.Operator.Sub
+            right = BinaryArithmeticOperation(condition.right.typ, condition.right, minus, condition.left)
+            operator = BinaryComparisonOperation.Operator.LtE
+            normal = BinaryComparisonOperation(condition.typ, right, operator, zero)
+        elif condition.operator == BinaryComparisonOperation.Operator.Is:
+            raise ValueError(f"Assumption of a binary comparison with {condition.operator} is unsupported!")
+        elif condition.operator == BinaryComparisonOperation.Operator.IsNot:
+            raise ValueError(f"Assumption of a binary comparison with {condition.operator} is unsupported!")
+        elif condition.operator == BinaryComparisonOperation.Operator.In:
+            if condition.forloop and not bwd:  # assumption in a for loop during forward analysis
+                top = self.lattices[condition.left.typ](**self.arguments[condition.left.typ]).top()
+                left = defaultdict(lambda: top)
+            else:  # condition assumption
+                left = self._evaluation.visit(condition.left, self, dict())
+            right = self._evaluation.visit(condition.right, self, dict())
+            return self._refinement.visit(condition.left, left, right[condition.right], self)
+        else:
+            assert condition.operator == BinaryComparisonOperation.Operator.NotIn
+            return self
+        evaluation = self._evaluation.visit(normal.left, self, dict())
+        nonpositive = self.lattices[normal.typ](True, True, False)
+        return self._refinement.visit(normal.left, evaluation, nonpositive, self)
 
     # expression evaluation
 

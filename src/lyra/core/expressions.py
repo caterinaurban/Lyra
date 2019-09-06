@@ -214,6 +214,21 @@ class NegationFreeExpression(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_Literal)
     def visit_Literal(self, expr: 'Literal', invert=False):
+        if invert:
+            if isinstance(expr.typ, BooleanLyraType):
+                if expr.val == 'True':
+                    return Literal(BooleanLyraType(), 'False')
+                assert expr.val == 'False'
+                return Literal(BooleanLyraType(), 'True')
+            elif isinstance(expr.typ, IntegerLyraType):
+                if float(expr.val) != 0:
+                    return Literal(BooleanLyraType(), 'False')
+                assert float(expr.val) == 0
+                return Literal(BooleanLyraType(), 'True')
+            assert isinstance(expr.typ, StringLyraType)
+            if expr.val:
+                return Literal(BooleanLyraType(), 'False')
+            return Literal(BooleanLyraType(), 'True')
         return expr    # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
@@ -293,7 +308,7 @@ class NegationFreeExpression(ExpressionVisitor):
         left = expr.left
         operator = expr.operator.reverse_operator() if invert else expr.operator
         right = expr.right
-        return BinaryComparisonOperation(expr.typ, left, operator, right)
+        return BinaryComparisonOperation(expr.typ, left, operator, right, expr.forloop)
 
 
 class NegationFreeNormalExpression(ExpressionVisitor):

@@ -16,7 +16,7 @@ from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
-from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing
+from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing, BinaryComparisonOperation
 from lyra.core.types import LyraType
 from lyra.core.utils import copy_docstring
 
@@ -141,18 +141,25 @@ class SimpleUsageState(Stack, State):
     def _assign_slicing(self, left: Slicing, right: Expression) -> 'SimpleUsageState':
         return self._assign_any(left, right)
 
-    @copy_docstring(State._assume)
-    def _assume(self, condition: Expression, bwd: bool = False) -> 'SimpleUsageState':
-        effect = False      # effect of the current nesting level on the outcome of the program
+    def _assume_any(self, condition: Expression) -> 'SimpleUsageState':
+        effect = False  # effect of the current nesting level on the outcome of the program
         for variable in self.lattice.variables:
             value = self.lattice.store[variable]
             if value.is_written() or value.is_top():
                 effect = True
                 break
-        if effect:      # the current nesting level has an effect on the outcome of the program
+        if effect:  # the current nesting level has an effect on the outcome of the program
             for identifier in condition.ids():
                 self.lattice.store[identifier].top()
         return self
+
+    @copy_docstring(State._assume_variable)
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
+
+    @copy_docstring(State._assume_binary_comparison)
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'SimpleUsageState':

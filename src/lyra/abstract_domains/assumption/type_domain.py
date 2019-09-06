@@ -19,7 +19,7 @@ from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
     Input, ListDisplay, Range, AttributeReference, Subscription, Slicing, \
     UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, TupleDisplay, \
-    SetDisplay, DictDisplay, BinarySequenceOperation
+    SetDisplay, DictDisplay, BinarySequenceOperation, BinaryComparisonOperation
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
     StringLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
@@ -402,8 +402,12 @@ class TypeState(Store, StateWithSummarization, InputMixin):
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'TypeState':
         raise RuntimeError("Unexpected assignment in a backward analysis!")
 
-    @copy_docstring(State._assume)
-    def _assume(self, condition: Expression, bwd: bool = False) -> 'TypeState':
+    @copy_docstring(State._assume_variable)
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'TypeState':
+        return self
+
+    @copy_docstring(State._assume_binary_comparison)
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'TypeState':
         return self
 
     @copy_docstring(State.enter_if)

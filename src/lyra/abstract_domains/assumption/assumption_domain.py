@@ -134,6 +134,13 @@ class AssumptionState(State):
     """
     class InputStack(Stack, State):
         """Stack of assumptions on the input data."""
+
+        def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'State':
+            pass
+
+        def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+            pass
+
         class InputLattice(BottomMixin):
             """Assumptions on the input data.
 
@@ -858,6 +865,12 @@ class AssumptionState(State):
     @copy_docstring(State._assign_slicing)
     def _assign_slicing(self, left: Slicing, right: Expression) -> 'AssumptionState':
         return self._assign_any(left, right)
+
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'State':
+        pass
+
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression, bwd: bool = False) -> 'AssumptionState':

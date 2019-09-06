@@ -59,6 +59,12 @@ class InRelationState(State, BottomMixin):
     .. automethod:: InRelationState._widening
     """
 
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'State':
+        pass
+
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
         pass
 
@@ -426,6 +432,12 @@ class FularaState(State):
     .. automethod:: FularaState._temp_cleanup
     .. automethod:: FularaState._update_dict_from_refined_scalar
     """
+
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'State':
+        pass
+
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
 
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
         pass

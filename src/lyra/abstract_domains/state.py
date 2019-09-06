@@ -15,8 +15,11 @@ from copy import deepcopy
 from typing import Set, Optional, List, Type, Dict, Any, Union
 
 from lyra.abstract_domains.lattice import Lattice
-from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing, AttributeReference
+from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing, AttributeReference, Literal, \
+    NegationFreeNormalExpression, NegationFreeExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
+    BinaryComparisonOperation
 from lyra.core.statements import ProgramPoint
+from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -94,7 +97,7 @@ class State(Lattice, metaclass=ABCMeta):
         """Assign an expression to another expression.
 
         .. warning::
-            The current state could also be bottom or top.
+            The current state could also be top.
 
         :param left: expression to be assigned to
         :param right: expression to assign
@@ -119,11 +122,83 @@ class State(Lattice, metaclass=ABCMeta):
         :return: current state modified by the assignment
 
         """
+        if self.is_bottom():
+            return self
         self.big_join([deepcopy(self)._assign(lhs, rhs) for lhs in left for rhs in right])
         self.result = set()  # assignments have no result, only side-effects
         return self
 
+    def _assume_literal(self, condition: Literal, neg: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: literal representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+        if isinstance(condition.typ, BooleanLyraType):
+            if (condition.val == 'True') ^ neg:
+                return self
+            assert condition.val == 'False'
+            return self.bottom()
+        elif isinstance(condition.typ, (IntegerLyraType, FloatLyraType)):
+            if (float(condition.val) != 0) ^ neg:
+                return self
+            assert float(condition.val) == 0
+            return self.bottom()
+        assert isinstance(condition.typ, StringLyraType)
+        if condition.val ^ neg:
+            return self
+        return self.bottom()
+
     @abstractmethod
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: variable representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+
+    def _assume_unary_boolean(self, condition: UnaryBooleanOperation) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: unary boolean operation representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+        if isinstance(condition.expression, Literal):
+            return self._assume_literal(condition.expression, neg=True)
+        assert isinstance(condition.expression, VariableIdentifier)
+        return self._assume_variable(condition.expression, neg=True)
+
+    def _assume_binary_boolean(self, condition: BinaryBooleanOperation, bwd: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: binary boolean operation representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+        if condition.operator == BinaryBooleanOperation.Operator.And:
+            right = deepcopy(self)._assume(condition.right, bwd=bwd)
+            return self._assume(condition.left, bwd=bwd).meet(right)
+        assert condition.operator == BinaryBooleanOperation.Operator.Or
+        right = deepcopy(self)._assume(condition.right, bwd=bwd)
+        return self._assume(condition.left, bwd=bwd).join(right)
+
+    @abstractmethod
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: binary comparison operation representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+
     def _assume(self, condition: Expression, bwd: bool = False) -> 'State':
         """Assume that some condition holds in the current state.
 
@@ -135,6 +210,18 @@ class State(Lattice, metaclass=ABCMeta):
         :return: current state modified to satisfy the assumption
 
         """
+        normal = self._negation_free.visit(condition)
+        if isinstance(normal, Literal):
+            return self._assume_literal(normal)
+        elif isinstance(normal, VariableIdentifier):
+            return self._assume_variable(normal)
+        elif isinstance(normal, UnaryBooleanOperation):
+            return self._assume_unary_boolean(normal)
+        elif isinstance(normal, BinaryBooleanOperation):
+            return self._assume_binary_boolean(normal, bwd=bwd)
+        elif isinstance(normal, BinaryComparisonOperation):
+            return self._assume_binary_comparison(normal, bwd=bwd)
+        raise ValueError(f"Assumption of a {normal.__class__.__name__} expression is unsupported!")
 
     def assume(self, condition: Set[Expression], bwd: bool = False) -> 'State':
         """Assume that some condition holds in the current state.
@@ -144,6 +231,8 @@ class State(Lattice, metaclass=ABCMeta):
         :return: current state modified to satisfy the assumption
 
         """
+        if self.is_bottom():
+            return self
         self.big_join([deepcopy(self)._assume(expr, bwd=bwd) for expr in condition])
         return self
 
@@ -219,7 +308,7 @@ class State(Lattice, metaclass=ABCMeta):
         """Outputs something in the current state.
 
         .. warning::
-            The current state could also be bottom or top.
+            The current state could also be top.
 
         :param output: expression representing the output
         :return: current state modified by the output
@@ -233,6 +322,8 @@ class State(Lattice, metaclass=ABCMeta):
         :return: current state modified by the output
 
         """
+        if self.is_bottom():
+            return self
         self.big_join([deepcopy(self)._output(expr) for expr in output])
         self.result = set()  # outputs have no result, only side-effects
         return self
@@ -275,7 +366,7 @@ class State(Lattice, metaclass=ABCMeta):
         """Substitute an expression to another expression.
 
         .. warning::
-            The current state could also be bottom or top.
+            The current state could also be top.
 
         :param left: expression to be substituted
         :param right: expression to substitute
@@ -300,9 +391,13 @@ class State(Lattice, metaclass=ABCMeta):
         :return: current state modified by the substitution
 
         """
+        if self.is_bottom():
+            return self
         self.big_join([deepcopy(self)._substitute(l, r) for l in left for r in right])
         self.result = set()  # assignments have no result, only side-effects
         return self
+
+    _negation_free = NegationFreeExpression()
 
 
 class StateWithSummarization(State, metaclass=ABCMeta):
@@ -439,10 +534,16 @@ class ProductState(State):
             self.states[i] = state._assign_slicing(left, right)
         return self
 
-    @copy_docstring(State._assume)
-    def _assume(self, condition: Expression, bwd: bool = False) -> 'ProductState':
+    @copy_docstring(State._assume_variable)
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'ProductState':
         for i, state in enumerate(self.states):
-            self.states[i] = state._assume(condition, bwd=bwd)
+            self.states[i] = state._assume_variable(condition, neg=neg)
+        return self
+
+    @copy_docstring(State._assume_binary_comparison)
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_binary_comparison(condition, bwd=bwd)
         return self
 
     @copy_docstring(State.before)
