@@ -550,9 +550,20 @@ class AssumptionState(State):
             self.lattice.record(current)
             return self
 
-        @copy_docstring(State._assign)
-        def _assign(self, left: Expression, right: Expression) -> 'AssumptionState.InputStack':
+        def _assign_any(self, left: Expression, right: Expression) -> 'AssumptionState.InputStack':
             raise RuntimeError("Unexpected assignment in a backward analysis!")
+
+        @copy_docstring(State._assign_variable)
+        def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'AssumptionState.InputStack':
+            return self._assign_any(left, right)
+
+        @copy_docstring(State._assign_subscription)
+        def _assign_subscription(self, left: Subscription, right: Expression) -> 'AssumptionState.InputStack':
+            return self._assign_any(left, right)
+
+        @copy_docstring(State._assign_slicing)
+        def _assign_slicing(self, left: Slicing, right: Expression) -> 'AssumptionState.InputStack':
+            return self._assign_any(left, right)
 
         @copy_docstring(State._assume)
         def _assume(self, condition: Expression,
@@ -605,8 +616,7 @@ class AssumptionState(State):
         def _output(self, output: Expression) -> 'AssumptionState.InputStack':
             return self     # nothing to be done
 
-        @copy_docstring(State._substitute)
-        def _substitute(self, left: Expression, right: Expression) -> 'AssumptionState.InputStack':
+        def _substitute_any(self, left: Expression, right: Expression) -> 'AssumptionState.InputStack':
             if isinstance(left, (VariableIdentifier, Subscription, Slicing)):
                 replacement = AssumptionState.InputStack.InputReplacement(self.pp)
                 replaced: Expression = replacement.visit(right)
@@ -614,6 +624,18 @@ class AssumptionState(State):
                     self.stack[i] = lattice.replace(left, replaced)
                 return self
             raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
+
+        @copy_docstring(State._substitute_variable)
+        def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'AssumptionState.InputStack':
+            return self._substitute_any(left, right)
+
+        @copy_docstring(State._substitute_subscription)
+        def _substitute_subscription(self, left: Subscription, right: Expression) -> 'AssumptionState.InputStack':
+            return self._substitute_any(left, right)
+
+        @copy_docstring(State._substitute_slicing)
+        def _substitute_slicing(self, left: Slicing, right: Expression) -> 'AssumptionState.InputStack':
+            return self._substitute_any(left, right)
 
         def record(self, constraint: InputLattice.InputConstraint) -> 'AssumptionState.InputStack':
             """Record a constraint on the input data.
@@ -822,9 +844,20 @@ class AssumptionState(State):
         self.stack.widening(other.stack)
         return self
 
-    @copy_docstring(State._assign)
-    def _assign(self, left: Expression, right: Expression) -> 'AssumptionState':
+    def _assign_any(self, left: Expression, right: Expression) -> 'AssumptionState':
         raise RuntimeError("Unexpected assignment in a backward analysis!")
+
+    @copy_docstring(State._assign_variable)
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'AssumptionState':
+        return self._assign_any(left, right)
+
+    @copy_docstring(State._assign_subscription)
+    def _assign_subscription(self, left: Subscription, right: Expression) -> 'AssumptionState':
+        return self._assign_any(left, right)
+
+    @copy_docstring(State._assign_slicing)
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'AssumptionState':
+        return self._assign_any(left, right)
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression, bwd: bool = False) -> 'AssumptionState':
@@ -876,8 +909,7 @@ class AssumptionState(State):
         self.stack.output({output})
         return self
 
-    @copy_docstring(State._substitute)
-    def _substitute(self, left: Expression, right: Expression) -> 'AssumptionState':
+    def _substitute_any(self, left: Expression, right: Expression) -> 'AssumptionState':
         # perform the substitution on each individual state
         for i, state in enumerate(self.states):
             self.states[i] = state.substitute({left}, {right})
@@ -889,6 +921,18 @@ class AssumptionState(State):
         # perform the substitution on the stack
         self.stack.substitute({left}, {right})
         return self
+
+    @copy_docstring(State._substitute_variable)
+    def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'AssumptionState':
+        return self._substitute_any(left, right)
+
+    @copy_docstring(State._substitute_subscription)
+    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'AssumptionState':
+        return self._substitute_any(left, right)
+
+    @copy_docstring(State._substitute_slicing)
+    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'AssumptionState':
+        return self._substitute_any(left, right)
 
 
 class TypeQuantityAssumptionState(AssumptionState):

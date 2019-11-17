@@ -12,17 +12,17 @@ from collections import defaultdict
 from copy import deepcopy
 from math import inf
 
-from apronpy.box import PyBoxMPQ
-from apronpy.environment import PyEnvironment
-from apronpy.tcons1 import PyTcons1Array
+from apronpy.box import PyBox
+from apronpy.manager import PyManager, PyBoxMPQManager
 
-from lyra.abstract_domains.basis import Basis
+from lyra.abstract_domains.basis import BasisWithSummarization
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin
+from lyra.abstract_domains.numerical.apron_domain import APRONStateWithSummarization
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import *
 
 from lyra.core.utils import copy_docstring
-from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType, SequenceLyraType
+from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType, SequenceLyraType, ContainerLyraType
 
 
 class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin):
@@ -211,7 +211,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin)
         return self.join(other)
 
 
-class IntervalState(Basis):
+class IntervalState(BasisWithSummarization):
     """Interval analysis state. An element of the interval abstract domain.
 
     Map from each program variable to the interval representing its value.
@@ -238,10 +238,10 @@ class IntervalState(Basis):
             if isinstance(v.typ, SequenceLyraType):
                 self.store[LengthIdentifier(v)] = lattices[IntegerLyraType()](lower=0)
 
-    @copy_docstring(Basis._assign)
+    @copy_docstring(BasisWithSummarization._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
         # update length identifiers, if appropriate
-        if isinstance(left, VariableIdentifier) and isinstance(left.typ, SequenceLyraType):
+        if isinstance(left, VariableIdentifier) and isinstance(left.typ, (SequenceLyraType, ContainerLyraType)):
             self.store[LengthIdentifier(left)] = self._length.visit(right, self)
         elif isinstance(left, Subscription) and isinstance(left.target.typ, SequenceLyraType):
             length = self.store[LengthIdentifier(left.target)]
@@ -262,7 +262,7 @@ class IntervalState(Basis):
         super()._assign(left, right)
         return self
 
-    @copy_docstring(Basis._assume)
+    @copy_docstring(BasisWithSummarization._assume)
     def _assume(self, condition: Expression, bwd: bool = False) -> 'IntervalState':
         normal = NegationFreeNormalExpression().visit(condition)
         if isinstance(normal, VariableIdentifier) and isinstance(normal.typ, BooleanLyraType):
@@ -305,17 +305,17 @@ class IntervalState(Basis):
 
     # expression evaluation
 
-    class ExpressionEvaluation(Basis.ExpressionEvaluation):
+    class ExpressionEvaluation(BasisWithSummarization.ExpressionEvaluation):
         """Visitor that performs the evaluation of an expression in the interval lattice."""
 
-        @copy_docstring(Basis.ExpressionEvaluation.visit_Literal)
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Literal)
         def visit_Literal(self, expr: Literal, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation    # nothing to be done
             evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
             return evaluation
 
-        @copy_docstring(Basis.ExpressionEvaluation.visit_Range)
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Range)
         def visit_Range(self, expr: Range, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
@@ -367,7 +367,7 @@ class IntervalState(Basis):
 
         @copy_docstring(ExpressionVisitor.visit_SetDisplay)
         def visit_SetDisplay(self, expr: SetDisplay, state=None):
-            raise ValueError(f"Unexpected expression during sequence length computation.")
+            return state.lattices[IntegerLyraType()](len(expr.items), len(expr.items))
 
         @copy_docstring(ExpressionVisitor.visit_DictDisplay)
         def visit_DictDisplay(self, expr: DictDisplay, state=None):
@@ -383,7 +383,7 @@ class IntervalState(Basis):
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, state=None):
-            lattice = state.lattices[IntegerLyraType()]
+            lattice: IntervalLattice = state.lattices[IntegerLyraType()]
 
             def is_one(stride):
                 literal = isinstance(stride, Literal)
@@ -417,6 +417,20 @@ class IntervalState(Basis):
 
         @copy_docstring(ExpressionVisitor.visit_Range)
         def visit_Range(self, expr: Range, state=None):
+            literal1 = isinstance(expr.start, Literal)
+            literal2 = isinstance(expr.stop, Literal)
+            variable2 = isinstance(expr.stop, VariableIdentifier)
+            literal3 = isinstance(expr.step, Literal)
+            if literal1 and literal2 and literal3:
+                start = int(expr.start.val)
+                stop = int(expr.stop.val)
+                step = int(expr.step.val)
+                length = len(range(start, stop, step))
+                return state.lattices[IntegerLyraType()](lower=length, upper=length)
+            elif literal1 and variable2 and literal3:
+                start = int(expr.start.val)
+                stop = state.store[expr.stop]
+                return state.lattices[IntegerLyraType()](lower=start).meet(stop)
             raise ValueError(f"Unexpected expression during sequence length computation.")
 
         @copy_docstring(ExpressionVisitor.visit_Keys)
@@ -458,13 +472,8 @@ class IntervalState(Basis):
     _length = LengthEvaluation()  # static class member shared between all instances
 
 
-class BoxState(State):
+class BoxStateWithSummarization(APRONStateWithSummarization):
     """Interval analysis state based on APRON. An element of the interval abstract domain.
-
-    Conjunction of linear constraints constraining the value of each variable.
-    The value of all program variables is unconstrained by default.
-
-    .. note:: Program variables storing collections are abstracted via summarization.
 
     .. document private methods
     .. automethod:: BoxState._assign
@@ -475,111 +484,26 @@ class BoxState(State):
     """
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
-        super().__init__(precursory=precursory)
-        r_vars = list()
-        for variable in variables:
-            r_vars.append(PyVar(variable.name))
-        self.environment = PyEnvironment([], r_vars)
-        self.box = PyBoxMPQ(self.environment)
-
-    @copy_docstring(State.bottom)
-    def bottom(self):
-        self.box = PyBoxMPQ.bottom(self.environment)
-        return self
-
-    @copy_docstring(State.top)
-    def top(self):
-        self.box = PyBoxMPQ.top(self.environment)
-        return self
+        super().__init__(PyBox, variables, precursory=precursory)
 
     def __repr__(self):
+        def var(dim):
+            return self.environment.environment.contents.var_of_dim[dim].decode('utf-8')
+        def itv(dim):
+            bound = self.bound_variable(PyVar(var(dim)))
+            interval = bound.interval.contents
+            inf = '{}'.format(interval.inf.contents)
+            lower = inf if inf != '-1/0' else '-inf'
+            sup = '{}'.format(interval.sup.contents)
+            upper = sup if sup != '1/0' else 'inf'
+            return '[{}, {}]'.format(lower, upper)
         if self.is_bottom():
             return "⊥"
-        return '{}'.format(self.box)
+        env = self.environment.environment.contents
+        result = ', '.join('{}: {}'.format(var(i), itv(i)) for i in range(env.intdim))
+        result += ', '.join(
+            '{} -> {}'.format(var(env.intdim + i), itv(env.intdim + i)) for i in range(env.realdim)
+        )
+        return result.replace('.0', '')
 
-    @copy_docstring(State.is_bottom)
-    def is_bottom(self) -> bool:
-        return self.box.is_bottom()
-
-    @copy_docstring(State.is_top)
-    def is_top(self) -> bool:
-        return self.box.is_top()
-
-    @copy_docstring(State._less_equal)
-    def _less_equal(self, other: 'BoxState') -> bool:
-        return self.box <= other.box
-
-    @copy_docstring(State._join)
-    def _join(self, other: 'BoxState') -> 'BoxState':
-        self.box = self.box.join(other.box)
-        return self
-
-    @copy_docstring(State._meet)
-    def _meet(self, other: 'BoxState') -> 'BoxState':
-        self.box = self.box.meet(other.box)
-        return self
-
-    @copy_docstring(State._widening)
-    def _widening(self, other: 'BoxState') -> 'BoxState':
-        self.box = self.box.widening(other.box)
-        return self
-
-    @copy_docstring(State._assign)
-    def _assign(self, left: Expression, right: Expression) -> 'BoxState':
-        if isinstance(left, VariableIdentifier):
-            expr = self._lyra2apron.visit(right, self.environment)
-            self.box = self.box.assign(PyVar(left.name), expr)
-            return self
-        raise NotImplementedError(f"Assignment to {left.__class__.__name__} is unsupported!")
-
-    @copy_docstring(State._assume)
-    def _assume(self, condition: Expression, bwd: bool = False) -> 'BoxState':
-        normal = self._negation_free.visit(condition)
-        if isinstance(normal, BinaryBooleanOperation):
-            if normal.operator == BinaryBooleanOperation.Operator.And:
-                right = deepcopy(self)._assume(normal.right, bwd=bwd)
-                return self._assume(normal.left, bwd=bwd).meet(right)
-            if normal.operator == BinaryBooleanOperation.Operator.Or:
-                right = deepcopy(self)._assume(normal.right, bwd=bwd)
-                return self._assume(normal.left, bwd=bwd).join(right)
-        elif isinstance(normal, BinaryComparisonOperation):
-            cond = self._lyra2apron.visit(normal, self.environment)
-            array = PyTcons1Array([cond])
-            abstract1 = PyBoxMPQ(self.environment, array=array)
-            lincons1 = abstract1.to_lincons
-            tcons1 = abstract1.to_tcons
-            self.box = self.box.meet(tcons1)
-            string = repr(self.box)
-            return self
-        raise NotImplementedError(f"Assumption of {normal.__class__.__name__} is unsupported!")
-
-    @copy_docstring(State.enter_if)
-    def enter_if(self) -> 'BoxState':
-        return self     # nothing to be done
-
-    @copy_docstring(State.exit_if)
-    def exit_if(self) -> 'BoxState':
-        return self     # nothing to be done
-
-    @copy_docstring(State.enter_loop)
-    def enter_loop(self) -> 'BoxState':
-        return self     # nothing to be done
-
-    @copy_docstring(State.exit_loop)
-    def exit_loop(self) -> 'BoxState':
-        return self     # nothing to be done
-
-    @copy_docstring(State.output)
-    def _output(self, output: Expression) -> 'BoxState':
-        return self     # nothing to be done
-
-    @copy_docstring(State._substitute)
-    def _substitute(self, left: Expression, right: Expression) -> 'BoxState':
-        if isinstance(left, VariableIdentifier):
-            expr = self._lyra2apron.visit(right, self.environment)
-            self.box = self.box.substitute(PyVar(left.name), expr)
-            return self
-        raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
-
-    _negation_free = NegationFreeExpression()
-    _lyra2apron = Lyra2APRON()
+    manager: PyManager = PyBoxMPQManager()

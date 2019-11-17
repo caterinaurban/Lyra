@@ -17,7 +17,7 @@ from lyra.engine.forward import ForwardInterpreter
 from lyra.semantics.backward import DefaultBackwardSemantics
 from lyra.semantics.forward import DefaultForwardSemantics
 
-from lyra.abstract_domains.numerical.interval_domain import IntervalState
+from lyra.abstract_domains.numerical.interval_domain import IntervalState, BoxStateWithSummarization
 from lyra.unittests.runner import TestRunner
 
 
@@ -30,6 +30,15 @@ class ForwardIntervalTest(TestRunner):
         return IntervalState(self.variables)
 
 
+class ForwardBoxTest(TestRunner):
+
+    def interpreter(self):
+        return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
+
+    def state(self):
+        return BoxStateWithSummarization(self.variables)
+
+
 class BackwardIntervalTest(TestRunner):
 
     def interpreter(self):
@@ -37,6 +46,15 @@ class BackwardIntervalTest(TestRunner):
 
     def state(self):
         return IntervalState(self.variables)
+
+
+class BackwardBoxTest(TestRunner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        return BoxStateWithSummarization(self.variables)
 
 
 def forward():

@@ -10,7 +10,7 @@ is represented by their sign (negative, zero, positive, ...).
 """
 from collections import defaultdict
 
-from lyra.abstract_domains.basis import Basis
+from lyra.abstract_domains.basis import BasisWithSummarization
 from lyra.abstract_domains.lattice import ArithmeticMixin, BooleanMixin
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import *
@@ -271,7 +271,7 @@ class SignLattice(ArithmeticMixin, BooleanMixin):
         return not self.negative and self.zero and self.positive
 
 
-class SignState(Basis):
+class SignState(BasisWithSummarization):
     """Sign analysis state. An element of the sign abstract domain.
 
     Map from each program variable to the sign representing its value.
@@ -318,10 +318,10 @@ class SignState(Basis):
 
     # expression evaluation
 
-    class ExpressionEvaluation(Basis.ExpressionEvaluation):
+    class ExpressionEvaluation(BasisWithSummarization.ExpressionEvaluation):
         """Visitor that performs the evaluation of an expression in the sign lattice."""
 
-        @copy_docstring(Basis.ExpressionEvaluation.visit_Literal)
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Literal)
         def visit_Literal(self, expr: Literal, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done

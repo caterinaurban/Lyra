@@ -40,6 +40,9 @@
 # from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis
 # BackwardIntervalAnalysis().main("example.py")
 
+# from lyra.engine.numerical.octagon_analysis import ForwardOctagonAnalysis
+# ForwardOctagonAnalysis().main("example.py")
+
 # from lyra.engine.numerical.polyhedra_analysis import ForwardPolyhedraAnalysis
 # ForwardPolyhedraAnalysis().main("example.py")
 
@@ -110,3 +113,6 @@ ContainerAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import TypeRangeWordSetAssumptionAnalysis
 # TypeRangeWordSetAssumptionAnalysis().main("example.py")
+
+# from lyra.engine.assumption.assumption_analysis import QuantityRangeWordSetAssumptionAnalysis
+# QuantityRangeWordSetAssumptionAnalysis().main("example.py")

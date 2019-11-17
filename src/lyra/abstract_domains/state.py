@@ -12,10 +12,10 @@ Abstract domain elements support lattice operations and program statements.
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
-from typing import Set, Optional, List, Type, Dict, Any
+from typing import Set, Optional, List, Type, Dict, Any, Union
 
 from lyra.abstract_domains.lattice import Lattice
-from lyra.core.expressions import Expression, VariableIdentifier
+from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing, AttributeReference
 from lyra.core.statements import ProgramPoint
 from lyra.core.utils import copy_docstring
 
@@ -64,6 +64,32 @@ class State(Lattice, metaclass=ABCMeta):
         return ", ".join("{}".format(expression) for expression in self.result)
 
     @abstractmethod
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
+        """Assign an expression to a variable identifier
+
+        :param left: the variable identifier to be assigned to
+        :param right: expression to assign
+        :return: current state modified by the assignment
+        """
+
+    @abstractmethod
+    def _assign_subscription(self, left: Subscription, right: Expression) -> 'State':
+        """Assign an expression to a subscription
+
+        :param left: the subscription to be assigned to
+        :param right: expression to assign
+        :return: current state modified by the assignment
+        """
+
+    @abstractmethod
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'State':
+        """Assign an expression to a slicing
+
+        :param left: the slicing to be assigned to
+        :param right: expression to assign
+        :return: current state modified by the assignment
+        """
+
     def _assign(self, left: Expression, right: Expression) -> 'State':
         """Assign an expression to another expression.
 
@@ -75,6 +101,15 @@ class State(Lattice, metaclass=ABCMeta):
         :return: current state modified by the assignment
 
         """
+        if isinstance(left, VariableIdentifier):
+            return self._assign_variable(left, right)
+        elif isinstance(left, AttributeReference):
+            raise NotImplementedError(f"Assignment to attribute reference {left} is unsupported!")
+        elif isinstance(left, Subscription):
+            return self._assign_subscription(left, right)
+        elif isinstance(left, Slicing):
+            return self._assign_slicing(left, right)
+        raise ValueError(f"Unexpected assignment to {left}!")
 
     def assign(self, left: Set[Expression], right: Set[Expression]) -> 'State':
         """Assign an expression to another expression.
@@ -210,6 +245,32 @@ class State(Lattice, metaclass=ABCMeta):
         return self.bottom()
 
     @abstractmethod
+    def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
+        """substitute an expression to a variable identifier
+
+        :param left: the variable identifier to be substituted to
+        :param right: expression to substitute
+        :return: current state modified by the substitution
+        """
+
+    @abstractmethod
+    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'State':
+        """substitute an expression to a subscription
+
+        :param left: the subscription to be substituted
+        :param right: expression to substitute
+        :return: current state modified by the substitution
+        """
+
+    @abstractmethod
+    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'State':
+        """substitute an expression to a slicing
+
+        :param left: the slicing to be substituted
+        :param right: expression to substitute
+        :return: current state modified by the substitution
+        """
+
     def _substitute(self, left: Expression, right: Expression) -> 'State':
         """Substitute an expression to another expression.
 
@@ -221,6 +282,15 @@ class State(Lattice, metaclass=ABCMeta):
         :return: current state modified by the substitution
 
         """
+        if isinstance(left, VariableIdentifier):
+            return self._substitute_variable(left, right)
+        elif isinstance(left, AttributeReference):
+            raise NotImplementedError(f"Substitution of attribute reference {left} is unsupported!")
+        elif isinstance(left, Subscription):
+            return self._substitute_subscription(left, right)
+        elif isinstance(left, Slicing):
+            return self._substitute_slicing(left, right)
+        raise ValueError(f"Unexpected substitution of {left}!")
 
     def substitute(self, left: Set[Expression], right: Set[Expression]) -> 'State':
         """Substitute an expression to another expression.
@@ -235,41 +305,64 @@ class State(Lattice, metaclass=ABCMeta):
         return self
 
 
-class EnvironmentMixin(State, metaclass=ABCMeta):
-    """Mixin to add environment modification operations to another state."""
+class StateWithSummarization(State, metaclass=ABCMeta):
 
-    @abstractmethod
-    def add_variable(self, variable: VariableIdentifier):
-        """Add a variable.
+    def _assign_summary(self, left: Union[Subscription, Slicing], right: Expression) -> 'StateWithSummarization':
+        """Assign an expression to a summary variable.
 
-        :param variable: variable to be added
-        :return: current state modified by the variable addition
+        :param left: summary variable to be assigned to
+        :param right: expression to assign
+        :return: current state modified by the assignment
         """
+        # copy the current state
+        current: StateWithSummarization = deepcopy(self)
+        # perform the substitution on the copy of the current state
+        self._assign_variable(left.target, right)
+        # perform a weak update on the current state
+        return self.join(current)
 
-    @abstractmethod
-    def forget_variable(self, variable: VariableIdentifier):
-        """Forget the value of a variable.
+    @copy_docstring(State._assign_subscription)
+    def _assign_subscription(self, left: Subscription, right: Expression) -> 'StateWithSummarization':
+        return self._assign_summary(left, right)
 
-        :param variable: variable whose value is to be forgotten
-        :return: current state modified to have value top for the forgotten variable
+    @copy_docstring(State._assign_slicing)
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'StateWithSummarization':
+        return self._assign_summary(left, right)
+
+    def _substitute_summary(self, left: Union[Subscription, Slicing], right: Expression) -> 'StateWithSummarization':
+        """Substitute an expression to a summary variable.
+
+        :param left: summary variable to be substituted
+        :param right: expression to substitute
+        :return: current state modified by the substitution
         """
+        # copy the current state
+        current: StateWithSummarization = deepcopy(self)
+        # perform the substitution on the copy of the current state
+        self._substitute_variable(left.target, right)
+        # check for errors turning the state into bottom
+        if self.is_bottom():
+            return self
+        # if there are not errors, perform a weak update on the current state
+        return self.join(current)
 
-    @abstractmethod
-    def remove_variable(self, variable: VariableIdentifier):
-        """Remove a variable.
+    @copy_docstring(State._substitute_subscription)
+    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'StateWithSummarization':
+        return self._substitute_summary(left, right)
 
-        :param variable: variable to be removed
-        :return: current state modified by the variable removal
-        """
+    @copy_docstring(State._substitute_slicing)
+    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'StateWithSummarization':
+        return self._substitute_summary(left, right)
 
 
 class ProductState(State):
     """Product analysis state. A mutable element of a product abstract domain.
+    (MRO: ProductState, State, Lattice)
     
     .. warning::
         Lattice operations and statements modify the current state.
     """
-    
+
     def __init__(self, states: List[Type[State]], arguments=None, precursory: State = None):
         super().__init__(precursory)
         if arguments is None:
@@ -328,10 +421,22 @@ class ProductState(State):
             self.states[i] = state.widening(other.states[i])
         return self
 
-    @copy_docstring(State._assign)
-    def _assign(self, left: Expression, right: Expression) -> 'ProductState':
+    @copy_docstring(State._assign_variable)
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'ProductState':
         for i, state in enumerate(self.states):
-            self.states[i] = state._assign(left, right)
+            self.states[i] = state._assign_variable(left, right)
+        return self
+
+    @copy_docstring(State._assign_subscription)
+    def _assign_subscription(self, left: Subscription, right: Expression) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assign_subscription(left, right)
+        return self
+
+    @copy_docstring(State._assign_slicing)
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assign_slicing(left, right)
         return self
 
     @copy_docstring(State._assume)
@@ -377,8 +482,20 @@ class ProductState(State):
             self.states[i] = state.output({output})
         return self
 
-    @copy_docstring(State._substitute)
-    def _substitute(self, left: Expression, right: Expression) -> 'ProductState':
+    @copy_docstring(State._substitute_variable)
+    def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'ProductState':
         for i, state in enumerate(self.states):
-            self.states[i] = state._substitute(left, right)
+            self.states[i] = state._substitute_variable(left, right)
+        return self
+
+    @copy_docstring(State._substitute_subscription)
+    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._substitute_subscription(left, right)
+        return self
+
+    @copy_docstring(State._substitute_slicing)
+    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._substitute_slicing(left, right)
         return self

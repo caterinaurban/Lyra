@@ -726,6 +726,13 @@ class CFGVisitor(ast.NodeVisitor):
             elif iterated.name == 'items' or iterated.name == 'keys' or iterated.name == 'values':
                 assert isinstance(iterated.typ, SetLyraType)
                 target_typ = iterated.typ.typ
+            elif iterated.name == 'list':
+                assert len(iterated.arguments) == 1
+                if isinstance(iterated.arguments[0].typ, ListLyraType):
+                    target_typ = iterated.arguments[0].typ.typ
+            else:
+                error = "The type of the target {} is not yet determinable!".format(iterated)
+                raise NotImplementedError(error)
         else:
             error = "The iteration attribute {} is not yet translatable to CFG!".format(iterated)
             raise NotImplementedError(error)
