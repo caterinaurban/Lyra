@@ -13,7 +13,6 @@ from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumpti
 from lyra.abstract_domains.assumption.quantity_domain import QuantityState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
-from lyra.abstract_domains.assumption.container_domain import ContainerState
 from lyra.abstract_domains.numerical.interval_domain import IntervalState
 
 from lyra.engine.backward import BackwardInterpreter
@@ -57,17 +56,6 @@ class AlphabetAnalysis(Runner):
 
     def state(self):
         return AlphabetState(self.variables)
-
-
-class ContainerAnalysis(Runner):
-
-    def interpreter(self):
-        backward = BackwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3, backward)
-
-    def state(self):
-        precursory = IntervalState(self.variables)
-        return ContainerState(self.variables, precursory=precursory)
 
 
 class TypeQuantityAssumptionAnalysis(Runner):
