@@ -9,25 +9,27 @@ Interface of an abstract domain mapping variables to lattice elements.
 from abc import ABCMeta
 from collections import defaultdict
 from copy import deepcopy
-from typing import Set, Dict, Type, Any
+from typing import Set, Dict, Type, Any, Union
 
 from lyra.abstract_domains.lattice import Lattice, ArithmeticMixin, BooleanMixin, SequenceMixin
-from lyra.abstract_domains.state import State
+from lyra.abstract_domains.state import State, StateWithSummarization
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing, \
     BinaryBooleanOperation, ExpressionVisitor, Literal, LengthIdentifier, ListDisplay, \
     AttributeReference, Input, Range, UnaryArithmeticOperation, BinaryArithmeticOperation, \
-    UnaryBooleanOperation, TupleDisplay, SetDisplay, DictDisplay, BinarySequenceOperation
+    UnaryBooleanOperation, TupleDisplay, SetDisplay, DictDisplay, BinarySequenceOperation, Keys, Values
 from lyra.core.types import LyraType, BooleanLyraType, SequenceLyraType
 from lyra.core.utils import copy_docstring
 
 
 class Basis(Store, State, metaclass=ABCMeta):
-    """Analysis basic state. A mutable element of a basis abstract domain.
+    """Analysis basis state. A mutable element of a basis abstract domain.
+    (MRO: Basis, State, Store, EnvironmentMixin, Lattice)
 
     .. warning::
         Lattice operations and statements modify the current state.
     """
+
     def __init__(self, variables: Set[VariableIdentifier],
                  lattices: Dict[LyraType, Type[Lattice]],
                  arguments: Dict[LyraType, Dict[str, Any]] = None,
@@ -35,51 +37,11 @@ class Basis(Store, State, metaclass=ABCMeta):
         super().__init__(variables, lattices, arguments)
         State.__init__(self, precursory)
 
-    @copy_docstring(State.is_bottom)
-    def is_bottom(self) -> bool:
-        """The current state is bottom if `any` non-summary variable maps to a bottom element,
-        or if the length identifier of `any` summary variable maps to a bottom element."""
-        for variable, element in self.store.items():
-            if isinstance(variable.typ, SequenceLyraType):
-                if element.is_bottom() and self.store[LengthIdentifier(variable)].is_bottom():
-                    return True
-            elif element.is_bottom():
-                return True
-        return False
-
-    @copy_docstring(State._assign)
-    def _assign(self, left: Expression, right: Expression) -> 'Basis':
-        if isinstance(left, VariableIdentifier):
-            evaluation = self._evaluation.visit(right, self, dict())
-            self.store[left] = evaluation[right]
-            return self
-        elif isinstance(left, Subscription) or isinstance(left, Slicing):
-            # copy the current state
-            current: Basis = deepcopy(self)
-            # perform the assignment on the copy of the current state
-            evaluation = self._evaluation.visit(right, self, dict())
-            self.store[left.target] = evaluation[right]
-            # perform a weak update on the current state
-            return self.join(current)
-        raise NotImplementedError(f"Assignment to {left.__class__.__name__} is unsupported!")
-
-    def _assume_binarybooleanoperation(self, condition: BinaryBooleanOperation,
-                                       bwd: bool = False) -> 'Basis':
-        """Assume that some binary boolean condition holds in the current state.
-
-        :param condition: expression representing the assumed binary boolean condition
-        :param bwd: whether the assumption happens in a backward analysis (default: False)
-        :return: current state modified to satisfy the assumption
-
-        """
-        if condition.operator == BinaryBooleanOperation.Operator.And:
-            right = deepcopy(self)._assume(condition.right, bwd=bwd)
-            return self._assume(condition.left, bwd=bwd).meet(right)
-        if condition.operator == BinaryBooleanOperation.Operator.Or:
-            right = deepcopy(self)._assume(condition.right, bwd=bwd)
-            return self._assume(condition.left, bwd=bwd).join(right)
-        error = f"Assumption of a boolean condition with {condition.operator} is unsupported!"
-        raise ValueError(error)
+    @copy_docstring(State._assign_variable)
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'BasisWithSummarization':
+        evaluation = self._evaluation.visit(right, self, dict())
+        self.store[left] = evaluation[right]
+        return self
 
     @copy_docstring(State.enter_if)
     def enter_if(self):
@@ -98,37 +60,28 @@ class Basis(Store, State, metaclass=ABCMeta):
         return self  # nothing to be done
 
     @copy_docstring(State._output)
-    def _output(self, output: Expression) -> 'Basis':
+    def _output(self, output: Expression) -> 'BasisWithSummarization':
         return self  # nothing to be done
 
-    @copy_docstring(State._substitute)
-    def _substitute(self, left: Expression, right: Expression):
-        if isinstance(left, VariableIdentifier):
-            # record the current value of the substituted variable
-            value: Basis = deepcopy(self.store[left])
-            # forget the current value of the substituted variable
-            self.store[left].top()
-            # evaluate the right-hand side proceeding bottom-up using the updated store
-            evaluation = self._evaluation.visit(right, self, dict())
-            # refine the updated store proceeding top-down on the right-hand side
-            self._refinement.visit(right, evaluation, value, self)
-            return self
-        elif isinstance(left, Subscription) or isinstance(left, Slicing):
-            # copy the current state
-            current: Basis = deepcopy(self)
-            # perform the substitution on the copy of the current state
-            target = left.target
-            value: Basis = deepcopy(current.store[target])
-            current.store[target].top()
-            evaluation = current._evaluation.visit(right, current, dict())
-            current._refinement.visit(right, evaluation, value, current)
-            # perform a weak update on the current state
-            return self.join(current)
-        raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
+    @copy_docstring(State._substitute_variable)
+    def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
+        # record the current value of the substituted variable
+        value = deepcopy(self.store[left])
+        # forget the current value of the substituted variable
+        self.store[left].top()
+        # evaluate the right-hand side proceeding bottom-up using the updated store
+        evaluation = self._evaluation.visit(right, self, dict())
+        # check for errors turning the state into bottom
+        feasible = evaluation[right].meet(value)
+        if feasible.is_bottom():
+            return self.bottom()
+        # refine the updated store proceeding top-down on the right-hand side
+        self._refinement.visit(right, evaluation, value, self)
+        return self
 
     # expression evaluation
 
-    class ExpressionEvaluation(ExpressionVisitor):
+    class ExpressionEvaluation(ExpressionVisitor, metaclass=ABCMeta):
         """Visitor that performs the evaluation of an expression in the lattice."""
 
         @copy_docstring(ExpressionVisitor.visit_Literal)
@@ -152,78 +105,11 @@ class Basis(Store, State, metaclass=ABCMeta):
             evaluation[expr] = deepcopy(state.store[expr])
             return evaluation
 
-        @copy_docstring(ExpressionVisitor.visit_ListDisplay)
-        def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation   # nothing to be done
-            evaluated = evaluation
-            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
-            for item in expr.items:
-                evaluated = self.visit(item, state, evaluated)
-                value = value.join(evaluated[item])
-            evaluation[expr] = value
-            return evaluation
-
-        @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
-        def visit_TupleDisplay(self, expr: TupleDisplay, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            evaluated = evaluation
-            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
-            for item in expr.items:
-                evaluated = self.visit(item, state, evaluated)
-                value = value.join(evaluated[item])
-            evaluation[expr] = value
-            return evaluation
-
-        @copy_docstring(ExpressionVisitor.visit_SetDisplay)
-        def visit_SetDisplay(self, expr: SetDisplay, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            evaluated = evaluation
-            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
-            for item in expr.items:
-                evaluated = self.visit(item, state, evaluated)
-                value = value.join(evaluated[item])
-            evaluation[expr] = value
-            return evaluation
-
-        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
-        def visit_DictDisplay(self, expr: DictDisplay, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            evaluated = evaluation
-            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
-            for key in expr.keys:
-                evaluated = self.visit(key, state, evaluated)
-                value = value.join(evaluated[key])
-            for val in expr.values:
-                evaluated = self.visit(val, state, evaluated)
-                value = value.join(evaluated[val])
-            evaluation[expr] = value
-            return evaluation
-
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
         def visit_AttributeReference(self, expr: AttributeReference, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
-            return evaluation
-
-        @copy_docstring(ExpressionVisitor.visit_Subscription)
-        def visit_Subscription(self, expr: Subscription, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            evaluated = self.visit(expr.target, state, evaluation)
-            evaluation[expr] = evaluated[expr.target]
-            return evaluation
-
-        @copy_docstring(ExpressionVisitor.visit_Slicing)
-        def visit_Slicing(self, expr: Slicing, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            evaluated = self.visit(expr.target, state, evaluation)
-            evaluation[expr] = evaluated[expr.target]
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Input)
@@ -242,6 +128,22 @@ class Basis(Store, State, metaclass=ABCMeta):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_Keys)
+        def visit_Keys(self, expr: Keys, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target_dict, state, evaluation)
+            evaluation[expr] = evaluated[expr.target_dict]
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_Values)
+        def visit_Values(self, expr: Values, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target_dict, state, evaluation)
+            evaluation[expr] = evaluated[expr.target_dict]
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -354,11 +256,11 @@ class Basis(Store, State, metaclass=ABCMeta):
             evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
             return evaluation
 
-    _evaluation = ExpressionEvaluation()  # static class member shared between all instances
+    _evaluation: ExpressionEvaluation
 
     # expression refinement
 
-    class ExpressionRefinement(ExpressionVisitor):
+    class ExpressionRefinement(ExpressionVisitor, metaclass=ABCMeta):
         """Visitor that:
 
         (1) refines the value of an evaluated expression based on a given lattice element; and
@@ -381,56 +283,10 @@ class Basis(Store, State, metaclass=ABCMeta):
             state.store[expr] = refined
             return state
 
-        @copy_docstring(ExpressionVisitor.visit_ListDisplay)
-        def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
-            refined = evaluation[expr].meet(value)
-            updated = state
-            for item in expr.items:
-                updated = self.visit(item, evaluation, refined, updated)
-            return updated
-
-        @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
-        def visit_TupleDisplay(self, expr: TupleDisplay, evaluation=None, value=None, state=None):
-            refined = evaluation[expr].meet(value)
-            updated = state
-            for item in expr.items:
-                updated = self.visit(item, evaluation, refined, updated)
-            return updated
-
-        @copy_docstring(ExpressionVisitor.visit_SetDisplay)
-        def visit_SetDisplay(self, expr: SetDisplay, evaluation=None, value=None, state=None):
-            refined = evaluation[expr].meet(value)
-            updated = state
-            for item in expr.items:
-                updated = self.visit(item, evaluation, refined, updated)
-            return updated
-
-        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
-        def visit_DictDisplay(self, expr: DictDisplay, evaluation=None, value=None, state=None):
-            refined = evaluation[expr].meet(value)
-            updated = state
-            for key in expr.keys:
-                updated = self.visit(key, evaluation, refined, updated)
-            for val in expr.values:
-                updated = self.visit(val, evaluation, refined, updated)
-            return updated
-
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
         def visit_AttributeReference(self, expr, evaluation=None, value=None, state=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
-
-        @copy_docstring(ExpressionVisitor.visit_Subscription)
-        def visit_Subscription(self, expr: Subscription, evaluation=None, value=None, state=None):
-            refined = evaluation[expr]      # weak update
-            state.store[expr.target] = refined
-            return state
-
-        @copy_docstring(ExpressionVisitor.visit_Slicing)
-        def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
-            refined = evaluation[expr]      # weak update
-            state.store[expr.target] = refined
-            return state
 
         @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
@@ -440,6 +296,14 @@ class Basis(Store, State, metaclass=ABCMeta):
         def visit_Range(self, expr: Range, state=None, evaluation=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Keys)
+        def visit_Keys(self, expr: Keys, evaluation=None, value=None, state=None):
+            return state  # nothing to be done
+
+        @copy_docstring(ExpressionVisitor.visit_Values)
+        def visit_Values(self, expr: Values, evaluation=None, value=None, state=None):
+            return state  # nothing to be done
 
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
         def visit_UnaryArithmeticOperation(self, expr, evaluation=None, value=None, state=None):
@@ -561,4 +425,167 @@ class Basis(Store, State, metaclass=ABCMeta):
             error = f"Refinement for a {expr.__class__.__name__} expression is unsupported!"
             raise ValueError(error)
 
-    _refinement = ExpressionRefinement()  # static class member shared between instances
+    _refinement: ExpressionRefinement
+
+
+class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
+    """Analysis basis state. A mutable element of a basis abstract domain.
+    (MRO: BasisWithSummarization, StateWithSummarization, Store, EnvironmentMixin, State, Lattice)
+
+    .. warning::
+        Lattice operations and statements modify the current state.
+    """
+
+    @copy_docstring(Basis.is_bottom)
+    def is_bottom(self) -> bool:
+        """The current state is bottom if `any` non-summary variable maps to a bottom element,
+        or if the length identifier of `any` summary variable maps to a bottom element."""
+        for variable, element in self.store.items():
+            if isinstance(variable.typ, SequenceLyraType):
+                if element.is_bottom() and self.store[LengthIdentifier(variable)].is_bottom():
+                    return True
+            elif element.is_bottom():
+                return True
+        return False
+
+    def _assume_binarybooleanoperation(self, condition: BinaryBooleanOperation,
+                                       bwd: bool = False) -> 'BasisWithSummarization':
+        """Assume that some binary boolean condition holds in the current state.
+
+        :param condition: expression representing the assumed binary boolean condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+        """
+        if condition.operator == BinaryBooleanOperation.Operator.And:
+            right = deepcopy(self)._assume(condition.right, bwd=bwd)
+            return self._assume(condition.left, bwd=bwd).meet(right)
+        if condition.operator == BinaryBooleanOperation.Operator.Or:
+            right = deepcopy(self)._assume(condition.right, bwd=bwd)
+            return self._assume(condition.left, bwd=bwd).join(right)
+        error = f"Assumption of a boolean condition with {condition.operator} is unsupported!"
+        raise ValueError(error)
+
+    # expression evaluation
+
+    class ExpressionEvaluation(Basis.ExpressionEvaluation):
+
+        @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+        def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation   # nothing to be done
+            evaluated = evaluation
+            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            for item in expr.items:
+                evaluated = self.visit(item, state, evaluated)
+                value = value.join(evaluated[item])
+            evaluation[expr] = value
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+        def visit_TupleDisplay(self, expr: TupleDisplay, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = evaluation
+            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            for item in expr.items:
+                evaluated = self.visit(item, state, evaluated)
+                value = value.join(evaluated[item])
+            evaluation[expr] = value
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+        def visit_SetDisplay(self, expr: SetDisplay, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = evaluation
+            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            for item in expr.items:
+                evaluated = self.visit(item, state, evaluated)
+                value = value.join(evaluated[item])
+            evaluation[expr] = value
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+        def visit_DictDisplay(self, expr: DictDisplay, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = evaluation
+            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            for key in expr.keys:
+                evaluated = self.visit(key, state, evaluated)
+                value = value.join(evaluated[key])
+            for val in expr.values:
+                evaluated = self.visit(val, state, evaluated)
+                value = value.join(evaluated[val])
+            evaluation[expr] = value
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_Subscription)
+        def visit_Subscription(self, expr: Subscription, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target, state, evaluation)
+            evaluation[expr] = evaluated[expr.target]
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_Slicing)
+        def visit_Slicing(self, expr: Slicing, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target, state, evaluation)
+            evaluation[expr] = evaluated[expr.target]
+            return evaluation
+
+    _evaluation = ExpressionEvaluation()
+
+    # expression refinement
+
+    class ExpressionRefinement(Basis.ExpressionRefinement):
+
+        @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+        def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for item in expr.items:
+                updated = self.visit(item, evaluation, refined, updated)
+            return updated
+
+        @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+        def visit_TupleDisplay(self, expr: TupleDisplay, evaluation=None, value=None, state=None):
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for item in expr.items:
+                updated = self.visit(item, evaluation, refined, updated)
+            return updated
+
+        @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+        def visit_SetDisplay(self, expr: SetDisplay, evaluation=None, value=None, state=None):
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for item in expr.items:
+                updated = self.visit(item, evaluation, refined, updated)
+            return updated
+
+        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+        def visit_DictDisplay(self, expr: DictDisplay, evaluation=None, value=None, state=None):
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for key in expr.keys:
+                updated = self.visit(key, evaluation, refined, updated)
+            for val in expr.values:
+                updated = self.visit(val, evaluation, refined, updated)
+            return updated
+
+        @copy_docstring(ExpressionVisitor.visit_Subscription)
+        def visit_Subscription(self, expr: Subscription, evaluation=None, value=None, state=None):
+            refined = evaluation[expr]      # weak update
+            state.store[expr.target] = refined
+            return state
+
+        @copy_docstring(ExpressionVisitor.visit_Slicing)
+        def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
+            refined = evaluation[expr]      # weak update
+            state.store[expr.target] = refined
+            return state
+
+    _refinement = ExpressionRefinement()

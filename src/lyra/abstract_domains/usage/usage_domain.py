@@ -126,9 +126,20 @@ class SimpleUsageState(Stack, State):
         self.lattice.decrease(current)
         return self
 
-    @copy_docstring(State._assign)
-    def _assign(self, left: Expression, right: Expression):
+    def _assign_any(self, left: Expression, right: Expression):
         raise RuntimeError("Unexpected assignment in a backward analysis!")
+
+    @copy_docstring(State._assign_variable)
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'SimpleUsageState':
+        return self._assign_any(left, right)
+
+    @copy_docstring(State._assign_subscription)
+    def _assign_subscription(self, left: Subscription, right: Expression) -> 'SimpleUsageState':
+        return self._assign_any(left, right)
+
+    @copy_docstring(State._assign_slicing)
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'SimpleUsageState':
+        return self._assign_any(left, right)
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression, bwd: bool = False) -> 'SimpleUsageState':
@@ -165,29 +176,41 @@ class SimpleUsageState(Stack, State):
             self.lattice.store[identifier].top()
         return self
 
-    @copy_docstring(State._substitute)
-    def _substitute(self, left: Expression, right: Expression) -> 'SimpleUsageState':
-        if isinstance(left, VariableIdentifier):
-            if self.lattice.store[left].is_top() or self.lattice.store[left].is_scoped():
-                # the assigned variable is used or scoped
-                self.lattice.store[left].written()
-                for identifier in right.ids():
-                    self.lattice.store[identifier].top()
-            return self
-        elif isinstance(left, Subscription) or isinstance(left, Slicing):
-            target = left.target
-            if self.lattice.store[target].is_top() or self.lattice.store[target].is_scoped():
-                # the assigned variable is used or scoped
-                self.lattice.store[target].top()   # summarization abstraction (join of U/S with W)
-                for identifier in right.ids():
-                    self.lattice.store[identifier].top()
+    @copy_docstring(State._substitute_variable)
+    def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'SimpleUsageState':
+        if self.lattice.store[left].is_top() or self.lattice.store[left].is_scoped():
+            # the assigned variable is used or scoped
+            self.lattice.store[left].written()
+            for identifier in right.ids():
+                self.lattice.store[identifier].top()
+        return self
 
-                if isinstance(left, Subscription):
-                    ids = left.key.ids()
-                else:   # Slicing
-                    ids = left.lower.ids() | left.upper.ids()
-                for identifier in ids:  # make ids in subscript used
-                    self.lattice.store[identifier].top()
-            return self
-        error = f"Substitution for {left} is not yet implemented!"
-        raise NotImplementedError(error)
+    def _substitute_summary(self, left: Subscription, right: Expression) -> 'SimpleUsageState':
+        """Substitute an expression to a summary variable.
+
+        :param left: summary variable to be substituted
+        :param right: expression to substitute
+        :return: current state modified by the substitution
+        """
+        target = left.target
+        if self.lattice.store[target].is_top() or self.lattice.store[target].is_scoped():
+            # the assigned variable is used or scoped
+            self.lattice.store[target].top()  # summarization abstraction (join of U/S with W)
+            for identifier in right.ids():
+                self.lattice.store[identifier].top()
+
+            if isinstance(left, Subscription):
+                ids = left.key.ids()
+            else:  # Slicing
+                ids = left.lower.ids() | left.upper.ids()
+            for identifier in ids:  # make ids in subscript used
+                self.lattice.store[identifier].top()
+        return self
+
+    @copy_docstring(State._substitute_subscription)
+    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'SimpleUsageState':
+        return self._substitute_summary(left, right)
+
+    @copy_docstring(State._substitute_slicing)
+    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'SimpleUsageState':
+        return self._substitute_summary(left, right)

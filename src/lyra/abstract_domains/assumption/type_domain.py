@@ -14,12 +14,12 @@ from typing import Set
 
 from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONMixin
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin, SequenceMixin
-from lyra.abstract_domains.state import State
+from lyra.abstract_domains.state import State, StateWithSummarization
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
     Input, ListDisplay, Range, AttributeReference, Subscription, Slicing, \
     UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, TupleDisplay, \
-    SetDisplay, DictDisplay, BinarySequenceOperation
+    SetDisplay, DictDisplay, BinarySequenceOperation, Keys, Values
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
     StringLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
@@ -360,7 +360,7 @@ class TypeLattice(BottomMixin, ArithmeticMixin, SequenceMixin, JSONMixin):
         return TypeLattice()
 
 
-class TypeState(Store, InputMixin):
+class TypeState(Store, StateWithSummarization, InputMixin):
     """Type assumption analysis state. An element of the type assumption abstract domain.
 
     Map from each program variable to the type representing its value.
@@ -374,7 +374,7 @@ class TypeState(Store, InputMixin):
     are stored in the class member ``inputs``, which is a map from each program point
     to the list of type assumptions on the inputs read at that point.
 
-    .. note:: Program variables storing lists are abstracted via summarization.
+    .. note:: Program variables storing collections are abstracted via summarization.
 
     .. document private methods
     .. automethod:: TypeState._assume
@@ -398,8 +398,8 @@ class TypeState(Store, InputMixin):
         super().__init__(variables, lattices, arguments)
         InputMixin.__init__(self, precursory)
 
-    @copy_docstring(State._assign)
-    def _assign(self, left: Expression, right: Expression) -> 'TypeState':
+    @copy_docstring(State._assign_variable)
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'TypeState':
         raise RuntimeError("Unexpected assignment in a backward analysis!")
 
     @copy_docstring(State._assume)
@@ -426,47 +426,35 @@ class TypeState(Store, InputMixin):
     def _output(self, output: Expression) -> 'TypeState':
         return self  # nothing to be done
 
-    @copy_docstring(State._substitute)
-    def _substitute(self, left: Expression, right: Expression) -> 'TypeState':
-        def do(variable, expression):
-            is_list = isinstance(variable.typ, ListLyraType)
-            is_boolean_list = is_list and isinstance(variable.typ.typ, BooleanLyraType)
-            is_integer_list = is_list and isinstance(variable.typ.typ, IntegerLyraType)
-            is_float_list = is_list and isinstance(variable.typ.typ, FloatLyraType)
-            is_string_list = is_list and isinstance(variable.typ.typ, StringLyraType)
-            # record the current value of the substituted variable
-            value: TypeLattice = deepcopy(self.store[variable])
-            if isinstance(variable.typ, BooleanLyraType) or is_boolean_list:
-                # forget the current value of the substituted variable
-                self.store[variable].boolean()
-            elif isinstance(variable.typ, IntegerLyraType) or is_integer_list:
-                # forget the current value of the substituted variable
-                self.store[variable].integer()
-            elif isinstance(variable.typ, FloatLyraType) or is_float_list:
-                # forget the current value of the substituted variable
-                self.store[variable].float()
-            elif isinstance(variable.typ, StringLyraType) or is_string_list:
-                # forget the current value of the substituted variable
-                self.store[variable].top()
-            else:
-                raise ValueError(f"Variable type {left.typ} is unsupported!")
-            # evaluate the right-hand side bottom-up using the updated store and the Lyra types
-            evaluation = self._evaluation.visit(expression, self, dict())
-            # restrict the value of the right-hand side using that of the substituted variable
-            refinement = evaluation[expression].meet(value)
-            # refine the updated store proceeding top-down on the right-hand side
-            self._refinement.visit(expression, evaluation, refinement, self)
-        if isinstance(left, VariableIdentifier):
-            do(left, right)
-        elif isinstance(left, Subscription) or isinstance(left, Slicing):
-            # copy the current state
-            current: TypeState = deepcopy(self)
-            # perform the substitution on the copy of the current state
-            do(left.target, right)
-            # perform a weak update on the current state
-            self.join(current)
+    @copy_docstring(State._substitute_variable)
+    def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'TypeState':
+        is_list = isinstance(left.typ, ListLyraType)
+        is_boolean_list = is_list and isinstance(left.typ.typ, BooleanLyraType)
+        is_integer_list = is_list and isinstance(left.typ.typ, IntegerLyraType)
+        is_float_list = is_list and isinstance(left.typ.typ, FloatLyraType)
+        is_string_list = is_list and isinstance(left.typ.typ, StringLyraType)
+        # record the current value of the substituted variable
+        value: TypeLattice = deepcopy(self.store[left])
+        if isinstance(left.typ, BooleanLyraType) or is_boolean_list:
+            # forget the current value of the substituted variable
+            self.store[left].boolean()
+        elif isinstance(left.typ, IntegerLyraType) or is_integer_list:
+            # forget the current value of the substituted variable
+            self.store[left].integer()
+        elif isinstance(left.typ, FloatLyraType) or is_float_list:
+            # forget the current value of the substituted variable
+            self.store[left].float()
+        elif isinstance(left.typ, StringLyraType) or is_string_list:
+            # forget the current value of the substituted variable
+            self.store[left].top()
         else:
-            raise NotImplementedError(f"Substitution of {left.__class__.__name__} is unsupported!")
+            raise ValueError(f"Variable type {left.typ} is unsupported!")
+        # evaluate the right-hand side bottom-up using the updated store and the Lyra types
+        evaluation = self._evaluation.visit(right, self, dict())
+        # restrict the value of the right-hand side using that of the substituted variable
+        refinement = evaluation[right].meet(value)
+        # refine the updated store proceeding top-down on the right-hand side
+        self._refinement.visit(right, evaluation, refinement, self)
 
         # check whether the property ∀x. m(x) ≤ TypeLattice.from_lyra_type(x.typ) still holds
         store = self.store
@@ -620,6 +608,16 @@ class TypeState(Store, InputMixin):
 
         @copy_docstring(ExpressionVisitor.visit_Range)
         def visit_Range(self, expr: Range, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Keys)
+        def visit_Keys(self, expr: Keys, state=None, evaluation=None):
+            error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Values)
+        def visit_Values(self, expr: Values, state=None, evaluation=None):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
@@ -787,6 +785,16 @@ class TypeState(Store, InputMixin):
 
         @copy_docstring(ExpressionVisitor.visit_Range)
         def visit_Range(self, expr: Range, state=None, evaluation=None):
+            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Keys)
+        def visit_Keys(self, expr: Keys, state=None, evaluation=None):
+            error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
+            raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_Values)
+        def visit_Values(self, expr: Values, state=None, evaluation=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 

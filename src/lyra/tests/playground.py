@@ -40,6 +40,9 @@
 from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis
 BackwardIntervalAnalysis().main("example.py")
 
+# from lyra.engine.numerical.octagon_analysis import ForwardOctagonAnalysis
+# ForwardOctagonAnalysis().main("example.py")
+
 # from lyra.engine.numerical.polyhedra_analysis import ForwardPolyhedraAnalysis
 # ForwardPolyhedraAnalysis().main("example.py")
 
@@ -69,11 +72,11 @@ BackwardIntervalAnalysis().main("example.py")
 # Input Data Assumption Analyses #
 ##################################
 
-# from lyra.engine.assumption.assumption_analysis import TypeAnalysis
-# TypeAnalysis().main("example.py")
+#from lyra.engine.assumption.assumption_analysis import TypeAnalysis
+#TypeAnalysis().main("example.py")
 
-# from lyra.engine.assumption.assumption_analysis import RangeAnalysis
-# RangeAnalysis().main("example.py")
+#from lyra.engine.assumption.assumption_analysis import RangeAnalysis
+#RangeAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import AlphabetAnalysis
 # AlphabetAnalysis().main("example.py")
@@ -95,3 +98,6 @@ BackwardIntervalAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import TypeRangeWordSetAssumptionAnalysis
 # TypeRangeWordSetAssumptionAnalysis().main("example.py")
+
+# from lyra.engine.assumption.assumption_analysis import QuantityRangeWordSetAssumptionAnalysis
+# QuantityRangeWordSetAssumptionAnalysis().main("example.py")

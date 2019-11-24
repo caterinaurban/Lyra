@@ -12,7 +12,7 @@ import string
 from collections import defaultdict
 from copy import deepcopy
 
-from lyra.abstract_domains.basis import Basis
+from lyra.abstract_domains.basis import BasisWithSummarization
 from lyra.abstract_domains.lattice import BottomMixin, SequenceMixin
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import *
@@ -129,7 +129,7 @@ class CharacterLattice(BottomMixin, SequenceMixin):
         return self._replace(type(self)(certainly, maybe))
 
 
-class CharacterState(Basis):
+class CharacterState(BasisWithSummarization):
     """Character inclusion analysis state. An element of the character inclusion abstract domain.
 
     Map from each program variable to the sets of characters
@@ -147,7 +147,7 @@ class CharacterState(Basis):
         lattices = defaultdict(lambda: CharacterLattice)
         super().__init__(variables, lattices, precursory=precursory)
 
-    @copy_docstring(Basis._assume)
+    @copy_docstring(BasisWithSummarization._assume)
     def _assume(self, condition: Expression, bwd: bool = False) -> 'CharacterState':
         if isinstance(condition, UnaryBooleanOperation):
             if condition.operator == UnaryBooleanOperation.Operator.Neg:
@@ -192,7 +192,7 @@ class CharacterState(Basis):
 
     # expression evaluation
 
-    class ExpressionEvaluation(Basis.ExpressionEvaluation):
+    class ExpressionEvaluation(BasisWithSummarization.ExpressionEvaluation):
         """Visitor that performs the evaluation of an expression in the character lattice."""
 
         def visit_Literal(self, expr, state=None, evaluation=None):
@@ -205,7 +205,7 @@ class CharacterState(Basis):
 
     # expression refinement
 
-    class ExpressionRefinement(Basis.ExpressionRefinement):
+    class ExpressionRefinement(BasisWithSummarization.ExpressionRefinement):
 
         def visit_BinarySequenceOperation(self, expr, evaluation=None, value=None, state=None):
             if expr.operator == BinarySequenceOperation.Operator.Concat:

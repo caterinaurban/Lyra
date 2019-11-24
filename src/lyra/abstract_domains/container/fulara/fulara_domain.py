@@ -21,7 +21,7 @@ from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, DictDisplay, \
     BinaryComparisonOperation, Keys, Items, Values, TupleDisplay, ExpressionVisitor, \
-    NegationFreeNormalExpression, Input, ListDisplay, Literal
+    NegationFreeNormalExpression, Input, ListDisplay, Literal, Slicing
 from lyra.core.types import DictLyraType, BooleanLyraType, IntegerLyraType, \
     FloatLyraType, StringLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
@@ -58,6 +58,25 @@ class InRelationState(State, BottomMixin):
     .. automethod:: InRelationState._join
     .. automethod:: InRelationState._widening
     """
+
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
+        pass
+
+    def _assign_subscription(self, left: Subscription, right: Expression) -> 'State':
+        pass
+
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'State':
+        pass
+
+    def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
+        pass
+
+    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'State':
+        pass
+
+    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'State':
+        pass
+
     def __init__(self,
                  tuple_set: Set[Tuple[VariableIdentifier, Optional[VariableIdentifier],
                                       Optional[VariableIdentifier]]] = None,
@@ -407,6 +426,24 @@ class FularaState(State):
     .. automethod:: FularaState._temp_cleanup
     .. automethod:: FularaState._update_dict_from_refined_scalar
     """
+
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
+        pass
+
+    def _assign_subscription(self, left: Subscription, right: Expression) -> 'State':
+        pass
+
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'State':
+        pass
+
+    def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
+        pass
+
+    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'State':
+        pass
+
+    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'State':
+        pass
 
     # here the Union type means a logical AND: Domains should inherit from both Wrapper and State
     def __init__(self, scalar_domain: Type[EnvironmentMixin],

@@ -12,7 +12,7 @@ import unittest
 
 import sys
 
-from lyra.abstract_domains.numerical.polyhedra_domain import PolyhedraState
+from lyra.abstract_domains.numerical.polyhedra_domain import PolyhedraStateWithSummarization
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.forward import ForwardInterpreter
 from lyra.semantics.backward import DefaultBackwardSemantics
@@ -28,7 +28,7 @@ class ForwardPolyhedraTest(TestRunner):
         return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
 
     def state(self):
-        return PolyhedraState(self.variables)
+        return PolyhedraStateWithSummarization(self.variables)
 
 
 class BackwardPolyhedraTest(TestRunner):
@@ -37,7 +37,7 @@ class BackwardPolyhedraTest(TestRunner):
         return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        return PolyhedraState(self.variables)
+        return PolyhedraStateWithSummarization(self.variables)
 
 
 def forward():

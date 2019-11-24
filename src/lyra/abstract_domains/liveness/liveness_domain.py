@@ -126,9 +126,20 @@ class LivenessState(Store, State):
         """The current store is bottom if `all` of its variables map to a bottom element."""
         return all(element.is_bottom() for element in self.store.values())
 
-    @copy_docstring(State._assign)
-    def _assign(self, left: Expression, right: Expression):
+    def _assign_any(self, left: Expression, right: Expression):
         raise RuntimeError("Unexpected assignment in a backward analysis!")
+
+    @copy_docstring(State._assign_variable)
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'LivenessState':
+        return self._assign_any(left, right)
+
+    @copy_docstring(State._assign_subscription)
+    def _assign_subscription(self, left: Subscription, right: Expression) -> 'LivenessState':
+        return self._assign_any(left, right)
+
+    @copy_docstring(State._assign_slicing)
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'LivenessState':
+        return self._assign_any(left, right)
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression, bwd: bool = False) -> 'LivenessState':
@@ -157,7 +168,7 @@ class LivenessState(Store, State):
         return self  # nothing to be done
 
     @copy_docstring(State._substitute)
-    def _substitute(self, left: Expression, right: Expression) -> 'LivenessState':
+    def _substitute_any(self, left: Expression, right: Expression) -> 'LivenessState':
         if isinstance(left, VariableIdentifier):
             self.store[left].bottom()
             for identifier in right.ids():
@@ -165,6 +176,18 @@ class LivenessState(Store, State):
             return self
         error = f"Substitution for {left} is not yet implemented!"
         raise NotImplementedError(error)
+
+    @copy_docstring(State._substitute_variable)
+    def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'LivenessState':
+        return self._substitute_any(left, right)
+
+    @copy_docstring(State._substitute_subscription)
+    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'LivenessState':
+        return self._substitute_any(left, right)
+
+    @copy_docstring(State._substitute_slicing)
+    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'LivenessState':
+        return self._substitute_any(left, right)
 
 
 class StrongLivenessState(LivenessState):
@@ -189,27 +212,38 @@ class StrongLivenessState(LivenessState):
             self.store[identifier] = LivenessLattice(LivenessLattice.Status.Live)
         return self
 
-    @copy_docstring(LivenessState._substitute)
-    def _substitute(self, left: Expression, right: Expression) -> 'StrongLivenessState':
-        if isinstance(left, VariableIdentifier):
-            if self.store[left].is_top():   # the assigned variable is strongly-live
-                self.store[left].bottom()
-                for identifier in right.ids():
-                    self.store[identifier].top()
-            return self
-        elif isinstance(left, Subscription) or isinstance(left, Slicing):
-            target = left.target
-            if self.store[target].is_top():  # the target variable (list, dict,..) is strongly-live
-                # summarization abstraction (weak update)
-                for identifier in right.ids():
-                    self.store[identifier].top()
+    @copy_docstring(State._substitute_variable)
+    def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'StrongLivenessState':
+        if self.store[left].is_top():  # the assigned variable is strongly-live
+            self.store[left].bottom()
+            for identifier in right.ids():
+                self.store[identifier].top()
+        return self
 
-                if isinstance(left, Subscription):
-                    ids = left.key.ids()
-                else:  # Slicing
-                    ids = left.lower.ids() | left.upper.ids()
-                for identifier in ids:  # make ids in subscript strongly live
-                    self.store[identifier].top()
-            return self
-        error = f"Substitution for {left} is not yet implemented!"
-        raise NotImplementedError(error)
+    def _substitute_summary(self, left: Subscription, right: Expression) -> 'StrongLivenessState':
+        """Substitute an expression to a summary variable.
+
+        :param left: summary variable to be substituted
+        :param right: expression to substitute
+        :return: current state modified by the substitution
+        """
+        target = left.target
+        if self.store[target].is_top():  # the target variable (list, dict,..) is strongly-live
+            # summarization abstraction (weak update)
+            for identifier in right.ids():
+                self.store[identifier].top()
+            if isinstance(left, Subscription):
+                ids = left.key.ids()
+            else:  # Slicing
+                ids = left.lower.ids() | left.upper.ids()
+            for identifier in ids:  # make ids in subscript strongly live
+                self.store[identifier].top()
+        return self
+
+    @copy_docstring(State._substitute_subscription)
+    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'StrongLivenessState':
+        return self._substitute_summary(left, right)
+
+    @copy_docstring(State._substitute_slicing)
+    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'StrongLivenessState':
+        return self._substitute_summary(left, right)
