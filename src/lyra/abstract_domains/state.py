@@ -16,10 +16,10 @@ from typing import Set, Optional, List, Type, Dict, Any, Union
 
 from lyra.abstract_domains.lattice import Lattice
 from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing, AttributeReference, Literal, \
-    NegationFreeNormalExpression, NegationFreeExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
+    NegationFreeExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
     BinaryComparisonOperation
 from lyra.core.statements import ProgramPoint
-from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType
+from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType, ContainerLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -132,7 +132,7 @@ class State(Lattice, metaclass=ABCMeta):
         """Assume that some condition holds in the current state.
 
         :param condition: literal representing the assumed condition
-        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :param neg: whether the assumption should be negated (default: False)
         :return: current state modified to satisfy the assumption
 
         """
@@ -156,7 +156,7 @@ class State(Lattice, metaclass=ABCMeta):
         """Assume that some condition holds in the current state.
 
         :param condition: variable representing the assumed condition
-        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :param neg: whether the assumption should be negated (default: False)
         :return: current state modified to satisfy the assumption
 
         """
@@ -165,7 +165,6 @@ class State(Lattice, metaclass=ABCMeta):
         """Assume that some condition holds in the current state.
 
         :param condition: unary boolean operation representing the assumed condition
-        :param bwd: whether the assumption happens in a backward analysis (default: False)
         :return: current state modified to satisfy the assumption
 
         """
@@ -190,6 +189,105 @@ class State(Lattice, metaclass=ABCMeta):
         return self._assume(condition.left, bwd=bwd).join(right)
 
     @abstractmethod
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: equal comparison operation representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+
+    @abstractmethod
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: not equal comparison operation representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+
+    @abstractmethod
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: less than comparison operation representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+
+    @abstractmethod
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: less than or equal comparison operation representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+
+    @abstractmethod
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: greater comparison operation representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+
+    @abstractmethod
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: greater than or equal comparison operation representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+
+    @abstractmethod
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: is comparison operation representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+
+    @abstractmethod
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: is not comparison operation representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+
+    @abstractmethod
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: in comparison operation representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+
+    @abstractmethod
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: not in comparison operation representing the assumed condition
+        :param bwd: whether the assumption happens in a backward analysis (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+
     def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
         """Assume that some condition holds in the current state.
 
@@ -198,12 +296,32 @@ class State(Lattice, metaclass=ABCMeta):
         :return: current state modified to satisfy the assumption
 
         """
+        if condition.operator == BinaryComparisonOperation.Operator.Eq:
+            return self._assume_eq_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.NotEq:
+            return self._assume_noteq_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.Lt:
+            return self._assume_lt_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.LtE:
+            return self._assume_lte_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.Gt:
+            return self._assume_gt_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.GtE:
+            return self._assume_gte_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.Is:
+            return self._assume_is_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.IsNot:
+            return self._assume_isnot_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.In:
+            return self._assume_in_comparison(condition, bwd=bwd)
+        assert condition.operator == BinaryComparisonOperation.Operator.NotIn
+        return self._assume_notin_comparison(condition, bwd=bwd)
 
     def _assume(self, condition: Expression, bwd: bool = False) -> 'State':
         """Assume that some condition holds in the current state.
 
         .. warning::
-            The current state could also be bottom or top.
+            The current state could also be top.
 
         :param condition: expression representing the assumed condition
         :param bwd: whether the assumption happens in a backward analysis (default: False)
@@ -424,6 +542,48 @@ class StateWithSummarization(State, metaclass=ABCMeta):
     def _assign_slicing(self, left: Slicing, right: Expression) -> 'StateWithSummarization':
         return self._assign_summary(left, right)
 
+    @abstractmethod
+    def _weak_update(self, variables: Set[VariableIdentifier], previous: 'StateWithSummarization'):
+        """Weaken a strong update.
+
+        :param variables: variables involved in the weak update
+        :param previous: state before the strong update
+        :return: current state modified to have undergone a weak update (instead of a strong update)
+        """
+
+    @copy_docstring(State._assume_binary_comparison)
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        # identify involved container identifiers
+        containers: Set[VariableIdentifier] = {var for var in condition.ids() if isinstance(var.typ, ContainerLyraType)}
+        # expand, i.e., copy the current state, if needed
+        current = deepcopy(self) if containers else None
+        # perform the assumption on the current state
+        if condition.operator == BinaryComparisonOperation.Operator.Eq:
+            self._assume_eq_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.NotEq:
+            self._assume_noteq_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.Lt:
+            self._assume_lt_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.LtE:
+            self._assume_lte_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.Gt:
+            self._assume_gt_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.GtE:
+            self._assume_gte_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.Is:
+            self._assume_is_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.IsNot:
+            self._assume_isnot_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.In:
+            self._assume_in_comparison(condition, bwd=bwd)
+        else:
+            assert condition.operator == BinaryComparisonOperation.Operator.NotIn
+            self._assume_notin_comparison(condition, bwd=bwd)
+        # fold, i.e., perform a weak update on the current state, if needed
+        if containers:
+            return self._weak_update(containers, current)
+        return self
+
     def _substitute_summary(self, left: Union[Subscription, Slicing], right: Expression) -> 'StateWithSummarization':
         """Substitute an expression to a summary variable.
 
@@ -540,10 +700,64 @@ class ProductState(State):
             self.states[i] = state._assume_variable(condition, neg=neg)
         return self
 
-    @copy_docstring(State._assume_binary_comparison)
-    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
+    @copy_docstring(State._assume_eq_comparison)
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
         for i, state in enumerate(self.states):
-            self.states[i] = state._assume_binary_comparison(condition, bwd=bwd)
+            self.states[i] = state._assume_eq_comparison(condition, bwd=bwd)
+        return self
+
+    @copy_docstring(State._assume_noteq_comparison)
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_noteq_comparison(condition, bwd=bwd)
+        return self
+
+    @copy_docstring(State._assume_lt_comparison)
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_lt_comparison(condition, bwd=bwd)
+        return self
+
+    @copy_docstring(State._assume_lte_comparison)
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_lte_comparison(condition, bwd=bwd)
+        return self
+
+    @copy_docstring(State._assume_gt_comparison)
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_gt_comparison(condition, bwd=bwd)
+        return self
+
+    @copy_docstring(State._assume_gte_comparison)
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_gte_comparison(condition, bwd=bwd)
+        return self
+
+    @copy_docstring(State._assume_is_comparison)
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_is_comparison(condition, bwd=bwd)
+        return self
+
+    @copy_docstring(State._assume_isnot_comparison)
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_isnot_comparison(condition, bwd=bwd)
+        return self
+
+    @copy_docstring(State._assume_in_comparison)
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_in_comparison(condition, bwd=bwd)
+        return self
+
+    @copy_docstring(State._assume_notin_comparison)
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_notin_comparison(condition, bwd=bwd)
         return self
 
     @copy_docstring(State.before)

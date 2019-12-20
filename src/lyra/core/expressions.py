@@ -9,7 +9,7 @@ Lyra's internal representation of Python expressions.
 
 from abc import ABCMeta, abstractmethod
 from enum import IntEnum
-from typing import Set, List, Union
+from typing import Set, List
 
 from apronpy.coeff import PyMPQScalarCoeff, PyMPQIntervalCoeff
 from apronpy.interval import PyMPQInterval

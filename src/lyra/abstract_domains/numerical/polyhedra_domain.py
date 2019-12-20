@@ -10,7 +10,7 @@ is represented by a conjunction of linear constraints.
 """
 from typing import Set
 
-from apronpy.manager import PyManager, PyPolkaMPQstrictManager
+from apronpy.manager import PyPolkaMPQstrictManager
 from apronpy.polka import PyPolka
 
 from lyra.abstract_domains.numerical.apron_domain import APRONStateWithSummarization

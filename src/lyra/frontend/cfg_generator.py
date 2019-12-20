@@ -576,7 +576,6 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute value stores the assigned value."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         assert typ is None     # we expect typ to be None
-        assignments = list()
         assert len(node.targets) == 1
         target = self.visit(node.targets[0], types, None)
         value = self.visit(node.value, types, target.typ)

@@ -7,9 +7,8 @@ Interface of an abstract domain mapping variables to lattice elements.
 :Author: Caterina Urban
 """
 from abc import ABCMeta
-from collections import defaultdict
 from copy import deepcopy
-from typing import Set, Dict, Type, Any, Union
+from typing import Set, Dict, Type, Any
 
 from lyra.abstract_domains.lattice import Lattice, ArithmeticMixin, BooleanMixin, SequenceMixin
 from lyra.abstract_domains.state import State, StateWithSummarization
@@ -38,7 +37,7 @@ class Basis(Store, State, metaclass=ABCMeta):
         State.__init__(self, precursory)
 
     @copy_docstring(State._assign_variable)
-    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'BasisWithSummarization':
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'Basis':
         evaluation = self._evaluation.visit(right, self, dict())
         self.store[left] = evaluation[right]
         return self
@@ -60,7 +59,7 @@ class Basis(Store, State, metaclass=ABCMeta):
         return self  # nothing to be done
 
     @copy_docstring(State._output)
-    def _output(self, output: Expression) -> 'BasisWithSummarization':
+    def _output(self, output: Expression) -> 'Basis':
         return self  # nothing to be done
 
     @copy_docstring(State._substitute_variable)
@@ -440,6 +439,14 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             return self._assume(condition.left, bwd=bwd).join(right)
         error = f"Assumption of a boolean condition with {condition.operator} is unsupported!"
         raise ValueError(error)
+
+    @copy_docstring(StateWithSummarization._weak_update)
+    def _weak_update(self, variables: Set[VariableIdentifier], previous: 'BasisWithSummarization'):
+        for var in variables:
+            self.store[var].join(previous.store[var])
+            if isinstance(var.typ, SequenceLyraType):
+                self.store[LengthIdentifier(var)].join(previous.store[LengthIdentifier(var)])
+        return self
 
     # expression evaluation
 

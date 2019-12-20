@@ -44,7 +44,6 @@ class ForwardInterpreter(Interpreter):
         worklist = Queue()
         worklist.put(self.cfg.in_node)
         iterations = {node: 0 for node in self.cfg.nodes}
-        done = set()
 
         while not worklist.empty():
             current: Node = worklist.get()  # retrieve the current node
@@ -162,4 +161,5 @@ class ForwardInterpreter(Interpreter):
                     worklist.put(node)
                 iterations[current.identifier] = iteration + 1
 
+        # print(states)
         return self.result

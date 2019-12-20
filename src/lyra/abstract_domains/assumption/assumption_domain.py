@@ -10,11 +10,12 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from enum import Enum
 from typing import List, Dict, Type, Any, Union, Tuple, Set, Optional
+
 from lyra.abstract_domains.lattice import Lattice, BottomMixin
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State, ProductState
 from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparisonOperation, \
-    Range, Literal, NegationFreeNormalExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
+    Range, Literal, UnaryBooleanOperation, BinaryBooleanOperation, \
     ExpressionVisitor, Input, ListDisplay, AttributeReference, Subscription, Slicing, \
     UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, TupleDisplay, \
     SetDisplay, DictDisplay, BinarySequenceOperation
@@ -134,13 +135,6 @@ class AssumptionState(State):
     """
     class InputStack(Stack, State):
         """Stack of assumptions on the input data."""
-
-        def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'State':
-            pass
-
-        def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
-            pass
-
         class InputLattice(BottomMixin):
             """Assumptions on the input data.
 
@@ -314,7 +308,7 @@ class AssumptionState(State):
 
             @copy_docstring(BottomMixin._widening)
             def _widening(self, other: InputLattice) -> InputLattice:
-                """``self \/ other = self ▽ other``."""
+                """``self ⋁ other = self ▽ other``."""
                 return self._join(other)
 
             def is_empty(self) -> bool:
@@ -572,21 +566,66 @@ class AssumptionState(State):
         def _assign_slicing(self, left: Slicing, right: Expression) -> 'AssumptionState.InputStack':
             return self._assign_any(left, right)
 
-        @copy_docstring(State._assume)
-        def _assume(self, condition: Expression,
-                    bwd: bool = False) -> 'AssumptionState.InputStack':
-            loop = AssumptionState.InputStack.Scope.Loop
-            if not self.is_bottom() and self.scope == loop:      # the current scope is a loop
-                negation_free_normal_expression = NegationFreeNormalExpression()
-                normal = negation_free_normal_expression.visit(condition)
-                if isinstance(normal, BinaryComparisonOperation):
-                    in_op = BinaryComparisonOperation.Operator.In
-                    notin_op = BinaryComparisonOperation.Operator.NotIn
-                    if normal.operator == in_op or normal.operator == notin_op:
-                        # the condition is ``... in range(...)`` or ``... not in range(...)``
-                        if isinstance(normal.right, Range):
-                            self.lattice.repeat(normal.right.stop)
-                            return self
+        def _assume_any(self):
+            if not self.is_bottom() and self.scope == AssumptionState.InputStack.Scope.Loop:  # current scope is a loop
+                if not self.lattice.is_empty():
+                    self.lattice.top()  # default to ★
+            return self
+
+        @copy_docstring(State._assume_variable)
+        def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'AssumptionState.InputStack':
+            return self._assume_any()
+
+        @copy_docstring(State._assume_eq_comparison)
+        def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+            return self._assume_any()
+
+        @copy_docstring(State._assume_noteq_comparison)
+        def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+            return self._assume_any()
+
+        @copy_docstring(State._assume_lt_comparison)
+        def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+            return self._assume_any()
+
+        @copy_docstring(State._assume_lte_comparison)
+        def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+            return self._assume_any()
+
+        @copy_docstring(State._assume_gt_comparison)
+        def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+            return self._assume_any()
+
+        @copy_docstring(State._assume_gte_comparison)
+        def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+            return self._assume_any()
+
+        @copy_docstring(State._assume_is_comparison)
+        def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+            return self._assume_any()
+
+        @copy_docstring(State._assume_isnot_comparison)
+        def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+            return self._assume_any()
+
+        @copy_docstring(State._assume_in_comparison)
+        def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+            if not self.is_bottom() and self.scope == AssumptionState.InputStack.Scope.Loop:  # current scope is a loop
+                # the condition is ``... in range(...)``
+                if isinstance(condition.right, Range):
+                    self.lattice.repeat(condition.right.stop)
+                    return self
+                if not self.lattice.is_empty():
+                    self.lattice.top()  # default to ★
+            return self
+
+        @copy_docstring(State._assume_notin_comparison)
+        def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+            if not self.is_bottom() and self.scope == AssumptionState.InputStack.Scope.Loop:  # current scope is a loop
+                # the condition is ``... not in range(...)``
+                if isinstance(condition.right, Range):
+                    self.lattice.repeat(condition.right.stop)
+                    return self
                 if not self.lattice.is_empty():
                     self.lattice.top()  # default to ★
             return self
@@ -787,8 +826,8 @@ class AssumptionState(State):
         super().__init__(precursory)
         if arguments is None:
             arguments: Dict[Type, Dict[str, Any]] = defaultdict(lambda: dict())
-        self._states = [state(**arguments[state]) for state in states]
-        self._stack = AssumptionState.InputStack()
+        self._states: List[InputMixin] = [state(**arguments[state]) for state in states]
+        self._stack: AssumptionState.InputStack = AssumptionState.InputStack()
 
     @property
     def states(self):
@@ -866,11 +905,49 @@ class AssumptionState(State):
     def _assign_slicing(self, left: Slicing, right: Expression) -> 'AssumptionState':
         return self._assign_any(left, right)
 
-    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'State':
-        pass
+    @copy_docstring(State._assume_variable)
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'AssumptionState':
+        raise RuntimeError("Unexpected call to AssumptionState._assume_variable!")
 
-    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
-        pass
+    @copy_docstring(State._assume_eq_comparison)
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'AssumptionState':
+        raise RuntimeError("Unexpected call to AssumptionState._assume_eq_comparison!")
+
+    @copy_docstring(State._assume_noteq_comparison)
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'AssumptionState':
+        raise RuntimeError("Unexpected call to AssumptionState._assume_noteq_comparison!")
+
+    @copy_docstring(State._assume_lt_comparison)
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'AssumptionState':
+        raise RuntimeError("Unexpected call to AssumptionState._assume_lt_comparison!")
+
+    @copy_docstring(State._assume_lte_comparison)
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'AssumptionState':
+        raise RuntimeError("Unexpected call to AssumptionState._assume_lte_comparison!")
+
+    @copy_docstring(State._assume_gt_comparison)
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'AssumptionState':
+        raise RuntimeError("Unexpected call to AssumptionState._assume_gt_comparison!")
+
+    @copy_docstring(State._assume_gte_comparison)
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'AssumptionState':
+        raise RuntimeError("Unexpected call to AssumptionState._assume_gte_comparison!")
+
+    @copy_docstring(State._assume_is_comparison)
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'AssumptionState':
+        raise RuntimeError("Unexpected call to AssumptionState._assume_is_comparison!")
+
+    @copy_docstring(State._assume_isnot_comparison)
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'AssumptionState':
+        raise RuntimeError("Unexpected call to AssumptionState._assume_isnot_comparison!")
+
+    @copy_docstring(State._assume_in_comparison)
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'AssumptionState':
+        raise RuntimeError("Unexpected call to AssumptionState._assume_in_comparison!")
+
+    @copy_docstring(State._assume_notin_comparison)
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'AssumptionState':
+        raise RuntimeError("Unexpected call to AssumptionState._assume_notin_comparison!")
 
     @copy_docstring(State._assume)
     def _assume(self, condition: Expression, bwd: bool = False) -> 'AssumptionState':

@@ -151,15 +151,50 @@ class CharacterState(BasisWithSummarization):
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'CharacterState':
         return self
 
-    @copy_docstring(BasisWithSummarization._assume_binary_comparison)
-    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
-        if condition.operator == BinaryComparisonOperation.Operator.Eq:
-            left = condition.left
-            right = condition.right
-            left_eval = self._evaluation.visit(condition.left, self, dict())
-            right_eval = self._evaluation.visit(condition.right, self, dict())
-            self._refinement.visit(left, left_eval, right_eval[right], self)
-            self._refinement.visit(right, right_eval, left_eval[left], self)
+    @copy_docstring(State._assume_eq_comparison)
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        left = condition.left
+        right = condition.right
+        left_eval = self._evaluation.visit(condition.left, self, dict())
+        right_eval = self._evaluation.visit(condition.right, self, dict())
+        self._refinement.visit(left, left_eval, right_eval[right], self)
+        self._refinement.visit(right, right_eval, left_eval[left], self)
+        return self
+
+    @copy_docstring(State._assume_noteq_comparison)
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_lt_comparison)
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_lte_comparison)
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_gt_comparison)
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_gte_comparison)
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_is_comparison)
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_isnot_comparison)
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_in_comparison)
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_notin_comparison)
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
         return self
 
     # expression evaluation

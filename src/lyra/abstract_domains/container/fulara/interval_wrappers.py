@@ -10,8 +10,8 @@ from typing import Set
 
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
 from lyra.abstract_domains.container.fulara.value_wrapper import ValueWrapper
-from lyra.abstract_domains.numerical.interval_domain import IntervalState, IntervalLattice
 from lyra.abstract_domains.lattice import EnvironmentMixin
+from lyra.abstract_domains.numerical.interval_domain import IntervalState, IntervalLattice
 from lyra.core.expressions import VariableIdentifier, LengthIdentifier
 from lyra.core.types import SequenceLyraType
 from lyra.core.utils import copy_docstring

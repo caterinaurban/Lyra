@@ -19,10 +19,9 @@ from typing import Set
 
 from lyra.abstract_domains.lattice import Lattice
 from lyra.abstract_domains.state import State
+from lyra.abstract_domains.store import Store
 from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing, BinaryComparisonOperation, \
     UnaryBooleanOperation, Literal, BinaryBooleanOperation
-
-from lyra.abstract_domains.store import Store
 from lyra.core.utils import copy_docstring
 
 
@@ -159,9 +158,45 @@ class LivenessState(Store, State):
 
     def _assume_binary_boolean(self, condition: BinaryBooleanOperation, bwd: bool = False) -> 'LivenessState':
         return self._assume_any(condition)
-
-    @copy_docstring(State._assume_binary_comparison)
-    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'LivenessState':
+    
+    @copy_docstring(State._assume_eq_comparison)
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'LivenessState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_noteq_comparison)
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'LivenessState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_lt_comparison)
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'LivenessState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_lte_comparison)
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'LivenessState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_gt_comparison)
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'LivenessState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_gte_comparison)
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'LivenessState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_is_comparison)
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'LivenessState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_isnot_comparison)
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'LivenessState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_in_comparison)
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'LivenessState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_notin_comparison)
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'LivenessState':
         return self._assume_any(condition)
 
     @copy_docstring(State.enter_if)
@@ -237,30 +272,26 @@ class StrongLivenessState(LivenessState):
                 self.store[identifier].top()
         return self
 
-    def _substitute_summary(self, left: Subscription, right: Expression) -> 'StrongLivenessState':
-        """Substitute an expression to a summary variable.
-
-        :param left: summary variable to be substituted
-        :param right: expression to substitute
-        :return: current state modified by the substitution
-        """
+    @copy_docstring(State._substitute_subscription)
+    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'StrongLivenessState':
         target = left.target
         if self.store[target].is_top():  # the target variable (list, dict,..) is strongly-live
             # summarization abstraction (weak update)
             for identifier in right.ids():
                 self.store[identifier].top()
-            if isinstance(left, Subscription):
-                ids = left.key.ids()
-            else:  # Slicing
-                ids = left.lower.ids() | left.upper.ids()
+            ids = left.key.ids()
             for identifier in ids:  # make ids in subscript strongly live
                 self.store[identifier].top()
         return self
 
-    @copy_docstring(State._substitute_subscription)
-    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'StrongLivenessState':
-        return self._substitute_summary(left, right)
-
     @copy_docstring(State._substitute_slicing)
     def _substitute_slicing(self, left: Slicing, right: Expression) -> 'StrongLivenessState':
-        return self._substitute_summary(left, right)
+        target = left.target
+        if self.store[target].is_top():  # the target variable (list, dict,..) is strongly-live
+            # summarization abstraction (weak update)
+            for identifier in right.ids():
+                self.store[identifier].top()
+            ids = left.lower.ids() | left.upper.ids()
+            for identifier in ids:  # make ids in subscript strongly live
+                self.store[identifier].top()
+        return self
