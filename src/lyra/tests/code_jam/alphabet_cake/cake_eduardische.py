@@ -3,7 +3,7 @@ for iT in list(range(0, T)):
     lim: List[str] = input().split()
     N: int = int(lim[0])
     M: int = int(lim[1])
-    a: List[List[object]] = []
+    a: List[List[str]] = []
     for i in list(range(0, N)):
         a.append([input()])
     cnt: int = 0
@@ -15,7 +15,7 @@ for iT in list(range(0, T)):
         for i in list(range(0, N)):
             for j in list(range(0, M)):
                 if (a[i][j] != '?'):
-                    orig: object = a[i][j]
+                    orig: str = a[i][j]
                     if ((j + 1) < M):
                         if (a[i][(j + 1)] == '?'):
                             l: int = i
@@ -30,7 +30,7 @@ for iT in list(range(0, T)):
                                     flag: bool = False
                             if flag:
                                 for z in list(range((l + 1), r)):
-                                    a[z][(j + 1)]: object = orig
+                                    a[z][(j + 1)]: str = orig
                                     cnt: int = (cnt - 1)
                     if ((j - 1) >= 0):
                         if (a[i][(j - 1)] == '?'):
@@ -46,7 +46,7 @@ for iT in list(range(0, T)):
                                     flag: bool = False
                             if flag:
                                 for z in list(range((l + 1), r)):
-                                    a[z][(j - 1)]: object = orig
+                                    a[z][(j - 1)]: str = orig
                                     cnt: int = (cnt - 1)
                     if ((i + 1) < N):
                         if (a[(i + 1)][j] == '?'):
@@ -62,7 +62,7 @@ for iT in list(range(0, T)):
                                     flag: bool = False
                             if flag:
                                 for z in list(range((l + 1), r)):
-                                    a[(i + 1)][z]: object = orig
+                                    a[(i + 1)][z]: str = orig
                                     cnt: int = (cnt - 1)
                     if ((i - 1) >= 0):
                         if (a[(i - 1)][j] == '?'):
@@ -78,10 +78,11 @@ for iT in list(range(0, T)):
                                     flag: bool = False
                             if flag:
                                 for z in list(range((l + 1), r)):
-                                    a[(i - 1)][z]: object = orig
+                                    a[(i - 1)][z]: str = orig
                                     cnt: int = (cnt - 1)
     print((('Case #' + str((iT + 1))) + ':'))
     for i in list(range(0, N)):
+        row_str: str = ''
         for j in list(range(0, M)):
-            print(a[i][j], end='')
-        print()
+            row_str += a[i][j]
+        print(row_str)

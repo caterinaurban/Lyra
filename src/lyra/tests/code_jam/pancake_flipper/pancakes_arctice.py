@@ -1,5 +1,11 @@
 def flipped(pancakes: List[str]) -> List[str]:
-    return [('+' if (pancake == '-') else '-') for pancake in pancakes]
+    flipped_pancakes: List[str] = list()
+    for pancake in pancakes:
+        if pancake == '-':
+            flipped_pancakes.append('+')
+        else:
+            flipped_pancakes.append('-')
+    return flipped_pancakes
 
 def solve(table: str, size: int) -> Tuple[(str, int)]:
     table_lst: List[str] = list(table)
@@ -16,9 +22,15 @@ def solve(table: str, size: int) -> Tuple[(str, int)]:
             table_lst: List[str] = ((table_lst[:(i - size)] + flipped(table_lst[(i - size):i])) + table_lst[i:])
             moves += 1
     print(table_lst)
-    return (''.join(table_lst), moves)
+    table_lst_str = ''
+    for index in range(len(table_lst)):
+        table_lst_str += table_lst[index]
+    return (table_lst_str, moves)
+
 tests: List[Tuple[(str, int)]] = []
-for line in open('A-small-attempt1.in', 'r').readlines()[1:]:
+N: int = int(input())
+for i in range(N):
+    line: str = input()
     tmp: List[str] = line.split()
     table: str = tmp[0]
     size: str = tmp[1]
@@ -27,12 +39,13 @@ results: List[str] = []
 i: int = 0
 for (table, size) in tests:
     print((table + str(size)))
-    (final_table, moves) = solve(table, size)
+    a_result: Tuple[(str, int)] = solve(table, size)
+    final_table: str = a_result[0]
+    moves: str = str(a_result[1])
     if ('-' in final_table):
-        moves: object = 'IMPOSSIBLE'
+        moves = 'IMPOSSIBLE'
     i += 1
-    print(f'Case #{i}: {moves}')
-    results += [f'Case #{i}: {moves}']
-with open('out.txt', 'w') as results_file:
-    for result in results:
-        results_file.write((result + '\n'))
+    print('Case #' + str(i) + ':' + moves)
+    results += ['Case #' + str(i) + ':' + moves]
+for result in results:
+    print(result)

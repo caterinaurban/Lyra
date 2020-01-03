@@ -1,15 +1,16 @@
 def solve() -> None:
-    line: List[str] = sys.stdin.readline().rstrip().split()
+    line: List[str] = input().rstrip().split()
     R: int = int(line[0])
     C: int = int(line[1])
     cake_map: Dict[(str, Tuple[(int, int, int, int)])] = {
-        
+
     }
     cake: List[List[str]] = []
     for row_num in range(R):
-        row: List[str] = list(sys.stdin.readline().rstrip())
+        row: List[str] = list(input().rstrip())
         cake.append(row)
-        for (col_num, char) in enumerate(row):
+        for col_num in range(len(row)):
+            char: str = row[col_num]
             if (char == '?'):
                 continue
             if (char not in cake_map):
@@ -27,7 +28,11 @@ def solve() -> None:
     while True:
         did_fill: bool = False
         for char in cake_map:
-            (l, r, u, d) = cake_map[char]
+            cake_map_char: Tuple[(int, int, int, int)] = cake_map[char]
+            l: int = cake_map_char[0]
+            r: int = cake_map_char[1]
+            u: int = cake_map_char[2]
+            d: int = cake_map_char[3]
             if (u > 0):
                 for col in range(l, (r + 1)):
                     if (cake[(u - 1)][col] != '?'):
@@ -71,12 +76,13 @@ def solve() -> None:
         if (not did_fill):
             break
     for row in cake:
-        print(''.join(row))
+        row_str: str = ''
+        for index in range(len(row)):
+            row_str += row[index]
+        print(row_str)
 
-def main() -> None:
-    T: int = int(sys.stdin.readline().rstrip())
-    for t in range(1, (T + 1)):
-        print('Case #{}:'.format(t))
-        answer: None = solve()
-if (__name__ == '__main__'):
-    main()
+
+T: int = int(input().rstrip())
+for t in range(1, (T + 1)):
+    print('Case #' + str(t) + ':')
+    solve()

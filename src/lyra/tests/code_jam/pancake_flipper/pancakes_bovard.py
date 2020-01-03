@@ -1,5 +1,3 @@
-
-
 def flip(c: str) -> str:
     if (c == '+'):
         return '-'
@@ -29,18 +27,18 @@ def solve(cakes: str, n: int) -> int:
     if (not ('-' in cakes)):
         return flips
     raise IOError(cakes)
-with open('A-small-attempt0.in') as f:
-    num_cases: int = int(f.readline())
-    for i in range(num_cases):
-        line: str = f.readline()
-        cakes: str = line.split(' ')[0]
-        flipper: int = int(line.split(' ')[1].strip())
-        try:
-            number: int = solve(cakes, flipper)
-            if (number == (- 1)):
-                result: str = 'IMPOSSIBLE'
-            else:
-                result: int = number
-        except Exception:
-            result: object = 'IMPOSSIBLE'
-        print('Case #{}: {}'.format((i + 1), result))
+
+num_cases: int = int(input())
+for i in range(num_cases):
+    line: str = input()
+    cakes: str = line.split(' ')[0]
+    flipper: int = int(line.split(' ')[1].strip())
+    try:
+        number: int = solve(cakes, flipper)
+        if (number == (- 1)):
+            result: str = 'IMPOSSIBLE'
+        else:
+            result: int = number
+    except Exception:
+        result: str = 'IMPOSSIBLE'
+    print('Case #' + str(i + 1) + ': ' + str(result))

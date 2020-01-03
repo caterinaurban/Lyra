@@ -3,7 +3,9 @@ for t in range(1, (T + 1)):
     line: List[str] = input().split()
     S: str = line[0]
     K: int = int(line[1])
-    a: List[int] = [0 for _ in range(len(S))]
+    a: List[int] = list()
+    for index in range(len(S)):
+        a.append(0)
     for i in range(len(S)):
         if (S[i] == '-'):
             a[i] += 1

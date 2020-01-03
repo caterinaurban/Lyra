@@ -1,7 +1,11 @@
-sys.setrecursionlimit(10000)
-
 def gao(s: str, k: int) -> int:
-    a: List[bool] = [(c == '+') for c in s]
+    a: List[bool] = list()
+    c: str = ''
+    for c in s:
+        if c == '+':
+            a.append(True)
+        else:
+            a.append(False)
     n: int = len(s)
     ans: int = 0
     for i in range(((n - k) + 1)):
@@ -12,12 +16,14 @@ def gao(s: str, k: int) -> int:
     if all(a):
         return ans
     return (- 1)
+
+
 for no_t in range(1, (int(input()) + 1)):
     line: List[str] = input().split()
     s: str = line[0]
     k: str = line[1]
     result: int = gao(s, int(k))
     if (result == (- 1)):
-        print(('Case #%d: %s' % (no_t, 'IMPOSSIBLE')))
+        print('Case #' + str(no_t) + ': ' + 'IMPOSSIBLE')
     else:
-        print(('Case #%d: %s' % (no_t, result)))
+        print('Case #' + str(no_t) + ': ' + str(result))

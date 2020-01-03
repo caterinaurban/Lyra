@@ -1,5 +1,6 @@
 def flips(s: str, k: int) -> int:
     if (len(s) < k):
+        pancake: str = ''
         for pancake in s:
             if (pancake == '-'):
                 return (- 1)
@@ -19,11 +20,12 @@ def flips(s: str, k: int) -> int:
             return (subresult + 1)
     else:
         return flips(s[1:], k)
+
 t: int = int(input())
 for i in range(1, (t + 1)):
     line: List[str] = input().split(' ')
     result: int = flips(line[0], int(line[1]))
     if (result != (- 1)):
-        print('Case #{}: {}'.format(i, result))
+        print('Case #' + str(i) + ': ' + str(result))
     else:
-        print('Case #{}: {}'.format(i, 'IMPOSSIBLE'))
+        print('Case #' + str(i) + ': ' + 'IMPOSSIBLE')

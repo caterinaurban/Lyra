@@ -1,9 +1,7 @@
-inf: IO = open('input.txt', mode='r')
-outf: IO = open('output.txt', mode='w')
-cases: int = int(inf.readline())
+cases: int = int(input())
 for case in range(1, (cases + 1)):
     rstr: str = (('Case #' + str(case)) + ': ')
-    rc: List[str] = inf.readline().split()
+    rc: List[str] = input().split()
     r: int = int(rc[0])
     c: int = int(rc[1])
     lines: List[List[str]] = []
@@ -11,7 +9,7 @@ for case in range(1, (cases + 1)):
         
     }
     for i in range(r):
-        lines.append(list(inf.readline().rstrip()))
+        lines.append(list(input().rstrip()))
         for j in range(c):
             if (lines[i][j] != '?'):
                 kids[lines[i][j]]: Tuple[(int, int)] = (i, j)
@@ -45,6 +43,8 @@ for case in range(1, (cases + 1)):
                 lines[i][j]: str = kid
     rstr += '\n'
     for line in lines:
-        rstr += (''.join(line) + '\n')
+        a_line: str = ''
+        for index in range(len(line)):
+            a_line += line[index]
+        rstr += a_line + '\n'
     print(rstr)
-    outf.write((rstr + '\n'))

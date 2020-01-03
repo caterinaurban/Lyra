@@ -9,7 +9,7 @@ for case in range(1, (n + 1)):
     for i in range(0, len(s)):
         if (s[i] is '-'):
             if (i > (len(s) - k)):
-                print('Case #{}: IMPOSSIBLE'.format(case))
+                print('Case #' + str(case) + ': ' + 'IMPOSSIBLE')
                 break
             else:
                 n += 1
@@ -21,4 +21,4 @@ for case in range(1, (n + 1)):
         else:
             pass
     else:
-        print('Case #{}: {}'.format(case, n))
+        print('Case #' + str(case) + ': ' + str(n))

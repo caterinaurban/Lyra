@@ -1,4 +1,5 @@
 def ok(pattern: str) -> bool:
+    c: str = ''
     for c in pattern:
         if (c != '+'):
             return False
@@ -47,13 +48,13 @@ def solve(pattern: str, K: int) -> int:
             queue.append(flipped)
         queue: List[str] = sorted(queue, key=(lambda p: table[p]))
     return m
-T: int = int(sys.stdin.readline())
+T: int = int(input())
 for i in range(0, T):
-    segments: List[str] = sys.stdin.readline().split(' ')
+    segments: List[str] = input().split(' ')
     pattern: str = segments[0]
     K: int = int(segments[1])
     result: int = solve(pattern, K)
     if (result >= 0):
-        print(('Case #%d: %s' % ((i + 1), str(result))))
+        print('Case #' + str(i + 1) + ': ' + str(result))
     else:
-        print(('Case #%d: %s' % ((i + 1), 'IMPOSSIBLE')))
+        print('Case #' + str(i + 1) + ': ' + 'IMPOSSIBLE')

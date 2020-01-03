@@ -15,8 +15,8 @@
 # Usage Analyses #
 ##################
 
-#from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
-#SimpleUsageAnalysis().main("esop2018.py")
+# from lyra.engine.usage.usage_analysis import SimpleUsageAnalysis
+# SimpleUsageAnalysis().main("esop2018.py")
 
 # from lyra.engine.usage.fulara_usage_analysis import FularaIntervalUsageAnalysis
 # FularaIntervalUsageAnalysis().main("usage/running_example.py")
@@ -37,8 +37,8 @@
 # from lyra.engine.numerical.interval_analysis import ForwardBoxAnalysis
 # ForwardBoxAnalysis().main("example.py")
 
-from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis
-BackwardIntervalAnalysis().main("example.py")
+# from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysis
+# BackwardIntervalAnalysis().main("example.py")
 
 # from lyra.engine.numerical.octagon_analysis import ForwardOctagonAnalysis
 # ForwardOctagonAnalysis().main("example.py")
@@ -81,11 +81,11 @@ BackwardIntervalAnalysis().main("example.py")
 # from lyra.engine.assumption.assumption_analysis import AlphabetAnalysis
 # AlphabetAnalysis().main("example.py")
 
-# from lyra.engine.assumption.assumption_analysis import TypeQuantityAssumptionAnalysis
-# TypeQuantityAssumptionAnalysis().main("example.py")
+#from lyra.engine.assumption.assumption_analysis import TypeQuantityAssumptionAnalysis
+#TypeQuantityAssumptionAnalysis().main("example.py")
 
-# from lyra.engine.assumption.assumption_analysis import TypeRangeAssumptionAnalysis
-# TypeRangeAssumptionAnalysis().main("example.py")
+#from lyra.engine.assumption.assumption_analysis import TypeRangeAssumptionAnalysis
+#TypeRangeAssumptionAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import TypeAlphabetAssumptionAnalysis
 # TypeAlphabetAssumptionAnalysis().main("example.py")

@@ -26,6 +26,6 @@ for ti in range(1, (t + 1)):
                     if ((cake[i][k] != '?') and (abs((k - j)) < dis)):
                         dis: int = abs((k - j))
                         cake[i][j]: str = cake[i][k]
-    print('Case #{}:'.format(ti))
+    print('Case #' + str(ti) + ':')
     for l in cake:
         print(l)

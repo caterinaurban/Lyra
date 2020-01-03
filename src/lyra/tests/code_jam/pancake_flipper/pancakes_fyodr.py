@@ -1,5 +1,4 @@
-setrecursionlimit(1000000)
-T: int = int(stdin.readline().strip())
+T: int = int(input().strip())
 lines: List[str] = []
 memos: Dict[(Tuple[(int, int, int, int)], int)] = {
     
@@ -30,8 +29,9 @@ def check(i: int, s: int, c: int, k: int) -> int:
         else:
             memos[(i, s, c, k)]: int = (best + 1)
     return memos[(i, s, c, k)]
+
 for t in range(1, (T + 1)):
-    line: List[str] = stdin.readline().strip().split()
+    line: List[str] = input().strip().split()
     cakes: str = line[0]
     k: int = int(line[1])
     s: int = 0
@@ -49,9 +49,7 @@ for t in range(1, (T + 1)):
         elif ((maybe < best) or (best == (- 1))):
             best: int = maybe
     if (best == (- 1)):
-        lines.append(('Case #%d: %s' % (t, 'IMPOSSIBLE')))
+        lines.append('Case #' + str(t) + ': ' + 'IMPOSSIBLE')
     else:
-        lines.append(('Case #%d: %d' % (t, best)))
+        lines.append('Case #' + str(t) + ': ' + str(best))
     print(lines[(- 1)])
-with open('googjama.txt', 'w') as outfile:
-    outfile.write('\n'.join(lines))

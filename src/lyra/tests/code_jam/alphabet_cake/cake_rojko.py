@@ -1,5 +1,3 @@
-sys.setrecursionlimit(10000)
-
 def fung(abec: List[str], g: List[List[str]], r: int, c: int) -> bool:
     dl: Dict[(str, int)] = {
         
@@ -69,7 +67,7 @@ for t in range(1, (T + 1)):
     for i in range(r):
         a: str = input()
         g.append(list(a))
-    print(('Case #%d:' % t))
+    print('Case #' + str(t) + ':')
     ab: Set[str] = set()
     for i in range(r):
         for j in range(c):
@@ -79,4 +77,7 @@ for t in range(1, (T + 1)):
     abec: List[str] = list(ab)
     res: bool = rek(abec, g, r, c, 0, 0)
     for i in range(r):
-        print(''.join(g[i]))
+        g_str: str = ''
+        for index in range(len(g[i])):
+            g_str += g[i][index]
+        print(g_str)

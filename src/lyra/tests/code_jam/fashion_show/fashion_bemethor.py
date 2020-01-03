@@ -7,6 +7,7 @@ def score(l: List[List[str]], n: int) -> int:
             if ((l[i][j] == '+') or (l[i][j] == 'x')):
                 s += 1
     return s
+
 t: int = int(input())
 for t_index in range(t):
     line: List[str] = input().split()
@@ -78,4 +79,4 @@ for t_index in range(t):
                 changes.append((l[i][j], (i + 1), (j + 1)))
     print(((((('Case #' + str((t_index + 1))) + ': ') + str(s)) + ' ') + str(len(changes))))
     for r in changes:
-        print(((((cast(str, r[0]) + ' ') + str(r[1])) + ' ') + str(r[2])))
+        print(str(r[0]) + ' ' + str(r[1]) + ' ' + str(r[2]))

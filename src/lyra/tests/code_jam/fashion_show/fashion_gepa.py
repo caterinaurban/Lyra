@@ -1,19 +1,27 @@
 def delta(N: int, x: List[List[str]], y: List[List[str]]) -> str:
     total: int = 0
-    res: List[str] = [None]
+    res: List[str] = list()
     for r in range(N):
         for c in range(N):
             if (x[r][c] != y[r][c]):
-                res.append(('%s %d %d' % (y[r][c], (r + 1), (c + 1))))
+                res.append(y[r][c] + ' ' + str(r + 1) + ' ' + str(c + 1))
             if (y[r][c] in ['+', 'x']):
                 total += 1
             elif (y[r][c] == 'o'):
                 total += 2
-    res[0]: str = ('%d %d' % (total, (len(res) - 1)))
-    return '\n'.join(res)
+    res[0]: str = str(total) + ' ' + str(len(res) - 1)
+    res_str: str = ''
+    for index in range(len(res)):
+        res_str += res[index] + '\n'
+    return res_str
 
 def compute(N: int, x: List[List[str]]) -> str:
-    y: List[List[str]] = [(['.'] * N) for i in range(N)]
+    y: List[List[str]] = list()
+    for index in range(N):
+        y_row: List[str] = list()
+        for j in range(N):
+            y_row.append('.')
+        y.append(y_row)
     if (N == 1):
         y[0][0]: str = 'o'
         return delta(N, x, y)
@@ -43,27 +51,30 @@ def compute(N: int, x: List[List[str]]) -> str:
     return delta(N, x, y)
 
 def parse() -> Tuple[(int, List[List[str]])]:
-    line: List[str] = sys.stdin.readline().strip().split()
+    line: List[str] = input().strip().split()
     N: int = int(line[0])
     M: int = int(line[1])
-    x: List[List[str]] = [(['.'] * N) for i in range(N)]
+    x: List[List[str]] = list()
+    for index in range(N):
+        x_row: List[str] = list()
+        for j in range(N):
+            x_row.append('.')
+        x.append(x_row)
     for i in range(M):
-        arc: List[str] = sys.stdin.readline().strip().split()
+        arc: List[str] = input().strip().split()
         a: str = arc[0]
         r: int = (int(arc[1]) - 1)
         c: int = (int(arc[2]) - 1)
         x[r][c]: str = a
     return (N, x)
-if (__name__ == '__main__'):
-    sys.setrecursionlimit(100000)
-    T: int = int(sys.stdin.readline().strip())
-    count: int = 1
-    part: int = 0
-    if (len(sys.argv) == 3):
-        part: int = int(sys.argv[1])
-        count: int = int(sys.argv[2])
-    for i in range(T):
-        (N, data) = parse()
-        if (((i * count) >= (part * T)) and ((i * count) < ((part + 1) * T))):
-            result: str = compute(N, data)
-            print(('Case #%d: %s' % ((i + 1), result)))
+
+T: int = int(input().strip())
+part: int = int(input())
+count: int = int(input())
+for i in range(T):
+    parse_result: Tuple[(int, List[List[str]])] = parse()
+    N: int = parse_result[0]
+    data: List[List[str]] = parse_result[1]
+    if (((i * count) >= (part * T)) and ((i * count) < ((part + 1) * T))):
+        result: str = compute(N, data)
+        print('Case #' + str(i + 1) + ':' + result)

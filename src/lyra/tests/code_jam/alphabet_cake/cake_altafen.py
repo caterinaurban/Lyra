@@ -1,5 +1,7 @@
-def valid(cake: List[List[str]]) -> bool:
-    cake: List[List[str]] = [c[:] for c in cake]
+def valid(cake_arg: List[List[str]]) -> bool:
+    cake: List[List[str]] = list()
+    for c in cake_arg:
+        cake.append(c[:])
     seen: str = ''
     for x in range(len(cake)):
         for y in range(len(cake[0])):
@@ -51,7 +53,7 @@ for case in range(T):
     cake: List[List[str]] = []
     for row in range(R):
         cake.append(list(input()))
-    print('Case #{}:'.format((case + 1)))
+    print('Case #' + str(case + 1) + ': ')
     result: List[List[str]] = solve(cake)
     for index in range(len(result)):
         print(result[index])

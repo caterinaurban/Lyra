@@ -1,11 +1,13 @@
-def printout(n: object, v: object) -> None:
-    print(((('Case #' + str(n)) + ': ') + str(v)))
+def printout(n: int, v: str) -> None:
+    print(((('Case #' + str(n)) + ': ') + v))
 
-def call(ii: object) -> None:
+def call(ii: int) -> None:
     line: List[str] = input().split()
     n: int = int(line[0])
     m: int = int(line[1])
-    row: List[str] = [' ' for i in range(n)]
+    row: List[str] = list()
+    for i in range(n):
+        row.append(' ')
     nonplus: int = (- 1)
     for i in range(m):
         tmp: List[str] = input().split()
@@ -20,7 +22,8 @@ def call(ii: object) -> None:
         nonplus: int = 0
         row[0]: str = 'o'
         res.append(('o', 0, 0))
-    for (i, v) in enumerate(row):
+    for i in range(len(row)):
+        v: str = row[i]
         if (v == ' '):
             res.append(('+', 0, i))
         elif (v == 'x'):
@@ -32,9 +35,12 @@ def call(ii: object) -> None:
         res.append(('x', i, i))
     for i in range(1, (n - 1)):
         res.append(('+', (n - 1), i))
-    printout(ii, ((str((((3 * n) - 2) if (n != 1) else 2)) + ' ') + str(len(res))))
+    number: int = 2
+    if n != 1:
+        number = (3 * n) - 2
+    printout(ii, str(number) + ' ' + str(len(res)))
     for ituple in res:
-        print(((str(ituple[0]) + str((cast(int, ituple[1]) + 1))) + str((cast(int, ituple[2]) + 1))))
+        print(((str(ituple[0]) + str((int(ituple[1]) + 1))) + str((int(ituple[2]) + 1))))
 t: int = int(input())
 for ii in range(t):
     call((ii + 1))
