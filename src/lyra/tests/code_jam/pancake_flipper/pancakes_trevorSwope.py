@@ -48,7 +48,7 @@ def flip(string: str) -> str:
 
 
 data: str = input()
-inputs: List[str] = data.splitlines()[1:]
+inputs: List[str] = data.split()[1:]
 answer: str = ''
 count: int = 1
 for line in inputs:

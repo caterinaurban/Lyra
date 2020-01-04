@@ -3,7 +3,9 @@ for i in range(tests):
     line: List[str] = input().strip().split()
     n: int = int(line[0])
     m: int = int(line[1])
-    initmodels: List[str] = ([' '] * n)
+    initmodels: List[str] = list()
+    for k in range(n):
+        initmodels.append(' ')
     score: int = 0
     for j in range(m):
         tmp: List[str] = input().strip().split()
