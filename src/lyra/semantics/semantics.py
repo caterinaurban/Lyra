@@ -238,6 +238,10 @@ class BuiltInCallSemantics(CallSemantics):
                 result.add(VariableIdentifier(typ, expression.name))
             elif isinstance(expression, Subscription):
                 result.add(Subscription(typ, expression.target, expression.key))
+            elif isinstance(expression, BinaryArithmeticOperation):
+                result.add(BinaryArithmeticOperation(typ, expression.left, expression.operator, expression.right))
+            elif isinstance(expression, LengthIdentifier):
+                result.add(LengthIdentifier(typ, expression.left, expression.operator, expression.right))
             else:
                 error = f"Argument of type {expression.typ} of {stmt.name} is not yet supported!"
                 raise NotImplementedError(error)
