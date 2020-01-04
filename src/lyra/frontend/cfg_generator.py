@@ -496,7 +496,7 @@ class CFGVisitor(ast.NodeVisitor):
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.func, ast.Name):
             name: str = node.func.id
-            if name == 'bool' or name == 'int':
+            if name == 'bool' or name == 'int' or name == 'str':
                 arguments = [self.visit(arg, types, typ, function_name=function_name) for arg in node.args]
                 return Call(pp, name, arguments, typ)
             if name == 'input':
@@ -529,6 +529,12 @@ class CFGVisitor(ast.NodeVisitor):
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, DictLyraType)
                 return Call(pp, name, arguments, SetLyraType(arguments[0].typ.key_typ))
+            if name == 'rstrip' or name == 'strip':
+                arguments = [self.visit(node.func.value, types, None, function_name=function_name)] # target of the call
+                args = [self.visit(arg, types, None, function_name=function_name) for arg in node.args]
+                arguments.extend(args)
+                assert isinstance(arguments[0].typ, StringLyraType)
+                return Call(pp, name, arguments, arguments[0].typ)
             if name == 'split':  # str.split([sep[, maxsplit]])
                 assert isinstance(typ, ListLyraType)  # we expect type to be a ListLyraType
                 arguments = [self.visit(node.func.value, types, typ.typ, function_name=function_name)]

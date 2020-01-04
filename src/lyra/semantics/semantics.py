@@ -218,9 +218,9 @@ class BuiltInCallSemantics(CallSemantics):
     """Semantics of built-in function/method calls."""
 
     def _cast_call_semantics(self, stmt: Call, state: State, typ: LyraType) -> State:
-        """Semantics of a call to 'int' or 'bool'.
+        """Semantics of a call to 'int', 'bool', 'float' or 'str'.
 
-        :param stmt: call to 'int' or 'bool' to be executed
+        :param stmt: call to 'int', 'bool', 'float' or 'str' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
@@ -270,6 +270,15 @@ class BuiltInCallSemantics(CallSemantics):
         :return: state modified by the call statement
         """
         return self._cast_call_semantics(stmt, state, FloatLyraType())
+
+    def str_call_semantics(self, stmt: Call, state: State) -> State:
+        """Semantics of a call to 'str'.
+
+        :param stmt: call to 'str' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        return self._cast_call_semantics(stmt, state, StringLyraType())
 
     def list_call_semantics(self, stmt: Call, state: State) -> State:
         """Semantics of a call to 'list'.
@@ -395,6 +404,29 @@ class BuiltInCallSemantics(CallSemantics):
             raise ValueError(error)
         state.result = result
         return state
+
+    def strip_call_semantics(self, stmt: Call, state: State) -> State:
+        if len(stmt.arguments) != 1:
+            error = f"Semantics for multiple arguments of {stmt.name} is not yet implemented!"
+            raise NotImplementedError(error)
+        argument = self.semantics(stmt.arguments[0], state).result
+        result = set()
+        for arg in argument:
+            assert isinstance(arg, Expression)
+            if not isinstance(arg.typ, StringLyraType):
+                error = f"Call to {stmt.name} of argument with unexpected type!"
+                raise ValueError(error)
+            typ = StringLyraType()
+            if isinstance(arg, Input):                # input().strip()
+                result.add(Input(typ))
+                continue
+            error = f"Call to {stmt.name} of unexpected argument!"
+            raise ValueError(error)
+        state.result = result
+        return state
+
+    def rstrip_call_semantics(self, stmt: Call, state: State) -> State:
+        return self.strip_call_semantics(stmt, state)
 
     # noinspection PyMethodMayBeStatic
     def input_call_semantics(self, stmt: Call, state: State) -> State:
