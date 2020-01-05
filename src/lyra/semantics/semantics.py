@@ -241,7 +241,7 @@ class BuiltInCallSemantics(CallSemantics):
             elif isinstance(expression, BinaryArithmeticOperation):
                 result.add(BinaryArithmeticOperation(typ, expression.left, expression.operator, expression.right))
             elif isinstance(expression, LengthIdentifier):
-                result.add(LengthIdentifier(typ, expression.left, expression.operator, expression.right))
+                result.add(LengthIdentifier(expression))
             else:
                 error = f"Argument of type {expression.typ} of {stmt.name} is not yet supported!"
                 raise NotImplementedError(error)
