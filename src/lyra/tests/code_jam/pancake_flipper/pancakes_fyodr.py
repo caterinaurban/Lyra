@@ -1,10 +1,4 @@
-T: int = int(input().strip())
-lines: List[str] = []
-memos: Dict[(Tuple[(int, int, int, int)], int)] = {
-    
-}
-
-def check(i: int, s: int, c: int, k: int) -> int:
+def check(memos: Dict[(Tuple[(int, int, int, int)], int)], i: int, s: int, c: int, k: int) -> int:
     if (s == 0):
         return 0
     elif ((i, s, c, k) not in memos):
@@ -30,17 +24,24 @@ def check(i: int, s: int, c: int, k: int) -> int:
             memos[(i, s, c, k)]: int = (best + 1)
     return memos[(i, s, c, k)]
 
+
+T: int = int(input().strip())
+lines: List[str] = []
+memos: Dict[(Tuple[(int, int, int, int)], int)] = {
+
+}
 for t in range(1, (T + 1)):
     line: List[str] = input().strip().split()
     cakes: str = line[0]
     k: int = int(line[1])
     s: int = 0
-    for (i, c) in enumerate(cakes):
+    for i in range(len(cakes)):
+        c: str = cakes[i]
         if (c == '-'):
             s += (1 << i)
     best: int = (- 1)
     for i in range((len(cakes) - (k - 1))):
-        maybe: int = check(i, s, len(cakes), k)
+        maybe: int = check(memos, i, s, len(cakes), k)
         if (maybe == 0):
             best: int = maybe
             break

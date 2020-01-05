@@ -102,7 +102,7 @@ def do_parse(input: List[str]) -> List[List[str]]:
     return result
 
 output: List[str] = []
-num_of_test_cases: int = int(input(), 10)
+num_of_test_cases: int = int(input())
 temp: List[str] = input()
 index: int = 0
 for test_case in range(num_of_test_cases):

@@ -8,9 +8,12 @@ num: int = int(input().strip())
 for case in range(num):
     input_line: str = input().strip()
     s: List[str] = list()
-    for i in input_line.split(' ')[0]:
+    split_line: List[str] = input_line.split(' ')
+    first_line: str = split_line[0]
+    i: str
+    for i in first_line:
         s.append(i)
-    num: int = int(input_line.split(' ')[1])
+    num: int = int(split_line[1])
     move: int = 0
     for i in range(len(s)):
         if (s[i] == '-'):
