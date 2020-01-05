@@ -536,10 +536,15 @@ class CFGVisitor(ast.NodeVisitor):
                 assert isinstance(arguments[0].typ, StringLyraType)
                 return Call(pp, name, arguments, arguments[0].typ)
             if name == 'split':  # str.split([sep[, maxsplit]])
-                assert isinstance(typ, ListLyraType)  # we expect type to be a ListLyraType
-                arguments = [self.visit(node.func.value, types, typ.typ, function_name=function_name)]
+                # assert isinstance(typ, ListLyraType) # we expect type to be a ListLyraType
+                if isinstance(typ, ListLyraType):
+                    elements_typ = typ.typ
+                else:
+                    elements_typ = None  # for chained calls, we don't know the type yet
                 # target of the call
-                args_typs = zip(node.args, [typ.typ, IntegerLyraType()])
+                arguments = [self.visit(node.func.value, types, elements_typ, function_name=function_name)] 
+                typ = arguments[0].typ
+                args_typs = zip(node.args, [typ, IntegerLyraType()])
                 args = [self.visit(arg, types, arg_typ, function_name=function_name) for arg, arg_typ in args_typs]
                 arguments.extend(args)
                 return Call(pp, name, arguments, typ)
@@ -604,7 +609,11 @@ class CFGVisitor(ast.NodeVisitor):
         if isinstance(node.slice, ast.Index):
             target = self.visit(node.value, types, None, function_name=function_name)
             key = self.visit(node.slice.value, types, None, function_name=function_name)
-            return SubscriptionAccess(pp, typ, target, key)
+            if isinstance(target.typ, ListLyraType):
+               element_type = target.typ.typ
+            else:  # String
+               element_type = target.typ
+            return SubscriptionAccess(pp, element_type, target, key)
         elif isinstance(node.slice, ast.Slice):
             value = self.visit(node.value, types, None, function_name=function_name)
             lower = self.visit(node.slice.lower, types, None, function_name=function_name)
