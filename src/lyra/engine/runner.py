@@ -18,7 +18,7 @@ from lyra.core.statements import Assignment, VariableAccess, Call, TupleDisplayA
 from lyra.core.types import SequenceLyraType, ContainerLyraType
 from lyra.engine.result import AnalysisResult
 from lyra.frontend.cfg_generator import ast_to_cfgs
-from lyra.frontend.cfg_generator import ast_to_function_args
+from lyra.frontend.cfg_generator import ast_to_fargs
 from lyra.visualization.graph_renderer import AnalysisResultRenderer
 
 
@@ -121,7 +121,7 @@ class Runner:
             self.tree = ast.parse(self.source)
             self.cfgs = ast_to_cfgs(self.tree)
             self.cfg = self.cfgs['']
-            self.function_args = ast_to_function_args(self.tree)
+            self.fargs = ast_to_fargs(self.tree)
         return self.run()
 
     def run(self) -> AnalysisResult:

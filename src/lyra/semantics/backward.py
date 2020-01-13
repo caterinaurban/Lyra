@@ -110,7 +110,7 @@ class AssignmentSemantics(BackwardSemantics):
 
         if isinstance(stmt.right, Call):
             function_name = stmt.right.name
-            if function_name in self._runner.names_to_cfgs.keys():
+            if function_name in self._runner.cfgs.keys():
                 # add a new variable for the result of a user defined function
                 result_variable = VariableIdentifier(stmt.right.typ, function_name + "#return_result")
                 state.add_variable(result_variable)

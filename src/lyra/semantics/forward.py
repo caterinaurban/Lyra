@@ -44,7 +44,7 @@ class UserDefinedCallSemantics(ForwardSemantics):
         :return: state modified by the call statement
         """
         function_name = stmt.name
-        function_cfg = self._runner.names_to_cfgs[function_name]
+        function_cfg = self._runner.cfgs[function_name]
         self._runner.cfg = function_cfg
 
         function_state = deepcopy(state)
@@ -61,7 +61,7 @@ class UserDefinedCallSemantics(ForwardSemantics):
 
         # map the actual parameters to the formal ones
         actual_args = stmt.arguments
-        formal_args = self._runner.function_args[function_name]
+        formal_args = self._runner.fargs[function_name]
 
         for (actual_arg, formal_arg) in zip(actual_args, formal_args):
             lhs = {formal_arg}
@@ -101,7 +101,7 @@ class AssignmentSemantics(ForwardSemantics):
         updated_state = state.assign(lhs, rhs)
         if isinstance(stmt.right, Call):
             function_name = stmt.right.name
-            if function_name in self._runner.names_to_cfgs.keys():
+            if function_name in self._runner.cfgs.keys():
                 # remove the result variable of the function call for user defined functions
                 variables = updated_state.variables
                 for variable in variables:
