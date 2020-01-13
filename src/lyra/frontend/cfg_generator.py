@@ -333,7 +333,7 @@ class CFGVisitor(ast.NodeVisitor):
     # Literals
 
     # noinspection PyUnusedLocal
-    def visit_Num(self, node, types=None, typ=None, function_name='main'):
+    def visit_Num(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a number (integer, float, or complex).
         The n attribute stores the value, already converted to the relevant type."""
         pp = ProgramPoint(node.lineno, node.col_offset)
@@ -346,13 +346,13 @@ class CFGVisitor(ast.NodeVisitor):
         raise NotImplementedError(f"Num of type {node.n.__class__.__name__} is unsupported!")
 
     # noinspection PyMethodMayBeStatic, PyUnusedLocal
-    def visit_Str(self, node, types=None, typ=None, function_name='main'):
+    def visit_Str(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a string. The s attribute stores the value."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         expr = Literal(StringLyraType(), node.s)
         return LiteralEvaluation(pp, expr)
 
-    def visit_List(self, node, types=None, typ=None, function_name='main'):
+    def visit_List(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a list.
         The elts attribute stores a list of nodes representing the elements.
         The ctx attribute is Store if the container is an assignment target, and Load otherwise."""
@@ -363,7 +363,7 @@ class CFGVisitor(ast.NodeVisitor):
             items = [self.visit(item, types, None, function_name=function_name) for item in node.elts]
         return ListDisplayAccess(pp, typ, items)
 
-    def visit_Tuple(self, node, types=None, typ=None, function_name='main'):
+    def visit_Tuple(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a tuple.
         The elts attribute stores a list of nodes representing the elements.
         The ctx attribute is Store if the container is an assignment target, and Load otherwise."""
@@ -375,7 +375,7 @@ class CFGVisitor(ast.NodeVisitor):
             items = [self.visit(item, types, None, function_name=function_name) for item in node.elts]
         return TupleDisplayAccess(pp, typ, items)
 
-    def visit_Set(self, node, types=None, typ=None, function_name='main'):
+    def visit_Set(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a set.
         The elts attribute stores a list of nodes representing the elements."""
         pp = ProgramPoint(node.lineno, node.col_offset)
@@ -385,7 +385,7 @@ class CFGVisitor(ast.NodeVisitor):
             items = [self.visit(item, types, None, function_name=function_name) for item in node.elts]
         return SetDisplayAccess(pp, typ, items)
 
-    def visit_Dict(self, node, types=None, typ=None, function_name='main'):
+    def visit_Dict(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a dictionary.
         The attributes keys and values store lists of nodes with matching order
         representing the keys and the values, respectively."""
@@ -399,7 +399,7 @@ class CFGVisitor(ast.NodeVisitor):
         return DictDisplayAccess(pp, typ, keys, values)
 
     # noinspection PyUnusedLocal
-    def visit_NameConstant(self, node, types=None, typ=None, function_name='main'):
+    def visit_NameConstant(self, node, types=None, typ=None, function_name=''):
         """Visitor function for True, False or None.
         The value attribute stores the constant."""
         if isinstance(node.value, bool):
@@ -410,13 +410,13 @@ class CFGVisitor(ast.NodeVisitor):
 
     # Variables
 
-    def visit_Name(self, node, types=None, typ=None, function_name='main'):
+    def visit_Name(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a variable name.
         The attribute id stores the name as a string.
         The attribute ctx is Store (to assign a new value to the variable),
         Load (to load the value of the variable), or Del (to delete the variable)."""
 
-        node.id = function_name + "#" + node.id if function_name is not 'main' else node.id
+        node.id = function_name + "#" + node.id if function_name is not '' else node.id
 
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.ctx, ast.Store):
@@ -438,12 +438,12 @@ class CFGVisitor(ast.NodeVisitor):
     # Expressions
 
     # noinspection PyUnusedLocal
-    def visit_Expr(self, node, types=None, typ=None, function_name='main'):
+    def visit_Expr(self, node, types=None, typ=None, function_name=''):
         """Visitor function for an expression statement (whose return value is unused).
         The attribute value stored another AST node."""
         return self.visit(node.value, types, function_name=function_name)
 
-    def visit_UnaryOp(self, node, types=None, typ=None, function_name='main'):
+    def visit_UnaryOp(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a unary operation.
         The attributes op and operand store the operator
         and any expression node, respectively."""
@@ -452,7 +452,7 @@ class CFGVisitor(ast.NodeVisitor):
         argument = self.visit(node.operand, types, typ, function_name=function_name)
         return Call(pp, name, [argument], typ)
 
-    def visit_BinOp(self, node, types=None, typ=None, function_name='main'):
+    def visit_BinOp(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a binary operation.
         The attributes op, left, and right store the operator
         and any expression nodes, respectively."""
@@ -462,7 +462,7 @@ class CFGVisitor(ast.NodeVisitor):
         right = self.visit(node.right, types, typ, function_name=function_name)
         return Call(pp, name, [left, right], typ)
 
-    def visit_BoolOp(self, node, types=None, typ=None, function_name='main'):
+    def visit_BoolOp(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a boolean operation.
         The attributes op and values store the operand
         and a list of any expression node representing the operand involved, respectively."""
@@ -471,7 +471,7 @@ class CFGVisitor(ast.NodeVisitor):
         arguments = [self.visit(val, types, typ, function_name=function_name) for val in node.values]
         return Call(pp, name, arguments, typ)
 
-    def visit_Compare(self, node, types=None, typ=None, function_name='main'):
+    def visit_Compare(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a comparison operation.
         The attributes left, ops, and comparators store the first value in the comparison,
         the list of operators, and the list of compared values after the first."""
@@ -489,7 +489,7 @@ class CFGVisitor(ast.NodeVisitor):
             second = right
         return result
 
-    def visit_Call(self, node, types=None, typ=None, function_name='main'):
+    def visit_Call(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a call.
         The attribute func stores the function being called (often a Name or Attribute object).
         The attribute args stores a list fo the arguments passed by position."""
@@ -558,7 +558,7 @@ class CFGVisitor(ast.NodeVisitor):
             arguments.extend([self.visit(arg, types, None, function_name=function_name) for arg in node.args])
             return Call(pp, name, arguments, typ)
 
-    def visit_IfExp(self, node, targets, op=None, types=None, typ=None, function_name='main'):
+    def visit_IfExp(self, node, targets, op=None, types=None, typ=None, function_name=''):
         """Visitor function for an if expression.
         The components of the expression are stored in the attributes test, body, and orelse."""
         pp = ProgramPoint(node.lineno, node.col_offset)
@@ -600,7 +600,7 @@ class CFGVisitor(ast.NodeVisitor):
 
     # Subscripting
 
-    def visit_Subscript(self, node, types=None, typ=None, function_name='main'):
+    def visit_Subscript(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a subscript.
         The attribute value stores the target of the subscript (often a Name).
         The attribute slice is one of Index, Slice, or ExtSlice.
@@ -624,7 +624,7 @@ class CFGVisitor(ast.NodeVisitor):
 
     # Statements
 
-    def visit_Assign(self, node, types=None, typ=None, function_name='main'):
+    def visit_Assign(self, node, types=None, typ=None, function_name=''):
         """Visitor function for an assignment.
         The attribute targets stores a list of targets of the assignment.
         The attribute value stores the assigned value."""
@@ -636,7 +636,7 @@ class CFGVisitor(ast.NodeVisitor):
         value = self.visit(node.value, types, target.typ, function_name=function_name)
         return Assignment(pp, target, value)
 
-    def visit_AnnAssign(self, node, types=None, typ=None, function_name='main'):
+    def visit_AnnAssign(self, node, types=None, typ=None, function_name=''):
         """Visitor function for an assignment with a type annotation.
         The attribute target stores the target of the assignment (a Name, Attribute, or Subscript).
         The attribute annotation stores the type annotation (a Str or Name).
@@ -648,7 +648,7 @@ class CFGVisitor(ast.NodeVisitor):
         value = self.visit(node.value, types, annotated, function_name=function_name)
         return Assignment(pp, target, value)
 
-    def visit_AugAssign(self, node, types=None, typ=None, function_name='main'):
+    def visit_AugAssign(self, node, types=None, typ=None, function_name=''):
         """Visitor function for an augmented assignment.
         The attribute target stores the target of the assignment (a Name, Attribute, or Subscript).
         The attributes op and value store the operation and the assigned value, respectively."""
@@ -661,7 +661,7 @@ class CFGVisitor(ast.NodeVisitor):
         return Assignment(pp, target, value)
 
     # noinspection PyMethodMayBeStatic, PyUnusedLocal
-    def visit_Raise(self, node, types=None, typ=None, function_name='main'):
+    def visit_Raise(self, node, types=None, typ=None, function_name=''):
         """Visitor function for an exception raise.
         The attribute exc stores the exception object to be raised
         (normally a Call or Name, or None for a standalone raise)."""
@@ -669,7 +669,7 @@ class CFGVisitor(ast.NodeVisitor):
 
     # Control Flow
 
-    def visit_If(self, node, types=None, typ=None, function_name='main'):
+    def visit_If(self, node, types=None, typ=None, function_name=''):
         """Visitor function for an if statement.
         The attribute test stores a single AST node.
         The attributes body and orelse each store a list of AST nodes to be executed."""
@@ -718,7 +718,7 @@ class CFGVisitor(ast.NodeVisitor):
         cfg = body.combine(orelse)
         return cfg
 
-    def visit_While(self, node, types=None, typ=None, function_name='main'):
+    def visit_While(self, node, types=None, typ=None, function_name=''):
         """Visitor function for an while statement.
         The attribute test stores a single AST node.
         The attributes body and orelse each store a list of AST nodes to be executed."""
@@ -755,7 +755,7 @@ class CFGVisitor(ast.NodeVisitor):
 
         return body
 
-    def visit_For(self, node, types=None, typ=None, function_name='main'):
+    def visit_For(self, node, types=None, typ=None, function_name=''):
         """Visitor function for a for statement.
         The attribute target stores the variable(s) the loop assigns to
         (as a single Name, Tuple, or List node).
@@ -824,7 +824,7 @@ class CFGVisitor(ast.NodeVisitor):
         return body
 
     # noinspection PyUnusedLocal
-    def visit_Break(self, _, types=None, typ=None, function_name='main'):
+    def visit_Break(self, _, types=None, typ=None, function_name=''):
         """Visitor function for a break statement."""
         dummy = _dummy_node(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
@@ -834,7 +834,7 @@ class CFGVisitor(ast.NodeVisitor):
         return cfg
 
     # noinspection PyUnusedLocal
-    def visit_Continue(self, _, types=None, typ=None, function_name='main'):
+    def visit_Continue(self, _, types=None, typ=None, function_name=''):
         """Visitor function for a continue statement."""
         dummy = _dummy_node(self._id_gen)
         cfg = LooseControlFlowGraph({dummy}, dummy, None)
@@ -857,12 +857,12 @@ class CFGVisitor(ast.NodeVisitor):
         self._cfgs[function_name] = function_cfg
         return function_cfg
 
-    def visit_Return(self, node, types=None, function_name='main'):
+    def visit_Return(self, node, types=None, function_name=''):
         """Visitor function for a return statement."""
         expressions = self.visit(node.value, types, function_name=function_name)
         return Return(ProgramPoint(node.lineno, node.col_offset), [expressions])
 
-    def _visit_body(self, body, types, loose_in_edges=False, loose_out_edges=False, function_name='main'):
+    def _visit_body(self, body, types, loose_in_edges=False, loose_out_edges=False, function_name=''):
         factory = CFGFactory(self._id_gen)
 
         for child in body:
@@ -951,7 +951,7 @@ class CFGVisitor(ast.NodeVisitor):
         end = _dummy_cfg(self._id_gen)
         main_cfg = start.append(body).append(end) if body else start.append(end)
         main_cfg = self._restructure_return_and_raise_edges(main_cfg)
-        self._cfgs['main'] = main_cfg
+        self._cfgs[''] = main_cfg
         return self._cfgs
 
     def _restructure_return_and_raise_edges(self, cfg):
@@ -970,7 +970,7 @@ class CFGVisitor(ast.NodeVisitor):
         return cfg
 
 
-def ast_to_cfg(root, function_name='main'):
+def ast_to_cfg(root, function_name=''):
     """Generate a CFG from an AST.
 
     :param root: root node of the AST
@@ -993,7 +993,7 @@ def ast_to_cfgs(root):
 
 def ast_to_function_args(root):
 
-    function_args = {'main': None}
+    function_args = {'': None}
     for child in root.body:
         if isinstance(child, ast.FunctionDef):
             function_name = child.name
@@ -1005,7 +1005,7 @@ def ast_to_function_args(root):
     return function_args
 
 
-def source_to_cfg(code: str, function_name='main'):
+def source_to_cfg(code: str, function_name=''):
     """Generate a CFG from a Python program.
 
     :param code: Python program

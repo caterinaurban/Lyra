@@ -119,15 +119,15 @@ class Runner:
         with open(self.path, 'r') as source:
             self.source = source.read()
             self.tree = ast.parse(self.source)
-            self.names_to_cfgs = ast_to_cfgs(self.tree)
-            self.cfg = self.names_to_cfgs['main']
+            self.cfgs = ast_to_cfgs(self.tree)
+            self.cfg = self.cfgs['']
             self.function_args = ast_to_function_args(self.tree)
         return self.run()
 
     def run(self) -> AnalysisResult:
         start = time.time()
         main_result = self.interpreter().analyze(self.state())
-        self.result['main'] = [main_result]
+        self.result[''] = [main_result]
         end = time.time()
         print('Time: {}s'.format(end - start))
         self.render(self.result)
@@ -135,7 +135,7 @@ class Runner:
 
     def render(self, result):
         renderer = AnalysisResultRenderer()
-        data = (self.names_to_cfgs, result)
+        data = (self.cfgs, result)
         name = os.path.splitext(os.path.basename(self.path))[0]
         label = f"CFG with Analysis Result for {name}"
         directory = os.path.dirname(self.path)
