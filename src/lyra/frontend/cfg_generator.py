@@ -366,8 +366,8 @@ class CFGVisitor(ast.NodeVisitor):
         The ctx attribute is Store if the container is an assignment target, and Load otherwise."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(typ, TupleLyraType):
-            items = [self.visit(item, types, i_typ, fname=fname)
-                     for item, i_typ in zip(node.elts, typ.typs)]
+            zipped = zip(node.elts, typ.typs)
+            items = [self.visit(item, types, i_typ, fname=fname) for item, i_typ in zipped]
         else:
             items = [self.visit(item, types, None, fname=fname) for item in node.elts]
         return TupleDisplayAccess(pp, typ, items)
@@ -412,23 +412,21 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute id stores the name as a string.
         The attribute ctx is Store (to assign a new value to the variable),
         Load (to load the value of the variable), or Del (to delete the variable)."""
-
-        node.id = fname + "#" + node.id if fname is not '' else node.id
-
+        name = fname + "#" + node.id if fname else node.id
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.ctx, ast.Store):
-            if node.id not in types:
+            if name not in types:
                 if typ:
-                    types[node.id] = typ
+                    types[name] = typ
                 else:
-                    raise ValueError(f"Missing type annotation for variable {node.id}!")
-            expr = VariableIdentifier(types[node.id], node.id)
-            return VariableAccess(pp, types[node.id], expr)
+                    raise ValueError(f"Missing type annotation for variable {name}!")
+            expr = VariableIdentifier(types[name], name)
+            return VariableAccess(pp, types[name], expr)
         if isinstance(node.ctx, ast.Load):
-            assert node.id in types
-            # assert types[node.id] == typ or typ is None
-            expr = VariableIdentifier(types[node.id], node.id)
-            return VariableAccess(pp, types[node.id], expr)
+            assert name in types
+            # assert types[name] == typ or typ is None
+            expr = VariableIdentifier(types[name], name)
+            return VariableAccess(pp, types[name], expr)
         assert isinstance(node.ctx, ast.Del)
         raise NotImplementedError(f"Name deletion is unsupported!")
 
@@ -497,61 +495,56 @@ class CFGVisitor(ast.NodeVisitor):
                 arguments = [self.visit(arg, types, typ, fname=fname) for arg in node.args]
                 return Call(pp, name, arguments, typ)
             if name == 'input':
-                arguments = [self.visit(arg, types, StringLyraType(), fname=fname) for arg in node.args]
-                return Call(pp, name, arguments, StringLyraType())
+                typ = StringLyraType
+                arguments = [self.visit(arg, types, typ(), fname=fname) for arg in node.args]
+                return Call(pp, name, arguments, typ())
             if name == 'range':
-                arguments = [self.visit(arg, types, IntegerLyraType(), fname=fname)
-                             for arg in node.args]
-                return Call(pp, name, arguments, ListLyraType(IntegerLyraType()))
+                typ = IntegerLyraType
+                arguments = [self.visit(arg, types, typ(), fname=fname) for arg in node.args]
+                return Call(pp, name, arguments, ListLyraType(typ()))
             arguments = [self.visit(arg, types, None, fname=fname) for arg in node.args]
             return Call(pp, name, arguments, typ)
         elif isinstance(node.func, ast.Attribute):
             name: str = node.func.attr
             if name == 'append':
-                arguments = [self.visit(node.func.value, types, None, fname=fname)] # target of the call
+                arguments = [self.visit(node.func.value, types, None, fname=fname)]     # target
                 args = [self.visit(arg, types, None, fname=fname) for arg in node.args]
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, ListLyraType)
                 return Call(pp, name, arguments, arguments[0].typ)
             if name == 'items':
-                arguments = [self.visit(node.func.value, types, None, fname=fname)] # target of the call
+                arguments = [self.visit(node.func.value, types, None, fname=fname)]     # target
                 args = [self.visit(arg, types, None, fname=fname) for arg in node.args]
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, DictLyraType)
                 tuple_typ = TupleLyraType([arguments[0].typ.key_typ, arguments[0].typ.val_typ])
                 return Call(pp, name, arguments, SetLyraType(tuple_typ))
             if name == 'keys':
-                arguments = [self.visit(node.func.value, types, None, fname=fname)] # target of the call
+                arguments = [self.visit(node.func.value, types, None, fname=fname)]     # target
                 args = [self.visit(arg, types, None, fname=fname) for arg in node.args]
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, DictLyraType)
                 return Call(pp, name, arguments, SetLyraType(arguments[0].typ.key_typ))
-            if name == 'rstrip' or name == 'strip':
-                arguments = [self.visit(node.func.value, types, None, fname=fname)] # target of the call
+            if name == 'lstrip' or name == 'strip' or name == 'rstrip':
+                arguments = [self.visit(node.func.value, types, None, fname=fname)]     # target
                 args = [self.visit(arg, types, None, fname=fname) for arg in node.args]
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, StringLyraType)
                 return Call(pp, name, arguments, arguments[0].typ)
             if name == 'split':  # str.split([sep[, maxsplit]])
-                # assert isinstance(typ, ListLyraType) # we expect type to be a ListLyraType
-                if isinstance(typ, ListLyraType):
-                    elements_typ = typ.typ
-                else:
-                    elements_typ = None  # for chained calls, we don't know the type yet
-                # target of the call
-                arguments = [self.visit(node.func.value, types, elements_typ, fname=fname)]
-                typ = arguments[0].typ
-                args_typs = zip(node.args, [typ, IntegerLyraType()])
+                assert isinstance(typ, ListLyraType)  # we expect type to be a ListLyraType
+                arguments = [self.visit(node.func.value, types, typ.typ, fname=fname)]  # target
+                args_typs = zip(node.args, [typ.typ, IntegerLyraType()])
                 args = [self.visit(arg, types, arg_typ, fname=fname) for arg, arg_typ in args_typs]
                 arguments.extend(args)
                 return Call(pp, name, arguments, typ)
             if name == 'values':
-                arguments = [self.visit(node.func.value, types, None, fname=fname)] # target of the call
+                arguments = [self.visit(node.func.value, types, None, fname=fname)]     # target
                 args = [self.visit(arg, types, None, fname=fname) for arg in node.args]
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, DictLyraType)
                 return Call(pp, name, arguments, SetLyraType(arguments[0].typ.val_typ))
-            arguments = [self.visit(node.func.value, types, None, fname=fname)]  # target of the call
+            arguments = [self.visit(node.func.value, types, None, fname=fname)]     # target
             arguments.extend([self.visit(arg, types, None, fname=fname) for arg in node.args])
             return Call(pp, name, arguments, typ)
 
@@ -563,16 +556,16 @@ class CFGVisitor(ast.NodeVisitor):
         body = self.visit(node.body, types, typ, fname=fname)
         assignments = list()
         for target in targets:
+            left = self.visit(target, types, typ, fname=fname)
             if op:
-                left = self.visit(target, types, typ)
                 name = type(op).__name__.lower()
                 value = Call(pp, name, [left, body], left.typ)
                 assignments.append(Assignment(pp, left, value))
             else:
-                assignments.append(Assignment(pp, self.visit(target, types, typ, fname=fname), body))
+                assignments.append(Assignment(pp, left, body))
         then.add_stmts(assignments)
         then.complete_basic_block()
-        then = then.cfg[fname]
+        then = then.cfg
         test = self.visit(node.test, types, BooleanLyraType(), fname=fname)
         then.add_edge(Conditional(None, test, then.in_node, Edge.Kind.IF_IN))
         then.add_edge(Unconditional(then.out_node, None, Edge.Kind.IF_OUT))
@@ -589,7 +582,7 @@ class CFGVisitor(ast.NodeVisitor):
                 assignments.append(Assignment(pp, self.visit(target, types, typ), body))
         orelse.add_stmts(assignments)
         orelse.complete_basic_block()
-        orelse = orelse.cfg[fname]
+        orelse = orelse.cfg
         not_test = Call(pp, 'not', [test], BooleanLyraType())
         orelse.add_edge(Conditional(None, not_test, orelse.in_node, Edge.Kind.IF_IN))
         orelse.add_edge(Unconditional(orelse.out_node, None, Edge.Kind.IF_OUT))
