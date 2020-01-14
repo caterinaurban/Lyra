@@ -573,13 +573,13 @@ class CFGVisitor(ast.NodeVisitor):
         body = self.visit(node.orelse, types, typ, fname=fname)
         assignments = list()
         for target in targets:
+            left = self.visit(target, types, typ, fname=fname)
             if op:
-                left = self.visit(target, types, typ, fname=fname)
                 name = type(op).__name__.lower()
                 value = Call(pp, name, [left, body], left.typ)
                 assignments.append(Assignment(pp, left, value))
             else:
-                assignments.append(Assignment(pp, self.visit(target, types, typ), body))
+                assignments.append(Assignment(pp, left, body))
         orelse.add_stmts(assignments)
         orelse.complete_basic_block()
         orelse = orelse.cfg
@@ -600,15 +600,18 @@ class CFGVisitor(ast.NodeVisitor):
             target = self.visit(node.value, types, None, fname=fname)
             key = self.visit(node.slice.value, types, None, fname=fname)
             if isinstance(target.typ, ListLyraType):
-               element_type = target.typ.typ
+                return SubscriptionAccess(pp, target.typ.typ, target, key)
             else:  # String
-               element_type = target.typ
-            return SubscriptionAccess(pp, element_type, target, key)
+                return SubscriptionAccess(pp, target.typ, target, key)
         elif isinstance(node.slice, ast.Slice):
             value = self.visit(node.value, types, None, fname=fname)
             lower = self.visit(node.slice.lower, types, None, fname=fname)
-            upper = self.visit(node.slice.upper, types, None, fname=fname) if node.slice.upper else None
-            step = self.visit(node.slice.step, types, None, fname=fname) if node.slice.step else None
+            upper = None
+            if node.slice.upper:
+                upper = self.visit(node.slice.upper, types, None, fname=fname)
+            step = None
+            if node.slice.step:
+                step = self.visit(node.slice.step, types, None, fname=fname)
             return SlicingAccess(pp, typ, value, lower, upper, step)
         raise NotImplementedError(f"Subscription {node.slice.__class__.__name__} is unsupported!")
 
@@ -620,10 +623,9 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute value stores the assigned value."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         assert typ is None  # we expect typ to be None
-        assignments = list()
         assert len(node.targets) == 1
-        target = self.visit(node.targets[0], types, None, fname=fname)
-        value = self.visit(node.value, types, target.typ, fname=fname)
+        target = self.visit(node.targets[0], types=types, typ=None, fname=fname)
+        value = self.visit(node.value, types=types, typ=target.typ, fname=fname)
         return Assignment(pp, target, value)
 
     def visit_AnnAssign(self, node, types=None, typ=None, fname=''):
@@ -634,8 +636,8 @@ class CFGVisitor(ast.NodeVisitor):
         pp = ProgramPoint(node.lineno, node.col_offset)
         assert typ is None  # we expect typ to be None
         annotated = resolve_type_annotation(node.annotation)
-        target = self.visit(node.target, types, annotated, fname=fname)
-        value = self.visit(node.value, types, annotated, fname=fname)
+        target = self.visit(node.target, types=types, typ=annotated, fname=fname)
+        value = self.visit(node.value, types=types, typ=annotated, fname=fname)
         return Assignment(pp, target, value)
 
     def visit_AugAssign(self, node, types=None, typ=None, fname=''):
@@ -644,9 +646,9 @@ class CFGVisitor(ast.NodeVisitor):
         The attributes op and value store the operation and the assigned value, respectively."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         assert typ is None  # we expect typ to be None
-        target = self.visit(node.target, types, None, fname=fname)
+        target = self.visit(node.target, types=types, typ=None, fname=fname)
         name = type(node.op).__name__.lower()
-        right = self.visit(node.value, types, None, fname=fname)
+        right = self.visit(node.value, types=types, typ=None, fname=fname)
         value = Call(pp, name, [target, right], target.typ)
         return Assignment(pp, target, value)
 
@@ -665,15 +667,15 @@ class CFGVisitor(ast.NodeVisitor):
         The attributes body and orelse each store a list of AST nodes to be executed."""
         pp = ProgramPoint(node.test.lineno, node.test.col_offset)
 
-        body = self._visit_body(node.body, types, typ, fname=fname)
-        test = self.visit(node.test, types, BooleanLyraType(), fname=fname)
+        body = self._visit_body(node.body, types, fname=fname)
+        test = self.visit(node.test, types=types, typ=BooleanLyraType(), fname=fname)
         body.add_edge(Conditional(None, test, body.in_node, Edge.Kind.IF_IN))
         if body.out_node:  # control flow can exit the body
             # add an unconditional IF_OUT edge
             body.add_edge(Unconditional(body.out_node, None, Edge.Kind.IF_OUT))
 
         if node.orelse:  # there is an else branch
-            orelse = self._visit_body(node.orelse, types, typ, fname=fname)
+            orelse = self._visit_body(node.orelse, types, fname=fname)
             not_test = Call(pp, 'not', [test], BooleanLyraType())
             orelse.add_edge(Conditional(None, not_test, orelse.in_node, Edge.Kind.IF_IN))
             if orelse.out_node:  # control flow can exit the else
@@ -714,8 +716,8 @@ class CFGVisitor(ast.NodeVisitor):
         The attributes body and orelse each store a list of AST nodes to be executed."""
         pp = ProgramPoint(node.test.lineno, node.test.col_offset)
 
-        body = self._visit_body(node.body, types, typ, fname=fname)
-        test = self.visit(node.test, types, BooleanLyraType(), fname=fname)
+        body = self._visit_body(node.body, types, fname=fname)
+        test = self.visit(node.test, types=types, typ=BooleanLyraType(), fname=fname)
         header = Loop(self._id_gen.next)
         body_in_node = body.in_node
         body_out_node = body.out_node
@@ -753,7 +755,7 @@ class CFGVisitor(ast.NodeVisitor):
         The attributes body and orelse each store a list of AST nodes to be executed."""
         pp = ProgramPoint(node.target.lineno, node.target.col_offset)
 
-        iterated = self.visit(node.iter, types, None, fname=fname)
+        iterated = self.visit(node.iter, types=types, typ=None, fname=fname)
         target_typ = None
         if isinstance(iterated, VariableAccess):
             if isinstance(iterated.typ, ListLyraType):  # iteration over list items
@@ -780,7 +782,7 @@ class CFGVisitor(ast.NodeVisitor):
         else:
             error = "The iteration attribute {} is not yet translatable to CFG!".format(iterated)
             raise NotImplementedError(error)
-        target = self.visit(node.target, types, target_typ, fname=fname)
+        target = self.visit(node.target, types=types, typ=target_typ, fname=fname)
 
         body = self._visit_body(node.body, types, fname=fname)
         test = Call(pp, 'in', [target, iterated], BooleanLyraType(), forloop=True)
@@ -797,7 +799,7 @@ class CFGVisitor(ast.NodeVisitor):
             body.add_edge(Unconditional(body_out_node, header, Edge.Kind.LOOP_OUT))
 
         if node.orelse:  # there is an else branch
-            orelse = self._visit_body(node.orelse, types, fname=fname)
+            orelse = self._visit_body(node.orelse, types=types, fname=fname)
             if orelse.out_node:  # control flow can exit the else
                 # add an unconditional DEFAULT edge
                 orelse.add_edge(Unconditional(orelse.out_node, None, Edge.Kind.DEFAULT))
@@ -833,23 +835,31 @@ class CFGVisitor(ast.NodeVisitor):
         cfg.special_edges.append((edge, LooseControlFlowGraph.SpecialEdgeType.CONTINUE))
         return cfg
 
-    def visit_FunctionDef(self, node, types, fname):
+    def visit_FunctionDef(self, node: ast.FunctionDef, types, fname):
+        """Visit function for a function definition.
+
+        class FunctionDef(name, args, body, decorator_list, returns)
+            name is a raw string of the function name.
+            args is a arguments node.
+            body is the list of nodes inside the function.
+            decorator_list is the list of decorators to be applied.
+            returns is the return annotation.
+        """
         for arg in node.args.args:
             annotated = resolve_type_annotation(arg.annotation)
             arg.arg = fname + "#" + arg.arg
             types[arg.arg] = annotated
         start = _dummy_cfg(self._id_gen)
-        body = self._visit_body(node.body, types, loose_in_edges=True, loose_out_edges=True,
-                                fname=fname)
+        body = self._visit_body(node.body, types, True, True, fname)
         end = _dummy_cfg(self._id_gen)
-        function_cfg = start.append(body).append(end) if body else start.append(end)
-        function_cfg = self._restructure_return_and_raise_edges(function_cfg)
-        self._cfgs[fname] = function_cfg
-        return function_cfg
+        fun_cfg = start.append(body).append(end) if body else start.append(end)
+        fun_cfg = self._restructure_return_and_raise_edges(fun_cfg)
+        self._cfgs[fname] = fun_cfg
+        return fun_cfg
 
     def visit_Return(self, node, types=None, fname=''):
         """Visitor function for a return statement."""
-        expressions = self.visit(node.value, types, fname=fname)
+        expressions = self.visit(node.value, types=types, fname=fname)
         return Return(ProgramPoint(node.lineno, node.col_offset), [expressions])
 
     def _visit_body(self, body, types, loose_in_edges=False, loose_out_edges=False, fname=''):
@@ -859,10 +869,11 @@ class CFGVisitor(ast.NodeVisitor):
             if isinstance(child, ast.Assign):
                 if isinstance(child.value, ast.IfExp):  # the value is a conditional expression
                     factory.complete_basic_block()
-                    if_cfg = self.visit(child.value, child.targets, None, types, fname=fname)
+                    targets = child.targets
+                    if_cfg = self.visit(child.value, targets, op=None, types=types, fname=fname)
                     factory.append_cfg(if_cfg)
                 else:  # normal assignment
-                    factory.add_stmts(self.visit(child, types, fname=fname))
+                    factory.add_stmts(self.visit(child, types=types, fname=fname))
             elif isinstance(child, ast.AnnAssign):
                 if child.value is None:  # only a type annotation
                     annotation = resolve_type_annotation(child.annotation)
@@ -873,52 +884,53 @@ class CFGVisitor(ast.NodeVisitor):
                 elif isinstance(child.value, ast.IfExp):  # the value is a conditional expression
                     factory.complete_basic_block()
                     annotation = resolve_type_annotation(child.annotation)
-                    if_cfg = self.visit(child.value, [child.target], None, types, annotation,
-                                        fname=fname)
+                    targets = [child.target]
+                    if_cfg = self.visit(child.value, targets, None, types, annotation, fname)
                     factory.append_cfg(if_cfg)
                 else:  # normal annotated assignment
                     factory.add_stmts(self.visit(child, types, fname=fname))
             elif isinstance(child, ast.AugAssign):
                 if isinstance(child.value, ast.IfExp):  # the value is a conditional expression
                     factory.complete_basic_block()
-                    if_cfg = self.visit(child.value, [child.target], child.op, types, fname=fname)
+                    targets = [child.target]
+                    if_cfg = self.visit(child.value, targets, child.op, types=types, fname=fname)
                     factory.append_cfg(if_cfg)
                 else:  # normal augmented assignment
-                    factory.add_stmts(self.visit(child, types, fname=fname))
+                    factory.add_stmts(self.visit(child, types=types, fname=fname))
             elif isinstance(child, ast.Expr):
                 # check other options for AnnAssign (empty value, or IfExp as value)
-                factory.add_stmts(self.visit(child, types, fname=fname))
+                factory.add_stmts(self.visit(child, types=types, fname=fname))
             elif isinstance(child, (ast.Raise, ast.Return)):
-                factory.add_stmts(self.visit(child, types, fname=fname))
+                factory.add_stmts(self.visit(child, types=types, fname=fname))
                 factory.complete_basic_block()
             elif isinstance(child, ast.If):
                 factory.complete_basic_block()
-                if_cfg = self.visit(child, types, fname=fname)
+                if_cfg = self.visit(child, types=types, fname=fname)
                 factory.append_cfg(if_cfg)
             elif isinstance(child, ast.While):
                 factory.complete_basic_block()
-                while_cfg = self.visit(child, types, fname=fname)
+                while_cfg = self.visit(child, types=types, fname=fname)
                 factory.append_cfg(while_cfg)
             elif isinstance(child, ast.For):
                 factory.complete_basic_block()
-                for_cfg = self.visit(child, types, fname=fname)
+                for_cfg = self.visit(child, types=types, fname=fname)
                 factory.append_cfg(for_cfg)
             elif isinstance(child, ast.Break):
                 factory.complete_basic_block()
-                break_cfg = self.visit(child, types, fname=fname)
+                break_cfg = self.visit(child, types=types, fname=fname)
                 factory.append_cfg(break_cfg)
             elif isinstance(child, ast.Continue):
                 factory.complete_basic_block()
-                cont_cfg = self.visit(child, types, fname=fname)
+                cont_cfg = self.visit(child, types=types, fname=fname)
                 factory.append_cfg(cont_cfg)
             elif isinstance(child, ast.Pass) and factory.incomplete_block():
                 pass
             elif isinstance(child, ast.Pass):
                 factory.append_cfg(_dummy_cfg(self._id_gen))
             elif isinstance(child, ast.FunctionDef):
-                function_factory = CFGFactory(self._id_gen)
-                function_cfg = self.visit_FunctionDef(child, types, child.name)
-                function_factory.append_cfg(function_cfg)
+                fun_factory = CFGFactory(self._id_gen)
+                fun_cfg = self.visit_FunctionDef(child, types, child.name)
+                fun_factory.append_cfg(fun_cfg)
             else:
                 error = "The statement {} is not yet translatable to CFG!".format(child)
                 raise NotImplementedError(error)
@@ -956,16 +968,6 @@ class CFGVisitor(ast.NodeVisitor):
         for node_to_be_removed in nodes_to_be_removed:
             cfg.remove_node(node_to_be_removed)
         return cfg
-
-
-# def ast_to_cfg(root, fname=''):
-#     """Generate a CFG from an AST.
-#
-#     :param root: root node of the AST
-#     :param fname: the function whose CFG will be generated
-#     :return: the CFG generated from the given AST for the function fname
-#     """
-#     return ast_to_cfgs(root)[fname]
 
 
 def ast_to_cfgs(root):
