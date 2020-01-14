@@ -622,7 +622,7 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute targets stores a list of targets of the assignment.
         The attribute value stores the assigned value."""
         pp = ProgramPoint(node.lineno, node.col_offset)
-        assert typ is None  # we expect typ to be None
+        assert typ is None     # we expect typ to be None
         assert len(node.targets) == 1
         target = self.visit(node.targets[0], types=types, typ=None, fname=fname)
         value = self.visit(node.value, types=types, typ=target.typ, fname=fname)

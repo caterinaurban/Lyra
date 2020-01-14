@@ -48,7 +48,6 @@ class BackwardInterpreter(Interpreter):
         worklist = Queue()
         worklist.put(self.cfg.out_node)
         iterations = {node: 0 for node in self.cfg.nodes}
-        done = set()
 
         while not worklist.empty():
             current: Node = worklist.get()  # retrieve the current node

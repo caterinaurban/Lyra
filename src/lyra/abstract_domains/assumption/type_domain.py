@@ -19,9 +19,9 @@ from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
     Input, ListDisplay, Range, AttributeReference, Subscription, Slicing, \
     UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, TupleDisplay, \
-    SetDisplay, DictDisplay, BinarySequenceOperation, Keys, Values
+    SetDisplay, DictDisplay, BinarySequenceOperation, BinaryComparisonOperation, Keys, Values
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
-    StringLyraType, ListLyraType
+    StringLyraType, ListLyraType, SequenceLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -402,8 +402,56 @@ class TypeState(Store, StateWithSummarization, InputMixin):
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'TypeState':
         raise RuntimeError("Unexpected assignment in a backward analysis!")
 
-    @copy_docstring(State._assume)
-    def _assume(self, condition: Expression, bwd: bool = False) -> 'TypeState':
+    @copy_docstring(StateWithSummarization._weak_update)
+    def _weak_update(self, variables: Set[VariableIdentifier], previous: 'TypeState'):
+        for var in variables:
+            self.store[var].join(previous.store[var])
+            if isinstance(var.typ, SequenceLyraType):
+                self.store[LengthIdentifier(var)].join(previous.store[LengthIdentifier(var)])
+        return self
+
+    @copy_docstring(State._assume_variable)
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'TypeState':
+        return self
+
+    @copy_docstring(State._assume_eq_comparison)
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'TypeState':
+        return self
+
+    @copy_docstring(State._assume_noteq_comparison)
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'TypeState':
+        return self
+
+    @copy_docstring(State._assume_lt_comparison)
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'TypeState':
+        return self
+
+    @copy_docstring(State._assume_lte_comparison)
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'TypeState':
+        return self
+
+    @copy_docstring(State._assume_gt_comparison)
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'TypeState':
+        return self
+
+    @copy_docstring(State._assume_gte_comparison)
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'TypeState':
+        return self
+
+    @copy_docstring(State._assume_is_comparison)
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'TypeState':
+        return self
+
+    @copy_docstring(State._assume_isnot_comparison)
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'TypeState':
+        return self
+
+    @copy_docstring(State._assume_in_comparison)
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'TypeState':
+        return self
+
+    @copy_docstring(State._assume_notin_comparison)
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'TypeState':
         return self
 
     @copy_docstring(State.enter_if)
@@ -479,8 +527,7 @@ class TypeState(Store, StateWithSummarization, InputMixin):
             # add the new variables to the current state
             for fresh in variables:
                 self.variables.append(fresh)
-                self.store[fresh] = self.lattices[type(fresh.typ)](
-                    **self.arguments[type(fresh.typ)])
+                self.store[fresh] = self.lattices[type(fresh.typ)](**self.arguments[type(fresh.typ)])
             # replace the given variable with the given expression
             self._substitute(variable, expression)
         return self

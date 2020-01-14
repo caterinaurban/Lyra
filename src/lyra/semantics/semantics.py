@@ -293,8 +293,7 @@ class BuiltInCallSemantics(CallSemantics):
         """
         def do(variable):
             if isinstance(variable.typ, StringLyraType):
-                typ = ListLyraType(variable.typ)
-                state.result = {VariableIdentifier(typ, variable.name)}
+                state.result = {VariableIdentifier(ListLyraType(variable.typ), variable.name)}
                 return state
             elif isinstance(variable.typ, ListLyraType):
                 state.result = {variable}
@@ -302,12 +301,10 @@ class BuiltInCallSemantics(CallSemantics):
             elif isinstance(variable.typ, TupleLyraType):
                 raise NotImplementedError(f"Conversion to list of {variable.typ} is not yet implemented!")
             elif isinstance(variable.typ, SetLyraType):
-                typ = ListLyraType(variable.typ.typ)
-                state.result = {VariableIdentifier(typ, variable.name)}
+                state.result = {VariableIdentifier(ListLyraType(variable.typ.typ), variable.name)}
                 return state
             elif isinstance(variable.typ, DictLyraType):
-                typ = ListLyraType(variable.typ.key_typ)
-                state.result = {VariableIdentifier(typ, variable.name)}
+                state.result = {VariableIdentifier(ListLyraType(variable.typ.key_typ), variable.name)}
                 return state
             raise TypeError(f"Unexpected type {variable.typ} for list conversion!")
         if not stmt.arguments:
@@ -642,8 +639,7 @@ class BuiltInCallSemantics(CallSemantics):
                 operation = product[0]
                 for i in range(1, len(arguments)):
                     right = product[i]
-                    BCO = BinaryComparisonOperation
-                    operation = BCO(stmt.typ, operation, operator, right, forloop=stmt.forloop)
+                    operation = BinaryComparisonOperation(stmt.typ, operation, operator, right, forloop=stmt.forloop)
                 result.add(operation)
         elif isinstance(operator, BinaryBooleanOperation.Operator):
             for product in itertools.product(*arguments):

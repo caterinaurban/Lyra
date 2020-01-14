@@ -16,7 +16,7 @@ from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
-from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing
+from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing, BinaryComparisonOperation
 from lyra.core.types import LyraType
 from lyra.core.utils import copy_docstring
 
@@ -141,18 +141,61 @@ class SimpleUsageState(Stack, State):
     def _assign_slicing(self, left: Slicing, right: Expression) -> 'SimpleUsageState':
         return self._assign_any(left, right)
 
-    @copy_docstring(State._assume)
-    def _assume(self, condition: Expression, bwd: bool = False) -> 'SimpleUsageState':
-        effect = False      # effect of the current nesting level on the outcome of the program
+    def _assume_any(self, condition: Expression) -> 'SimpleUsageState':
+        effect = False  # effect of the current nesting level on the outcome of the program
         for variable in self.lattice.variables:
             value = self.lattice.store[variable]
             if value.is_written() or value.is_top():
                 effect = True
                 break
-        if effect:      # the current nesting level has an effect on the outcome of the program
+        if effect:  # the current nesting level has an effect on the outcome of the program
             for identifier in condition.ids():
                 self.lattice.store[identifier].top()
         return self
+
+    @copy_docstring(State._assume_variable)
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
+
+    @copy_docstring(State._assume_eq_comparison)
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
+
+    @copy_docstring(State._assume_noteq_comparison)
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_lt_comparison)
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_lte_comparison)
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_gt_comparison)
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_gte_comparison)
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_is_comparison)
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_isnot_comparison)
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_in_comparison)
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
+    
+    @copy_docstring(State._assume_notin_comparison)
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'SimpleUsageState':
@@ -190,32 +233,28 @@ class SimpleUsageState(Stack, State):
                 self.lattice.store[identifier].top()
         return self
 
-    def _substitute_summary(self, left: Subscription, right: Expression) -> 'SimpleUsageState':
-        """Substitute an expression to a summary variable.
-
-        :param left: summary variable to be substituted
-        :param right: expression to substitute
-        :return: current state modified by the substitution
-        """
+    @copy_docstring(State._substitute_subscription)
+    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'SimpleUsageState':
         target = left.target
         if self.lattice.store[target].is_top() or self.lattice.store[target].is_scoped():
             # the assigned variable is used or scoped
             self.lattice.store[target].top()  # summarization abstraction (join of U/S with W)
             for identifier in right.ids():
                 self.lattice.store[identifier].top()
-
-            if isinstance(left, Subscription):
-                ids = left.key.ids()
-            else:  # Slicing
-                ids = left.lower.ids() | left.upper.ids()
+            ids = left.key.ids()
             for identifier in ids:  # make ids in subscript used
                 self.lattice.store[identifier].top()
         return self
 
-    @copy_docstring(State._substitute_subscription)
-    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'SimpleUsageState':
-        return self._substitute_summary(left, right)
-
     @copy_docstring(State._substitute_slicing)
     def _substitute_slicing(self, left: Slicing, right: Expression) -> 'SimpleUsageState':
-        return self._substitute_summary(left, right)
+        target = left.target
+        if self.lattice.store[target].is_top() or self.lattice.store[target].is_scoped():
+            # the assigned variable is used or scoped
+            self.lattice.store[target].top()  # summarization abstraction (join of U/S with W)
+            for identifier in right.ids():
+                self.lattice.store[identifier].top()
+            ids = left.lower.ids() | left.upper.ids()
+            for identifier in ids:  # make ids in subscript used
+                self.lattice.store[identifier].top()
+        return self

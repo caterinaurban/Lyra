@@ -8,17 +8,14 @@ Polyhedra Analysis - Unit Tests
 
 import glob
 import os
-import unittest
-
 import sys
+import unittest
 
 from lyra.abstract_domains.numerical.polyhedra_domain import PolyhedraStateWithSummarization
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.forward import ForwardInterpreter
 from lyra.semantics.backward import DefaultBackwardSemantics
 from lyra.semantics.forward import DefaultForwardSemantics
-
-from lyra.abstract_domains.numerical.interval_domain import IntervalState
 from lyra.unittests.runner import TestRunner
 
 

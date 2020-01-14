@@ -147,47 +147,54 @@ class CharacterState(BasisWithSummarization):
         lattices = defaultdict(lambda: CharacterLattice)
         super().__init__(variables, lattices, precursory=precursory)
 
-    @copy_docstring(BasisWithSummarization._assume)
-    def _assume(self, condition: Expression, bwd: bool = False) -> 'CharacterState':
-        if isinstance(condition, UnaryBooleanOperation):
-            if condition.operator == UnaryBooleanOperation.Operator.Neg:
-                expression = condition.expression
-                if isinstance(expression, BinaryComparisonOperation):
-                    typ = expression.typ
-                    left = expression.left
-                    operator = expression.operator.reverse_operator()
-                    right = expression.right
-                    new_expression = BinaryComparisonOperation(typ, left, operator, right)
-                    return self._assume(new_expression, bwd=bwd)
-                elif isinstance(expression, UnaryBooleanOperation):
-                    if expression.operator == UnaryBooleanOperation.Operator.Neg:
-                        return self._assume(expression.expression, bwd=bwd)
-                elif isinstance(expression, BinaryBooleanOperation):
-                    left = expression.left
-                    op = UnaryBooleanOperation.Operator.Neg
-                    left = UnaryBooleanOperation(left.typ, op, left)
-                    operator = expression.operator.reverse_operator()
-                    right = expression.right
-                    op = UnaryBooleanOperation.Operator.Neg
-                    right = UnaryBooleanOperation(right.typ, op, right)
-                    typ = expression.typ
-                    new_expression = BinaryBooleanOperation(typ, left, operator, right)
-                    return self._assume(new_expression, bwd=bwd)
-        elif isinstance(condition, BinaryBooleanOperation):
-            if condition.operator == BinaryBooleanOperation.Operator.And:
-                right = deepcopy(self)._assume(condition.right, bwd=bwd)
-                return self._assume(condition.left, bwd=bwd).meet(right)
-            if condition.operator == BinaryBooleanOperation.Operator.Or:
-                right = deepcopy(self)._assume(condition.right, bwd=bwd)
-                return self._assume(condition.left, bwd=bwd).join(right)
-        elif isinstance(condition, BinaryComparisonOperation):
-            if condition.operator == BinaryComparisonOperation.Operator.Eq:
-                left = condition.left
-                right = condition.right
-                left_eval = self._evaluation.visit(condition.left, self, dict())
-                right_eval = self._evaluation.visit(condition.right, self, dict())
-                self._refinement.visit(left, left_eval, right_eval[right], self)
-                self._refinement.visit(right, right_eval, left_eval[left], self)
+    @copy_docstring(BasisWithSummarization._assume_variable)
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_eq_comparison)
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        left = condition.left
+        right = condition.right
+        left_eval = self._evaluation.visit(condition.left, self, dict())
+        right_eval = self._evaluation.visit(condition.right, self, dict())
+        self._refinement.visit(left, left_eval, right_eval[right], self)
+        self._refinement.visit(right, right_eval, left_eval[left], self)
+        return self
+
+    @copy_docstring(State._assume_noteq_comparison)
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_lt_comparison)
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_lte_comparison)
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_gt_comparison)
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_gte_comparison)
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_is_comparison)
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_isnot_comparison)
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_in_comparison)
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
+        return self
+
+    @copy_docstring(State._assume_notin_comparison)
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
         return self
 
     # expression evaluation

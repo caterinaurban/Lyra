@@ -59,6 +59,42 @@ class InRelationState(State, BottomMixin):
     .. automethod:: InRelationState._widening
     """
 
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'State':
+        pass
+
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
         pass
 
@@ -426,6 +462,42 @@ class FularaState(State):
     .. automethod:: FularaState._temp_cleanup
     .. automethod:: FularaState._update_dict_from_refined_scalar
     """
+
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
+
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'State':
+        pass
+
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+        pass
 
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
         pass

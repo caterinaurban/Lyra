@@ -15,5 +15,5 @@ if a:
 if not a:
     # STATE: a -> ⊥, b -> =0, c -> =0
     c = True
-    # STATE: a -> ⊥, b -> =0, c -> >0
+    # STATE: a -> ⊥, b -> =0, c -> =0
 # FINAL: a -> >0, b -> =0, c -> =0

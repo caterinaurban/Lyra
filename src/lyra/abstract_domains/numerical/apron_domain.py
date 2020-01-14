@@ -10,12 +10,13 @@ is represented by a conjunction of (more of less complex) linear constraints.
 """
 from abc import ABCMeta
 from copy import deepcopy
-from typing import Set, Type, Union
+from typing import Set, Type
 
 from apronpy.abstract1 import PyAbstract1
 from apronpy.coeff import PyMPQIntervalCoeff
 from apronpy.environment import PyEnvironment
 from apronpy.interval import PyMPQInterval
+from apronpy.lincons1 import PyLincons1Array
 from apronpy.linexpr1 import PyLinexpr1
 from apronpy.manager import PyManager
 from apronpy.tcons1 import PyTcons1Array, PyTcons1
@@ -23,9 +24,9 @@ from apronpy.texpr1 import PyTexpr1
 from apronpy.var import PyVar
 
 from lyra.abstract_domains.state import State, StateWithSummarization
-from lyra.core.expressions import VariableIdentifier, Expression, BinaryBooleanOperation, \
-    BinaryComparisonOperation, NegationFreeExpression, Lyra2APRON, Slicing, Subscription, LengthIdentifier, ListDisplay, \
-    TupleDisplay
+from lyra.core.expressions import VariableIdentifier, Expression, \
+    BinaryComparisonOperation, NegationFreeExpression, Lyra2APRON, Slicing, Subscription, LengthIdentifier, \
+    ListDisplay, TupleDisplay, SetDisplay, DictDisplay
 from lyra.core.utils import copy_docstring
 
 
@@ -37,24 +38,48 @@ class Lyra2APRONWithSummarization(Lyra2APRON):
         return PyTexpr1.cst(environment, PyMPQIntervalCoeff(PyMPQInterval.top()))
 
     @copy_docstring(Lyra2APRON.visit_ListDisplay)
-    def visit_ListDisplay(self, expr: 'ListDisplay', environment=None, usub=False):
+    def visit_ListDisplay(self, expr: 'ListDisplay', environment=None, usub=False) -> Set[PyTexpr1]:
         assert not usub
-        return PyTexpr1.cst(environment, PyMPQIntervalCoeff(PyMPQInterval.top()))
+        texpr1s = set()
+        for item in expr.items:
+            visited = self.visit(item, environment)
+            assert isinstance(visited, PyTexpr1)    # TODO: relax this assumtion
+            texpr1s.add(visited)
+        return texpr1s
 
     @copy_docstring(Lyra2APRON.visit_TupleDisplay)
-    def visit_TupleDisplay(self, expr: 'TupleDisplay', environment=None, usub=False):
+    def visit_TupleDisplay(self, expr: 'TupleDisplay', environment=None, usub=False) -> Set[PyTexpr1]:
         assert not usub
-        return PyTexpr1.cst(environment, PyMPQIntervalCoeff(PyMPQInterval.top()))
+        texpr1s = set()
+        for item in expr.items:
+            visited = self.visit(item, environment)
+            assert isinstance(visited, PyTexpr1)    # TODO: relax this assumtion
+            texpr1s.add(visited)
+        return texpr1s
 
     @copy_docstring(Lyra2APRON.visit_SetDisplay)
-    def visit_SetDisplay(self, expr: 'SetDisplay', environment=None, usub=False):
+    def visit_SetDisplay(self, expr: 'SetDisplay', environment=None, usub=False) -> Set[PyTexpr1]:
         assert not usub
-        return PyTexpr1.cst(environment, PyMPQIntervalCoeff(PyMPQInterval.top()))
+        texpr1s = set()
+        for item in expr.items:
+            visited = self.visit(item, environment)
+            assert isinstance(visited, PyTexpr1)    # TODO: relax this assumtion
+            texpr1s.add(visited)
+        return texpr1s
 
     @copy_docstring(Lyra2APRON.visit_DictDisplay)
     def visit_DictDisplay(self, expr: 'DictDisplay', environment=None, usub=False):
         assert not usub
-        return PyTexpr1.cst(environment, PyMPQIntervalCoeff(PyMPQInterval.top()))
+        texpr1s = set()
+        for item in expr.keys:
+            visited = self.visit(item, environment)
+            assert isinstance(visited, PyTexpr1)    # TODO: relax this assumtion
+            texpr1s.add(visited)
+        for item in expr.values:
+            visited = self.visit(item, environment)
+            assert isinstance(visited, PyTexpr1)    # TODO: relax this assumtion
+            texpr1s.add(visited)
+        return texpr1s
 
     @copy_docstring(Lyra2APRON.visit_Subscription)
     def visit_Subscription(self, expr: 'Subscription', environment=None, usub=False):
@@ -87,10 +112,10 @@ class APRONStateWithSummarization(StateWithSummarization, metaclass=ABCMeta):
                  variables: Set[VariableIdentifier], precursory: State = None):
         super().__init__(precursory=precursory)
         self.domain = domain
-        vars = list()
+        _variables = list()
         for variable in variables:
-            vars.append(PyVar(variable.name))
-        self.environment = PyEnvironment([], vars)
+            _variables.append(PyVar(variable.name))
+        self.environment = PyEnvironment([], _variables)
         self.state = self.domain(self.manager, self.environment)
 
     @copy_docstring(State.bottom)
@@ -147,25 +172,133 @@ class APRONStateWithSummarization(StateWithSummarization, metaclass=ABCMeta):
     @copy_docstring(State._assign_variable)
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'APRONStateWithSummarization':
         expr = self._lyra2apron.visit(right, self.environment)
-        self.state = self.state.assign(PyVar(left.name), expr)
+        if isinstance(expr, PyTexpr1):
+            self.state = self.state.assign(PyVar(left.name), expr)
+        else:
+            assert isinstance(expr, Set)
+            state = deepcopy(self.state).bottom(self.manager, self.environment)
+            for item in expr:
+                state = state.join(deepcopy(self.state).assign(PyVar(left.name), item))
+            self.state = state
         return self
 
-    @copy_docstring(State._assume)
-    def _assume(self, condition: Expression, bwd: bool = False) -> 'APRONStateWithSummarization':
-        normal = self._negation_free.visit(condition)
-        if isinstance(normal, BinaryBooleanOperation):
-            if normal.operator == BinaryBooleanOperation.Operator.And:
-                right = deepcopy(self)._assume(normal.right, bwd=bwd)
-                return self._assume(normal.left, bwd=bwd).meet(right)
-            if normal.operator == BinaryBooleanOperation.Operator.Or:
-                right = deepcopy(self)._assume(normal.right, bwd=bwd)
-                return self._assume(normal.left, bwd=bwd).join(right)
-        elif isinstance(normal, BinaryComparisonOperation):
-            cond = self._lyra2apron.visit(normal, self.environment)
-            abstract1 = self.domain(self.manager, self.environment, array=PyTcons1Array([cond]))
-            self.state = self.state.meet(abstract1)
-            return self
-        raise NotImplementedError(f"Assumption of {normal.__class__.__name__} is unsupported!")
+    @copy_docstring(State._assume_variable)
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'APRONStateWithSummarization':
+        raise NotImplementedError(f"Assumption of {condition.__class__.__name__} is unsupported!")
+
+    @copy_docstring(StateWithSummarization._weak_update)
+    def _weak_update(self, variables: Set[VariableIdentifier], previous: 'APRONStateWithSummarization'):
+        given_names = {var.name for var in variables}
+        # find constraints involving the given variables
+        current_array: PyLincons1Array = self.state.to_lincons
+        current_unstable = list()
+        for i in range(len(current_array)):
+            lincons1 = current_array.get(i)
+            for name in given_names:
+                if str(lincons1.get_coeff(PyVar(name))) != '0':
+                    current_unstable.append(i)
+                    break
+        previous_array: PyLincons1Array = previous.state.to_lincons
+        previous_unstable = list()
+        for i in range(len(previous_array)):
+            lincons1 = previous_array.get(i)
+            for name in given_names:
+                if str(lincons1.get_coeff(PyVar(name))) != '0':
+                    previous_unstable.append(i)
+                    break
+        # join the constraints involving the given variables
+        all_names = set()
+        for i in range(len(self.environment)):
+            all_names.add(self.environment.environment.contents.var_of_dim[i].decode('utf-8'))
+        other_names = all_names - given_names
+
+        current_lincons1s = list()
+        for i in current_unstable:
+            current_lincons1s.append(current_array.get(i))
+        current_given = deepcopy(self.state).forget([PyVar(name) for name in other_names])
+        current_given_array = current_given.to_lincons
+        for i in range(len(current_given_array)):
+            current_lincons1s.append(current_given_array.get(i))
+        current_array1 = PyLincons1Array(current_lincons1s, self.environment)
+        current_abstract1 = self.domain(self.manager, self.environment, array=current_array1)
+
+        previous_lincons1s = list()
+        for i in previous_unstable:
+            previous_lincons1s.append(previous_array.get(i))
+        previous_given = deepcopy(previous.state).forget([PyVar(name) for name in other_names])
+        previous_given_array = previous_given.to_lincons
+        for i in range(len(previous_given_array)):
+            previous_lincons1s.append(previous_given_array.get(i))
+        previous_array1 = PyLincons1Array(previous_lincons1s, self.environment)
+        previous_abstract1 = self.domain(self.manager, self.environment, array=previous_array1)
+
+        joined_abstract1 = current_abstract1.join(previous_abstract1)
+        joined_array = joined_abstract1.to_lincons
+        # add the stable constraints to the result
+        lincons1s = list()
+        for i in range(len(joined_array)):
+            lincons1s.append(joined_array.get(i))
+        stable = deepcopy(self.state).forget([PyVar(name) for name in given_names])
+        stable_array = stable.to_lincons
+        for i in range(len(stable_array)):
+            lincons1s.append(stable_array.get(i))
+        abstract1 = self.domain(self.manager, self.environment, array=PyLincons1Array(lincons1s, self.environment))
+        self.state = abstract1
+        return self
+    
+    def _assume_any_comparison(self, condition: BinaryComparisonOperation):
+        cond = self._lyra2apron.visit(condition, self.environment)
+        if isinstance(cond, PyTcons1):
+            array = PyTcons1Array([cond])
+            self.state = self.state.meet(array)
+        else:
+            assert isinstance(cond, Set)
+            state = deepcopy(self.state).bottom(self.manager, self.environment)
+            for item in cond:
+                array = PyTcons1Array([item])
+                state = state.join(deepcopy(self.state).meet(array))
+            self.state = state
+        return self
+    
+    @copy_docstring(State._assume_eq_comparison)
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        return self._assume_any_comparison(condition)
+
+    @copy_docstring(State._assume_noteq_comparison)
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        return self._assume_any_comparison(condition)
+
+    @copy_docstring(State._assume_lt_comparison)
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        return self._assume_any_comparison(condition)
+
+    @copy_docstring(State._assume_lte_comparison)
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        return self._assume_any_comparison(condition)
+
+    @copy_docstring(State._assume_gt_comparison)
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        return self._assume_any_comparison(condition)
+
+    @copy_docstring(State._assume_gte_comparison)
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        return self._assume_any_comparison(condition)
+
+    @copy_docstring(State._assume_is_comparison)
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        return self._assume_any_comparison(condition)
+
+    @copy_docstring(State._assume_isnot_comparison)
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        return self._assume_any_comparison(condition)
+
+    @copy_docstring(State._assume_in_comparison)
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        return self._assume_any_comparison(condition)
+
+    @copy_docstring(State._assume_notin_comparison)
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        return self._assume_any_comparison(condition)
 
     @copy_docstring(State.enter_if)
     def enter_if(self) -> 'APRONStateWithSummarization':
@@ -195,7 +328,14 @@ class APRONStateWithSummarization(StateWithSummarization, metaclass=ABCMeta):
     @copy_docstring(State._substitute_variable)
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'APRONStateWithSummarization':
         expr = self._lyra2apron.visit(right, self.environment)
-        self.state = self.state.substitute(PyVar(left.name), expr)
+        if isinstance(expr, PyTexpr1):
+            self.state = self.state.substitute(PyVar(left.name), expr)
+        else:
+            assert isinstance(expr, Set)
+            state = deepcopy(self.state).bottom(self.manager, self.environment)
+            for item in expr:
+                state = state.join(deepcopy(self.state).substitute(PyVar(left.name), item))
+            self.state = state
         return self
 
     _negation_free = NegationFreeExpression()
