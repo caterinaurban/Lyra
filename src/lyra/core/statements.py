@@ -83,7 +83,7 @@ https://docs.python.org/3.4/reference/simple_stmts.html#expression-statements
 class LiteralEvaluation(Statement):
     """Literal evaluation representation."""
 
-    def __init__(self, pp: ProgramPoint, literal: Expression):
+    def __init__(self, pp, literal: Expression):
         """Literal evaluation construction.
 
         :param pp: program point associated with the literal evaluation
@@ -103,7 +103,7 @@ class LiteralEvaluation(Statement):
 class ExpressionAccess(Statement, metaclass=ABCMeta):
     """Expression access representation."""
 
-    def __init__(self, pp: ProgramPoint, typ: LyraType):
+    def __init__(self, pp, typ: LyraType):
         """Expression access construction.
 
         :param pp: program point associated with the statement
@@ -120,10 +120,11 @@ class ExpressionAccess(Statement, metaclass=ABCMeta):
 class VariableAccess(ExpressionAccess):
     """Variable access representation."""
 
-    def __init__(self, pp: ProgramPoint, typ: LyraType, variable: VariableIdentifier):
+    def __init__(self, pp, typ, variable: VariableIdentifier):
         """Variable access construction.
 
         :param pp: program point associated with the variable access
+        :param typ: type of the variable
         :param variable: variable being accessed
         """
         super().__init__(pp, typ)
@@ -140,10 +141,11 @@ class VariableAccess(ExpressionAccess):
 class ListDisplayAccess(ExpressionAccess):
     """List display access representation."""
 
-    def __init__(self, pp: ProgramPoint, typ: LyraType, items: List[Statement]):
+    def __init__(self, pp, typ, items: List[Statement]):
         """List display access construction.
 
         :param pp: program point associated with the list display access
+        :param typ: type of the list
         :param items: list of items being displayed
         """
         super().__init__(pp, typ)
@@ -160,10 +162,11 @@ class ListDisplayAccess(ExpressionAccess):
 class TupleDisplayAccess(ExpressionAccess):
     """Tuple display (= expression list with comma, or ()) access representation."""
 
-    def __init__(self, pp: ProgramPoint, typ: LyraType, items: List[Statement]):
+    def __init__(self, pp, typ, items: List[Statement]):
         """tuple access construction.
 
         :param pp: program point associated with the tuple access
+        :param typ: type of the tuple
         :param items: list of items being displayed
         """
         super().__init__(pp, typ)
@@ -180,10 +183,11 @@ class TupleDisplayAccess(ExpressionAccess):
 
 class SetDisplayAccess(ExpressionAccess):
     """Set display access representation."""
-    def __init__(self, pp: ProgramPoint, typ: LyraType, items: List[Statement]):
+    def __init__(self, pp, typ, items: List[Statement]):
         """Set display access construction.
 
         :param pp: program point associated with the set display access
+        :param typ: type of the set
         :param items: list of items being displayed
         """
         super().__init__(pp, typ)
@@ -199,13 +203,14 @@ class SetDisplayAccess(ExpressionAccess):
 
 
 class DictDisplayAccess(ExpressionAccess):
-    """Dictionary display access representation. ({k:v, ...})"""
-    def __init__(self, pp: ProgramPoint, typ: LyraType,
-                 keys: List[Statement], values: List[Statement]):
+    """Dictionary display access representation."""
+    def __init__(self, pp, typ, keys: List[Statement], values: List[Statement]):
         """Dictionary display access construction.
 
         :param pp: program point associated with the list display access
+        :param typ: type of the dictionary
         :param keys: list of keys being displayed
+        :param values: list of values being displayed
         """
         super().__init__(pp, typ)
         self._keys = keys
@@ -222,16 +227,17 @@ class DictDisplayAccess(ExpressionAccess):
     def __repr__(self):
         str_keys = map(str, self.keys)
         str_values = map(str, self.values)
-        return '{' + ', '.join(' : '.join(x) for x in zip(str_keys, str_values)) + '}'
+        return '{' + ', '.join(': '.join(x) for x in zip(str_keys, str_values)) + '}'
 
 
 class SubscriptionAccess(ExpressionAccess):
     """Subscription access representation."""
 
-    def __init__(self, pp: ProgramPoint, typ: LyraType, target: Statement, key: Statement):
+    def __init__(self, pp, typ, target: Statement, key: Statement):
         """Subscription access construction.
 
         :param pp: program point associated with the subscription access
+        :param typ: type of the subscription
         :param target: target of the subscription access
         :param key: index at which the target is begin subscripted
         """
@@ -254,13 +260,21 @@ class SubscriptionAccess(ExpressionAccess):
 class SlicingAccess(ExpressionAccess):
     """Slicing access representation."""
 
-    def __init__(self, pp: ProgramPoint, typ: LyraType, target: Statement,
-                 lower: Statement, upper: Statement = None, stride: Statement = None):
+    def __init__(self, pp, typ, target: Statement, lower: Statement, upper=None, stride=None):
+        """Slicing access construction.
+
+        :param pp: program point associated with the slicing access
+        :param typ: type of the slicing
+        :param target: target of the slicing access
+        :param lower: lower bound of the slicing
+        :param upper: upper bound of the slicing
+        :param stride: step of the slicing
+        """
         super().__init__(pp, typ)
-        self._target = target
-        self._lower = lower
-        self._upper = upper
-        self._stride = stride
+        self._target: Statement = target
+        self._lower: Statement = lower
+        self._upper: Statement = upper
+        self._stride: Statement = stride
 
     @property
     def target(self):
@@ -298,7 +312,7 @@ class Assignment(Statement):
     https://docs.python.org/3.4/reference/simple_stmts.html#assignment-statements
     """
 
-    def __init__(self, pp: ProgramPoint, left: ExpressionAccess, right: Statement):
+    def __init__(self, pp, left: ExpressionAccess, right: Statement):
         """Assignment statement representation.
 
         :param pp: program point associated with the statement
@@ -322,13 +336,39 @@ class Assignment(Statement):
 
 
 """
+Return Statements.
+https://docs.python.org/3.4/reference/simple_stmts.html#the-return-statement
+"""
+
+
+class Return(Statement):
+    def __init__(self, pp, values: List[Statement]):
+        """Return statement representation.
+
+        :param pp: program point associated with the return
+        :param values: list of returned expressions
+        """
+        super().__init__(pp)
+        self._values = values
+
+    @property
+    def values(self):
+        return self._values
+
+    def __repr__(self):
+        values = ', '.join('{}'.format(value) for value in self.values)
+        values = '({})'.format(values) if len(self.values) > 1 else values
+        return 'return {}'.format(values)
+
+
+"""
 Raise Statements.
 https://docs.python.org/3.4/reference/simple_stmts.html#the-raise-statement
 """
 
 
 class Raise(Statement):
-    def __init__(self, pp: ProgramPoint):
+    def __init__(self, pp):
         """Raise statement representation.
 
         :param pp: program point associated with the raise
@@ -345,8 +385,7 @@ Call Statements.
 
 
 class Call(Statement):
-    def __init__(self, pp: ProgramPoint, name: str, arguments: List[Statement], typ: LyraType,
-                 forloop: bool = False):
+    def __init__(self, pp, name: str, arguments: List[Statement], typ: LyraType, forloop=False):
         """Call statement representation.
 
         :param pp: program point associated with the call
@@ -356,10 +395,10 @@ class Call(Statement):
         :param forloop: whether the call happens in a for loop condition (default: False)
         """
         super().__init__(pp)
-        self._name = name
-        self._arguments = arguments
-        self._typ = typ
-        self._forloop = forloop
+        self._name: str = name
+        self._arguments: List[Statement] = arguments
+        self._typ: LyraType = typ
+        self._forloop: bool = forloop
 
     @property
     def name(self):
@@ -380,29 +419,3 @@ class Call(Statement):
     def __repr__(self):
         arguments = ", ".join("{}".format(argument) for argument in self.arguments)
         return "{}({})".format(self.name, arguments)
-
-
-"""
-Return Statements.
-https://docs.python.org/3.4/reference/simple_stmts.html#the-return-statement
-"""
-
-
-class Return(Statement):
-    def __init__(self, pp: ProgramPoint, expressions: List[Statement]):
-        """Return statement representation.
-
-        :param pp: program point associated with the raise
-        :param expressions: list of returned expressions
-        """
-        super().__init__(pp)
-        self._expressions = expressions
-
-    @property
-    def expressions(self):
-        return self._expressions
-
-    def __repr__(self):
-        expressions = ", ".join("{}".format(expression) for expression in self.expressions)
-        return "return (" + expressions + ")"
-
