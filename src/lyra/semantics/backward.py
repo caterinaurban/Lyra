@@ -140,7 +140,7 @@ class ReturnSemantics(BackwardSemantics):
         # propagate the return result to the return expressions
         variables = state.variables
         result_variable = {variable for variable in variables if "#return_result" in variable.name}
-        for expression in stmt.expressions:
+        for expression in stmt.values:
             state.assign(self.semantics(expression, state).result, result_variable)
         return state
 

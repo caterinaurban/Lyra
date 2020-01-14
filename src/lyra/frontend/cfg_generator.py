@@ -590,7 +590,7 @@ class CFGVisitor(ast.NodeVisitor):
 
     # Subscripting
 
-    def visit_Subscript(self, node, types=None, typ=None, fname=''):
+    def visit_Subscript(self, node: ast.Subscript, types=None, typ=None, fname=''):
         """Visitor function for a subscript.
         The attribute value stores the target of the subscript (often a Name).
         The attribute slice is one of Index, Slice, or ExtSlice.
@@ -853,7 +853,7 @@ class CFGVisitor(ast.NodeVisitor):
         body = self._visit_body(node.body, types, True, True, fname)
         end = _dummy_cfg(self._id_gen)
         fun_cfg = start.append(body).append(end) if body else start.append(end)
-        fun_cfg = self._restructure_return_and_raise_edges(fun_cfg)
+        # fun_cfg = self._restructure_return_and_raise_edges(fun_cfg)
         self._cfgs[fname] = fun_cfg
         return fun_cfg
 
@@ -950,24 +950,24 @@ class CFGVisitor(ast.NodeVisitor):
         body = self._visit_body(node.body, types, loose_in_edges=True, loose_out_edges=True)
         end = _dummy_cfg(self._id_gen)
         main_cfg = start.append(body).append(end) if body else start.append(end)
-        main_cfg = self._restructure_return_and_raise_edges(main_cfg)
+        # main_cfg = self._restructure_return_and_raise_edges(main_cfg)
         self._cfgs[''] = main_cfg
         return self._cfgs
 
-    def _restructure_return_and_raise_edges(self, cfg):
-        nodes_to_be_removed = []
-        for node in cfg.nodes.values():
-            if any(isinstance(stmt, (Raise, Return)) for stmt in node.stmts):
-                edges_to_be_removed = cfg.get_edges_with_source(node)
-                for edge_to_be_removed in edges_to_be_removed:
-                    target = edge_to_be_removed.target
-                    if len(cfg.get_edges_with_target(target)) == 1: # there is no other edge
-                        nodes_to_be_removed.append(edge_to_be_removed.target)
-                    cfg.remove_edge(edge_to_be_removed)
-                cfg.add_edge(Unconditional(node, cfg.out_node)) # connect the node to the exit node
-        for node_to_be_removed in nodes_to_be_removed:
-            cfg.remove_node(node_to_be_removed)
-        return cfg
+    # def _restructure_return_and_raise_edges(self, cfg):
+    #     nodes_to_be_removed = []
+    #     for node in cfg.nodes.values():
+    #         if any(isinstance(stmt, (Raise, Return)) for stmt in node.stmts):
+    #             edges_to_be_removed = cfg.get_edges_with_source(node)
+    #             for edge_to_be_removed in edges_to_be_removed:
+    #                 target = edge_to_be_removed.target
+    #                 if len(cfg.get_edges_with_target(target)) == 1: # there is no other edge
+    #                     nodes_to_be_removed.append(edge_to_be_removed.target)
+    #                 cfg.remove_edge(edge_to_be_removed)
+    #             cfg.add_edge(Unconditional(node, cfg.out_node)) # connect the node to the exit node
+    #     for node_to_be_removed in nodes_to_be_removed:
+    #         cfg.remove_node(node_to_be_removed)
+    #     return cfg
 
 
 def ast_to_cfgs(root):

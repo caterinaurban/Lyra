@@ -303,10 +303,6 @@ class IntervalState(BasisWithSummarization):
         error = f"Assumption of a {normal.__class__.__name__} expression is unsupported!"
         raise ValueError(error)
 
-    def forget_variable(self, variable: VariableIdentifier):
-        old_value = self.store[variable]
-        self.store[variable] = old_value.top()
-
     # expression evaluation
 
     class ExpressionEvaluation(BasisWithSummarization.ExpressionEvaluation):

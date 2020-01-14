@@ -422,6 +422,11 @@ class TypeState(Store, StateWithSummarization, InputMixin):
     def exit_loop(self) -> 'TypeState':
         return self  # nothing to be done
 
+    @copy_docstring(State.forget_variable)
+    def forget_variable(self, variable: VariableIdentifier) -> 'TypeState':
+        self.store[variable].top()
+        return self
+
     @copy_docstring(State.output)
     def _output(self, output: Expression) -> 'TypeState':
         return self  # nothing to be done

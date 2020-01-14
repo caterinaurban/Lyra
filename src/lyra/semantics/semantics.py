@@ -49,6 +49,10 @@ class Semantics:
     def __init__(self, runner: Runner = None):
         self._runner = runner
 
+    @property
+    def runner(self):
+        return self._runner
+
     def semantics(self, stmt: Statement, state: State) -> State:
         """Semantics of a statement.
 

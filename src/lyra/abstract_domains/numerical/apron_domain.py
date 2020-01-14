@@ -183,6 +183,11 @@ class APRONStateWithSummarization(StateWithSummarization, metaclass=ABCMeta):
     def exit_loop(self) -> 'APRONStateWithSummarization':
         return self  # nothing to be done
 
+    @copy_docstring(State.forget_variable)
+    def forget_variable(self, variable: VariableIdentifier) -> 'APRONStateWithSummarization':
+        self.state = self.state.forget([PyVar(variable.name)])
+        return self
+
     @copy_docstring(State.output)
     def _output(self, output: Expression) -> 'APRONStateWithSummarization':
         return self  # nothing to be done

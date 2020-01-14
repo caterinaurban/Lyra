@@ -38,7 +38,7 @@ class Basis(Store, State, metaclass=ABCMeta):
         State.__init__(self, precursory)
 
     @copy_docstring(State._assign_variable)
-    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'BasisWithSummarization':
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'Basis':
         evaluation = self._evaluation.visit(right, self, dict())
         self.store[left] = evaluation[right]
         return self
@@ -59,8 +59,13 @@ class Basis(Store, State, metaclass=ABCMeta):
     def exit_loop(self):
         return self  # nothing to be done
 
+    @copy_docstring(State.forget_variable)
+    def forget_variable(self, variable: VariableIdentifier) -> 'Basis':
+        self.store[variable].top()
+        return self
+
     @copy_docstring(State._output)
-    def _output(self, output: Expression) -> 'BasisWithSummarization':
+    def _output(self, output: Expression) -> 'Basis':
         return self  # nothing to be done
 
     @copy_docstring(State._substitute_variable)

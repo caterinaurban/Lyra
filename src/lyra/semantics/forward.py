@@ -126,7 +126,7 @@ class ReturnSemantics(ForwardSemantics):
         # propagate the return expressions and remove all the other variables
         variables = state.variables
         result_variable = {variable for variable in variables if "#return_result" in variable.name}
-        for expression in stmt.expressions:
+        for expression in stmt.values:
             state.assign(result_variable, self.semantics(expression, state).result)
         for variable in variables.copy():
             if variable not in result_variable:
