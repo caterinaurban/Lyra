@@ -218,9 +218,9 @@ class BuiltInCallSemantics(CallSemantics):
     """Semantics of built-in function/method calls."""
 
     def _cast_call_semantics(self, stmt: Call, state: State, typ: LyraType) -> State:
-        """Semantics of a call to 'int', 'bool', 'float' or 'str'.
+        """Semantics of a call to 'int', 'bool', 'float', or 'str'.
 
-        :param stmt: call to 'int', 'bool', 'float' or 'str' to be executed
+        :param stmt: call to 'int', 'bool', 'float', or 'str' to be executed
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
@@ -238,10 +238,6 @@ class BuiltInCallSemantics(CallSemantics):
                 result.add(VariableIdentifier(typ, expression.name))
             elif isinstance(expression, Subscription):
                 result.add(Subscription(typ, expression.target, expression.key))
-            elif isinstance(expression, BinaryArithmeticOperation):
-                result.add(BinaryArithmeticOperation(typ, expression.left, expression.operator, expression.right))
-            elif isinstance(expression, LengthIdentifier):
-                result.add(LengthIdentifier(expression))
             else:
                 error = f"Argument of type {expression.typ} of {stmt.name} is not yet supported!"
                 raise NotImplementedError(error)
@@ -421,13 +417,16 @@ class BuiltInCallSemantics(CallSemantics):
                 error = f"Call to {stmt.name} of argument with unexpected type!"
                 raise ValueError(error)
             typ = StringLyraType()
-            if isinstance(arg, Input):                # input().strip()
+            if isinstance(arg, Input):                  # input().strip()
                 result.add(Input(typ))
                 continue
             error = f"Call to {stmt.name} of unexpected argument!"
             raise ValueError(error)
         state.result = result
         return state
+
+    def lstrip_call_semantics(self, stmt: Call, state: State) -> State:
+        return self.strip_call_semantics(stmt, state)
 
     def rstrip_call_semantics(self, stmt: Call, state: State) -> State:
         return self.strip_call_semantics(stmt, state)
