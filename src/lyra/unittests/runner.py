@@ -18,7 +18,7 @@ from math import inf
 
 from lyra.core.cfg import Conditional, Edge
 from lyra.engine.runner import Runner
-from lyra.frontend.cfg_generator import ast_to_cfg
+from lyra.frontend.cfg_generator import ast_to_cfgs, ast_to_fargs
 from lyra.visualization.graph_renderer import AnalysisResultRenderer
 
 
@@ -49,16 +49,17 @@ class TestRunner(unittest.TestCase, Runner, metaclass=ABCMeta):
         with open(self.path, 'r', encoding="utf-8") as source:
             self.source = source.read()
             self.tree = ast.parse(self.source)
-            self.cfg = ast_to_cfg(self.tree)
+            self.cfgs = ast_to_cfgs(self.tree)
+            self.fargs = ast_to_fargs(self.tree)
 
-    def runTest(self):
-        result = self.interpreter().analyze(self.state())
+    def runTest(self, fname: str = ''):
+        result = self.interpreter().analyze(self.cfgs[fname], self.state())
         self.render(result)
         self.check(result)
 
     def render(self, result):
         renderer = AnalysisResultRenderer()
-        data = (self.cfg, result)
+        data = (self.cfgs, result)
         name = os.path.splitext(os.path.basename(self.path))[0]
         label = f"CFG with Analysis Result for {name}"
         directory = os.path.join(os.path.dirname(self.path), "graphs")
@@ -97,21 +98,21 @@ class TestRunner(unittest.TestCase, Runner, metaclass=ABCMeta):
         actual = None
         distance = inf
         if line == -inf:    # precondition
-            actual = result.get_node_result(self.cfg.in_node)[0]
+            actual = next(iter(result.get_node_result(self.cfgs[''].in_node).values()))[0]
             return actual
         elif line == inf:   # postcondition
-            actual = result.get_node_result(self.cfg.out_node)[0]
+            actual = next(iter(result.get_node_result(self.cfgs[''].out_node).values()))[0]
             return actual
         elif line < 0:
-            for edge in self.cfg.edges.values():
+            for edge in self.cfgs[''].edges.values():
                 if isinstance(edge, Conditional) and edge.kind == Edge.Kind.LOOP_IN:
                     current = edge.condition.pp.line + line
                     if current < distance:
-                        states = result.get_node_result(edge.source)
+                        states = next(iter(result.get_node_result(edge.source).values()))
                         actual = states[0]
                         distance = current
-        for node in self.cfg.nodes.values():
-            states = result.get_node_result(node)
+        for node in self.cfgs[''].nodes.values():
+            states = next(iter(result.get_node_result(node).values()))
             for i, stmt in enumerate(node.stmts):
                 current = stmt.pp.line - line
                 if abs(current) < distance:

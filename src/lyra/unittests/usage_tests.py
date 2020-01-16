@@ -22,7 +22,7 @@ from lyra.unittests.runner import TestRunner
 class UsageTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return SimpleUsageState(self.variables)

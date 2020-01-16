@@ -307,7 +307,7 @@ class CFGVisitor(ast.NodeVisitor):
         super().__init__()
         self._id_gen = CFGVisitor.NodeIdentifierGenerator()
         self._cfgs = {}
-        self._fdefs = {}
+        self._fdefs = dict()
 
     def visit(self, node, *args, **kwargs):
         """Visit an AST node.
@@ -423,10 +423,14 @@ class CFGVisitor(ast.NodeVisitor):
             expr = VariableIdentifier(types[name], name)
             return VariableAccess(pp, types[name], expr)
         if isinstance(node.ctx, ast.Load):
-            assert name in types
+            if name in types:
+                _name = name
+            else:
+                _name = name.replace(fname + '#', '')
+            assert _name in types
             # assert types[name] == typ or typ is None
-            expr = VariableIdentifier(types[name], name)
-            return VariableAccess(pp, types[name], expr)
+            expr = VariableIdentifier(types[_name], _name)
+            return VariableAccess(pp, types[_name], expr)
         assert isinstance(node.ctx, ast.Del)
         raise NotImplementedError(f"Name deletion is unsupported!")
 
@@ -928,9 +932,7 @@ class CFGVisitor(ast.NodeVisitor):
             elif isinstance(child, ast.Pass):
                 factory.append_cfg(_dummy_cfg(self._id_gen))
             elif isinstance(child, ast.FunctionDef):
-                fun_factory = CFGFactory(self._id_gen)
-                fun_cfg = self.visit_FunctionDef(child, types, child.name)
-                fun_factory.append_cfg(fun_cfg)
+                self._fdefs[child.name] = child
             else:
                 error = "The statement {} is not yet translatable to CFG!".format(child)
                 raise NotImplementedError(error)
@@ -952,6 +954,10 @@ class CFGVisitor(ast.NodeVisitor):
         main_cfg = start.append(body).append(end) if body else start.append(end)
         # main_cfg = self._restructure_return_and_raise_edges(main_cfg)
         self._cfgs[''] = main_cfg
+        for fdef, child in self._fdefs.items():
+            fun_factory = CFGFactory(self._id_gen)
+            fun_cfg = self.visit_FunctionDef(child, types, child.name)
+            fun_factory.append_cfg(fun_cfg)
         return self._cfgs
 
     # def _restructure_return_and_raise_edges(self, cfg):

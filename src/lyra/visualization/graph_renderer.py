@@ -5,7 +5,9 @@ from uuid import uuid4 as uuid
 
 import graphviz as gv
 
+from lyra.abstract_domains.state import State
 from lyra.core.cfg import *
+from lyra.engine.result import AnalysisResult
 
 
 class GraphRenderer(metaclass=ABCMeta):
@@ -191,43 +193,33 @@ class CFGRenderer(GraphRenderer):
 class AnalysisResultRenderer(CFGRenderer):
     """Graphviz rendering of an analysis result on the analyzed control flow graph."""
 
-    def _basic_node_label(self, node, result, function_name=""):
+    def _basic_node_label(self, node, result: AnalysisResult, fname='', ctx=False):
+        results: Dict[State, List[State]] = result.get_node_result(node)
         state = '<font point-size="9">{} </font>'
+        node_result = [fname] if fname and ctx else list()      # add function name
         stmt = '<font color="#ffffff" point-size="11">{}</font>'
-        stmts = list(map(lambda x: stmt.format(html.escape(str(x))), node.stmts))
-
-        node_result = []
-
-        node_states = result[0].get_node_result(node) # there should always be at least one result
-        number_of_states = len(node_states)
-        number_of_stmts = len(stmts)
-        for index in range(max(number_of_states, number_of_stmts)):
-            for a_result in result:
-                current_state = a_result.get_node_result(node)[index]
-                states = state.format(html.escape(str(current_state)).replace(
-                    '\n', '<br />'))
-                node_result.append(states)
-            if index < number_of_stmts:
-                node_result.append(stmts[index])
-        if function_name != "":
-            node_result = [function_name] + node_result
+        for idx in range(len(node.stmts)):
+            # ctxs -> states
+            for i, states in enumerate(results.values()):
+                ctx2state = 'ctx{}: {}'.format(i, states[idx]) if fname else str(states[idx])
+                node_result.append(state.format(html.escape(ctx2state).replace('\n', '<br />')))
+            # stmt
+            node_result.append(stmt.format(html.escape(str(node.stmts[idx]))))
+        # last ctx -> states
+        for i, states in enumerate(results.values()):
+            ctx2state = 'ctx{}: {}'.format(i, states[-1]) if fname else str(states[-1])
+            node_result.append(state.format(html.escape(ctx2state).replace('\n', '<br />')))
         return self._list2table(node_result, escape=False)
 
     def _render(self, data):
-        (names_to_cfgs, results) = data
-        names = names_to_cfgs.keys()
-        for function_name in names:
-            function_cfg = names_to_cfgs[function_name]
-            function_results = results[function_name]
-            for node in function_cfg.nodes.values():
-                fillcolor = self._node_color(node, function_cfg)
+        (cfgs, result) = data
+        for fname, fcfg in cfgs.items():
+            for node in fcfg.nodes.values():
+                fillcolor = self._node_color(node, fcfg)
                 if isinstance(node, (Basic, Loop)):
-                    cfg_name = ""
-                    if node == function_cfg.in_node:
-                        cfg_name = function_name # only the in_node has function_name
-                    label = self._basic_node_label(node, function_results, cfg_name)
+                    label = self._basic_node_label(node, result, fname, node == fcfg.in_node)
                     self._render_node(node, label, fillcolor)
                 else:
                     label = self._escape_label(self._shorten_label(str(node)))
                     self._render_node(node, label, fillcolor)
-            self._render_edges(function_cfg)
+            self._render_edges(fcfg)

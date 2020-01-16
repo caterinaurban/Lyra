@@ -15,7 +15,7 @@ from lyra.semantics.forward import DefaultForwardSemantics
 class ForwardOctagonAnalysis(Runner):
 
     def interpreter(self):
-        return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
+        return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
 
     def state(self):
         return OctagonStateWithSummarization(self.variables)
@@ -24,7 +24,7 @@ class ForwardOctagonAnalysis(Runner):
 class BackwardOctagonAnalysis(Runner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return OctagonStateWithSummarization(self.variables)

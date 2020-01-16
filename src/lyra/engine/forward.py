@@ -15,35 +15,38 @@ from lyra.engine.result import AnalysisResult
 from lyra.semantics.forward import ForwardSemantics
 
 from lyra.abstract_domains.state import State
-from lyra.core.cfg import Basic, Loop, Conditional, Edge, Node
+from lyra.core.cfg import Basic, Loop, Conditional, Edge, Node, ControlFlowGraph
 
 
 class ForwardInterpreter(Interpreter):
     """Forward control flow graph interpreter."""
 
-    def __init__(self, cfg, semantics: ForwardSemantics, widening, precursory=None):
+    def __init__(self, cfgs, fargs, semantics: ForwardSemantics, widening, precursory=None):
         """Forward control flow graph interpreter construction.
 
-        :param cfg: control flow graph to analyze
+        :param cfgs: control flow graphs to analyze
+        :param fargs: formal arguments of functions
         :param semantics: semantics of statements in the control flow graph
         :param widening: number of iterations before widening
         :param precursory: precursory control flow graph interpreter
         """
-        super().__init__(cfg, semantics, widening, precursory)
+        super().__init__(cfgs, fargs, semantics, widening, precursory)
 
-    def analyze(self, initial: State) -> AnalysisResult:
+    def analyze(self, cfg: ControlFlowGraph, initial: State) -> AnalysisResult:
         from lyra.engine.backward import BackwardInterpreter
+
+        context: State = deepcopy(initial)
 
         # run the precursory analysis (if any)
         if self.precursory:  # there is a precursory analysis to be run
-            pre_result: Optional[AnalysisResult] = self.precursory.analyze(initial.precursory)
+            pre_result: Optional[AnalysisResult] = self.precursory.analyze(cfg, initial.precursory)
         else:  # there is no precursory analysis to be run
             pre_result: Optional[AnalysisResult] = None
 
         # prepare the worklist and iteration counts
         worklist = Queue()
-        worklist.put(self.cfg.in_node)
-        iterations = {node: 0 for node in self.cfg.nodes}
+        worklist.put(cfg.in_node)
+        iterations = {node: 0 for node in cfg.nodes}
 
         while not worklist.empty():
             current: Node = worklist.get()  # retrieve the current node
@@ -52,24 +55,25 @@ class ForwardInterpreter(Interpreter):
 
             # retrieve the previous entry state of the node
             if current in self.result.result:
-                previous = deepcopy(self.result.get_node_result(current)[0])
+                previous = deepcopy(self.result.get_node_result(current)[context][0])
             else:
                 previous = None
 
             # compute the current entry state of the current node
             entry = deepcopy(initial)
-            if current.identifier != self.cfg.in_node.identifier:
+            if current.identifier != cfg.in_node.identifier:
                 entry.bottom()
                 # join incoming states
-                edges = self.cfg.in_edges(current)
+                edges = cfg.in_edges(current)
                 for edge in edges:
                     if edge.source in self.result.result:
-                        predecessor = deepcopy(self.result.get_node_result(edge.source)[-1])
+                        ctx = context
+                        predecessor = deepcopy(self.result.get_node_result(edge.source)[ctx][-1])
                     else:
                         predecessor = deepcopy(initial).bottom()
                     # handle conditional edges
                     if isinstance(edge, Conditional) and edge.kind == Edge.Kind.DEFAULT:
-                        neighbors = self.cfg.out_edges(edge.source)
+                        neighbors = cfg.out_edges(edge.source)
                         branch = any(edge.kind == Edge.Kind.IF_IN for edge in neighbors)
                         loop = any(edge.kind == Edge.Kind.LOOP_IN for edge in neighbors)
                         assert (branch or loop) and not (branch and loop)
@@ -79,15 +83,18 @@ class ForwardInterpreter(Interpreter):
 
                         if pre_result:  # a precursory analysis was run
                             if isinstance(self.precursory, BackwardInterpreter):
-                                precursory = pre_result.get_node_result(edge.target)[0]
+                                ctx = context.precursory
+                                precursory = pre_result.get_node_result(edge.target)[ctx][0]
                             else:
                                 assert isinstance(self.precursory, ForwardInterpreter)
-                                precursory = pre_result.get_node_result(edge.source)[-1]
+                                ctx = context.precursory
+                                precursory = pre_result.get_node_result(edge.source)[ctx][-1]
                         else:           # no precursory analysis was run
                             precursory = None
 
                         predecessor = predecessor.before(condition.pp, precursory)
-                        predecessor = self.semantics.semantics(condition, predecessor).filter()
+                        predecessor = self.semantics.semantics(condition, predecessor, self)
+                        predecessor = predecessor.filter()
                         predecessor = predecessor.exit_if() if branch else predecessor
                         predecessor = predecessor.exit_loop() if loop else predecessor
                     elif edge.kind == Edge.Kind.IF_IN:
@@ -97,15 +104,18 @@ class ForwardInterpreter(Interpreter):
 
                         if pre_result:  # a precursory analysis was run
                             if isinstance(self.precursory, BackwardInterpreter):
-                                precursory = pre_result.get_node_result(edge.target)[0]
+                                ctx = context.precursory
+                                precursory = pre_result.get_node_result(edge.target)[ctx][0]
                             else:
                                 assert isinstance(self.precursory, ForwardInterpreter)
-                                precursory = pre_result.get_node_result(edge.source)[-1]
+                                ctx = context.precursory
+                                precursory = pre_result.get_node_result(edge.source)[ctx][-1]
                         else:           # no precursory analysis was run
                             precursory = None
 
                         predecessor = predecessor.before(condition.pp, precursory)
-                        predecessor = self.semantics.semantics(condition, predecessor).filter()
+                        predecessor = self.semantics.semantics(condition, predecessor, self)
+                        predecessor = predecessor.filter()
                     elif edge.kind == Edge.Kind.LOOP_IN:
                         predecessor = predecessor.enter_loop()
                         assert isinstance(edge, Conditional)
@@ -113,15 +123,18 @@ class ForwardInterpreter(Interpreter):
 
                         if pre_result:  # a precursory analysis was run
                             if isinstance(self.precursory, BackwardInterpreter):
-                                precursory = pre_result.get_node_result(edge.target)[0]
+                                ctx = context.precursory
+                                precursory = pre_result.get_node_result(edge.target)[ctx][0]
                             else:
                                 assert isinstance(self.precursory, ForwardInterpreter)
-                                precursory = pre_result.get_node_result(edge.source)[-1]
+                                ctx = context.precursory
+                                precursory = pre_result.get_node_result(edge.source)[ctx][-1]
                         else:           # no precursory analysis was run
                             precursory = None
 
                         predecessor = predecessor.before(condition.pp, precursory)
-                        predecessor = self.semantics.semantics(condition, predecessor).filter()
+                        predecessor = self.semantics.semantics(condition, predecessor, self)
+                        predecessor = predecessor.filter()
                     # handle unconditional non-default edges
                     if edge.kind == Edge.Kind.IF_OUT:
                         predecessor = predecessor.exit_if()
@@ -139,7 +152,8 @@ class ForwardInterpreter(Interpreter):
                     successor = entry
 
                     if pre_result:     # a precursory analysis was run
-                        pre_states: List[Optional[State]] = pre_result.get_node_result(current)
+                        ctx = context.precursory
+                        pre_states = pre_result.get_node_result(current)[ctx]
                         if isinstance(self.precursory, BackwardInterpreter):
                             pre_states = pre_states[1:]
                         else:
@@ -150,14 +164,14 @@ class ForwardInterpreter(Interpreter):
 
                     for precursory, stmt in zip(pre_states, current.stmts):
                         successor = successor.before(stmt.pp, precursory)
-                        successor = self.semantics.semantics(stmt, deepcopy(successor))
+                        successor = self.semantics.semantics(stmt, deepcopy(successor), self)
                         states.append(successor)
                 elif isinstance(current, Loop):
                     # nothing to be done
                     pass
-                self.result.set_node_result(current, list(states))
+                self.result.set_node_result(current, context, list(states))
                 # update worklist and iteration count
-                for node in self.cfg.successors(current):
+                for node in cfg.successors(current):
                     worklist.put(node)
                 iterations[current.identifier] = iteration + 1
 

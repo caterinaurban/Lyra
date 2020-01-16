@@ -22,7 +22,7 @@ from lyra.unittests.runner import TestRunner
 class ForwardSignTest(TestRunner):
 
     def interpreter(self):
-        return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
+        return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
 
     def state(self):
         return SignState(self.variables)
@@ -31,7 +31,7 @@ class ForwardSignTest(TestRunner):
 class BackwardSignTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return SignState(self.variables)

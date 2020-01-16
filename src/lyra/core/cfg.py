@@ -9,9 +9,12 @@ Lyra's internal representation of a Python program.
 
 from abc import ABCMeta, abstractmethod
 from enum import Enum
+from queue import Queue
 from typing import Dict, List, Set, Tuple, Optional
 
-from lyra.core.statements import Statement
+from lyra.core.expressions import VariableIdentifier, LengthIdentifier
+from lyra.core.statements import Statement, Assignment, VariableAccess, Call, TupleDisplayAccess
+from lyra.core.types import SequenceLyraType, ContainerLyraType
 
 
 class Node(metaclass=ABCMeta):
@@ -201,6 +204,42 @@ class ControlFlowGraph:
     @property
     def edges(self) -> Dict[Tuple[Node, Node], Edge]:
         return self._edges
+
+    @property
+    def variables(self) -> Set[VariableIdentifier]:
+        variables = set()
+        visited, worklist = set(), Queue()
+        worklist.put(self.in_node)
+        while not worklist.empty():
+            current = worklist.get()
+            if current.identifier not in visited:
+                visited.add(current.identifier)
+                for stmt in current.stmts:
+                    if isinstance(stmt, Assignment) and isinstance(stmt.left, VariableAccess):
+                        variable = stmt.left.variable
+                        variables.add(variable)
+                        if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
+                            variables.add(LengthIdentifier(variable))
+                if isinstance(current, Loop):
+                    edges = self.edges.items()
+                    conds = list()
+                    for nodes, edge in edges:
+                        if nodes[0] == current:
+                            assert isinstance(edge, Conditional)
+                            conds.append(edge.condition)
+                    for cond in [c for c in conds if isinstance(c, Call)]:
+                        for arg in cond.arguments:
+                            if isinstance(arg, VariableAccess):
+                                variable = arg.variable
+                                variables.add(arg.variable)
+                                if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
+                                    variables.add(LengthIdentifier(variable))
+                            elif isinstance(arg, TupleDisplayAccess):
+                                for i in arg.items:
+                                    variables.add(i.variable)
+                for node in self.successors(current):
+                    worklist.put(node)
+        return variables
 
     def in_edges(self, node: Node) -> Set[Edge]:
         """Ingoing edges of a given node.
