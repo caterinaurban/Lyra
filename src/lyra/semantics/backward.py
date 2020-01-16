@@ -47,31 +47,20 @@ class UserDefinedCallSemantics(BackwardSemantics):
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        if not isinstance(state, EnvironmentMixin):
-            error = f"{state.__class__} does not support environment modifications! "
-            raise ValueError(error + f"{state.__class__} must inherit from EnvironmentMixin.")
         fname, fcfg, _ = stmt.name, interpreter.cfgs[stmt.name], deepcopy(state)
-        assert isinstance(state, State)
-        # add formal function parameters and local function variables
-        for formal in interpreter.fargs[fname]:
-            state = state.add_variable(formal).forget_variable(formal)
-        for local in fcfg.variables:
-            state = state.add_variable(local).forget_variable(local)
         # analyze the function
         fresult = interpreter.analyze(fcfg, state)
-        # get the resulting state
-        fstate = fresult.get_node_result(fcfg.in_node)[state][0]
+        fstate = fresult.get_node_result(fcfg.in_node)[state][-1]
         state = state.bottom().join(deepcopy(fstate))
         # substitute function actual to formal parameters
         for formal, actual in zip(interpreter.fargs[fname], stmt.arguments):
-            rhs = self.semantics(actual, state, interpreter).result
-            state = state.substitute({formal}, rhs)
-        # remove local function variables and formal parameters
-        assert isinstance(state, EnvironmentMixin) and isinstance(state, State)
-        for local in fcfg.variables:
-            state = state.remove_variable(local)
-        for formal in interpreter.fargs[fname]:
-            state = state.remove_variable(formal)
+            if isinstance(actual, Call) and actual.name in interpreter.cfgs:
+            # TODO: right might not be a Call but just contain a Call
+                state.result = {formal}
+                state = self.semantics(actual, state, interpreter)
+            else:
+                rhs = self.semantics(actual, state, interpreter).result
+                state = state.substitute({formal}, rhs)
         return state
 
     def return_semantics(self, stmt: Return, state: State, interpreter: Interpreter):
@@ -101,8 +90,19 @@ class AssignmentSemantics(BackwardSemantics):
         """
         if isinstance(stmt.right, Call) and stmt.right.name in interpreter.cfgs:
             # TODO: right might not be a Call but just contain a Call
+            # add formal function parameters and local function variables
+            for formal in interpreter.fargs[stmt.right.name]:
+                state = state.add_variable(formal).forget_variable(formal)
+            for local in interpreter.cfgs[stmt.right.name].variables:
+                state = state.add_variable(local).forget_variable(local)
             lhs = self.semantics(stmt.left, state, interpreter)
-            return self.semantics(stmt.right, lhs, interpreter)
+            state = self.semantics(stmt.right, lhs, interpreter)
+            # remove local function variables and formal function parameters
+            for local in interpreter.cfgs[stmt.right.name].variables:
+                state = state.remove_variable(local)
+            for formal in interpreter.fargs[stmt.right.name]:
+                state = state.remove_variable(formal)
+            return state
         lhs = self.semantics(stmt.left, state, interpreter).result      # lhs evaluation
         rhs = self.semantics(stmt.right, state, interpreter).result   # rhs evaluation
         return state.substitute(lhs, rhs)

@@ -88,13 +88,13 @@ class AssignmentSemantics(ForwardSemantics):
         rhs = self.semantics(stmt.right, state, interpreter).result     # rhs evaluation
         lhs = self.semantics(stmt.left, state, interpreter).result      # lhs evaluation
         state = state.assign(lhs, rhs)
-        # if needed, remove formal function parameters and local function variables
+        # if needed, remove local function variables and formal function parameters
         if isinstance(stmt.right, Call) and stmt.right.name in interpreter.cfgs:
             # TODO: right might not be a Call but just contain a Call
-            for formal in interpreter.fargs[stmt.right.name]:
-                state = state.remove_variable(formal)
             for local in interpreter.cfgs[stmt.right.name].variables:
                 state = state.remove_variable(local)
+            for formal in interpreter.fargs[stmt.right.name]:
+                state = state.remove_variable(formal)
         return state
 
 
