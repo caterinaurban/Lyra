@@ -58,9 +58,9 @@ class BackwardInterpreter(Interpreter):
             iteration = iterations[current.identifier]
 
             # retrieve the previous exit state of the node
-            if current in self.result.result:
+            try:
                 previous = deepcopy(self.result.get_node_result(current)[context][-1])
-            else:
+            except:
                 previous = None
 
             # compute the current exit state of the current node

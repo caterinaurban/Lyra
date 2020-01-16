@@ -54,9 +54,9 @@ class ForwardInterpreter(Interpreter):
             iteration = iterations[current.identifier]
 
             # retrieve the previous entry state of the node
-            if current in self.result.result:
+            try:
                 previous = deepcopy(self.result.get_node_result(current)[context][0])
-            else:
+            except:
                 previous = None
 
             # compute the current entry state of the current node
