@@ -39,6 +39,7 @@ def generate_flips(sequence: str, k: int, reached: Set[str]) -> Set[str]:
 
 def flip(string: str) -> str:
     new_string: str = ''
+    i: str = ''
     for i in string:
         if (i == '+'):
             new_string: str = (new_string + '-')
@@ -48,12 +49,14 @@ def flip(string: str) -> str:
 
 
 data: str = input()
-inputs: List[str] = data.split()[1:]
+all_inputs: List[str] = data.split()
+inputs: List[str] = all_inputs[1:]
 answer: str = ''
 count: int = 1
 for line in inputs:
-    sequence: str = line.split(' ')[0]
-    k: str = line.split(' ')[1]
+    split_line: List[str] = line.split()
+    sequence: str = split_line[0]
+    k: str = split_line[1]
     line_answer: int = flips(sequence, int(k))
     if (line_answer == (- 1)):
         answer: str = (((answer + 'Case #') + str(count)) + ': IMPOSSIBLE\n')

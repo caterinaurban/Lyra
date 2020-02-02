@@ -23,7 +23,7 @@ def flips(s: str, k: int) -> int:
 
 t: int = int(input())
 for i in range(1, (t + 1)):
-    line: List[str] = input().split(' ')
+    line: List[str] = input().split()
     result: int = flips(line[0], int(line[1]))
     if (result != (- 1)):
         print('Case #' + str(i) + ': ' + str(result))

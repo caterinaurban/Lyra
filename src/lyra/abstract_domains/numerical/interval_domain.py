@@ -425,7 +425,11 @@ class IntervalState(BasisWithSummarization):
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None):
             if isinstance(expr.typ, SequenceLyraType):
-                return state.store[LengthIdentifier(expr)]
+                length = LengthIdentifier(expr)
+                if length in state.store.keys():
+                    return state.store[LengthIdentifier(expr)]
+                # the length of a variable identifier obtained by casting to string
+                return state.lattices[IntegerLyraType()](lower=0)
             raise ValueError(f"Unexpected expression during sequence length computation.")
 
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)

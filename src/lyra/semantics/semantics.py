@@ -185,7 +185,7 @@ class ExpressionSemantics(Semantics):
         :return: state modified by the slicing access
         """
         target = self.semantics(stmt.target, state, interpreter).result
-        lower = self.semantics(stmt.lower, state, interpreter).result
+        lower = self.semantics(stmt.lower, state, interpreter).result if stmt.lower else {None}
         upper = self.semantics(stmt.upper, state, interpreter).result if stmt.upper else {None}
         stride = self.semantics(stmt.stride, state, interpreter).result if stmt.stride else {None}
         result = set()

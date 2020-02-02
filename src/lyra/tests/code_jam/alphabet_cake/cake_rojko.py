@@ -1,3 +1,15 @@
+def max(x: int, y: int):
+  if x > y:
+      return x
+  else:
+      return y
+
+def min(x: int, y: int):
+  if x < y:
+      return x
+  else:
+      return y
+
 def fung(abec: List[str], g: List[List[str]], r: int, c: int) -> bool:
     dl: Dict[(str, int)] = {
         

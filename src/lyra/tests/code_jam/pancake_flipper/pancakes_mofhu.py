@@ -1,13 +1,13 @@
 n: int = int(input())
 for case in range(1, (n + 1)):
-    line: List[str] = input().split(' ')
+    line: List[str] = input().split()
     tmps: str = line[0]
     tmpk: str = line[1]
     s: List[str] = list(tmps)
     k: int = int(tmpk)
     n: int = 0
     for i in range(0, len(s)):
-        if (s[i] is '-'):
+        if (s[i] == '-'):
             if (i > (len(s) - k)):
                 print('Case #' + str(case) + ': ' + 'IMPOSSIBLE')
                 break

@@ -1,3 +1,9 @@
+def all_true(a: List[bool]) -> bool:
+    for i in range(len(a)):
+        if a[i] == False:
+            return False
+    return True
+
 def gao(s: str, k: int) -> int:
     a: List[bool] = list()
     c: str = ''
@@ -9,11 +15,11 @@ def gao(s: str, k: int) -> int:
     n: int = len(s)
     ans: int = 0
     for i in range(((n - k) + 1)):
-        if (not a[i]):
+        if a[i] == False:
             for j in range(k):
                 a[(i + j)]: bool = (not a[(i + j)])
             ans += 1
-    if all(a):
+    if all_true(a):
         return ans
     return (- 1)
 

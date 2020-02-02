@@ -1,3 +1,9 @@
+def max(x: int, y: int):
+  if x > y:
+      return x
+  else:
+      return y
+
 def flipped(pancakes: List[str]) -> List[str]:
     flipped_pancakes: List[str] = list()
     for pancake in pancakes:
@@ -22,7 +28,7 @@ def solve(table: str, size: int) -> Tuple[(str, int)]:
             table_lst: List[str] = ((table_lst[:(i - size)] + flipped(table_lst[(i - size):i])) + table_lst[i:])
             moves += 1
     print(table_lst)
-    table_lst_str = ''
+    table_lst_str: str = ''
     for index in range(len(table_lst)):
         table_lst_str += table_lst[index]
     return (table_lst_str, moves)

@@ -52,14 +52,14 @@ def f(N: int, Ms: Dict[(Tuple[(int, int)], str)]) -> Tuple[(int, Dict[(Tuple[(in
 
 T: int = int(input())
 for t in range(1, (T + 1)):
-    line: List[str] = input().split(' ')
+    line: List[str] = input().split()
     N: int = int(line[0])
     M: int = int(line[1])
     Ms: Dict[(Tuple[(int, int)], str)] = {
         
     }
     for _ in range(M):
-        tmp: List[str] = input().split(' ')
+        tmp: List[str] = input().split()
         v: str = tmp[0]
         i: int = int(tmp[1])
         j: int = int(tmp[2])

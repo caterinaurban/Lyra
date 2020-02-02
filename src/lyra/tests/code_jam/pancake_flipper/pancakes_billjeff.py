@@ -8,7 +8,7 @@ num: int = int(input().strip())
 for case in range(num):
     input_line: str = input().strip()
     s: List[str] = list()
-    split_line: List[str] = input_line.split(' ')
+    split_line: List[str] = input_line.split()
     first_line: str = split_line[0]
     i: str
     for i in first_line:
