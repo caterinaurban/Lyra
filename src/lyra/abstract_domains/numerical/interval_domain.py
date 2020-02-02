@@ -446,7 +446,7 @@ class IntervalState(BasisWithSummarization):
 
         @copy_docstring(ExpressionVisitor.visit_DictDisplay)
         def visit_DictDisplay(self, expr: DictDisplay, state=None):
-            raise ValueError(f"Unexpected expression during sequence length computation.")
+            return state.lattices[IntegerLyraType()](len(expr.keys), len(expr.keys))
 
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
         def visit_AttributeReference(self, expr: AttributeReference, state=None):

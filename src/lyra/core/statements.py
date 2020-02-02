@@ -294,7 +294,7 @@ class SlicingAccess(ExpressionAccess):
 
     def __repr__(self):
         target = "{}[".format(self.target)
-        lower = "{}:".format(self.lower)
+        lower = "{}:".format(self.lower) if self.lower else ":"
         upper = "{}".format(self.upper) if self.upper else ""
         stride = ":{}".format(self.stride) if self.stride else ""
         return target + lower + upper + stride + "]"

@@ -609,7 +609,9 @@ class CFGVisitor(ast.NodeVisitor):
                 return SubscriptionAccess(pp, target.typ, target, key)
         elif isinstance(node.slice, ast.Slice):
             value = self.visit(node.value, types, None, fname=fname)
-            lower = self.visit(node.slice.lower, types, None, fname=fname)
+            lower = None
+            if node.slice.lower:
+                lower = self.visit(node.slice.lower, types, None, fname=fname)
             upper = None
             if node.slice.upper:
                 upper = self.visit(node.slice.upper, types, None, fname=fname)
