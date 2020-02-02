@@ -6,7 +6,7 @@ def all_question_marks(grid_row: List[str]) -> bool:
 
 T: int = int(input().strip())
 for t in range(1, (T + 1)):
-    line: List[str] = input().strip().split(' ')
+    line: List[str] = input().strip().split()
     R: int = int(line[0])
     C: int = int(line[1])
     grid: List[List[str]] = []

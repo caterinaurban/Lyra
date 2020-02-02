@@ -421,10 +421,10 @@ class BuiltInCallSemantics(CallSemantics):
         return state
 
     def lstrip_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
-        return self.strip_call_semantics(stmt, state)
+        return self.strip_call_semantics(stmt, state, interpreter)
 
     def rstrip_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
-        return self.strip_call_semantics(stmt, state)
+        return self.strip_call_semantics(stmt, state, interpreter)
 
     # noinspection PyMethodMayBeStatic
     def input_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
