@@ -80,7 +80,8 @@ for iT in list(range(0, T)):
                                 for z in list(range((l + 1), r)):
                                     a[(i - 1)][z]: str = orig
                                     cnt: int = (cnt - 1)
-    print((('Case #' + str((iT + 1))) + ':'))
+    case_number: int = iT + 1
+    print('Case #' + str(case_number) + ':')
     for i in list(range(0, N)):
         row_str: str = ''
         for j in list(range(0, M)):

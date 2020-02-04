@@ -20,14 +20,14 @@ cases: str = input().strip()
 print(cases)
 for index in range(1, (int(cases) + 1)):
     rowData: str = input().strip()
-    strs: List[str] = rowData.split(' ')
+    strs: List[str] = rowData.split()
+    old: str = strs[0]
     k: int = int(strs[1])
-    L: int = len(strs[0])
+    L: int = len(old)
     strF: str = ''
     for i in range(L):
         strF += '+'
     flag: bool = True
-    old: str = strs[0]
     List: List[str] = []
     if (old == strF):
         flag: bool = False

@@ -50,7 +50,7 @@ def solve(pattern: str, K: int) -> int:
     return m
 T: int = int(input())
 for i in range(0, T):
-    segments: List[str] = input().split(' ')
+    segments: List[str] = input().split()
     pattern: str = segments[0]
     K: int = int(segments[1])
     result: int = solve(pattern, K)

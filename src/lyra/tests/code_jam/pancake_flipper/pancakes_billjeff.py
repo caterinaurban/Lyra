@@ -23,7 +23,8 @@ for case in range(num):
                 move += 1
             else:
                 move: int = (- 1)
+    case_number: int = case + 1
     if (move != (- 1)):
-        print('Case #' + str(case + 1) + ': ' + str(move))
+        print('Case #' + str(case_number) + ': ' + str(move))
     else:
-        print('Case #' + str(case + 1) + ':' + ' IMPOSSIBLE')
+        print('Case #' + str(case_number) + ':' + ' IMPOSSIBLE')

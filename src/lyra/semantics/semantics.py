@@ -171,6 +171,13 @@ class ExpressionSemantics(Semantics):
             elif isinstance(primary.typ, DictLyraType):
                 subscription = Subscription(primary.typ.key_typ, primary, index)
                 result.add(subscription)
+            elif isinstance(primary.typ, TupleLyraType):
+                if not isinstance(index, Literal):
+                    error = f"Semantics for {primary}[{index}] is not yet implemented!"
+                    raise NotImplementedError(error)
+                int_index = int(index.val)
+                subscription = Subscription(primary.typ.typs[int_index], primary, index)
+                result.add(subscription)
             else:
                 error = f"Semantics for subscription of {primary} is not yet implemented!"
                 raise NotImplementedError(error)

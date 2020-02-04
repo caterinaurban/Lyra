@@ -5,7 +5,8 @@ def flip(c: str) -> str:
         return '+'
 
 def n_flip(cakes: str, n: int, idx: int) -> str:
-    assert ((idx + n) <= len(cakes))
+    if (idx + n) > len(cakes):
+        raise Exception
     to_return: str = cakes[:idx]
     for i in range(n):
         to_return += flip(cakes[(idx + i)])
@@ -31,8 +32,9 @@ def solve(cakes: str, n: int) -> int:
 num_cases: int = int(input())
 for i in range(num_cases):
     line: str = input()
-    cakes: str = line.split(' ')[0]
-    flipper: int = int(line.split(' ')[1].strip())
+    split_line: List[str] = line.split()
+    cakes: str = split_line[0]
+    flipper: int = int(split_line[1].strip())
     try:
         number: int = solve(cakes, flipper)
         if (number == (- 1)):
