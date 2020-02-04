@@ -260,7 +260,7 @@ class CFGFactory:
 
     def append_cfg(self, other):
         if self._cfg is not None:
-            if self._cfg.loose_out_edges and other.loose_in_edges:
+            if self._cfg.loose_out_edges or other.loose_in_edges:
                 self._cfg.append(_dummy_cfg(self._id_gen))
             self._cfg.append(other)
         else:

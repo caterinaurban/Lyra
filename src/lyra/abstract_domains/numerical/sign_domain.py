@@ -237,6 +237,9 @@ class SignLattice(ArithmeticMixin, BooleanMixin):
     def _div(self, other: 'SignLattice') -> 'SignLattice':
         return self._replace(type(self)())
 
+    def _mod(self, other: 'SignLattice') -> 'SignLattice':
+        return self._replace(type(self)())
+
     # boolean operations
 
     @copy_docstring(BooleanMixin.false)
