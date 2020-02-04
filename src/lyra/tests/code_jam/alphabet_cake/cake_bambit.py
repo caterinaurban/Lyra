@@ -1,3 +1,16 @@
+def max(x: int, y: int):
+  if x > y:
+      return x
+  else:
+      return y
+
+def min(x: int, y: int):
+  if x < y:
+      return x
+  else:
+      return y
+
+
 def solve() -> None:
     line: List[str] = input().rstrip().split()
     R: int = int(line[0])

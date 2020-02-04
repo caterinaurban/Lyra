@@ -421,6 +421,9 @@ class BuiltInCallSemantics(CallSemantics):
             if isinstance(arg, Input):                  # input().strip()
                 result.add(Input(typ))
                 continue
+            elif isinstance(arg, VariableIdentifier):   # x.strip()
+                result.add(VariableIdentifier(typ, arg.name))
+                continue
             error = f"Call to {stmt.name} of unexpected argument!"
             raise ValueError(error)
         state.result = result
@@ -487,6 +490,48 @@ class BuiltInCallSemantics(CallSemantics):
             return state
         error = f"Call to {stmt.name} with unexpected number of arguments!"
         raise ValueError(error)
+
+    def count_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
+        """Semantics of calls to 'count'.
+
+        :param stmt: call to 'count' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        argument = self.semantics(stmt.arguments[0], state, interpreter).result
+        result = set()
+        for arg in argument:
+            result.add(VariableIdentifier(stmt.typ, arg.name))
+        state.result = result
+        return state
+
+    def find_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
+        """Semantics of calls to 'find'.
+
+        :param stmt: call to 'find' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        argument = self.semantics(stmt.arguments[0], state, interpreter).result
+        result = set()
+        for arg in argument:
+            result.add(VariableIdentifier(stmt.typ, arg.name))
+        state.result = result
+        return state
+
+    def get_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
+        """Semantics of calls to 'get'.
+
+        :param stmt: call to 'get' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        argument = self.semantics(stmt.arguments[0], state, interpreter).result
+        result = set()
+        for arg in argument:
+            result.add(VariableIdentifier(arg.typ.val_typ, arg.name))
+        state.result = result
+        return state
 
     def items_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
         """Semantics of calls to 'items'.

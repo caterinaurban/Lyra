@@ -1,3 +1,9 @@
+def pow(a: int, b: int) -> int:
+    power: int = 1
+    for i in range(b):
+        power = power * a
+    return power
+
 def check(memos: Dict[(Tuple[(int, int, int, int)], int)], i: int, s: int, c: int, k: int) -> int:
     if (s == 0):
         return 0
@@ -5,8 +11,8 @@ def check(memos: Dict[(Tuple[(int, int, int, int)], int)], i: int, s: int, c: in
         memos[(i, s, c, k)]: int = (- 1)
         flip: int = 0
         for j in range(k):
-            flip += (1 << j)
-        flip: int = (flip << i)
+            flip += pow(2, j)
+        flip: int = flip * pow(2, i)
         new_s: int = (s ^ flip)
         best: int = (- 1)
         for j in range((c - (k - 1))):
@@ -38,7 +44,7 @@ for t in range(1, (T + 1)):
     for i in range(len(cakes)):
         c: str = cakes[i]
         if (c == '-'):
-            s += (1 << i)
+            s += pow(2, i)
     best: int = (- 1)
     for i in range((len(cakes) - (k - 1))):
         maybe: int = check(memos, i, s, len(cakes), k)

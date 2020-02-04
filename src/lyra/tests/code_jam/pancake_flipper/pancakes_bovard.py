@@ -27,20 +27,18 @@ def solve(cakes: str, n: int) -> int:
         return (- 1)
     if (not ('-' in cakes)):
         return flips
-    raise IOError(cakes)
+    return -1
 
 num_cases: int = int(input())
 for i in range(num_cases):
     line: str = input()
     split_line: List[str] = line.split()
     cakes: str = split_line[0]
-    flipper: int = int(split_line[1].strip())
-    try:
-        number: int = solve(cakes, flipper)
-        if (number == (- 1)):
-            result: str = 'IMPOSSIBLE'
-        else:
-            result: int = number
-    except Exception:
+    flipper_str: str = split_line[1]
+    flipper: int = int(flipper_str.strip())
+    number: int = solve(cakes, flipper)
+    if (number == (- 1)):
         result: str = 'IMPOSSIBLE'
+    else:
+        result: int = number
     print('Case #' + str(i + 1) + ': ' + str(result))
