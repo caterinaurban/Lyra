@@ -1,3 +1,14 @@
+def sort(queue: List[str], table: Dict[(str, int)]):
+    elements: int = len(queue)
+    for i in range(elements-1):
+        for j in range(i+1, elements):
+            index_i: int = table[queue[i]]
+            index_j: int = table[queue[j]]
+            if index_i > index_j:
+                aux: str = queue[i]
+                queue[i] = queue[j]
+                queue[j] = aux
+
 def ok(pattern: str) -> bool:
     c: str = ''
     for c in pattern:
@@ -29,7 +40,7 @@ def solve(pattern: str, K: int) -> int:
     m: int = (- 1)
     while (len(queue) > 0):
         p: str = queue[0]
-        del queue[0]
+        queue = queue[1:]
         current: int = table[p]
         if ((m >= 0) and (current >= m)):
             break
@@ -46,7 +57,7 @@ def solve(pattern: str, K: int) -> int:
             else:
                 continue
             queue.append(flipped)
-        queue: List[str] = sorted(queue, key=(lambda p: table[p]))
+        sort(queue, table)
     return m
 T: int = int(input())
 for i in range(0, T):
@@ -54,7 +65,8 @@ for i in range(0, T):
     pattern: str = segments[0]
     K: int = int(segments[1])
     result: int = solve(pattern, K)
+    case_number: int = i + 1
     if (result >= 0):
-        print('Case #' + str(i + 1) + ': ' + str(result))
+        print('Case #' + str(case_number) + ': ' + str(result))
     else:
-        print('Case #' + str(i + 1) + ': ' + 'IMPOSSIBLE')
+        print('Case #' + str(case_number) + ': ' + 'IMPOSSIBLE')

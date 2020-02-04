@@ -67,7 +67,6 @@ for index in range(1, (int(cases) + 1)):
             step: int = (- 1)
         else:
             step += 1
-            del List[:]
             List: List[str] = newList[:]
     o: str = str(step)
     if (step == (- 1)):
