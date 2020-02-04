@@ -25,7 +25,6 @@ from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, C
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
     StringLyraType, TupleLyraType, ListLyraType, SetLyraType, DictLyraType
 from lyra.engine.interpreter import Interpreter
-from lyra.engine.runner import Runner
 
 _first1 = re.compile(r'(.)([A-Z][a-z]+)')
 _all2 = re.compile('([a-z0-9])([A-Z])')
@@ -697,6 +696,16 @@ class BuiltInCallSemantics(CallSemantics):
         :return: state modified by the call statement
         """
         operator = BinaryArithmeticOperation.Operator.Div
+        return self._binary_operation(stmt, operator, state, interpreter)
+
+    def mod_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
+        """Semantics of a call to '%' (modulo).
+
+        :param stmt: call to '%' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        operator = BinaryArithmeticOperation.Operator.Mod
         return self._binary_operation(stmt, operator, state, interpreter)
 
     def eq_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:

@@ -172,6 +172,9 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin)
     def _div(self, other: 'IntervalLattice') -> 'IntervalLattice':
         return self._replace(type(self)())
 
+    def _mod(self, other: 'ArithmeticMixin') -> 'ArithmeticMixin':
+        return self._replace(type(self)())
+
     # boolean operations
 
     @copy_docstring(BooleanMixin.false)

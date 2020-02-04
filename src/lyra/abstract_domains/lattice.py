@@ -382,10 +382,10 @@ class ArithmeticMixin(Lattice, metaclass=ABCMeta):
         """
 
     def div(self, other: 'ArithmeticMixin') -> 'ArithmeticMixin':
-        """Multiplication between two lattice elements.
+        """Division between two lattice elements.
 
         :param other: other lattice element
-        :return: current lattice element modified to be the product
+        :return: current lattice element modified to be the division
 
         """
         if self.is_bottom():
@@ -394,6 +394,29 @@ class ArithmeticMixin(Lattice, metaclass=ABCMeta):
             return self._replace(other)
         else:
             return self._div(other)
+
+    @abstractmethod
+    def _mod(self, other: 'ArithmeticMixin') -> 'ArithmeticMixin':
+        """Modulo between two default lattice elements.
+
+        :param other: other lattice element
+        :return: current lattice element modified to be the reminder
+
+        """
+
+    def mod(self, other: 'ArithmeticMixin') -> 'ArithmeticMixin':
+        """Modulo between two lattice elements.
+
+        :param other: other lattice element
+        :return: current lattice element modified to be the reminder
+
+        """
+        if self.is_bottom():
+            return self
+        elif other.is_bottom():
+            return self._replace(other)
+        else:
+            return self._mod(other)
 
 
 class BooleanMixin(Lattice, metaclass=ABCMeta):

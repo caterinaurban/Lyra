@@ -67,7 +67,8 @@ for t in range(1, (T + 1)):
     result: Tuple[(int, Dict[(Tuple[(int, int)], str)])] = f(N, Ms)
     score: int = result[0]
     changed: Dict[(Tuple[(int, int)], str)] = result[1]
-    print('Case #' + str(t) + ':' + str(score) + ' ' + str(len(changed)) + '\n')
+    number_of_changes: int = len(changed)
+    print('Case #' + str(t) + ':' + str(score) + ' ' + str(number_of_changes) + '\n')
     for (i, j) in changed:
         print(changed[(i, j)] + ' ' + str(i) + ' ' + str(j) + '\n')
     for i in range(1, (N + 1)):

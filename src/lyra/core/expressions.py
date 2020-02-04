@@ -913,6 +913,10 @@ class Subscription(Expression):
     def __str__(self):
         return "{0.target}[{0.key}]".format(self)
 
+    @property
+    def name(self):
+        return self.__str__()
+
 
 class Slicing(Expression):
     """Slicing representation.
@@ -1314,6 +1318,7 @@ class BinaryArithmeticOperation(BinaryOperation):
         Sub = 2
         Mult = 3
         Div = 4
+        Mod = 5
 
         def __str__(self):
             if self.value == 1:
@@ -1324,6 +1329,8 @@ class BinaryArithmeticOperation(BinaryOperation):
                 return "*"
             elif self.value == 4:
                 return "/"
+            elif self.value == 5:
+                return "%"
 
     def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
         """Binary arithmetic operation expression representation.

@@ -213,6 +213,12 @@ class Basis(Store, State, metaclass=ABCMeta):
                 else:
                     evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
                 return evaluated2
+            elif expr.operator == BinaryArithmeticOperation.Operator.Mod:
+                if isinstance(value1, ArithmeticMixin):
+                    evaluated2[expr] = deepcopy(value1).mod(value2)
+                else:
+                    evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
+                return evaluated2
             raise ValueError(f"Binary arithmetic operator '{str(expr.operator)}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
@@ -393,6 +399,13 @@ class Basis(Store, State, metaclass=ABCMeta):
                     refinement2 = deepcopy(refined).top()
                 updated2 = self.visit(expr.right, evaluation, refinement2, updated1)
                 return updated2
+            elif expr.operator == BinaryArithmeticOperation.Operator.Mod:
+                refined = evaluation[expr].meet(value)
+                if isinstance(refined, ArithmeticMixin):
+                    refinement = deepcopy(refined).mod(evaluation[expr.right])
+                else:
+                    refinement = deepcopy(refined).top()
+                return self.visit(expr.left, evaluation, refinement, state)
             raise ValueError(f"Binary arithmetic operator '{expr.operator}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
