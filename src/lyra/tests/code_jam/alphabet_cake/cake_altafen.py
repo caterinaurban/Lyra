@@ -30,21 +30,46 @@ def valid(cake_arg: List[List[str]]) -> bool:
                     cake[x3][y3]: str = '_'
     return True
 
+def cartesian_product(inputs: List[List[str]]) -> List[List[str]]:
+    solutions: int = 1
+    for an_input in inputs:
+        solutions *= len(an_input)
+
+    product: List[List[str]] = list()
+    for i in range(solutions):
+        j: int = 1
+        result_line: str = ''
+        for input_line in inputs:
+            result_line += input_line[(i/j) % len(input_line)]
+            j *= len(input_line)
+        product.append([result_line])
+    return product
+
 def solve(cake: List[List[str]]) -> List[List[str]]:
     letters: str = ''
     unk: List[Tuple[(int, int)]] = []
     for x in range(len(cake)):
-        for y in range(len(cake[0])):
+        first: List[str] = cake[0]
+        for y in range(len(first)):
             if (cake[x][y] == '?'):
                 unk.append((x, y))
             else:
                 letters += cake[x][y]
-    for attempt in product(letters, repeat=len(unk)):
-        for (a, b) in zip(unk, attempt):
+
+    letters_list: List[List[str]] = []
+    for i in range(len(unk)):
+        letters_list.append([letters])
+    attempts: List[List[str]] = cartesian_product(letters_list)
+
+    for attempt in attempts:
+        for i in range(len(unk)):
+            a: Tuple[(int, int)] = unk[i]
+            b: str = attempt[i]
             cake[a[0]][a[1]]: str = b
         if valid(cake):
             return cake
     return [['WTF']]
+
 T: int = int(input())
 for case in range(T):
     line: List[str] = input().split()
@@ -53,7 +78,8 @@ for case in range(T):
     cake: List[List[str]] = []
     for row in range(R):
         cake.append(list(input()))
-    print('Case #' + str(case + 1) + ': ')
+    case_number: int = case + 1
+    print('Case #' + str(case_number) + ': ')
     result: List[List[str]] = solve(cake)
     for index in range(len(result)):
         print(result[index])
