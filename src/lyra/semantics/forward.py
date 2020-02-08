@@ -48,9 +48,16 @@ class UserDefinedCallSemantics(ForwardSemantics):
         """
         fname, fcfg, _ = stmt.name, interpreter.cfgs[stmt.name], deepcopy(state)
         # assign function actual to formal parameters
-        for formal, actual in zip(interpreter.fargs[fname], stmt.arguments):
+        fargs = interpreter.fargs[fname]
+        for formal, actual in zip(fargs, stmt.arguments):
             rhs = self.semantics(actual, state, interpreter).result
             state = state.assign({formal}, rhs)
+
+        # add the local variables to the state
+        local_vars = set(interpreter.cfgs[fname].variables).difference(fargs)
+        for local in local_vars:
+            state = state.add_variable(local).forget_variable(local)
+
         fresult = interpreter.analyze(fcfg, state)      # analyze the function
         fstate = fresult.get_node_result(fcfg.out_node)[state][-1]
         return state.bottom().join(deepcopy(fstate))
@@ -81,9 +88,11 @@ class AssignmentSemantics(ForwardSemantics):
         # if needed, add formal function parameters and local function variables
         if isinstance(stmt.right, Call) and stmt.right.name in interpreter.cfgs:
             # TODO: right might not be a Call but just contain a Call
-            for formal in interpreter.fargs[stmt.right.name]:
+            formal_args = interpreter.fargs[stmt.right.name]
+            local_vars = set(interpreter.cfgs[stmt.right.name].variables).difference(formal_args)
+            for formal in formal_args:
                 state = state.add_variable(formal).forget_variable(formal)
-            for local in interpreter.cfgs[stmt.right.name].variables:
+            for local in local_vars:
                 state = state.add_variable(local).forget_variable(local)
         rhs = self.semantics(stmt.right, state, interpreter).result     # rhs evaluation
         lhs = self.semantics(stmt.left, state, interpreter).result      # lhs evaluation
@@ -91,9 +100,11 @@ class AssignmentSemantics(ForwardSemantics):
         # if needed, remove local function variables and formal function parameters
         if isinstance(stmt.right, Call) and stmt.right.name in interpreter.cfgs:
             # TODO: right might not be a Call but just contain a Call
-            for local in interpreter.cfgs[stmt.right.name].variables:
+            formal_args = interpreter.fargs[stmt.right.name]
+            local_vars = set(interpreter.cfgs[stmt.right.name].variables).difference(formal_args)
+            for local in local_vars:
                 state = state.remove_variable(local)
-            for formal in interpreter.fargs[stmt.right.name]:
+            for formal in formal_args:
                 state = state.remove_variable(formal)
         return state
 

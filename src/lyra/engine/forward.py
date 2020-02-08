@@ -68,7 +68,11 @@ class ForwardInterpreter(Interpreter):
                 for edge in edges:
                     if edge.source in self.result.result:
                         ctx = context
-                        predecessor = deepcopy(self.result.get_node_result(edge.source)[ctx][-1])
+                        node_result = self.result.get_node_result(edge.source)
+                        if ctx in node_result.keys():
+                            predecessor = deepcopy(node_result[ctx][-1])
+                        else:
+                            predecessor = deepcopy(initial).bottom()
                     else:
                         predecessor = deepcopy(initial).bottom()
                     # handle conditional edges

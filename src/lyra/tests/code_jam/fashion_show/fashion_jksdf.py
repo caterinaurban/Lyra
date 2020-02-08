@@ -1,6 +1,3 @@
-def printout(n: int, v: str) -> None:
-    print(((('Case #' + str(n)) + ': ') + v))
-
 def call(ii: int) -> None:
     line: List[str] = input().split()
     n: int = int(line[0])
@@ -38,9 +35,13 @@ def call(ii: int) -> None:
     number: int = 2
     if n != 1:
         number = (3 * n) - 2
-    printout(ii, str(number) + ' ' + str(len(res)))
+    res_size: int = len(res)
+    print('Case #' + str(ii) + ': ' + str(number) + ' ' + str(res_size))
     for ituple in res:
-        print(((str(ituple[0]) + str((int(ituple[1]) + 1))) + str((int(ituple[2]) + 1))))
+        tuple_one: int = int(ituple[1]) + 1
+        tuple_two: int = int(ituple[2]) + 1
+        print(str(ituple[0]) + str(tuple_one) + str(tuple_two))
+
 t: int = int(input())
 for ii in range(t):
     call((ii + 1))

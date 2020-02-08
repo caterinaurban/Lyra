@@ -4,7 +4,8 @@ def valid(cake_arg: List[List[str]]) -> bool:
         cake.append(c[:])
     seen: str = ''
     for x in range(len(cake)):
-        for y in range(len(cake[0])):
+        first: str = cake[0]
+        for y in range(len(first)):
             if (cake[x][y] == '?'):
                 raise Exception
             elif (cake[x][y] == '_'):
@@ -18,8 +19,8 @@ def valid(cake_arg: List[List[str]]) -> bool:
                     break
                 if (cake[x][y] != cake[x2][y]):
                     break
-            for y2 in range(y, (len(cake[0]) + 1)):
-                if (y2 == len(cake[0])):
+            for y2 in range(y, (len(first) + 1)):
+                if (y2 == len(first)):
                     break
                 if (cake[x][y] != cake[x][y2]):
                     break
