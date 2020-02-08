@@ -9,8 +9,8 @@ Lyra's internal backward semantics of statements.
 from typing import Union
 
 from lyra.abstract_domains.lattice import EnvironmentMixin
-from lyra.core.expressions import BinarySequenceOperation, ListDisplay, VariableIdentifier
-from lyra.core.types import ListLyraType
+from lyra.core.expressions import BinarySequenceOperation, ListDisplay, VariableIdentifier, SetDisplay
+from lyra.core.types import ListLyraType, SetLyraType
 from lyra.engine.interpreter import Interpreter
 from lyra.semantics.semantics import Semantics, DefaultSemantics
 
@@ -32,6 +32,18 @@ class BackwardSemantics(Semantics):
         for target in targets:
             for value in values:
                 display = ListDisplay(ListLyraType(value.typ), [value])
+                rhs.add(BinarySequenceOperation(target.typ, target, op, display))
+        return state.substitute(targets, rhs)
+
+    def update_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
+        assert len(stmt.arguments) == 2
+        targets = self.semantics(stmt.arguments[0], state, interpreter).result
+        op = BinarySequenceOperation.Operator.Concat
+        values = self.semantics(stmt.arguments[1], state, interpreter).result
+        rhs = set()
+        for target in targets:
+            for value in values:
+                display = SetDisplay(SetLyraType(value.typ), [value])
                 rhs.add(BinarySequenceOperation(target.typ, target, op, display))
         return state.substitute(targets, rhs)
 

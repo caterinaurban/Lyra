@@ -566,6 +566,12 @@ class CFGVisitor(ast.NodeVisitor):
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, DictLyraType)
                 return Call(pp, name, arguments, SetLyraType(arguments[0].typ.val_typ))
+            if name == 'update':
+                arguments = [self.visit(node.func.value, types, None, fname=fname)]     # target
+                args = [self.visit(arg, types, None, fname=fname) for arg in node.args]
+                arguments.extend(args)
+                assert isinstance(arguments[0].typ, SetLyraType)
+                return Call(pp, name, arguments, arguments[0].typ)
             arguments = [self.visit(node.func.value, types, None, fname=fname)]     # target
             arguments.extend([self.visit(arg, types, None, fname=fname) for arg in node.args])
             return Call(pp, name, arguments, typ)
