@@ -16,12 +16,14 @@ def flipped(pancakes: List[str]) -> List[str]:
 def solve(table: str, size: int) -> Tuple[(str, int)]:
     table_lst: List[str] = list(table)
     moves: int = 0
-    for i in range(max(1, (len(table_lst) - size))):
+    first_range: int = max(1, (len(table_lst) - size))
+    for i in range(first_range):
         print(table_lst)
         if (table_lst[i] == '-'):
             table_lst: List[str] = ((table_lst[:i] + flipped(table_lst[i:(i + size)])) + table_lst[(i + size):])
             moves += 1
-    for i in range((len(table_lst) - 1), max(((len(table_lst) - size) - 1), (size - 1)), (- 1)):
+    second_range: int = max(((len(table_lst) - size) - 1), (size - 1))
+    for i in range((len(table_lst) - 1), second_range, (- 1)):
         print(table_lst)
         if (table_lst[i] == '-'):
             i += 1

@@ -533,6 +533,21 @@ class BuiltInCallSemantics(CallSemantics):
         state.result = result
         return state
 
+    # TODO: this is a bitvector operation, can it be analyzed more precisely (e.g., like a binary operation)?
+    def bitxor_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
+        """Semantics of calls to '^' (bitwise xor).
+
+        :param stmt: call to '^' (bitwise xor) to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        argument = self.semantics(stmt.arguments[0], state, interpreter).result
+        result = set()
+        for arg in argument:
+            result.add(VariableIdentifier(stmt.typ, arg.name))
+        state.result = result
+        return state
+
     def items_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
         """Semantics of calls to 'items'.
 

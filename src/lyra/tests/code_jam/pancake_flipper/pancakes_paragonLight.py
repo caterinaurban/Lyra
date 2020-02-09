@@ -1,21 +1,3 @@
-def checkOnes(l: Dict[(int, int)]) -> int:
-    ones: int = 0
-    last: int = (- 1)
-    for i in range(len(l)):
-        if (i > 0):
-            last: int = l[(i - 1)]
-        if (l[i] == 0):
-            if (last == 1):
-                ones += 1
-            else:
-                continue
-        elif (last == 1):
-            continue
-        else:
-            continue
-    return ones
-
-
 cases: str = input().strip()
 print(cases)
 for index in range(1, (int(cases) + 1)):
