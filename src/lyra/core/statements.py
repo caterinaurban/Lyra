@@ -256,6 +256,10 @@ class SubscriptionAccess(ExpressionAccess):
     def __repr__(self):
         return "{0.target}[{0.key}]".format(self)
 
+    @property
+    def name(self):
+        return self.__str__()
+
 
 class SlicingAccess(ExpressionAccess):
     """Slicing access representation."""

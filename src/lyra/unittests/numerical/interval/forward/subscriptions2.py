@@ -1,0 +1,6 @@
+x5: List[List[str]] = [["a", "b", "c"], ["d", "e", "f"]]
+# STATE: i -> [-inf, inf], j -> [-inf, inf], len(x5) -> [0, inf], len(x5[i]) -> [0, inf], len(x5[j]) -> [0, inf], x5 -> [-inf, inf]
+for i in range(3):
+    for j in range(2):
+        if (x5[i][j] == '?' and (i < j)):
+            x5[j][i]: str = ''

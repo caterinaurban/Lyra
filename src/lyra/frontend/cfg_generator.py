@@ -520,7 +520,7 @@ class CFGVisitor(ast.NodeVisitor):
                 arguments = [self.visit(node.func.value, types, None, fname=fname)]  # target
                 args = [self.visit(arg, types, None, fname=fname) for arg in node.args]
                 arguments.extend(args)
-                assert isinstance(arguments[0].typ, StringLyraType)
+                assert isinstance(arguments[0].typ, (StringLyraType, ListLyraType))
                 return Call(pp, name, arguments, IntegerLyraType)
             if name == 'find':  # str.find(str, beg=0, end=len(string))
                 arguments = [self.visit(node.func.value, types, None, fname=fname)]  # target

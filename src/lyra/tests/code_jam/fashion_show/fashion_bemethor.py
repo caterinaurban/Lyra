@@ -19,8 +19,10 @@ for t_index in range(t):
         l.append([])
         l_beg.append([])
         for _ in range(n):
-            l[(- 1)].append('')
-            l_beg[(- 1)].append('')
+            last_l: List[str] = l[(- 1)]
+            last_l.append('')
+            last_l_beg: List[str] = l_beg[(- 1)]
+            last_l_beg.append('')
     for _ in range(m):
         tmp: List[str] = input().split()
         c: str = tmp[0]

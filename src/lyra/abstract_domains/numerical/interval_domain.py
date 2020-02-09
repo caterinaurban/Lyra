@@ -238,8 +238,8 @@ class IntervalState(BasisWithSummarization):
         lattices = defaultdict(lambda: IntervalLattice)
         super().__init__(variables, lattices, precursory=precursory)
         for v in self.variables:
-            if isinstance(v.typ, SequenceLyraType):
-                self.store[LengthIdentifier(v)] = lattices[IntegerLyraType()](lower=0)
+            if isinstance(v, LengthIdentifier):
+                self.store[v] = lattices[IntegerLyraType()](lower=0)
 
     @copy_docstring(BasisWithSummarization._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':

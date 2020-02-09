@@ -13,7 +13,7 @@ from queue import Queue
 from typing import Dict, List, Set, Tuple, Optional
 
 from lyra.core.expressions import VariableIdentifier, LengthIdentifier
-from lyra.core.statements import Statement, Assignment, VariableAccess, Call, TupleDisplayAccess
+from lyra.core.statements import Statement, Assignment, VariableAccess, Call, TupleDisplayAccess, SubscriptionAccess
 from lyra.core.types import SequenceLyraType, ContainerLyraType
 
 
@@ -215,11 +215,20 @@ class ControlFlowGraph:
             if current.identifier not in visited:
                 visited.add(current.identifier)
                 for stmt in current.stmts:
-                    if isinstance(stmt, Assignment) and isinstance(stmt.left, VariableAccess):
-                        variable = stmt.left.variable
-                        variables.add(variable)
-                        if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
-                            variables.add(LengthIdentifier(variable))
+                    if isinstance(stmt, Assignment):
+                        if isinstance(stmt.left, VariableAccess):
+                            variable = stmt.left.variable
+                            variables.add(variable)
+                            if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
+                                variables.add(LengthIdentifier(variable))
+                        elif isinstance(stmt.left, SubscriptionAccess):
+                            if isinstance(stmt.left.typ, (SequenceLyraType, ContainerLyraType)):
+                                variable = stmt.left.target
+                                variables.add(LengthIdentifier(variable))
+                            if isinstance(stmt.left.target, SubscriptionAccess):  # A[i][j][k]
+                                if isinstance(stmt.left.target.typ, (SequenceLyraType, ContainerLyraType)):
+                                    variable = stmt.left.target
+                                    variables.add(LengthIdentifier(variable))
                 if isinstance(current, Loop):
                     edges = self.edges.items()
                     conds = list()
@@ -237,9 +246,31 @@ class ControlFlowGraph:
                             elif isinstance(arg, TupleDisplayAccess):
                                 for i in arg.items:
                                     variables.add(i.variable)
+                elif isinstance(current, Basic):
+                    edges = self.edges.items()
+                    conds = list()
+                    for nodes, edge in edges:
+                        if nodes[0] == current:
+                            if isinstance(edge, Conditional):
+                                conds.append(edge.condition)  # if statements
+                    all_calls = [c for c in conds if isinstance(c, Call)]
+                    subscription_args = list()
+                    self.all_subscription_args(all_calls, subscription_args)
+                    for arg in subscription_args:
+                        if isinstance(arg.typ, (SequenceLyraType, ContainerLyraType)):
+                            variable = arg.target
+                            variables.add(LengthIdentifier(variable))
                 for node in self.successors(current):
                     worklist.put(node)
         return variables
+
+    def all_subscription_args(self, calls, args):
+        for call in calls:
+            for arg in call.arguments:
+                if isinstance(arg, Call):
+                    self.all_subscription_args([arg], args)
+                elif isinstance(arg, SubscriptionAccess):
+                    args.append(arg)
 
     def in_edges(self, node: Node) -> Set[Edge]:
         """Ingoing edges of a given node.

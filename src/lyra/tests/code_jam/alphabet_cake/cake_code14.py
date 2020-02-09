@@ -1,3 +1,8 @@
+def abs(x: int) -> int:
+    if x >= 0:
+        return x
+    return -x
+
 t: int = int(input())
 for ti in range(1, (t + 1)):
     line: List[str] = input().split()
@@ -13,8 +18,9 @@ for ti in range(1, (t + 1)):
                 for k in range(m):
                     if (k == j):
                         continue
-                    if ((cake[k][i] != '?') and (abs((k - j)) < dis)):
-                        dis: int = abs((k - j))
+                    kj: int = abs(k - j)
+                    if ((cake[k][i] != '?') and (kj < dis)):
+                        dis: int = kj
                         cake[j][i]: str = cake[k][i]
     for i in range(m):
         for j in range(n):
@@ -23,8 +29,9 @@ for ti in range(1, (t + 1)):
                 for k in range(n):
                     if (k == j):
                         continue
-                    if ((cake[i][k] != '?') and (abs((k - j)) < dis)):
-                        dis: int = abs((k - j))
+                    kj: int = abs(k - j)
+                    if ((cake[i][k] != '?') and (kj < dis)):
+                        dis: int = kj
                         cake[i][j]: str = cake[i][k]
     print('Case #' + str(ti) + ':')
     for l in cake:
