@@ -28,7 +28,7 @@ class AnalysisResult:
         :param node: analyzed node
         :return: list of states representing the result of the analysis for the block
         """
-        return self.result[node]
+        return self.result.get(node, dict())
 
     def set_node_result(self, node: Node, context: State, states: List[State]) -> None:
         """Set the analysis result for a node.
