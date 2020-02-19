@@ -238,8 +238,8 @@ class IntervalState(BasisWithSummarization):
         lattices = defaultdict(lambda: IntervalLattice)
         super().__init__(variables, lattices, precursory=precursory)
         for v in self.variables:
-            if isinstance(v, LengthIdentifier):
-                self.store[v] = lattices[IntegerLyraType()](lower=0)
+            if isinstance(v.typ, SequenceLyraType):
+                self.store[LengthIdentifier(v)] = lattices[IntegerLyraType()](lower=0)
 
     @copy_docstring(BasisWithSummarization._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
@@ -429,10 +429,7 @@ class IntervalState(BasisWithSummarization):
         def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None):
             if isinstance(expr.typ, SequenceLyraType):
                 length = LengthIdentifier(expr)
-                if length in state.store.keys():
-                    return state.store[LengthIdentifier(expr)]
-                # the length of a variable identifier obtained by casting to string
-                return state.lattices[IntegerLyraType()](lower=0)
+                return state.store.get(length, state.lattices[IntegerLyraType()](lower=0))
             raise ValueError(f"Unexpected expression during sequence length computation.")
 
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
