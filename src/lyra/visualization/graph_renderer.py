@@ -201,18 +201,19 @@ class AnalysisResultRenderer(CFGRenderer):
         for idx in range(len(node.stmts)):
             # ctxs -> states
             for i, states in enumerate(results.values()):
-                ctx2state = 'ctx{}: {}'.format(i, states[idx]) if fname else str(states[idx])
+                ctx2state = '[ctx]\n{}'.format(i, states[idx]).replace('; ', '\n') if fname else str(states[idx]).replace('; ', '\n')
                 node_result.append(state.format(html.escape(ctx2state).replace('\n', '<br />')))
             # stmt
             node_result.append(stmt.format(html.escape(str(node.stmts[idx]))))
         # last ctx -> states
         for i, states in enumerate(results.values()):
-            ctx2state = 'ctx{}: {}'.format(i, states[-1]) if fname else str(states[-1])
+            ctx2state = '[ctx]\n{}'.format(i, states[-1]).replace('; ', '\n') if fname else str(states[-1]).replace('; ', '\n')
             node_result.append(state.format(html.escape(ctx2state).replace('\n', '<br />')))
         return self._list2table(node_result, escape=False)
 
     def _render(self, data):
         (cfgs, result) = data
+        previous = None
         for fname, fcfg in cfgs.items():
             for node in fcfg.nodes.values():
                 fillcolor = self._node_color(node, fcfg)
@@ -223,3 +224,6 @@ class AnalysisResultRenderer(CFGRenderer):
                     label = self._escape_label(self._shorten_label(str(node)))
                     self._render_node(node, label, fillcolor)
             self._render_edges(fcfg)
+            if previous:
+                self._graph.edge(str(previous.out_node.identifier), str(fcfg.in_node.identifier), _attributes={'style':'invis'})
+            previous = fcfg

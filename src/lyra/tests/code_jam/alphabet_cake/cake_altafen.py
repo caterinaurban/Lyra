@@ -17,11 +17,13 @@ def valid(cake_arg: List[List[str]]) -> bool:
             for x2 in range(x, (len(cake) + 1)):
                 if (x2 == len(cake)):
                     break
+                pass
                 if (cake[x][y] != cake[x2][y]):
                     break
             for y2 in range(y, (len(first) + 1)):
                 if (y2 == len(first)):
                     break
+                pass
                 if (cake[x][y] != cake[x][y2]):
                     break
             for x3 in range(x, x2):
