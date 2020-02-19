@@ -401,11 +401,11 @@ class Basis(Store, State, metaclass=ABCMeta):
                 return updated2
             elif expr.operator == BinaryArithmeticOperation.Operator.Mod:
                 refined = evaluation[expr].meet(value)
-                if isinstance(refined, ArithmeticMixin):
-                    refinement = deepcopy(refined).mod(evaluation[expr.right])
-                else:
-                    refinement = deepcopy(refined).top()
-                return self.visit(expr.left, evaluation, refinement, state)
+                refinement1 = deepcopy(refined).top()
+                updated1 = self.visit(expr.left, evaluation, refinement1, state)
+                refinement2 = deepcopy(refined).top()
+                updated2 = self.visit(expr.right, evaluation, refinement2, updated1)
+                return updated2
             raise ValueError(f"Binary arithmetic operator '{expr.operator}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
