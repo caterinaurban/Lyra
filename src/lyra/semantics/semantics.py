@@ -174,8 +174,7 @@ class ExpressionSemantics(Semantics):
                 if not isinstance(index, Literal):
                     error = f"Semantics for {primary}[{index}] is not yet implemented!"
                     raise NotImplementedError(error)
-                int_index = int(index.val)
-                subscription = Subscription(primary.typ.typs[int_index], primary, index)
+                subscription = Subscription(primary.typ.typs[int(index.val)], primary, index)
                 result.add(subscription)
             else:
                 error = f"Semantics for subscription of {primary} is not yet implemented!"
