@@ -24,7 +24,7 @@ from lyra.unittests.runner import TestRunner
 class FularaTest(TestRunner):
 
     def interpreter(self):
-        return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
+        return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
 
     def state(self):  # initial state
         # wrapper conversions

@@ -252,6 +252,9 @@ class FularaUsageState(Stack, State):
     .. automethod:: FularaUsageState._substitute
     """
 
+    def forget_variable(self, variable: VariableIdentifier) -> 'State':
+        pass
+
     def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
         pass
 

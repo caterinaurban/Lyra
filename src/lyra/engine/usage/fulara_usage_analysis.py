@@ -18,12 +18,12 @@ from lyra.semantics.forward import DefaultForwardSemantics
 
 class FularaIntervalUsageAnalysis(Runner):
     def interpreter(self):
-        forward = ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 2, forward)
+        forward = ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 2, forward)
 
     def state(self):  # initial state
         forward = FularaIntervalAnalysis()
-        forward._cfg = self.cfg
+        forward._cfgs = self.cfgs
         init_forward = forward.state()
         scalar_vars = {v for v in self.variables if type(v.typ) in
                        fulara_usage_domain.scalar_types}

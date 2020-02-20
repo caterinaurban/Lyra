@@ -32,12 +32,12 @@ class FularaIntervalUsageTest(TestRunner):
 
     def interpreter(self):
         analysis = FularaIntervalUsageAnalysis()
-        analysis._cfg = self.cfg
+        analysis._cfgs = self.cfgs
         return analysis.interpreter()
 
     def state(self):  # initial state
         analysis = FularaIntervalUsageAnalysis()
-        analysis._cfg = self.cfg
+        analysis._cfgs = self.cfgs
         return analysis.state()
 
 

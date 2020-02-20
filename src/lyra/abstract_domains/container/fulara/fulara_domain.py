@@ -463,6 +463,9 @@ class FularaState(State):
     .. automethod:: FularaState._update_dict_from_refined_scalar
     """
 
+    def forget_variable(self, variable: VariableIdentifier) -> 'State':
+        pass
+
     def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
         pass
 

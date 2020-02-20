@@ -17,7 +17,7 @@ from lyra.semantics.forward import DefaultForwardSemantics
 
 class FularaIntervalAnalysis(Runner):
     def interpreter(self):
-        return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
+        return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
 
     def state(self):  # initial state
         # wrapper conversions
