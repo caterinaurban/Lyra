@@ -201,13 +201,13 @@ class AnalysisResultRenderer(CFGRenderer):
         for idx in range(len(node.stmts)):
             # ctxs -> states
             for i, states in enumerate(results.values()):
-                ctx2state = '[ctx]\n{}'.format(i, states[idx]).replace('; ', '\n') if fname else str(states[idx]).replace('; ', '\n')
+                ctx2state = 'ctx{}: {}'.format(i, states[idx]).replace(';', '\n') if fname else str(states[idx]).replace(';', '\n')
                 node_result.append(state.format(html.escape(ctx2state).replace('\n', '<br />')))
             # stmt
             node_result.append(stmt.format(html.escape(str(node.stmts[idx]))))
         # last ctx -> states
         for i, states in enumerate(results.values()):
-            ctx2state = '[ctx]\n{}'.format(i, states[-1]).replace('; ', '\n') if fname else str(states[-1]).replace('; ', '\n')
+            ctx2state = 'ctx{}: {}'.format(i, states[-1]).replace(';', '\n') if fname else str(states[-1]).replace(';', '\n')
             node_result.append(state.format(html.escape(ctx2state).replace('\n', '<br />')))
         return self._list2table(node_result, escape=False)
 
