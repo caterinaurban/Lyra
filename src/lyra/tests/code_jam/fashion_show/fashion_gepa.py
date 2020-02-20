@@ -4,12 +4,15 @@ def delta(N: int, x: List[List[str]], y: List[List[str]]) -> str:
     for r in range(N):
         for c in range(N):
             if (x[r][c] != y[r][c]):
-                res.append(y[r][c] + ' ' + str(r + 1) + ' ' + str(c + 1))
+                rr: int = r + 1
+                cc: int = c + 1
+                res.append(y[r][c] + ' ' + str(rr) + ' ' + str(cc))
             if (y[r][c] in ['+', 'x']):
                 total += 1
             elif (y[r][c] == 'o'):
                 total += 2
-    res[0]: str = str(total) + ' ' + str(len(res) - 1)
+    diff: int = len(res) - 1
+    res[0]: str = str(total) + ' ' + str(diff)
     res_str: str = ''
     for index in range(len(res)):
         res_str += res[index] + '\n'

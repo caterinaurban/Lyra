@@ -64,6 +64,7 @@ for _t in range(1, (_T + 1)):
         if row_done[i]:
             i += 1
             continue
+        pass
         if col_done[j]:
             j += 1
             continue
