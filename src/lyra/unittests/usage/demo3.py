@@ -1,7 +1,7 @@
 x: int = int(input())
 y: int = int(input())
 
-# STATE: a -> W, b -> N, x -> U, y -> N
+# STATE: a -> W; b -> N; x -> U; y -> N
 
 if 3 > x:  # x decision
     # inside nested if only b is modified!

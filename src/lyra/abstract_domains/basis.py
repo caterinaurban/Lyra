@@ -453,41 +453,10 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
         Lattice operations and statements modify the current state.
     """
 
-    @copy_docstring(Basis.is_bottom)
-    def is_bottom(self) -> bool:
-        """The current state is bottom if `any` non-summary variable maps to a bottom element,
-        or if the length identifier of `any` summary variable maps to a bottom element."""
-        for variable, element in self.store.items():
-            if isinstance(variable.typ, SequenceLyraType):
-                if element.is_bottom() and self.store[LengthIdentifier(variable)].is_bottom():
-                    return True
-            elif element.is_bottom():
-                return True
-        return False
-
-    def _assume_binarybooleanoperation(self, condition: BinaryBooleanOperation,
-                                       bwd: bool = False) -> 'BasisWithSummarization':
-        """Assume that some binary boolean condition holds in the current state.
-
-        :param condition: expression representing the assumed binary boolean condition
-        :param bwd: whether the assumption happens in a backward analysis (default: False)
-        :return: current state modified to satisfy the assumption
-        """
-        if condition.operator == BinaryBooleanOperation.Operator.And:
-            right = deepcopy(self)._assume(condition.right, bwd=bwd)
-            return self._assume(condition.left, bwd=bwd).meet(right)
-        if condition.operator == BinaryBooleanOperation.Operator.Or:
-            right = deepcopy(self)._assume(condition.right, bwd=bwd)
-            return self._assume(condition.left, bwd=bwd).join(right)
-        error = f"Assumption of a boolean condition with {condition.operator} is unsupported!"
-        raise ValueError(error)
-
     @copy_docstring(StateWithSummarization._weak_update)
     def _weak_update(self, variables: Set[VariableIdentifier], previous: 'BasisWithSummarization'):
         for var in variables:
             self.store[var].join(previous.store[var])
-            if isinstance(var.typ, SequenceLyraType):
-                self.store[LengthIdentifier(var)].join(previous.store[LengthIdentifier(var)])
         return self
 
     # expression evaluation
@@ -549,16 +518,22 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
         def visit_Subscription(self, expr: Subscription, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            evaluated = self.visit(expr.target, state, evaluation)
-            evaluation[expr] = evaluated[expr.target]
+            target = expr
+            while isinstance(target, (Subscription, Slicing)):
+                target = target.target
+            evaluated = self.visit(target, state, evaluation)
+            evaluation[expr] = evaluated[target]
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            evaluated = self.visit(expr.target, state, evaluation)
-            evaluation[expr] = evaluated[expr.target]
+            target = expr
+            while isinstance(target, (Subscription, Slicing)):
+                target = target.target
+            evaluated = self.visit(target, state, evaluation)
+            evaluation[expr] = evaluated[target]
             return evaluation
 
     _evaluation = ExpressionEvaluation()
@@ -604,13 +579,19 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: Subscription, evaluation=None, value=None, state=None):
             refined = evaluation[expr]      # weak update
-            state.store[expr.target] = refined
+            target = expr
+            while isinstance(target, (Subscription, Slicing)):
+                target = target.target
+            state.store[target] = refined
             return state
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
             refined = evaluation[expr]      # weak update
-            state.store[expr.target] = refined
+            target = expr
+            while isinstance(target, (Subscription, Slicing)):
+                target = target.target
+            state.store[target] = refined
             return state
 
     _refinement = ExpressionRefinement()

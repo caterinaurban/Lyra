@@ -14,4 +14,4 @@ def min(x: int, y: int):
 a: int = 10
 b: int = 20
 c: int = max(a, b) if a > 0 and b > 0 else min(a, b)
-# STATE: a -> [10, 10], b -> [20, 20], c -> [20, 20]
+# STATE: a -> [10, 10]; b -> [20, 20]; c -> [20, 20]

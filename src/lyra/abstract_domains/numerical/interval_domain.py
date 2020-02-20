@@ -238,29 +238,51 @@ class IntervalState(BasisWithSummarization):
         lattices = defaultdict(lambda: IntervalLattice)
         super().__init__(variables, lattices, precursory=precursory)
         for v in self.variables:
-            if isinstance(v.typ, SequenceLyraType):
+            if isinstance(v.typ, (SequenceLyraType, ContainerLyraType)):
                 self.store[LengthIdentifier(v)] = lattices[IntegerLyraType()](lower=0)
+
+    @copy_docstring(BasisWithSummarization.is_bottom)
+    def is_bottom(self) -> bool:
+        """The current state is bottom if `any` non-summary variable maps to a bottom element,
+        or if the length identifier of `any` summary variable maps to a bottom element."""
+        for variable, element in self.store.items():
+            if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
+                if element.is_bottom() and self.store[LengthIdentifier(variable)].is_bottom():
+                    return True
+            elif element.is_bottom():
+                return True
+        return False
 
     @copy_docstring(BasisWithSummarization._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
         # update length identifiers, if appropriate
-        if isinstance(left, VariableIdentifier) and isinstance(left.typ, (SequenceLyraType, ContainerLyraType)):
-            self.store[LengthIdentifier(left)] = self._length.visit(right, self)
-        elif isinstance(left, Subscription) and isinstance(left.target.typ, SequenceLyraType):
-            length = self.store[LengthIdentifier(left.target)]
-            key = deepcopy(self._evaluation.visit(left.key, self, dict())[left.key])
-            if key.less_equal(self.lattices[left.key.typ](lower=0)):    # key is positive
-                if length.upper < key.lower:    # key is definitely larger than length
-                    return self.bottom()
-                lower = self.lattices[left.key.typ](lower=key.lower)
-                self.store[LengthIdentifier(left.target)] = length.meet(lower)
-            elif key.less_equal(self.lattices[left.key.typ](upper=-1)):     # key is negative
-                if length.upper + key.upper < 0:    # key is definitely smaller than length
-                    return self.bottom()
-                upper = self.lattices[left.key.typ](lower=-key.upper)
-                self.store[LengthIdentifier(left.target)] = length.meet(upper)
-        elif isinstance(left, Slicing) and isinstance(left.target.typ, SequenceLyraType):
-            self.store[LengthIdentifier(left.target)] = self._length.visit(right, self)
+        if isinstance(left, VariableIdentifier):
+            if isinstance(left.typ, (SequenceLyraType, ContainerLyraType)):
+                self.store[LengthIdentifier(left)] = self._length.visit(right, self)
+        elif isinstance(left, Subscription) and isinstance(left.target, VariableIdentifier):
+            if isinstance(left.target.typ, SequenceLyraType):
+                length = self.store[LengthIdentifier(left.target)]
+                key = deepcopy(self._evaluation.visit(left.key, self, dict())[left.key])
+                if key.less_equal(self.lattices[left.key.typ](lower=0)):    # key is positive
+                    if length.upper < key.lower:    # key is definitely larger than length
+                        return self.bottom()
+                    lower = self.lattices[left.key.typ](lower=key.lower)
+                    self.store[LengthIdentifier(left.target)] = length.meet(lower)
+                elif key.less_equal(self.lattices[left.key.typ](upper=-1)):     # key is negative
+                    if length.upper + key.upper < 0:    # key is definitely smaller than length
+                        return self.bottom()
+                    upper = self.lattices[left.key.typ](lower=-key.upper)
+                    self.store[LengthIdentifier(left.target)] = length.meet(upper)
+        elif isinstance(left, Slicing) and isinstance(left.target, VariableIdentifier): #x[i:j] = e
+            if isinstance(left.target.typ, SequenceLyraType):   # x[i:j] = e
+                current = self.store[LengthIdentifier(left.target)]      # current length
+                # under-approximate length of left
+                lattice = self.lattices[IntegerLyraType()]
+                slicing = lattice(lower=1, upper=1)     # default under-approximation
+                # over-approximate length of right
+                extra = self._length.visit(right, self)
+                # len(x) = len(x) - len(x[j:i]) + len(e)
+                self.store[LengthIdentifier(left.target)] = current.sub(slicing).add(extra)
         # perform the assignment
         super()._assign(left, right)
         return self
@@ -275,6 +297,14 @@ class IntervalState(BasisWithSummarization):
                 value = self.lattices[condition.typ](**self.arguments[condition.typ]).true()
             return self._refinement.visit(condition, evaluation, value, self)
         raise ValueError(f"Assumption of variable {condition} is unsupported!")
+
+    @copy_docstring(BasisWithSummarization._weak_update)
+    def _weak_update(self, variables: Set[VariableIdentifier], previous: 'BasisWithSummarization'):
+        for var in variables:
+            self.store[var].join(previous.store[var])
+            if isinstance(var.typ, (SequenceLyraType, ContainerLyraType)):
+                self.store[LengthIdentifier(var)].join(previous.store[LengthIdentifier(var)])
+        return self
 
     @copy_docstring(BasisWithSummarization._assume_eq_comparison)
     def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'IntervalState':

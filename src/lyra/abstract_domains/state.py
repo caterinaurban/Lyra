@@ -538,7 +538,10 @@ class StateWithSummarization(State, metaclass=ABCMeta):
         # copy the current state
         current: StateWithSummarization = deepcopy(self)
         # perform the substitution on the copy of the current state
-        self._assign_variable(left.target, right)
+        target = left
+        while isinstance(target, (Subscription, Slicing)):    # recurse to VariableIdentifier target
+            target = target.target
+        self._assign_variable(target, right)
         # perform a weak update on the current state
         return self.join(current)
 
@@ -556,7 +559,7 @@ class StateWithSummarization(State, metaclass=ABCMeta):
 
         :param variables: variables involved in the weak update
         :param previous: state before the strong update
-        :return: current state modified to have undergone a weak update (instead of a strong update)
+        :return: current state modified to have undergone a weak update (instead of a strong one)
         """
 
     @copy_docstring(State._assume_binary_comparison)
@@ -602,7 +605,10 @@ class StateWithSummarization(State, metaclass=ABCMeta):
         # copy the current state
         current: StateWithSummarization = deepcopy(self)
         # perform the substitution on the copy of the current state
-        self._substitute_variable(left.target, right)
+        target = left
+        while isinstance(target, (Subscription, Slicing)):    # recurse to VariableIdentifier target
+            target = target.target
+        self._substitute_variable(target, right)
         # check for errors turning the state into bottom
         if self.is_bottom():
             return self

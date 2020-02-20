@@ -1,7 +1,7 @@
 b: bool = bool(input())
 x: int = int(input())
 y: int = int(input())
-# RESULT: b -> U, list1 -> (O@0:4), list2 -> (O@0:2), s -> O, x -> U, y -> N
+# RESULT: b -> U; list1 -> (O@0:4); list2 -> (O@0:2); s -> O; x -> U; y -> N
 list1: List[int] = [1, x, 2, 3, 5, 8, y]
 s: int = 0
 if b:

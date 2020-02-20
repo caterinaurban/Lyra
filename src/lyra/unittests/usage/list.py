@@ -1,7 +1,7 @@
 
 x: int = int(input())
 y: int = int(input())
-# list1 -> (O@0:4), s -> O, x -> U, y -> N
+# list1 -> (O@0:4), s -> O; x -> U; y -> N
 list1: List[int] = [1, x, 2, 3, 5, 8, y]
 s: int = 0
 
