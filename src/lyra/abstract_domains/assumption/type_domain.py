@@ -314,6 +314,32 @@ class TypeLattice(BottomMixin, ArithmeticMixin, SequenceMixin, JSONMixin):
             return self.bottom()
         return self._replace(TypeLattice(TypeLattice.Status.Float))
 
+    @copy_docstring(ArithmeticMixin._mod)
+    def _mod(self, other: 'TypeLattice') -> 'TypeLattice':
+        """
+        Boolean % Boolean = Integer
+        Boolean / Integer = Integer
+        Boolean / Float = Float
+        Boolean / String = ⊥
+        Integer / Boolean = Integer
+        Integer / Integer = Integer
+        Integer / Float = Float
+        Integer / String = ⊥
+        Float / Boolean = Float
+        Float / Integer = Float
+        Float / Float = Float
+        Float / String = ⊥
+        String / Boolean = ⊥
+        String / Integer = ⊥
+        String / Float = ⊥
+        String / String = ⊥
+        """
+        if self.is_boolean() and other.is_boolean():
+            return self._replace(TypeLattice(TypeLattice.Status.Integer))
+        elif self.is_top() or other.is_top():
+            return self.bottom()
+        return self._replace(TypeLattice(max(self.element, other.element)))
+
     # sequence operations
 
     @copy_docstring(SequenceMixin._concat)

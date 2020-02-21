@@ -18,7 +18,7 @@ from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparis
     Range, Literal, UnaryBooleanOperation, BinaryBooleanOperation, \
     ExpressionVisitor, Input, ListDisplay, AttributeReference, Subscription, Slicing, \
     UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, TupleDisplay, \
-    SetDisplay, DictDisplay, BinarySequenceOperation
+    SetDisplay, DictDisplay, BinarySequenceOperation, Keys, Values
 from lyra.core.statements import ProgramPoint
 from lyra.core.types import IntegerLyraType
 from lyra.core.utils import copy_docstring
@@ -483,6 +483,16 @@ class AssumptionState(State):
                     step = self.visit(expr.step, left, right)
                     return Range(expr.typ, start, stop, step)
 
+                @copy_docstring(ExpressionVisitor.visit_Keys)
+                def visit_Keys(self, expr: Keys, left=None, right=None):
+                    target = self.visit(expr.target_dict, left, right)
+                    return Keys(expr.typ, target)
+
+                @copy_docstring(ExpressionVisitor.visit_Values)
+                def visit_Values(self, expr: Values, left=None, right=None):
+                    target = self.visit(expr.target_dict, left, right)
+                    return Values(expr.typ, target)
+
                 @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
                 def visit_UnaryArithmeticOperation(self, expr, left=None, right=None):
                     expression = self.visit(expr.expression, left, right)
@@ -658,6 +668,10 @@ class AssumptionState(State):
             _ = self.scopes.pop()
             return self.pop()
 
+        @copy_docstring(State.forget_variable)
+        def forget_variable(self, variable: VariableIdentifier) -> 'State':
+            raise RuntimeError("Unexpected forget of variable {variable}!")
+
         @copy_docstring(State._output)
         def _output(self, output: Expression) -> 'AssumptionState.InputStack':
             return self     # nothing to be done
@@ -783,6 +797,16 @@ class AssumptionState(State):
                 stop = self.visit(expr.stop)
                 step = self.visit(expr.step)
                 return Range(expr.typ, start, stop, step)
+
+            @copy_docstring(ExpressionVisitor.visit_Keys)
+            def visit_Keys(self, expr: Keys, left=None, right=None):
+                target = self.visit(expr.target_dict, left, right)
+                return Keys(expr.typ, target)
+
+            @copy_docstring(ExpressionVisitor.visit_Values)
+            def visit_Values(self, expr: Values, left=None, right=None):
+                target = self.visit(expr.target_dict, left, right)
+                return Values(expr.typ, target)
 
             @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
             def visit_UnaryArithmeticOperation(self, expr: UnaryArithmeticOperation):
@@ -990,6 +1014,13 @@ class AssumptionState(State):
         for i, state in enumerate(self.states):
             self.states[i] = state.exit_loop()
         self.stack.exit_loop()
+        return self
+
+    @copy_docstring(State.forget_variable)
+    def forget_variable(self, variable: VariableIdentifier) -> 'State':
+        for i, state in enumerate(self.states):
+            self.states[i] = state.forget_variable(variable)
+        self.stack.forget_variable(variable)
         return self
 
     @copy_docstring(State._output)
