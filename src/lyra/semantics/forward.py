@@ -58,21 +58,42 @@ class UserDefinedCallSemantics(ForwardSemantics):
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        fname, fcfg, _ = stmt.name, interpreter.cfgs[stmt.name], deepcopy(state)
-        # assign function actual to formal parameters
-        fargs = interpreter.fargs[fname]
-        for formal, actual in zip(fargs, stmt.arguments):
+        fname, fcfg = stmt.name, interpreter.cfgs[stmt.name]
+        # add formal function parameters to the state and assign their actual values
+        formal_args = interpreter.fargs[fname]
+        for formal, actual in zip(formal_args, stmt.arguments):
+
             rhs = self.semantics(actual, state, interpreter).result
+            state = state.add_variable(formal).forget_variable(formal)
             state = state.assign({formal}, rhs)
 
-        # add the local variables to the state
-        local_vars = set(interpreter.cfgs[fname].variables).difference(fargs)
+            if isinstance(actual, Call) and actual.name in interpreter.cfgs:
+                _ret = VariableIdentifier(formal.typ, '{}#return'.format(actual.name))
+                state = state.remove_variable(_ret)
+        # add local function variables to the state
+        local_vars = set(fcfg.variables).difference(formal_args)
         for local in local_vars:
             state = state.add_variable(local).forget_variable(local)
 
         fresult = interpreter.analyze(fcfg, state)      # analyze the function
         fstate = fresult.get_node_result(fcfg.out_node)[state][-1]
-        return state.bottom().join(deepcopy(fstate))
+        state = state.bottom().join(deepcopy(fstate))
+
+        # assign return variable
+        if state.result:
+            typ = next(iter(state.result)).typ
+            ret = VariableIdentifier(typ, '{}#return'.format(fname))
+            state = state.add_variable(ret).forget_variable(ret)
+            state = state.assign({ret}, state.result)
+            state.result = {ret}
+
+        # remove local function variables and formal function parameters
+        for local in local_vars:
+            state = state.remove_variable(local)
+        for formal in formal_args:
+            state = state.remove_variable(formal)
+
+        return state
 
     def return_semantics(self, stmt: Return, state: State, interpreter: Interpreter):
         """Forward semantics of an return statement.
@@ -97,27 +118,20 @@ class AssignmentSemantics(ForwardSemantics):
         :param state: state before executing the assignment
         :return: state modified by the assignment
         """
-        # if needed, add formal function parameters and local function variables
-        if isinstance(stmt.right, Call) and stmt.right.name in interpreter.cfgs:
-            # TODO: right might not be a Call but just contain a Call
-            formal_args = interpreter.fargs[stmt.right.name]
-            local_vars = set(interpreter.cfgs[stmt.right.name].variables).difference(formal_args)
-            for formal in formal_args:
-                state = state.add_variable(formal).forget_variable(formal)
-            for local in local_vars:
-                state = state.add_variable(local).forget_variable(local)
-        rhs = self.semantics(stmt.right, state, interpreter).result     # rhs evaluation
         lhs = self.semantics(stmt.left, state, interpreter).result      # lhs evaluation
-        state = state.assign(lhs, rhs)
-        # if needed, remove local function variables and formal function parameters
+
+        ret = None
         if isinstance(stmt.right, Call) and stmt.right.name in interpreter.cfgs:
-            # TODO: right might not be a Call but just contain a Call
-            formal_args = interpreter.fargs[stmt.right.name]
-            local_vars = set(interpreter.cfgs[stmt.right.name].variables).difference(formal_args)
-            for local in local_vars:
-                state = state.remove_variable(local)
-            for formal in formal_args:
-                state = state.remove_variable(formal)
+            typ = next(iter(lhs)).typ
+            ret = VariableIdentifier(typ, '{}#return'.format(stmt.right.name))
+            state = state.add_variable(ret).forget_variable(ret)
+
+        rhs = self.semantics(stmt.right, state, interpreter).result     # rhs evaluation
+        state = state.assign(lhs, rhs)
+
+        if isinstance(stmt.right, Call) and stmt.right.name in interpreter.cfgs:
+            state = state.remove_variable(ret)
+
         return state
 
 

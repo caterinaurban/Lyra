@@ -554,9 +554,13 @@ class CFGVisitor(ast.NodeVisitor):
                 assert isinstance(arguments[0].typ, StringLyraType)
                 return Call(pp, name, arguments, arguments[0].typ)
             if name == 'split':  # str.split([sep[, maxsplit]])
-                assert isinstance(typ, ListLyraType)  # we expect type to be a ListLyraType
-                arguments = [self.visit(node.func.value, types, typ.typ, fname=fname)]  # target
-                args_typs = zip(node.args, [typ.typ, IntegerLyraType()])
+                if isinstance(typ, list):    # this comes from a subscript
+                    _typ = ListLyraType(typ[0])
+                else:
+                    _typ = typ
+                assert isinstance(_typ, ListLyraType)  # we expect type to be a ListLyraType
+                arguments = [self.visit(node.func.value, types, _typ.typ, fname=fname)]  # target
+                args_typs = zip(node.args, [_typ.typ, IntegerLyraType()])
                 args = [self.visit(arg, types, arg_typ, fname=fname) for arg, arg_typ in args_typs]
                 arguments.extend(args)
                 return Call(pp, name, arguments, typ)
@@ -625,7 +629,7 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute ctx is Load, Store, or Del."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.slice, ast.Index):
-            target = self.visit(node.value, types, None, fname=fname)
+            target = self.visit(node.value, types, [typ], fname=fname)
             key = self.visit(node.slice.value, types, None, fname=fname)
             if isinstance(target.typ, ListLyraType):
                 return SubscriptionAccess(pp, target.typ.typ, target, key)
