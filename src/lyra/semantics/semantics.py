@@ -394,13 +394,13 @@ class BuiltInCallSemantics(CallSemantics):
                 items = [Literal(StringLyraType(), val) for val in arg.val.split()]
                 result.add(ListDisplay(typ, items))
                 continue
-            elif isinstance(arg, VariableIdentifier):   # x.split()
+            elif isinstance(arg, VariableIdentifier):   # TODO: x.split()
                 result.add(VariableIdentifier(typ, arg.name))
                 continue
             elif isinstance(arg, Input):                # input().split()
                 result.add(Input(typ))
                 continue
-            error = f"Call to {stmt.name} of unexpected argument!"
+            error = f"Call to {stmt.name} of unexpected argument {arg}!"
             raise ValueError(error)
         state.result = result
         return state
@@ -423,7 +423,10 @@ class BuiltInCallSemantics(CallSemantics):
             elif isinstance(arg, VariableIdentifier):   # x.strip()
                 result.add(VariableIdentifier(typ, arg.name))
                 continue
-            error = f"Call to {stmt.name} of unexpected argument!"
+            elif isinstance(arg, Subscription):         # x[i].strip()
+                result.add(Subscription(typ, arg.target, arg.key))
+                continue
+            error = f"Call to {stmt.name} of unexpected argument {arg}!"
             raise ValueError(error)
         state.result = result
         return state

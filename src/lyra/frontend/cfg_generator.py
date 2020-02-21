@@ -512,22 +512,22 @@ class CFGVisitor(ast.NodeVisitor):
             name: str = node.func.attr
             if name == 'append':
                 arguments = [self.visit(node.func.value, types, None, fname=fname)]     # target
-                args = [self.visit(arg, types, None, fname=fname) for arg in node.args]
-                arguments.extend(args)
                 assert isinstance(arguments[0].typ, ListLyraType)
+                args = [self.visit(arg, types, arguments[0].typ.typ, fname=fname) for arg in node.args]
+                arguments.extend(args)
                 return Call(pp, name, arguments, arguments[0].typ)
             if name == 'count':  # str.count(sub, start= 0,end=len(string))
                 arguments = [self.visit(node.func.value, types, None, fname=fname)]  # target
                 args = [self.visit(arg, types, None, fname=fname) for arg in node.args]
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, (StringLyraType, ListLyraType))
-                return Call(pp, name, arguments, IntegerLyraType)
+                return Call(pp, name, arguments, IntegerLyraType())
             if name == 'find':  # str.find(str, beg=0, end=len(string))
                 arguments = [self.visit(node.func.value, types, None, fname=fname)]  # target
                 args = [self.visit(arg, types, None, fname=fname) for arg in node.args]
                 arguments.extend(args)
                 assert isinstance(arguments[0].typ, StringLyraType)
-                return Call(pp, name, arguments, IntegerLyraType)
+                return Call(pp, name, arguments, IntegerLyraType())
             if name == 'get':  # dict.get(key[, value])
                 arguments = [self.visit(node.func.value, types, None, fname=fname)]     # target
                 args = [self.visit(arg, types, None, fname=fname) for arg in node.args]
