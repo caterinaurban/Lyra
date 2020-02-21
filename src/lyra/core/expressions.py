@@ -180,6 +180,14 @@ class ExpressionVisitor(metaclass=ABCMeta):
         """Visit of a range call expression."""
 
     @abstractmethod
+    def visit_Keys(self, expr: 'Keys'):
+        """Visit of a keys call expression."""
+
+    @abstractmethod
+    def visit_Values(self, expr: 'Values'):
+        """Visit of a values call expression."""
+
+    @abstractmethod
     def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation'):
         """Visit of a unary arithmetic operation."""
 
@@ -278,6 +286,14 @@ class NegationFreeExpression(ExpressionVisitor):
     def visit_Range(self, expr: 'Range', invert=False):
         return expr     # nothing to be done
 
+    @copy_docstring(ExpressionVisitor.visit_Keys)
+    def visit_Keys(self, expr: 'Keys', invert=False):
+        return expr  # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Values)
+    def visit_Values(self, expr: 'Values', invert=False):
+        return expr  # nothing to be done
+
     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
     def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', invert=False):
         return expr     # nothing to be done
@@ -371,6 +387,14 @@ class NegationFreeNormalExpression(ExpressionVisitor):
     @copy_docstring(ExpressionVisitor.visit_Range)
     def visit_Range(self, expr: 'Range', invert=False):
         return expr     # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Keys)
+    def visit_Keys(self, expr: 'Keys', invert=False):
+        return expr  # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Values)
+    def visit_Values(self, expr: 'Keys', invert=False):
+        return expr  # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
     def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', invert=False):
@@ -521,6 +545,14 @@ class Lyra2APRON(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_Range)
     def visit_Range(self, expr: 'Range', environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_Keys)
+    def visit_Keys(self, expr: 'Keys', environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_Values)
+    def visit_Values(self, expr: 'Keys', environment=None, usub=False):
         raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
 
     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -880,6 +912,10 @@ class Subscription(Expression):
 
     def __str__(self):
         return "{0.target}[{0.key}]".format(self)
+
+    @property
+    def name(self):
+        return self.__str__()
 
 
 class Slicing(Expression):
@@ -1282,6 +1318,7 @@ class BinaryArithmeticOperation(BinaryOperation):
         Sub = 2
         Mult = 3
         Div = 4
+        Mod = 5
 
         def __str__(self):
             if self.value == 1:
@@ -1292,6 +1329,8 @@ class BinaryArithmeticOperation(BinaryOperation):
                 return "*"
             elif self.value == 4:
                 return "/"
+            elif self.value == 5:
+                return "%"
 
     def __init__(self, typ: LyraType, left: Expression, operator: Operator, right: Expression):
         """Binary arithmetic operation expression representation.

@@ -213,6 +213,11 @@ class SimpleUsageState(Stack, State):
     def exit_loop(self) -> 'SimpleUsageState':
         return self.pop()
 
+    @copy_docstring(State.forget_variable)
+    def forget_variable(self, variable: VariableIdentifier) -> 'State':
+        self.lattice.store[variable].top()
+        return self
+
     @copy_docstring(State._output)
     def _output(self, output: Expression) -> 'SimpleUsageState':
         for identifier in output.ids():

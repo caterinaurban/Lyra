@@ -10,14 +10,15 @@ import os
 import time
 from abc import abstractmethod
 from queue import Queue
-from typing import Set
+from typing import Dict, List, Set
 
-from lyra.core.cfg import Loop
+from lyra.core.cfg import Loop, ControlFlowGraph
 from lyra.core.expressions import VariableIdentifier, LengthIdentifier
 from lyra.core.statements import Assignment, VariableAccess, Call, TupleDisplayAccess
 from lyra.core.types import SequenceLyraType, ContainerLyraType
 from lyra.engine.result import AnalysisResult
-from lyra.frontend.cfg_generator import ast_to_cfg
+from lyra.frontend.cfg_generator import ast_to_cfgs
+from lyra.frontend.cfg_generator import ast_to_fargs
 from lyra.visualization.graph_renderer import AnalysisResultRenderer
 
 
@@ -28,7 +29,8 @@ class Runner:
         self._path = None
         self._source = None
         self._tree = None
-        self._cfg = None
+        self._cfgs = None
+        self._fargs = {}
 
     @property
     def path(self):
@@ -55,12 +57,20 @@ class Runner:
         self._tree = tree
 
     @property
-    def cfg(self):
-        return self._cfg
+    def cfgs(self):
+        return self._cfgs
 
-    @cfg.setter
-    def cfg(self, cfg):
-        self._cfg = cfg
+    @cfgs.setter
+    def cfgs(self, cfgs):
+        self._cfgs = cfgs
+
+    @property
+    def fargs(self):
+        return self._fargs
+
+    @fargs.setter
+    def fargs(self, fargs):
+        self._fargs = fargs
 
     @abstractmethod
     def interpreter(self):
@@ -71,48 +81,21 @@ class Runner:
         """Initial analysis state."""
 
     @property
-    def variables(self) -> Set[VariableIdentifier]:
-        variables = set()
-        visited, worklist = set(), Queue()
-        worklist.put(self.cfg.in_node)
-        while not worklist.empty():
-            current = worklist.get()
-            if current.identifier not in visited:
-                visited.add(current.identifier)
-                for stmt in current.stmts:
-                    if isinstance(stmt, Assignment) and isinstance(stmt.left, VariableAccess):
-                        variable = stmt.left.variable
-                        variables.add(variable)
-                        if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
-                            variables.add(LengthIdentifier(variable))
-                if isinstance(current, Loop):
-                    edges = self.cfg.edges.items()
-                    conds = [edge.condition for nodes, edge in edges if nodes[0] == current]
-                    for cond in [c for c in conds if isinstance(c, Call)]:
-                        for arg in cond.arguments:
-                            if isinstance(arg, VariableAccess):
-                                variable = arg.variable
-                                variables.add(arg.variable)
-                                if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
-                                    variables.add(LengthIdentifier(variable))
-                            elif isinstance(arg, TupleDisplayAccess):
-                                for i in arg.items:
-                                    variables.add(i.variable)
-                for node in self.cfg.successors(current):
-                    worklist.put(node)
-        return variables
+    def variables(self, fname: str = '') -> Set[VariableIdentifier]:
+        return self.cfgs[fname].variables
 
     def main(self, path):
         self.path = path
         with open(self.path, 'r') as source:
             self.source = source.read()
             self.tree = ast.parse(self.source)
-            self.cfg = ast_to_cfg(self.tree)
+            self.cfgs: Dict[str, ControlFlowGraph] = ast_to_cfgs(self.tree)
+            self.fargs: Dict[str, List[VariableIdentifier]] = ast_to_fargs(self.tree)
         return self.run()
 
-    def run(self) -> AnalysisResult:
+    def run(self, fname: str = '') -> AnalysisResult:
         start = time.time()
-        result = self.interpreter().analyze(self.state())
+        result = self.interpreter().analyze(self.cfgs[fname], self.state())
         end = time.time()
         print('Time: {}s'.format(end - start))
         self.render(result)
@@ -120,7 +103,7 @@ class Runner:
 
     def render(self, result):
         renderer = AnalysisResultRenderer()
-        data = (self.cfg, result)
+        data = (self.cfgs, result)
         name = os.path.splitext(os.path.basename(self.path))[0]
         label = f"CFG with Analysis Result for {name}"
         directory = os.path.dirname(self.path)

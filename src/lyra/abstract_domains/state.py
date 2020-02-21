@@ -422,6 +422,14 @@ class State(Lattice, metaclass=ABCMeta):
         return self
 
     @abstractmethod
+    def forget_variable(self, variable: VariableIdentifier) -> 'State':
+        """Forget a variable value.
+
+        :param variable: variable whose value is to be forgotten
+        :return: current state modified to have forgotten the given variable value
+        """
+
+    @abstractmethod
     def _output(self, output: Expression) -> 'State':
         """Outputs something in the current state.
 
@@ -530,7 +538,10 @@ class StateWithSummarization(State, metaclass=ABCMeta):
         # copy the current state
         current: StateWithSummarization = deepcopy(self)
         # perform the substitution on the copy of the current state
-        self._assign_variable(left.target, right)
+        target = left
+        while isinstance(target, (Subscription, Slicing)):    # recurse to VariableIdentifier target
+            target = target.target
+        self._assign_variable(target, right)
         # perform a weak update on the current state
         return self.join(current)
 
@@ -548,7 +559,7 @@ class StateWithSummarization(State, metaclass=ABCMeta):
 
         :param variables: variables involved in the weak update
         :param previous: state before the strong update
-        :return: current state modified to have undergone a weak update (instead of a strong update)
+        :return: current state modified to have undergone a weak update (instead of a strong one)
         """
 
     @copy_docstring(State._assume_binary_comparison)
@@ -594,7 +605,10 @@ class StateWithSummarization(State, metaclass=ABCMeta):
         # copy the current state
         current: StateWithSummarization = deepcopy(self)
         # perform the substitution on the copy of the current state
-        self._substitute_variable(left.target, right)
+        target = left
+        while isinstance(target, (Subscription, Slicing)):    # recurse to VariableIdentifier target
+            target = target.target
+        self._substitute_variable(target, right)
         # check for errors turning the state into bottom
         if self.is_bottom():
             return self
@@ -789,6 +803,12 @@ class ProductState(State):
     def exit_loop(self) -> 'ProductState':
         for i, state in enumerate(self.states):
             self.states[i] = state.exit_loop()
+        return self
+
+    @copy_docstring(State.forget_variable)
+    def forget_variable(self, variable: VariableIdentifier) -> 'ProductState':
+        for i, state in enumerate(self.states):
+            self.states[i] = state.forget_variable(variable)
         return self
 
     @copy_docstring(State._output)

@@ -25,7 +25,7 @@ from lyra.unittests.runner import TestRunner
 class TypeTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return TypeState(self.variables)
@@ -34,7 +34,7 @@ class TypeTest(TestRunner):
 class QuantityTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return QuantityState(self.variables)
@@ -43,7 +43,7 @@ class QuantityTest(TestRunner):
 class RangeTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return RangeState(self.variables)
@@ -52,7 +52,7 @@ class RangeTest(TestRunner):
 class AlphabetTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return AlphabetState(self.variables)
@@ -61,7 +61,7 @@ class AlphabetTest(TestRunner):
 class TypeQuantityAssumptionTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return TypeQuantityAssumptionState(self.variables)
@@ -70,7 +70,7 @@ class TypeQuantityAssumptionTest(TestRunner):
 class TypeRangeAssumptionTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return TypeRangeAssumptionState(self.variables)
@@ -79,7 +79,7 @@ class TypeRangeAssumptionTest(TestRunner):
 class TypeAlphabetAssumptionTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return TypeAlphabetAssumptionState(self.variables)
@@ -88,7 +88,7 @@ class TypeAlphabetAssumptionTest(TestRunner):
 class TypeWordSetAssumptionTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return TypeWordSetAssumptionState(self.variables)
@@ -97,7 +97,7 @@ class TypeWordSetAssumptionTest(TestRunner):
 class TypeRangeAlphabetAssumptionTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return TypeRangeAlphabetAssumptionState(self.variables)
@@ -106,7 +106,7 @@ class TypeRangeAlphabetAssumptionTest(TestRunner):
 class QuantityRangeWordSetAssumptionTest(TestRunner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return QuantityRangeWordSetAssumptionState(self.variables)

@@ -215,6 +215,11 @@ class LivenessState(Store, State):
     def exit_loop(self) -> 'LivenessState':
         return self  # nothing to be done
 
+    @copy_docstring(State.exit_loop)
+    def forget_variable(self, variable: VariableIdentifier) -> 'LivenessState':
+        self.store[variable].top()
+        return self
+
     @copy_docstring(State._output)
     def _output(self, output: Expression) -> 'LivenessState':
         return self  # nothing to be done

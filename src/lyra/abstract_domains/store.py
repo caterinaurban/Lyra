@@ -71,7 +71,7 @@ class Store(EnvironmentMixin):
 
     def __repr__(self):
         items = sorted(self.store.items(), key=lambda x: x[0].name)
-        return ", ".join("{} -> {}".format(variable, value) for variable, value in items)
+        return "; ".join("{} -> {}".format(variable, value) for variable, value in items)
 
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'Store':

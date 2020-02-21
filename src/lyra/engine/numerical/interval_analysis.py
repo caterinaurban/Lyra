@@ -17,7 +17,7 @@ from lyra.abstract_domains.numerical.interval_domain import IntervalState, BoxSt
 class ForwardIntervalAnalysis(Runner):
 
     def interpreter(self):
-        return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
+        return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
 
     def state(self):
         return IntervalState(self.variables)
@@ -26,7 +26,7 @@ class ForwardIntervalAnalysis(Runner):
 class ForwardBoxAnalysis(Runner):
 
     def interpreter(self):
-        return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
+        return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
 
     def state(self):
         return BoxStateWithSummarization(self.variables)
@@ -35,7 +35,7 @@ class ForwardBoxAnalysis(Runner):
 class BackwardIntervalAnalysis(Runner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return IntervalState(self.variables)
@@ -44,7 +44,7 @@ class BackwardIntervalAnalysis(Runner):
 class BackwardBoxAnalysis(Runner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return BoxStateWithSummarization(self.variables)

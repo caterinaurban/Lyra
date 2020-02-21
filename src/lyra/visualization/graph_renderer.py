@@ -5,7 +5,9 @@ from uuid import uuid4 as uuid
 
 import graphviz as gv
 
+from lyra.abstract_domains.state import State
 from lyra.core.cfg import *
+from lyra.engine.result import AnalysisResult
 
 
 class GraphRenderer(metaclass=ABCMeta):
@@ -191,24 +193,37 @@ class CFGRenderer(GraphRenderer):
 class AnalysisResultRenderer(CFGRenderer):
     """Graphviz rendering of an analysis result on the analyzed control flow graph."""
 
-    def _basic_node_label(self, node, result):
+    def _basic_node_label(self, node, result: AnalysisResult, fname='', ctx=False):
+        results: Dict[State, List[State]] = result.get_node_result(node)
         state = '<font point-size="9">{} </font>'
-        states = map(lambda x: state.format(html.escape(str(x)).replace(
-            '\n', '<br />')), result.get_node_result(node))
+        node_result = [fname] if fname and ctx else list()      # add function name
         stmt = '<font color="#ffffff" point-size="11">{}</font>'
-        stmts = map(lambda x: stmt.format(html.escape(str(x))), node.stmts)
-        node_result = [item for items in zip_longest(
-            states, stmts) for item in items if item is not None]
+        for idx in range(len(node.stmts)):
+            # ctxs -> states
+            for i, states in enumerate(results.values()):
+                ctx2state = 'ctx{}: {}'.format(i, states[idx]).replace(';', '\n') if fname else str(states[idx]).replace(';', '\n')
+                node_result.append(state.format(html.escape(ctx2state).replace('\n', '<br />')))
+            # stmt
+            node_result.append(stmt.format(html.escape(str(node.stmts[idx]))))
+        # last ctx -> states
+        for i, states in enumerate(results.values()):
+            ctx2state = 'ctx{}: {}'.format(i, states[-1]).replace(';', '\n') if fname else str(states[-1]).replace(';', '\n')
+            node_result.append(state.format(html.escape(ctx2state).replace('\n', '<br />')))
         return self._list2table(node_result, escape=False)
 
     def _render(self, data):
-        (cfg, result) = data
-        for node in cfg.nodes.values():
-            fillcolor = self._node_color(node, cfg)
-            if isinstance(node, (Basic, Loop)):
-                label = self._basic_node_label(node, result)
-                self._render_node(node, label, fillcolor)
-            else:
-                label = self._escape_label(self._shorten_label(str(node)))
-                self._render_node(node, label, fillcolor)
-        self._render_edges(cfg)
+        (cfgs, result) = data
+        previous = None
+        for fname, fcfg in cfgs.items():
+            for node in fcfg.nodes.values():
+                fillcolor = self._node_color(node, fcfg)
+                if isinstance(node, (Basic, Loop)):
+                    label = self._basic_node_label(node, result, fname, node == fcfg.in_node)
+                    self._render_node(node, label, fillcolor)
+                else:
+                    label = self._escape_label(self._shorten_label(str(node)))
+                    self._render_node(node, label, fillcolor)
+            self._render_edges(fcfg)
+            if previous:
+                self._graph.edge(str(previous.out_node.identifier), str(fcfg.in_node.identifier), _attributes={'style':'invis'})
+            previous = fcfg
