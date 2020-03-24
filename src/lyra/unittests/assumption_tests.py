@@ -13,12 +13,15 @@ import sys
 from lyra.abstract_domains.assumption.alphabet_domain import AlphabetState
 from lyra.abstract_domains.assumption.assumption_domain import TypeRangeAssumptionState, \
     TypeAlphabetAssumptionState, TypeRangeAlphabetAssumptionState, TypeQuantityAssumptionState, \
-    TypeWordSetAssumptionState, QuantityRangeWordSetAssumptionState
+    TypeWordSetAssumptionState, QuantityRangeWordSetAssumptionState, \
+    TypeSignIntervalStringSetProductState
 from lyra.abstract_domains.assumption.quantity_domain import QuantityState
 from lyra.abstract_domains.assumption.range_domain import RangeState
 from lyra.abstract_domains.assumption.type_domain import TypeState
 from lyra.engine.backward import BackwardInterpreter
+from lyra.engine.forward import ForwardInterpreter
 from lyra.semantics.backward import DefaultBackwardSemantics
+from lyra.semantics.forward import DefaultForwardSemantics
 from lyra.unittests.runner import TestRunner
 
 
@@ -112,6 +115,15 @@ class QuantityRangeWordSetAssumptionTest(TestRunner):
         return QuantityRangeWordSetAssumptionState(self.variables)
 
 
+class TypeSignIntervalStringSetTest(TestRunner):
+
+    def interpreter(self):
+        return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
+
+    def state(self):
+        return TypeSignIntervalStringSetProductState(self.variables)
+
+
 def test_suite():
     suite = unittest.TestSuite()
     name = os.getcwd() + '/assumption/type/**.py'
@@ -164,6 +176,11 @@ def test_suite():
         if os.path.basename(path) != "__init__.py":
             print('quantity+range+wordset/' + os.path.basename(path))
             suite.addTest(QuantityRangeWordSetAssumptionTest(path))
+    name = os.getcwd() + '/assumption/type+sign+interval+stringset/**.py'
+    for path in glob.iglob(name):
+        if os.path.basename(path) != "__init__.py":
+            print('type+sign+interval+stringset/' + os.path.basename(path))
+            suite.addTest(TypeSignIntervalStringSetTest(path))
     return suite
 
 

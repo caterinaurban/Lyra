@@ -1241,6 +1241,18 @@ class TypeSignIntervalStringSetProductState(ProductState):
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)
 
+    def __repr__(self):
+        if self.is_bottom():
+            return "⊥"
+        result = list()
+        for variable in sorted(self.states[0].variables, key=lambda x: x.name):
+            values = list()
+            for state in self.states:
+                values.append('{}'.format(state.store[variable]))
+            value = ' ⋅ '.join(values)
+            result.append('{} -> {}'.format(variable, value))
+        return '; '.join(result)
+
 
 class TypeQuantityRangeWordSetAssumptionState(AssumptionState):
     """Type+quantity+range+word set assumption analysis state.

@@ -139,6 +139,16 @@ class QuantityRangeWordSetAssumptionAnalysis(Runner):
         precursory = SignIntervalStringSetProductState(self.variables)
         return QuantityRangeWordSetAssumptionState(self.variables, precursory=precursory)
 
+
+class TypeSignIntervalStringSetProductAnalysis(Runner):
+
+    def interpreter(self):
+        return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
+
+    def state(self):
+        return TypeSignIntervalStringSetProductState(self.variables)
+
+
 class TypeQuantityRangeWordSetAssumptionAnalysis(Runner):
 
     def interpreter(self):
