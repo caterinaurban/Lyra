@@ -105,5 +105,8 @@
 # from lyra.engine.assumption.assumption_analysis import QuantityRangeWordSetAssumptionAnalysis
 # QuantityRangeWordSetAssumptionAnalysis().main("example.py")
 
+from lyra.engine.assumption.assumption_analysis import TypeSignIntervalStringSetProductAnalysis
+TypeSignIntervalStringSetProductAnalysis().main("example.py")
+
 # from lyra.engine.assumption.assumption_analysis import TypeQuantityRangeWordSetAssumptionAnalysis
 # TypeQuantityRangeWordSetAssumptionAnalysis().main("example.py")
