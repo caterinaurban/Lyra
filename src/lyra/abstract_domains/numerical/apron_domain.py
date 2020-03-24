@@ -182,6 +182,10 @@ class APRONStateWithSummarization(StateWithSummarization, metaclass=ABCMeta):
             self.state = state
         return self
 
+    @copy_docstring(StateWithSummarization._assign_dictionary_subscription)
+    def _assign_dictionary_subscription(self, left: Subscription, right: Expression) -> 'APRONStateWithSummarization':
+        raise NotImplementedError(f"Assignment of dictionary subscription {left} is unsupported!")
+
     @copy_docstring(State._assume_variable)
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'APRONStateWithSummarization':
         raise NotImplementedError(f"Assumption of {condition.__class__.__name__} is unsupported!")

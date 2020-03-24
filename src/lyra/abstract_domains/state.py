@@ -19,7 +19,8 @@ from lyra.core.expressions import Expression, VariableIdentifier, Subscription, 
     NegationFreeExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
     BinaryComparisonOperation
 from lyra.core.statements import ProgramPoint
-from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType, ContainerLyraType
+from lyra.core.types import BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType, \
+    ContainerLyraType, DictLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -545,8 +546,19 @@ class StateWithSummarization(State, metaclass=ABCMeta):
         # perform a weak update on the current state
         return self.join(current)
 
+    @abstractmethod
+    def _assign_dictionary_subscription(self, left: Subscription, right: Expression) -> 'StateWithSummarization':
+        """Assign an expression to a dictionary subscription
+
+        :param left: the dictionary subscription to be assigned to
+        :param right: expression to assign
+        :return: current state modified by the assignment
+        """
+
     @copy_docstring(State._assign_subscription)
     def _assign_subscription(self, left: Subscription, right: Expression) -> 'StateWithSummarization':
+        if isinstance(left.target.typ, DictLyraType):
+            return self._assign_dictionary_subscription(left, right)
         return self._assign_summary(left, right)
 
     @copy_docstring(State._assign_slicing)

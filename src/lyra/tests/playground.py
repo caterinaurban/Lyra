@@ -72,8 +72,11 @@
 # Input Data Assumption Analyses #
 ##################################
 
-# from lyra.engine.assumption.assumption_analysis import TypeAnalysis
-# TypeAnalysis().main("example.py")
+# from lyra.engine.assumption.assumption_analysis import ForwardTypeAnalysis
+# ForwardTypeAnalysis().main("example.py")
+
+# from lyra.engine.assumption.assumption_analysis import BackwardTypeAnalysis
+# BackwardTypeAnalysis().main("example.py")
 
 # from lyra.engine.assumption.assumption_analysis import RangeAnalysis
 # RangeAnalysis().main("example.py")
@@ -101,3 +104,6 @@
 
 # from lyra.engine.assumption.assumption_analysis import QuantityRangeWordSetAssumptionAnalysis
 # QuantityRangeWordSetAssumptionAnalysis().main("example.py")
+
+# from lyra.engine.assumption.assumption_analysis import TypeQuantityRangeWordSetAssumptionAnalysis
+# TypeQuantityRangeWordSetAssumptionAnalysis().main("example.py")

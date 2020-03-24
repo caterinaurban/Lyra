@@ -358,7 +358,8 @@ class BuiltInCallSemantics(CallSemantics):
         :return: state modified by the call statement
         """
         if not stmt.arguments:
-            state.result = {SetDisplay(stmt.typ, list())}
+            assert isinstance(stmt.typ, DictLyraType)
+            state.result = {DictDisplay(stmt.typ, list(), list())}
             return state
         raise NotImplementedError(f"Semantics for {stmt} is not yet implemented!")
 

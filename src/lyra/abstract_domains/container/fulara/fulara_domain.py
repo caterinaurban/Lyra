@@ -21,7 +21,8 @@ from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, DictDisplay, \
     BinaryComparisonOperation, Keys, Items, Values, TupleDisplay, ExpressionVisitor, \
-    NegationFreeNormalExpression, Input, ListDisplay, Literal, Slicing
+    NegationFreeNormalExpression, Input, ListDisplay, Literal, Slicing, KeysIdentifier, \
+    ValuesIdentifier
 from lyra.core.types import DictLyraType, BooleanLyraType, IntegerLyraType, \
     FloatLyraType, StringLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
@@ -683,7 +684,14 @@ class FularaState(State):
         return self._scopes[-1]
 
     def __repr__(self):
-        return f"{self.scalar_state}, {self.dict_store}, {self.init_store}, {self.in_relations}"
+        items = sorted(self.scalar_state.store.items(), key=lambda x: x[0].name)
+        remove = set()
+        for variable in self.dict_store.store:
+            remove.add(KeysIdentifier(variable))
+            remove.add(ValuesIdentifier(variable))
+        _items = [item for item in items if item[0] not in remove]
+        _scalar = "; ".join("{} -> {}".format(variable, value) for variable, value in _items)
+        return f"{_scalar}, {self.dict_store}, {self.init_store}, {self.in_relations}"
 
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'FularaState':

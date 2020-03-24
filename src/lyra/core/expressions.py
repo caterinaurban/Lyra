@@ -651,18 +651,24 @@ class Identifier(Expression, metaclass=ABCMeta):
     https://docs.python.org/3.4/reference/expressions.html#atom-identifiers
     """
 
-    def __init__(self, typ: LyraType, name: str):
+    def __init__(self, typ: LyraType, name: str, special: bool = False):
         """Identifier construction.
 
         :param typ: type of the identifier
         :param name: name of the identifier
+        :param special: whether this is a special identifier
         """
         super().__init__(typ)
         self._name = name
+        self._special = special
 
     @property
     def name(self):
         return self._name
+
+    @property
+    def special(self):
+        return self._special
 
     def __eq__(self, other: 'Identifier'):
         return self.name == other.name
@@ -683,7 +689,7 @@ class VariableIdentifier(Identifier):
         :param typ: type of the identifier
         :param name: name of the identifier
         """
-        super().__init__(typ, name)
+        super().__init__(typ, name, special=False)
 
 
 class LengthIdentifier(Identifier):
@@ -695,7 +701,45 @@ class LengthIdentifier(Identifier):
         :param expression: sequence or collection the length of which is being constructed
         """
         name = "len({})".format(expression)
-        super().__init__(IntegerLyraType(), name)
+        super().__init__(IntegerLyraType(), name, special=True)
+        self._expression = expression
+
+    @property
+    def expression(self):
+        return self._expression
+
+
+class KeysIdentifier(Identifier):
+    """Dictionary keys identifier representation."""
+
+    def __init__(self, expression: Expression):
+        """Dictionary keys identifier construction.
+
+        :param expression: dictionary the keys of which are being identified
+        """
+        name = "keys({})".format(expression)
+        typ = expression.typ
+        assert isinstance(typ, DictLyraType)
+        super().__init__(typ.key_typ, name, special=True)
+        self._expression = expression
+
+    @property
+    def expression(self):
+        return self._expression
+
+
+class ValuesIdentifier(Identifier):
+    """Dictionary values identifier representation."""
+
+    def __init__(self, expression: Expression):
+        """Dictionary values identifier construction.
+
+        :param expression: dictionary the values of which are being identified
+        """
+        name = "values({})".format(expression)
+        typ = expression.typ
+        assert isinstance(typ, DictLyraType)
+        super().__init__(typ.val_typ, name, special=True)
         self._expression = expression
 
     @property

@@ -12,9 +12,10 @@ from enum import Enum
 from queue import Queue
 from typing import Dict, List, Set, Tuple, Optional
 
-from lyra.core.expressions import VariableIdentifier, LengthIdentifier
+from lyra.core.expressions import VariableIdentifier, LengthIdentifier, KeysIdentifier, \
+    ValuesIdentifier
 from lyra.core.statements import Statement, Assignment, VariableAccess, Call, TupleDisplayAccess
-from lyra.core.types import SequenceLyraType, ContainerLyraType
+from lyra.core.types import SequenceLyraType, ContainerLyraType, DictLyraType
 
 
 class Node(metaclass=ABCMeta):
@@ -220,6 +221,9 @@ class ControlFlowGraph:
                         variables.add(variable)
                         if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
                             variables.add(LengthIdentifier(variable))
+                            if isinstance(variable.typ, DictLyraType):
+                                variables.add(KeysIdentifier(variable))
+                                variables.add(ValuesIdentifier(variable))
                 if isinstance(current, Loop):
                     edges = self.edges.items()
                     conds = list()
@@ -234,6 +238,9 @@ class ControlFlowGraph:
                                 variables.add(arg.variable)
                                 if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
                                     variables.add(LengthIdentifier(variable))
+                                    if isinstance(variable.typ, DictLyraType):
+                                        variables.add(KeysIdentifier(variable))
+                                        variables.add(ValuesIdentifier(variable))
                             elif isinstance(arg, TupleDisplayAccess):
                                 for i in arg.items:
                                     variables.add(i.variable)

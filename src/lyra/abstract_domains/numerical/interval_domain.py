@@ -238,26 +238,46 @@ class IntervalState(BasisWithSummarization):
         lattices = defaultdict(lambda: IntervalLattice)
         super().__init__(variables, lattices, precursory=precursory)
         for v in self.variables:
-            if isinstance(v.typ, (SequenceLyraType, ContainerLyraType)):
+            if isinstance(v.typ, (SequenceLyraType, ContainerLyraType)) and not v.special:
                 self.store[LengthIdentifier(v)] = lattices[IntegerLyraType()](lower=0)
 
     @copy_docstring(BasisWithSummarization.is_bottom)
     def is_bottom(self) -> bool:
         """The current state is bottom if `any` non-summary variable maps to a bottom element,
         or if the length identifier of `any` summary variable maps to a bottom element."""
-        for variable, element in self.store.items():
-            if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
-                if element.is_bottom() and self.store[LengthIdentifier(variable)].is_bottom():
+        for var, element in self.store.items():
+            if not var.special:
+                if isinstance(var.typ, (SequenceLyraType, ContainerLyraType)):
+                    if element.is_bottom() and self.store[LengthIdentifier(var)].is_bottom():
+                        return True
+                elif element.is_bottom():
                     return True
-            elif element.is_bottom():
-                return True
         return False
+
+    @copy_docstring(BasisWithSummarization._assign_dictionary_subscription)
+    def _assign_dictionary_subscription(self, left: Subscription, right: Expression):
+        # update length identifier
+        target = left
+        key = None
+        while isinstance(target, Subscription):  # recurse to VariableIdentifier target
+            key = target.key
+            target = target.target
+        _evaluation = self._evaluation.visit(key, self, dict())
+        current = self.store[LengthIdentifier(target)]      # current length
+        one = self.lattices[IntegerLyraType()](lower=1, upper=1)
+        if _evaluation[key].less_equal(self.store[KeysIdentifier(target)]):
+            self.store[LengthIdentifier(target)] = deepcopy(current).join(current.add(one))
+        else:
+            self.store[LengthIdentifier(target)] = current.add(one)
+        # perform the assignment
+        super()._assign_dictionary_subscription(left, right)
+        return self
 
     @copy_docstring(BasisWithSummarization._assign)
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
         # update length identifiers, if appropriate
         if isinstance(left, VariableIdentifier):
-            if isinstance(left.typ, (SequenceLyraType, ContainerLyraType)):
+            if isinstance(left.typ, (SequenceLyraType, ContainerLyraType)) and not left.special:
                 self.store[LengthIdentifier(left)] = self._length.visit(right, self)
         elif isinstance(left, Subscription) and isinstance(left.target, VariableIdentifier):
             if isinstance(left.target.typ, SequenceLyraType):
@@ -302,7 +322,7 @@ class IntervalState(BasisWithSummarization):
     def _weak_update(self, variables: Set[VariableIdentifier], previous: 'BasisWithSummarization'):
         for var in variables:
             self.store[var].join(previous.store[var])
-            if isinstance(var.typ, (SequenceLyraType, ContainerLyraType)):
+            if isinstance(var.typ, (SequenceLyraType, ContainerLyraType)) and not var.special:
                 self.store[LengthIdentifier(var)].join(previous.store[LengthIdentifier(var)])
         return self
 
@@ -457,7 +477,7 @@ class IntervalState(BasisWithSummarization):
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None):
-            if isinstance(expr.typ, SequenceLyraType):
+            if isinstance(expr.typ, SequenceLyraType) and not expr.special:
                 length = LengthIdentifier(expr)
                 return state.store.get(length, state.lattices[IntegerLyraType()](lower=0))
             raise ValueError(f"Unexpected expression during sequence length computation.")

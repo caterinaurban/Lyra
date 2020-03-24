@@ -1228,3 +1228,36 @@ class QuantityRangeWordSetAssumptionState(AssumptionState):
         states = [QuantityState, RangeState, WordSetState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)
+
+
+class TypeSignIntervalStringSetProductState(ProductState):
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.numerical.sign_domain import SignState
+        from lyra.abstract_domains.numerical.interval_domain import IntervalState
+        from lyra.abstract_domains.string.stringset_domain import StringSetState
+        states = [TypeState, SignState, IntervalState, StringSetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)
+
+
+class TypeQuantityRangeWordSetAssumptionState(AssumptionState):
+    """Type+quantity+range+word set assumption analysis state.
+
+    Reduced product of type, quantity, range, and word set constraining states,
+    and a stack of assumptions on the input data.
+
+    .. document private methods
+    .. automethod:: TypeQuantityRangeWordSetAssumptionState._assume
+    .. automethod:: TypeQuantityRangeWordSetAssumptionState._substitute
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        from lyra.abstract_domains.assumption.type_domain import TypeState
+        from lyra.abstract_domains.assumption.quantity_domain import QuantityState
+        from lyra.abstract_domains.assumption.range_domain import RangeState
+        from lyra.abstract_domains.assumption.wordset_domain import WordSetState
+        states = [TypeState, QuantityState, RangeState, WordSetState]
+        arguments = defaultdict(lambda: {'variables': variables})
+        super().__init__(states, arguments, precursory)

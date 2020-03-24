@@ -10,6 +10,7 @@ The set of possible values of a program variable in a state is represented as a 
 from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum
+from functools import reduce
 from typing import Set
 
 from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONMixin
@@ -19,9 +20,11 @@ from lyra.abstract_domains.store import Store
 from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisitor, Literal, \
     Input, ListDisplay, Range, AttributeReference, Subscription, Slicing, \
     UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, TupleDisplay, \
-    SetDisplay, DictDisplay, BinarySequenceOperation, BinaryComparisonOperation, Keys, Values
+    SetDisplay, DictDisplay, BinarySequenceOperation, BinaryComparisonOperation, Keys, Values, \
+    KeysIdentifier, ValuesIdentifier
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
-    StringLyraType, ListLyraType, SequenceLyraType
+    StringLyraType, ListLyraType, SequenceLyraType, SetLyraType, TupleLyraType, DictLyraType, \
+    ContainerLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -96,17 +99,7 @@ class TypeLattice(BottomMixin, ArithmeticMixin, SequenceMixin, JSONMixin):
 
     @classmethod
     def from_lyra_type(cls, lyra_type: LyraType):
-        if isinstance(lyra_type, ListLyraType):
-            typ = lyra_type.typ
-        else:
-            typ = lyra_type
-        if isinstance(typ, BooleanLyraType):
-            return cls(TypeLattice.Status.Boolean)
-        elif isinstance(typ, IntegerLyraType):
-            return cls(TypeLattice.Status.Integer)
-        elif isinstance(typ, FloatLyraType):
-            return cls(TypeLattice.Status.Float)
-        return cls(TypeLattice.Status.String)
+        return cls(resolve(lyra_type))
 
     @property
     def element(self):
@@ -386,6 +379,26 @@ class TypeLattice(BottomMixin, ArithmeticMixin, SequenceMixin, JSONMixin):
         return TypeLattice()
 
 
+def resolve(typ: LyraType) -> TypeLattice.Status:
+    _typ = typ
+    while isinstance(_typ, (ListLyraType, TupleLyraType, SetLyraType, DictLyraType)):
+        if isinstance(_typ, (ListLyraType, SetLyraType)):
+            _typ = _typ.typ
+        elif isinstance(_typ, TupleLyraType):
+            _typ = reduce(max, map(resolve, _typ.typs), TypeLattice.Status.Boolean)
+        elif isinstance(_typ, DictLyraType):
+            _typ = max(resolve(_typ.key_typ), resolve(_typ.val_typ))
+    if isinstance(_typ, TypeLattice.Status):
+        return _typ
+    elif isinstance(_typ, BooleanLyraType):
+        return TypeLattice.Status.Boolean
+    elif isinstance(_typ, IntegerLyraType):
+        return TypeLattice.Status.Integer
+    elif isinstance(_typ, FloatLyraType):
+        return TypeLattice.Status.Float
+    return TypeLattice.Status.String
+
+
 class TypeState(Store, StateWithSummarization, InputMixin):
     """Type assumption analysis state. An element of the type assumption abstract domain.
 
@@ -406,6 +419,10 @@ class TypeState(Store, StateWithSummarization, InputMixin):
     .. automethod:: TypeState._assume
     .. automethod:: TypeState._substitute
     """
+    class Status(defaultdict):
+
+        def __missing__(self, key):
+            return {'type_status': resolve(key)}
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         """Map each program variable to the type representing its value.
@@ -413,27 +430,51 @@ class TypeState(Store, StateWithSummarization, InputMixin):
         :param variables: set of program variables
         """
         lattices = defaultdict(lambda: TypeLattice)
-        arguments = defaultdict(lambda: {'type_status': TypeLattice.Status.String})
-        arguments[BooleanLyraType()] = {'type_status': TypeLattice.Status.Boolean}
-        arguments[ListLyraType(BooleanLyraType())] = {'type_status': TypeLattice.Status.Boolean}
-        arguments[IntegerLyraType()] = {'type_status': TypeLattice.Status.Integer}
-        arguments[ListLyraType(IntegerLyraType())] = {'type_status': TypeLattice.Status.Integer}
-        arguments[FloatLyraType()] = {'type_status': TypeLattice.Status.Float}
-        arguments[ListLyraType(FloatLyraType())] = {'type_status': TypeLattice.Status.Float}
-
+        arguments = TypeState.Status()
         super().__init__(variables, lattices, arguments)
         InputMixin.__init__(self, precursory)
 
     @copy_docstring(State._assign_variable)
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'TypeState':
-        raise RuntimeError("Unexpected assignment in a backward analysis!")
+        evaluation = self._evaluation.visit(right, self, dict())
+        typ = TypeLattice.from_lyra_type(left.typ)
+        self.store[left] = evaluation[right].meet(typ)
+        if isinstance(left.typ, DictLyraType):
+            _typ = TypeLattice.from_lyra_type(left.typ.key_typ)
+            typ_ = TypeLattice.from_lyra_type(left.typ.val_typ)
+            if isinstance(right.typ, DictLyraType):
+                self.store[KeysIdentifier(left)] = evaluation[KeysIdentifier(right)].meet(_typ)
+                self.store[ValuesIdentifier(left)] = evaluation[ValuesIdentifier(right)].meet(typ_)
+            else:
+                self.store[KeysIdentifier(left)] = deepcopy(evaluation[right]).meet(deepcopy(typ))
+                self.store[ValuesIdentifier(left)] = deepcopy(evaluation[right]).meet(deepcopy(typ))
+        return self
+
+    def _assign_dictionary_subscription(self, left: Subscription, right: Expression) -> 'TypeState':
+        # copy the current state
+        current: TypeState = deepcopy(self)
+        # perform the assignment on the copy of the current state
+        target = left
+        key = None
+        while isinstance(target, Subscription):  # recurse to VariableIdentifier target
+            key = target.key
+            target = target.target
+        # do self._assign_variable(target, right)
+        _evaluation = self._evaluation.visit(key, self, dict())
+        _typ = TypeLattice.from_lyra_type(target.typ.key_typ)
+        evaluation = self._evaluation.visit(right, self, dict())
+        typ = TypeLattice.from_lyra_type(target.typ)
+        typ_ = TypeLattice.from_lyra_type(target.typ.val_typ)
+        self.store[target] = deepcopy(evaluation[right]).join(deepcopy(_evaluation[key])).meet(typ)
+        self.store[KeysIdentifier(target)] = _evaluation[key].meet(_typ)
+        self.store[ValuesIdentifier(target)] = evaluation[right].meet(typ_)
+        # perform a weak update on the current state
+        return self.join(current)
 
     @copy_docstring(StateWithSummarization._weak_update)
     def _weak_update(self, variables: Set[VariableIdentifier], previous: 'TypeState'):
         for var in variables:
             self.store[var].join(previous.store[var])
-            if isinstance(var.typ, SequenceLyraType):
-                self.store[LengthIdentifier(var)].join(previous.store[LengthIdentifier(var)])
         return self
 
     @copy_docstring(State._assume_variable)
@@ -499,6 +540,9 @@ class TypeState(Store, StateWithSummarization, InputMixin):
     @copy_docstring(State.forget_variable)
     def forget_variable(self, variable: VariableIdentifier) -> 'TypeState':
         self.store[variable].top()
+        if isinstance(variable.typ, DictLyraType):
+            self.store[KeysIdentifier(variable)].top()
+            self.store[ValuesIdentifier(variable)].top()
         return self
 
     @copy_docstring(State.output)
@@ -507,27 +551,19 @@ class TypeState(Store, StateWithSummarization, InputMixin):
 
     @copy_docstring(State._substitute_variable)
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'TypeState':
-        is_list = isinstance(left.typ, ListLyraType)
-        is_boolean_list = is_list and isinstance(left.typ.typ, BooleanLyraType)
-        is_integer_list = is_list and isinstance(left.typ.typ, IntegerLyraType)
-        is_float_list = is_list and isinstance(left.typ.typ, FloatLyraType)
-        is_string_list = is_list and isinstance(left.typ.typ, StringLyraType)
         # record the current value of the substituted variable
         value: TypeLattice = deepcopy(self.store[left])
-        if isinstance(left.typ, BooleanLyraType) or is_boolean_list:
-            # forget the current value of the substituted variable
+        # forget the current value of the substituted variable
+        typ = resolve(left.typ)
+        if typ == TypeLattice.Status.Boolean:
             self.store[left].boolean()
-        elif isinstance(left.typ, IntegerLyraType) or is_integer_list:
-            # forget the current value of the substituted variable
+        elif typ == TypeLattice.Status.Integer:
             self.store[left].integer()
-        elif isinstance(left.typ, FloatLyraType) or is_float_list:
-            # forget the current value of the substituted variable
+        elif typ == TypeLattice.Status.Float:
             self.store[left].float()
-        elif isinstance(left.typ, StringLyraType) or is_string_list:
-            # forget the current value of the substituted variable
-            self.store[left].top()
         else:
-            raise ValueError(f"Variable type {left.typ} is unsupported!")
+            assert typ == TypeLattice.Status.String
+            self.store[left].top()
         # evaluate the right-hand side bottom-up using the updated store and the Lyra types
         evaluation = self._evaluation.visit(right, self, dict())
         # restrict the value of the right-hand side using that of the substituted variable
@@ -605,6 +641,20 @@ class TypeState(Store, StateWithSummarization, InputMixin):
             evaluation[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
             return evaluation
 
+        def visit_KeysIdentifier(self, expr: KeysIdentifier, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            value: TypeLattice = deepcopy(state.store[expr])
+            evaluation[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
+            return evaluation
+
+        def visit_ValuesIdentifier(self, expr: ValuesIdentifier, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            value: TypeLattice = deepcopy(state.store[expr])
+            evaluation[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
+            return evaluation
+
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, state=None, evaluation=None):
             if expr in evaluation:
@@ -646,14 +696,20 @@ class TypeState(Store, StateWithSummarization, InputMixin):
             if expr in evaluation:
                 return evaluation   # nothing to be done
             evaluated = evaluation
+            _value: TypeLattice = TypeLattice().bottom()
             value: TypeLattice = TypeLattice().bottom()
+            value_: TypeLattice = TypeLattice().bottom()
             for key in expr.keys:
                 evaluated = self.visit(key, state, evaluated)
                 value = value.join(evaluated[key])
+                _value = _value.join(evaluated[key])
             for val in expr.values:
                 evaluated = self.visit(val, state, evaluated)
                 value = value.join(evaluated[val])
+                value_ = value_.join(evaluated[val])
+            evaluation[KeysIdentifier(expr)] = _value
             evaluation[expr] = value
+            evaluation[ValuesIdentifier(expr)] = value_
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
@@ -666,7 +722,12 @@ class TypeState(Store, StateWithSummarization, InputMixin):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.target, state, evaluation)
-            evaluation[expr] = evaluated[expr.target].meet(TypeLattice.from_lyra_type(expr.typ))
+            if isinstance(expr.typ, DictLyraType):
+                evaluated_ = self.visit(ValuesIdentifier(expr.target), state, evaluation)
+                retrieved = evaluated_.get(ValuesIdentifier(expr.target), evaluated[expr.target])
+                evaluation[expr] = retrieved.meet(TypeLattice.from_lyra_type(expr.typ))
+            else:
+                evaluation[expr] = evaluated[expr.target].meet(TypeLattice.from_lyra_type(expr.typ))
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)

@@ -16,8 +16,9 @@ from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.store import Store
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
-from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing, BinaryComparisonOperation
-from lyra.core.types import LyraType
+from lyra.core.expressions import VariableIdentifier, Expression, Subscription, Slicing, \
+    BinaryComparisonOperation, KeysIdentifier, ValuesIdentifier
+from lyra.core.types import LyraType, DictLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -151,6 +152,9 @@ class SimpleUsageState(Stack, State):
         if effect:  # the current nesting level has an effect on the outcome of the program
             for identifier in condition.ids():
                 self.lattice.store[identifier].top()
+                if isinstance(identifier.typ, DictLyraType):
+                    self.lattice.store[KeysIdentifier(identifier)].top()
+                    self.lattice.store[ValuesIdentifier(identifier)].top()
         return self
 
     @copy_docstring(State._assume_variable)
@@ -215,13 +219,19 @@ class SimpleUsageState(Stack, State):
 
     @copy_docstring(State.forget_variable)
     def forget_variable(self, variable: VariableIdentifier) -> 'State':
-        self.lattice.store[variable].top()
+        self.lattice.store[variable].bottom()
+        if isinstance(variable.typ, DictLyraType):
+            self.lattice.store[KeysIdentifier(variable)].bottom()
+            self.lattice.store[ValuesIdentifier(variable)].bottom()
         return self
 
     @copy_docstring(State._output)
     def _output(self, output: Expression) -> 'SimpleUsageState':
         for identifier in output.ids():
             self.lattice.store[identifier].top()
+            if isinstance(identifier.typ, DictLyraType):
+                self.lattice.store[KeysIdentifier(identifier)].top()
+                self.lattice.store[ValuesIdentifier(identifier)].top()
         return self
 
     @copy_docstring(State._substitute_variable)
@@ -229,8 +239,14 @@ class SimpleUsageState(Stack, State):
         if self.lattice.store[left].is_top() or self.lattice.store[left].is_scoped():
             # the assigned variable is used or scoped
             self.lattice.store[left].written()
+            if isinstance(left.typ, DictLyraType):
+                self.lattice.store[KeysIdentifier(left)].written()
+                self.lattice.store[ValuesIdentifier(left)].written()
             for identifier in right.ids():
                 self.lattice.store[identifier].top()
+                if isinstance(identifier.typ, DictLyraType):
+                    self.lattice.store[KeysIdentifier(identifier)].top()
+                    self.lattice.store[ValuesIdentifier(identifier)].top()
         return self
 
     @copy_docstring(State._substitute_subscription)
@@ -239,11 +255,20 @@ class SimpleUsageState(Stack, State):
         if self.lattice.store[target].is_top() or self.lattice.store[target].is_scoped():
             # the assigned variable is used or scoped
             self.lattice.store[target].top()  # summarization abstraction (join of U/S with W)
+            if isinstance(target.typ, DictLyraType):
+                self.lattice.store[KeysIdentifier(target)].top()
+                self.lattice.store[ValuesIdentifier(target)].top()
             for identifier in right.ids():
                 self.lattice.store[identifier].top()
+                if isinstance(identifier.typ, DictLyraType):
+                    self.lattice.store[KeysIdentifier(identifier)].top()
+                    self.lattice.store[ValuesIdentifier(identifier)].top()
             ids = left.key.ids()
             for identifier in ids:  # make ids in subscript used
                 self.lattice.store[identifier].top()
+                if isinstance(identifier.typ, DictLyraType):
+                    self.lattice.store[KeysIdentifier(identifier)].top()
+                    self.lattice.store[ValuesIdentifier(identifier)].top()
         return self
 
     @copy_docstring(State._substitute_slicing)
@@ -252,9 +277,18 @@ class SimpleUsageState(Stack, State):
         if self.lattice.store[target].is_top() or self.lattice.store[target].is_scoped():
             # the assigned variable is used or scoped
             self.lattice.store[target].top()  # summarization abstraction (join of U/S with W)
+            if isinstance(target.typ, DictLyraType):
+                self.lattice.store[KeysIdentifier(target)].top()
+                self.lattice.store[ValuesIdentifier(target)].top()
             for identifier in right.ids():
                 self.lattice.store[identifier].top()
+                if isinstance(identifier.typ, DictLyraType):
+                    self.lattice.store[KeysIdentifier(identifier)].top()
+                    self.lattice.store[ValuesIdentifier(identifier)].top()
             ids = left.lower.ids() | left.upper.ids()
             for identifier in ids:  # make ids in subscript used
                 self.lattice.store[identifier].top()
+                if isinstance(identifier.typ, DictLyraType):
+                    self.lattice.store[KeysIdentifier(identifier)].top()
+                    self.lattice.store[ValuesIdentifier(identifier)].top()
         return self

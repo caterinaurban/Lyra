@@ -24,7 +24,7 @@ from lyra.abstract_domains.usage.usage_domain import SimpleUsageStore
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import VariableIdentifier, Expression, Subscription, \
     _iter_child_exprs, NegationFreeNormalExpression, Keys, Values, \
-    Items, BinaryComparisonOperation, TupleDisplay, Slicing
+    Items, BinaryComparisonOperation, TupleDisplay, Slicing, KeysIdentifier, ValuesIdentifier
 from lyra.core.types import BooleanLyraType, IntegerLyraType, StringLyraType, \
     FloatLyraType, DictLyraType, ListLyraType
 from lyra.core.utils import copy_docstring
@@ -121,7 +121,14 @@ class FularaUsageLattice(Lattice):
         self._loop_flag = value
 
     def __repr__(self):
-        return f"{self.scalar_usage}, {self.dict_usage}"
+        items = sorted(self.scalar_usage.store.items(), key=lambda x: x[0].name)
+        remove = set()
+        for variable in self.dict_usage.store:
+            remove.add(KeysIdentifier(variable))
+            remove.add(ValuesIdentifier(variable))
+        _items = [item for item in items if item[0] not in remove]
+        _scalar = "; ".join("{} -> {}".format(variable, value) for variable, value in _items)
+        return f"{_scalar}, {self.dict_usage}"
 
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'FularaUsageLattice':
