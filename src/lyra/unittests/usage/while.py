@@ -1,3 +1,4 @@
+
 n: int = int(input())
 x: int = int(input())
 i: int = 0

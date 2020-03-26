@@ -1,3 +1,4 @@
+
 # INITIAL: example -> W; i -> W; key -> W; keys(example) -> W; len(example) -> N; len(key) -> N; value -> W; values(example) -> W
 value: int = input()
 # STATE: example -> W; i -> W; key -> W; keys(example) -> W; len(example) -> N; len(key) -> N; value -> U; values(example) -> W

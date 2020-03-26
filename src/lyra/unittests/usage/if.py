@@ -1,3 +1,4 @@
+
 x: int = int(input())
 y: int = int(input())
 # STATE: x -> U; y -> U; z -> W

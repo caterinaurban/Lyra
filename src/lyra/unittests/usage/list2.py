@@ -1,3 +1,4 @@
+
 b: bool = bool(input())
 x: int = int(input())
 y: int = int(input())

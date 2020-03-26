@@ -1,9 +1,8 @@
+
 x1: int = int(input())  # x1 unused
 x2: int = int(input())
 x3: int = int(input())
-
-# RESULT: x1 -> N; x2 -> U; x3 -> U; asc -> O; temp -> O
-
+# STATE: asc -> W; temp -> W; x1 -> N; x2 -> U; x3 -> U
 asc: bool = True
 if x1 <= x2:
     temp: bool = False

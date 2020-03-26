@@ -1,3 +1,4 @@
+
 # INITIAL: x -> N; y -> W; z -> W
 x: int = int(input())
 y: int = int(input())

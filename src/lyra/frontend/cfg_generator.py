@@ -584,6 +584,7 @@ class CFGVisitor(ast.NodeVisitor):
         """Visitor function for an if expression.
         The components of the expression are stored in the attributes test, body, and orelse."""
         pp = ProgramPoint(node.lineno, node.col_offset)
+        _pp = ProgramPoint(-node.lineno, -node.col_offset)
         then = CFGFactory(self._id_gen)
         body = self.visit(node.body, types, typ, fname=fname)
         assignments = list()
@@ -615,7 +616,7 @@ class CFGVisitor(ast.NodeVisitor):
         orelse.add_stmts(assignments)
         orelse.complete_basic_block()
         orelse = orelse.cfg
-        not_test = Call(pp, 'not', [test], BooleanLyraType())
+        not_test = Call(_pp, 'not', [test], BooleanLyraType())
         orelse.add_edge(Conditional(None, not_test, orelse.in_node, Edge.Kind.IF_IN))
         orelse.add_edge(Unconditional(orelse.out_node, None, Edge.Kind.IF_OUT))
         return then.combine(orelse)
@@ -700,6 +701,7 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute test stores a single AST node.
         The attributes body and orelse each store a list of AST nodes to be executed."""
         pp = ProgramPoint(node.test.lineno, node.test.col_offset)
+        _pp = ProgramPoint(-node.test.lineno, -node.test.col_offset)
 
         body = self._visit_body(node.body, types, fname=fname)
         test = self.visit(node.test, types=types, typ=BooleanLyraType(), fname=fname)
@@ -710,7 +712,7 @@ class CFGVisitor(ast.NodeVisitor):
 
         if node.orelse:  # there is an else branch
             orelse = self._visit_body(node.orelse, types, fname=fname)
-            not_test = Call(pp, 'not', [test], BooleanLyraType())
+            not_test = Call(_pp, 'not', [test], BooleanLyraType())
             orelse.add_edge(Conditional(None, not_test, orelse.in_node, Edge.Kind.IF_IN))
             if orelse.out_node:  # control flow can exit the else
                 # add an unconditional IF_OUT edge
@@ -728,7 +730,7 @@ class CFGVisitor(ast.NodeVisitor):
 
         else:  # there is no else branch
             orelse = LooseControlFlowGraph()
-            not_test = Call(pp, 'not', [test], BooleanLyraType())
+            not_test = Call(_pp, 'not', [test], BooleanLyraType())
             orelse.add_edge(Conditional(None, not_test, None, Edge.Kind.DEFAULT))
 
         # handle special edges
@@ -749,6 +751,7 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute test stores a single AST node.
         The attributes body and orelse each store a list of AST nodes to be executed."""
         pp = ProgramPoint(node.test.lineno, node.test.col_offset)
+        _pp = ProgramPoint(-node.test.lineno, -node.test.col_offset)
 
         body = self._visit_body(node.body, types, fname=fname)
         test = self.visit(node.test, types=types, typ=BooleanLyraType(), fname=fname)
@@ -758,7 +761,7 @@ class CFGVisitor(ast.NodeVisitor):
         body.add_node(header)
         body.in_node = header
         body.add_edge(Conditional(header, test, body_in_node, Edge.Kind.LOOP_IN))
-        not_test = Call(pp, 'not', [test], BooleanLyraType())
+        not_test = Call(_pp, 'not', [test], BooleanLyraType())
         body.add_edge(Conditional(header, not_test, None))
         if body_out_node:  # control flow can exit the body
             # add an unconditional LOOP_OUT edge
@@ -788,6 +791,7 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute iter stores a single AST node representing the item to be looped over.
         The attributes body and orelse each store a list of AST nodes to be executed."""
         pp = ProgramPoint(node.target.lineno, node.target.col_offset)
+        _pp = ProgramPoint(-node.target.lineno, -node.target.col_offset)
 
         iterated = self.visit(node.iter, types=types, typ=None, fname=fname)
         target_typ = None
@@ -826,7 +830,7 @@ class CFGVisitor(ast.NodeVisitor):
         body.add_node(header)
         body.in_node = header
         body.add_edge(Conditional(header, test, body_in_node, Edge.Kind.LOOP_IN))
-        not_test = Call(pp, 'notin', [target, iterated], BooleanLyraType(), forloop=True)
+        not_test = Call(_pp, 'notin', [target, iterated], BooleanLyraType(), forloop=True)
         body.add_edge(Conditional(header, not_test, None))
         if body_out_node:  # control flow can exit the body
             # add an unconditional LOOP_OUT edge
