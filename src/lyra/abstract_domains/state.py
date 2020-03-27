@@ -648,7 +648,7 @@ class ProductState(State):
         super().__init__(precursory)
         if arguments is None:
             arguments: Dict[Type, Dict[str, Any]] = defaultdict(lambda: dict())
-        self._states = [state(**arguments[state]) for state in states]
+        self._states = [deepcopy(state(**arguments[state])) for state in states]
 
     @property
     def states(self):

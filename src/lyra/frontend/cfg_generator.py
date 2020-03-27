@@ -887,6 +887,7 @@ class CFGVisitor(ast.NodeVisitor):
             annotated = resolve_type_annotation(arg.annotation)
             arg.arg = fname + "#" + arg.arg
             types[arg.arg] = annotated
+        types[fname + "#return"] = resolve_type_annotation(node.returns)
         start = _dummy_cfg(self._id_gen)
         body = self._visit_body(node.body, types, True, True, fname)
         end = _dummy_cfg(self._id_gen)
@@ -897,7 +898,8 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_Return(self, node, types=None, fname=''):
         """Visitor function for a return statement."""
-        expressions = self.visit(node.value, types=types, fname=fname)
+        typ = types[fname + "#return"]
+        expressions = self.visit(node.value, typ=typ, types=types, fname=fname)
         return Return(ProgramPoint(node.lineno, node.col_offset), [expressions])
 
     def _visit_body(self, body, types, loose_in_edges=False, loose_out_edges=False, fname=''):

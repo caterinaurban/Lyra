@@ -81,8 +81,7 @@ class UserDefinedCallSemantics(ForwardSemantics):
 
         # assign return variable
         if state.result:
-            typ = next(iter(state.result)).typ
-            ret = VariableIdentifier(typ, '{}#return'.format(fname))
+            ret = VariableIdentifier(stmt.typ, '{}#return'.format(fname))
             state = state.add_variable(ret).forget_variable(ret)
             state = state.assign({ret}, state.result)
             state.result = {ret}
@@ -122,8 +121,7 @@ class AssignmentSemantics(ForwardSemantics):
 
         ret = None
         if isinstance(stmt.right, Call) and stmt.right.name in interpreter.cfgs:
-            typ = next(iter(lhs)).typ
-            ret = VariableIdentifier(typ, '{}#return'.format(stmt.right.name))
+            ret = VariableIdentifier(stmt.right.typ, '{}#return'.format(stmt.right.name))
             state = state.add_variable(ret).forget_variable(ret)
 
         rhs = self.semantics(stmt.right, state, interpreter).result     # rhs evaluation

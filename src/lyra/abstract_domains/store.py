@@ -11,9 +11,10 @@ Lifting of a lattice to a set of program variables.
 from collections import defaultdict
 from typing import Dict, Any, Type, Set
 
-from lyra.core.expressions import VariableIdentifier
+from lyra.core.expressions import VariableIdentifier, LengthIdentifier, KeysIdentifier, \
+    ValuesIdentifier
 from lyra.abstract_domains.lattice import Lattice, EnvironmentMixin
-from lyra.core.types import LyraType
+from lyra.core.types import LyraType, SequenceLyraType, ContainerLyraType, DictLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -133,10 +134,25 @@ class Store(EnvironmentMixin):
         self.variables.add(variable)
         typ = type(variable.typ)
         self.store[variable] = self.lattices[typ](**self.arguments[typ]).bottom()
+        if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
+            _length = self.lattices[typ](**self.arguments[typ]).bottom()
+            self.store[LengthIdentifier(variable)] = _length
+            if isinstance(variable.typ, DictLyraType):
+                _typ = type(variable.typ.key_typ)
+                _keys = self.lattices[_typ](**self.arguments[_typ]).bottom()
+                self.store[KeysIdentifier(variable)] = _keys
+                _typ = type(variable.typ.val_typ)
+                _values = self.lattices[_typ](**self.arguments[_typ]).bottom()
+                self.store[ValuesIdentifier(variable)] = _values
         return self
 
     @copy_docstring(EnvironmentMixin.remove_variable)
     def remove_variable(self, variable: VariableIdentifier):
         self.variables.remove(variable)
         del self.store[variable]
+        if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
+            del self.store[LengthIdentifier(variable)]
+            if isinstance(variable.typ, DictLyraType):
+                del self.store[KeysIdentifier(variable)]
+                del self.store[ValuesIdentifier(variable)]
         return self

@@ -11,7 +11,7 @@ from collections import defaultdict
 from enum import Enum
 from typing import List, Dict, Type, Any, Union, Tuple, Set, Optional
 
-from lyra.abstract_domains.lattice import Lattice, BottomMixin
+from lyra.abstract_domains.lattice import Lattice, BottomMixin, EnvironmentMixin
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State, ProductState
 from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparisonOperation, \
@@ -1230,7 +1230,7 @@ class QuantityRangeWordSetAssumptionState(AssumptionState):
         super().__init__(states, arguments, precursory)
 
 
-class TypeSignIntervalStringSetProductState(ProductState):
+class TypeSignIntervalStringSetProductState(EnvironmentMixin, ProductState):
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         from lyra.abstract_domains.assumption.type_domain import TypeState
@@ -1252,6 +1252,24 @@ class TypeSignIntervalStringSetProductState(ProductState):
             value = ' ⋅ '.join(values)
             result.append('{} -> {}'.format(variable, value))
         return '; '.join(result)
+
+    @copy_docstring(EnvironmentMixin.unify)
+    def unify(self, other: 'TypeSignIntervalStringSetProductState'):
+        for i, state in enumerate(self.states):
+            self.states[i] = state.unify(other.states[i])
+        return self
+
+    @copy_docstring(EnvironmentMixin.add_variable)
+    def add_variable(self, variable: VariableIdentifier):
+        for i, state in enumerate(self.states):
+            self.states[i] = state.add_variable(variable)
+        return self
+
+    @copy_docstring(EnvironmentMixin.remove_variable)
+    def remove_variable(self, variable: VariableIdentifier):
+        for i, state in enumerate(self.states):
+            self.states[i] = state.remove_variable(variable)
+        return self
 
 
 class TypeQuantityRangeWordSetAssumptionState(AssumptionState):
