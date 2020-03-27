@@ -18,7 +18,8 @@ from lyra.core.expressions import VariableIdentifier, Expression, Subscription, 
     AttributeReference, Input, Range, UnaryArithmeticOperation, BinaryArithmeticOperation, \
     UnaryBooleanOperation, TupleDisplay, SetDisplay, DictDisplay, BinarySequenceOperation, Keys, \
     Values, KeysIdentifier, ValuesIdentifier
-from lyra.core.types import LyraType, BooleanLyraType, SequenceLyraType, DictLyraType
+from lyra.core.types import LyraType, BooleanLyraType, SequenceLyraType, DictLyraType, \
+    ContainerLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -489,6 +490,19 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
         Lattice operations and statements modify the current state.
     """
 
+    @copy_docstring(StateWithSummarization.is_bottom)
+    def is_bottom(self) -> bool:
+        """The current state is bottom if `any` non-summary variable maps to a bottom element,
+        or if the length identifier of `any` summary variable maps to a bottom element."""
+        for var, element in self.store.items():
+            if not var.special:
+                if isinstance(var.typ, (SequenceLyraType, ContainerLyraType)):
+                    if element.is_bottom() and self.store[LengthIdentifier(var)].is_bottom():
+                        return True
+                elif element.is_bottom():
+                    return True
+        return False
+
     @copy_docstring(StateWithSummarization._assign_dictionary_subscription)
     def _assign_dictionary_subscription(self, left: Subscription, right: Expression) -> 'StateWithSummarization':
         # copy the current state
@@ -600,6 +614,25 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             evaluated = self.visit(target, state, evaluation)
             evaluation[expr] = evaluated[target]
             return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+        def visit_BinarySequenceOperation(self, expr, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated1 = self.visit(expr.left, state, evaluation)
+            evaluated2 = self.visit(expr.right, state, evaluated1)
+            value1 = evaluated2[expr.left]
+            value2 = evaluated2[expr.right]
+            if expr.operator == BinarySequenceOperation.Operator.Concat:
+                if isinstance(value1, SequenceMixin):
+                    if isinstance(expr.typ, ContainerLyraType):     # summarization
+                        evaluated2[expr] = deepcopy(value1).join(value2)
+                    else:
+                        evaluated2[expr] = deepcopy(value1).concat(value2)
+                else:
+                    evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
+                return evaluated2
+            raise ValueError(f"Binary sequence operator '{str(expr.operator)}' is unsupported!")
 
     _evaluation = ExpressionEvaluation()
 

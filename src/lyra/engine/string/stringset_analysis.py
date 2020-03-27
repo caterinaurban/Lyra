@@ -15,7 +15,7 @@ from lyra.semantics.forward import DefaultForwardSemantics
 class ForwardStringSetAnalysis(Runner):
 
     def interpreter(self):
-        return ForwardInterpreter(self.cfg, DefaultForwardSemantics(), 3)
+        return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
 
     def state(self):
         return StringSetState(self.variables)
@@ -24,7 +24,7 @@ class ForwardStringSetAnalysis(Runner):
 class BackwardStringSetAnalysis(Runner):
 
     def interpreter(self):
-        return BackwardInterpreter(self.cfg, DefaultBackwardSemantics(), 3)
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
         return StringSetState(self.variables)

@@ -241,19 +241,6 @@ class IntervalState(BasisWithSummarization):
             if isinstance(v.typ, (SequenceLyraType, ContainerLyraType)) and not v.special:
                 self.store[LengthIdentifier(v)] = lattices[IntegerLyraType()](lower=0)
 
-    @copy_docstring(BasisWithSummarization.is_bottom)
-    def is_bottom(self) -> bool:
-        """The current state is bottom if `any` non-summary variable maps to a bottom element,
-        or if the length identifier of `any` summary variable maps to a bottom element."""
-        for var, element in self.store.items():
-            if not var.special:
-                if isinstance(var.typ, (SequenceLyraType, ContainerLyraType)):
-                    if element.is_bottom() and self.store[LengthIdentifier(var)].is_bottom():
-                        return True
-                elif element.is_bottom():
-                    return True
-        return False
-
     @copy_docstring(BasisWithSummarization._assign_dictionary_subscription)
     def _assign_dictionary_subscription(self, left: Subscription, right: Expression):
         # update length identifier

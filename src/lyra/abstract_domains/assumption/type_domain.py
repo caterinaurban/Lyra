@@ -434,6 +434,19 @@ class TypeState(Store, StateWithSummarization, InputMixin):
         super().__init__(variables, lattices, arguments)
         InputMixin.__init__(self, precursory)
 
+    @copy_docstring(Store.is_bottom)
+    def is_bottom(self) -> bool:
+        """The current state is bottom if `any` non-summary variable maps to a bottom element,
+        or if the length identifier of `any` summary variable maps to a bottom element."""
+        for var, element in self.store.items():
+            if not var.special:
+                if isinstance(var.typ, (SequenceLyraType, ContainerLyraType)):
+                    if element.is_bottom() and self.store[LengthIdentifier(var)].is_bottom():
+                        return True
+                elif element.is_bottom():
+                    return True
+        return False
+
     @copy_docstring(State._assign_variable)
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'TypeState':
         evaluation = self._evaluation.visit(right, self, dict())
@@ -450,6 +463,7 @@ class TypeState(Store, StateWithSummarization, InputMixin):
                 self.store[ValuesIdentifier(left)] = deepcopy(evaluation[right]).meet(deepcopy(typ))
         return self
 
+    @copy_docstring(StateWithSummarization._assign_dictionary_subscription)
     def _assign_dictionary_subscription(self, left: Subscription, right: Expression) -> 'TypeState':
         # copy the current state
         current: TypeState = deepcopy(self)
