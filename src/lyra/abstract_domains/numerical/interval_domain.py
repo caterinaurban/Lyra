@@ -418,6 +418,16 @@ class IntervalState(BasisWithSummarization):
     def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'IntervalState':
         return self
 
+    @copy_docstring(State.forget_variable)
+    def forget_variable(self, variable: VariableIdentifier) -> 'IntervalState':
+        self.store[variable].top()
+        if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
+            self.store[LengthIdentifier(variable)] = self.lattices[IntegerLyraType()](lower=0)
+            if isinstance(variable.typ, DictLyraType):
+                self.store[KeysIdentifier(variable)].top()
+                self.store[ValuesIdentifier(variable)].top()
+        return self
+
     # expression evaluation
 
     class ExpressionEvaluation(BasisWithSummarization.ExpressionEvaluation):

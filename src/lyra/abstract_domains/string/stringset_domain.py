@@ -84,6 +84,8 @@ class StringSetLattice(TopMixin, SequenceMixin):
         return self._replace(type(self)(strings))
 
     def _widening(self, other: 'StringSetLattice') -> 'StringSetLattice':
+        if self.less_equal(other) and other.less_equal(self):
+            return self
         return self.top()
 
     # string operations

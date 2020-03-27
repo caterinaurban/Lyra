@@ -70,9 +70,11 @@ class Basis(Store, State, metaclass=ABCMeta):
     @copy_docstring(State.forget_variable)
     def forget_variable(self, variable: VariableIdentifier) -> 'Basis':
         self.store[variable].top()
-        if isinstance(variable.typ, DictLyraType):
-            self.store[KeysIdentifier(variable)].top()
-            self.store[ValuesIdentifier(variable)].top()
+        if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
+            self.store[LengthIdentifier(variable)].top()
+            if isinstance(variable.typ, DictLyraType):
+                self.store[KeysIdentifier(variable)].top()
+                self.store[ValuesIdentifier(variable)].top()
         return self
 
     @copy_docstring(State._output)

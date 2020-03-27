@@ -704,86 +704,70 @@ class ProductState(State):
 
     @copy_docstring(State._assign_variable)
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._assign_variable(left, right)
-        return self
+        raise RuntimeError("Unexpected call to ProductState._assign_variable!")
 
     @copy_docstring(State._assign_subscription)
     def _assign_subscription(self, left: Subscription, right: Expression) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._assign_subscription(left, right)
-        return self
+        raise RuntimeError("Unexpected call to ProductState._assign_subscription!")
 
     @copy_docstring(State._assign_slicing)
     def _assign_slicing(self, left: Slicing, right: Expression) -> 'ProductState':
+        raise RuntimeError("Unexpected call to ProductState._assign_slicing!")
+
+    @copy_docstring(State.assign)
+    def assign(self, left: Set[Expression], right: Set[Expression]) -> 'ProductState':
         for i, state in enumerate(self.states):
-            self.states[i] = state._assign_slicing(left, right)
+            self.states[i] = state.assign(left, right)
         return self
 
     @copy_docstring(State._assume_variable)
-    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._assume_variable(condition, neg=neg)
-        return self
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False):
+        raise RuntimeError("Unexpected call to ProductState._assume_variable!")
 
     @copy_docstring(State._assume_eq_comparison)
-    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._assume_eq_comparison(condition, bwd=bwd)
-        return self
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        raise RuntimeError("Unexpected call to ProductState._assume_eq_comparison!")
 
     @copy_docstring(State._assume_noteq_comparison)
-    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._assume_noteq_comparison(condition, bwd=bwd)
-        return self
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        raise RuntimeError("Unexpected call to ProductState._assume_noteq_comparison!")
 
     @copy_docstring(State._assume_lt_comparison)
-    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._assume_lt_comparison(condition, bwd=bwd)
-        return self
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        raise RuntimeError("Unexpected call to ProductState._assume_lt_comparison!")
 
     @copy_docstring(State._assume_lte_comparison)
-    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._assume_lte_comparison(condition, bwd=bwd)
-        return self
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        raise RuntimeError("Unexpected call to ProductState._assume_lte_comparison!")
 
     @copy_docstring(State._assume_gt_comparison)
-    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._assume_gt_comparison(condition, bwd=bwd)
-        return self
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        raise RuntimeError("Unexpected call to ProductState._assume_gt_comparison!")
 
     @copy_docstring(State._assume_gte_comparison)
-    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._assume_gte_comparison(condition, bwd=bwd)
-        return self
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        raise RuntimeError("Unexpected call to ProductState._assume_gte_comparison!")
 
     @copy_docstring(State._assume_is_comparison)
-    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._assume_is_comparison(condition, bwd=bwd)
-        return self
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        raise RuntimeError("Unexpected call to ProductState._assume_is_comparison!")
 
     @copy_docstring(State._assume_isnot_comparison)
-    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._assume_isnot_comparison(condition, bwd=bwd)
-        return self
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        raise RuntimeError("Unexpected call to ProductState._assume_isnot_comparison!")
 
     @copy_docstring(State._assume_in_comparison)
-    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._assume_in_comparison(condition, bwd=bwd)
-        return self
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        raise RuntimeError("Unexpected call to ProductState._assume_in_comparison!")
 
     @copy_docstring(State._assume_notin_comparison)
-    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'ProductState':
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        raise RuntimeError("Unexpected call to ProductState._assume_notin_comparison!")
+
+    @copy_docstring(State.assume)
+    def assume(self, condition: Set[Expression], bwd: bool = False) -> 'ProductState':
         for i, state in enumerate(self.states):
-            self.states[i] = state._assume_notin_comparison(condition, bwd=bwd)
+            self.states[i] = state.assume(condition, bwd=bwd)
         return self
 
     @copy_docstring(State.before)
@@ -825,24 +809,28 @@ class ProductState(State):
 
     @copy_docstring(State._output)
     def _output(self, output: Expression) -> 'ProductState':
+        raise RuntimeError("Unexpected call to ProductState._output!")
+
+    @copy_docstring(State.output)
+    def output(self, output: Set[Expression]) -> 'State':
         for i, state in enumerate(self.states):
-            self.states[i] = state.output({output})
+            self.states[i] = state.output(output)
         return self
 
     @copy_docstring(State._substitute_variable)
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._substitute_variable(left, right)
-        return self
+        raise RuntimeError("Unexpected call to ProductState._substitute_variable!")
 
     @copy_docstring(State._substitute_subscription)
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'ProductState':
-        for i, state in enumerate(self.states):
-            self.states[i] = state._substitute_subscription(left, right)
-        return self
+        raise RuntimeError("Unexpected call to ProductState._substitute_subscription!")
 
     @copy_docstring(State._substitute_slicing)
     def _substitute_slicing(self, left: Slicing, right: Expression) -> 'ProductState':
+        raise RuntimeError("Unexpected call to ProductState._substitute_slicing!")
+
+    @copy_docstring(State.substitute)
+    def substitute(self, left: Set[Expression], right: Set[Expression]) -> 'ProductState':
         for i, state in enumerate(self.states):
-            self.states[i] = state._substitute_slicing(left, right)
+            self.states[i] = state.substitute(left, right)
         return self

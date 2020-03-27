@@ -1,5 +1,5 @@
 
-def f(x: int):
+def f(x: int) -> int:
     return x + b
 
 a: int = 3

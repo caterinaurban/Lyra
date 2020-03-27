@@ -9,8 +9,10 @@ Lyra's internal forward semantics of statements.
 from typing import Union
 
 from lyra.abstract_domains.lattice import EnvironmentMixin
-from lyra.core.expressions import BinarySequenceOperation, ListDisplay, VariableIdentifier, SetDisplay
-from lyra.core.types import ListLyraType, IntegerLyraType, SetLyraType
+from lyra.core.expressions import BinarySequenceOperation, ListDisplay, VariableIdentifier, \
+    SetDisplay, LengthIdentifier, KeysIdentifier, ValuesIdentifier
+from lyra.core.types import ListLyraType, IntegerLyraType, SetLyraType, SequenceLyraType, \
+    ContainerLyraType, DictLyraType
 from lyra.engine.interpreter import Interpreter
 from lyra.semantics.semantics import Semantics, DefaultSemantics
 
@@ -71,7 +73,15 @@ class UserDefinedCallSemantics(ForwardSemantics):
                 _ret = VariableIdentifier(formal.typ, '{}#return'.format(actual.name))
                 state = state.remove_variable(_ret)
         # add local function variables to the state
-        local_vars = set(fcfg.variables).difference(formal_args)
+        _formal_args = set()
+        for formal in formal_args:
+            _formal_args.add(formal)
+            if isinstance(formal.typ, (SequenceLyraType, ContainerLyraType)):
+                _formal_args.add(LengthIdentifier(formal))
+                if isinstance(formal.typ, DictLyraType):
+                    _formal_args.add(KeysIdentifier(formal))
+                    _formal_args.add(ValuesIdentifier(formal))
+        local_vars = set(fcfg.variables).difference(_formal_args)
         for local in local_vars:
             state = state.add_variable(local).forget_variable(local)
 
@@ -88,7 +98,8 @@ class UserDefinedCallSemantics(ForwardSemantics):
 
         # remove local function variables and formal function parameters
         for local in local_vars:
-            state = state.remove_variable(local)
+            if not local.special:
+                state = state.remove_variable(local)
         for formal in formal_args:
             state = state.remove_variable(formal)
 

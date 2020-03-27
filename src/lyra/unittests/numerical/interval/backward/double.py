@@ -1,5 +1,5 @@
 
-def f(x: int):
+def f(x: int) -> int:
     return x - 1
 
 a: int = int(input())
