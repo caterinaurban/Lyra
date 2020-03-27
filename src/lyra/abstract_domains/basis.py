@@ -91,9 +91,10 @@ class Basis(Store, State, metaclass=ABCMeta):
         # evaluate the right-hand side proceeding bottom-up using the updated store
         evaluation = self._evaluation.visit(right, self, dict())
         # check for errors turning the state into bottom
-        feasible = evaluation[right].meet(value)
-        if feasible.is_bottom():
-            return self.bottom()
+        if not evaluation[right].is_bottom():
+            feasible = evaluation[right].meet(value)
+            if feasible.is_bottom():
+                return self.bottom()
         # refine the updated store proceeding top-down on the right-hand side
         self._refinement.visit(right, evaluation, value, self)
         return self

@@ -581,7 +581,7 @@ class TypeState(Store, StateWithSummarization, InputMixin):
         # evaluate the right-hand side bottom-up using the updated store and the Lyra types
         evaluation = self._evaluation.visit(right, self, dict())
         # restrict the value of the right-hand side using that of the substituted variable
-        refinement = evaluation[right].meet(value)
+        refinement = deepcopy(evaluation[right]).meet(value)
         # refine the updated store proceeding top-down on the right-hand side
         self._refinement.visit(right, evaluation, refinement, self)
 
@@ -741,7 +741,7 @@ class TypeState(Store, StateWithSummarization, InputMixin):
                 retrieved = evaluated_.get(ValuesIdentifier(expr.target), evaluated[expr.target])
                 evaluation[expr] = retrieved.meet(TypeLattice.from_lyra_type(expr.typ))
             else:
-                evaluation[expr] = evaluated[expr.target].meet(TypeLattice.from_lyra_type(expr.typ))
+                evaluation[expr] = evaluated[expr.target].meet(TypeLattice.from_lyra_type(expr.target.typ.typ))
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
