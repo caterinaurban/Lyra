@@ -221,7 +221,7 @@ class BuiltInCallSemantics(CallSemantics):
     """Semantics of built-in function/method calls."""
 
     def _cast_call_semantics(self, stmt: Call, state, interpreter, typ: LyraType) -> State:
-        """Semantics of a call to 'int', 'bool', 'float', or 'str'.
+        """Semantics of a call to 'int', 'bool', or 'float'.
 
         :param stmt: call to 'int', 'bool', 'float', or 'str' to be executed
         :param state: state before executing the call statement
@@ -281,7 +281,13 @@ class BuiltInCallSemantics(CallSemantics):
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        return self._cast_call_semantics(stmt, state, interpreter, StringLyraType())
+        if len(stmt.arguments) != 1:
+            error = f"Semantics for multiple arguments of {stmt.name} is not yet implemented!"
+            raise NotImplementedError(error)
+        argument = self.semantics(stmt.arguments[0], state, interpreter).result
+        result = {Input(StringLyraType())}   # over-approximation
+        state.result = result
+        return state
 
     def list_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
         """Semantics of a call to 'list'.

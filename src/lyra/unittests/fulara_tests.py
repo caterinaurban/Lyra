@@ -96,10 +96,10 @@ class FularaTest(TestRunner):
 
 def test_suite():
     suite = unittest.TestSuite()
-    name = os.getcwd() + '/container/fulara/interval/**.py'
-    for path in glob.iglob(name):
-        if os.path.basename(path) != "__init__.py":
-            suite.addTest(FularaTest(path))
+    # name = os.getcwd() + '/container/fulara/interval/**.py'
+    # for path in glob.iglob(name):
+    #     if os.path.basename(path) != "__init__.py":
+    #         suite.addTest(FularaTest(path))
     return suite
 
 

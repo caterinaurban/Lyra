@@ -1,4 +1,4 @@
-def max(x: int, y: int):
+def max(x: int, y: int) -> int:
   if x > y:
       return x
   else:

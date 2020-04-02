@@ -191,4 +191,7 @@ def resolve_type_annotation(annotation):
             values = [resolve_type_annotation(v) for v in annotation.slice.value.elts]
             return TupleLyraType(values)
 
+    if isinstance(annotation, ast.NameConstant):
+        return annotation.value
+
     raise NotImplementedError(f"Type annotation {annotation} is not yet supported!")

@@ -1,10 +1,10 @@
-def max(x: int, y: int):
+def max(x: int, y: int) -> int:
   if x > y:
       return x
   else:
       return y
 
-def min(x: int, y: int):
+def min(x: int, y: int) -> int:
   if x < y:
       return x
   else:

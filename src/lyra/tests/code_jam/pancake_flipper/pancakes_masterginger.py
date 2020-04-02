@@ -1,4 +1,4 @@
-def sort(queue: List[str], table: Dict[(str, int)]):
+def sort(queue: List[str], table: Dict[(str, int)]) -> None:
     elements: int = len(queue)
     for i in range(elements-1):
         for j in range(i+1, elements):
