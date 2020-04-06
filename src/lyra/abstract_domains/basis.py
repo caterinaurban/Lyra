@@ -42,13 +42,15 @@ class Basis(Store, State, metaclass=ABCMeta):
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'Basis':
         evaluation = self._evaluation.visit(right, self, dict())
         self.store[left] = evaluation[right]
-        if isinstance(left.typ, DictLyraType):
+        if left.is_dictionary:
             if isinstance(right.typ, DictLyraType):
-                self.store[KeysIdentifier(left)] = evaluation[KeysIdentifier(right)]
-                self.store[ValuesIdentifier(left)] = evaluation[ValuesIdentifier(right)]
+                _keys = KeysIdentifier(right)
+                self.keys[left.keys] = evaluation.get(_keys, deepcopy(evaluation[right]))
+                _values = ValuesIdentifier(right)
+                self.values[left.values] = evaluation.get(_values, deepcopy(evaluation[right]))
             else:
-                self.store[KeysIdentifier(left)] = deepcopy(evaluation[right])
-                self.store[ValuesIdentifier(left)] = deepcopy(evaluation[right])
+                self.keys[left.keys] = deepcopy(evaluation[right])
+                self.values[left.values] = deepcopy(evaluation[right])
         return self
 
     @copy_docstring(State.enter_if)
@@ -70,11 +72,11 @@ class Basis(Store, State, metaclass=ABCMeta):
     @copy_docstring(State.forget_variable)
     def forget_variable(self, variable: VariableIdentifier) -> 'Basis':
         self.store[variable].top()
-        if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
-            self.store[LengthIdentifier(variable)].top()
-            if isinstance(variable.typ, DictLyraType):
-                self.store[KeysIdentifier(variable)].top()
-                self.store[ValuesIdentifier(variable)].top()
+        if variable.has_length:
+            self.lengths[variable.length].top()
+            if variable.is_dictionary:
+                self.keys[variable.keys].top()
+                self.values[variable.values].top()
         return self
 
     @copy_docstring(State._output)
@@ -87,9 +89,9 @@ class Basis(Store, State, metaclass=ABCMeta):
         value = deepcopy(self.store[left])
         # forget the current value of the substituted variable
         self.store[left].top()
-        if isinstance(left.typ, DictLyraType):
-            self.store[KeysIdentifier(left)].top()
-            self.store[ValuesIdentifier(left)].top()
+        if left.is_dictionary:
+            self.keys[left.keys].top()
+            self.values[left.values].top()
         # evaluate the right-hand side proceeding bottom-up using the updated store
         evaluation = self._evaluation.visit(right, self, dict())
         # check for errors turning the state into bottom
@@ -118,25 +120,18 @@ class Basis(Store, State, metaclass=ABCMeta):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluation[expr] = deepcopy(state.store[expr])
+            if expr.has_length:
+                evaluation[expr.length] = deepcopy(state.lengths[expr.length])
+                if expr.is_dictionary:
+                    evaluation[expr.keys] = deepcopy(state.keys[expr.keys])
+                    evaluation[expr.values] = deepcopy(state.values[expr.values])
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
         def visit_LengthIdentifier(self, expr: LengthIdentifier, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            evaluation[expr] = deepcopy(state.store[expr])
-            return evaluation
-
-        def visit_KeysIdentifier(self, expr: KeysIdentifier, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            evaluation[expr] = deepcopy(state.store[expr])
-            return evaluation
-
-        def visit_ValuesIdentifier(self, expr: ValuesIdentifier, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            evaluation[expr] = deepcopy(state.store[expr])
+            evaluation[expr] = deepcopy(state.lengths[expr])
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
@@ -168,20 +163,16 @@ class Basis(Store, State, metaclass=ABCMeta):
         def visit_Keys(self, expr: Keys, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            keys = KeysIdentifier(expr.target_dict)
-            _evaluated = self.visit(keys, state, evaluation)
             evaluated = self.visit(expr.target_dict, state, evaluation)
-            evaluation[expr] = _evaluated.get(keys, evaluated[expr.target_dict])
+            evaluation[expr] = evaluated[expr.target_dict.keys]
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Values)
         def visit_Values(self, expr: Values, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            values = ValuesIdentifier(expr.target_dict)
             evaluated = self.visit(expr.target_dict, state, evaluation)
-            evaluated_ = self.visit(values, state, evaluation)
-            evaluation[expr] = evaluated_.get(values, evaluated[expr.target_dict])
+            evaluation[expr] = evaluated[expr.target_dict.values]
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -317,20 +308,19 @@ class Basis(Store, State, metaclass=ABCMeta):
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):
-            if isinstance(expr.typ, DictLyraType):
-                _refined = evaluation[KeysIdentifier(expr)].meet(value)
-                state.store[KeysIdentifier(expr)] = _refined
             refined = evaluation[expr].meet(value)
             state.store[expr] = refined
-            if isinstance(expr.typ, DictLyraType):
-                refined_ = evaluation[ValuesIdentifier(expr)].meet(value)
-                state.store[ValuesIdentifier(expr)] = refined_
+            if expr.is_dictionary:
+                _refined = evaluation[expr.keys].meet(value)
+                state.store[expr.keys] = _refined
+                refined_ = evaluation[expr.values].meet(value)
+                state.store[expr.values] = refined_
             return state
 
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
         def visit_LengthIdentifier(self, expr, evaluation=None, value=None, state=None):
             refined = evaluation[expr].meet(value)
-            state.store[expr] = refined
+            state.lengths[expr] = refined
             return state
 
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
@@ -493,19 +483,6 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
         Lattice operations and statements modify the current state.
     """
 
-    @copy_docstring(StateWithSummarization.is_bottom)
-    def is_bottom(self) -> bool:
-        """The current state is bottom if `any` non-summary variable maps to a bottom element,
-        or if the length identifier of `any` summary variable maps to a bottom element."""
-        for var, element in self.store.items():
-            if not var.special:
-                if isinstance(var.typ, (SequenceLyraType, ContainerLyraType)):
-                    if element.is_bottom() and self.store[LengthIdentifier(var)].is_bottom():
-                        return True
-                elif element.is_bottom():
-                    return True
-        return False
-
     @copy_docstring(StateWithSummarization._assign_dictionary_subscription)
     def _assign_dictionary_subscription(self, left: Subscription, right: Expression) -> 'StateWithSummarization':
         # copy the current state
@@ -520,8 +497,8 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
         _evaluation = self._evaluation.visit(key, self, dict())
         evaluation = self._evaluation.visit(right, self, dict())
         self.store[target] = deepcopy(evaluation[right]).join(deepcopy(_evaluation[key]))
-        self.store[KeysIdentifier(target)] = _evaluation[key]
-        self.store[ValuesIdentifier(target)] = evaluation[right]
+        self.keys[target.keys] = _evaluation[key]
+        self.values[target.values] = evaluation[right]
         # perform a weak update on the current state
         return self.join(current)
 
@@ -529,6 +506,11 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
     def _weak_update(self, variables: Set[VariableIdentifier], previous: 'BasisWithSummarization'):
         for var in variables:
             self.store[var].join(previous.store[var])
+            if var.has_length:
+                self.lengths[var.length].join(previous.lengths[var.length])
+                if var.is_dictionary:
+                    self.keys[var.keys].join(previous.keys[var.keys])
+                    self.values[var.values].join(previous.values[var.values])
         return self
 
     # expression evaluation
@@ -601,8 +583,7 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                 target = target.target
             evaluated = self.visit(target, state, evaluation)
             if isinstance(target.typ, DictLyraType):
-                evaluated_ = self.visit(ValuesIdentifier(target), state, evaluation)
-                evaluation[expr] = evaluated_.get(ValuesIdentifier(target), evaluated[target])
+                evaluation[expr] = evaluated[target.values]
             else:
                 evaluation[expr] = evaluated[target]
             return evaluation

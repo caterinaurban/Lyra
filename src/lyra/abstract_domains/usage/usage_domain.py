@@ -152,9 +152,9 @@ class SimpleUsageState(Stack, State):
         if effect:  # the current nesting level has an effect on the outcome of the program
             for identifier in condition.ids():
                 self.lattice.store[identifier].top()
-                if isinstance(identifier.typ, DictLyraType):
-                    self.lattice.store[KeysIdentifier(identifier)].top()
-                    self.lattice.store[ValuesIdentifier(identifier)].top()
+                if identifier.is_dictionary:
+                    self.lattice.keys[identifier.keys].top()
+                    self.lattice.values[identifier.values].top()
         return self
 
     @copy_docstring(State._assume_variable)
@@ -220,18 +220,18 @@ class SimpleUsageState(Stack, State):
     @copy_docstring(State.forget_variable)
     def forget_variable(self, variable: VariableIdentifier) -> 'State':
         self.lattice.store[variable].bottom()
-        if isinstance(variable.typ, DictLyraType):
-            self.lattice.store[KeysIdentifier(variable)].bottom()
-            self.lattice.store[ValuesIdentifier(variable)].bottom()
+        if variable.is_dictionary:
+            self.lattice.keys[variable.keys].bottom()
+            self.lattice.values[variable.values].bottom()
         return self
 
     @copy_docstring(State._output)
     def _output(self, output: Expression) -> 'SimpleUsageState':
         for identifier in output.ids():
             self.lattice.store[identifier].top()
-            if isinstance(identifier.typ, DictLyraType):
-                self.lattice.store[KeysIdentifier(identifier)].top()
-                self.lattice.store[ValuesIdentifier(identifier)].top()
+            if identifier.is_dictionary:
+                self.lattice.keys[identifier.keys].top()
+                self.lattice.values[identifier.values].top()
         return self
 
     @copy_docstring(State._substitute_variable)
@@ -239,14 +239,14 @@ class SimpleUsageState(Stack, State):
         if self.lattice.store[left].is_top() or self.lattice.store[left].is_scoped():
             # the assigned variable is used or scoped
             self.lattice.store[left].written()
-            if isinstance(left.typ, DictLyraType):
-                self.lattice.store[KeysIdentifier(left)].written()
-                self.lattice.store[ValuesIdentifier(left)].written()
+            if left.is_dictionary:
+                self.lattice.keys[left.keys].written()
+                self.lattice.values[left.values].written()
             for identifier in right.ids():
                 self.lattice.store[identifier].top()
-                if isinstance(identifier.typ, DictLyraType):
-                    self.lattice.store[KeysIdentifier(identifier)].top()
-                    self.lattice.store[ValuesIdentifier(identifier)].top()
+                if identifier.is_dictionary:
+                    self.lattice.keys[identifier.keys].top()
+                    self.lattice.values[identifier.values].top()
         return self
 
     @copy_docstring(State._substitute_subscription)
@@ -256,19 +256,19 @@ class SimpleUsageState(Stack, State):
             # the assigned variable is used or scoped
             self.lattice.store[target].top()  # summarization abstraction (join of U/S with W)
             if isinstance(target.typ, DictLyraType):
-                self.lattice.store[KeysIdentifier(target)].top()
-                self.lattice.store[ValuesIdentifier(target)].top()
+                self.lattice.keys[KeysIdentifier(target)].top()
+                self.lattice.values[ValuesIdentifier(target)].top()
             for identifier in right.ids():
                 self.lattice.store[identifier].top()
-                if isinstance(identifier.typ, DictLyraType):
-                    self.lattice.store[KeysIdentifier(identifier)].top()
-                    self.lattice.store[ValuesIdentifier(identifier)].top()
+                if identifier.is_dictionary:
+                    self.lattice.keys[identifier.keys].top()
+                    self.lattice.values[identifier.values].top()
             ids = left.key.ids()
             for identifier in ids:  # make ids in subscript used
                 self.lattice.store[identifier].top()
                 if isinstance(identifier.typ, DictLyraType):
-                    self.lattice.store[KeysIdentifier(identifier)].top()
-                    self.lattice.store[ValuesIdentifier(identifier)].top()
+                    self.lattice.keys[identifier.keys].top()
+                    self.lattice.values[identifier.values].top()
         return self
 
     @copy_docstring(State._substitute_slicing)
@@ -278,17 +278,17 @@ class SimpleUsageState(Stack, State):
             # the assigned variable is used or scoped
             self.lattice.store[target].top()  # summarization abstraction (join of U/S with W)
             if isinstance(target.typ, DictLyraType):
-                self.lattice.store[KeysIdentifier(target)].top()
-                self.lattice.store[ValuesIdentifier(target)].top()
+                self.lattice.keys[KeysIdentifier(target)].top()
+                self.lattice.values[ValuesIdentifier(target)].top()
             for identifier in right.ids():
                 self.lattice.store[identifier].top()
-                if isinstance(identifier.typ, DictLyraType):
-                    self.lattice.store[KeysIdentifier(identifier)].top()
-                    self.lattice.store[ValuesIdentifier(identifier)].top()
+                if identifier.is_dictionary:
+                    self.lattice.store[identifier.keys].top()
+                    self.lattice.store[identifier.values].top()
             ids = left.lower.ids() | left.upper.ids()
             for identifier in ids:  # make ids in subscript used
                 self.lattice.store[identifier].top()
-                if isinstance(identifier.typ, DictLyraType):
-                    self.lattice.store[KeysIdentifier(identifier)].top()
-                    self.lattice.store[ValuesIdentifier(identifier)].top()
+                if identifier.is_dictionary:
+                    self.lattice.keys[identifier.keys].top()
+                    self.lattice.values[identifier.values].top()
         return self

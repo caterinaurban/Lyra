@@ -275,9 +275,9 @@ class StrongLivenessState(LivenessState):
     def _output(self, output: Expression) -> 'StrongLivenessState':
         for identifier in output.ids():
             self.store[identifier] = LivenessLattice(LivenessLattice.Status.Live)
-            if isinstance(identifier.typ, DictLyraType):
-                self.store[KeysIdentifier(identifier)] = LivenessLattice(LivenessLattice.Status.Live)
-                self.store[ValuesIdentifier(identifier)] = LivenessLattice(LivenessLattice.Status.Live)
+            if identifier.is_dictionary:
+                self.keys[identifier.keys] = LivenessLattice(LivenessLattice.Status.Live)
+                self.values[identifier.values] = LivenessLattice(LivenessLattice.Status.Live)
         return self
 
     @copy_docstring(State._substitute_variable)
@@ -285,13 +285,13 @@ class StrongLivenessState(LivenessState):
         if self.store[left].is_top():  # the assigned variable is strongly-live
             self.store[left].bottom()
             if isinstance(left.typ, DictLyraType):
-                self.store[KeysIdentifier(left)].bottom()
-                self.store[ValuesIdentifier(left)].bottom()
+                self.keys[KeysIdentifier(left)].bottom()
+                self.values[ValuesIdentifier(left)].bottom()
             for identifier in right.ids():
                 self.store[identifier].top()
-                if isinstance(identifier.typ, DictLyraType):
-                    self.store[KeysIdentifier(identifier)].top()
-                    self.store[ValuesIdentifier(identifier)].top()
+                if identifier.is_dictionary:
+                    self.keys[identifier.keys].top()
+                    self.values[identifier.values].top()
         return self
 
     @copy_docstring(State._substitute_subscription)
@@ -301,15 +301,15 @@ class StrongLivenessState(LivenessState):
             # summarization abstraction (weak update)
             for identifier in right.ids():
                 self.store[identifier].top()
-                if isinstance(identifier.typ, DictLyraType):
-                    self.store[KeysIdentifier(identifier)].top()
-                    self.store[ValuesIdentifier(identifier)].top()
+                if identifier.is_dictionary:
+                    self.keys[identifier.keys].top()
+                    self.values[identifier.values].top()
             ids = left.key.ids()
             for identifier in ids:  # make ids in subscript strongly live
                 self.store[identifier].top()
-                if isinstance(identifier.typ, DictLyraType):
-                    self.store[KeysIdentifier(identifier)].top()
-                    self.store[ValuesIdentifier(identifier)].top()
+                if identifier.is_dictionary:
+                    self.keys[identifier.keys].top()
+                    self.values[identifier.values].top()
         return self
 
     @copy_docstring(State._substitute_slicing)
@@ -319,13 +319,13 @@ class StrongLivenessState(LivenessState):
             # summarization abstraction (weak update)
             for identifier in right.ids():
                 self.store[identifier].top()
-                if isinstance(identifier.typ, DictLyraType):
-                    self.store[KeysIdentifier(identifier)].top()
-                    self.store[ValuesIdentifier(identifier)].top()
+                if identifier.is_dictionary:
+                    self.keys[identifier.keys].top()
+                    self.values[identifier.values].top()
             ids = left.lower.ids() | left.upper.ids()
             for identifier in ids:  # make ids in subscript strongly live
                 self.store[identifier].top()
-                if isinstance(identifier.typ, DictLyraType):
-                    self.store[KeysIdentifier(identifier)].top()
-                    self.store[ValuesIdentifier(identifier)].top()
+                if identifier.is_dictionary:
+                    self.keys[identifier.keys].top()
+                    self.values[identifier.values].top()
         return self

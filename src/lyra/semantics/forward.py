@@ -76,11 +76,11 @@ class UserDefinedCallSemantics(ForwardSemantics):
         _formal_args = set()
         for formal in formal_args:
             _formal_args.add(formal)
-            if isinstance(formal.typ, (SequenceLyraType, ContainerLyraType)):
-                _formal_args.add(LengthIdentifier(formal))
-                if isinstance(formal.typ, DictLyraType):
-                    _formal_args.add(KeysIdentifier(formal))
-                    _formal_args.add(ValuesIdentifier(formal))
+            # if isinstance(formal.typ, (SequenceLyraType, ContainerLyraType)):
+            #     _formal_args.add(LengthIdentifier(formal))
+            #     if isinstance(formal.typ, DictLyraType):
+            #         _formal_args.add(KeysIdentifier(formal))
+            #         _formal_args.add(ValuesIdentifier(formal))
         local_vars = set(fcfg.variables).difference(_formal_args)
         for local in local_vars:
             state = state.add_variable(local).forget_variable(local)

@@ -238,8 +238,16 @@ class IntervalState(BasisWithSummarization):
         lattices = defaultdict(lambda: IntervalLattice)
         super().__init__(variables, lattices, precursory=precursory)
         for v in self.variables:
-            if isinstance(v.typ, (SequenceLyraType, ContainerLyraType)) and not v.special:
-                self.store[LengthIdentifier(v)] = lattices[IntegerLyraType()](lower=0)
+            if v.has_length:
+                self.lengths[v.length] = lattices[IntegerLyraType()](lower=0)
+
+    @copy_docstring(BasisWithSummarization.is_top)
+    def is_top(self) -> bool:
+        """The current store is top if `all` of its variables map to a top element."""
+        _store = all(element.is_top() for element in self.store.values())
+        _top = self.lattices[IntegerLyraType()](lower=0)
+        _lengths = all(_top.less_equal(element) for element in self.lengths.values())
+        return _store and _lengths
 
     @copy_docstring(BasisWithSummarization._assign_dictionary_subscription)
     def _assign_dictionary_subscription(self, left: Subscription, right: Expression):
@@ -250,12 +258,12 @@ class IntervalState(BasisWithSummarization):
             key = target.key
             target = target.target
         _evaluation = self._evaluation.visit(key, self, dict())
-        current = self.store[LengthIdentifier(target)]      # current length
+        current = self.lengths[target.length]      # current length
         one = self.lattices[IntegerLyraType()](lower=1, upper=1)
-        if _evaluation[key].less_equal(self.store[KeysIdentifier(target)]):
-            self.store[LengthIdentifier(target)] = deepcopy(current).join(current.add(one))
+        if _evaluation[key].less_equal(self.keys[target.keys]):
+            self.lengths[target.length] = deepcopy(current).join(current.add(one))
         else:
-            self.store[LengthIdentifier(target)] = current.add(one)
+            self.lengths[target.length] = current.add(one)
         # perform the assignment
         super()._assign_dictionary_subscription(left, right)
         return self
@@ -264,32 +272,32 @@ class IntervalState(BasisWithSummarization):
     def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
         # update length identifiers, if appropriate
         if isinstance(left, VariableIdentifier):
-            if isinstance(left.typ, (SequenceLyraType, ContainerLyraType)) and not left.special:
-                self.store[LengthIdentifier(left)] = self._length.visit(right, self)
+            if left.has_length:
+                self.lengths[left.length] = self._length.visit(right, self)
         elif isinstance(left, Subscription) and isinstance(left.target, VariableIdentifier):
             if isinstance(left.target.typ, SequenceLyraType):
-                length = self.store[LengthIdentifier(left.target)]
+                length = self.lengths[left.target.length]
                 key = deepcopy(self._evaluation.visit(left.key, self, dict())[left.key])
                 if key.less_equal(self.lattices[left.key.typ](lower=0)):    # key is positive
                     if length.upper < key.lower:    # key is definitely larger than length
                         return self.bottom()
                     lower = self.lattices[left.key.typ](lower=key.lower)
-                    self.store[LengthIdentifier(left.target)] = length.meet(lower)
+                    self.lengths[left.target.length] = length.meet(lower)
                 elif key.less_equal(self.lattices[left.key.typ](upper=-1)):     # key is negative
                     if length.upper + key.upper < 0:    # key is definitely smaller than length
                         return self.bottom()
                     upper = self.lattices[left.key.typ](lower=-key.upper)
-                    self.store[LengthIdentifier(left.target)] = length.meet(upper)
+                    self.lengths[left.target.length] = length.meet(upper)
         elif isinstance(left, Slicing) and isinstance(left.target, VariableIdentifier): #x[i:j] = e
             if isinstance(left.target.typ, SequenceLyraType):   # x[i:j] = e
-                current = self.store[LengthIdentifier(left.target)]      # current length
+                current = self.lengths[left.target.length]      # current length
                 # under-approximate length of left
                 lattice = self.lattices[IntegerLyraType()]
                 slicing = lattice(lower=1, upper=1)     # default under-approximation
                 # over-approximate length of right
                 extra = self._length.visit(right, self)
                 # len(x) = len(x) - len(x[j:i]) + len(e)
-                self.store[LengthIdentifier(left.target)] = current.sub(slicing).add(extra)
+                self.lengths[left.target.length] = current.sub(slicing).add(extra)
         # perform the assignment
         super()._assign(left, right)
         return self
@@ -304,14 +312,6 @@ class IntervalState(BasisWithSummarization):
                 value = self.lattices[condition.typ](**self.arguments[condition.typ]).true()
             return self._refinement.visit(condition, evaluation, value, self)
         raise ValueError(f"Assumption of variable {condition} is unsupported!")
-
-    @copy_docstring(BasisWithSummarization._weak_update)
-    def _weak_update(self, variables: Set[VariableIdentifier], previous: 'BasisWithSummarization'):
-        for var in variables:
-            self.store[var].join(previous.store[var])
-            if isinstance(var.typ, (SequenceLyraType, ContainerLyraType)) and not var.special:
-                self.store[LengthIdentifier(var)].join(previous.store[LengthIdentifier(var)])
-        return self
 
     @copy_docstring(BasisWithSummarization._assume_eq_comparison)
     def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'IntervalState':
@@ -420,12 +420,9 @@ class IntervalState(BasisWithSummarization):
 
     @copy_docstring(State.forget_variable)
     def forget_variable(self, variable: VariableIdentifier) -> 'IntervalState':
-        self.store[variable].top()
-        if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
-            self.store[LengthIdentifier(variable)] = self.lattices[IntegerLyraType()](lower=0)
-            if isinstance(variable.typ, DictLyraType):
-                self.store[KeysIdentifier(variable)].top()
-                self.store[ValuesIdentifier(variable)].top()
+        super().forget_variable(variable)
+        if variable.has_length:
+            self.lengths[variable.length] = self.lattices[IntegerLyraType()](lower=0)
         return self
 
     # expression evaluation
@@ -474,9 +471,8 @@ class IntervalState(BasisWithSummarization):
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
         def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None):
-            if isinstance(expr.typ, SequenceLyraType) and not expr.special:
-                length = LengthIdentifier(expr)
-                return state.store.get(length, state.lattices[IntegerLyraType()](lower=0))
+            if expr.has_length:
+                return state.lengths.get(expr.length, state.lattices[IntegerLyraType()](lower=0))
             raise ValueError(f"Unexpected expression during sequence length computation.")
 
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
@@ -515,27 +511,29 @@ class IntervalState(BasisWithSummarization):
                 literal = isinstance(stride, Literal)
                 return literal and lattice(stride).less_equal(lattice(lower=1, upper=1))
 
-            if isinstance(expr.lower, Literal):
-                lower = IntervalLattice.from_literal(expr.lower)
-                if not lower.less_equal(lattice(lower=0)):
-                    lower = lower.add(state.store[LengthIdentifier(expr.target)])
-                if not expr.upper:
-                    upper = deepcopy(state.store[LengthIdentifier(expr.target)])
-                    if not expr.stride or is_one(expr.stride):  # [l:_:(1)]
-                        length = lattice(lower=0).meet(upper.sub(lower))
-                        if length.is_bottom():
-                            return lattice(lower=0, upper=0)
-                        return length
-                elif isinstance(expr.upper, Literal):
-                    upper = IntervalLattice.from_literal(expr.upper)
-                    if not upper.less_equal(lattice(lower=0)):
-                        upper = upper.add(state.store[LengthIdentifier(expr.target)])
-                    if not expr.stride or is_one(expr.stride):  # [l:u:(1)]
-                        length = lattice(lower=0).meet(upper.sub(lower))
-                        if length.is_bottom():
-                            return lattice(lower=0, upper=0)
-                        return length
-            return deepcopy(state.store[LengthIdentifier(expr.target)])   # over-approximation
+            if isinstance(expr.target, VariableIdentifier):
+                if isinstance(expr.lower, Literal):
+                    lower = IntervalLattice.from_literal(expr.lower)
+                    if not lower.less_equal(lattice(lower=0)):
+                        lower = lower.add(state.lengths[LengthIdentifier(expr.target)])
+                    if not expr.upper:
+                        upper = deepcopy(state.lengths[LengthIdentifier(expr.target)])
+                        if not expr.stride or is_one(expr.stride):  # [l:_:(1)]
+                            length = lattice(lower=0).meet(upper.sub(lower))
+                            if length.is_bottom():
+                                return lattice(lower=0, upper=0)
+                            return length
+                    elif isinstance(expr.upper, Literal):
+                        upper = IntervalLattice.from_literal(expr.upper)
+                        if not upper.less_equal(lattice(lower=0)):
+                            upper = upper.add(state.lengths[LengthIdentifier(expr.target)])
+                        if not expr.stride or is_one(expr.stride):  # [l:u:(1)]
+                            length = lattice(lower=0).meet(upper.sub(lower))
+                            if length.is_bottom():
+                                return lattice(lower=0, upper=0)
+                            return length
+                return deepcopy(state.lengths[LengthIdentifier(expr.target)])   # over-approximation
+            return lattice(lower=0)     # default
 
         @copy_docstring(ExpressionVisitor.visit_Input)
         def visit_Input(self, expr: Input, state=None):

@@ -434,33 +434,22 @@ class TypeState(Store, StateWithSummarization, InputMixin):
         super().__init__(variables, lattices, arguments)
         InputMixin.__init__(self, precursory)
 
-    @copy_docstring(Store.is_bottom)
-    def is_bottom(self) -> bool:
-        """The current state is bottom if `any` non-summary variable maps to a bottom element,
-        or if the length identifier of `any` summary variable maps to a bottom element."""
-        for var, element in self.store.items():
-            if not var.special:
-                if isinstance(var.typ, (SequenceLyraType, ContainerLyraType)):
-                    if element.is_bottom() and self.store[LengthIdentifier(var)].is_bottom():
-                        return True
-                elif element.is_bottom():
-                    return True
-        return False
-
     @copy_docstring(State._assign_variable)
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'TypeState':
         evaluation = self._evaluation.visit(right, self, dict())
         typ = TypeLattice.from_lyra_type(left.typ)
         self.store[left] = evaluation[right].meet(typ)
-        if isinstance(left.typ, DictLyraType):
+        if left.is_dictionary:
             _typ = TypeLattice.from_lyra_type(left.typ.key_typ)
             typ_ = TypeLattice.from_lyra_type(left.typ.val_typ)
             if isinstance(right.typ, DictLyraType):
-                self.store[KeysIdentifier(left)] = evaluation[KeysIdentifier(right)].meet(_typ)
-                self.store[ValuesIdentifier(left)] = evaluation[ValuesIdentifier(right)].meet(typ_)
+                _keys = evaluation.get(KeysIdentifier(right), deepcopy(evaluation[right]))
+                self.keys[left.keys] = _keys.meet(_typ)
+                _values = evaluation.get(ValuesIdentifier(right), deepcopy(evaluation[right]))
+                self.values[left.values] = _values.meet(typ_)
             else:
-                self.store[KeysIdentifier(left)] = deepcopy(evaluation[right]).meet(deepcopy(typ))
-                self.store[ValuesIdentifier(left)] = deepcopy(evaluation[right]).meet(deepcopy(typ))
+                self.keys[left.keys] = deepcopy(evaluation[right]).meet(deepcopy(typ))
+                self.values[left.values] = deepcopy(evaluation[right]).meet(deepcopy(typ))
         return self
 
     @copy_docstring(StateWithSummarization._assign_dictionary_subscription)
@@ -480,8 +469,8 @@ class TypeState(Store, StateWithSummarization, InputMixin):
         typ = TypeLattice.from_lyra_type(target.typ)
         typ_ = TypeLattice.from_lyra_type(target.typ.val_typ)
         self.store[target] = deepcopy(evaluation[right]).join(deepcopy(_evaluation[key])).meet(typ)
-        self.store[KeysIdentifier(target)] = _evaluation[key].meet(_typ)
-        self.store[ValuesIdentifier(target)] = evaluation[right].meet(typ_)
+        self.keys[target.keys] = _evaluation[key].meet(_typ)
+        self.values[target.values] = evaluation[right].meet(typ_)
         # perform a weak update on the current state
         return self.join(current)
 
@@ -489,6 +478,11 @@ class TypeState(Store, StateWithSummarization, InputMixin):
     def _weak_update(self, variables: Set[VariableIdentifier], previous: 'TypeState'):
         for var in variables:
             self.store[var].join(previous.store[var])
+            if var.has_length:
+                self.lengths[var.length].join(previous.lengths[var.length])
+                if var.is_dictionary:
+                    self.keys[var.keys].join(previous.keys[var.keys])
+                    self.values[var.values].join(previous.values[var.values])
         return self
 
     @copy_docstring(State._assume_variable)
@@ -554,9 +548,9 @@ class TypeState(Store, StateWithSummarization, InputMixin):
     @copy_docstring(State.forget_variable)
     def forget_variable(self, variable: VariableIdentifier) -> 'TypeState':
         self.store[variable].top()
-        if isinstance(variable.typ, DictLyraType):
-            self.store[KeysIdentifier(variable)].top()
-            self.store[ValuesIdentifier(variable)].top()
+        if variable.is_dictionary:
+            self.keys[variable.keys].top()
+            self.values[variable.values].top()
         return self
 
     @copy_docstring(State.output)
@@ -645,28 +639,18 @@ class TypeState(Store, StateWithSummarization, InputMixin):
                 return evaluation  # nothing to be done
             value: TypeLattice = deepcopy(state.store[expr])
             evaluation[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
+            if expr.is_dictionary:
+                _value = deepcopy(state.keys[expr.keys])
+                evaluation[expr.keys] = _value.meet(TypeLattice.from_lyra_type(expr.typ.key_typ))
+                value_ = deepcopy(state.values[expr.values])
+                evaluation[expr.values] = value_.meet(TypeLattice.from_lyra_type(expr.typ.val_typ))
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
         def visit_LengthIdentifier(self, expr: LengthIdentifier, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            value: TypeLattice = deepcopy(state.store[expr])
-            evaluation[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
-            return evaluation
-
-        def visit_KeysIdentifier(self, expr: KeysIdentifier, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            value: TypeLattice = deepcopy(state.store[expr])
-            evaluation[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
-            return evaluation
-
-        def visit_ValuesIdentifier(self, expr: ValuesIdentifier, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            value: TypeLattice = deepcopy(state.store[expr])
-            evaluation[expr] = value.meet(TypeLattice.from_lyra_type(expr.typ))
+            evaluation[expr] = deepcopy(state.lengths[expr])
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
@@ -735,21 +719,25 @@ class TypeState(Store, StateWithSummarization, InputMixin):
         def visit_Subscription(self, expr: Subscription, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            evaluated = self.visit(expr.target, state, evaluation)
-            if isinstance(expr.typ, DictLyraType):
-                evaluated_ = self.visit(ValuesIdentifier(expr.target), state, evaluation)
-                retrieved = evaluated_.get(ValuesIdentifier(expr.target), evaluated[expr.target])
-                evaluation[expr] = retrieved.meet(TypeLattice.from_lyra_type(expr.typ))
+            target = expr
+            while isinstance(target, (Subscription, Slicing)):
+                target = target.target
+            evaluated = self.visit(target, state, evaluation)
+            if isinstance(target.typ, DictLyraType):
+                evaluation[expr] = evaluated[target.values].meet(TypeLattice.from_lyra_type(target.typ.val_typ))
             else:
-                evaluation[expr] = evaluated[expr.target].meet(TypeLattice.from_lyra_type(expr.target.typ.typ))
+                evaluation[expr] = evaluated[target].meet(TypeLattice.from_lyra_type(target.typ.typ))
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            evaluated = self.visit(expr.target, state, evaluation)
-            evaluation[expr] = evaluated[expr.target].meet(TypeLattice.from_lyra_type(expr.typ))
+            target = expr
+            while isinstance(target, (Subscription, Slicing)):
+                target = target.target
+            evaluated = self.visit(target, state, evaluation)
+            evaluation[expr] = evaluated[target].meet(TypeLattice.from_lyra_type(target.typ))
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Input)
@@ -872,12 +860,17 @@ class TypeState(Store, StateWithSummarization, InputMixin):
         def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):
             refined = evaluation[expr].meet(value)
             state.store[expr] = refined
+            if expr.is_dictionary:
+                _refined = evaluation[expr.keys].meet(value)
+                state.store[expr.keys] = _refined
+                refined_ = evaluation[expr.values].meet(value)
+                state.store[expr.values] = refined_
             return state
 
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
         def visit_LengthIdentifier(self, expr, evaluation=None, value=None, state=None):
             refined = evaluation[expr].meet(value)
-            state.store[expr] = refined
+            state.lengths[expr] = refined
             return state
 
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
@@ -922,13 +915,19 @@ class TypeState(Store, StateWithSummarization, InputMixin):
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: Subscription, evaluation=None, value=None, state=None):
             refined = evaluation[expr]  # weak update
-            state.store[expr.target] = refined
+            target = expr
+            while isinstance(target, (Subscription, Slicing)):
+                target = target.target
+            state.store[target] = refined
             return state
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
             refined = evaluation[expr]  # weak update
-            state.store[expr.target] = refined
+            target = expr
+            while isinstance(target, (Subscription, Slicing)):
+                target = target.target
+            state.store[target] = refined
             return state
 
         @copy_docstring(ExpressionVisitor.visit_Input)

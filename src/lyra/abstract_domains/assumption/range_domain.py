@@ -75,7 +75,7 @@ class RangeState(IntervalState, InputMixin):
         InputMixin.__init__(self, precursory)
         for v in self.variables:
             if isinstance(v.typ, SequenceLyraType):
-                self.store[LengthIdentifier(v)] = lattices[IntegerLyraType()](lower=0)
+                self.lengths[LengthIdentifier(v)] = lattices[IntegerLyraType()](lower=0)
 
     @copy_docstring(InputMixin.replace)
     def replace(self, variable: VariableIdentifier, expression: Expression) -> 'RangeState':

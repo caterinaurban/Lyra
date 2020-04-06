@@ -219,11 +219,11 @@ class ControlFlowGraph:
                     if isinstance(stmt, Assignment) and isinstance(stmt.left, VariableAccess):
                         variable = stmt.left.variable
                         variables.add(variable)
-                        if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
-                            variables.add(LengthIdentifier(variable))
-                            if isinstance(variable.typ, DictLyraType):
-                                variables.add(KeysIdentifier(variable))
-                                variables.add(ValuesIdentifier(variable))
+                        # if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
+                        #     variables.add(LengthIdentifier(variable))
+                        #     if isinstance(variable.typ, DictLyraType):
+                        #         variables.add(KeysIdentifier(variable))
+                        #         variables.add(ValuesIdentifier(variable))
                 if isinstance(current, Loop):
                     edges = self.edges.items()
                     conds = list()
@@ -236,11 +236,11 @@ class ControlFlowGraph:
                             if isinstance(arg, VariableAccess):
                                 variable = arg.variable
                                 variables.add(arg.variable)
-                                if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
-                                    variables.add(LengthIdentifier(variable))
-                                    if isinstance(variable.typ, DictLyraType):
-                                        variables.add(KeysIdentifier(variable))
-                                        variables.add(ValuesIdentifier(variable))
+                                # if isinstance(variable.typ, (SequenceLyraType, ContainerLyraType)):
+                                #     variables.add(LengthIdentifier(variable))
+                                #     if isinstance(variable.typ, DictLyraType):
+                                #         variables.add(KeysIdentifier(variable))
+                                #         variables.add(ValuesIdentifier(variable))
                             elif isinstance(arg, TupleDisplayAccess):
                                 for i in arg.items:
                                     variables.add(i.variable)

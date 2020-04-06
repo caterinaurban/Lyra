@@ -20,7 +20,7 @@ from apronpy.texpr1 import PyTexpr1
 from apronpy.var import PyVar
 
 from lyra.core.types import LyraType, StringLyraType, IntegerLyraType, BooleanLyraType, \
-    DictLyraType, SetLyraType, ListLyraType, TupleLyraType
+    DictLyraType, SetLyraType, ListLyraType, TupleLyraType, SequenceLyraType, ContainerLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -690,6 +690,40 @@ class VariableIdentifier(Identifier):
         :param name: name of the identifier
         """
         super().__init__(typ, name, special=False)
+
+    @property
+    def has_length(self):
+        return isinstance(self.typ, (SequenceLyraType, ContainerLyraType))
+
+    @property
+    def length(self):
+        if self.has_length:
+            return LengthIdentifier(self)
+        return None
+
+    @property
+    def is_dictionary(self):
+        return isinstance(self.typ, DictLyraType)
+
+    @property
+    def has_keys(self):
+        return isinstance(self.typ, DictLyraType)
+
+    @property
+    def keys(self):
+        if self.has_keys:
+            return KeysIdentifier(self)
+        return None
+
+    @property
+    def has_values(self):
+        return isinstance(self.typ, DictLyraType)
+
+    @property
+    def values(self):
+        if self.has_values:
+            return ValuesIdentifier(self)
+        return None
 
 
 class LengthIdentifier(Identifier):

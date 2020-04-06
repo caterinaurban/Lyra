@@ -623,7 +623,15 @@ class AssumptionState(State):
             if not self.is_bottom() and self.scope == AssumptionState.InputStack.Scope.Loop:  # current scope is a loop
                 # the condition is ``... in range(...)``
                 if isinstance(condition.right, Range):
-                    self.lattice.repeat(condition.right.stop)
+                    if condition.right.start == Literal(IntegerLyraType(), '0'):
+                        self.lattice.repeat(condition.right.stop)
+                    else:
+                        typ = condition.right.typ.typ
+                        stop = condition.right.stop
+                        op = BinaryArithmeticOperation.Operator.Sub
+                        start = condition.right.start
+                        multiplier = BinaryArithmeticOperation(typ, stop, op, start)
+                        self.lattice.repeat(multiplier)
                     return self
                 if not self.lattice.is_empty():
                     self.lattice.top()  # default to ★
@@ -634,7 +642,15 @@ class AssumptionState(State):
             if not self.is_bottom() and self.scope == AssumptionState.InputStack.Scope.Loop:  # current scope is a loop
                 # the condition is ``... not in range(...)``
                 if isinstance(condition.right, Range):
-                    self.lattice.repeat(condition.right.stop)
+                    if condition.right.start == Literal(IntegerLyraType(), '0'):
+                        self.lattice.repeat(condition.right.stop)
+                    else:
+                        typ = condition.right.typ.typ
+                        stop = condition.right.stop
+                        op = BinaryArithmeticOperation.Operator.Sub
+                        start = condition.right.start
+                        multiplier = BinaryArithmeticOperation(typ, stop, op, start)
+                        self.lattice.repeat(multiplier)
                     return self
                 if not self.lattice.is_empty():
                     self.lattice.top()  # default to ★
@@ -1244,12 +1260,19 @@ class TypeSignIntervalStringSetProductState(EnvironmentMixin, ProductState):
     def __repr__(self):
         if self.is_bottom():
             return "⊥"
+        var2lattices = defaultdict(lambda: list())
+        for state in self.states:
+            for variable, element in state.store.items():
+                var2lattices[variable].append(element)
+            for variable, element in state.lengths.items():
+                var2lattices[variable].append(element)
+            for variable, element in state.keys.items():
+                var2lattices[variable].append(element)
+            for variable, element in state.values.items():
+                var2lattices[variable].append(element)
         result = list()
-        for variable in sorted(self.states[0].variables, key=lambda x: x.name):
-            values = list()
-            for state in self.states:
-                values.append('{}'.format(state.store[variable]))
-            value = ' ⋅ '.join(values)
+        for variable, lattices in sorted(var2lattices.items(), key=lambda x: x[0].name):
+            value = ' ⋅ '.join('{}'.format(lattice) for lattice in lattices)
             result.append('{} -> {}'.format(variable, value))
         return '; '.join(result)
 
