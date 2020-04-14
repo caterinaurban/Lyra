@@ -168,7 +168,7 @@ class ExpressionSemantics(Semantics):
                 subscription = Subscription(primary.typ.typ, primary, index)
                 result.add(subscription)
             elif isinstance(primary.typ, DictLyraType):
-                subscription = Subscription(primary.typ.key_typ, primary, index)
+                subscription = Subscription(primary.typ.val_typ, primary, index)
                 result.add(subscription)
             elif isinstance(primary.typ, TupleLyraType):
                 if not isinstance(index, Literal):

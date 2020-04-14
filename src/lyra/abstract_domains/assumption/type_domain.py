@@ -11,7 +11,7 @@ from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum
 from functools import reduce
-from typing import Set
+from typing import Set, Union
 
 from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONMixin
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin, SequenceMixin
@@ -452,25 +452,80 @@ class TypeState(Store, StateWithSummarization, InputMixin):
                 self.values[left.values] = deepcopy(evaluation[right]).meet(deepcopy(typ))
         return self
 
-    @copy_docstring(StateWithSummarization._assign_dictionary_subscription)
-    def _assign_dictionary_subscription(self, left: Subscription, right: Expression) -> 'TypeState':
-        # copy the current state
-        current: TypeState = deepcopy(self)
-        # perform the assignment on the copy of the current state
-        target = left
-        key = None
-        while isinstance(target, Subscription):  # recurse to VariableIdentifier target
-            key = target.key
+    @copy_docstring(State._assign_subscription)
+    def _assign_subscription(self, left: Subscription, right: Expression):
+        """The subscription assignment is of the form target[key] = value. There are various cases:
+
+        * target is a dictionary; in this case we should
+            (1) join key and value to the summary corresponding to target
+            (2) join key to the summary of the keys of target
+            (3) join value to the summary of the values of target
+        * target is a subscription of the form x[i], x[i][j], ...; in this case we should
+            (1) join key and value to the summary corresponding to x
+            (2) (if x is a dictionary) join key and value to the summary of its values
+                note that i must already be in the summary of the keys of x
+        * otherwise (default), we should
+            (1) join value to the summary corresponding to x
+            (2) (if x is a dictionary) join value to the summary of its values
+                note that i must already be in the summary of the keys of x
+
+        An exception is an assignment of the form x[i:j]...[k] which has *no effect* on x.
+        """
+        current: TypeState = deepcopy(self)  # copy the current state
+        key = self._evaluation.visit(left.key, self, dict())[left.key]  # evaluate key
+        value = self._evaluation.visit(right, self, dict())[right]  # evaluate value
+        # perform the assignment on the current state
+        target = left.target
+        if isinstance(target, VariableIdentifier) and target.is_dictionary:  # D[key] = value
+            typ = TypeLattice.from_lyra_type(target.typ)
+            _typ = TypeLattice.from_lyra_type(target.typ.key_typ)
+            typ_ = TypeLattice.from_lyra_type(target.typ.val_typ)
+            self.store[target] = deepcopy(value).join(deepcopy(key)).meet(typ)
+            self.keys[target.keys] = key.meet(_typ)
+            self.values[target.values] = value.meet(typ_)
+        elif isinstance(target.typ, DictLyraType):  # X...[key] = value
+            while isinstance(target, Subscription):
+                target = target.target
+            assert isinstance(target, VariableIdentifier)
+            typ = TypeLattice.from_lyra_type(target.typ)
+            self.store[target] = deepcopy(value).join(deepcopy(key)).meet(typ)
+            if isinstance(target.typ, DictLyraType):
+                typ_ = TypeLattice.from_lyra_type(target.typ.val_typ)
+                self.values[target.values] = deepcopy(value).join(deepcopy(key)).meet(typ_)
+        else:  # default case
+            while isinstance(target, Subscription):
+                target = target.target
+            if isinstance(target, Slicing):
+                return self
+            assert isinstance(target, VariableIdentifier)
+            typ = TypeLattice.from_lyra_type(target.typ)
+            self.store[target] = deepcopy(value).meet(typ)
+            if target.is_dictionary:
+                typ_ = TypeLattice.from_lyra_type(target.typ.val_typ)
+                self.values[target.values] = deepcopy(value).meet(typ_)
+        # perform a weak update on the current state
+        return self.join(current)
+
+    @copy_docstring(State._assign_slicing)
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'StateWithSummarization':
+        """The slicing assignment is of the form target[...] = value.
+        This corresponds to the default case for a subscription (see above),
+        with the exception of an assignment of the form x[i:j]...[k:l]
+        which again has *no effect* on x."""
+        current: TypeState = deepcopy(self)  # copy the current state
+        value = self._evaluation.visit(right, self, dict())[right]  # evaluate value
+        # perform the assignment on the current state
+        target = left.target
+        while isinstance(target, Subscription):
             target = target.target
-        # do self._assign_variable(target, right)
-        _evaluation = self._evaluation.visit(key, self, dict())
-        _typ = TypeLattice.from_lyra_type(target.typ.key_typ)
-        evaluation = self._evaluation.visit(right, self, dict())
+        if isinstance(target, Slicing):
+            return self
+        assert isinstance(target, VariableIdentifier)
         typ = TypeLattice.from_lyra_type(target.typ)
-        typ_ = TypeLattice.from_lyra_type(target.typ.val_typ)
-        self.store[target] = deepcopy(evaluation[right]).join(deepcopy(_evaluation[key])).meet(typ)
-        self.keys[target.keys] = _evaluation[key].meet(_typ)
-        self.values[target.values] = evaluation[right].meet(typ_)
+        self.store[target] = deepcopy(value).meet(typ)
+        if target.is_dictionary:
+            typ_ = TypeLattice.from_lyra_type(target.typ.val_typ)
+            self.values[target.values] = deepcopy(value).meet(typ_)
         # perform a weak update on the current state
         return self.join(current)
 
@@ -584,6 +639,34 @@ class TypeState(Store, StateWithSummarization, InputMixin):
         assert all(store[v].less_equal(TypeLattice.from_lyra_type(v.typ)) for v in store.keys())
 
         return self
+
+    def _substitute_summary(self, left: Union[Subscription, Slicing], right: Expression):
+        """Substitute an expression to a summary variable.
+
+        :param left: summary variable to be substituted
+        :param right: expression to substitute
+        :return: current state modified by the substitution
+        """
+        # copy the current state
+        current: TypeState = deepcopy(self)
+        # perform the substitution on the copy of the current state
+        target = left
+        while isinstance(target, (Subscription, Slicing)):  # recurse to VariableIdentifier target
+            target = target.target
+        self._substitute_variable(target, right)
+        # check for errors turning the state into bottom
+        if self.is_bottom():
+            return self
+        # if there are not errors, perform a weak update on the current state
+        return self.join(current)
+
+    @copy_docstring(State._substitute_subscription)
+    def _substitute_subscription(self, left: Subscription, right: Expression):
+        return self._substitute_summary(left, right)
+
+    @copy_docstring(State._substitute_slicing)
+    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'StateWithSummarization':
+        return self._substitute_summary(left, right)
 
     @copy_docstring(InputMixin.replace)
     def replace(self, variable: VariableIdentifier, expression: Expression) -> 'TypeState':

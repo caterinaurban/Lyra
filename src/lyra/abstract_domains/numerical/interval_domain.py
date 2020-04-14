@@ -249,57 +249,58 @@ class IntervalState(BasisWithSummarization):
         _lengths = all(_top.less_equal(element) for element in self.lengths.values())
         return _store and _lengths
 
-    @copy_docstring(BasisWithSummarization._assign_dictionary_subscription)
-    def _assign_dictionary_subscription(self, left: Subscription, right: Expression):
-        # update length identifier
-        target = left
-        key = None
-        while isinstance(target, Subscription):  # recurse to VariableIdentifier target
-            key = target.key
-            target = target.target
-        _evaluation = self._evaluation.visit(key, self, dict())
-        current = self.lengths[target.length]      # current length
-        one = self.lattices[IntegerLyraType()](lower=1, upper=1)
-        if _evaluation[key].less_equal(self.keys[target.keys]):
-            self.lengths[target.length] = deepcopy(current).join(current.add(one))
-        else:
-            self.lengths[target.length] = current.add(one)
+    @copy_docstring(BasisWithSummarization._assign_variable)
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'IntervalState':
+        if left.has_length:     # update corresponding length identifier, if any
+            self.lengths[left.length] = self._length.visit(right, self)
         # perform the assignment
-        super()._assign_dictionary_subscription(left, right)
+        super()._assign_variable(left, right)
         return self
 
-    @copy_docstring(BasisWithSummarization._assign)
-    def _assign(self, left: Expression, right: Expression) -> 'IntervalState':
+    @copy_docstring(BasisWithSummarization._assign_subscription)
+    def _assign_subscription(self, left: Subscription, right: Expression) -> 'IntervalState':
         # update length identifiers, if appropriate
-        if isinstance(left, VariableIdentifier):
-            if left.has_length:
-                self.lengths[left.length] = self._length.visit(right, self)
-        elif isinstance(left, Subscription) and isinstance(left.target, VariableIdentifier):
-            if isinstance(left.target.typ, SequenceLyraType):
-                length = self.lengths[left.target.length]
-                key = deepcopy(self._evaluation.visit(left.key, self, dict())[left.key])
-                if key.less_equal(self.lattices[left.key.typ](lower=0)):    # key is positive
-                    if length.upper < key.lower:    # key is definitely larger than length
-                        return self.bottom()
-                    lower = self.lattices[left.key.typ](lower=key.lower)
-                    self.lengths[left.target.length] = length.meet(lower)
-                elif key.less_equal(self.lattices[left.key.typ](upper=-1)):     # key is negative
-                    if length.upper + key.upper < 0:    # key is definitely smaller than length
-                        return self.bottom()
-                    upper = self.lattices[left.key.typ](lower=-key.upper)
-                    self.lengths[left.target.length] = length.meet(upper)
-        elif isinstance(left, Slicing) and isinstance(left.target, VariableIdentifier): #x[i:j] = e
-            if isinstance(left.target.typ, SequenceLyraType):   # x[i:j] = e
-                current = self.lengths[left.target.length]      # current length
-                # under-approximate length of left
-                lattice = self.lattices[IntegerLyraType()]
-                slicing = lattice(lower=1, upper=1)     # default under-approximation
-                # over-approximate length of right
-                extra = self._length.visit(right, self)
-                # len(x) = len(x) - len(x[j:i]) + len(e)
-                self.lengths[left.target.length] = current.sub(slicing).add(extra)
+        target = left.target
+        if isinstance(target, VariableIdentifier) and isinstance(target.typ, SequenceLyraType):
+            current: IntervalLattice = self.lengths[target.length]   # current length
+            key = deepcopy(self._evaluation.visit(left.key, self, dict())[left.key])
+            if key.less_equal(self.lattices[left.key.typ](lower=0)):  # key is positive
+                if current.upper < key.lower:  # key is definitely larger than length
+                    return self.bottom()
+                lower = self.lattices[left.key.typ](lower=key.lower)
+                self.lengths[target.length] = current.meet(lower)
+            elif key.less_equal(self.lattices[left.key.typ](upper=-1)):  # key is negative
+                if current.upper + key.upper < 0:  # key is definitely smaller than length
+                    return self.bottom()
+                upper = self.lattices[left.key.typ](lower=-key.upper)
+                self.lengths[target.length] = current.meet(upper)
+        elif isinstance(target, VariableIdentifier) and target.is_dictionary:  # D[key] = value
+            current: IntervalLattice = self.lengths[target.length]   # current length
+            key = self._evaluation.visit(left.key, self, dict())[left.key]      # evaluate key
+            one = self.lattices[IntegerLyraType()](lower=1, upper=1)
+            if key.less_equal(self.keys[target.keys]):
+                self.lengths[target.length] = deepcopy(current).join(current.add(one))
+            else:
+                self.lengths[target.length] = current.add(one)
         # perform the assignment
-        super()._assign(left, right)
+        super()._assign_subscription(left, right)
+        return self
+
+    @copy_docstring(State._assign_slicing)
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'IntervalState':
+        # update length identifiers, if appropriate
+        target = left.target
+        if isinstance(target, VariableIdentifier) and isinstance(target.typ, SequenceLyraType):
+            current: IntervalLattice = self.lengths[target.length]   # current length
+            # under-approximate length of left
+            lattice = self.lattices[IntegerLyraType()]
+            slicing = lattice(lower=1, upper=1)  # default under-approximation
+            # over-approximate length of right
+            extra = self._length.visit(right, self)
+            # len(x) = len(x) - len(x[j:i]) + len(e)
+            self.lengths[target.length] = current.sub(slicing).add(extra)
+        # perform the assignment
+        super()._assign_slicing(left, right)
         return self
 
     @copy_docstring(BasisWithSummarization._assume_variable)
@@ -624,8 +625,8 @@ class BoxStateWithSummarization(APRONStateWithSummarization):
         if self.is_bottom():
             return "⊥"
         env = self.environment.environment.contents
-        result = ', '.join('{}: {}'.format(var(i), itv(i)) for i in range(env.intdim))
-        result += ', '.join(
+        result = '; '.join('{}: {}'.format(var(i), itv(i)) for i in range(env.intdim))
+        result += '; '.join(
             '{} -> {}'.format(var(env.intdim + i), itv(env.intdim + i)) for i in range(env.realdim)
         )
         return result.replace('.0', '')

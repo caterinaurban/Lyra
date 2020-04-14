@@ -10,7 +10,7 @@ is represented by a conjunction of (more of less complex) linear constraints.
 """
 from abc import ABCMeta
 from copy import deepcopy
-from typing import Set, Type
+from typing import Set, Type, Union
 
 from apronpy.abstract1 import PyAbstract1
 from apronpy.coeff import PyMPQIntervalCoeff
@@ -182,9 +182,30 @@ class APRONStateWithSummarization(StateWithSummarization, metaclass=ABCMeta):
             self.state = state
         return self
 
-    @copy_docstring(StateWithSummarization._assign_dictionary_subscription)
-    def _assign_dictionary_subscription(self, left: Subscription, right: Expression) -> 'APRONStateWithSummarization':
-        raise NotImplementedError(f"Assignment of dictionary subscription {left} is unsupported!")
+    def _assign_summary(self, left: Union[Subscription, Slicing], right: Expression):
+        """Assign an expression to a summary variable.
+
+        :param left: summary variable to be assigned to
+        :param right: expression to assign
+        :return: current state modified by the assignment
+        """
+        # copy the current state
+        current: APRONStateWithSummarization = deepcopy(self)
+        # perform the substitution on the copy of the current state
+        target = left
+        while isinstance(target, (Subscription, Slicing)):  # recurse to VariableIdentifier target
+            target = target.target
+        self._assign_variable(target, right)
+        # perform a weak update on the current state
+        return self.join(current)
+
+    @copy_docstring(State._assign_subscription)
+    def _assign_subscription(self, left: Subscription, right: Expression):
+        return self._assign_summary(left, right)    # TODO: implement correctly
+
+    @copy_docstring(State._assign_slicing)
+    def _assign_slicing(self, left: Slicing, right: Expression):
+        return self._assign_summary(left, right)    # TODO: implement correctly
 
     @copy_docstring(State._assume_variable)
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'APRONStateWithSummarization':
@@ -341,6 +362,34 @@ class APRONStateWithSummarization(StateWithSummarization, metaclass=ABCMeta):
                 state = state.join(deepcopy(self.state).substitute(PyVar(left.name), item))
             self.state = state
         return self
+
+    def _substitute_summary(self, left: Union[Subscription, Slicing], right: Expression):
+        """Substitute an expression to a summary variable.
+
+        :param left: summary variable to be substituted
+        :param right: expression to substitute
+        :return: current state modified by the substitution
+        """
+        # copy the current state
+        current: APRONStateWithSummarization = deepcopy(self)
+        # perform the substitution on the copy of the current state
+        target = left
+        while isinstance(target, (Subscription, Slicing)):  # recurse to VariableIdentifier target
+            target = target.target
+        self._substitute_variable(target, right)
+        # check for errors turning the state into bottom
+        if self.is_bottom():
+            return self
+        # if there are not errors, perform a weak update on the current state
+        return self.join(current)
+
+    @copy_docstring(State._substitute_subscription)
+    def _substitute_subscription(self, left: Subscription, right: Expression):
+        return self._substitute_summary(left, right)    # TODO: implement correctly
+
+    @copy_docstring(State._substitute_slicing)
+    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'StateWithSummarization':
+        return self._substitute_summary(left, right)    # TODO: implement correctly
 
     _negation_free = NegationFreeExpression()
     _lyra2apron = Lyra2APRONWithSummarization()

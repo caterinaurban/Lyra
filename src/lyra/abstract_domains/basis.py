@@ -8,7 +8,7 @@ Interface of an abstract domain mapping variables to lattice elements.
 """
 from abc import ABCMeta
 from copy import deepcopy
-from typing import Set, Dict, Type, Any
+from typing import Set, Dict, Type, Any, Union
 
 from lyra.abstract_domains.lattice import Lattice, ArithmeticMixin, BooleanMixin, SequenceMixin
 from lyra.abstract_domains.state import State, StateWithSummarization
@@ -483,22 +483,71 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
         Lattice operations and statements modify the current state.
     """
 
-    @copy_docstring(StateWithSummarization._assign_dictionary_subscription)
-    def _assign_dictionary_subscription(self, left: Subscription, right: Expression) -> 'StateWithSummarization':
-        # copy the current state
-        current: BasisWithSummarization = deepcopy(self)
-        # perform the assignment on the copy of the current state
-        target = left
-        key = None
-        while isinstance(target, Subscription):  # recurse to VariableIdentifier target
-            key = target.key
+    @copy_docstring(State._assign_subscription)
+    def _assign_subscription(self, left: Subscription, right: Expression):
+        """The subscription assignment is of the form target[key] = value. There are various cases:
+
+        * target is a dictionary; in this case we should
+            (1) join key and value to the summary corresponding to target
+            (2) join key to the summary of the keys of target
+            (3) join value to the summary of the values of target
+        * target is a subscription of the form x[i], x[i][j], ...; in this case we should
+            (1) join key and value to the summary corresponding to x
+            (2) (if x is a dictionary) join key and value to the summary of its values
+                note that i must already be in the summary of the keys of x
+        * otherwise (default), we should
+            (1) join value to the summary corresponding to x
+            (2) (if x is a dictionary) join value to the summary of its values
+                note that i must already be in the summary of the keys of x
+
+        An exception is an assignment of the form x[i:j]...[k] which has *no effect* on x.
+        """
+        current: BasisWithSummarization = deepcopy(self)    # copy the current state
+        key = self._evaluation.visit(left.key, self, dict())[left.key]      # evaluate key
+        value = self._evaluation.visit(right, self, dict())[right]          # evaluate value
+        # perform the assignment on the current state
+        target = left.target
+        if isinstance(target, VariableIdentifier) and target.is_dictionary:     # D[key] = value
+            self.store[target] = deepcopy(value).join(deepcopy(key))
+            self.keys[target.keys] = key
+            self.values[target.values] = value
+        elif isinstance(target.typ, DictLyraType):      # X...[key] = value
+            while isinstance(target, Subscription):
+                target = target.target
+            assert isinstance(target, VariableIdentifier)
+            self.store[target] = deepcopy(value).join(deepcopy(key))
+            if isinstance(target.typ, DictLyraType):
+                self.values[target.values] = deepcopy(value).join(deepcopy(key))
+        else:   # default case
+            while isinstance(target, Subscription):
+                target = target.target
+            if isinstance(target, Slicing):
+                return self
+            assert isinstance(target, VariableIdentifier)
+            self.store[target] = deepcopy(value)
+            if target.is_dictionary:
+                self.values[target.values] = deepcopy(value)
+        # perform a weak update on the current state
+        return self.join(current)
+
+    @copy_docstring(State._assign_slicing)
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'StateWithSummarization':
+        """The slicing assignment is of the form target[...] = value.
+        This corresponds to the default case for a subscription (see above),
+        with the exception of an assignment of the form x[i:j]...[k:l]
+        which again has *no effect* on x."""
+        current: BasisWithSummarization = deepcopy(self)    # copy the current state
+        value = self._evaluation.visit(right, self, dict())[right]      # evaluate value
+        # perform the assignment on the current state
+        target = left.target
+        while isinstance(target, Subscription):
             target = target.target
-        # do self._assign_variable(target, right)
-        _evaluation = self._evaluation.visit(key, self, dict())
-        evaluation = self._evaluation.visit(right, self, dict())
-        self.store[target] = deepcopy(evaluation[right]).join(deepcopy(_evaluation[key]))
-        self.keys[target.keys] = _evaluation[key]
-        self.values[target.values] = evaluation[right]
+        if isinstance(target, Slicing):
+            return self
+        assert isinstance(target, VariableIdentifier)
+        self.store[target] = deepcopy(value)
+        if target.is_dictionary:
+            self.values[target.values] = deepcopy(value)
         # perform a weak update on the current state
         return self.join(current)
 
@@ -512,6 +561,34 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                     self.keys[var.keys].join(previous.keys[var.keys])
                     self.values[var.values].join(previous.values[var.values])
         return self
+
+    def _substitute_summary(self, left: Union[Subscription, Slicing], right: Expression):
+        """Substitute an expression to a summary variable.
+
+        :param left: summary variable to be substituted
+        :param right: expression to substitute
+        :return: current state modified by the substitution
+        """
+        # copy the current state
+        current: BasisWithSummarization = deepcopy(self)
+        # perform the substitution on the copy of the current state
+        target = left
+        while isinstance(target, (Subscription, Slicing)):  # recurse to VariableIdentifier target
+            target = target.target
+        self._substitute_variable(target, right)
+        # check for errors turning the state into bottom
+        if self.is_bottom():
+            return self
+        # if there are not errors, perform a weak update on the current state
+        return self.join(current)
+
+    @copy_docstring(State._substitute_subscription)
+    def _substitute_subscription(self, left: Subscription, right: Expression):
+        return self._substitute_summary(left, right)
+
+    @copy_docstring(State._substitute_slicing)
+    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'BasisWithSummarization':
+        return self._substitute_summary(left, right)
 
     # expression evaluation
 

@@ -15,7 +15,8 @@ from copy import deepcopy
 from typing import Set, Optional, List, Type, Dict, Any, Union
 
 from lyra.abstract_domains.lattice import Lattice
-from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing, AttributeReference, Literal, \
+from lyra.core.expressions import Expression, VariableIdentifier, Subscription, Slicing, \
+    AttributeReference, Literal, \
     NegationFreeExpression, UnaryBooleanOperation, BinaryBooleanOperation, \
     BinaryComparisonOperation
 from lyra.core.statements import ProgramPoint
@@ -174,7 +175,7 @@ class State(Lattice, metaclass=ABCMeta):
         assert isinstance(condition.expression, VariableIdentifier)
         return self._assume_variable(condition.expression, neg=True)
 
-    def _assume_binary_boolean(self, condition: BinaryBooleanOperation, bwd: bool = False) -> 'State':
+    def _assume_binary_boolean(self, condition: BinaryBooleanOperation, bwd: bool = False):
         """Assume that some condition holds in the current state.
 
         :param condition: binary boolean operation representing the assumed condition
@@ -190,7 +191,7 @@ class State(Lattice, metaclass=ABCMeta):
         return self._assume(condition.left, bwd=bwd).join(right)
 
     @abstractmethod
-    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         """Assume that some condition holds in the current state.
 
         :param condition: equal comparison operation representing the assumed condition
@@ -200,7 +201,7 @@ class State(Lattice, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         """Assume that some condition holds in the current state.
 
         :param condition: not equal comparison operation representing the assumed condition
@@ -210,7 +211,7 @@ class State(Lattice, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         """Assume that some condition holds in the current state.
 
         :param condition: less than comparison operation representing the assumed condition
@@ -220,17 +221,17 @@ class State(Lattice, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         """Assume that some condition holds in the current state.
 
-        :param condition: less than or equal comparison operation representing the assumed condition
+        :param condition: less than or equal comparison representing the assumed condition
         :param bwd: whether the assumption happens in a backward analysis (default: False)
         :return: current state modified to satisfy the assumption
 
         """
 
     @abstractmethod
-    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         """Assume that some condition holds in the current state.
 
         :param condition: greater comparison operation representing the assumed condition
@@ -240,17 +241,17 @@ class State(Lattice, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         """Assume that some condition holds in the current state.
 
-        :param condition: greater than or equal comparison operation representing the assumed condition
+        :param condition: greater than or equal comparison representing the assumed condition
         :param bwd: whether the assumption happens in a backward analysis (default: False)
         :return: current state modified to satisfy the assumption
 
         """
 
     @abstractmethod
-    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         """Assume that some condition holds in the current state.
 
         :param condition: is comparison operation representing the assumed condition
@@ -260,7 +261,7 @@ class State(Lattice, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         """Assume that some condition holds in the current state.
 
         :param condition: is not comparison operation representing the assumed condition
@@ -270,7 +271,7 @@ class State(Lattice, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         """Assume that some condition holds in the current state.
 
         :param condition: in comparison operation representing the assumed condition
@@ -280,7 +281,7 @@ class State(Lattice, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         """Assume that some condition holds in the current state.
 
         :param condition: not in comparison operation representing the assumed condition
@@ -289,7 +290,7 @@ class State(Lattice, metaclass=ABCMeta):
 
         """
 
-    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         """Assume that some condition holds in the current state.
 
         :param condition: binary comparison operation representing the assumed condition
@@ -503,7 +504,8 @@ class State(Lattice, metaclass=ABCMeta):
         if isinstance(left, VariableIdentifier):
             return self._substitute_variable(left, right)
         elif isinstance(left, AttributeReference):
-            raise NotImplementedError(f"Substitution of attribute reference {left} is unsupported!")
+            error = f"Substitution of attribute reference {left} is unsupported!"
+            raise NotImplementedError(error)
         elif isinstance(left, Subscription):
             return self._substitute_subscription(left, right)
         elif isinstance(left, Slicing):
@@ -529,42 +531,6 @@ class State(Lattice, metaclass=ABCMeta):
 
 class StateWithSummarization(State, metaclass=ABCMeta):
 
-    def _assign_summary(self, left: Union[Subscription, Slicing], right: Expression) -> 'StateWithSummarization':
-        """Assign an expression to a summary variable.
-
-        :param left: summary variable to be assigned to
-        :param right: expression to assign
-        :return: current state modified by the assignment
-        """
-        # copy the current state
-        current: StateWithSummarization = deepcopy(self)
-        # perform the substitution on the copy of the current state
-        target = left
-        while isinstance(target, (Subscription, Slicing)):    # recurse to VariableIdentifier target
-            target = target.target
-        self._assign_variable(target, right)
-        # perform a weak update on the current state
-        return self.join(current)
-
-    @abstractmethod
-    def _assign_dictionary_subscription(self, left: Subscription, right: Expression) -> 'StateWithSummarization':
-        """Assign an expression to a dictionary subscription
-
-        :param left: the dictionary subscription to be assigned to
-        :param right: expression to assign
-        :return: current state modified by the assignment
-        """
-
-    @copy_docstring(State._assign_subscription)
-    def _assign_subscription(self, left: Subscription, right: Expression) -> 'StateWithSummarization':
-        if isinstance(left.target.typ, DictLyraType):
-            return self._assign_dictionary_subscription(left, right)
-        return self._assign_summary(left, right)
-
-    @copy_docstring(State._assign_slicing)
-    def _assign_slicing(self, left: Slicing, right: Expression) -> 'StateWithSummarization':
-        return self._assign_summary(left, right)
-
     @abstractmethod
     def _weak_update(self, variables: Set[VariableIdentifier], previous: 'StateWithSummarization'):
         """Weaken a strong update.
@@ -577,7 +543,7 @@ class StateWithSummarization(State, metaclass=ABCMeta):
     @copy_docstring(State._assume_binary_comparison)
     def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         # identify involved container identifiers
-        containers: Set[VariableIdentifier] = {var for var in condition.ids() if isinstance(var.typ, ContainerLyraType)}
+        containers = {var for var in condition.ids() if isinstance(var.typ, ContainerLyraType)}
         # expand, i.e., copy the current state, if needed
         current = deepcopy(self) if containers else None
         # perform the assumption on the current state
@@ -606,34 +572,6 @@ class StateWithSummarization(State, metaclass=ABCMeta):
         if containers:
             return self._weak_update(containers, current)
         return self
-
-    def _substitute_summary(self, left: Union[Subscription, Slicing], right: Expression) -> 'StateWithSummarization':
-        """Substitute an expression to a summary variable.
-
-        :param left: summary variable to be substituted
-        :param right: expression to substitute
-        :return: current state modified by the substitution
-        """
-        # copy the current state
-        current: StateWithSummarization = deepcopy(self)
-        # perform the substitution on the copy of the current state
-        target = left
-        while isinstance(target, (Subscription, Slicing)):    # recurse to VariableIdentifier target
-            target = target.target
-        self._substitute_variable(target, right)
-        # check for errors turning the state into bottom
-        if self.is_bottom():
-            return self
-        # if there are not errors, perform a weak update on the current state
-        return self.join(current)
-
-    @copy_docstring(State._substitute_subscription)
-    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'StateWithSummarization':
-        return self._substitute_summary(left, right)
-
-    @copy_docstring(State._substitute_slicing)
-    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'StateWithSummarization':
-        return self._substitute_summary(left, right)
 
 
 class ProductState(State):
@@ -704,70 +642,86 @@ class ProductState(State):
 
     @copy_docstring(State._assign_variable)
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'ProductState':
-        raise RuntimeError("Unexpected call to ProductState._assign_variable!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assign_variable(left, right)
+        return self
 
     @copy_docstring(State._assign_subscription)
     def _assign_subscription(self, left: Subscription, right: Expression) -> 'ProductState':
-        raise RuntimeError("Unexpected call to ProductState._assign_subscription!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assign_subscription(left, right)
+        return self
 
     @copy_docstring(State._assign_slicing)
     def _assign_slicing(self, left: Slicing, right: Expression) -> 'ProductState':
-        raise RuntimeError("Unexpected call to ProductState._assign_slicing!")
-
-    @copy_docstring(State.assign)
-    def assign(self, left: Set[Expression], right: Set[Expression]) -> 'ProductState':
         for i, state in enumerate(self.states):
-            self.states[i] = state.assign(left, right)
+            self.states[i] = state._assign_slicing(left, right)
         return self
 
     @copy_docstring(State._assume_variable)
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False):
-        raise RuntimeError("Unexpected call to ProductState._assume_variable!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_variable(condition, neg=neg)
+        return self
 
     @copy_docstring(State._assume_eq_comparison)
     def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise RuntimeError("Unexpected call to ProductState._assume_eq_comparison!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_eq_comparison(condition, bwd=bwd)
+        return self
 
     @copy_docstring(State._assume_noteq_comparison)
     def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise RuntimeError("Unexpected call to ProductState._assume_noteq_comparison!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_noteq_comparison(condition, bwd=bwd)
+        return self
 
     @copy_docstring(State._assume_lt_comparison)
     def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise RuntimeError("Unexpected call to ProductState._assume_lt_comparison!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_lt_comparison(condition, bwd=bwd)
+        return self
 
     @copy_docstring(State._assume_lte_comparison)
     def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise RuntimeError("Unexpected call to ProductState._assume_lte_comparison!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_lte_comparison(condition, bwd=bwd)
+        return self
 
     @copy_docstring(State._assume_gt_comparison)
     def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise RuntimeError("Unexpected call to ProductState._assume_gt_comparison!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_gt_comparison(condition, bwd=bwd)
+        return self
 
     @copy_docstring(State._assume_gte_comparison)
     def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise RuntimeError("Unexpected call to ProductState._assume_gte_comparison!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_gte_comparison(condition, bwd=bwd)
+        return self
 
     @copy_docstring(State._assume_is_comparison)
     def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise RuntimeError("Unexpected call to ProductState._assume_is_comparison!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_is_comparison(condition, bwd=bwd)
+        return self
 
     @copy_docstring(State._assume_isnot_comparison)
     def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise RuntimeError("Unexpected call to ProductState._assume_isnot_comparison!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_isnot_comparison(condition, bwd=bwd)
+        return self
 
     @copy_docstring(State._assume_in_comparison)
     def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise RuntimeError("Unexpected call to ProductState._assume_in_comparison!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_in_comparison(condition, bwd=bwd)
+        return self
 
     @copy_docstring(State._assume_notin_comparison)
     def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise RuntimeError("Unexpected call to ProductState._assume_notin_comparison!")
-
-    @copy_docstring(State.assume)
-    def assume(self, condition: Set[Expression], bwd: bool = False) -> 'ProductState':
         for i, state in enumerate(self.states):
-            self.states[i] = state.assume(condition, bwd=bwd)
+            self.states[i] = state._assume_notin_comparison(condition, bwd=bwd)
         return self
 
     @copy_docstring(State.before)
@@ -809,28 +763,24 @@ class ProductState(State):
 
     @copy_docstring(State._output)
     def _output(self, output: Expression) -> 'ProductState':
-        raise RuntimeError("Unexpected call to ProductState._output!")
-
-    @copy_docstring(State.output)
-    def output(self, output: Set[Expression]) -> 'State':
         for i, state in enumerate(self.states):
-            self.states[i] = state.output(output)
+            self.states[i] = state._output(output)
         return self
 
     @copy_docstring(State._substitute_variable)
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'ProductState':
-        raise RuntimeError("Unexpected call to ProductState._substitute_variable!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._substitute_variable(left, right)
+        return self
 
     @copy_docstring(State._substitute_subscription)
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'ProductState':
-        raise RuntimeError("Unexpected call to ProductState._substitute_subscription!")
+        for i, state in enumerate(self.states):
+            self.states[i] = state._substitute_subscription(left, right)
+        return self
 
     @copy_docstring(State._substitute_slicing)
     def _substitute_slicing(self, left: Slicing, right: Expression) -> 'ProductState':
-        raise RuntimeError("Unexpected call to ProductState._substitute_slicing!")
-
-    @copy_docstring(State.substitute)
-    def substitute(self, left: Set[Expression], right: Set[Expression]) -> 'ProductState':
         for i, state in enumerate(self.states):
-            self.states[i] = state.substitute(left, right)
+            self.states[i] = state._substitute_slicing(left, right)
         return self
