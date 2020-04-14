@@ -14,7 +14,8 @@ from typing import Set
 from lyra.abstract_domains.basis import BasisWithSummarization
 from lyra.abstract_domains.lattice import TopMixin, SequenceMixin
 from lyra.abstract_domains.state import State
-from lyra.core.expressions import Literal, VariableIdentifier, BinaryComparisonOperation
+from lyra.core.expressions import Literal, VariableIdentifier, BinaryComparisonOperation, \
+    Subscription
 from lyra.core.types import StringLyraType
 from lyra.core.utils import copy_docstring
 
@@ -121,6 +122,10 @@ class StringSetState(BasisWithSummarization):
 
     @copy_docstring(BasisWithSummarization._assume_variable)
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'StringSetState':
+        return self
+
+    @copy_docstring(BasisWithSummarization._assume_subscription)
+    def _assume_subscription(self, condition: Subscription, neg: bool = False) -> 'StringSetState':
         return self
 
     @copy_docstring(State._assume_eq_comparison)

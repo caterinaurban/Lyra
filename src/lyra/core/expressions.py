@@ -272,6 +272,9 @@ class NegationFreeExpression(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_Subscription)
     def visit_Subscription(self, expr: 'Subscription', invert=False):
+        if isinstance(expr.typ, BooleanLyraType) and invert:
+            operator = UnaryBooleanOperation.Operator.Neg
+            return UnaryBooleanOperation(BooleanLyraType(), operator, expr)
         return expr     # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_Slicing)

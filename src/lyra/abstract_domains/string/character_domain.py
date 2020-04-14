@@ -151,6 +151,10 @@ class CharacterState(BasisWithSummarization):
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'CharacterState':
         return self
 
+    @copy_docstring(BasisWithSummarization._assume_subscription)
+    def _assume_subscription(self, condition: Subscription, neg: bool = False) -> 'CharacterState':
+        return self
+
     @copy_docstring(State._assume_eq_comparison)
     def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'CharacterState':
         left = condition.left

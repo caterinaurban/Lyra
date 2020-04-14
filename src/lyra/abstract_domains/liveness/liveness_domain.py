@@ -158,9 +158,15 @@ class LivenessState(Store, State):
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'LivenessState':
         return self._assume_any(condition)
 
+    @copy_docstring(State._assume_subscription)
+    def _assume_subscription(self, condition: Subscription, neg: bool = False) -> 'LivenessState':
+        return self._assume_any(condition)
+
+    @copy_docstring(State._assume_unary_boolean)
     def _assume_unary_boolean(self, condition: UnaryBooleanOperation) -> 'LivenessState':
         return self._assume_any(condition)
 
+    @copy_docstring(State._assume_binary_boolean)
     def _assume_binary_boolean(self, condition: BinaryBooleanOperation, bwd: bool = False) -> 'LivenessState':
         return self._assume_any(condition)
     

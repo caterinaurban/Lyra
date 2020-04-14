@@ -161,6 +161,10 @@ class SimpleUsageState(Stack, State):
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'SimpleUsageState':
         return self._assume_any(condition)
 
+    @copy_docstring(State._assume_subscription)
+    def _assume_subscription(self, condition: Subscription, neg: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
+
     @copy_docstring(State._assume_eq_comparison)
     def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
         return self._assume_any(condition)

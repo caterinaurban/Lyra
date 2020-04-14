@@ -295,6 +295,9 @@ class FularaUsageState(Stack, State):
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'State':
         pass
 
+    def _assume_subscription(self, condition: Subscription, neg: bool = False) -> 'State':
+        pass
+
     def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'State':
         pass
 

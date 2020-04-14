@@ -305,6 +305,19 @@ class SignState(BasisWithSummarization):
             return self._refinement.visit(condition, evaluation, value, self)
         raise ValueError(f"Assumption of variable {condition} is unsupported!")
 
+    @copy_docstring(BasisWithSummarization._assume_subscription)
+    def _assume_subscription(self, condition: Subscription, neg: bool = False) -> 'SignState':
+        if isinstance(condition.typ, BooleanLyraType):
+            evaluation = self._evaluation.visit(condition, self, dict())
+            if neg:
+                value = self.lattices[condition.typ](**self.arguments[condition.typ]).false()
+            else:
+                value = self.lattices[condition.typ](**self.arguments[condition.typ]).true()
+            if not value.less_equal(evaluation[condition.target]):
+                return self.bottom()
+            return self
+        raise ValueError(f"Assumption of variable {condition} is unsupported!")
+
     @copy_docstring(BasisWithSummarization._assume_eq_comparison)
     def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SignState':
         # left == right -> left - right <= 0 && right - left <= 0

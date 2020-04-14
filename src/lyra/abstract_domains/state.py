@@ -163,6 +163,16 @@ class State(Lattice, metaclass=ABCMeta):
 
         """
 
+    @abstractmethod
+    def _assume_subscription(self, condition: Subscription, neg: bool = False) -> 'State':
+        """Assume that some condition holds in the current state.
+
+        :param condition: subscription representing the assumed condition
+        :param neg: whether the assumption should be negated (default: False)
+        :return: current state modified to satisfy the assumption
+
+        """
+
     def _assume_unary_boolean(self, condition: UnaryBooleanOperation) -> 'State':
         """Assume that some condition holds in the current state.
 
@@ -172,8 +182,10 @@ class State(Lattice, metaclass=ABCMeta):
         """
         if isinstance(condition.expression, Literal):
             return self._assume_literal(condition.expression, neg=True)
-        assert isinstance(condition.expression, VariableIdentifier)
-        return self._assume_variable(condition.expression, neg=True)
+        elif isinstance(condition.expression, VariableIdentifier):
+            return self._assume_variable(condition.expression, neg=True)
+        assert isinstance(condition.expression, Subscription)
+        return self._assume_subscription(condition.expression, neg=True)
 
     def _assume_binary_boolean(self, condition: BinaryBooleanOperation, bwd: bool = False):
         """Assume that some condition holds in the current state.
@@ -335,6 +347,8 @@ class State(Lattice, metaclass=ABCMeta):
             return self._assume_literal(normal)
         elif isinstance(normal, VariableIdentifier):
             return self._assume_variable(normal)
+        elif isinstance(normal, Subscription):
+            return self._assume_subscription(normal)
         elif isinstance(normal, UnaryBooleanOperation):
             return self._assume_unary_boolean(normal)
         elif isinstance(normal, BinaryBooleanOperation):
@@ -662,6 +676,12 @@ class ProductState(State):
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False):
         for i, state in enumerate(self.states):
             self.states[i] = state._assume_variable(condition, neg=neg)
+        return self
+
+    @copy_docstring(State._assume_subscription)
+    def _assume_subscription(self, condition: Subscription, neg: bool = False):
+        for i, state in enumerate(self.states):
+            self.states[i] = state._assume_subscription(condition, neg=neg)
         return self
 
     @copy_docstring(State._assume_eq_comparison)

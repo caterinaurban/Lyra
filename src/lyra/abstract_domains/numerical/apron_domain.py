@@ -211,6 +211,10 @@ class APRONStateWithSummarization(StateWithSummarization, metaclass=ABCMeta):
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'APRONStateWithSummarization':
         raise NotImplementedError(f"Assumption of {condition.__class__.__name__} is unsupported!")
 
+    @copy_docstring(State._assume_subscription)
+    def _assume_subscription(self, condition: Subscription, neg: bool = False) -> 'APRONStateWithSummarization':
+        raise NotImplementedError(f"Assumption of {condition.__class__.__name__} is unsupported!")
+
     @copy_docstring(StateWithSummarization._weak_update)
     def _weak_update(self, variables: Set[VariableIdentifier], previous: 'APRONStateWithSummarization'):
         given_names = {var.name for var in variables}
