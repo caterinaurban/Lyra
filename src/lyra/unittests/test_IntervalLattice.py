@@ -9,7 +9,7 @@ Interval Lattice - Unit Tests
 import unittest
 
 from math import inf
-from lyra.abstract_domains.numerical.interval_domain import IntervalLattice
+from lyra.abstract_domains.numerical.interval_lattice import IntervalLattice
 
 
 class TestIntervalLattice(unittest.TestCase):

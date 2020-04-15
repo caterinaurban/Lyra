@@ -11,13 +11,14 @@ from typing import Set
 from lyra.abstract_domains.container.fulara.key_wrapper import KeyWrapper
 from lyra.abstract_domains.container.fulara.value_wrapper import ValueWrapper
 from lyra.abstract_domains.lattice import EnvironmentMixin
-from lyra.abstract_domains.numerical.interval_domain import IntervalState, IntervalLattice
+from lyra.abstract_domains.numerical.interval_domain import IntervalStateWithSummarization
+from lyra.abstract_domains.numerical.interval_lattice import IntervalLattice
 from lyra.core.expressions import VariableIdentifier, LengthIdentifier, Expression
 from lyra.core.types import SequenceLyraType
 from lyra.core.utils import copy_docstring
 
 
-class IntervalSWrapper(IntervalState):
+class IntervalSWrapper(IntervalStateWithSummarization):
     """Wrapper around IntervalState for scalar domain of FularaState"""
 
     def __init__(self, scalar_variables: Set[VariableIdentifier]):

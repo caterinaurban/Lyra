@@ -11,19 +11,30 @@ from lyra.engine.runner import Runner
 from lyra.semantics.backward import DefaultBackwardSemantics
 from lyra.semantics.forward import DefaultForwardSemantics
 
-from lyra.abstract_domains.numerical.interval_domain import IntervalState, BoxStateWithSummarization
+from lyra.abstract_domains.numerical.interval_domain import IntervalStateWithSummarization, \
+    BoxStateWithSummarization, IntervalStateWithIndexing
 
 
-class ForwardIntervalAnalysis(Runner):
+class ForwardIntervalAnalysisWithSummarization(Runner):
 
     def interpreter(self):
         return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
 
     def state(self):
-        return IntervalState(self.variables)
+        return IntervalStateWithSummarization(self.variables)
 
 
-class ForwardBoxAnalysis(Runner):
+class ForwardIntervalAnalysisWithIndexing(Runner):
+
+    def interpreter(self):
+        return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
+
+    def state(self):
+        IntervalStateWithIndexing.bound = 3
+        return IntervalStateWithIndexing(self.variables)
+
+
+class ForwardBoxAnalysisWithSummarization(Runner):
 
     def interpreter(self):
         return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
@@ -32,16 +43,16 @@ class ForwardBoxAnalysis(Runner):
         return BoxStateWithSummarization(self.variables)
 
 
-class BackwardIntervalAnalysis(Runner):
+class BackwardIntervalAnalysisWithSummarization(Runner):
 
     def interpreter(self):
         return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
 
     def state(self):
-        return IntervalState(self.variables)
+        return IntervalStateWithSummarization(self.variables)
 
 
-class BackwardBoxAnalysis(Runner):
+class BackwardBoxAnalysisWithSummarization(Runner):
 
     def interpreter(self):
         return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)

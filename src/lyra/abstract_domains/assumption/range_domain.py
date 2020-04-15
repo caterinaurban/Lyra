@@ -12,8 +12,9 @@ from collections import defaultdict
 from math import inf
 from typing import Set
 from lyra.abstract_domains.assumption.assumption_domain import InputMixin, JSONMixin
-from lyra.abstract_domains.numerical.interval_domain import IntervalState, \
-    copy_docstring, Input, IntervalLattice
+from lyra.abstract_domains.numerical.interval_domain import IntervalStateWithSummarization, \
+    copy_docstring, Input
+from lyra.abstract_domains.numerical.interval_lattice import IntervalLattice
 from lyra.core.expressions import VariableIdentifier, Expression, LengthIdentifier
 from lyra.core.types import IntegerLyraType, SequenceLyraType
 
@@ -50,7 +51,7 @@ class RangeLattice(IntervalLattice, JSONMixin):
         return RangeLattice(lower, upper)
 
 
-class RangeState(IntervalState, InputMixin):
+class RangeState(IntervalStateWithSummarization, InputMixin):
     """Range assumption analysis state. An element of the range assumption abstract domain.
 
     Map from each program variable to the value range representing its value.
@@ -71,7 +72,7 @@ class RangeState(IntervalState, InputMixin):
         :param variables: set of program variables
         """
         lattices = defaultdict(lambda: RangeLattice)
-        super(IntervalState, self).__init__(variables, lattices)
+        super(IntervalStateWithSummarization, self).__init__(variables, lattices)
         InputMixin.__init__(self, precursory)
         for v in self.variables:
             if isinstance(v.typ, SequenceLyraType):
@@ -115,9 +116,9 @@ class RangeState(IntervalState, InputMixin):
 
     # expression refinement
 
-    class ExpressionRefinement(IntervalState.ExpressionRefinement):
+    class ExpressionRefinement(IntervalStateWithSummarization.ExpressionRefinement):
 
-        @copy_docstring(IntervalState.ExpressionRefinement.visit_Input)
+        @copy_docstring(IntervalStateWithSummarization.ExpressionRefinement.visit_Input)
         def visit_Input(self, expr: Input, evaluation=None, value=None, state=None):
             state.record(value)
             return state    # nothing to be done

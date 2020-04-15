@@ -1227,9 +1227,9 @@ class SignIntervalStringSetProductState(ProductState):
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         from lyra.abstract_domains.numerical.sign_domain import SignState
-        from lyra.abstract_domains.numerical.interval_domain import IntervalState
+        from lyra.abstract_domains.numerical.interval_domain import IntervalStateWithSummarization
         from lyra.abstract_domains.string.stringset_domain import StringSetState
-        states = [SignState, IntervalState, StringSetState]
+        states = [SignState, IntervalStateWithSummarization, StringSetState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)
 
@@ -1259,9 +1259,9 @@ class TypeSignIntervalStringSetProductState(EnvironmentMixin, ProductState):
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
         from lyra.abstract_domains.assumption.type_domain import TypeState
         from lyra.abstract_domains.numerical.sign_domain import SignState
-        from lyra.abstract_domains.numerical.interval_domain import IntervalState
+        from lyra.abstract_domains.numerical.interval_domain import IntervalStateWithSummarization
         from lyra.abstract_domains.string.stringset_domain import StringSetState
-        states = [TypeState, SignState, IntervalState, StringSetState]
+        states = [TypeState, SignState, IntervalStateWithSummarization, StringSetState]
         arguments = defaultdict(lambda: {'variables': variables})
         super().__init__(states, arguments, precursory)
 
