@@ -17,9 +17,10 @@ from lyra.core.expressions import VariableIdentifier, Expression, Subscription, 
     BinaryBooleanOperation, ExpressionVisitor, Literal, LengthIdentifier, ListDisplay, \
     AttributeReference, Input, Range, UnaryArithmeticOperation, BinaryArithmeticOperation, \
     UnaryBooleanOperation, TupleDisplay, SetDisplay, DictDisplay, BinarySequenceOperation, Keys, \
-    Values, KeysIdentifier, ValuesIdentifier
+    Values, KeysIdentifier, ValuesIdentifier, CastOperation
 from lyra.core.types import LyraType, BooleanLyraType, SequenceLyraType, DictLyraType, \
-    ContainerLyraType
+    ContainerLyraType, IntegerLyraType, FloatLyraType, StringLyraType, ListLyraType, SetLyraType, \
+    TupleLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -312,9 +313,9 @@ class Basis(Store, State, metaclass=ABCMeta):
             state.store[expr] = refined
             if expr.is_dictionary:
                 _refined = evaluation[expr.keys].meet(value)
-                state.store[expr.keys] = _refined
+                state.keys[expr.keys] = _refined
                 refined_ = evaluation[expr.values].meet(value)
-                state.store[expr.values] = refined_
+                state.values[expr.values] = refined_
             return state
 
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
@@ -676,6 +677,22 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             evaluation[expr] = evaluated[target]
             return evaluation
 
+        @copy_docstring(ExpressionVisitor.visit_CastOperation)
+        def visit_CastOperation(self, expr: CastOperation, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.expression, state, evaluation)
+            container = isinstance(expr.expression.typ, (SequenceLyraType, ContainerLyraType))
+            if isinstance(expr.typ, BooleanLyraType) and container:
+                if evaluated[expr.expression].is_bottom():
+                    value = state.lattices[expr.typ](**state.arguments[expr.typ]).false()
+                else:
+                    value = state.lattices[expr.typ](**state.arguments[expr.typ]).true()
+                evaluation[expr] = value
+            else:
+                evaluation[expr] = evaluated[expr.expression]
+            return evaluation
+
         @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
         def visit_BinarySequenceOperation(self, expr, state=None, evaluation=None):
             if expr in evaluation:
@@ -752,5 +769,39 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                 target = target.target
             state.store[target] = refined
             return state
+
+        @copy_docstring(ExpressionVisitor.visit_CastOperation)
+        def visit_CastOperation(self, expr, evaluation=None, value=None, state=None):
+            assert not isinstance(expr.expression.typ, type(expr.typ))  # there is actually a cast
+            if isinstance(expr.typ, BooleanLyraType):   # y = cast(x)
+                if isinstance(expr.expression.typ, (IntegerLyraType, FloatLyraType)):
+                    refined = evaluation[expr].meet(value)
+                    return self.visit(expr.expression, evaluation, refined, state)
+                assert isinstance(expr.expression, (SequenceLyraType, ContainerLyraType))
+                refined = evaluation[expr].meet(value)
+                assert isinstance(refined, BooleanMixin)
+                if refined.is_false():      # x is empty
+                    typ = expr.expression.typ
+                    _refined = state.lattices[typ](**state.arguments[typ]).bottom()
+                    return self.visit(expr.expression, evaluation, _refined, state)
+                else:                       # x could be empty or non-empty
+                    return state    # over-approximation
+            elif isinstance(expr.typ, (IntegerLyraType, FloatLyraType)):
+                typ = expr.expression.typ
+                if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
+                    refined = evaluation[expr].meet(value)
+                    return self.visit(expr.expression, evaluation, refined, state)
+                assert isinstance(typ, StringLyraType)
+                return state    # over-approximation
+            elif isinstance(expr.typ, StringLyraType):
+                return state    # over-approximation
+            elif isinstance(expr.typ, (ListLyraType, SetLyraType, TupleLyraType)):
+                if isinstance(expr.expression.typ, DictLyraType):
+                    return state    # over-approximation
+                refined = evaluation[expr].meet(value)
+                return self.visit(expr.expression, evaluation, refined, state)
+            else:
+                error = f"Cast to {expr.typ} of expression {expr.expression} is unexpected!"
+                raise ValueError(error)
 
     _refinement = ExpressionRefinement()

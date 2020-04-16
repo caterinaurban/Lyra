@@ -55,6 +55,33 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin)
             return cls(value, value)
         return cls()
 
+    def gamma(self, bound: int):
+        """Concretization.
+
+        :return: the concretization of the current interval as a list of strings
+        """
+        result = list()
+        if self.lower != -inf and self.upper != inf:
+            lower = int(self.lower)
+            upper = int(self.upper + 1)
+            for value in range(lower, upper):
+                result.append(str(value))
+        elif self.lower != -inf:
+            lower = int(self.lower)
+            upper = int(self.lower + bound)
+            for value in range(lower, upper):
+                result.append(str(value))
+            result.append('_')
+        elif self.upper != inf:
+            lower = int(self.upper - bound)
+            upper = int(self.upper + 1)
+            result.append('_')
+            for value in range(lower, upper):
+                result.append(str(value))
+        else:
+            result.append('_')
+        return result
+
     @property
     def lower(self):
         """Current lower bound.

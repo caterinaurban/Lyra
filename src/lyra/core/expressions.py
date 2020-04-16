@@ -188,6 +188,10 @@ class ExpressionVisitor(metaclass=ABCMeta):
         """Visit of a values call expression."""
 
     @abstractmethod
+    def visit_CastOperation(self, expr: 'CastOperation'):
+        """Visit of a cast operation."""
+
+    @abstractmethod
     def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation'):
         """Visit of a unary arithmetic operation."""
 
@@ -297,6 +301,10 @@ class NegationFreeExpression(ExpressionVisitor):
     def visit_Values(self, expr: 'Values', invert=False):
         return expr  # nothing to be done
 
+    @copy_docstring(ExpressionVisitor.visit_CastOperation)
+    def visit_CastOperation(self, expr: 'CastOperation'):
+        return expr  # nothing to be done
+
     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
     def visit_UnaryArithmeticOperation(self, expr: 'UnaryArithmeticOperation', invert=False):
         return expr     # nothing to be done
@@ -397,6 +405,10 @@ class NegationFreeNormalExpression(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_Values)
     def visit_Values(self, expr: 'Keys', invert=False):
+        return expr  # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_CastOperation)
+    def visit_CastOperation(self, expr: 'CastOperation'):
         return expr  # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -556,6 +568,10 @@ class Lyra2APRON(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_Values)
     def visit_Values(self, expr: 'Keys', environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_CastOperation)
+    def visit_CastOperation(self, expr: 'CastOperation'):
         raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
 
     @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -1213,6 +1229,41 @@ Operation Expressions
 
 class Operation(Expression, metaclass=ABCMeta):
     """Operation representation."""
+
+
+"""
+Cast Operation Expressions
+"""
+
+class CastOperation(Operation):
+    """Cast operation representation."""
+
+    def __init__(self, typ: LyraType, expression: Expression):
+        """Cast operation construction.
+
+        :param typ: type of the operation (i.e., the target type of the cast)
+        :param expression: expression of the operation (i.e., expression to be cast)
+        """
+        super().__init__(typ)
+        self._expression = expression
+
+    @property
+    def expression(self):
+        return self._expression
+
+    def __eq__(self, other: 'UnaryOperation'):
+        typ = self.typ == other.typ
+        expression = self.expression == other.expression
+        return typ and expression
+
+    def __hash__(self):
+        return hash((self.typ, self.expression))
+
+    def __str__(self):
+        expr_string = str(self.expression)
+        if isinstance(self.expression, Operation):
+            expr_string = f"({expr_string})"
+        return f"{str(self.typ)}{expr_string}"
 
 
 """

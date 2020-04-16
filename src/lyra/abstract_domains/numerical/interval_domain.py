@@ -23,7 +23,7 @@ from lyra.abstract_domains.state import State
 from lyra.core.expressions import *
 
 from lyra.core.utils import copy_docstring
-from lyra.core.types import BooleanLyraType, IntegerLyraType, SequenceLyraType
+from lyra.core.types import BooleanLyraType, IntegerLyraType, SequenceLyraType, FloatLyraType
 
 
 class IntervalStateMixin(BasisWithSummarization):
@@ -290,6 +290,12 @@ class IntervalStateMixin(BasisWithSummarization):
         def visit_Values(self, expr: Values, state=None):
             return state.lattices[IntegerLyraType()](lower=0)
 
+        @copy_docstring(ExpressionVisitor.visit_CastOperation)
+        def visit_CastOperation(self, expr: CastOperation, state=None):
+            if isinstance(expr.typ, (SequenceLyraType, ContainerLyraType)):
+                return self.visit(expr.expression, state)
+            raise ValueError(f"Unexpected expression during sequence length computation.")
+
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
         def visit_UnaryArithmeticOperation(self, expr, state=None):
             raise ValueError(f"Unexpected expression during sequence length computation.")
@@ -485,9 +491,9 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
 
     # expression evaluation
 
-    class ExpressionEvaluation(Basis.ExpressionEvaluation):
+    class ExpressionEvaluation(BasisWithSummarization.ExpressionEvaluation):
 
-        @copy_docstring(Basis.ExpressionEvaluation.visit_Literal)
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Literal)
         def visit_Literal(self, expr: Literal, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
@@ -500,6 +506,7 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                 evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
             return evaluation
 
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_ListDisplay)
         def visit_ListDisplay(self, expr: 'ListDisplay', state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation
@@ -513,6 +520,7 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             evaluation[expr] = value
             return evaluation
 
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_TupleDisplay)
         def visit_TupleDisplay(self, expr: 'TupleDisplay', state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation
@@ -526,6 +534,7 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             evaluation[expr] = value
             return evaluation
 
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_SetDisplay)
         def visit_SetDisplay(self, expr: 'SetDisplay', state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
@@ -539,6 +548,7 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             evaluation[expr] = value
             return evaluation
 
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_DictDisplay)
         def visit_DictDisplay(self, expr: 'DictDisplay', state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation   # nothing to be done
@@ -553,24 +563,54 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                 evaluated = self.visit(val, state, evaluated)
                 current_: Union[IntervalLattice, IndexedLattice] = evaluated[val]
                 value_ = value_.join(deepcopy(current_))
-                itv_ = current_ if isinstance(current_, IntervalLattice) else current_.summarize()
+                if isinstance(current_, IntervalLattice):
+                    itv_ = current_
+                elif isinstance(expr.typ.val_typ, DictLyraType):
+                    typ_ = expr.typ.val_typ.key_typ
+                    itv_ = current_.summarize()
+                    for idx in current_.indexes:
+                        if idx == '_':
+                            key_ = state.lattices[typ_](**state.arguments[typ_]).top()
+                            itv_ = itv_.join(key_)
+                        else:
+                            literal = Literal(typ_, idx)
+                            key_ = state.lattices[typ_].from_literal(literal)
+                            itv_ = itv_.join(key_)
+                else:
+                    itv_ = current_.summarize()
                 value = value.set_subscript(str(key), itv_)
             evaluation[KeysIdentifier(expr)] = _value
             evaluation[expr] = value
             evaluation[ValuesIdentifier(expr)] = value_
             return evaluation
 
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Subscription)
         def visit_Subscription(self, expr: 'Subscription', state=None, evaluation=None):
-            pass
+            if expr in evaluation:
+                return evaluation
+            evaluated = evaluation
+            evaluated = self.visit(expr.target, state, evaluated)
+            target = evaluated[expr.target]
+            if isinstance(target, IntervalLattice):
+                evaluation[expr] = target
+            else:
+                assert isinstance(target, IndexedLattice)
+                evaluated = self.visit(expr.key, state, evaluated)
+                key = evaluated[expr.key]
+                itv: IntervalLattice = key if isinstance(key, IntervalLattice) else key.summarize()
+                gamma = itv.gamma(target.bound)
+                evaluation[expr] = target.get_slice(gamma).summarize()
+            return evaluation
 
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Slicing)
         def visit_Slicing(self, expr: 'Slicing', state=None, evaluation=None):
-            pass
+            raise NotImplementedError   # TODO
 
         @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Range)
         def visit_Range(self, expr: Range, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-
+            # TODO: implement properly
             evaluated = evaluation
             evaluated = self.visit(expr.start, state, evaluated)
             sub = BinaryArithmeticOperation.Operator.Sub
@@ -588,29 +628,80 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                 evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
             return evaluation
 
+        @copy_docstring(ExpressionVisitor.visit_CastOperation)
+        def visit_CastOperation(self, expr: CastOperation, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.expression, state, evaluation)
+            container = isinstance(expr.expression.typ, (SequenceLyraType, ContainerLyraType))
+            string = isinstance(expr.expression.typ, StringLyraType)
+            ensemble = isinstance(expr.expression.typ, SetLyraType)
+            dictionary = isinstance(expr.expression.typ, DictLyraType)
+            if isinstance(expr.typ, BooleanLyraType) and container:
+                current: IndexedLattice = evaluated[expr.expression]
+                if current.is_empty():
+                    value = state.lattices[expr.typ](**state.arguments[expr.typ]).false()
+                elif current.is_nonempty():
+                    value = state.lattices[expr.typ](**state.arguments[expr.typ]).true()
+                else:
+                    value = state.lattices[expr.typ](**state.arguments[expr.typ]).maybe()
+                evaluation[expr] = value
+            elif isinstance(expr.typ, (IntegerLyraType, FloatLyraType)) and string:
+                current: IndexedLattice = evaluated[expr.expression]
+                evaluation[expr] = current.summarize()
+            elif isinstance(expr.typ, StringLyraType):
+                value = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
+                evaluation[expr] = value
+            elif isinstance(expr.typ, (ListLyraType, TupleLyraType)) and ensemble:
+                current: IntervalLattice = evaluated[expr.expression]
+                indexed = {'_': current}
+                value = state.lattices[expr.typ](**state.arguments[expr.typ], indexed=indexed)
+                evaluation[expr] = value
+            elif isinstance(expr.typ, (ListLyraType, SetLyraType, TupleLyraType)) and dictionary:
+                current = evaluated[KeysIdentifier(expr.expression)]
+                if isinstance(current, IntervalLattice):
+                    indexed = {'_': current}
+                    value = state.lattices[expr.typ](**state.arguments[expr.typ], indexed=indexed)
+                    evaluation[expr] = value
+                else:
+                    assert isinstance(current, IndexedLattice)
+                    evaluation[expr] = current
+            else:   # default case
+                evaluation[expr] = evaluated[expr.expression]
+            return evaluation
+
     _evaluation = ExpressionEvaluation()
 
     # expression refinement
 
-    class ExpressionRefinement(Basis.ExpressionRefinement):
+    class ExpressionRefinement(BasisWithSummarization.ExpressionRefinement):
 
         def visit_ListDisplay(self, expr: 'ListDisplay', evaluation=None, value=None, state=None):
-            pass
+            raise NotImplementedError  # TODO
 
         def visit_TupleDisplay(self, expr: 'TupleDisplay', evaluation=None, value=None, state=None):
-            pass
+            raise NotImplementedError  # TODO
 
         def visit_SetDisplay(self, expr: 'SetDisplay', evaluation=None, value=None, state=None):
-            pass
+            raise NotImplementedError  # TODO
 
         def visit_DictDisplay(self, expr: 'DictDisplay', evaluation=None, value=None, state=None):
-            pass
+            raise NotImplementedError  # TODO
 
         def visit_Subscription(self, expr: 'Subscription', evaluation=None, value=None, state=None):
-            pass
+            subscription = evaluation[expr]
+            refined = deepcopy(subscription).meet(value)
+            target = expr.target
+            if isinstance(target, VariableIdentifier):
+                key = evaluation[expr.key]
+                itv: IntervalLattice = key if isinstance(key, IntervalLattice) else key.summarize()
+                gamma = itv.gamma(state.store[target].bound)
+                if len(gamma) == 1:
+                    state.store[target] = state.store[target].set_subscript(gamma[0], refined)
+            return state
 
         def visit_Slicing(self, expr: 'Slicing', evaluation=None, value=None, state=None):
-            pass
+            raise NotImplementedError  # TODO
 
     _refinement = ExpressionRefinement()
 

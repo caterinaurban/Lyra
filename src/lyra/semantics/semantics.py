@@ -10,10 +10,11 @@ Lyra's internal semantics of statements.
 
 import itertools
 import re
+from copy import deepcopy
 
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import BinaryArithmeticOperation, Subscription, Slicing, \
-    LengthIdentifier, VariableIdentifier, Range, Expression, BinarySequenceOperation
+    LengthIdentifier, VariableIdentifier, Range, Expression, BinarySequenceOperation, CastOperation
 from lyra.core.expressions import BinaryBooleanOperation, Input, TupleDisplay, ListDisplay, \
     Literal, SetDisplay, DictDisplay, Items, Keys, Values
 from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
@@ -237,13 +238,8 @@ class BuiltInCallSemantics(CallSemantics):
                 result.add(Input(typ))
             elif isinstance(expression, Literal):
                 result.add(Literal(typ, expression.val))
-            elif isinstance(expression, VariableIdentifier):
-                result.add(VariableIdentifier(typ, expression.name))
-            elif isinstance(expression, Subscription):
-                result.add(Subscription(typ, expression.target, expression.key))
             else:
-                error = f"Argument of type {expression.typ} of {stmt.name} is not yet supported!"
-                raise NotImplementedError(error)
+                result.add(CastOperation(typ, expression))
         state.result = result
         return state
 
@@ -281,13 +277,7 @@ class BuiltInCallSemantics(CallSemantics):
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        if len(stmt.arguments) != 1:
-            error = f"Semantics for multiple arguments of {stmt.name} is not yet implemented!"
-            raise NotImplementedError(error)
-        argument = self.semantics(stmt.arguments[0], state, interpreter).result
-        result = {Input(StringLyraType())}   # over-approximation
-        state.result = result
-        return state
+        return self._cast_call_semantics(stmt, state, interpreter, StringLyraType())
 
     def list_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
         """Semantics of a call to 'list'.
@@ -296,53 +286,36 @@ class BuiltInCallSemantics(CallSemantics):
         :param state: state before executing the call statement
         :return: state modified by the call statement
         """
-        def do(variable):
-            if isinstance(variable.typ, StringLyraType):
-                state.result = {VariableIdentifier(ListLyraType(variable.typ), variable.name)}
-                return state
-            elif isinstance(variable.typ, ListLyraType):
-                state.result = {variable}
-                return state
-            elif isinstance(variable.typ, TupleLyraType):
-                raise NotImplementedError(f"Conversion to list of {variable.typ} is not yet implemented!")
-            elif isinstance(variable.typ, SetLyraType):
-                state.result = {VariableIdentifier(ListLyraType(variable.typ.typ), variable.name)}
-                return state
-            elif isinstance(variable.typ, DictLyraType):
-                state.result = {VariableIdentifier(ListLyraType(variable.typ.key_typ), variable.name)}
-                return state
-            raise TypeError(f"Unexpected type {variable.typ} for list conversion!")
         if not stmt.arguments:
             state.result = {ListDisplay(stmt.typ, list())}
             return state
         assert len(stmt.arguments) == 1  # exactly one argument is expected
-        argument = stmt.arguments[0]
-        if isinstance(argument, VariableAccess):
-            return do(argument.variable)
-        # elif isinstance(argument, SubscriptionAccess):
-        #     target = argument.target
-        #     if isinstance(target, VariableAccess):
-        #         return do(target.variable)
-        elif isinstance(argument, Call):
-            if isinstance(argument.typ, StringLyraType):
-                typ = ListLyraType(argument.typ)
-                call = Call(argument.pp, argument.name, argument.arguments, typ)
-                state.result = self.semantics(call, state, interpreter).result
-                return state
-            elif isinstance(argument.typ, ListLyraType):
-                state.result = self.semantics(argument, state, interpreter).result
-                return state
-            elif isinstance(argument.typ, SetLyraType):
-                typ = ListLyraType(argument.typ.typ)
-                call = Call(argument.pp, argument.name, argument.arguments, typ)
-                state.result = self.semantics(call, state, interpreter).result
-                return state
-            elif isinstance(argument.typ, DictLyraType):
-                typ = ListLyraType(argument.typ.key_typ)
-                call = Call(argument.pp, argument.name, argument.arguments, typ)
-                state.result = self.semantics(call, state, interpreter).result
-                return state
-        raise NotImplementedError(f"Semantics for {stmt} is not yet implemented!")
+        argument = self.semantics(stmt.arguments[0], state, interpreter).result
+        result = set()
+        for expression in argument:
+            if isinstance(expression.typ, StringLyraType):
+                typ = ListLyraType(expression.typ)
+                result.add(CastOperation(typ, expression))
+            elif isinstance(expression.typ, ListLyraType):
+                result.add(expression)
+            elif isinstance(expression.typ, TupleLyraType):
+                if all(typ == expression.typ.typs[0] for typ in expression.typ.typs):
+                    typ = ListLyraType(expression.typ.typs[0])
+                    result.add(CastOperation(typ, expression))
+                else:
+                    error = f"Cast to list of {expression} is not yet implemented!"
+                    raise NotImplementedError(error)
+            elif isinstance(expression.typ, SetLyraType):
+                typ = ListLyraType(expression.typ.typ)
+                result.add(CastOperation(typ, expression))
+            elif isinstance(expression.typ, DictLyraType):
+                typ = ListLyraType(expression.typ.key_typ)
+                result.add(CastOperation(typ, expression))
+            else:
+                error = f"Cast to list of expression {expression} with unexpected type!"
+                raise ValueError(error)
+        state.result = result
+        return state
 
     def set_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
         """Semantics of a call to 'set'.
@@ -354,7 +327,79 @@ class BuiltInCallSemantics(CallSemantics):
         if not stmt.arguments:
             state.result = {SetDisplay(stmt.typ, list())}
             return state
-        raise NotImplementedError(f"Semantics for {stmt} is not yet implemented!")
+        assert len(stmt.arguments) == 1  # exactly one argument is expected
+        argument = self.semantics(stmt.arguments[0], state, interpreter).result
+        result = set()
+        for expression in argument:
+            if isinstance(expression.typ, StringLyraType):
+                typ = SetLyraType(expression.typ)
+                result.add(CastOperation(typ, expression))
+            elif isinstance(expression.typ, ListLyraType):
+                typ = SetLyraType(expression.typ.typ)
+                result.add(CastOperation(typ, expression))
+            elif isinstance(expression.typ, TupleLyraType):
+                if all(typ == expression.typ.typs[0] for typ in expression.typ.typs):
+                    typ = SetLyraType(expression.typ.typs[0])
+                    result.add(CastOperation(typ, expression))
+                else:
+                    error = f"Cast to list of {expression} is not yet implemented!"
+                    raise NotImplementedError(error)
+            elif isinstance(expression.typ, SetLyraType):
+                result.add(expression)
+            elif isinstance(expression.typ, DictLyraType):
+                typ = SetLyraType(expression.typ.key_typ)
+                result.add(CastOperation(typ, expression))
+            else:
+                error = f"Cast to list of expression {expression} with unexpected type!"
+                raise ValueError(error)
+        state.result = result
+        return state
+
+    def tuple_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
+        """Semantics of a call to 'tuple'.
+
+        :param stmt: call to 'tuple' to be executed
+        :param state: state before executing the call statement
+        :return: state modified by the call statement
+        """
+        if not stmt.arguments:
+            state.result = {TupleDisplay(stmt.typ, list())}
+            return state
+        assert len(stmt.arguments) == 1  # exactly one argument is expected
+        argument = self.semantics(stmt.arguments[0], state, interpreter).result
+        result = set()
+        for expression in argument:
+            if isinstance(expression.typ, StringLyraType):
+                if isinstance(expression, Literal):
+                    typs = [deepcopy(expression.typ) for _ in range(len(expression.val))]
+                    typ = TupleLyraType(typs)
+                    result.add(CastOperation(typ, expression))
+                else:
+                    error = f"Cast to tuple of {expression} is not yet implemented!"
+                    raise NotImplementedError(error)
+            elif isinstance(expression.typ, (ListLyraType, SetLyraType)):
+                if isinstance(expression, ListDisplay):
+                    typs = [deepcopy(expression.typ.typ) for _ in range(len(expression.items))]
+                    typ = TupleLyraType(typs)
+                    result.add(CastOperation(typ, expression))
+                else:
+                    error = f"Cast to tuple of {expression} is not yet implemented!"
+                    raise NotImplementedError(error)
+            elif isinstance(expression.typ, TupleLyraType):
+                result.add(expression)
+            elif isinstance(expression.typ, DictLyraType):
+                if isinstance(expression, DictDisplay):
+                    typs = [deepcopy(expression.typ.key_typ) for _ in range(len(expression.keys))]
+                    typ = TupleLyraType(typs)
+                    result.add(CastOperation(typ, expression))
+                else:
+                    error = f"Cast to tuple of {expression} is not yet implemented!"
+                    raise NotImplementedError(error)
+            else:
+                error = f"Cast to list of expression {expression} with unexpected type!"
+                raise ValueError(error)
+        state.result = result
+        return state
 
     def dict_call_semantics(self, stmt: Call, state: State, interpreter: Interpreter) -> State:
         """Semantics of a call to 'dict'.

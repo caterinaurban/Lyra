@@ -38,7 +38,10 @@ class IndexedLattice(BottomMixin, SequenceMixin):
             rest = self._lattice().bottom()
             for j in range(bound, len(keys)):
                 rest = rest.join(indexed[keys[j]])
-            self._indexed['_'] = rest
+            if '_' in indexed:
+                self._indexed['_'] = self._indexed['_'].join(rest)
+            else:
+                self._indexed['_'] = rest
         self._bound = bound
 
     @property
@@ -56,6 +59,17 @@ class IndexedLattice(BottomMixin, SequenceMixin):
         :return: the current indexed (sub)lattice elements
         """
         return self._indexed
+
+    @property
+    def indexes(self):
+        """Current indexes.
+
+        :return: the current indexes (sorted)
+        """
+        items = sorted(self.indexed.keys())
+        if self.default.is_bottom():
+            return items[:-1]   # exclude the (unused) default index
+        return items
 
     @property
     def size(self):
@@ -128,6 +142,12 @@ class IndexedLattice(BottomMixin, SequenceMixin):
             indexed = indexed.join(self.get_subscript(idx))
         return indexed
 
+    def is_empty(self) -> bool:
+        return len(self.indexed) == 1 and self.default.is_bottom()
+
+    def is_nonempty(self) -> bool:
+        return len(self.indexed) > 1 or not self.default.is_top()
+
     def __repr__(self):
         if self.is_bottom():
             return "⊥"
@@ -152,7 +172,7 @@ class IndexedLattice(BottomMixin, SequenceMixin):
         result = yours.issubset(mine)   # other should fix fewer indexes than self
         if result:
             for idx, itv in self.indexed.items():
-                if idx in other:    # self should fix stronger constraints than other
+                if idx in other.indexes:    # self should fix stronger constraints than other
                     result = result and itv.less_equal(other.indexed[idx])
                 else:
                     result = result and itv.less_equal(other.default)
@@ -177,7 +197,7 @@ class IndexedLattice(BottomMixin, SequenceMixin):
     def _meet(self, other: 'IndexedLattice') -> 'IndexedLattice':
         default = self.default
         for idx, itv in self.indexed.items():
-            if idx in other:    # common indexes should be met
+            if idx in other.indexed:    # common indexes should be met
                 self.indexed[idx] = itv.meet(other.indexed[idx])
             else:               # meet indexes fixed only by self with default of other
                 self.indexed[idx] = itv.meet(other.default)
@@ -221,7 +241,7 @@ class IndexedLattice(BottomMixin, SequenceMixin):
             for i in range(min(self.bound - self.size, len(yours))):
                 next = str(int(highest) + i)
                 self.indexed[next] = other.indexed[yours[i]]
-            for j in range(self.bound, len(yours)):
+            for j in range(min(self.bound - self.size, len(yours)), len(yours)):
                 self.indexed['_'] = self.indexed['_'].join(other.indexed[yours[j]])
         else:   # join indexed from other with default
             for itv in other.indexed.values():

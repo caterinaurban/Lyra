@@ -21,7 +21,7 @@ from lyra.core.expressions import VariableIdentifier, Expression, ExpressionVisi
     Input, ListDisplay, Range, AttributeReference, Subscription, Slicing, \
     UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, TupleDisplay, \
     SetDisplay, DictDisplay, BinarySequenceOperation, BinaryComparisonOperation, Keys, Values, \
-    KeysIdentifier, ValuesIdentifier
+    KeysIdentifier, ValuesIdentifier, CastOperation
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
     StringLyraType, ListLyraType, SequenceLyraType, SetLyraType, TupleLyraType, DictLyraType, \
     ContainerLyraType
@@ -849,6 +849,14 @@ class TypeState(Store, StateWithSummarization, InputMixin):
             error = f"Evaluation for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
 
+        @copy_docstring(ExpressionVisitor.visit_CastOperation)
+        def visit_CastOperation(self, expr: CastOperation, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.expression, state, evaluation)[expr.expression]
+            evaluation[expr] = evaluated.meet(TypeLattice.from_lyra_type(expr.typ))
+            return evaluation
+
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
         def visit_UnaryArithmeticOperation(self, expr, state=None, evaluation=None):
             if expr in evaluation:
@@ -949,9 +957,9 @@ class TypeState(Store, StateWithSummarization, InputMixin):
             state.store[expr] = refined
             if expr.is_dictionary:
                 _refined = evaluation[expr.keys].meet(value)
-                state.store[expr.keys] = _refined
+                state.keys[expr.keys] = _refined
                 refined_ = evaluation[expr.values].meet(value)
-                state.store[expr.values] = refined_
+                state.values[expr.values] = refined_
             return state
 
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
@@ -1036,6 +1044,33 @@ class TypeState(Store, StateWithSummarization, InputMixin):
         def visit_Values(self, expr: Values, state=None, evaluation=None):
             error = f"Refinement for a {expr.__class__.__name__} expression is not yet supported!"
             raise ValueError(error)
+
+        @copy_docstring(ExpressionVisitor.visit_CastOperation)
+        def visit_CastOperation(self, expr, evaluation=None, value=None, state=None):
+            assert not isinstance(expr.expression.typ, type(expr.typ))  # there is actually a cast
+            if isinstance(expr.typ, BooleanLyraType):  # y = cast(x)
+                if isinstance(expr.expression.typ, (IntegerLyraType, FloatLyraType)):
+                    refined = evaluation[expr].meet(value)
+                    return self.visit(expr.expression, evaluation, refined, state)
+                assert isinstance(expr.expression, (SequenceLyraType, ContainerLyraType))
+                return state  # over-approximation
+            elif isinstance(expr.typ, (IntegerLyraType, FloatLyraType)):
+                typ = expr.expression.typ
+                if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
+                    refined = evaluation[expr].meet(value)
+                    return self.visit(expr.expression, evaluation, refined, state)
+                assert isinstance(typ, StringLyraType)
+                return state  # over-approximation
+            elif isinstance(expr.typ, StringLyraType):
+                return state  # over-approximation
+            elif isinstance(expr.typ, (ListLyraType, SetLyraType, TupleLyraType)):
+                if isinstance(expr.expression.typ, DictLyraType):
+                    return state  # over-approximation
+                refined = evaluation[expr].meet(value)
+                return self.visit(expr.expression, evaluation, refined, state)
+            else:
+                error = f"Cast to {expr.typ} of expression {expr.expression} is unexpected!"
+                raise ValueError(error)
 
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
         def visit_UnaryArithmeticOperation(self, expr, evaluation=None, value=None, state=None):
