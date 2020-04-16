@@ -65,11 +65,11 @@ def forward_summarization():
 
 def forward_indexing():
     suite = unittest.TestSuite()
-    # name = os.getcwd() + '/numerical/interval/forward/**.py'
-    # for path in glob.iglob(name):
-    #     if os.path.basename(path) != "__init__.py":
-    #         print('forward/' + os.path.basename(path))
-    #         suite.addTest(ForwardIntervalTestWithIndexing(path))
+    name = os.getcwd() + '/numerical/interval/forward/**.py'
+    for path in glob.iglob(name):
+        if os.path.basename(path) != "__init__.py":
+            print('forward/' + os.path.basename(path))
+            suite.addTest(ForwardIntervalTestWithIndexing(path))
     name = os.getcwd() + '/numerical/interval/forward/indexing/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":

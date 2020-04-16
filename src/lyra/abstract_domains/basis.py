@@ -635,9 +635,9 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = evaluation
-            _value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            _value = state.lattices[expr.typ.key_typ](**state.arguments[expr.typ.key_typ]).bottom()
             value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
-            value_ = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            value_ = state.lattices[expr.typ.val_typ](**state.arguments[expr.typ.val_typ]).bottom()
             for key in expr.keys:
                 evaluated = self.visit(key, state, evaluated)
                 value = value.join(evaluated[key])

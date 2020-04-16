@@ -10,6 +10,7 @@ is represented as an interval.
 """
 from collections import defaultdict
 from copy import deepcopy
+from typing import Union
 
 from apronpy.box import PyBox
 from apronpy.manager import PyManager, PyBoxMPQManager
@@ -25,32 +26,7 @@ from lyra.core.utils import copy_docstring
 from lyra.core.types import BooleanLyraType, IntegerLyraType, SequenceLyraType
 
 
-class IntervalStateWithSummarization(BasisWithSummarization):
-    """Interval analysis state. An element of the interval abstract domain.
-
-    Map from each program variable to the interval representing its value.
-    The value of all program variables is represented by the unbounded interval by default.
-
-    .. note:: Program variables storing sequences and containers are abstracted via summarization.
-
-    .. document private methods
-    .. automethod:: IntervalState._assign
-    .. automethod:: IntervalState._assume
-    .. automethod:: IntervalState._output
-    .. automethod:: IntervalState._substitute
-
-    """
-
-    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
-        """Map each program variable to the interval representing its value.
-
-        :param variables: set of program variables
-        """
-        lattices = defaultdict(lambda: IntervalLattice)
-        super().__init__(variables, lattices, precursory=precursory)
-        for v in self.variables:
-            if v.has_length:
-                self.lengths[v.length] = lattices[IntegerLyraType()](lower=0)
+class IntervalStateMixin(BasisWithSummarization):
 
     @copy_docstring(BasisWithSummarization.is_top)
     def is_top(self) -> bool:
@@ -61,61 +37,15 @@ class IntervalStateWithSummarization(BasisWithSummarization):
         return _store and _lengths
 
     @copy_docstring(BasisWithSummarization._assign_variable)
-    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'IntervalStateWithSummarization':
-        if left.has_length:     # update corresponding length identifier, if any
+    def _assign_variable(self, left: VariableIdentifier, right: Expression):
+        if left.has_length:  # update corresponding length identifier, if any
             self.lengths[left.length] = self._length.visit(right, self)
         # perform the assignment
         super()._assign_variable(left, right)
         return self
 
-    @copy_docstring(BasisWithSummarization._assign_subscription)
-    def _assign_subscription(self, left: Subscription, right: Expression) -> 'IntervalStateWithSummarization':
-        # update length identifiers, if appropriate
-        target = left.target
-        if isinstance(target, VariableIdentifier) and isinstance(target.typ, SequenceLyraType):
-            current: IntervalLattice = self.lengths[target.length]   # current length
-            key = deepcopy(self._evaluation.visit(left.key, self, dict())[left.key])
-            if key.less_equal(self.lattices[left.key.typ](lower=0)):  # key is positive
-                if current.upper < key.lower:  # key is definitely larger than length
-                    return self.bottom()
-                lower = self.lattices[left.key.typ](lower=key.lower)
-                self.lengths[target.length] = current.meet(lower)
-            elif key.less_equal(self.lattices[left.key.typ](upper=-1)):  # key is negative
-                if current.upper + key.upper < 0:  # key is definitely smaller than length
-                    return self.bottom()
-                upper = self.lattices[left.key.typ](lower=-key.upper)
-                self.lengths[target.length] = current.meet(upper)
-        elif isinstance(target, VariableIdentifier) and target.is_dictionary:  # D[key] = value
-            current: IntervalLattice = self.lengths[target.length]   # current length
-            key = self._evaluation.visit(left.key, self, dict())[left.key]      # evaluate key
-            one = self.lattices[IntegerLyraType()](lower=1, upper=1)
-            if key.less_equal(self.keys[target.keys]):
-                self.lengths[target.length] = deepcopy(current).join(current.add(one))
-            else:
-                self.lengths[target.length] = current.add(one)
-        # perform the assignment
-        super()._assign_subscription(left, right)
-        return self
-
-    @copy_docstring(State._assign_slicing)
-    def _assign_slicing(self, left: Slicing, right: Expression) -> 'IntervalStateWithSummarization':
-        # update length identifiers, if appropriate
-        target = left.target
-        if isinstance(target, VariableIdentifier) and isinstance(target.typ, SequenceLyraType):
-            current: IntervalLattice = self.lengths[target.length]   # current length
-            # under-approximate length of left
-            lattice = self.lattices[IntegerLyraType()]
-            slicing = lattice(lower=1, upper=1)  # default under-approximation
-            # over-approximate length of right
-            extra = self._length.visit(right, self)
-            # len(x) = len(x) - len(x[j:i]) + len(e)
-            self.lengths[target.length] = current.sub(slicing).add(extra)
-        # perform the assignment
-        super()._assign_slicing(left, right)
-        return self
-
     @copy_docstring(BasisWithSummarization._assume_variable)
-    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'IntervalStateWithSummarization':
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False):
         if isinstance(condition.typ, BooleanLyraType):
             evaluation = self._evaluation.visit(condition, self, dict())
             if neg:
@@ -126,7 +56,7 @@ class IntervalStateWithSummarization(BasisWithSummarization):
         raise ValueError(f"Assumption of variable {condition} is unsupported!")
 
     @copy_docstring(BasisWithSummarization._assume_subscription)
-    def _assume_subscription(self, condition: Subscription, neg: bool = False) -> 'IntervalStateWithSummarization':
+    def _assume_subscription(self, condition: Subscription, neg: bool = False):
         if isinstance(condition.typ, BooleanLyraType):
             evaluation = self._evaluation.visit(condition, self, dict())
             if neg:
@@ -139,7 +69,7 @@ class IntervalStateWithSummarization(BasisWithSummarization):
         raise ValueError(f"Assumption of variable {condition} is unsupported!")
 
     @copy_docstring(BasisWithSummarization._assume_eq_comparison)
-    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'IntervalStateWithSummarization':
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         # left == right -> left - right <= 0 && right - left <= 0
         zero = Literal(IntegerLyraType(), "0")
         minus = BinaryArithmeticOperation.Operator.Sub
@@ -152,7 +82,7 @@ class IntervalStateWithSummarization(BasisWithSummarization):
         return self._assume_binary_boolean(BinaryBooleanOperation(condition.typ, expr1, conj, expr2), bwd=bwd)
 
     @copy_docstring(BasisWithSummarization._assume_noteq_comparison)
-    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'IntervalStateWithSummarization':
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         # left != right -> left - (right - 1) <= 0 || right - (left - 1) <= 0
         zero = Literal(IntegerLyraType(), "0")
         one = Literal(IntegerLyraType(), "1")
@@ -165,10 +95,11 @@ class IntervalStateWithSummarization(BasisWithSummarization):
         expr2 = BinaryArithmeticOperation(condition.right.typ, condition.right, minus, expr2)
         expr2 = BinaryComparisonOperation(condition.typ, expr2, operator, zero)
         disj = BinaryBooleanOperation.Operator.Or
-        return self._assume_binary_boolean(BinaryBooleanOperation(condition.typ, expr1, disj, expr2), bwd=bwd)
+        return self._assume_binary_boolean(
+            BinaryBooleanOperation(condition.typ, expr1, disj, expr2), bwd=bwd)
 
     @copy_docstring(BasisWithSummarization._assume_lt_comparison)
-    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'IntervalStateWithSummarization':
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         # left < right -> left - (right - 1) <= 0
         zero = Literal(IntegerLyraType(), "0")
         minus = BinaryArithmeticOperation.Operator.Sub
@@ -182,7 +113,7 @@ class IntervalStateWithSummarization(BasisWithSummarization):
         return self._refinement.visit(normal.left, evaluation, nonpositive, self)
 
     @copy_docstring(BasisWithSummarization._assume_lte_comparison)
-    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'IntervalStateWithSummarization':
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         # left <= right -> left - right <= 0
         zero = Literal(IntegerLyraType(), "0")
         if isinstance(condition.right, Literal) and condition.right == zero:
@@ -196,7 +127,7 @@ class IntervalStateWithSummarization(BasisWithSummarization):
         return self._refinement.visit(normal.left, evaluation, nonpositive, self)
 
     @copy_docstring(BasisWithSummarization._assume_gt_comparison)
-    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'IntervalStateWithSummarization':
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         # left > right -> right - (left - 1) <= 0
         zero = Literal(IntegerLyraType(), "0")
         one = Literal(IntegerLyraType(), "1")
@@ -210,7 +141,7 @@ class IntervalStateWithSummarization(BasisWithSummarization):
         return self._refinement.visit(normal.left, evaluation, nonpositive, self)
 
     @copy_docstring(BasisWithSummarization._assume_gte_comparison)
-    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'IntervalStateWithSummarization':
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         # left >= right -> right - left <= 0
         zero = Literal(IntegerLyraType(), "0")
         minus = BinaryArithmeticOperation.Operator.Sub
@@ -222,15 +153,17 @@ class IntervalStateWithSummarization(BasisWithSummarization):
         return self._refinement.visit(normal.left, evaluation, nonpositive, self)
 
     @copy_docstring(BasisWithSummarization._assume_is_comparison)
-    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'IntervalStateWithSummarization':
-        raise ValueError(f"Assumption of a binary comparison with {condition.operator} is unsupported!")
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        error = f"Assumption of a binary comparison with {condition.operator} is unsupported!"
+        raise ValueError(error)
 
     @copy_docstring(BasisWithSummarization._assume_isnot_comparison)
-    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'IntervalStateWithSummarization':
-        raise ValueError(f"Assumption of a binary comparison with {condition.operator} is unsupported!")
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        error = f"Assumption of a binary comparison with {condition.operator} is unsupported!"
+        raise ValueError(error)
 
     @copy_docstring(BasisWithSummarization._assume_in_comparison)
-    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'IntervalStateWithSummarization':
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         if condition.forloop and not bwd:  # assumption in a for loop during forward analysis
             top = self.lattices[condition.left.typ](**self.arguments[condition.left.typ]).top()
             left = defaultdict(lambda: top)
@@ -240,50 +173,17 @@ class IntervalStateWithSummarization(BasisWithSummarization):
         return self._refinement.visit(condition.left, left, right[condition.right], self)
 
     @copy_docstring(BasisWithSummarization._assume_notin_comparison)
-    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'IntervalStateWithSummarization':
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         return self
 
     @copy_docstring(State.forget_variable)
-    def forget_variable(self, variable: VariableIdentifier) -> 'IntervalStateWithSummarization':
+    def forget_variable(self, variable: VariableIdentifier):
         super().forget_variable(variable)
         if variable.has_length:
             self.lengths[variable.length] = self.lattices[IntegerLyraType()](lower=0)
         return self
 
-    # expression evaluation
-
-    class ExpressionEvaluation(BasisWithSummarization.ExpressionEvaluation):
-        """Visitor that performs the evaluation of an expression in the interval lattice."""
-
-        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Literal)
-        def visit_Literal(self, expr: Literal, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation    # nothing to be done
-            evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
-            return evaluation
-
-        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Range)
-        def visit_Range(self, expr: Range, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-
-            evaluated = evaluation
-            evaluated = self.visit(expr.start, state, evaluated)
-            sub = BinaryArithmeticOperation.Operator.Sub
-            one = Literal(expr.stop.typ, '1')
-            stop = BinaryArithmeticOperation(expr.stop.typ, expr.stop, sub, one)
-            evaluated = self.visit(stop, state, evaluated)
-
-            if not evaluated[expr.start].is_bottom() and not evaluated[stop].is_bottom():
-                lower = evaluated[expr.start].lower
-                upper = evaluated[stop].upper
-                value = state.lattices[expr.typ](lower=lower, upper=upper)
-                evaluation[expr] = value
-            else:
-                evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
-            return evaluation
-
-    _evaluation = ExpressionEvaluation()  # static class member shared between all instances
+    # length evaluation
 
     class LengthEvaluation(ExpressionVisitor):
         """Visitor that computes the length of a sequence type expression."""
@@ -421,7 +321,116 @@ class IntervalStateWithSummarization(BasisWithSummarization):
     _length = LengthEvaluation()  # static class member shared between all instances
 
 
-class IntervalStateWithIndexing(BasisWithSummarization):
+class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization):
+    """Interval analysis state. An element of the interval abstract domain.
+
+    Map from each program variable to the interval representing its value.
+    The value of all program variables is represented by the unbounded interval by default.
+
+    .. note:: Program variables storing sequences and containers are abstracted via summarization.
+
+    .. document private methods
+    .. automethod:: IntervalState._assign
+    .. automethod:: IntervalState._assume
+    .. automethod:: IntervalState._output
+    .. automethod:: IntervalState._substitute
+
+    """
+
+    def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
+        """Map each program variable to the interval representing its value.
+
+        :param variables: set of program variables
+        """
+        lattices = defaultdict(lambda: IntervalLattice)
+        super().__init__(variables, lattices, precursory=precursory)
+        for v in self.variables:
+            if v.has_length:
+                self.lengths[v.length] = lattices[IntegerLyraType()](lower=0)
+
+    @copy_docstring(BasisWithSummarization._assign_subscription)
+    def _assign_subscription(self, left: Subscription, right: Expression) -> 'IntervalStateWithSummarization':
+        # update length identifiers, if appropriate
+        target = left.target
+        if isinstance(target, VariableIdentifier) and isinstance(target.typ, SequenceLyraType):
+            current: IntervalLattice = self.lengths[target.length]   # current length
+            key = deepcopy(self._evaluation.visit(left.key, self, dict())[left.key])
+            if key.less_equal(self.lattices[left.key.typ](lower=0)):  # key is positive
+                if current.upper < key.lower:  # key is definitely larger than length
+                    return self.bottom()
+                lower = self.lattices[left.key.typ](lower=key.lower)
+                self.lengths[target.length] = current.meet(lower)
+            elif key.less_equal(self.lattices[left.key.typ](upper=-1)):  # key is negative
+                if current.upper + key.upper < 0:  # key is definitely smaller than length
+                    return self.bottom()
+                upper = self.lattices[left.key.typ](lower=-key.upper)
+                self.lengths[target.length] = current.meet(upper)
+        elif isinstance(target, VariableIdentifier) and target.is_dictionary:  # D[key] = value
+            current: IntervalLattice = self.lengths[target.length]   # current length
+            key = self._evaluation.visit(left.key, self, dict())[left.key]      # evaluate key
+            one = self.lattices[IntegerLyraType()](lower=1, upper=1)
+            if key.less_equal(self.keys[target.keys]):
+                self.lengths[target.length] = deepcopy(current).join(current.add(one))
+            else:
+                self.lengths[target.length] = current.add(one)
+        # perform the assignment
+        super()._assign_subscription(left, right)
+        return self
+
+    @copy_docstring(State._assign_slicing)
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'IntervalStateWithSummarization':
+        # update length identifiers, if appropriate
+        target = left.target
+        if isinstance(target, VariableIdentifier) and isinstance(target.typ, SequenceLyraType):
+            current: IntervalLattice = self.lengths[target.length]   # current length
+            # under-approximate length of left
+            lattice = self.lattices[IntegerLyraType()]
+            slicing = lattice(lower=1, upper=1)  # default under-approximation
+            # over-approximate length of right
+            extra = self._length.visit(right, self)
+            # len(x) = len(x) - len(x[j:i]) + len(e)
+            self.lengths[target.length] = current.sub(slicing).add(extra)
+        # perform the assignment
+        super()._assign_slicing(left, right)
+        return self
+
+    # expression evaluation
+
+    class ExpressionEvaluation(BasisWithSummarization.ExpressionEvaluation):
+        """Visitor that performs the evaluation of an expression in the interval lattice."""
+
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Literal)
+        def visit_Literal(self, expr: Literal, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation    # nothing to be done
+            evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
+            return evaluation
+
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+
+            evaluated = evaluation
+            evaluated = self.visit(expr.start, state, evaluated)
+            sub = BinaryArithmeticOperation.Operator.Sub
+            one = Literal(expr.stop.typ, '1')
+            stop = BinaryArithmeticOperation(expr.stop.typ, expr.stop, sub, one)
+            evaluated = self.visit(stop, state, evaluated)
+
+            if not evaluated[expr.start].is_bottom() and not evaluated[stop].is_bottom():
+                lower = evaluated[expr.start].lower
+                upper = evaluated[stop].upper
+                value = state.lattices[expr.typ](lower=lower, upper=upper)
+                evaluation[expr] = value
+            else:
+                evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            return evaluation
+
+    _evaluation = ExpressionEvaluation()  # static class member shared between all instances
+
+
+class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
     """Interval analysis state with indexing.
 
     .. note:: Program variables storing sequences and dictionaries are abstracted via indexing,
@@ -468,42 +477,6 @@ class IntervalStateWithIndexing(BasisWithSummarization):
     def _assign_slicing(self, left: Slicing, right: Expression) -> 'State':
         pass
 
-    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'State':
-        pass
-
-    def _assume_subscription(self, condition: Subscription, neg: bool = False) -> 'State':
-        pass
-
-    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        pass
-
-    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        pass
-
-    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        pass
-
-    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        pass
-
-    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        pass
-
-    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        pass
-
-    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        pass
-
-    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        pass
-
-    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        pass
-
-    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        pass
-
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'State':
         pass
 
@@ -518,7 +491,13 @@ class IntervalStateWithIndexing(BasisWithSummarization):
         def visit_Literal(self, expr: Literal, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
+            if isinstance(expr.typ, StringLyraType):
+                value = state.lattices[expr.typ](**state.arguments[expr.typ], indexed=dict())
+                for idx, item in enumerate(expr.val):
+                    value = value.set_subscript(str(idx), IntervalLattice())
+                evaluation[expr] = value
+            else:
+                evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
             return evaluation
 
         def visit_ListDisplay(self, expr: 'ListDisplay', state=None, evaluation=None):
@@ -535,25 +514,79 @@ class IntervalStateWithIndexing(BasisWithSummarization):
             return evaluation
 
         def visit_TupleDisplay(self, expr: 'TupleDisplay', state=None, evaluation=None):
-            pass
+            if expr in evaluation:
+                return evaluation
+            evaluated = evaluation
+            value = state.lattices[expr.typ](**state.arguments[expr.typ], indexed = dict())
+            for idx, item in enumerate(expr.items):
+                evaluated = self.visit(item, state, evaluated)
+                current = evaluated[item]
+                itv = current if isinstance(current, IntervalLattice) else current.summarize()
+                value = value.set_subscript(str(idx), itv)
+            evaluation[expr] = value
+            return evaluation
 
         def visit_SetDisplay(self, expr: 'SetDisplay', state=None, evaluation=None):
-            pass
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = evaluation
+            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            for item in expr.items:
+                evaluated = self.visit(item, state, evaluated)
+                current = evaluated[item]
+                itv = current if isinstance(current, IntervalLattice) else current.summarize()
+                value = value.join(itv)
+            evaluation[expr] = value
+            return evaluation
 
         def visit_DictDisplay(self, expr: 'DictDisplay', state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation   # nothing to be done
             evaluated = evaluation
-
+            _value = state.lattices[expr.typ.key_typ](**state.arguments[expr.typ.key_typ]).bottom()
             value = state.lattices[expr.typ](**state.arguments[expr.typ], indexed=dict())
-
-            pass
+            value_ = state.lattices[expr.typ.val_typ](**state.arguments[expr.typ.val_typ]).bottom()
+            for idx, (key, val) in enumerate(zip(expr.keys, expr.values)):
+                evaluated = self.visit(key, state, evaluated)
+                _current: Union[IntervalLattice, IndexedLattice] = evaluated[key]
+                _value = _value.join(deepcopy(_current))
+                evaluated = self.visit(val, state, evaluated)
+                current_: Union[IntervalLattice, IndexedLattice] = evaluated[val]
+                value_ = value_.join(deepcopy(current_))
+                itv_ = current_ if isinstance(current_, IntervalLattice) else current_.summarize()
+                value = value.set_subscript(str(key), itv_)
+            evaluation[KeysIdentifier(expr)] = _value
+            evaluation[expr] = value
+            evaluation[ValuesIdentifier(expr)] = value_
+            return evaluation
 
         def visit_Subscription(self, expr: 'Subscription', state=None, evaluation=None):
             pass
 
         def visit_Slicing(self, expr: 'Slicing', state=None, evaluation=None):
             pass
+
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Range)
+        def visit_Range(self, expr: Range, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+
+            evaluated = evaluation
+            evaluated = self.visit(expr.start, state, evaluated)
+            sub = BinaryArithmeticOperation.Operator.Sub
+            one = Literal(expr.stop.typ, '1')
+            stop = BinaryArithmeticOperation(expr.stop.typ, expr.stop, sub, one)
+            evaluated = self.visit(stop, state, evaluated)
+
+            if not evaluated[expr.start].is_bottom() and not evaluated[stop].is_bottom():
+                lower = evaluated[expr.start].lower
+                upper = evaluated[stop].upper
+                assert isinstance(expr.typ, ListLyraType)
+                value = state.lattices[expr.typ.typ](lower=lower, upper=upper)
+                evaluation[expr] = value
+            else:
+                evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            return evaluation
 
     _evaluation = ExpressionEvaluation()
 
