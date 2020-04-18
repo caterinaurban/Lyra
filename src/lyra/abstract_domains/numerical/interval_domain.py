@@ -653,12 +653,12 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                 value = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
                 evaluation[expr] = value
             elif isinstance(expr.typ, (ListLyraType, TupleLyraType)) and ensemble:
-                current: IntervalLattice = evaluated[expr.expression]
+                current: IntervalLattice = deepcopy(evaluated[expr.expression])
                 indexed = {'_': current}
                 value = state.lattices[expr.typ](**state.arguments[expr.typ], indexed=indexed)
                 evaluation[expr] = value
             elif isinstance(expr.typ, (ListLyraType, SetLyraType, TupleLyraType)) and dictionary:
-                current = evaluated[KeysIdentifier(expr.expression)]
+                current = deepcopy(evaluated[KeysIdentifier(expr.expression)])
                 if isinstance(current, IntervalLattice):
                     indexed = {'_': current}
                     value = state.lattices[expr.typ](**state.arguments[expr.typ], indexed=indexed)
@@ -667,7 +667,7 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                     assert isinstance(current, IndexedLattice)
                     evaluation[expr] = current
             else:   # default case
-                evaluation[expr] = evaluated[expr.expression]
+                evaluation[expr] = deepcopy(evaluated[expr.expression])
             return evaluation
 
     _evaluation = ExpressionEvaluation()
@@ -675,18 +675,6 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
     # expression refinement
 
     class ExpressionRefinement(BasisWithSummarization.ExpressionRefinement):
-
-        def visit_ListDisplay(self, expr: 'ListDisplay', evaluation=None, value=None, state=None):
-            raise NotImplementedError  # TODO
-
-        def visit_TupleDisplay(self, expr: 'TupleDisplay', evaluation=None, value=None, state=None):
-            raise NotImplementedError  # TODO
-
-        def visit_SetDisplay(self, expr: 'SetDisplay', evaluation=None, value=None, state=None):
-            raise NotImplementedError  # TODO
-
-        def visit_DictDisplay(self, expr: 'DictDisplay', evaluation=None, value=None, state=None):
-            raise NotImplementedError  # TODO
 
         def visit_Subscription(self, expr: 'Subscription', evaluation=None, value=None, state=None):
             subscription = evaluation[expr]

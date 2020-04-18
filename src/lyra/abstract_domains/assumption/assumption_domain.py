@@ -18,7 +18,7 @@ from lyra.core.expressions import VariableIdentifier, Expression, BinaryComparis
     Range, Literal, UnaryBooleanOperation, BinaryBooleanOperation, \
     ExpressionVisitor, Input, ListDisplay, AttributeReference, Subscription, Slicing, \
     UnaryArithmeticOperation, BinaryArithmeticOperation, LengthIdentifier, TupleDisplay, \
-    SetDisplay, DictDisplay, BinarySequenceOperation, Keys, Values
+    SetDisplay, DictDisplay, BinarySequenceOperation, Keys, Values, CastOperation
 from lyra.core.statements import ProgramPoint
 from lyra.core.types import IntegerLyraType
 from lyra.core.utils import copy_docstring
@@ -493,6 +493,11 @@ class AssumptionState(State):
                     target = self.visit(expr.target_dict, left, right)
                     return Values(expr.typ, target)
 
+                @copy_docstring(ExpressionVisitor.visit_CastOperation)
+                def visit_CastOperation(self, expr: CastOperation, left=None, right=None):
+                    expression = self.visit(expr.expression, left, right)
+                    return CastOperation(expr.typ, expression)
+
                 @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
                 def visit_UnaryArithmeticOperation(self, expr, left=None, right=None):
                     expression = self.visit(expr.expression, left, right)
@@ -819,14 +824,19 @@ class AssumptionState(State):
                 return Range(expr.typ, start, stop, step)
 
             @copy_docstring(ExpressionVisitor.visit_Keys)
-            def visit_Keys(self, expr: Keys, left=None, right=None):
-                target = self.visit(expr.target_dict, left, right)
+            def visit_Keys(self, expr: Keys):
+                target = self.visit(expr.target_dict)
                 return Keys(expr.typ, target)
 
             @copy_docstring(ExpressionVisitor.visit_Values)
-            def visit_Values(self, expr: Values, left=None, right=None):
-                target = self.visit(expr.target_dict, left, right)
+            def visit_Values(self, expr: Values):
+                target = self.visit(expr.target_dict)
                 return Values(expr.typ, target)
+
+            @copy_docstring(ExpressionVisitor.visit_CastOperation)
+            def visit_CastOperation(self, expr: UnaryArithmeticOperation):
+                expression = self.visit(expr.expression)
+                return CastOperation(expr.typ, expression)
 
             @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
             def visit_UnaryArithmeticOperation(self, expr: UnaryArithmeticOperation):

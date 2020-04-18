@@ -1056,11 +1056,10 @@ class TypeState(Store, StateWithSummarization, InputMixin):
                 return state  # over-approximation
             elif isinstance(expr.typ, (IntegerLyraType, FloatLyraType)):
                 typ = expr.expression.typ
-                if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
-                    refined = evaluation[expr].meet(value)
-                    return self.visit(expr.expression, evaluation, refined, state)
-                assert isinstance(typ, StringLyraType)
-                return state  # over-approximation
+                simple = (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)
+                assert isinstance(typ, simple)
+                refined = evaluation[expr].meet(value)
+                return self.visit(expr.expression, evaluation, refined, state)
             elif isinstance(expr.typ, StringLyraType):
                 return state  # over-approximation
             elif isinstance(expr.typ, (ListLyraType, SetLyraType, TupleLyraType)):

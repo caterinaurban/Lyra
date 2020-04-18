@@ -97,7 +97,7 @@ class Basis(Store, State, metaclass=ABCMeta):
         evaluation = self._evaluation.visit(right, self, dict())
         # check for errors turning the state into bottom
         if not evaluation[right].is_bottom():
-            feasible = evaluation[right].meet(value)
+            feasible = deepcopy(evaluation[right]).meet(value)
             if feasible.is_bottom():
                 return self.bottom()
         # refine the updated store proceeding top-down on the right-hand side
@@ -661,9 +661,9 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                 target = target.target
             evaluated = self.visit(target, state, evaluation)
             if isinstance(target.typ, DictLyraType):
-                evaluation[expr] = evaluated[target.values]
+                evaluation[expr] = deepcopy(evaluated[target.values])
             else:
-                evaluation[expr] = evaluated[target]
+                evaluation[expr] = deepcopy(evaluated[target])
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
@@ -674,7 +674,7 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             while isinstance(target, (Subscription, Slicing)):
                 target = target.target
             evaluated = self.visit(target, state, evaluation)
-            evaluation[expr] = evaluated[target]
+            evaluation[expr] = deepcopy(evaluated[target])
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_CastOperation)
@@ -690,7 +690,7 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                     value = state.lattices[expr.typ](**state.arguments[expr.typ]).true()
                 evaluation[expr] = value
             else:
-                evaluation[expr] = evaluated[expr.expression]
+                evaluation[expr] = deepcopy(evaluated[expr.expression])
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
@@ -788,11 +788,10 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                     return state    # over-approximation
             elif isinstance(expr.typ, (IntegerLyraType, FloatLyraType)):
                 typ = expr.expression.typ
-                if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType)):
-                    refined = evaluation[expr].meet(value)
-                    return self.visit(expr.expression, evaluation, refined, state)
-                assert isinstance(typ, StringLyraType)
-                return state    # over-approximation
+                simple = (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)
+                assert isinstance(typ, simple)
+                refined = evaluation[expr].meet(value)
+                return self.visit(expr.expression, evaluation, refined, state)
             elif isinstance(expr.typ, StringLyraType):
                 return state    # over-approximation
             elif isinstance(expr.typ, (ListLyraType, SetLyraType, TupleLyraType)):
