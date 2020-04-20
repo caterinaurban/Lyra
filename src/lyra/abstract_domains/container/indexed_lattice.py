@@ -6,11 +6,15 @@ The elements of the lattice are a bounded number of indexed lattice elements.
 
 :Author: Caterina Urban
 """
+from ast import literal_eval
 from copy import deepcopy
+from math import inf
 from typing import Dict, List, Set, Type
 
 from lyra.abstract_domains.lattice import SequenceMixin, BottomMixin, Lattice
 from lyra.core.expressions import Literal
+from lyra.core.types import IntegerLyraType, LyraType, StringLyraType, FloatLyraType, \
+    BooleanLyraType, TupleLyraType
 from lyra.core.utils import copy_docstring
 
 
@@ -27,82 +31,149 @@ class IndexedLattice(BottomMixin, SequenceMixin):
     .. automethod:: IndexedLattice._concat
     """
 
-    def __init__(self, lattice: Type[Lattice], indexed: Dict[str, Lattice] = None, bound: int = 3):
+    def __init__(self, lattice: Type[Lattice], index: Dict[str, Lattice] = None, bound: int = 3):
+        """Indexed lattice creation.
+
+        :param lattice: the (sub)lattice whose elements are to be indexed
+        :param index: the initial index
+        :param bound: bound on the size of the index
+        """
         super().__init__()
         self._lattice: Type[Lattice] = lattice
-        self._indexed = {'_': self._lattice()}
-        if indexed is not None:
-            keys: List[str] = sorted(indexed.keys())
-            for i in range(min(bound, len(keys))):
-                self._indexed[keys[i]] = indexed[keys[i]]
+        self._index: Dict[str, Lattice] = {self.default: self._lattice()}
+        if index is not None:
+            keys: List[str] = sorted(index.keys())
+            for i in range(min(bound, len(keys))):          # index all possible elements
+                self._index[keys[i]] = index[keys[i]]
             rest = self._lattice().bottom()
-            for j in range(bound, len(keys)):
-                rest = rest.join(indexed[keys[j]])
-            if '_' in indexed:
-                self._indexed['_'] = self._indexed['_'].join(rest)
+            for j in range(bound, len(keys)):               # join the rest of the elements
+                rest = rest.join(index[keys[j]])
+            if self.default in index:
+                self._index[self.default] = self._index[self.default].join(rest)
             else:
-                self._indexed['_'] = rest
-        self._bound = bound
+                self._index[self.default] = rest
+        self._bound: int = bound
+
+    @classmethod
+    def from_literal(cls, lattice: Type[Lattice], literal: Literal, bound: int = 3):
+        if isinstance(literal.typ, StringLyraType):
+            index = dict()
+            for idx, item in enumerate(literal.val):
+                if hasattr(lattice, 'from_literal'):
+                    index[str(idx)] = lattice.from_literal(Literal(StringLyraType(), item))
+                else:
+                    index[str(idx)] = lattice().top()
+            return cls(lattice, index, bound)
+        return cls(lattice, None, 3)
+
+    def __getitem__(self, idx: str) -> Lattice:
+        return self.index.get(idx, self.index[self.default])
+
+    def __setitem__(self, idx: str, itv: Lattice):
+        if idx != self.default and (idx in self.index or self.size < self.bound):
+            self.index[idx] = itv
+        else:
+            self.index[self.default] = self.index[self.default].join(itv)
 
     @property
-    def lattice(self):
-        """Current indexed (sub)lattice.
+    def lattice(self) -> Type[Lattice]:
+        """Current (sub)lattice.
 
-        :return: the (sub)lattice whose elements are currently indexed
+        :return: the (sub)lattice whose elements are indexed
         """
         return self._lattice
 
     @property
-    def indexed(self):
-        """Current indexed (sub)lattice elements.
+    def default(self) -> str:
+        """Current default index.
 
-        :return: the current indexed (sub)lattice elements
+        :return: the default index
         """
-        return self._indexed
+        return '_'
 
     @property
-    def indexes(self):
-        """Current indexes.
+    def index(self) -> Dict[str, Lattice]:
+        """Current index of (sub)lattice elements.
 
-        :return: the current indexes (sorted)
+        :return: the current index
         """
-        items = sorted(self.indexed.keys())
-        if self.default.is_bottom():
-            return items[:-1]   # exclude the (unused) default index
+        return self._index
+
+    @property
+    def used(self) -> List[str]:
+        """Current used indexes.
+
+        :return: the current used indexes (sorted)
+        """
+        items: List[str] = sorted(self.index.keys())
+        if self.index[self.default].is_bottom():
+            items.remove(self.default)   # exclude the (unused) default index
+            return items
         return items
 
     @property
-    def size(self):
+    def size(self) -> int:
         """Current number of indexed (sub)lattice elements.
+
+        .. note:: the default index is not counted
 
         :return: the current number of indexed (sub)lattice elements
         """
-        return len(self.indexed) - 1
+        return len(self.index) - 1
 
     @property
-    def bound(self):
+    def bound(self) -> int:
         """Current bound on the indexed (sub)lattice elements.
 
         :return: the current bound on the indexed (sub)lattice elements
         """
         return self._bound
 
-    @property
-    def default(self):
-        """Default indexed (sub)lattice elements.
+    def is_empty(self) -> bool:
+        """Test whether the index is empty.
 
-        :return: the current default indexed (sub)lattice element
+        :return: whether the index is empty
         """
-        return self.indexed['_']
+        return len(self.index) == 1 and self.index[self.default].is_bottom()
 
-    def summarize(self) -> 'Lattice':
-        """Summarize the indexed (sub)lattice elements into a single (sub)lattice element.
+    def is_nonempty(self) -> bool:
+        """Test whether the index is non-empty.
 
-        :return: the (sub)lattice element representing the summary of the indexed elements
+        :return: whether the index is non-empty
         """
+        return len(self.index) > 1 or not self.index[self.default].is_top()
+
+    def summarize(self, keys: LyraType = None) -> 'Lattice':
+        """Summarize the index into a single (sub)lattice element.
+
+        :param keys: if give, type to use to also summarize the keys (default: None)
+        :return: the (sub)lattice element representing the summary of the index
+        """
+        def do(lattice, typ, key, current: Lattice) -> Lattice:
+            updated: Lattice = current
+            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
+                if hasattr(lattice, 'from_literal'):
+                    literal = Literal(typ, key)
+                    updated = updated.join(lattice.from_literal(literal))
+                else:
+                    updated = updated.join(lattice().top())
+            else:
+                assert isinstance(typ, TupleLyraType)
+                val = literal_eval(key)
+                for i, subtyp in enumerate(typ.typs):
+                    updated = do(lattice, subtyp, val[i], updated)
+            return updated
+
         summary: Lattice = self.lattice().bottom()
-        for itv in self.indexed.values():
-            summary = summary.join(deepcopy(itv))
+        if keys:
+            for idx in self.used:
+                if idx == self.default:
+                    summary = summary.join(self.lattice().top())
+                else:
+                    summary = do(self.lattice, keys, idx, summary)
+
+        for value in self.index.values():
+            summary = summary.join(deepcopy(value))
         return summary
 
     def set_subscript(self, idx: str, itv: Lattice) -> 'IndexedLattice':
@@ -112,10 +183,11 @@ class IndexedLattice(BottomMixin, SequenceMixin):
         :param itv: the new (sub)lattice element
         :return: current lattice element modified to index the new (sub)lattice element
         """
-        if idx in self.indexed or self.size < self.bound:
-            self.indexed[idx] = itv
+        #TODO: redo
+        if idx in self.index or self.size < self.bound:
+            self.index[idx] = itv
         else:
-            self.indexed['_'] = self.indexed['_'].join(itv)
+            self.index['_'] = self.index['_'].join(itv)
         return self
 
     def get_subscript(self, idx: str) -> 'IndexedLattice':
@@ -124,12 +196,13 @@ class IndexedLattice(BottomMixin, SequenceMixin):
         :param idx: the target index
         :return: new lattice element indexing the retireved (sub)lattice element
         """
+        #TODO: redo
         indexed: Dict[str, Lattice] = dict()
-        if idx in self.indexed:
-            indexed[idx] = self.indexed[idx]
+        if idx in self.index:
+            indexed[idx] = self.index[idx]
         else:
-            indexed['_'] = self.default
-        return type(self)(lattice=self.lattice, indexed=indexed, bound=self.bound)
+            indexed['_'] = self.index[self.default]
+        return type(self)(lattice=self.lattice, index=indexed, bound=self.bound)
 
     def set_slice(self, indexed: Dict[str, Lattice]) -> 'IndexedLattice':
         for idx, itv in indexed.items():
@@ -142,90 +215,93 @@ class IndexedLattice(BottomMixin, SequenceMixin):
             indexed = indexed.join(self.get_subscript(idx))
         return indexed
 
-    def is_empty(self) -> bool:
-        return len(self.indexed) == 1 and self.default.is_bottom()
-
-    def is_nonempty(self) -> bool:
-        return len(self.indexed) > 1 or not self.default.is_top()
+    def refine(self, lattice: Lattice) -> 'IndexedLattice':
+        for idx in self.index:
+            self.index[idx] = self.index[idx].meet(deepcopy(lattice))
+        return self
 
     def __repr__(self):
         if self.is_bottom():
             return "⊥"
-        items = sorted(self.indexed.items(), key=lambda x: x[0])
+
+        def order(key):
+            return key if key != '_' else str(inf)
+
+        items = sorted(self.index.items(), key=lambda x: order(x[0]))
         return ', '.join('{}@{}'.format(idx, itv) for idx, itv in items)
 
     @copy_docstring(BottomMixin.top)
     def top(self):
-        """The bottom lattice element is ``_ -> [-oo, +oo]``"""
+        """The top lattice element is ``_ -> [-oo, +oo]``"""
         self._replace(type(self)(lattice=self.lattice, bound=self.bound))
         return self
 
     @copy_docstring(BottomMixin.is_top)
     def is_top(self) -> bool:
-        return all(itv.is_top() for itv in self.indexed.values())
+        return all(itv.is_top() for itv in self.index.values())
 
     @copy_docstring(BottomMixin._less_equal)
     def _less_equal(self, other: 'IndexedLattice') -> bool:
         # e.g., 0@[9, 9], 1@[1, 3], 2@[0, 0], _@[-oo, 4] ⊑ 0@[9, 10], 1@[-3, 3], _@[-oo, 9]
-        mine: Set[str] = set(self.indexed.keys())
-        yours: Set[str] = set(other.indexed.keys())
+        mine: Set[str] = set(self.index.keys())
+        yours: Set[str] = set(other.index.keys())
         result = yours.issubset(mine)   # other should fix fewer indexes than self
         if result:
-            for idx, itv in self.indexed.items():
-                if idx in other.indexes:    # self should fix stronger constraints than other
-                    result = result and itv.less_equal(other.indexed[idx])
+            for idx, itv in self.index.items():
+                if idx in other.used:    # self should fix stronger constraints than other
+                    result = result and itv.less_equal(other.index[idx])
                 else:
-                    result = result and itv.less_equal(other.default)
+                    result = result and itv.less_equal(other.index[self.default])
         return result
 
     @copy_docstring(BottomMixin._join)
     def _join(self, other: 'IndexedLattice') -> 'IndexedLattice':
         # e.g., 1@[1, 1], 3@[3, 3], _@[-oo, 0] ⨆ 0@[0, 0], 1@[2, 2], _@[0, +oo]
         # = 1@[1, 2], _@[-oo, +oo]
-        mine: Set[str] = set(self.indexed.keys())
-        yours: Set[str] = set(other.indexed.keys())
+        mine: Set[str] = set(self.index.keys())
+        yours: Set[str] = set(other.index.keys())
         for idx in mine.intersection(yours):    # common indexes should be joined
-            self.indexed[idx] = self.indexed[idx].join(other.indexed[idx])
+            self.index[idx] = self.index[idx].join(other.index[idx])
         for idx in mine.difference(yours):  # join indexes fixed only by self with default
-            self.indexed['_'] = self.indexed['_'].join(self.indexed[idx])
-            del self.indexed[idx]
+            self.index['_'] = self.index['_'].join(self.index[idx])
+            del self.index[idx]
         for idx in yours.difference(mine):  # join indexes fixed only by other with default
-            self.indexed['_'] = self.indexed['_'].join(other.indexed[idx])
+            self.index['_'] = self.index['_'].join(other.index[idx])
         return self
 
     @copy_docstring(BottomMixin._meet)
     def _meet(self, other: 'IndexedLattice') -> 'IndexedLattice':
-        default = self.default
-        for idx, itv in self.indexed.items():
-            if idx in other.indexed:    # common indexes should be met
-                self.indexed[idx] = itv.meet(other.indexed[idx])
+        default = self.index[self.default]
+        for idx, itv in self.index.items():
+            if idx in other.index:    # common indexes should be met
+                self.index[idx] = itv.meet(other.index[idx])
             else:               # meet indexes fixed only by self with default of other
-                self.indexed[idx] = itv.meet(other.default)
-        mine: Set[str] = set(self.indexed.keys())
-        yours: Set[str] = set(other.indexed.keys())
+                self.index[idx] = itv.meet(other.index[self.default])
+        mine: Set[str] = set(self.index.keys())
+        yours: Set[str] = set(other.index.keys())
         _yours: List[str] = sorted(list(yours.difference(mine)))
         for i in range(min(self.bound - self.size, len(_yours))):
-            self.indexed[_yours[i]] = deepcopy(default).meet(other.indexed[_yours[i]])
+            self.index[_yours[i]] = deepcopy(default).meet(other.index[_yours[i]])
         for j in range(self.bound, len(_yours)):
-            self.indexed['_'] = self.indexed['_'].join(other.indexed[_yours[j]])
-        for idx, itv in self.indexed.items():
+            self.index['_'] = self.index['_'].join(other.index[_yours[j]])
+        for idx, itv in self.index.items():
             if idx != '_' and itv.is_bottom():
                 return self.bottom()
         return self
 
     @copy_docstring(BottomMixin._widening)
     def _widening(self, other: 'IndexedLattice') -> 'IndexedLattice':
-        mine: Set[str] = set(self.indexed.keys())
-        yours: Set[str] = set(other.indexed.keys())
+        mine: Set[str] = set(self.index.keys())
+        yours: Set[str] = set(other.index.keys())
         for idx in mine.intersection(yours) - {'_'}:
-            self.indexed[idx] = self.indexed[idx].widening(other.indexed[idx])
-        _mine = self.default
+            self.index[idx] = self.index[idx].widening(other.index[idx])
+        _mine = self.index[self.default]
         for idx in mine.difference(yours):
-            _mine = _mine.join(self.indexed[idx])
-        _yours = other.default
+            _mine = _mine.join(self.index[idx])
+        _yours = other.index[other.default]
         for idx in yours.difference(mine):
-            _yours = _yours.join(other.indexed[idx])
-        self.indexed['_'] = _mine.widening(_yours)
+            _yours = _yours.join(other.index[idx])
+        self.index['_'] = _mine.widening(_yours)
         return self
 
     # string operations
@@ -235,15 +311,14 @@ class IndexedLattice(BottomMixin, SequenceMixin):
         """
         .. note:: We assume here that the involved lattice elements are representing sequences.
         """
-        if self.default.is_bottom():    # add indexes from other up to the bound
-            yours: List[str] = sorted(list(other.indexed.keys()))[:-1]
-            highest = sorted(list(self.indexed.keys()))[-2]
+        if self.index[self.default].is_bottom():    # add indexes from other up to the bound
+            yours: List[str] = sorted(list(other.index.keys()))[:-1]
+            highest = sorted(list(self.index.keys()))[-2]
             for i in range(min(self.bound - self.size, len(yours))):
-                next = str(int(highest) + i)
-                self.indexed[next] = other.indexed[yours[i]]
+                self.index[str(int(highest) + i)] = other.index[yours[i]]
             for j in range(min(self.bound - self.size, len(yours)), len(yours)):
-                self.indexed['_'] = self.indexed['_'].join(other.indexed[yours[j]])
+                self.index['_'] = self.index['_'].join(other.index[yours[j]])
         else:   # join indexed from other with default
-            for itv in other.indexed.values():
-                self.indexed['_'] = self.indexed['_'].join(itv)
+            for itv in other.index.values():
+                self.index['_'] = self.index['_'].join(itv)
         return self

@@ -6,6 +6,7 @@ Interval Lattice
 """
 
 from math import inf
+from typing import List
 
 from lyra.abstract_domains.lattice import BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin
 from lyra.core.expressions import Literal
@@ -55,7 +56,7 @@ class IntervalLattice(BottomMixin, ArithmeticMixin, BooleanMixin, SequenceMixin)
             return cls(value, value)
         return cls()
 
-    def gamma(self, bound: int):
+    def gamma(self, bound: int) -> List[str]:
         """Concretization.
 
         :return: the concretization of the current interval as a list of strings
