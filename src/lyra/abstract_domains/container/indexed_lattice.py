@@ -176,44 +176,44 @@ class IndexedLattice(BottomMixin, SequenceMixin):
             summary = summary.join(deepcopy(value))
         return summary
 
-    def set_subscript(self, idx: str, itv: Lattice) -> 'IndexedLattice':
-        """Set a specific index to a new (sub)lattice element.
-
-        :param idx: the index to be set
-        :param itv: the new (sub)lattice element
-        :return: current lattice element modified to index the new (sub)lattice element
-        """
-        #TODO: redo
-        if idx in self.index or self.size < self.bound:
-            self.index[idx] = itv
-        else:
-            self.index['_'] = self.index['_'].join(itv)
-        return self
-
-    def get_subscript(self, idx: str) -> 'IndexedLattice':
-        """Get a specific indexed (sub)lattice element.
-
-        :param idx: the target index
-        :return: new lattice element indexing the retireved (sub)lattice element
-        """
-        #TODO: redo
-        indexed: Dict[str, Lattice] = dict()
-        if idx in self.index:
-            indexed[idx] = self.index[idx]
-        else:
-            indexed['_'] = self.index[self.default]
-        return type(self)(lattice=self.lattice, index=indexed, bound=self.bound)
-
-    def set_slice(self, indexed: Dict[str, Lattice]) -> 'IndexedLattice':
-        for idx, itv in indexed.items():
-            self.set_subscript(idx, itv)
-        return self
-
-    def get_slice(self, idxs: List[str]) -> 'IndexedLattice':
-        indexed: IndexedLattice = IndexedLattice(lattice=self.lattice).bottom()
-        for idx in sorted(idxs):
-            indexed = indexed.join(self.get_subscript(idx))
-        return indexed
+    # def set_subscript(self, idx: str, itv: Lattice) -> 'IndexedLattice':
+    #     """Set a specific index to a new (sub)lattice element.
+    #
+    #     :param idx: the index to be set
+    #     :param itv: the new (sub)lattice element
+    #     :return: current lattice element modified to index the new (sub)lattice element
+    #     """
+    #     #TODO: redo
+    #     if idx in self.index or self.size < self.bound:
+    #         self.index[idx] = itv
+    #     else:
+    #         self.index['_'] = self.index['_'].join(itv)
+    #     return self
+    #
+    # def get_subscript(self, idx: str) -> 'IndexedLattice':
+    #     """Get a specific indexed (sub)lattice element.
+    #
+    #     :param idx: the target index
+    #     :return: new lattice element indexing the retireved (sub)lattice element
+    #     """
+    #     #TODO: redo
+    #     indexed: Dict[str, Lattice] = dict()
+    #     if idx in self.index:
+    #         indexed[idx] = self.index[idx]
+    #     else:
+    #         indexed['_'] = self.index[self.default]
+    #     return type(self)(lattice=self.lattice, index=indexed, bound=self.bound)
+    #
+    # def set_slice(self, indexed: Dict[str, Lattice]) -> 'IndexedLattice':
+    #     for idx, itv in indexed.items():
+    #         self.set_subscript(idx, itv)
+    #     return self
+    #
+    # def get_slice(self, idxs: List[str]) -> 'IndexedLattice':
+    #     indexed: IndexedLattice = IndexedLattice(lattice=self.lattice).bottom()
+    #     for idx in sorted(idxs):
+    #         indexed = indexed.join(self.get_subscript(idx))
+    #     return indexed
 
     def refine(self, lattice: Lattice) -> 'IndexedLattice':
         for idx in self.index:

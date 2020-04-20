@@ -500,7 +500,8 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                     else:
                         assert isinstance(self.values[values], IndexedLattice)
                         assert isinstance(value, IndexedLattice)
-                        self.values[values] = self.values[values].join(deepcopy(value)).refine(summary)
+                        updated = self.values[values].join(deepcopy(value)).refine(summary)
+                        self.values[values] = updated
             else:
                 ...
         else:
