@@ -56,6 +56,12 @@ class IndexedLattice(BottomMixin, SequenceMixin):
 
     @classmethod
     def from_literal(cls, lattice: Type[Lattice], literal: Literal, bound: int = 3):
+        """Indexed lattice creation from a literal expression.
+
+        :param lattice: the (sub)lattice whose elements are to be indexed
+        :param literal: the literal
+        :param bound: bound on the size of the index
+        """
         if isinstance(literal.typ, StringLyraType):
             index = dict()
             for idx, item in enumerate(literal.val):
@@ -67,9 +73,24 @@ class IndexedLattice(BottomMixin, SequenceMixin):
         return cls(lattice, None, 3)
 
     def __getitem__(self, idx: str) -> Lattice:
+        """Get the (sub)lattice element at a given index.
+
+        :param idx: the index of interest
+        :return: the (sub)lattice element indexed at the given index
+        (the default (sub)lattice element is returned if the given index is unused)
+        """
         return self.index.get(idx, self.index[self.default])
 
     def __setitem__(self, idx: str, itv: Lattice):
+        """Set a (sub)lattice element at a given index.
+
+        :param idx: the index of interest
+        :param itv: the (sub)lattice element to be set
+        :return: current lattice element modified to index the given (sub)lattice element
+        (this is joined to the default (sub)lattice element if
+        (a) the given index is the default index or
+        (b) the given index is unused and the bound has been exceeded)
+        """
         if idx != self.default and (idx in self.index or self.size < self.bound):
             self.index[idx] = itv
         else:
@@ -176,44 +197,36 @@ class IndexedLattice(BottomMixin, SequenceMixin):
             summary = summary.join(deepcopy(value))
         return summary
 
-    # def set_subscript(self, idx: str, itv: Lattice) -> 'IndexedLattice':
-    #     """Set a specific index to a new (sub)lattice element.
-    #
-    #     :param idx: the index to be set
-    #     :param itv: the new (sub)lattice element
-    #     :return: current lattice element modified to index the new (sub)lattice element
-    #     """
-    #     #TODO: redo
-    #     if idx in self.index or self.size < self.bound:
-    #         self.index[idx] = itv
-    #     else:
-    #         self.index['_'] = self.index['_'].join(itv)
-    #     return self
-    #
-    # def get_subscript(self, idx: str) -> 'IndexedLattice':
-    #     """Get a specific indexed (sub)lattice element.
-    #
-    #     :param idx: the target index
-    #     :return: new lattice element indexing the retireved (sub)lattice element
-    #     """
-    #     #TODO: redo
-    #     indexed: Dict[str, Lattice] = dict()
-    #     if idx in self.index:
-    #         indexed[idx] = self.index[idx]
-    #     else:
-    #         indexed['_'] = self.index[self.default]
-    #     return type(self)(lattice=self.lattice, index=indexed, bound=self.bound)
-    #
-    # def set_slice(self, indexed: Dict[str, Lattice]) -> 'IndexedLattice':
-    #     for idx, itv in indexed.items():
-    #         self.set_subscript(idx, itv)
-    #     return self
-    #
-    # def get_slice(self, idxs: List[str]) -> 'IndexedLattice':
-    #     indexed: IndexedLattice = IndexedLattice(lattice=self.lattice).bottom()
-    #     for idx in sorted(idxs):
-    #         indexed = indexed.join(self.get_subscript(idx))
-    #     return indexed
+    def weak_get(self, idxs: List[str]):
+        """Weak get of the (sub)lattice element(s) at a given list of indexes
+
+        :param idxs: the indexes of interest
+        :return: the join of the (sub)lattice elements indexed at the given index
+        """
+        if len(idxs) == 1 and idxs[0] == self.default:
+            return self.summarize()
+        else:
+            result: Lattice = self.lattice().bottom()
+            for idx in idxs:
+                result = result.join(deepcopy(self.index.get(idx, self.index[self.default])))
+            return result
+
+    def weak_set(self, idxs: List[str], itv: Lattice):
+        """Weak set of a (sub)lattice element at a given list of indexes.
+
+        :param idxs: the indexes of interest
+        :param itv: the (sub)lattice element to be set
+        :return: current lattice element modified to take into account the indexing
+        """
+        if len(idxs) == 1 and idxs[0] == self.default:
+            for idx in self.index:
+                self.index[idx] = self.index[idx].join(deepcopy(itv))
+        else:
+            for idx in idxs:
+                if idx in self.index:
+                    self.index[idx] = self.index[idx].join(deepcopy(itv))
+                else:
+                    self.index[self.default] = self.index[self.default].join(deepcopy(itv))
 
     def refine(self, lattice: Lattice) -> 'IndexedLattice':
         for idx in self.index:

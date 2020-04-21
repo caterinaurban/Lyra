@@ -375,10 +375,10 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
             current: IntervalLattice = self.lengths[target.length]   # current length
             key = self._evaluation.visit(left.key, self, dict())[left.key]      # evaluate key
             one = self.lattices[IntegerLyraType()](lower=1, upper=1)
-            if key.less_equal(self.keys[target.keys]):
-                self.lengths[target.length] = deepcopy(current).join(current.add(one))
-            else:
+            if key.upper == key.lower and not key.less_equal(self.keys[left.target.keys]):
                 self.lengths[target.length] = current.add(one)
+            else:
+                self.lengths[target.length] = deepcopy(current).join(current.add(one))
         # perform the assignment
         super()._assign_subscription(left, right)
         return self
@@ -481,29 +481,42 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
         value = self._evaluation.visit(right, self, dict())[right]          # evaluate value
         if isinstance(left.target, VariableIdentifier):
             target: IndexedLattice = self._evaluation.visit(left.target, self, dict())[left.target]
-            _key = self._key.visit(left.key, target.bound, self)
-            if len(_key) == 1 and _key[0] != target.default:
-                if isinstance(value, IntervalLattice):
-                    itv = deepcopy(value)
-                elif isinstance(left.target.typ.val_typ, DictLyraType):
-                    itv = value.summarize(keys=left.target.typ.val_typ.key_typ)
-                else:
-                    itv = value.summarize()
-                self.store[left.target][_key[0]] = itv
-                if left.target.is_dictionary:
-                    key = self._evaluation.visit(left.key, self, dict())[left.key]  # evaluate key
-                    self.keys[left.target.keys] = self.keys[left.target.keys].join(deepcopy(key))
-                    summary = self.store[left.target].summarize()
-                    values = left.target.values
-                    if isinstance(self.values[values], IntervalLattice):
-                        self.values[values] = self.values[values].join(deepcopy(itv)).meet(summary)
-                    else:
-                        assert isinstance(self.values[values], IndexedLattice)
-                        assert isinstance(value, IndexedLattice)
-                        updated = self.values[values].join(deepcopy(value)).refine(summary)
-                        self.values[values] = updated
+            _key: List[str] = self._key.visit(left.key, target.bound, self)
+            if isinstance(value, IntervalLattice):
+                itv: IntervalLattice = deepcopy(value)
+            elif isinstance(left.target.typ.val_typ, DictLyraType):
+                itv: IntervalLattice = value.summarize(keys=left.target.typ.val_typ.key_typ)
             else:
-                ...
+                itv: IntervalLattice = value.summarize()
+            precise = len(_key) == 1 and _key[0] != target.default
+            added = False
+            if precise:
+                added = _key[0] not in target.used
+                self.store[left.target][_key[0]] = itv
+            else:
+                self.store[left.target].weak_set(_key, itv)
+            if left.target.is_dictionary:
+                key = self._evaluation.visit(left.key, self, dict())[left.key]  # evaluate key
+                # update length
+                current: IntervalLattice = self.lengths[left.target.length]  # current length
+                one = self.lattices[IntegerLyraType()](lower=1, upper=1)
+                if precise:
+                    if added:
+                        self.lengths[left.target.length] = current.add(one)
+                else:
+                    self.lengths[left.target.length] = deepcopy(current).join(current.add(one))
+                # update keys
+                self.keys[left.target.keys] = self.keys[left.target.keys].join(deepcopy(key))
+                # update values
+                summary = self.store[left.target].summarize()
+                values = left.target.values
+                if isinstance(self.values[values], IntervalLattice):
+                    self.values[values] = self.values[values].join(deepcopy(itv)).meet(summary)
+                else:
+                    assert isinstance(self.values[values], IndexedLattice)
+                    assert isinstance(value, IndexedLattice)
+                    updated = self.values[values].join(deepcopy(value)).refine(summary)
+                    self.values[values] = updated
         else:
             ...
         return self
@@ -700,9 +713,7 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             else:
                 assert isinstance(target, IndexedLattice)
                 _key: List[str] = state._key.visit(expr.key, target.bound, state)
-                fetched: IntervalLattice = deepcopy(target[_key[0]])
-                for i in range(1, len(_key)):
-                    fetched = fetched.join(deepcopy(target[_key[i]]))
+                fetched: IntervalLattice = target.weak_get(_key)
                 if isinstance(expr.target, VariableIdentifier) and expr.target.is_dictionary:
                     values = deepcopy(evaluated[expr.target.values])
                     if isinstance(values, IntervalLattice):
