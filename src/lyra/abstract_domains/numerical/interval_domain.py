@@ -55,19 +55,6 @@ class IntervalStateMixin(BasisWithSummarization):
             return self._refinement.visit(condition, evaluation, value, self)
         raise ValueError(f"Assumption of variable {condition} is unsupported!")
 
-    @copy_docstring(BasisWithSummarization._assume_subscription)
-    def _assume_subscription(self, condition: Subscription, neg: bool = False):
-        if isinstance(condition.typ, BooleanLyraType):
-            evaluation = self._evaluation.visit(condition, self, dict())
-            if neg:
-                value = self.lattices[condition.typ](**self.arguments[condition.typ]).false()
-            else:
-                value = self.lattices[condition.typ](**self.arguments[condition.typ]).true()
-            if not value.less_equal(evaluation[condition.target]):
-                return self.bottom()
-            return self
-        raise ValueError(f"Assumption of variable {condition} is unsupported!")
-
     @copy_docstring(BasisWithSummarization._assume_eq_comparison)
     def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         # left == right -> left - right <= 0 && right - left <= 0
@@ -364,7 +351,7 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
             if key.less_equal(self.lattices[left.key.typ](lower=0)):  # key is positive
                 if current.upper < key.lower:  # key is definitely larger than length
                     return self.bottom()
-                lower = self.lattices[left.key.typ](lower=key.lower)
+                lower = self.lattices[left.key.typ](lower=key.lower + 1)
                 self.lengths[target.length] = current.meet(lower)
             elif key.less_equal(self.lattices[left.key.typ](upper=-1)):  # key is negative
                 if current.upper + key.upper < 0:  # key is definitely smaller than length
@@ -399,6 +386,19 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
         # perform the assignment
         super()._assign_slicing(left, right)
         return self
+
+    @copy_docstring(BasisWithSummarization._assume_subscription)
+    def _assume_subscription(self, condition: Subscription, neg: bool = False):
+        if isinstance(condition.typ, BooleanLyraType):
+            evaluation = self._evaluation.visit(condition, self, dict())
+            if neg:
+                value = self.lattices[condition.typ](**self.arguments[condition.typ]).false()
+            else:
+                value = self.lattices[condition.typ](**self.arguments[condition.typ]).true()
+            if not value.less_equal(evaluation[condition.target]):
+                return self.bottom()
+            return self
+        raise ValueError(f"Assumption of variable {condition} is unsupported!")
 
     # expression evaluation
 
@@ -481,6 +481,7 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
         value = self._evaluation.visit(right, self, dict())[right]          # evaluate value
         if isinstance(left.target, VariableIdentifier):
             target: IndexedLattice = self._evaluation.visit(left.target, self, dict())[left.target]
+            key = self._evaluation.visit(left.key, self, dict())[left.key]
             _key: List[str] = self._key.visit(left.key, target.bound, self)
             if isinstance(value, IntervalLattice):
                 itv: IntervalLattice = deepcopy(value)
@@ -496,7 +497,6 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             else:
                 self.store[left.target].weak_set(_key, itv)
             if left.target.is_dictionary:
-                key = self._evaluation.visit(left.key, self, dict())[left.key]  # evaluate key
                 # update length
                 current: IntervalLattice = self.lengths[left.target.length]  # current length
                 one = self.lattices[IntegerLyraType()](lower=1, upper=1)
@@ -517,12 +517,37 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                     assert isinstance(value, IndexedLattice)
                     updated = self.values[values].join(deepcopy(value)).refine(summary)
                     self.values[values] = updated
+            else:
+                current: IntervalLattice = self.lengths[left.target.length]  # current length
+                if key.less_equal(self.lattices[left.key.typ](lower=0)):  # key is positive
+                    if current.upper < key.lower:  # key is definitely larger than length
+                        return self.bottom()
+                    lower = self.lattices[left.key.typ](lower=key.lower + 1)
+                    self.lengths[left.target.length] = current.meet(lower)
+                elif key.less_equal(self.lattices[left.key.typ](upper=-1)):  # key is negative
+                    if current.upper + key.upper < 0:  # key is definitely smaller than length
+                        return self.bottom()
+                    upper = self.lattices[left.key.typ](lower=-key.upper)
+                    self.lengths[left.target.length] = current.meet(upper)
         else:
             ...
         return self
 
     def _assign_slicing(self, left: Slicing, right: Expression) -> 'State':
         pass
+
+    @copy_docstring(BasisWithSummarization._assume_subscription)
+    def _assume_subscription(self, condition: Subscription, neg: bool = False):
+        if isinstance(condition.typ, BooleanLyraType):
+            evaluation = self._evaluation.visit(condition, self, dict())
+            if neg:
+                value = self.lattices[condition.typ](**self.arguments[condition.typ]).false()
+            else:
+                value = self.lattices[condition.typ](**self.arguments[condition.typ]).true()
+            if not value.less_equal(evaluation[condition]):
+                return self.bottom()
+            return self
+        raise ValueError(f"Assumption of variable {condition} is unsupported!")
 
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'State':
         pass
@@ -637,7 +662,10 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             for idx, item in enumerate(expr.items):
                 evaluated = self.visit(item, state, evaluated)
                 current = evaluated[item]
-                itv = current if isinstance(current, IntervalLattice) else current.summarize()
+                if isinstance(current, IntervalLattice):
+                    itv = deepcopy(current)
+                else:
+                    itv = current.summarize()
                 value[str(idx)] = itv
             evaluation[expr] = value
             return evaluation
@@ -651,7 +679,10 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             for idx, item in enumerate(expr.items):
                 evaluated = self.visit(item, state, evaluated)
                 current = evaluated[item]
-                itv = current if isinstance(current, IntervalLattice) else current.summarize()
+                if isinstance(current, IntervalLattice):
+                    itv = deepcopy(current)
+                else:
+                    itv = current.summarize()
                 value[str(idx)] = itv
             evaluation[expr] = value
             return evaluation
@@ -665,7 +696,10 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             for item in expr.items:
                 evaluated = self.visit(item, state, evaluated)
                 current = evaluated[item]
-                itv = current if isinstance(current, IntervalLattice) else current.summarize()
+                if isinstance(current, IntervalLattice):
+                    itv = deepcopy(current)
+                else:
+                    itv = current.summarize()
                 value = value.join(itv)
             evaluation[expr] = value
             return evaluation
@@ -771,7 +805,10 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                 evaluation[expr] = value
             elif isinstance(expr.typ, (IntegerLyraType, FloatLyraType)) and string:
                 current: IndexedLattice = evaluated[expr.expression]
-                evaluation[expr] = current.summarize()
+                if isinstance(current, IntervalLattice):
+                    evaluation[expr] = deepcopy(current)
+                else:
+                    evaluation[expr] = current.summarize()
             elif isinstance(expr.typ, StringLyraType):
                 value = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
                 evaluation[expr] = value
