@@ -29,7 +29,7 @@ class ForwardIntervalTestWithSummarization(TestRunner):
         return IntervalStateWithSummarization(self.variables)
 
 
-class ForwardIntervalTestWithIndexing(TestRunner):
+class ForwardIntervalTestWithIndexing3(TestRunner):
 
     def interpreter(self):
         return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
@@ -63,18 +63,18 @@ def forward_summarization():
     return suite
 
 
-def forward_indexing():
+def forward_indexing3():
     suite = unittest.TestSuite()
     name = os.getcwd() + '/numerical/interval/forward/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
             print('forward/' + os.path.basename(path))
-            suite.addTest(ForwardIntervalTestWithIndexing(path))
-    name = os.getcwd() + '/numerical/interval/forward/indexing/**.py'
+            suite.addTest(ForwardIntervalTestWithIndexing3(path))
+    name = os.getcwd() + '/numerical/interval/forward/indexing3/**.py'
     for path in glob.iglob(name):
         if os.path.basename(path) != "__init__.py":
-            print('forward/indexing/' + os.path.basename(path))
-            suite.addTest(ForwardIntervalTestWithIndexing(path))
+            print('forward/indexing3/' + os.path.basename(path))
+            suite.addTest(ForwardIntervalTestWithIndexing3(path))
     return suite
 
 
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     runner = unittest.TextTestRunner()
     result1 = runner.run(forward_summarization())
     success1 = result1.wasSuccessful()
-    result2 = runner.run(forward_indexing())
+    result2 = runner.run(forward_indexing3())
     success2 = result2.wasSuccessful()
     result3 = runner.run(backward())
     success3 = result3.wasSuccessful()
