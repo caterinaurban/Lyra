@@ -479,16 +479,16 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
 
     def _assign_subscription(self, left: Subscription, right: Expression):
         value = self._evaluation.visit(right, self, dict())[right]          # evaluate value
+        if isinstance(value, IntervalLattice):
+            itv: IntervalLattice = deepcopy(value)
+        elif isinstance(left.target.typ.val_typ, DictLyraType):
+            itv: IntervalLattice = value.summarize(keys=left.target.typ.val_typ.key_typ)
+        else:
+            itv: IntervalLattice = value.summarize()
         if isinstance(left.target, VariableIdentifier):
             target: IndexedLattice = self._evaluation.visit(left.target, self, dict())[left.target]
             key = self._evaluation.visit(left.key, self, dict())[left.key]
             _key: List[str] = self._key.visit(left.key, target.bound, self)
-            if isinstance(value, IntervalLattice):
-                itv: IntervalLattice = deepcopy(value)
-            elif isinstance(left.target.typ.val_typ, DictLyraType):
-                itv: IntervalLattice = value.summarize(keys=left.target.typ.val_typ.key_typ)
-            else:
-                itv: IntervalLattice = value.summarize()
             precise = len(_key) == 1 and _key[0] != target.default
             added = False
             if precise:
@@ -529,8 +529,56 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                         return self.bottom()
                     upper = self.lattices[left.key.typ](lower=-key.upper)
                     self.lengths[left.target.length] = current.meet(upper)
+        elif isinstance(left.target.typ, DictLyraType):
+            key = self._evaluation.visit(left.key, self, dict())[left.key]
+            _itv = deepcopy(key) if isinstance(key, IntervalLattice) else key.summarize()
+            _target = left.target.target
+            _key = left.target.key
+            __key = left.key
+            while isinstance(_target, Subscription):
+                __key = _key
+                _key = _target.key
+                _target = _target.target
+            assert isinstance(_target, VariableIdentifier)
+            target = self._evaluation.visit(_target, self, dict())[_target]
+            _key: List[str] = self._key.visit(_key, target.bound, self)
+            self.store[_target].weak_set(_key, deepcopy(itv).join(deepcopy(_itv)))
+            if _target.is_dictionary:
+                # update values
+                summary = self.store[_target].summarize()
+                values = _target.values
+                if isinstance(self.values[values], IntervalLattice):
+                    self.values[values] = self.values[values].join(deepcopy(itv)).meet(summary)
+                else:
+                    assert isinstance(self.values[values], IndexedLattice)
+                    __key: List[str] = self._key.visit(__key, target.bound, self)
+                    self.values[values].weak_set(__key, itv)
+                    self.values[values] = self.values[values].refine(summary)
         else:
-            ...
+            _target = left.target.target
+            _key = left.target.key
+            __key = left.key
+            while isinstance(_target, Subscription):
+                __key = _key
+                _key = _target.key
+                _target = _target.target
+            if isinstance(_target, Slicing):
+                return self
+            assert isinstance(_target, VariableIdentifier)
+            target = self._evaluation.visit(_target, self, dict())[_target]
+            _key: List[str] = self._key.visit(_key, target.bound, self)
+            self.store[_target].weak_set(_key, itv)
+            if _target.is_dictionary:
+                # update values
+                summary = self.store[_target].summarize()
+                values = _target.values
+                if isinstance(self.values[values], IntervalLattice):
+                    self.values[values] = self.values[values].join(deepcopy(itv)).meet(summary)
+                else:
+                    assert isinstance(self.values[values], IndexedLattice)
+                    __key: List[str] = self._key.visit(__key, target.bound, self)
+                    self.values[values].weak_set(__key, itv)
+                    self.values[values] = self.values[values].refine(summary)
         return self
 
     def _assign_slicing(self, left: Slicing, right: Expression) -> 'State':
