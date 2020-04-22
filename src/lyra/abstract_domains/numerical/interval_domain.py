@@ -10,6 +10,7 @@ is represented as an interval.
 """
 from collections import defaultdict
 from copy import deepcopy
+from math import inf
 from typing import Union
 
 from apronpy.box import PyBox
@@ -148,16 +149,6 @@ class IntervalStateMixin(BasisWithSummarization):
     def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         error = f"Assumption of a binary comparison with {condition.operator} is unsupported!"
         raise ValueError(error)
-
-    @copy_docstring(BasisWithSummarization._assume_in_comparison)
-    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        if condition.forloop and not bwd:  # assumption in a for loop during forward analysis
-            top = self.lattices[condition.left.typ](**self.arguments[condition.left.typ]).top()
-            left = defaultdict(lambda: top)
-        else:  # condition assumption
-            left = self._evaluation.visit(condition.left, self, dict())
-        right = self._evaluation.visit(condition.right, self, dict())
-        return self._refinement.visit(condition.left, left, right[condition.right], self)
 
     @copy_docstring(BasisWithSummarization._assume_notin_comparison)
     def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
@@ -408,6 +399,16 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
             return self
         raise ValueError(f"Assumption of variable {condition} is unsupported!")
 
+    @copy_docstring(BasisWithSummarization._assume_in_comparison)
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        if condition.forloop and not bwd:  # assumption in a for loop during forward analysis
+            top = self.lattices[condition.left.typ](**self.arguments[condition.left.typ]).top()
+            left = defaultdict(lambda: top)
+        else:  # condition assumption
+            left = self._evaluation.visit(condition.left, self, dict())
+        right = self._evaluation.visit(condition.right, self, dict())
+        return self._refinement.visit(condition.left, left, right[condition.right], self)
+
     # expression evaluation
 
     class ExpressionEvaluation(BasisWithSummarization.ExpressionEvaluation):
@@ -608,6 +609,28 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                 return self.bottom()
             return self
         raise ValueError(f"Assumption of variable {condition} is unsupported!")
+
+    @copy_docstring(BasisWithSummarization._assume_in_comparison)
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        if condition.forloop and not bwd:  # assumption in a for loop during forward analysis
+            top = self.lattices[condition.left.typ](**self.arguments[condition.left.typ]).top()
+            left = defaultdict(lambda: top)
+        else:  # condition assumption
+            left = self._evaluation.visit(condition.left, self, dict())
+        right = self._evaluation.visit(condition.right, self, dict())[condition.right]
+        if isinstance(right, IntervalLattice):
+            return self._refinement.visit(condition.left, left, deepcopy(right), self)
+        else:
+            assert isinstance(right, IndexedLattice)
+            if isinstance(condition.right.typ, DictLyraType):
+                if isinstance(condition.right, VariableIdentifier):
+                    keys = self.keys[condition.right.keys]
+                    itv = deepcopy(keys) if isinstance(keys, IntervalLattice) else keys.summarize()
+                else:
+                    itv = right.summarize(keys=condition.right.typ.key_typ)
+                return self._refinement.visit(condition.left, left, itv, self)
+            else:
+                return self._refinement.visit(condition.left, left, right.summarize(), self)
 
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'State':
         pass
@@ -832,19 +855,22 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
         def visit_Range(self, expr: Range, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            # TODO: implement properly
-            evaluated = evaluation
-            evaluated = self.visit(expr.start, state, evaluated)
+            evaluated = self.visit(expr.start, state, evaluation)
             sub = BinaryArithmeticOperation.Operator.Sub
             one = Literal(expr.stop.typ, '1')
             stop = BinaryArithmeticOperation(expr.stop.typ, expr.stop, sub, one)
             evaluated = self.visit(stop, state, evaluated)
-
             if not evaluated[expr.start].is_bottom() and not evaluated[stop].is_bottom():
                 lower = evaluated[expr.start].lower
                 upper = evaluated[stop].upper
-                assert isinstance(expr.typ, ListLyraType)
-                value = state.lattices[expr.typ.typ](lower=lower, upper=upper)
+                if lower != -inf and upper != inf:
+                    index = dict()
+                    for i in range(lower, upper + 1):
+                        index[str(i)] = state.lattices[expr.typ.typ](lower=i, upper=i)
+
+                else:
+                    index = {'_': state.lattices[expr.typ.typ](lower=lower, upper=upper)}
+                value = state.lattices[expr.typ](**state.arguments[expr.typ], index=index)
                 evaluation[expr] = value
             else:
                 evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
@@ -855,11 +881,12 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.expression, state, evaluation)
-            container = isinstance(expr.expression.typ, (SequenceLyraType, ContainerLyraType))
-            string = isinstance(expr.expression.typ, StringLyraType)
-            ensemble = isinstance(expr.expression.typ, SetLyraType)
-            dictionary = isinstance(expr.expression.typ, DictLyraType)
-            if isinstance(expr.typ, BooleanLyraType) and container:
+            iscontainer = isinstance(expr.expression.typ, (SequenceLyraType, ContainerLyraType))
+            isstring = isinstance(expr.expression.typ, StringLyraType)
+            islist = isinstance(expr.expression.typ, ListLyraType)
+            isset = isinstance(expr.expression.typ, SetLyraType)
+            isdictionary = isinstance(expr.expression.typ, DictLyraType)
+            if isinstance(expr.typ, BooleanLyraType) and iscontainer:
                 current: IndexedLattice = evaluated[expr.expression]
                 if current.is_empty():
                     value = state.lattices[expr.typ](**state.arguments[expr.typ]).false()
@@ -868,7 +895,7 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                 else:
                     value = state.lattices[expr.typ](**state.arguments[expr.typ]).maybe()
                 evaluation[expr] = value
-            elif isinstance(expr.typ, (IntegerLyraType, FloatLyraType)) and string:
+            elif isinstance(expr.typ, (IntegerLyraType, FloatLyraType)) and isstring:
                 current: IndexedLattice = evaluated[expr.expression]
                 if isinstance(current, IntervalLattice):
                     evaluation[expr] = deepcopy(current)
@@ -877,12 +904,12 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             elif isinstance(expr.typ, StringLyraType):
                 value = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
                 evaluation[expr] = value
-            elif isinstance(expr.typ, (ListLyraType, TupleLyraType)) and ensemble:
+            elif isinstance(expr.typ, (ListLyraType, TupleLyraType)) and isset:
                 current: IntervalLattice = deepcopy(evaluated[expr.expression])
                 indexed = {'_': current}
                 value = state.lattices[expr.typ](**state.arguments[expr.typ], index=indexed)
                 evaluation[expr] = value
-            elif isinstance(expr.typ, (ListLyraType, SetLyraType, TupleLyraType)) and dictionary:
+            elif isinstance(expr.typ, (ListLyraType, SetLyraType, TupleLyraType)) and isdictionary:
                 current = deepcopy(evaluated[KeysIdentifier(expr.expression)])
                 if isinstance(current, IntervalLattice):
                     indexed = {'_': current}
