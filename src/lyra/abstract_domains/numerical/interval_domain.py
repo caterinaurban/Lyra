@@ -213,7 +213,15 @@ class IntervalStateMixin(BasisWithSummarization):
 
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: Subscription, state=None):
-            return state.lattices[IntegerLyraType()](lower=1, upper=1)
+            case0 = isinstance(expr.target.typ, StringLyraType)
+            sequence = isinstance(expr.target.typ, (ListLyraType, TupleLyraType))
+            complex = (SequenceLyraType, DictLyraType)
+            case1 = sequence and not isinstance(expr.target.typ.typ, complex)
+            dictionary = isinstance(expr.target.typ, DictLyraType)
+            case2 = dictionary and not isinstance(expr.target.typ.val_typ, complex)
+            if case0 or case1 or case2:
+                return state.lattices[IntegerLyraType()](lower=1, upper=1)
+            return state.lattices[IntegerLyraType()](lower=0)
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, state=None):
@@ -491,8 +499,10 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             _key: List[str] = self._key.visit(left.key, target.bound, self)
             precise = len(_key) == 1 and _key[0] != target.default
             added = False
+            replaced = False
             if precise:
-                added = _key[0] not in target.used
+                added = _key[0] not in target.used and target.default not in target.used
+                replaced = _key[0] in target.used
                 self.store[left.target][_key[0]] = itv
             else:
                 self.store[left.target].weak_set(_key, itv)
@@ -503,6 +513,8 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                 if precise:
                     if added:
                         self.lengths[left.target.length] = current.add(one)
+                    elif not replaced:
+                        self.lengths[left.target.length] = deepcopy(current).join(current.add(one))
                 else:
                     self.lengths[left.target.length] = deepcopy(current).join(current.add(one))
                 # update keys
@@ -804,7 +816,12 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                         assert isinstance(values, IndexedLattice)
                         evaluation[expr] = values.refine(fetched)
                 else:
-                    evaluation[expr] = fetched
+                    if isinstance(expr.typ, (SequenceLyraType, DictLyraType)):
+                        index = {'_': fetched}
+                        idxd = state.lattices[expr.typ](**state.arguments[expr.typ], index=index)
+                        evaluation[expr] = idxd
+                    else:
+                        evaluation[expr] = fetched
             return evaluation
 
         @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Slicing)
