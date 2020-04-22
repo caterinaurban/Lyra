@@ -24,7 +24,7 @@ class ForwardIntervalAnalysisWithSummarization(Runner):
         return IntervalStateWithSummarization(self.variables)
 
 
-class ForwardIntervalAnalysisWithIndexing(Runner):
+class ForwardIntervalAnalysisWithIndexing3(Runner):
 
     def interpreter(self):
         return ForwardInterpreter(self.cfgs, self.fargs, DefaultForwardSemantics(), 3)
@@ -50,6 +50,16 @@ class BackwardIntervalAnalysisWithSummarization(Runner):
 
     def state(self):
         return IntervalStateWithSummarization(self.variables)
+
+
+class BackwardIntervalAnalysisWithIndexing3(Runner):
+
+    def interpreter(self):
+        return BackwardInterpreter(self.cfgs, self.fargs, DefaultBackwardSemantics(), 3)
+
+    def state(self):
+        IntervalStateWithIndexing.bound = 3
+        return IntervalStateWithIndexing(self.variables)
 
 
 class BackwardBoxAnalysisWithSummarization(Runner):

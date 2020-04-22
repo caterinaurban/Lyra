@@ -34,14 +34,20 @@
 # from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysisWithSummarization
 # ForwardIntervalAnalysisWithSummarization().main("example.py")
 
-# from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysisWithIndexing
-# ForwardIntervalAnalysisWithIndexing().main("example.py")
+# from lyra.engine.numerical.interval_analysis import ForwardIntervalAnalysisWithIndexing3
+# ForwardIntervalAnalysisWithIndexing3().main("example.py")
 
-# from lyra.engine.numerical.interval_analysis import ForwardBoxAnalysis
-# ForwardBoxAnalysis().main("example.py")
+# from lyra.engine.numerical.interval_analysis import ForwardBoxAnalysisWithSummarization
+# ForwardBoxAnalysisWithSummarization().main("example.py")
 
 # from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysisWithSummarization
 # BackwardIntervalAnalysisWithSummarization().main("example.py")
+
+# from lyra.engine.numerical.interval_analysis import BackwardIntervalAnalysisWithIndexing3
+# BackwardIntervalAnalysisWithIndexing3().main("example.py")
+
+# from lyra.engine.numerical.interval_analysis import BackwardBoxAnalysisWithSummarization
+# BackwardBoxAnalysisWithSummarization().main("example.py")
 
 # from lyra.engine.numerical.octagon_analysis import ForwardOctagonAnalysis
 # ForwardOctagonAnalysis().main("example.py")
