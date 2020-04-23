@@ -338,10 +338,12 @@ class IndexedLattice(BottomMixin, SequenceMixin):
         """
         if self.index[self.default].is_bottom():    # add indexes from other up to the bound
             yours: List[str] = sorted(list(other.index.keys()))[:-1]
-            highest = sorted(list(self.index.keys()))[-2]
-            for i in range(min(self.bound - self.size, len(yours))):
-                self.index[str(int(highest) + i)] = other.index[yours[i]]
-            for j in range(min(self.bound - self.size, len(yours)), len(yours)):
+            highest = sorted(list(self.index.keys()))[-2] if self.size > 0 else -1
+            i, maximum = 0, min(self.bound - self.size, len(yours))
+            while i < maximum:
+                self.index[str(int(highest) + i + 1)] = other.index[yours[i]]
+                i = i + 1
+            for j in range(i, len(yours)):
                 self.index['_'] = self.index['_'].join(other.index[yours[j]])
         else:   # join indexed from other with default
             for itv in other.index.values():

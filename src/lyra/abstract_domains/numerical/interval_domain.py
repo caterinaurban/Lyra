@@ -16,8 +16,9 @@ from typing import Union
 from apronpy.box import PyBox
 from apronpy.manager import PyManager, PyBoxMPQManager
 
-from lyra.abstract_domains.basis import BasisWithSummarization, Basis
+from lyra.abstract_domains.basis import BasisWithSummarization, Basis, BasisWithIndexing
 from lyra.abstract_domains.container.indexed_lattice import IndexedLattice
+from lyra.abstract_domains.lattice import SequenceMixin
 from lyra.abstract_domains.numerical.apron_domain import APRONStateWithSummarization
 from lyra.abstract_domains.numerical.interval_lattice import IntervalLattice
 from lyra.abstract_domains.state import State
@@ -309,7 +310,7 @@ class IntervalStateMixin(BasisWithSummarization):
             if expr.operator == BinarySequenceOperation.Operator.Concat:
                 left = self.visit(expr.left, state)
                 right = self.visit(expr.right, state)
-                return left.add(right)
+                return deepcopy(left).add(deepcopy(right))
             raise ValueError(f"Binary sequence operator '{str(expr.operator)}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
@@ -531,7 +532,7 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
     _evaluation = ExpressionEvaluation()  # static class member shared between all instances
 
 
-class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
+class IntervalStateWithIndexing(IntervalStateMixin, BasisWithIndexing):
     """Interval analysis state with indexing.
 
     .. note:: Program variables storing sequences and dictionaries are abstracted via indexing,
@@ -868,7 +869,7 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
 
     # expression evaluation
 
-    class ExpressionEvaluation(BasisWithSummarization.ExpressionEvaluation):
+    class ExpressionEvaluation(BasisWithIndexing.ExpressionEvaluation):
 
         @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Literal)
         def visit_Literal(self, expr: Literal, state=None, evaluation=None):
@@ -881,63 +882,6 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                 evaluation[expr] = value
             else:
                 evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
-            return evaluation
-
-        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_ListDisplay)
-        def visit_ListDisplay(self, expr: 'ListDisplay', state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation
-            evaluated = evaluation
-            value = state.lattices[expr.typ](**state.arguments[expr.typ], index=dict())
-            for idx, item in enumerate(expr.items):
-                evaluated = self.visit(item, state, evaluated)
-                if state.is_bottom():
-                    return evaluation
-                current = evaluated[item]
-                if isinstance(current, IntervalLattice):
-                    itv = deepcopy(current)
-                else:
-                    itv = current.summarize()
-                value[str(idx)] = itv
-            evaluation[expr] = value
-            return evaluation
-
-        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_TupleDisplay)
-        def visit_TupleDisplay(self, expr: 'TupleDisplay', state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation
-            evaluated = evaluation
-            value = state.lattices[expr.typ](**state.arguments[expr.typ], index=dict())
-            for idx, item in enumerate(expr.items):
-                evaluated = self.visit(item, state, evaluated)
-                if state.is_bottom():
-                    return evaluation
-                current = evaluated[item]
-                if isinstance(current, IntervalLattice):
-                    itv = deepcopy(current)
-                else:
-                    itv = current.summarize()
-                value[str(idx)] = itv
-            evaluation[expr] = value
-            return evaluation
-
-        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_SetDisplay)
-        def visit_SetDisplay(self, expr: 'SetDisplay', state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            evaluated = evaluation
-            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
-            for item in expr.items:
-                evaluated = self.visit(item, state, evaluated)
-                if state.is_bottom():
-                    return evaluation
-                current = evaluated[item]
-                if isinstance(current, IntervalLattice):
-                    itv = deepcopy(current)
-                else:
-                    itv = current.summarize()
-                value = value.join(itv)
-            evaluation[expr] = value
             return evaluation
 
         @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_DictDisplay)
@@ -1103,6 +1047,26 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             else:   # default case
                 evaluation[expr] = deepcopy(evaluated[expr.expression])
             return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
+        def visit_BinarySequenceOperation(self, expr, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated1 = self.visit(expr.left, state, evaluation)
+            if state.is_bottom():
+                return evaluation
+            evaluated2 = self.visit(expr.right, state, evaluated1)
+            if state.is_bottom():
+                return evaluation
+            value1 = evaluated2[expr.left]
+            value2 = evaluated2[expr.right]
+            if expr.operator == BinarySequenceOperation.Operator.Concat:
+                if isinstance(value1, SequenceMixin):
+                    evaluated2[expr] = deepcopy(value1).concat(value2)
+                else:
+                    evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
+                return evaluated2
+            raise ValueError(f"Binary sequence operator '{str(expr.operator)}' is unsupported!")
 
     _evaluation = ExpressionEvaluation()
 

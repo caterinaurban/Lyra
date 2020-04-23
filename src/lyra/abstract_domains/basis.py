@@ -10,6 +10,7 @@ from abc import ABCMeta
 from copy import deepcopy
 from typing import Set, Dict, Type, Any, Union
 
+from lyra.abstract_domains.container.indexed_lattice import IndexedLattice
 from lyra.abstract_domains.lattice import Lattice, ArithmeticMixin, BooleanMixin, SequenceMixin
 from lyra.abstract_domains.state import State, StateWithSummarization
 from lyra.abstract_domains.store import Store
@@ -17,7 +18,7 @@ from lyra.core.expressions import VariableIdentifier, Expression, Subscription, 
     BinaryBooleanOperation, ExpressionVisitor, Literal, LengthIdentifier, ListDisplay, \
     AttributeReference, Input, Range, UnaryArithmeticOperation, BinaryArithmeticOperation, \
     UnaryBooleanOperation, TupleDisplay, SetDisplay, DictDisplay, BinarySequenceOperation, Keys, \
-    Values, KeysIdentifier, ValuesIdentifier, CastOperation
+    Values, KeysIdentifier, ValuesIdentifier, CastOperation, BinaryComparisonOperation
 from lyra.core.types import LyraType, BooleanLyraType, SequenceLyraType, DictLyraType, \
     ContainerLyraType, IntegerLyraType, FloatLyraType, StringLyraType, ListLyraType, SetLyraType, \
     TupleLyraType
@@ -857,3 +858,129 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                 raise ValueError(error)
 
     _refinement = ExpressionRefinement()
+
+
+class BasisWithIndexing(Basis, metaclass=ABCMeta):
+    """Basis abstract domain with indexing (and summarization for sets).
+
+    .. warning::
+        Lattice operations and statements modify the current state.
+    """
+
+    @copy_docstring(BasisWithSummarization._assign_subscription)
+    def _assign_subscription(self, left: Subscription, right: Expression):
+        ...
+
+    @copy_docstring(State._assign_slicing)
+    def _assign_slicing(self, left: Slicing, right: Expression):
+        ...
+
+    @copy_docstring(StateWithSummarization._weak_update)
+    def _weak_update(self, variables: Set[VariableIdentifier], previous: 'BasisWithIndexing'):
+        for var in variables:
+            assert isinstance(var.typ, SetLyraType)
+            self.store[var].join(previous.store[var])
+            self.lengths[var.length].join(previous.lengths[var.length])
+        return self
+
+    @copy_docstring(Basis._assume_binary_comparison)
+    def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
+        # identify involved set identifiers
+        containers = {var for var in condition.ids() if isinstance(var.typ, SetLyraType)}
+        # expand, i.e., copy the current state, if needed
+        current = deepcopy(self) if containers else None
+        # perform the assumption on the current state
+        if condition.operator == BinaryComparisonOperation.Operator.Eq:
+            self._assume_eq_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.NotEq:
+            self._assume_noteq_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.Lt:
+            self._assume_lt_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.LtE:
+            self._assume_lte_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.Gt:
+            self._assume_gt_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.GtE:
+            self._assume_gte_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.Is:
+            self._assume_is_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.IsNot:
+            self._assume_isnot_comparison(condition, bwd=bwd)
+        elif condition.operator == BinaryComparisonOperation.Operator.In:
+            self._assume_in_comparison(condition, bwd=bwd)
+        else:
+            assert condition.operator == BinaryComparisonOperation.Operator.NotIn
+            self._assume_notin_comparison(condition, bwd=bwd)
+        # fold, i.e., perform a weak update on the current state, if needed
+        if containers:
+            return self._weak_update(containers, current)
+        return self
+
+    @copy_docstring(State._substitute_subscription)
+    def _substitute_subscription(self, left: Subscription, right: Expression):
+        ...
+
+    @copy_docstring(State._substitute_slicing)
+    def _substitute_slicing(self, left: Slicing, right: Expression):
+        ...
+
+    # expression evaluation
+
+    class ExpressionEvaluation(Basis.ExpressionEvaluation):
+
+        @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+        def visit_ListDisplay(self, expr: 'ListDisplay', state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation
+            evaluated = evaluation
+            value = state.lattices[expr.typ](**state.arguments[expr.typ], index=dict())
+            for idx, item in enumerate(expr.items):
+                evaluated = self.visit(item, state, evaluated)
+                if state.is_bottom():
+                    return evaluation
+                current = evaluated[item]
+                if isinstance(current, IndexedLattice):
+                    itv = current.summarize()
+                else:
+                    itv = deepcopy(current)
+                value[str(idx)] = itv
+            evaluation[expr] = value
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+        def visit_TupleDisplay(self, expr: 'TupleDisplay', state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation
+            evaluated = evaluation
+            value = state.lattices[expr.typ](**state.arguments[expr.typ], index=dict())
+            for idx, item in enumerate(expr.items):
+                evaluated = self.visit(item, state, evaluated)
+                if state.is_bottom():
+                    return evaluation
+                current = evaluated[item]
+                if isinstance(current, IndexedLattice):
+                    itv = current.summarize()
+                else:
+                    itv = deepcopy(current)
+                value[str(idx)] = itv
+            evaluation[expr] = value
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+        def visit_SetDisplay(self, expr: 'SetDisplay', state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = evaluation
+            value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            for item in expr.items:
+                evaluated = self.visit(item, state, evaluated)
+                if state.is_bottom():
+                    return evaluation
+                current = evaluated[item]
+                if isinstance(current, IndexedLattice):
+                    itv = current.summarize()
+                else:
+                    itv = deepcopy(current)
+                value = value.join(itv)
+            evaluation[expr] = value
+            return evaluation
