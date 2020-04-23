@@ -49,6 +49,8 @@ class IntervalStateMixin(BasisWithSummarization):
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False):
         if isinstance(condition.typ, BooleanLyraType):
             evaluation = self._evaluation.visit(condition, self, dict())
+            if self.is_bottom():
+                return self
             if neg:
                 value = self.lattices[condition.typ](**self.arguments[condition.typ]).false()
             else:
@@ -97,6 +99,8 @@ class IntervalStateMixin(BasisWithSummarization):
         operator = BinaryComparisonOperation.Operator.LtE
         normal = BinaryComparisonOperation(condition.typ, left, operator, zero)
         evaluation = self._evaluation.visit(normal.left, self, dict())
+        if self.is_bottom():
+            return self
         nonpositive = self.lattices[normal.typ](upper=0)
         return self._refinement.visit(normal.left, evaluation, nonpositive, self)
 
@@ -111,6 +115,8 @@ class IntervalStateMixin(BasisWithSummarization):
             left = BinaryArithmeticOperation(condition.left.typ, condition.left, minus, condition.right)
             normal = BinaryComparisonOperation(condition.typ, left, condition.operator, zero)
         evaluation = self._evaluation.visit(normal.left, self, dict())
+        if self.is_bottom():
+            return self
         nonpositive = self.lattices[normal.typ](upper=0)
         return self._refinement.visit(normal.left, evaluation, nonpositive, self)
 
@@ -125,6 +131,8 @@ class IntervalStateMixin(BasisWithSummarization):
         operator = BinaryComparisonOperation.Operator.LtE
         normal = BinaryComparisonOperation(condition.typ, right, operator, zero)
         evaluation = self._evaluation.visit(normal.left, self, dict())
+        if self.is_bottom():
+            return self
         nonpositive = self.lattices[normal.typ](upper=0)
         return self._refinement.visit(normal.left, evaluation, nonpositive, self)
 
@@ -137,6 +145,8 @@ class IntervalStateMixin(BasisWithSummarization):
         operator = BinaryComparisonOperation.Operator.LtE
         normal = BinaryComparisonOperation(condition.typ, right, operator, zero)
         evaluation = self._evaluation.visit(normal.left, self, dict())
+        if self.is_bottom():
+            return self
         nonpositive = self.lattices[normal.typ](upper=0)
         return self._refinement.visit(normal.left, evaluation, nonpositive, self)
 
@@ -346,9 +356,12 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
         target = left.target
         if isinstance(target, VariableIdentifier) and isinstance(target.typ, SequenceLyraType):
             current: IntervalLattice = self.lengths[target.length]   # current length
-            key = deepcopy(self._evaluation.visit(left.key, self, dict())[left.key])
+            evaluation = self._evaluation.visit(left.key, self, dict())
+            if self.is_bottom():
+                return self
+            key = deepcopy(evaluation[left.key])
             if key.less_equal(self.lattices[left.key.typ](lower=0)):  # key is positive
-                if current.upper < key.lower:  # key is definitely larger than length
+                if current.upper <= key.lower:  # key is definitely larger than length
                     return self.bottom()
                 lower = self.lattices[left.key.typ](lower=key.lower + 1)
                 self.lengths[target.length] = current.meet(lower)
@@ -359,7 +372,10 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
                 self.lengths[target.length] = current.meet(upper)
         elif isinstance(target, VariableIdentifier) and target.is_dictionary:  # D[key] = value
             current: IntervalLattice = self.lengths[target.length]   # current length
-            key = self._evaluation.visit(left.key, self, dict())[left.key]      # evaluate key
+            evaluation = self._evaluation.visit(left.key, self, dict())     # evaluate key
+            if self.is_bottom():
+                return self
+            key = evaluation[left.key]
             one = self.lattices[IntegerLyraType()](lower=1, upper=1)
             if key.upper == key.lower and not key.less_equal(self.keys[left.target.keys]):
                 self.lengths[target.length] = current.add(one)
@@ -390,6 +406,8 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
     def _assume_subscription(self, condition: Subscription, neg: bool = False):
         if isinstance(condition.typ, BooleanLyraType):
             evaluation = self._evaluation.visit(condition, self, dict())
+            if self.is_bottom():
+                return self
             if neg:
                 value = self.lattices[condition.typ](**self.arguments[condition.typ]).false()
             else:
@@ -406,8 +424,34 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
             left = defaultdict(lambda: top)
         else:  # condition assumption
             left = self._evaluation.visit(condition.left, self, dict())
+            if self.is_bottom():
+                return self
         right = self._evaluation.visit(condition.right, self, dict())
+        if self.is_bottom():
+            return self
         return self._refinement.visit(condition.left, left, right[condition.right], self)
+
+    @copy_docstring(BasisWithSummarization._substitute_subscription)
+    def _substitute_subscription(self, left: Subscription, right: Expression):
+        # copy the current state
+        current: BasisWithSummarization = deepcopy(self)
+        # perform the substitution on the copy of the current state
+        target = left
+        while isinstance(target, (Subscription, Slicing)):  # recurse to VariableIdentifier target
+            target = target.target
+        if isinstance(left.target, VariableIdentifier) and left.target.is_dictionary:
+            # update length
+            length = self.lengths[left.target.length]
+            default = self.lattices[IntegerLyraType()](lower=0)
+            one = self.lattices[IntegerLyraType()](lower=1, upper=1)
+            updated = default.meet(deepcopy(length).join(length.sub(one)))
+            self.lengths[left.target.length] = updated
+        self._substitute_variable(target, right)
+        # check for errors turning the state into bottom
+        if self.is_bottom():
+            return self
+        # if there are not errors, perform a weak update on the current state
+        return self.join(current)
 
     # expression evaluation
 
@@ -426,12 +470,15 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
             if expr in evaluation:
                 return evaluation  # nothing to be done
 
-            evaluated = evaluation
-            evaluated = self.visit(expr.start, state, evaluated)
+            evaluated = self.visit(expr.start, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             sub = BinaryArithmeticOperation.Operator.Sub
             one = Literal(expr.stop.typ, '1')
             stop = BinaryArithmeticOperation(expr.stop.typ, expr.stop, sub, one)
             evaluated = self.visit(stop, state, evaluated)
+            if state.is_bottom():
+                return evaluation
 
             if not evaluated[expr.start].is_bottom() and not evaluated[stop].is_bottom():
                 lower = evaluated[expr.start].lower
@@ -440,6 +487,45 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
                 evaluation[expr] = value
             else:
                 evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+            return evaluation
+
+        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Subscription)
+        def visit_Subscription(self, expr: Subscription, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            target = expr
+            while isinstance(target, (Subscription, Slicing)):
+                target = target.target
+            evaluated = self.visit(target, state, evaluation)
+            if state.is_bottom():
+                return evaluation
+            if isinstance(target.typ, DictLyraType):
+                evaluation[expr] = deepcopy(evaluated[target.values])
+                if isinstance(expr.target, VariableIdentifier):
+                    length: IntervalLattice = state.lengths[expr.target.length]
+                    one_ = state.lattices[IntegerLyraType()](lower=1)
+                    state.lengths[expr.target.length] = length.meet(one_)
+            else:
+                if isinstance(expr.target, VariableIdentifier):
+                    if isinstance(expr.target.typ, SequenceLyraType):
+                        # update length
+                        key = self.visit(expr.key, state, evaluated)[expr.key]
+                        if state.is_bottom():
+                            return evaluation
+                        current: IntervalLattice = state.lengths[expr.target.length]
+                        if key.less_equal(state.lattices[expr.key.typ](lower=0)):
+                            if current.upper <= key.lower:  # key is larger than length
+                                state.bottom()
+                                return evaluation
+                            lower = state.lattices[expr.key.typ](lower=key.lower + 1)
+                            state.lengths[expr.target.length] = current.meet(lower)
+                        elif key.less_equal(state.lattices[expr.key.typ](upper=-1)):
+                            if current.upper + key.upper < 0:  # key is smaller than length
+                                state.bottom()
+                                return evaluation
+                            upper = state.lattices[expr.key.typ](lower=-key.upper)
+                            state.lengths[expr.target.length] = current.meet(upper)
+                evaluation[expr] = deepcopy(evaluated[target])
             return evaluation
 
     _evaluation = ExpressionEvaluation()  # static class member shared between all instances
@@ -487,7 +573,10 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                 self.lengths[v.length] = lattices[IntegerLyraType()](lower=0)
 
     def _assign_subscription(self, left: Subscription, right: Expression):
-        value = self._evaluation.visit(right, self, dict())[right]          # evaluate value
+        evaluation = self._evaluation.visit(right, self, dict())
+        if self.is_bottom():
+            return self
+        value = evaluation[right]    # evaluate value
         if isinstance(value, IntervalLattice):
             itv: IntervalLattice = deepcopy(value)
         elif isinstance(left.target.typ.val_typ, DictLyraType):
@@ -495,8 +584,14 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
         else:
             itv: IntervalLattice = value.summarize()
         if isinstance(left.target, VariableIdentifier):
-            target: IndexedLattice = self._evaluation.visit(left.target, self, dict())[left.target]
-            key = self._evaluation.visit(left.key, self, dict())[left.key]
+            evaluation = self._evaluation.visit(left.target, self, dict())
+            if self.is_bottom():
+                return self
+            target: IndexedLattice = evaluation[left.target]
+            evaluation = self._evaluation.visit(left.key, self, dict())
+            if self.is_bottom():
+                return self
+            key = evaluation[left.key]
             _key: List[str] = self._key.visit(left.key, target.bound, self)
             precise = len(_key) == 1 and _key[0] != target.default
             added = False
@@ -533,7 +628,7 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             else:
                 current: IntervalLattice = self.lengths[left.target.length]  # current length
                 if key.less_equal(self.lattices[left.key.typ](lower=0)):  # key is positive
-                    if current.upper < key.lower:  # key is definitely larger than length
+                    if current.upper <= key.lower:  # key is definitely larger than length
                         return self.bottom()
                     lower = self.lattices[left.key.typ](lower=key.lower + 1)
                     self.lengths[left.target.length] = current.meet(lower)
@@ -543,7 +638,10 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                     upper = self.lattices[left.key.typ](lower=-key.upper)
                     self.lengths[left.target.length] = current.meet(upper)
         elif isinstance(left.target.typ, DictLyraType):
-            key = self._evaluation.visit(left.key, self, dict())[left.key]
+            evaluation = self._evaluation.visit(left.key, self, dict())
+            if self.is_bottom():
+                return self
+            key = evaluation[left.key]
             _itv = deepcopy(key) if isinstance(key, IntervalLattice) else key.summarize()
             _target = left.target.target
             _key = left.target.key
@@ -553,7 +651,10 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                 _key = _target.key
                 _target = _target.target
             assert isinstance(_target, VariableIdentifier)
-            target = self._evaluation.visit(_target, self, dict())[_target]
+            evaluation = self._evaluation.visit(_target, self, dict())
+            if self.is_bottom():
+                return self
+            target = evaluation[_target]
             _key: List[str] = self._key.visit(_key, target.bound, self)
             self.store[_target].weak_set(_key, deepcopy(itv).join(deepcopy(_itv)))
             if _target.is_dictionary:
@@ -578,7 +679,10 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             if isinstance(_target, Slicing):
                 return self
             assert isinstance(_target, VariableIdentifier)
-            target = self._evaluation.visit(_target, self, dict())[_target]
+            evaluation = self._evaluation.visit(_target, self, dict())
+            if self.is_bottom():
+                return self
+            target = evaluation[_target]
             _key: List[str] = self._key.visit(_key, target.bound, self)
             self.store[_target].weak_set(_key, itv)
             if _target.is_dictionary:
@@ -594,13 +698,15 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                     self.values[values] = self.values[values].refine(summary)
         return self
 
-    def _assign_slicing(self, left: Slicing, right: Expression) -> 'State':
-        pass
+    def _assign_slicing(self, left: Slicing, right: Expression):
+        raise NotImplementedError  # TODO
 
     @copy_docstring(BasisWithSummarization._assume_subscription)
     def _assume_subscription(self, condition: Subscription, neg: bool = False):
         if isinstance(condition.typ, BooleanLyraType):
             evaluation = self._evaluation.visit(condition, self, dict())
+            if self.is_bottom():
+                return self
             if neg:
                 value = self.lattices[condition.typ](**self.arguments[condition.typ]).false()
             else:
@@ -617,7 +723,12 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             left = defaultdict(lambda: top)
         else:  # condition assumption
             left = self._evaluation.visit(condition.left, self, dict())
-        right = self._evaluation.visit(condition.right, self, dict())[condition.right]
+            if self.is_bottom():
+                return self
+        evaluated = self._evaluation.visit(condition.right, self, dict())
+        if self.is_bottom():
+            return self
+        right = evaluated[condition.right]
         if isinstance(right, IntervalLattice):
             return self._refinement.visit(condition.left, left, deepcopy(right), self)
         else:
@@ -632,11 +743,47 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             else:
                 return self._refinement.visit(condition.left, left, right.summarize(), self)
 
-    def _substitute_subscription(self, left: Subscription, right: Expression) -> 'State':
-        pass
+    def _substitute_subscription(self, left: Subscription, right: Expression):
+        if isinstance(left.target, VariableIdentifier):
+            evaluation = self._evaluation.visit(left.target, self, dict())
+            if self.is_bottom():
+                return self
+            target: IndexedLattice = evaluation[left.target]
+            _key: List[str] = self._key.visit(left.key, target.bound, self)
+            # record the current value of the subscription
+            evaluation = self._evaluation.visit(left, self, dict())
+            if self.is_bottom():
+                return self
+            current = evaluation[left]
+            # forget the current value of the subscription
+            self.store[left.target].forget(_key)
+            if left.target.is_dictionary:
+                # update length
+                length = self.lengths[left.target.length]
+                default = self.lattices[IntegerLyraType()](lower=0)
+                one = self.lattices[IntegerLyraType()](lower=1, upper=1)
+                updated = default.meet(deepcopy(length).join(length.sub(one)))
+                self.lengths[left.target.length] = updated
+                # forget keys and values
+                self.keys[left.target.keys] = self.keys[left.target.keys].top()
+                self.values[left.target.values] = self.values[left.target.values].top()
+            # evaluate the right-hand side proceeding bottom-up using the updated store
+            evaluation = self._evaluation.visit(right, self, dict())
+            if self.is_bottom():
+                return self
+            # check for errors turning the state into bottom
+            if not evaluation[right].is_bottom():
+                feasible = deepcopy(evaluation[right]).meet(current)
+                if feasible.is_bottom():
+                    return self.bottom()
+            # refine the updated store proceeding top-down on the right-hand side
+            self._refinement.visit(right, evaluation, current, self)
+        else:
+            raise NotImplementedError  # TODO
+        return self
 
-    def _substitute_slicing(self, left: Slicing, right: Expression) -> 'State':
-        pass
+    def _substitute_slicing(self, left: Slicing, right: Expression):
+        raise NotImplementedError  # TODO
 
     # key evaluation
 
@@ -744,6 +891,8 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             value = state.lattices[expr.typ](**state.arguments[expr.typ], index=dict())
             for idx, item in enumerate(expr.items):
                 evaluated = self.visit(item, state, evaluated)
+                if state.is_bottom():
+                    return evaluation
                 current = evaluated[item]
                 if isinstance(current, IntervalLattice):
                     itv = deepcopy(current)
@@ -761,6 +910,8 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             value = state.lattices[expr.typ](**state.arguments[expr.typ], index=dict())
             for idx, item in enumerate(expr.items):
                 evaluated = self.visit(item, state, evaluated)
+                if state.is_bottom():
+                    return evaluation
                 current = evaluated[item]
                 if isinstance(current, IntervalLattice):
                     itv = deepcopy(current)
@@ -778,6 +929,8 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
             for item in expr.items:
                 evaluated = self.visit(item, state, evaluated)
+                if state.is_bottom():
+                    return evaluation
                 current = evaluated[item]
                 if isinstance(current, IntervalLattice):
                     itv = deepcopy(current)
@@ -797,9 +950,13 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             value_ = state.lattices[expr.typ.val_typ](**state.arguments[expr.typ.val_typ]).bottom()
             for idx, (key, val) in enumerate(zip(expr.keys, expr.values)):
                 evaluated = self.visit(key, state, evaluated)   # recurse on key
+                if state.is_bottom():
+                    return evaluation
                 _current: Union[IntervalLattice, IndexedLattice] = evaluated[key]
                 _value = _value.join(deepcopy(_current))
                 evaluated = self.visit(val, state, evaluated)   # recurse on val
+                if state.is_bottom():
+                    return evaluation
                 current_: Union[IntervalLattice, IndexedLattice] = evaluated[val]
                 value_ = value_.join(deepcopy(current_))
                 #
@@ -824,6 +981,8 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             if expr in evaluation:
                 return evaluation
             evaluated = self.visit(expr.target, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             target = deepcopy(evaluated[expr.target])
             if isinstance(target, IntervalLattice):
                 evaluation[expr] = target
@@ -839,6 +998,25 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                         assert isinstance(values, IndexedLattice)
                         evaluation[expr] = values.refine(fetched)
                 else:
+                    if isinstance(expr.target, VariableIdentifier):
+                        if isinstance(expr.target.typ, SequenceLyraType):
+                            # update length
+                            key = self.visit(expr.key, state, evaluated)[expr.key]
+                            if state.is_bottom():
+                                return evaluation
+                            current: IntervalLattice = state.lengths[expr.target.length]
+                            if key.less_equal(state.lattices[expr.key.typ](lower=0)):
+                                if current.upper <= key.lower:  # key is larger than length
+                                    state.bottom()
+                                    return evaluation
+                                lower = state.lattices[expr.key.typ](lower=key.lower + 1)
+                                state.lengths[expr.target.length] = current.meet(lower)
+                            elif key.less_equal(state.lattices[expr.key.typ](upper=-1)):
+                                if current.upper + key.upper < 0:  # key is smaller than length
+                                    state.bottom()
+                                    return evaluation
+                                upper = state.lattices[expr.key.typ](lower=-key.upper)
+                                state.lengths[expr.target.length] = current.meet(upper)
                     if isinstance(expr.typ, (SequenceLyraType, DictLyraType)):
                         index = {'_': fetched}
                         idxd = state.lattices[expr.typ](**state.arguments[expr.typ], index=index)
@@ -856,10 +1034,14 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.start, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             sub = BinaryArithmeticOperation.Operator.Sub
             one = Literal(expr.stop.typ, '1')
             stop = BinaryArithmeticOperation(expr.stop.typ, expr.stop, sub, one)
             evaluated = self.visit(stop, state, evaluated)
+            if state.is_bottom():
+                return evaluation
             if not evaluated[expr.start].is_bottom() and not evaluated[stop].is_bottom():
                 lower = evaluated[expr.start].lower
                 upper = evaluated[stop].upper
@@ -867,7 +1049,6 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                     index = dict()
                     for i in range(lower, upper + 1):
                         index[str(i)] = state.lattices[expr.typ.typ](lower=i, upper=i)
-
                 else:
                     index = {'_': state.lattices[expr.typ.typ](lower=lower, upper=upper)}
                 value = state.lattices[expr.typ](**state.arguments[expr.typ], index=index)
@@ -881,9 +1062,10 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.expression, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             iscontainer = isinstance(expr.expression.typ, (SequenceLyraType, ContainerLyraType))
             isstring = isinstance(expr.expression.typ, StringLyraType)
-            islist = isinstance(expr.expression.typ, ListLyraType)
             isset = isinstance(expr.expression.typ, SetLyraType)
             isdictionary = isinstance(expr.expression.typ, DictLyraType)
             if isinstance(expr.typ, BooleanLyraType) and iscontainer:
@@ -931,11 +1113,17 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
         def visit_Subscription(self, expr, evaluation=None, value=None, state=None):
             refined = deepcopy(evaluation[expr]).meet(value)
             if isinstance(expr.target, VariableIdentifier):
-                target = state.store[expr.target]
+                target = deepcopy(state.store[expr.target])
                 _key: List[str] = state._key.visit(expr.key, target.bound, state)
                 if len(_key) == 1 and _key[0] != target.default:
                     state.store[expr.target][_key[0]] = refined
                     if expr.target.is_dictionary:
+                        # update length
+                        if not set(state.store[expr.target].used).issubset(target.used):
+                            length: IntervalLattice = state.lengths[expr.target.length]
+                            one = state.lattices[IntegerLyraType()](lower=1, upper=1)
+                            state.lengths[expr.target.length] = length.add(one)
+                        # update values
                         summary = state.store[expr.target].summarize()
                         values = expr.target.values
                         if isinstance(state.values[values], IntervalLattice):
@@ -943,6 +1131,11 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithSummarization):
                         else:
                             assert isinstance(state.values[values], IndexedLattice)
                             state.values[values] = state.values[values].refine(summary)
+                else:
+                    if expr.target.is_dictionary:
+                        length: IntervalLattice = state.lengths[expr.target.length]
+                        one_ = state.lattices[IntegerLyraType()](lower=1)
+                        state.lengths[expr.target.length] = length.meet(one_)
             return state
 
         def visit_Slicing(self, expr: 'Slicing', evaluation=None, value=None, state=None):

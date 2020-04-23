@@ -211,6 +211,18 @@ class IndexedLattice(BottomMixin, SequenceMixin):
                 result = result.join(deepcopy(self.index.get(idx, self.index[self.default])))
             return result
 
+    def forget(self, idxs: List[str]):
+        """Forget a given list of indexes.
+
+        :param idxs: the indexes of interest
+        :return: current lattice element modified to take into account the forget
+        """
+        self.index[self.default] = self.index[self.default].top()
+        for idx in idxs:
+            if idx != self.default and idx in self.index:
+                del self.index[idx]
+        return self
+
     def weak_set(self, idxs: List[str], itv: Lattice):
         """Weak set of a (sub)lattice element at a given list of indexes.
 

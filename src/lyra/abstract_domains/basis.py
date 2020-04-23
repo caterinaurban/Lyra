@@ -42,6 +42,8 @@ class Basis(Store, State, metaclass=ABCMeta):
     @copy_docstring(State._assign_variable)
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'Basis':
         evaluation = self._evaluation.visit(right, self, dict())
+        if self.is_bottom():
+            return self
         self.store[left] = evaluation[right]
         if left.is_dictionary:
             if isinstance(right.typ, DictLyraType):
@@ -95,6 +97,8 @@ class Basis(Store, State, metaclass=ABCMeta):
             self.values[left.values].top()
         # evaluate the right-hand side proceeding bottom-up using the updated store
         evaluation = self._evaluation.visit(right, self, dict())
+        if self.is_bottom():
+            return self
         # check for errors turning the state into bottom
         if not evaluation[right].is_bottom():
             feasible = deepcopy(evaluation[right]).meet(value)
@@ -165,6 +169,8 @@ class Basis(Store, State, metaclass=ABCMeta):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.target_dict, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             evaluation[expr] = evaluated[expr.target_dict.keys]
             return evaluation
 
@@ -173,6 +179,8 @@ class Basis(Store, State, metaclass=ABCMeta):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.target_dict, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             evaluation[expr] = evaluated[expr.target_dict.values]
             return evaluation
 
@@ -181,6 +189,8 @@ class Basis(Store, State, metaclass=ABCMeta):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.expression, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             value = evaluated[expr.expression]
             if expr.operator == UnaryArithmeticOperation.Operator.Add:
                 evaluated[expr] = value
@@ -198,6 +208,8 @@ class Basis(Store, State, metaclass=ABCMeta):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.expression, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             value = evaluated[expr.expression]
             if expr.operator == UnaryBooleanOperation.Operator.Neg:
                 if isinstance(value, BooleanMixin):
@@ -212,7 +224,11 @@ class Basis(Store, State, metaclass=ABCMeta):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated1 = self.visit(expr.left, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             evaluated2 = self.visit(expr.right, state, evaluated1)
+            if state.is_bottom():
+                return evaluation
             value1 = evaluated2[expr.left]
             value2 = evaluated2[expr.right]
             if expr.operator == BinaryArithmeticOperation.Operator.Add:
@@ -252,7 +268,11 @@ class Basis(Store, State, metaclass=ABCMeta):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated1 = self.visit(expr.left, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             evaluated2 = self.visit(expr.right, state, evaluated1)
+            if state.is_bottom():
+                return evaluation
             value1 = evaluated2[expr.left]
             value2 = evaluated2[expr.right]
             if expr.operator == BinarySequenceOperation.Operator.Concat:
@@ -268,7 +288,11 @@ class Basis(Store, State, metaclass=ABCMeta):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated1 = self.visit(expr.left, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             evaluated2 = self.visit(expr.right, state, evaluated1)
+            if state.is_bottom():
+                return evaluation
             value1 = evaluated2[expr.left]
             value2 = evaluated2[expr.right]
             if expr.operator == BinaryBooleanOperation.Operator.And:
@@ -504,8 +528,14 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
         An exception is an assignment of the form x[i:j]...[k] which has *no effect* on x.
         """
         current: BasisWithSummarization = deepcopy(self)    # copy the current state
-        key = self._evaluation.visit(left.key, self, dict())[left.key]      # evaluate key
-        value = self._evaluation.visit(right, self, dict())[right]          # evaluate value
+        evaluation = self._evaluation.visit(left.key, self, dict())      # evaluate key
+        if self.is_bottom():
+            return self
+        key = evaluation[left.key]
+        evaluation = self._evaluation.visit(right, self, dict())          # evaluate value
+        if self.is_bottom():
+            return self
+        value = evaluation[right]
         # perform the assignment on the current state
         target = left.target
         if isinstance(target, VariableIdentifier) and target.is_dictionary:     # D[key] = value
@@ -538,7 +568,10 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
         with the exception of an assignment of the form x[i:j]...[k:l]
         which again has *no effect* on x."""
         current: BasisWithSummarization = deepcopy(self)    # copy the current state
-        value = self._evaluation.visit(right, self, dict())[right]      # evaluate value
+        evaluation = self._evaluation.visit(right, self, dict())      # evaluate value
+        if self.is_bottom():
+            return self
+        value = evaluation[right]
         # perform the assignment on the current state
         target = left.target
         while isinstance(target, Subscription):
@@ -603,6 +636,8 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
             for item in expr.items:
                 evaluated = self.visit(item, state, evaluated)
+                if state.is_bottom():
+                    return evaluation
                 value = value.join(evaluated[item])
             evaluation[expr] = value
             return evaluation
@@ -615,6 +650,8 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
             for item in expr.items:
                 evaluated = self.visit(item, state, evaluated)
+                if state.is_bottom():
+                    return evaluation
                 value = value.join(evaluated[item])
             evaluation[expr] = value
             return evaluation
@@ -627,6 +664,8 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
             for item in expr.items:
                 evaluated = self.visit(item, state, evaluated)
+                if state.is_bottom():
+                    return evaluation
                 value = value.join(evaluated[item])
             evaluation[expr] = value
             return evaluation
@@ -641,10 +680,14 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             value_ = state.lattices[expr.typ.val_typ](**state.arguments[expr.typ.val_typ]).bottom()
             for key in expr.keys:
                 evaluated = self.visit(key, state, evaluated)
+                if state.is_bottom():
+                    return evaluation
                 value = value.join(evaluated[key])
                 _value = _value.join(evaluated[key])
             for val in expr.values:
                 evaluated = self.visit(val, state, evaluated)
+                if state.is_bottom():
+                    return evaluation
                 value = value.join(evaluated[val])
                 value_ = value_.join(evaluated[val])
             evaluation[KeysIdentifier(expr)] = _value
@@ -660,6 +703,8 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             while isinstance(target, (Subscription, Slicing)):
                 target = target.target
             evaluated = self.visit(target, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             if isinstance(target.typ, DictLyraType):
                 evaluation[expr] = deepcopy(evaluated[target.values])
             else:
@@ -674,6 +719,8 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             while isinstance(target, (Subscription, Slicing)):
                 target = target.target
             evaluated = self.visit(target, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             evaluation[expr] = deepcopy(evaluated[target])
             return evaluation
 
@@ -682,6 +729,8 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.expression, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             container = isinstance(expr.expression.typ, (SequenceLyraType, ContainerLyraType))
             if isinstance(expr.typ, BooleanLyraType) and container:
                 if evaluated[expr.expression].is_bottom():
@@ -698,7 +747,11 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated1 = self.visit(expr.left, state, evaluation)
+            if state.is_bottom():
+                return evaluation
             evaluated2 = self.visit(expr.right, state, evaluated1)
+            if state.is_bottom():
+                return evaluation
             value1 = evaluated2[expr.left]
             value2 = evaluated2[expr.right]
             if expr.operator == BinarySequenceOperation.Operator.Concat:
