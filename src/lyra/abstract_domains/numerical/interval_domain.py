@@ -28,23 +28,7 @@ from lyra.core.utils import copy_docstring
 from lyra.core.types import BooleanLyraType, IntegerLyraType, SequenceLyraType, FloatLyraType
 
 
-class IntervalStateMixin(BasisWithSummarization):
-
-    @copy_docstring(BasisWithSummarization.is_top)
-    def is_top(self) -> bool:
-        """The current store is top if `all` of its variables map to a top element."""
-        _store = all(element.is_top() for element in self.store.values())
-        _top = self.lattices[IntegerLyraType()](lower=0)
-        _lengths = all(_top.less_equal(element) for element in self.lengths.values())
-        return _store and _lengths
-
-    @copy_docstring(BasisWithSummarization._assign_variable)
-    def _assign_variable(self, left: VariableIdentifier, right: Expression):
-        if left.has_length:  # update corresponding length identifier, if any
-            self.lengths[left.length] = self._length.visit(right, self)
-        # perform the assignment
-        super()._assign_variable(left, right)
-        return self
+class IntervalStateMixin(Basis):
 
     @copy_docstring(BasisWithSummarization._assume_variable)
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False):
@@ -165,164 +149,6 @@ class IntervalStateMixin(BasisWithSummarization):
     def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         return self
 
-    @copy_docstring(State.forget_variable)
-    def forget_variable(self, variable: VariableIdentifier):
-        super().forget_variable(variable)
-        if variable.has_length:
-            self.lengths[variable.length] = self.lattices[IntegerLyraType()](lower=0)
-        return self
-
-    # length evaluation
-
-    class LengthEvaluation(ExpressionVisitor):
-        """Visitor that computes the length of a sequence type expression."""
-
-        @copy_docstring(ExpressionVisitor.visit_Literal)
-        def visit_Literal(self, expr: Literal, state=None):
-            if isinstance(expr.typ, StringLyraType):
-                return state.lattices[IntegerLyraType()](len(expr.val), len(expr.val))
-            raise ValueError(f"Unexpected expression during sequence length computation.")
-
-        @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
-        def visit_VariableIdentifier(self, expr: VariableIdentifier, state=None):
-            if expr.has_length:
-                return state.lengths.get(expr.length, state.lattices[IntegerLyraType()](lower=0))
-            raise ValueError(f"Unexpected expression during sequence length computation.")
-
-        @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
-        def visit_LengthIdentifier(self, expr: LengthIdentifier, state=None):
-            raise ValueError(f"Unexpected expression during sequence length computation.")
-
-        @copy_docstring(ExpressionVisitor.visit_ListDisplay)
-        def visit_ListDisplay(self, expr: ListDisplay, state=None):
-            return state.lattices[IntegerLyraType()](len(expr.items), len(expr.items))
-
-        @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
-        def visit_TupleDisplay(self, expr: TupleDisplay, state=None):
-            return state.lattices[IntegerLyraType()](len(expr.items), len(expr.items))
-
-        @copy_docstring(ExpressionVisitor.visit_SetDisplay)
-        def visit_SetDisplay(self, expr: SetDisplay, state=None):
-            return state.lattices[IntegerLyraType()](len(expr.items), len(expr.items))
-
-        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
-        def visit_DictDisplay(self, expr: DictDisplay, state=None):
-            return state.lattices[IntegerLyraType()](len(expr.keys), len(expr.keys))
-
-        @copy_docstring(ExpressionVisitor.visit_AttributeReference)
-        def visit_AttributeReference(self, expr: AttributeReference, state=None):
-            raise ValueError(f"Unexpected expression during sequence length computation.")
-
-        @copy_docstring(ExpressionVisitor.visit_Subscription)
-        def visit_Subscription(self, expr: Subscription, state=None):
-            case0 = isinstance(expr.target.typ, StringLyraType)
-            sequence = isinstance(expr.target.typ, (ListLyraType, TupleLyraType))
-            complex = (SequenceLyraType, DictLyraType)
-            case1 = sequence and not isinstance(expr.target.typ.typ, complex)
-            dictionary = isinstance(expr.target.typ, DictLyraType)
-            case2 = dictionary and not isinstance(expr.target.typ.val_typ, complex)
-            if case0 or case1 or case2:
-                return state.lattices[IntegerLyraType()](lower=1, upper=1)
-            return state.lattices[IntegerLyraType()](lower=0)
-
-        @copy_docstring(ExpressionVisitor.visit_Slicing)
-        def visit_Slicing(self, expr: Slicing, state=None):
-            lattice = state.lattices[IntegerLyraType()]
-
-            def is_one(stride):
-                literal = isinstance(stride, Literal)
-                return literal and lattice(stride).less_equal(lattice(lower=1, upper=1))
-
-            if isinstance(expr.target, VariableIdentifier):
-                if isinstance(expr.lower, Literal):
-                    lower = IntervalLattice.from_literal(expr.lower)
-                    if not lower.less_equal(lattice(lower=0)):
-                        lower = lower.add(state.lengths[LengthIdentifier(expr.target)])
-                    if not expr.upper:
-                        upper = deepcopy(state.lengths[LengthIdentifier(expr.target)])
-                        if not expr.stride or is_one(expr.stride):  # [l:_:(1)]
-                            length = lattice(lower=0).meet(upper.sub(lower))
-                            if length.is_bottom():
-                                return lattice(lower=0, upper=0)
-                            return length
-                    elif isinstance(expr.upper, Literal):
-                        upper = IntervalLattice.from_literal(expr.upper)
-                        if not upper.less_equal(lattice(lower=0)):
-                            upper = upper.add(state.lengths[LengthIdentifier(expr.target)])
-                        if not expr.stride or is_one(expr.stride):  # [l:u:(1)]
-                            length = lattice(lower=0).meet(upper.sub(lower))
-                            if length.is_bottom():
-                                return lattice(lower=0, upper=0)
-                            return length
-                return deepcopy(state.lengths[LengthIdentifier(expr.target)])   # over-approximation
-            return lattice(lower=0)     # default
-
-        @copy_docstring(ExpressionVisitor.visit_Input)
-        def visit_Input(self, expr: Input, state=None):
-            return state.lattices[IntegerLyraType()](lower=0)
-
-        @copy_docstring(ExpressionVisitor.visit_Range)
-        def visit_Range(self, expr: Range, state=None):
-            literal1 = isinstance(expr.start, Literal)
-            literal2 = isinstance(expr.stop, Literal)
-            variable2 = isinstance(expr.stop, VariableIdentifier)
-            literal3 = isinstance(expr.step, Literal)
-            if literal1 and literal2 and literal3:
-                start = int(expr.start.val)
-                stop = int(expr.stop.val)
-                step = int(expr.step.val)
-                length = len(range(start, stop, step))
-                return state.lattices[IntegerLyraType()](lower=length, upper=length)
-            elif literal1 and variable2 and literal3:
-                start = int(expr.start.val)
-                stop = state.store[expr.stop]
-                return state.lattices[IntegerLyraType()](lower=start).meet(stop)
-            raise ValueError(f"Unexpected expression during sequence length computation.")
-
-        @copy_docstring(ExpressionVisitor.visit_Keys)
-        def visit_Keys(self, expr: Keys, state=None):
-            return state.lattices[IntegerLyraType()](lower=0)
-
-        @copy_docstring(ExpressionVisitor.visit_Values)
-        def visit_Values(self, expr: Values, state=None):
-            return state.lattices[IntegerLyraType()](lower=0)
-
-        @copy_docstring(ExpressionVisitor.visit_CastOperation)
-        def visit_CastOperation(self, expr: CastOperation, state=None):
-            if isinstance(expr.typ, (SequenceLyraType, ContainerLyraType)):
-                return self.visit(expr.expression, state)
-            raise ValueError(f"Unexpected expression during sequence length computation.")
-
-        @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
-        def visit_UnaryArithmeticOperation(self, expr, state=None):
-            raise ValueError(f"Unexpected expression during sequence length computation.")
-
-        @copy_docstring(ExpressionVisitor.visit_UnaryBooleanOperation)
-        def visit_UnaryBooleanOperation(self, expr, state=None):
-            raise ValueError(f"Unexpected expression during sequence length computation.")
-
-        @copy_docstring(ExpressionVisitor.visit_BinaryArithmeticOperation)
-        def visit_BinaryArithmeticOperation(self, expr, state=None):
-            raise ValueError(f"Unexpected expression during sequence length computation.")
-
-        @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
-        def visit_BinarySequenceOperation(self, expr, state=None):
-            if expr.operator == BinarySequenceOperation.Operator.Concat:
-                left = self.visit(expr.left, state)
-                right = self.visit(expr.right, state)
-                return deepcopy(left).add(deepcopy(right))
-            raise ValueError(f"Binary sequence operator '{str(expr.operator)}' is unsupported!")
-
-        @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
-        def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
-            raise ValueError(f"Unexpected expression during sequence length computation.")
-
-        @copy_docstring(ExpressionVisitor.visit_BinaryComparisonOperation)
-        def visit_BinaryComparisonOperation(self, expr, state=None, evaluation=None):
-            raise ValueError(f"Unexpected expression during sequence length computation.")
-
-    _length = LengthEvaluation()  # static class member shared between all instances
-
 
 class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization):
     """Interval analysis state. An element of the interval abstract domain.
@@ -347,61 +173,6 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
         """
         lattices = defaultdict(lambda: IntervalLattice)
         super().__init__(variables, lattices, precursory=precursory)
-        for v in self.variables:
-            if v.has_length:
-                self.lengths[v.length] = lattices[IntegerLyraType()](lower=0)
-
-    @copy_docstring(BasisWithSummarization._assign_subscription)
-    def _assign_subscription(self, left: Subscription, right: Expression) -> 'IntervalStateWithSummarization':
-        # update length identifiers, if appropriate
-        target = left.target
-        if isinstance(target, VariableIdentifier) and isinstance(target.typ, SequenceLyraType):
-            current: IntervalLattice = self.lengths[target.length]   # current length
-            evaluation = self._evaluation.visit(left.key, self, dict())
-            if self.is_bottom():
-                return self
-            key = deepcopy(evaluation[left.key])
-            if key.less_equal(self.lattices[left.key.typ](lower=0)):  # key is positive
-                if current.upper <= key.lower:  # key is definitely larger than length
-                    return self.bottom()
-                lower = self.lattices[left.key.typ](lower=key.lower + 1)
-                self.lengths[target.length] = current.meet(lower)
-            elif key.less_equal(self.lattices[left.key.typ](upper=-1)):  # key is negative
-                if current.upper + key.upper < 0:  # key is definitely smaller than length
-                    return self.bottom()
-                upper = self.lattices[left.key.typ](lower=-key.upper)
-                self.lengths[target.length] = current.meet(upper)
-        elif isinstance(target, VariableIdentifier) and target.is_dictionary:  # D[key] = value
-            current: IntervalLattice = self.lengths[target.length]   # current length
-            evaluation = self._evaluation.visit(left.key, self, dict())     # evaluate key
-            if self.is_bottom():
-                return self
-            key = evaluation[left.key]
-            one = self.lattices[IntegerLyraType()](lower=1, upper=1)
-            if key.upper == key.lower and not key.less_equal(self.keys[left.target.keys]):
-                self.lengths[target.length] = current.add(one)
-            else:
-                self.lengths[target.length] = deepcopy(current).join(current.add(one))
-        # perform the assignment
-        super()._assign_subscription(left, right)
-        return self
-
-    @copy_docstring(State._assign_slicing)
-    def _assign_slicing(self, left: Slicing, right: Expression) -> 'IntervalStateWithSummarization':
-        # update length identifiers, if appropriate
-        target = left.target
-        if isinstance(target, VariableIdentifier) and isinstance(target.typ, SequenceLyraType):
-            current: IntervalLattice = self.lengths[target.length]   # current length
-            # under-approximate length of left
-            lattice = self.lattices[IntegerLyraType()]
-            slicing = lattice(lower=1, upper=1)  # default under-approximation
-            # over-approximate length of right
-            extra = self._length.visit(right, self)
-            # len(x) = len(x) - len(x[j:i]) + len(e)
-            self.lengths[target.length] = current.sub(slicing).add(extra)
-        # perform the assignment
-        super()._assign_slicing(left, right)
-        return self
 
     @copy_docstring(BasisWithSummarization._assume_subscription)
     def _assume_subscription(self, condition: Subscription, neg: bool = False):
@@ -569,138 +340,6 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithIndexing):
         lattices = IntervalStateWithIndexing.Lattices()
         arguments = IntervalStateWithIndexing.Arguments()
         super().__init__(variables, lattices, arguments, precursory=precursory)
-        for v in self.variables:
-            if v.has_length:
-                self.lengths[v.length] = lattices[IntegerLyraType()](lower=0)
-
-    def _assign_subscription(self, left: Subscription, right: Expression):
-        evaluation = self._evaluation.visit(right, self, dict())
-        if self.is_bottom():
-            return self
-        value = evaluation[right]    # evaluate value
-        if isinstance(value, IntervalLattice):
-            itv: IntervalLattice = deepcopy(value)
-        elif isinstance(left.target.typ.val_typ, DictLyraType):
-            itv: IntervalLattice = value.summarize(keys=left.target.typ.val_typ.key_typ)
-        else:
-            itv: IntervalLattice = value.summarize()
-        if isinstance(left.target, VariableIdentifier):
-            evaluation = self._evaluation.visit(left.target, self, dict())
-            if self.is_bottom():
-                return self
-            target: IndexedLattice = evaluation[left.target]
-            evaluation = self._evaluation.visit(left.key, self, dict())
-            if self.is_bottom():
-                return self
-            key = evaluation[left.key]
-            _key: List[str] = self._key.visit(left.key, target.bound, self)
-            precise = len(_key) == 1 and _key[0] != target.default
-            added = False
-            replaced = False
-            if precise:
-                added = _key[0] not in target.used and target.default not in target.used
-                replaced = _key[0] in target.used
-                self.store[left.target][_key[0]] = itv
-            else:
-                self.store[left.target].weak_set(_key, itv)
-            if left.target.is_dictionary:
-                # update length
-                current: IntervalLattice = self.lengths[left.target.length]  # current length
-                one = self.lattices[IntegerLyraType()](lower=1, upper=1)
-                if precise:
-                    if added:
-                        self.lengths[left.target.length] = current.add(one)
-                    elif not replaced:
-                        self.lengths[left.target.length] = deepcopy(current).join(current.add(one))
-                else:
-                    self.lengths[left.target.length] = deepcopy(current).join(current.add(one))
-                # update keys
-                self.keys[left.target.keys] = self.keys[left.target.keys].join(deepcopy(key))
-                # update values
-                summary = self.store[left.target].summarize()
-                values = left.target.values
-                if isinstance(self.values[values], IntervalLattice):
-                    self.values[values] = self.values[values].join(deepcopy(itv)).meet(summary)
-                else:
-                    assert isinstance(self.values[values], IndexedLattice)
-                    assert isinstance(value, IndexedLattice)
-                    updated = self.values[values].join(deepcopy(value)).refine(summary)
-                    self.values[values] = updated
-            else:
-                current: IntervalLattice = self.lengths[left.target.length]  # current length
-                if key.less_equal(self.lattices[left.key.typ](lower=0)):  # key is positive
-                    if current.upper <= key.lower:  # key is definitely larger than length
-                        return self.bottom()
-                    lower = self.lattices[left.key.typ](lower=key.lower + 1)
-                    self.lengths[left.target.length] = current.meet(lower)
-                elif key.less_equal(self.lattices[left.key.typ](upper=-1)):  # key is negative
-                    if current.upper + key.upper < 0:  # key is definitely smaller than length
-                        return self.bottom()
-                    upper = self.lattices[left.key.typ](lower=-key.upper)
-                    self.lengths[left.target.length] = current.meet(upper)
-        elif isinstance(left.target.typ, DictLyraType):
-            evaluation = self._evaluation.visit(left.key, self, dict())
-            if self.is_bottom():
-                return self
-            key = evaluation[left.key]
-            _itv = deepcopy(key) if isinstance(key, IntervalLattice) else key.summarize()
-            _target = left.target.target
-            _key = left.target.key
-            __key = left.key
-            while isinstance(_target, Subscription):
-                __key = _key
-                _key = _target.key
-                _target = _target.target
-            assert isinstance(_target, VariableIdentifier)
-            evaluation = self._evaluation.visit(_target, self, dict())
-            if self.is_bottom():
-                return self
-            target = evaluation[_target]
-            _key: List[str] = self._key.visit(_key, target.bound, self)
-            self.store[_target].weak_set(_key, deepcopy(itv).join(deepcopy(_itv)))
-            if _target.is_dictionary:
-                # update values
-                summary = self.store[_target].summarize()
-                values = _target.values
-                if isinstance(self.values[values], IntervalLattice):
-                    self.values[values] = self.values[values].join(deepcopy(itv)).meet(summary)
-                else:
-                    assert isinstance(self.values[values], IndexedLattice)
-                    __key: List[str] = self._key.visit(__key, target.bound, self)
-                    self.values[values].weak_set(__key, itv)
-                    self.values[values] = self.values[values].refine(summary)
-        else:
-            _target = left.target.target
-            _key = left.target.key
-            __key = left.key
-            while isinstance(_target, Subscription):
-                __key = _key
-                _key = _target.key
-                _target = _target.target
-            if isinstance(_target, Slicing):
-                return self
-            assert isinstance(_target, VariableIdentifier)
-            evaluation = self._evaluation.visit(_target, self, dict())
-            if self.is_bottom():
-                return self
-            target = evaluation[_target]
-            _key: List[str] = self._key.visit(_key, target.bound, self)
-            self.store[_target].weak_set(_key, itv)
-            if _target.is_dictionary:
-                # update values
-                summary = self.store[_target].summarize()
-                values = _target.values
-                if isinstance(self.values[values], IntervalLattice):
-                    self.values[values] = self.values[values].join(deepcopy(itv)).meet(summary)
-                else:
-                    assert isinstance(self.values[values], IndexedLattice)
-                    __key: List[str] = self._key.visit(__key, target.bound, self)
-                    self.values[values].weak_set(__key, itv)
-                    self.values[values] = self.values[values].refine(summary)
-        return self
-
-    def _assign_slicing(self, left: Slicing, right: Expression):
-        raise NotImplementedError  # TODO
 
     @copy_docstring(BasisWithSummarization._assume_subscription)
     def _assume_subscription(self, condition: Subscription, neg: bool = False):
@@ -744,129 +383,6 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithIndexing):
             else:
                 return self._refinement.visit(condition.left, left, right.summarize(), self)
 
-    def _substitute_subscription(self, left: Subscription, right: Expression):
-        if isinstance(left.target, VariableIdentifier):
-            evaluation = self._evaluation.visit(left.target, self, dict())
-            if self.is_bottom():
-                return self
-            target: IndexedLattice = evaluation[left.target]
-            _key: List[str] = self._key.visit(left.key, target.bound, self)
-            # record the current value of the subscription
-            evaluation = self._evaluation.visit(left, self, dict())
-            if self.is_bottom():
-                return self
-            current = evaluation[left]
-            # forget the current value of the subscription
-            self.store[left.target].forget(_key)
-            if left.target.is_dictionary:
-                # update length
-                length = self.lengths[left.target.length]
-                default = self.lattices[IntegerLyraType()](lower=0)
-                one = self.lattices[IntegerLyraType()](lower=1, upper=1)
-                updated = default.meet(deepcopy(length).join(length.sub(one)))
-                self.lengths[left.target.length] = updated
-                # forget keys and values
-                self.keys[left.target.keys] = self.keys[left.target.keys].top()
-                self.values[left.target.values] = self.values[left.target.values].top()
-            # evaluate the right-hand side proceeding bottom-up using the updated store
-            evaluation = self._evaluation.visit(right, self, dict())
-            if self.is_bottom():
-                return self
-            # check for errors turning the state into bottom
-            if not evaluation[right].is_bottom():
-                feasible = deepcopy(evaluation[right]).meet(current)
-                if feasible.is_bottom():
-                    return self.bottom()
-            # refine the updated store proceeding top-down on the right-hand side
-            self._refinement.visit(right, evaluation, current, self)
-        else:
-            raise NotImplementedError  # TODO
-        return self
-
-    def _substitute_slicing(self, left: Slicing, right: Expression):
-        raise NotImplementedError  # TODO
-
-    # key evaluation
-
-    class KeyEvaluation(ExpressionVisitor):
-
-        def visit_Literal(self, expr: 'Literal', bound=None, state=None) -> List[str]:
-            return [str(expr)]
-
-        def default(self, expr, bound=None, state=None) -> List[str]:
-            current = state._evaluation.visit(expr, state, dict())[expr]
-            itv = current if isinstance(current, IntervalLattice) else current.summarize()
-            return itv.gamma(bound)
-
-        def visit_VariableIdentifier(self, expr, bound=None, state=None) -> List[str]:
-            return self.default(expr, bound, state)
-
-        def visit_LengthIdentifier(self, expr: 'LengthIdentifier', bound=None, state=None):
-            return self.default(expr, bound, state)
-
-        def visit_ListDisplay(self, expr: 'ListDisplay', bound=None, state=None):
-            raise ValueError(f"Unexpected expression during key evaluation.")
-
-        def visit_TupleDisplay(self, expr: 'TupleDisplay', bound=None, state=None) -> List[str]:
-            items = list()
-            for item in expr.items:
-                value: List[str] = self.visit(item, bound, state)
-                if len(value) == 1:
-                    items.append(value[0])
-                else:
-                    return ['_']
-            return ['({})'.format(', '.join(items))]
-
-        def visit_SetDisplay(self, expr: 'SetDisplay', bound=None, state=None):
-            raise ValueError(f"Unexpected expression during key evaluation.")
-
-        def visit_DictDisplay(self, expr: 'DictDisplay', bound=None, state=None):
-            raise ValueError(f"Unexpected expression during key evaluation.")
-
-        def visit_AttributeReference(self, expr: 'AttributeReference', bound=None, state=None):
-            raise NotImplementedError(f"Unsupported expression during key evaluation.")
-
-        def visit_Subscription(self, expr: 'Subscription', bound=None, state=None) -> List[str]:
-            return self.default(expr, bound, state)
-
-        def visit_Slicing(self, expr: 'Slicing', bound=None, state=None) -> List[str]:
-            return self.default(expr, bound, state)
-
-        def visit_Input(self, expr: 'Input', bound=None, state=None) -> List[str]:
-            return self.default(expr, bound, state)
-
-        def visit_Range(self, expr: 'Range', bound=None, state=None):
-            raise NotImplementedError(f"Unsupported expression during key evaluation.")
-
-        def visit_Keys(self, expr: 'Keys', bound=None, state=None):
-            raise NotImplementedError(f"Unsupported expression during key evaluation.")
-
-        def visit_Values(self, expr: 'Values', bound=None, state=None):
-            raise NotImplementedError(f"Unsupported expression during key evaluation.")
-
-        def visit_CastOperation(self, expr: 'CastOperation', bound=None, state=None) -> List[str]:
-            return self.default(expr, bound, state)
-
-        def visit_UnaryArithmeticOperation(self, expr, bound=None, state=None) -> List[str]:
-            return self.default(expr, bound, state)
-
-        def visit_UnaryBooleanOperation(self, expr, bound=None, state=None) -> List[str]:
-            return self.default(expr, bound, state)
-
-        def visit_BinaryArithmeticOperation(self, expr, bound=None, state=None) -> List[str]:
-            return self.default(expr, bound, state)
-
-        def visit_BinarySequenceOperation(self, expr, bound=None, state=None) -> List[str]:
-            return self.default(expr, bound, state)
-
-        def visit_BinaryBooleanOperation(self, expr, bound=None, state=None) -> List[str]:
-            return self.default(expr, bound, state)
-
-        def visit_BinaryComparisonOperation(self, expr, bound=None, state=None) -> List[str]:
-            return self.default(expr, bound, state)
-
-    _key = KeyEvaluation()
-
     # expression evaluation
 
     class ExpressionEvaluation(BasisWithIndexing.ExpressionEvaluation):
@@ -884,90 +400,37 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithIndexing):
                 evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
             return evaluation
 
-        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_DictDisplay)
-        def visit_DictDisplay(self, expr: 'DictDisplay', state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation   # nothing to be done
-            evaluated = evaluation
-            _value = state.lattices[expr.typ.key_typ](**state.arguments[expr.typ.key_typ]).bottom()
-            value = state.lattices[expr.typ](**state.arguments[expr.typ], index=dict())
-            value_ = state.lattices[expr.typ.val_typ](**state.arguments[expr.typ.val_typ]).bottom()
-            for idx, (key, val) in enumerate(zip(expr.keys, expr.values)):
-                evaluated = self.visit(key, state, evaluated)   # recurse on key
-                if state.is_bottom():
-                    return evaluation
-                _current: Union[IntervalLattice, IndexedLattice] = evaluated[key]
-                _value = _value.join(deepcopy(_current))
-                evaluated = self.visit(val, state, evaluated)   # recurse on val
-                if state.is_bottom():
-                    return evaluation
-                current_: Union[IntervalLattice, IndexedLattice] = evaluated[val]
-                value_ = value_.join(deepcopy(current_))
-                #
-                if isinstance(current_, IntervalLattice):
-                    itv_ = deepcopy(current_)
-                elif isinstance(expr.typ.val_typ, DictLyraType):
-                    itv_ = current_.summarize(keys=expr.typ.val_typ.key_typ)
-                else:
-                    itv_ = current_.summarize()
-                _key: List[str] = state._key.visit(key, value.bound, state)
-                if len(_key) == 1 and _key[0] != value.default:
-                    value[_key[0]] = itv_
-                else:
-                    value[value.default] = itv_
-            evaluation[KeysIdentifier(expr)] = _value
-            evaluation[expr] = value
-            evaluation[ValuesIdentifier(expr)] = value_
-            return evaluation
-
         @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Subscription)
         def visit_Subscription(self, expr: 'Subscription', state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation
+            # update length identifiers, if appropriate
             evaluated = self.visit(expr.target, state, evaluation)
             if state.is_bottom():
                 return evaluation
-            target = deepcopy(evaluated[expr.target])
-            if isinstance(target, IntervalLattice):
-                evaluation[expr] = target
-            else:
-                assert isinstance(target, IndexedLattice)
-                _key: List[str] = state._key.visit(expr.key, target.bound, state)
-                fetched: IntervalLattice = target.weak_get(_key)
-                if isinstance(expr.target, VariableIdentifier) and expr.target.is_dictionary:
-                    values = deepcopy(evaluated[expr.target.values])
-                    if isinstance(values, IntervalLattice):
-                        evaluation[expr] = fetched.meet(values)
-                    else:
-                        assert isinstance(values, IndexedLattice)
-                        evaluation[expr] = values.refine(fetched)
-                else:
-                    if isinstance(expr.target, VariableIdentifier):
-                        if isinstance(expr.target.typ, SequenceLyraType):
-                            # update length
-                            key = self.visit(expr.key, state, evaluated)[expr.key]
-                            if state.is_bottom():
+            target = evaluated[expr.target]
+            if isinstance(target, IndexedLattice):
+                if isinstance(expr.target, VariableIdentifier):
+                    if isinstance(expr.target.typ, SequenceLyraType):
+                        # update length
+                        key = self.visit(expr.key, state, evaluated)[expr.key]
+                        if state.is_bottom():
+                            return evaluation
+                        current: IntervalLattice = state.lengths[expr.target.length]
+                        if key.less_equal(state.lattices[expr.key.typ](lower=0)):
+                            if current.upper <= key.lower:  # key is larger than length
+                                state.bottom()
                                 return evaluation
-                            current: IntervalLattice = state.lengths[expr.target.length]
-                            if key.less_equal(state.lattices[expr.key.typ](lower=0)):
-                                if current.upper <= key.lower:  # key is larger than length
-                                    state.bottom()
-                                    return evaluation
-                                lower = state.lattices[expr.key.typ](lower=key.lower + 1)
-                                state.lengths[expr.target.length] = current.meet(lower)
-                            elif key.less_equal(state.lattices[expr.key.typ](upper=-1)):
-                                if current.upper + key.upper < 0:  # key is smaller than length
-                                    state.bottom()
-                                    return evaluation
-                                upper = state.lattices[expr.key.typ](lower=-key.upper)
-                                state.lengths[expr.target.length] = current.meet(upper)
-                    if isinstance(expr.typ, (SequenceLyraType, DictLyraType)):
-                        index = {'_': fetched}
-                        idxd = state.lattices[expr.typ](**state.arguments[expr.typ], index=index)
-                        evaluation[expr] = idxd
-                    else:
-                        evaluation[expr] = fetched
-            return evaluation
+                            lower = state.lattices[expr.key.typ](lower=key.lower + 1)
+                            state.lengths[expr.target.length] = current.meet(lower)
+                        elif key.less_equal(state.lattices[expr.key.typ](upper=-1)):
+                            if current.upper + key.upper < 0:  # key is smaller than length
+                                state.bottom()
+                                return evaluation
+                            upper = state.lattices[expr.key.typ](lower=-key.upper)
+                            state.lengths[expr.target.length] = current.meet(upper)
+            # perform the evaluation
+            return super().visit_Subscription(expr, state, evaluation)
 
         @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Slicing)
         def visit_Slicing(self, expr: 'Slicing', state=None, evaluation=None):

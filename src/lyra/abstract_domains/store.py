@@ -10,6 +10,7 @@ import itertools
 from collections import defaultdict
 from typing import Dict, Any, Type, Set
 
+from lyra.abstract_domains.numerical.interval_lattice import IntervalLattice
 from lyra.core.expressions import VariableIdentifier, LengthIdentifier, KeysIdentifier, \
     ValuesIdentifier
 from lyra.abstract_domains.lattice import Lattice, EnvironmentMixin
@@ -47,10 +48,9 @@ class Store(EnvironmentMixin):
         try:
             self._store = {v: lattices[v.typ](**self._arguments[v.typ]) for v in variables}
             self._lengths, self._keys, self._values = dict(), dict(), dict()
-            typ = IntegerLyraType()
             for v in variables:
                 if v.has_length:
-                    self._lengths[v.length] = lattices[typ](**self._arguments[typ])
+                    self._lengths[v.length] = IntervalLattice(lower=0)
                     if v.is_dictionary:
                         _key = lattices[v.typ.key_typ](**self._arguments[v.typ.key_typ])
                         self._keys[v.keys] = _key
@@ -119,7 +119,7 @@ class Store(EnvironmentMixin):
         for var in self.store:
             self.store[var].top()
         for var in self.lengths:
-            self.lengths[var].top()
+            self.lengths[var] = IntervalLattice(lower=0)
         for var in self.keys:
             self.keys[var].top()
         for var in self.values:
@@ -138,7 +138,8 @@ class Store(EnvironmentMixin):
     def is_top(self) -> bool:
         """The current store is top if `all` of its variables map to a top element."""
         _store = all(element.is_top() for element in self.store.values())
-        _lengths = all(element.is_top() for element in self.lengths.values())
+        _top = IntervalLattice(lower=0)
+        _lengths = all(_top.less_equal(element) for element in self.lengths.values())
         return _store and _lengths
 
     @copy_docstring(EnvironmentMixin.unify)
@@ -202,8 +203,7 @@ class Store(EnvironmentMixin):
         typ = variable.typ
         self.store[variable] = self.lattices[typ](**self.arguments[typ]).bottom()
         if variable.has_length:
-            _length = self.lattices[IntegerLyraType()](**self.arguments[IntegerLyraType()])
-            self.lengths[variable.length] = _length.bottom()
+            self.lengths[variable.length] = IntervalLattice(lower=0).bottom()
             if variable.is_dictionary:
                 _key = self.lattices[typ.key_typ](**self._arguments[typ.key_typ]).bottom()
                 self._keys[variable.keys] = _key
