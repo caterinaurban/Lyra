@@ -13,8 +13,8 @@ from copy import deepcopy
 from math import inf
 from typing import Union
 
-from apronpy.box import PyBox
-from apronpy.manager import PyManager, PyBoxMPQManager
+from apronpy.box import PyBox, PyBoxMPQManager
+from apronpy.manager import PyManager
 
 from lyra.abstract_domains.basis import BasisWithSummarization, Basis, BasisWithIndexing
 from lyra.abstract_domains.container.indexed_lattice import IndexedLattice

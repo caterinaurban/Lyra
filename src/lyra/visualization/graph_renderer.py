@@ -17,7 +17,7 @@ class GraphRenderer(metaclass=ABCMeta):
         'labelloc': 't',
         'fontcolor': 'black',
         'fontname': 'roboto',
-        'bgcolor': '#ffffff',
+        'bgcolor': 'transparent',
         'margin': '0',
     }   # graph attributes
 
