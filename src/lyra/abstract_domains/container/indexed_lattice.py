@@ -167,7 +167,7 @@ class IndexedLattice(BottomMixin, SequenceMixin):
     def summarize(self, keys: LyraType = None) -> 'Lattice':
         """Summarize the index into a single (sub)lattice element.
 
-        :param keys: if give, type to use to also summarize the keys (default: None)
+        :param keys: if given, type to use to also summarize the keys (default: None)
         :return: the (sub)lattice element representing the summary of the index
         """
         def do(lattice, typ, key, current: Lattice) -> Lattice:
@@ -329,7 +329,7 @@ class IndexedLattice(BottomMixin, SequenceMixin):
         self.index['_'] = _mine.widening(_yours)
         return self
 
-    # string operations
+    # sequence operations
 
     @copy_docstring(SequenceMixin._concat)
     def _concat(self, other: 'IndexedLattice') -> 'IndexedLattice':

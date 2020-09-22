@@ -89,7 +89,7 @@ class StringSetLattice(TopMixin, SequenceMixin):
             return self
         return self.top()
 
-    # string operations
+    # sequence operations
 
     def _concat(self, other: 'StringSetLattice') -> 'StringSetLattice':
         if self.is_top():

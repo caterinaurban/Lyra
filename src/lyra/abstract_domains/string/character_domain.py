@@ -119,7 +119,7 @@ class CharacterLattice(BottomMixin, SequenceMixin):
         """``(c1, m1) ▽ (c2, m2) = (c1, m1) ⊔ (c2, m2)``."""
         return self._join(other)
 
-    # string operations
+    # sequence operations
 
     @copy_docstring(SequenceMixin.concat)
     def _concat(self, other: 'CharacterLattice') -> 'CharacterLattice':
