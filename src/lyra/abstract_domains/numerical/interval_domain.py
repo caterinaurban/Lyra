@@ -203,28 +203,6 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
             return self
         return self._refinement.visit(condition.left, left, right[condition.right], self)
 
-    @copy_docstring(BasisWithSummarization._substitute_subscription)
-    def _substitute_subscription(self, left: Subscription, right: Expression):
-        # copy the current state
-        current: BasisWithSummarization = deepcopy(self)
-        # perform the substitution on the copy of the current state
-        target = left
-        while isinstance(target, (Subscription, Slicing)):  # recurse to VariableIdentifier target
-            target = target.target
-        if isinstance(left.target, VariableIdentifier) and left.target.is_dictionary:
-            # update length
-            length = self.lengths[left.target.length]
-            default = self.lattices[IntegerLyraType()](lower=0)
-            one = self.lattices[IntegerLyraType()](lower=1, upper=1)
-            updated = default.meet(deepcopy(length).join(length.sub(one)))
-            self.lengths[left.target.length] = updated
-        self._substitute_variable(target, right)
-        # check for errors turning the state into bottom
-        if self.is_bottom():
-            return self
-        # if there are not errors, perform a weak update on the current state
-        return self.join(current)
-
     # expression evaluation
 
     class ExpressionEvaluation(BasisWithSummarization.ExpressionEvaluation):
@@ -259,45 +237,6 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
                 evaluation[expr] = value
             else:
                 evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
-            return evaluation
-
-        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Subscription)
-        def visit_Subscription(self, expr: Subscription, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            target = expr
-            while isinstance(target, (Subscription, Slicing)):
-                target = target.target
-            evaluated = self.visit(target, state, evaluation)
-            if state.is_bottom():
-                return evaluation
-            if isinstance(target.typ, DictLyraType):
-                evaluation[expr] = deepcopy(evaluated[target.values])
-                if isinstance(expr.target, VariableIdentifier):
-                    length: IntervalLattice = state.lengths[expr.target.length]
-                    one_ = state.lattices[IntegerLyraType()](lower=1)
-                    state.lengths[expr.target.length] = length.meet(one_)
-            else:
-                if isinstance(expr.target, VariableIdentifier):
-                    if isinstance(expr.target.typ, SequenceLyraType):
-                        # update length
-                        key = self.visit(expr.key, state, evaluated)[expr.key]
-                        if state.is_bottom():
-                            return evaluation
-                        current: IntervalLattice = state.lengths[expr.target.length]
-                        if key.less_equal(state.lattices[expr.key.typ](lower=0)):
-                            if current.upper <= key.lower:  # key is larger than length
-                                state.bottom()
-                                return evaluation
-                            lower = state.lattices[expr.key.typ](lower=key.lower + 1)
-                            state.lengths[expr.target.length] = current.meet(lower)
-                        elif key.less_equal(state.lattices[expr.key.typ](upper=-1)):
-                            if current.upper + key.upper < 0:  # key is smaller than length
-                                state.bottom()
-                                return evaluation
-                            upper = state.lattices[expr.key.typ](lower=-key.upper)
-                            state.lengths[expr.target.length] = current.meet(upper)
-                evaluation[expr] = deepcopy(evaluated[target])
             return evaluation
 
     _evaluation = ExpressionEvaluation()  # static class member shared between all instances
@@ -400,42 +339,6 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithIndexing):
                 evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
             return evaluation
 
-        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Subscription)
-        def visit_Subscription(self, expr: 'Subscription', state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation
-            # update length identifiers, if appropriate
-            evaluated = self.visit(expr.target, state, evaluation)
-            if state.is_bottom():
-                return evaluation
-            target = evaluated[expr.target]
-            if isinstance(target, IndexedLattice):
-                if isinstance(expr.target, VariableIdentifier):
-                    if isinstance(expr.target.typ, SequenceLyraType):
-                        # update length
-                        key = self.visit(expr.key, state, evaluated)[expr.key]
-                        if state.is_bottom():
-                            return evaluation
-                        current: IntervalLattice = state.lengths[expr.target.length]
-                        if key.less_equal(state.lattices[expr.key.typ](lower=0)):
-                            if current.upper <= key.lower:  # key is larger than length
-                                state.bottom()
-                                return evaluation
-                            lower = state.lattices[expr.key.typ](lower=key.lower + 1)
-                            state.lengths[expr.target.length] = current.meet(lower)
-                        elif key.less_equal(state.lattices[expr.key.typ](upper=-1)):
-                            if current.upper + key.upper < 0:  # key is smaller than length
-                                state.bottom()
-                                return evaluation
-                            upper = state.lattices[expr.key.typ](lower=-key.upper)
-                            state.lengths[expr.target.length] = current.meet(upper)
-            # perform the evaluation
-            return super().visit_Subscription(expr, state, evaluation)
-
-        @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Slicing)
-        def visit_Slicing(self, expr: 'Slicing', state=None, evaluation=None):
-            raise NotImplementedError   # TODO
-
         @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Range)
         def visit_Range(self, expr: Range, state=None, evaluation=None):
             if expr in evaluation:
@@ -511,64 +414,7 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithIndexing):
                 evaluation[expr] = deepcopy(evaluated[expr.expression])
             return evaluation
 
-        @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
-        def visit_BinarySequenceOperation(self, expr, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            evaluated1 = self.visit(expr.left, state, evaluation)
-            if state.is_bottom():
-                return evaluation
-            evaluated2 = self.visit(expr.right, state, evaluated1)
-            if state.is_bottom():
-                return evaluation
-            value1 = evaluated2[expr.left]
-            value2 = evaluated2[expr.right]
-            if expr.operator == BinarySequenceOperation.Operator.Concat:
-                if isinstance(value1, SequenceMixin):
-                    evaluated2[expr] = deepcopy(value1).concat(value2)
-                else:
-                    evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
-                return evaluated2
-            raise ValueError(f"Binary sequence operator '{str(expr.operator)}' is unsupported!")
-
     _evaluation = ExpressionEvaluation()
-
-    # expression refinement
-
-    class ExpressionRefinement(BasisWithSummarization.ExpressionRefinement):
-
-        def visit_Subscription(self, expr, evaluation=None, value=None, state=None):
-            refined = deepcopy(evaluation[expr]).meet(value)
-            if isinstance(expr.target, VariableIdentifier):
-                target = deepcopy(state.store[expr.target])
-                _key: List[str] = state._key.visit(expr.key, target.bound, state)
-                if len(_key) == 1 and _key[0] != target.default:
-                    state.store[expr.target][_key[0]] = refined
-                    if expr.target.is_dictionary:
-                        # update length
-                        if not set(state.store[expr.target].used).issubset(target.used):
-                            length: IntervalLattice = state.lengths[expr.target.length]
-                            one = state.lattices[IntegerLyraType()](lower=1, upper=1)
-                            state.lengths[expr.target.length] = length.add(one)
-                        # update values
-                        summary = state.store[expr.target].summarize()
-                        values = expr.target.values
-                        if isinstance(state.values[values], IntervalLattice):
-                            state.values[values] = state.values[values].meet(summary)
-                        else:
-                            assert isinstance(state.values[values], IndexedLattice)
-                            state.values[values] = state.values[values].refine(summary)
-                else:
-                    if expr.target.is_dictionary:
-                        length: IntervalLattice = state.lengths[expr.target.length]
-                        one_ = state.lattices[IntegerLyraType()](lower=1)
-                        state.lengths[expr.target.length] = length.meet(one_)
-            return state
-
-        def visit_Slicing(self, expr: 'Slicing', evaluation=None, value=None, state=None):
-            raise NotImplementedError  # TODO
-
-    _refinement = ExpressionRefinement()
 
 
 class BoxStateWithSummarization(APRONStateWithSummarization):
