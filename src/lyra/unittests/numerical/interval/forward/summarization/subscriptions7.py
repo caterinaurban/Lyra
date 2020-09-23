@@ -1,5 +1,7 @@
 
-A: Dict[int, List[int]] = {1: [1], 2: [1, 2]}
-B: List[int] = A[1]
-C: List[int] = A[2]
-# FINAL: A -> [1, 2]; B -> [1, 2]; C -> [1, 2]; keys(A) -> [1, 2]; len(A) -> [2, 2]; len(B) -> [0, inf]; len(C) -> [0, inf]; values(A) -> [1, 2]
+x: List[List[int]] = [[0], [0, 1], [0, 1, 2], [0, 1, 2, 3]]
+# STATE: len(x) -> [4, 4]; x -> [0, 3]; y -> [-inf, inf]; z -> [-inf, inf]
+y: int = x[3][3]
+# STATE: len(x) -> [4, 4]; x -> [0, 3]; y -> [0, 3]; z -> [-inf, inf]
+z: int = x[9][0]
+# FINAL: len(x) -> ⊥; x -> ⊥; y -> ⊥; z -> ⊥

@@ -961,7 +961,7 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                 key = self.visit(expr.key, state, evaluated)[expr.key]
                 if state.is_bottom():
                     return evaluation
-                intersection = key.meet(deepcopy(evaluated[KeysIdentifier(expr.target)]))
+                intersection = deepcopy(key).meet(deepcopy(evaluated[KeysIdentifier(expr.target)]))
                 if intersection.is_bottom():  # key does not belong to target keys
                     state.bottom()
                     return evaluation
@@ -1519,49 +1519,71 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: 'Subscription', state=None, evaluation=None):
             if expr in evaluation:
-                return evaluation
-            evaluated = self.visit(expr.target, state, evaluation)
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target, state, evaluation)  # evaluate target
             if state.is_bottom():
                 return evaluation
-            target = deepcopy(evaluated[expr.target])
-            if isinstance(target, IndexedLattice):
-                _key: List[str] = state._key.visit(expr.key, target.bound, state)
-                fetched = target.weak_get(_key)
-                if isinstance(expr.target, VariableIdentifier) and expr.target.is_dictionary:
-                    values = deepcopy(evaluated[expr.target.values])
-                    if isinstance(values, IndexedLattice):
-                        evaluation[expr] = values.refine(fetched)
-                    else:
-                        evaluation[expr] = fetched.meet(values)
-                else:
-                    if isinstance(expr.target, VariableIdentifier):
-                        if isinstance(expr.target.typ, SequenceLyraType):
-                            # update length
-                            key = self.visit(expr.key, state, evaluated)[expr.key]
-                            if state.is_bottom():
+            if isinstance(expr.target.typ, SequenceLyraType):
+                # check (and modify) target length based on key
+                if isinstance(expr.target, VariableIdentifier):  # simple variable subscription
+                    key = self.visit(expr.key, state, evaluated)[expr.key]
+                    if state.is_bottom():
+                        return evaluation
+                    if isinstance(key, IntervalLattice):
+                        length: IntervalLattice = state.lengths[expr.target.length]
+                        if 0 <= key.lower:  # key is positive
+                            if length.upper <= key.lower:  # key is larger than length
+                                state.bottom()
                                 return evaluation
-                            if isinstance(key, IntervalLattice):
-                                length: IntervalLattice = state.lengths[expr.target.length]
-                                if 0 <= key.lower:      # key is positive
-                                    if length.upper <= key.lower:  # key is larger than length
-                                        state.bottom()
-                                        return evaluation
-                                    lower = IntervalLattice(lower=key.lower + 1)
-                                    state.lengths[expr.target.length] = length.meet(lower)
-                                elif key.upper < 0:     # key is negative
-                                    if length.upper + key.upper < 0:  # key is smaller than length
-                                        state.bottom()
-                                        return evaluation
-                                    upper = IntervalLattice(lower=-key.upper)
-                                    state.lengths[expr.target.length] = length.meet(upper)
+                            lower = IntervalLattice(lower=key.lower + 1)                            # TODO: move to refinement?
+                            state.lengths[expr.target.length] = length.meet(lower)                  # TODO: move to refinement?
+                        elif key.upper < 0:  # key is negative
+                            if length.upper + key.upper < 0:  # key is smaller than length
+                                state.bottom()
+                                return evaluation
+                            upper = IntervalLattice(lower=-key.upper)                               # TODO: move to refinement?
+                            state.lengths[expr.target.length] = length.meet(upper)
+                # return value of key in target
+                target = deepcopy(evaluated[expr.target])
+                if isinstance(target, IndexedLattice):
+                    _key: List[str] = state._key.visit(expr.key, target.bound, state)
+                    fetched = target.weak_get(_key)
                     if isinstance(expr.typ, (SequenceLyraType, DictLyraType)):
                         index = {'_': fetched}
                         idxd = state.lattices[expr.typ](**state.arguments[expr.typ], index=index)
                         evaluation[expr] = idxd
                     else:
                         evaluation[expr] = fetched
+                else:
+                    evaluation[expr] = target
             else:
-                evaluation[expr] = target
+                assert isinstance(expr.target.typ, DictLyraType)
+                # check (and modify) target length based on key
+                key = self.visit(expr.key, state, evaluated)[expr.key]
+                if state.is_bottom():
+                    return evaluation
+                intersection = deepcopy(key).meet(deepcopy(evaluated[KeysIdentifier(expr.target)]))
+                if intersection.is_bottom():  # key does not belong to target keys
+                    state.bottom()
+                    return evaluation
+                if isinstance(expr.target, VariableIdentifier):                                     # TODO: move to refinement?
+                    length: IntervalLattice = state.lengths[expr.target.length]                     # TODO: move to refinement?
+                    state.lengths[expr.target.length] = length.meet(IntervalLattice(lower=1))       # TODO: move to refinement?
+                # return value of key in target (refined with value of target values)
+                target = deepcopy(evaluated[expr.target])
+                if isinstance(target, IndexedLattice):
+                    _key: List[str] = state._key.visit(expr.key, target.bound, state)
+                    fetched = target.weak_get(_key)
+                    if fetched.is_bottom():     # key does not belong to target keys
+                        state.bottom()
+                        return evaluation
+                    values = deepcopy(evaluated[ValuesIdentifier(expr.target)])
+                    if isinstance(values, IndexedLattice):
+                        evaluation[expr] = values.refine(fetched)
+                    else:
+                        evaluation[expr] = fetched.meet(values)
+                else:
+                    evaluation[expr] = target
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
@@ -1640,6 +1662,12 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
             return updated
 
         def visit_Subscription(self, expr, evaluation=None, value=None, state=None):
+            #
+            # k: int = int(input())
+            # x: int = {1: 1, 2: 2, 3: 3}[k]
+            # if x != 3:
+            #     raise ValueError
+            #
             refined = deepcopy(evaluation[expr]).meet(value)
             if isinstance(expr.target, VariableIdentifier):
                 target = deepcopy(state.store[expr.target])
@@ -1648,10 +1676,10 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                     state.store[expr.target][_key[0]] = refined
                     if expr.target.is_dictionary:
                         # update length
-                        if not set(state.store[expr.target].used).issubset(target.used):
-                            length: IntervalLattice = state.lengths[expr.target.length]
-                            one = IntervalLattice(lower=1, upper=1)
-                            state.lengths[expr.target.length] = length.add(one)
+                        # if not set(state.store[expr.target].used).issubset(target.used):
+                        #     length: IntervalLattice = state.lengths[expr.target.length]
+                        #     one = IntervalLattice(lower=1, upper=1)
+                        #     state.lengths[expr.target.length] = length.add(one)
                         # update values
                         summary = state.store[expr.target].summarize()
                         values = expr.target.values

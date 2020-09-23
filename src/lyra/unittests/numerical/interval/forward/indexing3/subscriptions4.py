@@ -1,4 +1,7 @@
 
-done: List[bool] = [False, False, False]
-x: int = 3 if done[0] else -3
-# FINAL: done -> 0@[0, 0], 1@[0, 0], 2@[0, 0], _@⊥; len(done) -> [3, 3]; x -> [-3, -3]
+D: Dict[int, List[int]] = {1: [2], 2: [3, 4]}
+L: List[List[int]] = [[], [2], [3, 4]]
+# STATE: D -> 1@[2, 2], 2@[3, 4], _@⊥; L -> 0@⊥, 1@[2, 2], 2@[3, 4], _@⊥; keys(D) -> [1, 2]; len(D) -> [2, 2]; len(L) -> [3, 3]; values(D) -> 0@[2, 3], _@[4, 4]; y -> [-inf, inf]; z -> [-inf, inf]
+y: int = D[2][1]
+z: int = L[2][1]
+# FINAL: D -> 1@[2, 2], 2@[3, 4], _@⊥; L -> 0@⊥, 1@[2, 2], 2@[3, 4], _@⊥; keys(D) -> [1, 2]; len(D) -> [2, 2]; len(L) -> [3, 3]; values(D) -> 0@[2, 3], _@[4, 4]; y -> [4, 4]; z -> [3, 4]
