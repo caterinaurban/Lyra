@@ -354,6 +354,9 @@ class CFGVisitor(ast.NodeVisitor):
         The elts attribute stores a list of nodes representing the elements.
         The ctx attribute is Store if the container is an assignment target, and Load otherwise."""
         pp = ProgramPoint(node.lineno, node.col_offset)
+        if isinstance(typ, list):   # this comes from a subscript
+            items = [self.visit(item, types, typ[0], fname=fname) for item in node.elts]
+            return ListDisplayAccess(pp, ListLyraType(typ[0]), items)
         if isinstance(typ, ListLyraType):
             items = [self.visit(item, types, typ.typ, fname=fname) for item in node.elts]
         else:
@@ -365,6 +368,9 @@ class CFGVisitor(ast.NodeVisitor):
         The elts attribute stores a list of nodes representing the elements.
         The ctx attribute is Store if the container is an assignment target, and Load otherwise."""
         pp = ProgramPoint(node.lineno, node.col_offset)
+        if isinstance(typ, list):   # this comes from a subscript
+            items = [self.visit(item, types, None, fname=fname) for item in node.elts]
+            return TupleDisplayAccess(pp, TupleLyraType([]), items)     # TODO: fix me
         if isinstance(typ, TupleLyraType):
             zipped = zip(node.elts, typ.typs)
             items = [self.visit(item, types, i_typ, fname=fname) for item, i_typ in zipped]
@@ -376,6 +382,9 @@ class CFGVisitor(ast.NodeVisitor):
         """Visitor function for a set.
         The elts attribute stores a list of nodes representing the elements."""
         pp = ProgramPoint(node.lineno, node.col_offset)
+        if isinstance(typ, list):   # this comes from a subscript
+            items = [self.visit(item, types, typ[0], fname=fname) for item in node.elts]
+            return SetDisplayAccess(pp, SetLyraType(typ[0]), items)
         if isinstance(typ, SetLyraType):
             items = [self.visit(item, types, typ.typ, fname=fname) for item in node.elts]
         else:
@@ -387,6 +396,10 @@ class CFGVisitor(ast.NodeVisitor):
         The attributes keys and values store lists of nodes with matching order
         representing the keys and the values, respectively."""
         pp = ProgramPoint(node.lineno, node.col_offset)
+        if isinstance(typ, list):   # this comes from a subscript
+            keys = [self.visit(key, types, typ[0], fname=fname) for key in node.keys]
+            values = [self.visit(value, types, typ[1], fname=fname) for value in node.values]
+            return DictDisplayAccess(pp, DictLyraType(typ[0], typ[1]), keys, values)
         if isinstance(typ, DictLyraType):
             keys = [self.visit(key, types, typ.key_typ, fname=fname) for key in node.keys]
             values = [self.visit(value, types, typ.val_typ, fname=fname) for value in node.values]
@@ -630,8 +643,12 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute ctx is Load, Store, or Del."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.slice, ast.Index):
-            target = self.visit(node.value, types, [typ], fname=fname)
             key = self.visit(node.slice.value, types, None, fname=fname)
+            if isinstance(key, LiteralEvaluation):
+                _typ = key.literal.typ
+            else:
+                _typ = key.typ
+            target = self.visit(node.value, types, [_typ, typ], fname=fname)
             if isinstance(target.typ, ListLyraType):
                 return SubscriptionAccess(pp, target.typ.typ, target, key)
             else:  # String
