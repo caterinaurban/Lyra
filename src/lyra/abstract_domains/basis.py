@@ -96,9 +96,11 @@ class Basis(Store, State, metaclass=ABCMeta):
         value = deepcopy(self.store[left])
         # forget the current value of the substituted variable
         self.store[left].top()
-        if left.is_dictionary:
-            self.keys[left.keys].top()
-            self.values[left.values].top()
+        if left.has_length:
+            self.lengths[left.length] = IntervalLattice(lower=0)
+            if left.is_dictionary:
+                self.keys[left.keys].top()
+                self.values[left.values].top()
         # evaluate the right-hand side proceeding bottom-up using the updated store
         evaluation = self._evaluation.visit(right, self, dict())
         if self.is_bottom():
@@ -775,11 +777,9 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
     def _weak_update(self, variables: Set[VariableIdentifier], previous: 'BasisWithSummarization'):
         for var in variables:
             self.store[var].join(previous.store[var])
-            if var.has_length:
-                self.lengths[var.length].join(previous.lengths[var.length])
-                if var.is_dictionary:
-                    self.keys[var.keys].join(previous.keys[var.keys])
-                    self.values[var.values].join(previous.values[var.values])
+            if var.is_dictionary:
+                self.keys[var.keys].join(previous.keys[var.keys])
+                self.values[var.values].join(previous.values[var.values])
         return self
 
     @copy_docstring(State._substitute_subscription)
@@ -796,7 +796,26 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             one = IntervalLattice(lower=1, upper=1)
             updated = IntervalLattice(lower=0).meet(deepcopy(length).join(length.sub(one)))
             self.lengths[left.target.length] = updated
-        self._substitute_variable(target, right)
+
+        # record the current value of the substituted variable
+        value = deepcopy(self.store[target])
+        # forget the current value of the substituted variable
+        self.store[target].top()
+        if target.is_dictionary:
+            self.keys[target.keys].top()
+            self.values[target.values].top()
+        # evaluate the right-hand side proceeding bottom-up using the updated store
+        evaluation = self._evaluation.visit(right, self, dict())
+        if self.is_bottom():
+            return self
+        # check for errors turning the state into bottom
+        if not evaluation[right].is_bottom():
+            feasible = deepcopy(evaluation[right]).meet(value)
+            if feasible.is_bottom():
+                return self.bottom()
+        # refine the updated store proceeding top-down on the right-hand side
+        self._refinement.visit(right, evaluation, value, self)
+
         # check for errors turning the state into bottom
         if self.is_bottom():
             return self
@@ -811,7 +830,26 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
         target = left
         while isinstance(target, (Subscription, Slicing)):  # recurse to VariableIdentifier target
             target = target.target
-        self._substitute_variable(target, right)
+
+        # record the current value of the substituted variable
+        value = deepcopy(self.store[target])
+        # forget the current value of the substituted variable
+        self.store[target].top()
+        if target.is_dictionary:
+            self.keys[target.keys].top()
+            self.values[target.values].top()
+        # evaluate the right-hand side proceeding bottom-up using the updated store
+        evaluation = self._evaluation.visit(right, self, dict())
+        if self.is_bottom():
+            return self
+        # check for errors turning the state into bottom
+        if not evaluation[right].is_bottom():
+            feasible = deepcopy(evaluation[right]).meet(value)
+            if feasible.is_bottom():
+                return self.bottom()
+        # refine the updated store proceeding top-down on the right-hand side
+        self._refinement.visit(right, evaluation, value, self)
+
         # check for errors turning the state into bottom
         if self.is_bottom():
             return self
@@ -1213,14 +1251,6 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
     def _assign_slicing(self, left: Slicing, right: Expression):
         raise NotImplementedError  # TODO
 
-    @copy_docstring(StateWithSummarization._weak_update)
-    def _weak_update(self, variables: Set[VariableIdentifier], previous: 'BasisWithIndexing'):
-        for var in variables:
-            assert isinstance(var.typ, SetLyraType)
-            self.store[var].join(previous.store[var])
-            self.lengths[var.length].join(previous.lengths[var.length])
-        return self
-
     @copy_docstring(Basis._assume_binary_comparison)
     def _assume_binary_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
         # identify involved set identifiers
@@ -1250,8 +1280,9 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
             assert condition.operator == BinaryComparisonOperation.Operator.NotIn
             self._assume_notin_comparison(condition, bwd=bwd)
         # fold, i.e., perform a weak update on the current state, if needed
-        if containers:
-            return self._weak_update(containers, current)
+        for container in containers:
+            assert isinstance(container.typ, SetLyraType)
+            self.store[container].join(current.store[container])
         return self
 
     @copy_docstring(State._substitute_subscription)
@@ -1559,7 +1590,48 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
 
     # expression refinement
 
-    class ExpressionRefinement(BasisWithSummarization.ExpressionRefinement):
+    class ExpressionRefinement(Basis.ExpressionRefinement):
+
+        @copy_docstring(ExpressionVisitor.visit_ListDisplay)
+        def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for idx, item in enumerate(expr.items):
+                if isinstance(refined, IndexedLattice):
+                    updated = self.visit(item, evaluation, deepcopy(refined[str(idx)]), updated)
+                else:
+                    updated = self.visit(item, evaluation, refined, updated)
+            return updated
+
+        @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
+        def visit_TupleDisplay(self, expr: TupleDisplay, evaluation=None, value=None, state=None):
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for idx, item in enumerate(expr.items):
+                if isinstance(refined, IndexedLattice):
+                    updated = self.visit(item, evaluation, deepcopy(refined[str(idx)]), updated)
+                else:
+                    updated = self.visit(item, evaluation, refined, updated)
+            return updated
+
+        @copy_docstring(ExpressionVisitor.visit_SetDisplay)
+        def visit_SetDisplay(self, expr: SetDisplay, evaluation=None, value=None, state=None):
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for idx, item in enumerate(expr.items):
+                if isinstance(refined, IndexedLattice):
+                    updated = self.visit(item, evaluation, deepcopy(refined[str(idx)]), updated)
+                else:
+                    updated = self.visit(item, evaluation, refined, updated)
+            return updated
+
+        @copy_docstring(ExpressionVisitor.visit_DictDisplay)
+        def visit_DictDisplay(self, expr: DictDisplay, evaluation=None, value=None, state=None):
+            refined = evaluation[expr].meet(value)
+            updated = state
+            for key, val in zip(expr.keys, expr.values):
+                updated = self.visit(val, evaluation, deepcopy(refined[str(key)]), updated)
+            return updated
 
         def visit_Subscription(self, expr, evaluation=None, value=None, state=None):
             refined = deepcopy(evaluation[expr]).meet(value)
@@ -1589,6 +1661,10 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
             return state
 
         def visit_Slicing(self, expr: 'Slicing', evaluation=None, value=None, state=None):
+            raise NotImplementedError  # TODO
+
+        @copy_docstring(ExpressionVisitor.visit_CastOperation)
+        def visit_CastOperation(self, expr, evaluation=None, value=None, state=None):
             raise NotImplementedError  # TODO
 
     _refinement = ExpressionRefinement()
