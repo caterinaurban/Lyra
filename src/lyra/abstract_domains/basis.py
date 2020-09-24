@@ -685,11 +685,11 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                 if x is a dictionary, join key and value to the summary of the values of x
                 note that i, j, ... must already be in the summary of the keys of x
         """
-        evaluation = self._evaluation.visit(left.key, self, dict())      # evaluate key
+        evaluation = self._evaluation.visit(left.key, self, dict())     # evaluate key
         if self.is_bottom():
             return self
         key = evaluation[left.key]
-        evaluation = self._evaluation.visit(right, self, dict())          # evaluate value
+        evaluation = self._evaluation.visit(right, self, dict())        # evaluate value
         if self.is_bottom():
             return self
         value = evaluation[right]
@@ -701,12 +701,12 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                 if isinstance(key, IntervalLattice):
                     length: IntervalLattice = self.lengths[target.length]
                     if 0 <= key.lower:  # key is positive
-                        if length.upper <= key.lower:  # key is definitely larger than length
+                        if length.upper <= key.lower:       # key is definitely larger than length
                             return self.bottom()
                         lower = IntervalLattice(lower=key.lower + 1)
                         self.lengths[target.length] = length.meet(lower)
                     elif key.upper < 0:  # key is negative
-                        if length.upper + key.upper < 0:  # key is definitely smaller than length
+                        if length.upper + key.upper < 0:    # key is definitely smaller than length
                             return self.bottom()
                         upper = IntervalLattice(lower=-key.upper)
                         self.lengths[target.length] = length.meet(upper)
@@ -1139,37 +1139,69 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
 
     @copy_docstring(BasisWithSummarization._assign_subscription)
     def _assign_subscription(self, left: Subscription, right: Expression):
-        evaluation = self._evaluation.visit(right, self, dict())
+        """The subscription assignment is of the form target[key] = value. There are various cases:
+
+        * target is a variable (i.e., simple subscription); in this case we should
+            (1) update the indexed value corresponding to target
+            (2) (list) check that key is in length bounds of target
+                (list/dictionary) update length of target
+            (3) (dictionary) update keys of target
+            (4) (dictionary) update values of target
+        * target is a subscription or a slicing (i.e., nested subscription);
+            (1) recursively find the target of the target, i.e., x
+                (if at any point a slicing is encountered, the assignment has *no effect* on x)
+            (2) (list) update the value corresponding to x with value, and
+                if x is a dictionary, update values of x with value
+                note that i, j, ... must already be in the summary of the keys of x
+                (dictionary) update the value corresponding to x with key and value, and
+                if x is a dictionary, update values of x with key and value
+                note that i, j, ... must already be in the summary of the keys of x
+        """
+        evaluation = self._evaluation.visit(left.key, self, dict())             # evaluate key
         if self.is_bottom():
             return self
-        value = evaluation[right]    # evaluate value
-        if isinstance(value, IndexedLattice):
+        key = evaluation[left.key]
+        evaluation = self._evaluation.visit(right, self, dict())                # evaluate value
+        if self.is_bottom():
+            return self
+        value = evaluation[right]
+        if isinstance(value, IndexedLattice):                                   # summarize value
             if isinstance(left.target.typ.val_typ, DictLyraType):
                 itv = value.summarize(keys=left.target.typ.val_typ.key_typ)
             else:
                 itv = value.summarize()
         else:
             itv = deepcopy(value)
-        if isinstance(left.target, VariableIdentifier):
-            evaluation = self._evaluation.visit(left.target, self, dict())
+        # perform a strong update on the current state
+        if isinstance(left.target, VariableIdentifier):      # simple subscription: x[key] = value
+            evaluation = self._evaluation.visit(left.target, self, dict())      # evaluate target
             if self.is_bottom():
                 return self
             target: IndexedLattice = evaluation[left.target]
-            evaluation = self._evaluation.visit(left.key, self, dict())
-            if self.is_bottom():
-                return self
-            key = evaluation[left.key]
             _key: List[str] = self._key.visit(left.key, target.bound, self)
             precise = len(_key) == 1 and _key[0] != target.default
-            added = False
-            replaced = False
+            added, replaced = False, False
             if precise:
                 added = _key[0] not in target.used and target.default not in target.used
                 replaced = _key[0] in target.used
                 self.store[left.target][_key[0]] = itv
             else:
                 self.store[left.target].weak_set(_key, itv)
-            if left.target.is_dictionary:
+            if isinstance(left.target.typ, ListLyraType):               # l[key] = value
+                if isinstance(key, IntervalLattice):
+                    length: IntervalLattice = self.lengths[left.target.length]
+                    if 0 <= key.lower:  # key is positive
+                        if length.upper <= key.lower:       # key is definitely larger than length
+                            return self.bottom()
+                        lower = IntervalLattice(lower=key.lower + 1)
+                        self.lengths[left.target.length] = length.meet(lower)
+                    elif key.upper < 0:  # key is negative
+                        if length.upper + key.upper < 0:    # key is definitely smaller than length
+                            return self.bottom()
+                        upper = IntervalLattice(lower=-key.upper)
+                        self.lengths[left.target.length] = length.meet(upper)
+            else:
+                assert isinstance(left.target.typ, DictLyraType)        # d[key] = value
                 # update length
                 length: IntervalLattice = self.lengths[left.target.length]  # current length
                 one = IntervalLattice(lower=1, upper=1)
@@ -1180,6 +1212,9 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                         self.lengths[left.target.length] = deepcopy(length).join(length.add(one))
                 else:
                     self.lengths[left.target.length] = deepcopy(length).join(length.add(one))
+                # in any case the dictionary contains at least one key now
+                one_ = IntervalLattice(lower=1)
+                self.lengths[left.target.length] = self.lengths[left.target.length].meet(one_)
                 # update keys
                 self.keys[left.target.keys] = self.keys[left.target.keys].join(deepcopy(key))
                 # update values
@@ -1191,76 +1226,61 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                     self.values[values] = updated
                 else:
                     self.values[values] = self.values[values].join(deepcopy(itv)).meet(summary)
+        else:   # nested subscription: X[key] = value
+            assert isinstance(left.target, (Subscription, Slicing))
+            if isinstance(left.target.typ, ListLyraType):           # L[key] = value
+                _target = left.target.target
+                _key = left.target.key
+                __key = left.key
+                while isinstance(_target, Subscription):
+                    __key = _key
+                    _key = _target.key
+                    _target = _target.target
+                if isinstance(_target, Slicing):
+                    return self
+                assert isinstance(_target, VariableIdentifier)
+                evaluation = self._evaluation.visit(_target, self, dict())
+                if self.is_bottom():
+                    return self
+                target = evaluation[_target]
+                _key: List[str] = self._key.visit(_key, target.bound, self)
+                self.store[_target].weak_set(_key, itv)
+                if isinstance(_target.typ, DictLyraType):    # d[...][key] = value
+                    summary = self.store[_target].summarize()
+                    values = _target.values
+                    if isinstance(self.values[values], IndexedLattice):
+                        __key: List[str] = self._key.visit(__key, target.bound, self)
+                        self.values[values].weak_set(__key, itv)
+                        self.values[values] = self.values[values].refine(summary)
+                    else:
+                        self.values[values] = self.values[values].join(deepcopy(itv)).meet(summary)
             else:
-                if isinstance(key, IntervalLattice):
-                    length: IntervalLattice = self.lengths[left.target.length]
-                    if 0 <= key.lower:  # key is positive
-                        if length.upper <= key.lower:  # key is definitely larger than length
-                            return self.bottom()
-                        lower = IntervalLattice(lower=key.lower + 1)
-                        self.lengths[left.target.length] = length.meet(lower)
-                    elif key.upper < 0:  # key is negative
-                        if length.upper + key.upper < 0:  # key is definitely smaller than length
-                            return self.bottom()
-                        upper = IntervalLattice(lower=-key.upper)
-                        self.lengths[left.target.length] = length.meet(upper)
-        elif isinstance(left.target.typ, DictLyraType):
-            evaluation = self._evaluation.visit(left.key, self, dict())
-            if self.is_bottom():
-                return self
-            key = evaluation[left.key]
-            _itv = key.summarize() if isinstance(key, IndexedLattice) else deepcopy(key)
-            _target = left.target.target
-            _key = left.target.key
-            __key = left.key
-            while isinstance(_target, Subscription):
-                __key = _key
-                _key = _target.key
-                _target = _target.target
-            assert isinstance(_target, VariableIdentifier)
-            evaluation = self._evaluation.visit(_target, self, dict())
-            if self.is_bottom():
-                return self
-            target = evaluation[_target]
-            _key: List[str] = self._key.visit(_key, target.bound, self)
-            self.store[_target].weak_set(_key, deepcopy(itv).join(deepcopy(_itv)))
-            if _target.is_dictionary:
-                # update values
-                summary = self.store[_target].summarize()
-                values = _target.values
-                if isinstance(self.values[values], IndexedLattice):
-                    __key: List[str] = self._key.visit(__key, target.bound, self)
-                    self.values[values].weak_set(__key, itv)
-                    self.values[values] = self.values[values].refine(summary)
-                else:
-                    self.values[values] = self.values[values].join(deepcopy(itv)).meet(summary)
-        else:
-            _target = left.target.target
-            _key = left.target.key
-            __key = left.key
-            while isinstance(_target, Subscription):
-                __key = _key
-                _key = _target.key
-                _target = _target.target
-            if isinstance(_target, Slicing):
-                return self
-            assert isinstance(_target, VariableIdentifier)
-            evaluation = self._evaluation.visit(_target, self, dict())
-            if self.is_bottom():
-                return self
-            target = evaluation[_target]
-            _key: List[str] = self._key.visit(_key, target.bound, self)
-            self.store[_target].weak_set(_key, itv)
-            if _target.is_dictionary:
-                # update values
-                summary = self.store[_target].summarize()
-                values = _target.values
-                if isinstance(self.values[values], IndexedLattice):
-                    __key: List[str] = self._key.visit(__key, target.bound, self)
-                    self.values[values].weak_set(__key, itv)
-                    self.values[values] = self.values[values].refine(summary)
-                else:
-                    self.values[values] = self.values[values].join(deepcopy(itv)).meet(summary)
+                assert isinstance(left.target.typ, DictLyraType)    # D[key] = value
+                _target = left.target.target
+                _key = left.target.key
+                __key = left.key
+                while isinstance(_target, Subscription):
+                    __key = _key
+                    _key = _target.key
+                    _target = _target.target
+                assert isinstance(_target, VariableIdentifier)
+                evaluation = self._evaluation.visit(_target, self, dict())
+                if self.is_bottom():
+                    return self
+                target = evaluation[_target]
+                _key: List[str] = self._key.visit(_key, target.bound, self)
+                _itv = key.summarize() if isinstance(key, IndexedLattice) else deepcopy(key)
+                joined = deepcopy(itv).join(deepcopy(_itv))
+                self.store[_target].weak_set(_key, joined)
+                if isinstance(_target.typ, DictLyraType):    # d[...][key] = value
+                    summary = self.store[_target].summarize()
+                    values = _target.values
+                    if isinstance(self.values[values], IndexedLattice):
+                        __key: List[str] = self._key.visit(__key, target.bound, self)
+                        self.values[values].weak_set(__key, itv)
+                        self.values[values] = self.values[values].refine(summary)
+                    else:
+                        self.values[values] = self.values[values].join(deepcopy(itv)).meet(summary)
         return self
 
     @copy_docstring(State._assign_slicing)
