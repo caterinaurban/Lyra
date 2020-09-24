@@ -668,20 +668,22 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
     def _assign_subscription(self, left: Subscription, right: Expression):
         """The subscription assignment is of the form target[key] = value. There are various cases:
 
-        * target is a dictionary; in this case we should
-            (1) join key and value to the summary corresponding to target
-            (2) join key to the summary of the keys of target
-            (3) join value to the summary of the values of target
-        * target is a subscription of the form x[i], x[i][j], ...; in this case we should
-            (1) join key and value to the summary corresponding to x
-            (2) (if x is a dictionary) join key and value to the summary of its values
+        * target is a variable (i.e., simple subscription); in this case we should
+            (1) (list) join value to the summary corresponding to target
+                (dictionary) join key and value to the summary corresponding to target
+            (2) (list) check that key is in length bounds of target
+                (list/dictionary) update length of target
+            (3) (dictionary) join key to the summary of the keys of target
+            (4) (dictionary) join value fo the summary of the values of target
+        * target is a subscription or a slicing (i.e., nested subscription);
+            (1) recursively find the target of the target, i.e., x
+                (if at any point a slicing is encountered, the assignment has *no effect* on x)
+            (2) (list) join value to the summary corresponding to x, and
+                if x is a dictionary, join value to the summary of the values of x
                 note that i, j, ... must already be in the summary of the keys of x
-        * otherwise (default), we should
-            (1) join value to the summary corresponding to x
-            (2) (if x is a dictionary) join value to the summary of its values
-                note that i must already be in the summary of the keys of x
-
-        An exception is an assignment of the form x[i:j]...[k] which has *no effect* on x.
+                (dictionary) join key and value to the summary corresponding to x, and
+                if x is a dictionary, join key and value to the summary of the values of x
+                note that i, j, ... must already be in the summary of the keys of x
         """
         evaluation = self._evaluation.visit(left.key, self, dict())      # evaluate key
         if self.is_bottom():
@@ -694,19 +696,7 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
         # perform a weak update on the current state
         target = left.target
         if isinstance(target, VariableIdentifier):      # simple subscription: x[key] = value
-            if target.is_dictionary:                            # d[key] = value
-                self.store[target] = self.store[target].join(deepcopy(key)).join(deepcopy(value))
-                length: IntervalLattice = self.lengths[target.length]
-                one = IntervalLattice(lower=1, upper=1)
-                precise = isinstance(key, IntervalLattice) and key.lower == key.upper
-                if precise and not key.less_equal(self.keys[left.target.keys]):
-                    self.lengths[target.length] = length.add(one)
-                else:
-                    self.lengths[target.length] = deepcopy(length).join(length.add(one))
-                self.keys[target.keys] = self.keys[target.keys].join(key)
-                self.values[target.values] = self.values[target.values].join(value)
-            else:
-                assert isinstance(target.typ, ListLyraType)     # l[key] = value
+            if isinstance(target.typ, ListLyraType):            # l[key] = value
                 self.store[target] = self.store[target].join(deepcopy(value))
                 if isinstance(key, IntervalLattice):
                     length: IntervalLattice = self.lengths[target.length]
@@ -720,9 +710,34 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                             return self.bottom()
                         upper = IntervalLattice(lower=-key.upper)
                         self.lengths[target.length] = length.meet(upper)
+            else:
+                assert isinstance(target.typ, DictLyraType)     # d[key] = value
+                self.store[target] = self.store[target].join(deepcopy(key)).join(deepcopy(value))
+                length: IntervalLattice = self.lengths[target.length]
+                one = IntervalLattice(lower=1, upper=1)
+                intersection = deepcopy(key).meet(deepcopy(self.keys[target.keys]))
+                if intersection.is_bottom():  # key does not belong to target keys
+                    self.lengths[target.length] = length.add(one)
+                else:
+                    self.lengths[target.length] = deepcopy(length).join(length.add(one))
+                # in any case the dictionary contains at least one key now
+                one_ = IntervalLattice(lower=1)
+                self.lengths[target.length] = self.lengths[target.length].meet(one_)
+                self.keys[target.keys] = self.keys[target.keys].join(key)
+                self.values[target.values] = self.values[target.values].join(value)
         else:   # nested subscription: X[key] = value
             assert isinstance(target, (Subscription, Slicing))
-            if isinstance(target.typ, DictLyraType):    # D[key] = value
+            if isinstance(target.typ, ListLyraType):            # L[key] = value
+                while isinstance(target, Subscription):
+                    target = target.target
+                if isinstance(target, Slicing):
+                    return self
+                assert isinstance(target, VariableIdentifier)
+                self.store[target] = self.store[target].join(deepcopy(value))
+                if isinstance(target.typ, DictLyraType):    # d[...][key] = value
+                    self.values[target.values] = self.values[target.values].join(deepcopy(value))
+            else:
+                assert isinstance(target.typ, DictLyraType)     # D[key] = value
                 while isinstance(target, Subscription):
                     target = target.target
                 assert isinstance(target, VariableIdentifier)
@@ -730,15 +745,6 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                 self.store[target] = self.store[target].join(deepcopy(joined))
                 if isinstance(target.typ, DictLyraType):    # d[...][key] = value
                     self.values[target.values] = self.values[target.values].join(deepcopy(joined))
-            else:   # L[key] = value
-                while isinstance(target, Subscription):
-                    target = target.target
-                if isinstance(target, Slicing):
-                    return self
-                assert isinstance(target, VariableIdentifier)
-                self.store[target] = self.store[target].join(deepcopy(value))
-                if target.is_dictionary:    # d[...][key] = value
-                    self.values[target.values] = self.values[target.values].join(deepcopy(value))
         return self
 
     @copy_docstring(State._assign_slicing)
