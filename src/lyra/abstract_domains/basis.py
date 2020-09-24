@@ -872,6 +872,7 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                     return evaluation
                 value = value.join(evaluated[item])
             evaluation[expr] = value
+            evaluation[LengthIdentifier(expr)] = state._length.visit(expr, state)
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
@@ -886,6 +887,7 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                     return evaluation
                 value = value.join(evaluated[item])
             evaluation[expr] = value
+            evaluation[LengthIdentifier(expr)] = state._length.visit(expr, state)
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_SetDisplay)
@@ -900,6 +902,7 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                     return evaluation
                 value = value.join(evaluated[item])
             evaluation[expr] = value
+            evaluation[LengthIdentifier(expr)] = state._length.visit(expr, state)
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_DictDisplay)
@@ -925,6 +928,7 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             evaluation[KeysIdentifier(expr)] = _value
             evaluation[expr] = value
             evaluation[ValuesIdentifier(expr)] = value_
+            evaluation[LengthIdentifier(expr)] = state._length.visit(expr, state)
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Subscription)
@@ -936,12 +940,12 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                 return evaluation
             if isinstance(expr.target.typ, SequenceLyraType):
                 # check (and modify) target length based on key
-                if isinstance(expr.target, VariableIdentifier):  # simple variable subscription
+                if LengthIdentifier(expr.target) in evaluated:
                     key = self.visit(expr.key, state, evaluated)[expr.key]
                     if state.is_bottom():
                         return evaluation
                     if isinstance(key, IntervalLattice):
-                        length: IntervalLattice = state.lengths[expr.target.length]
+                        length: IntervalLattice = evaluated[LengthIdentifier(expr.target)]
                         if 0 <= key.lower:  # key is positive
                             if length.upper <= key.lower:  # key is larger than length
                                 state.bottom()
@@ -1439,6 +1443,7 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                     itv = deepcopy(current)
                 value[str(idx)] = itv
             evaluation[expr] = value
+            evaluation[LengthIdentifier(expr)] = state._length.visit(expr, state)
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
@@ -1458,6 +1463,7 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                     itv = deepcopy(current)
                 value[str(idx)] = itv
             evaluation[expr] = value
+            evaluation[LengthIdentifier(expr)] = state._length.visit(expr, state)
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_SetDisplay)
@@ -1477,6 +1483,7 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                     itv = deepcopy(current)
                 value = value.join(itv)
             evaluation[expr] = value
+            evaluation[LengthIdentifier(expr)] = state._length.visit(expr, state)
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_DictDisplay)
@@ -1514,6 +1521,7 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
             evaluation[KeysIdentifier(expr)] = _value
             evaluation[expr] = value
             evaluation[ValuesIdentifier(expr)] = value_
+            evaluation[LengthIdentifier(expr)] = state._length.visit(expr, state)
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Subscription)
@@ -1525,12 +1533,12 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                 return evaluation
             if isinstance(expr.target.typ, SequenceLyraType):
                 # check (and modify) target length based on key
-                if isinstance(expr.target, VariableIdentifier):  # simple variable subscription
+                if LengthIdentifier(expr.target) in evaluated:
                     key = self.visit(expr.key, state, evaluated)[expr.key]
                     if state.is_bottom():
                         return evaluation
                     if isinstance(key, IntervalLattice):
-                        length: IntervalLattice = state.lengths[expr.target.length]
+                        length: IntervalLattice = evaluated[LengthIdentifier(expr.target)]
                         if 0 <= key.lower:  # key is positive
                             if length.upper <= key.lower:  # key is larger than length
                                 state.bottom()
@@ -1548,6 +1556,9 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                 if isinstance(target, IndexedLattice):
                     _key: List[str] = state._key.visit(expr.key, target.bound, state)
                     fetched = target.weak_get(_key)
+                    if fetched.is_bottom():     # key does not belong to target keys
+                        state.bottom()
+                        return evaluation
                     if isinstance(expr.typ, (SequenceLyraType, DictLyraType)):
                         index = {'_': fetched}
                         idxd = state.lattices[expr.typ](**state.arguments[expr.typ], index=index)
