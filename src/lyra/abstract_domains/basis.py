@@ -337,17 +337,6 @@ class Basis(Store, State, metaclass=ABCMeta):
         def visit_Literal(self, expr: Literal, evaluation=None, value=None, state=None):
             return state  # nothing to be done
 
-        @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
-        def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):
-            refined = evaluation[expr].meet(value)
-            state.store[expr] = refined
-            if expr.is_dictionary:
-                _refined = evaluation[expr.keys].meet(value)
-                state.keys[expr.keys] = _refined
-                refined_ = evaluation[expr.values].meet(value)
-                state.values[expr.values] = refined_
-            return state
-
         @copy_docstring(ExpressionVisitor.visit_LengthIdentifier)
         def visit_LengthIdentifier(self, expr, evaluation=None, value=None, state=None):
             refined = evaluation[expr].meet(value)
@@ -957,13 +946,15 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                                 state.bottom()
                                 return evaluation
                             lower = IntervalLattice(lower=key.lower + 1)                            # TODO: move to refinement?
-                            state.lengths[expr.target.length] = length.meet(lower)                  # TODO: move to refinement?
+                            if isinstance(expr.target, VariableIdentifier):                         # TODO: move to refinement?
+                                state.lengths[expr.target.length] = length.meet(lower)              # TODO: move to refinement?
                         elif key.upper < 0:  # key is negative
                             if length.upper + key.upper < 0:  # key is smaller than length
                                 state.bottom()
                                 return evaluation
                             upper = IntervalLattice(lower=-key.upper)                               # TODO: move to refinement?
-                            state.lengths[expr.target.length] = length.meet(upper)                  # TODO: move to refinement?
+                            if isinstance(expr.target, VariableIdentifier):                         # TODO: move to refinement?
+                                state.lengths[expr.target.length] = length.meet(upper)              # TODO: move to refinement?
                 evaluation[expr] = deepcopy(evaluated[expr.target])  # return value of target
             else:
                 assert isinstance(expr.target.typ, DictLyraType)
@@ -1042,6 +1033,17 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
 
     class ExpressionRefinement(Basis.ExpressionRefinement):
 
+        @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+        def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):
+            refined = evaluation[expr].meet(value)
+            state.store[expr] = refined
+            if expr.is_dictionary:
+                _refined = evaluation[expr.keys].meet(value)
+                state.keys[expr.keys] = _refined
+                refined_ = evaluation[expr.values].meet(value)
+                state.values[expr.values] = refined_
+            return state
+
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
             refined = evaluation[expr].meet(value)
@@ -1079,11 +1081,7 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: Subscription, evaluation=None, value=None, state=None):
             refined = evaluation[expr]      # weak update
-            target = expr
-            while isinstance(target, (Subscription, Slicing)):
-                target = target.target
-            state.store[target] = refined
-            return state
+            return self.visit(expr.target, evaluation, refined, state)
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
@@ -1570,13 +1568,15 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                                 state.bottom()
                                 return evaluation
                             lower = IntervalLattice(lower=key.lower + 1)                            # TODO: move to refinement?
-                            state.lengths[expr.target.length] = length.meet(lower)                  # TODO: move to refinement?
+                            if isinstance(expr.target, VariableIdentifier):                         # TODO: move to refinement?
+                                state.lengths[expr.target.length] = length.meet(lower)              # TODO: move to refinement?
                         elif key.upper < 0:  # key is negative
                             if length.upper + key.upper < 0:  # key is smaller than length
                                 state.bottom()
                                 return evaluation
                             upper = IntervalLattice(lower=-key.upper)                               # TODO: move to refinement?
-                            state.lengths[expr.target.length] = length.meet(upper)
+                            if isinstance(expr.target, VariableIdentifier):                         # TODO: move to refinement?
+                                state.lengths[expr.target.length] = length.meet(upper)              # TODO: move to refinement?
                 # return value of key in target
                 target = deepcopy(evaluated[expr.target])
                 if isinstance(target, IndexedLattice):
@@ -1657,9 +1657,26 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
 
     class ExpressionRefinement(Basis.ExpressionRefinement):
 
+        @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
+        def visit_VariableIdentifier(self, expr, evaluation=None, value=None, state=None):
+            refined = evaluation[expr].meet(value)
+            state.store[expr] = refined
+            if expr.is_dictionary:
+                # _refined = evaluation[expr.keys].meet(value)
+                # state.keys[expr.keys] = _refined
+                summary = refined.summarize()
+                if isinstance(state.values[expr.values], IndexedLattice):
+                    state.values[expr.values] = evaluation[expr.values].refine(summary)
+                else:
+                    state.values[expr.values] = evaluation[expr.values].meet(summary)
+            return state
+
         @copy_docstring(ExpressionVisitor.visit_ListDisplay)
         def visit_ListDisplay(self, expr: ListDisplay, evaluation=None, value=None, state=None):
-            refined = evaluation[expr].meet(value)
+            if isinstance(value, IndexedLattice):
+                refined = evaluation[expr].meet(value)
+            else:
+                refined = evaluation[expr].refine(value)
             updated = state
             for idx, item in enumerate(expr.items):
                 if isinstance(refined, IndexedLattice):
@@ -1670,7 +1687,10 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
 
         @copy_docstring(ExpressionVisitor.visit_TupleDisplay)
         def visit_TupleDisplay(self, expr: TupleDisplay, evaluation=None, value=None, state=None):
-            refined = evaluation[expr].meet(value)
+            if isinstance(value, IndexedLattice):
+                refined = evaluation[expr].meet(value)
+            else:
+                refined = evaluation[expr].refine(value)
             updated = state
             for idx, item in enumerate(expr.items):
                 if isinstance(refined, IndexedLattice):
@@ -1681,7 +1701,10 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
 
         @copy_docstring(ExpressionVisitor.visit_SetDisplay)
         def visit_SetDisplay(self, expr: SetDisplay, evaluation=None, value=None, state=None):
-            refined = evaluation[expr].meet(value)
+            if isinstance(value, IndexedLattice):
+                refined = evaluation[expr].meet(value)
+            else:
+                refined = evaluation[expr].refine(value)
             updated = state
             for idx, item in enumerate(expr.items):
                 if isinstance(refined, IndexedLattice):
@@ -1692,44 +1715,55 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
 
         @copy_docstring(ExpressionVisitor.visit_DictDisplay)
         def visit_DictDisplay(self, expr: DictDisplay, evaluation=None, value=None, state=None):
-            refined = evaluation[expr].meet(value)
+            if isinstance(value, IndexedLattice):
+                refined = evaluation[expr].meet(value)
+            else:
+                refined = evaluation[expr].refine(value)
             updated = state
             for key, val in zip(expr.keys, expr.values):
                 updated = self.visit(val, evaluation, deepcopy(refined[str(key)]), updated)
             return updated
 
         def visit_Subscription(self, expr, evaluation=None, value=None, state=None):
-            #
-            # k: int = int(input())
-            # x: int = {1: 1, 2: 2, 3: 3}[k]
-            # if x != 3:
-            #     raise ValueError
-            #
             refined = deepcopy(evaluation[expr]).meet(value)
-            if isinstance(expr.target, VariableIdentifier):
-                target = deepcopy(state.store[expr.target])
-                _key: List[str] = state._key.visit(expr.key, target.bound, state)
-                if len(_key) == 1 and _key[0] != target.default:
-                    state.store[expr.target][_key[0]] = refined
-                    if expr.target.is_dictionary:
-                        # update length
-                        # if not set(state.store[expr.target].used).issubset(target.used):
-                        #     length: IntervalLattice = state.lengths[expr.target.length]
-                        #     one = IntervalLattice(lower=1, upper=1)
-                        #     state.lengths[expr.target.length] = length.add(one)
-                        # update values
-                        summary = state.store[expr.target].summarize()
-                        values = expr.target.values
-                        if isinstance(state.values[values], IntervalLattice):
-                            state.values[values] = state.values[values].meet(summary)
-                        else:
-                            assert isinstance(state.values[values], IndexedLattice)
-                            state.values[values] = state.values[values].refine(summary)
-                else:
-                    if expr.target.is_dictionary:
-                        length: IntervalLattice = state.lengths[expr.target.length]
-                        state.lengths[expr.target.length] = length.meet(IntervalLattice(lower=1))
-            return state
+            target: IndexedLattice = deepcopy(evaluation[expr.target])          # value of target
+            _key: List[str] = state._key.visit(expr.key, target.bound, state)   # value of key
+            updated = state
+            # refine value of target
+            itv = refined.summarize() if isinstance(refined, IndexedLattice) else refined
+            if len(_key) == 1 and _key[0] != target.default:    # key is precise
+                target[_key[0]] = itv
+            else:
+                target.weak_set(_key, itv)
+            updated = self.visit(expr.target, evaluation, target, updated)
+            # refine value of key
+
+
+            # refined = deepcopy(evaluation[expr]).meet(value)
+            # if isinstance(expr.target, VariableIdentifier):
+            #     target = deepcopy(state.store[expr.target])
+            #     _key: List[str] = state._key.visit(expr.key, target.bound, state)
+            #     if len(_key) == 1 and _key[0] != target.default:
+            #         state.store[expr.target][_key[0]] = refined
+            #         if expr.target.is_dictionary:
+            #             # update length
+            #             # if not set(state.store[expr.target].used).issubset(target.used):
+            #             #     length: IntervalLattice = state.lengths[expr.target.length]
+            #             #     one = IntervalLattice(lower=1, upper=1)
+            #             #     state.lengths[expr.target.length] = length.add(one)
+            #             # update values
+            #             summary = state.store[expr.target].summarize()
+            #             values = expr.target.values
+            #             if isinstance(state.values[values], IntervalLattice):
+            #                 state.values[values] = state.values[values].meet(summary)
+            #             else:
+            #                 assert isinstance(state.values[values], IndexedLattice)
+            #                 state.values[values] = state.values[values].refine(summary)
+            #     else:
+            #         if expr.target.is_dictionary:
+            #             length: IntervalLattice = state.lengths[expr.target.length]
+            #             state.lengths[expr.target.length] = length.meet(IntervalLattice(lower=1))
+            return updated
 
         def visit_Slicing(self, expr: 'Slicing', evaluation=None, value=None, state=None):
             raise NotImplementedError  # TODO

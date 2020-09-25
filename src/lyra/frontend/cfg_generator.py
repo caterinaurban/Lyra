@@ -355,8 +355,9 @@ class CFGVisitor(ast.NodeVisitor):
         The ctx attribute is Store if the container is an assignment target, and Load otherwise."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(typ, list):   # this comes from a subscript
-            items = [self.visit(item, types, typ[0], fname=fname) for item in node.elts]
-            return ListDisplayAccess(pp, ListLyraType(typ[0]), items)
+            items = [self.visit(item, types, typ[1], fname=fname) for item in node.elts]
+            itm_typ = items[0].typ if isinstance(typ[1], list) else typ[1]
+            return ListDisplayAccess(pp, ListLyraType(itm_typ), items)
         if isinstance(typ, ListLyraType):
             items = [self.visit(item, types, typ.typ, fname=fname) for item in node.elts]
         else:
@@ -383,8 +384,9 @@ class CFGVisitor(ast.NodeVisitor):
         The elts attribute stores a list of nodes representing the elements."""
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(typ, list):   # this comes from a subscript
-            items = [self.visit(item, types, typ[0], fname=fname) for item in node.elts]
-            return SetDisplayAccess(pp, SetLyraType(typ[0]), items)
+            items = [self.visit(item, types, typ[1], fname=fname) for item in node.elts]
+            itm_typ = items[0].typ if isinstance(typ[1], list) else typ[1]
+            return SetDisplayAccess(pp, SetLyraType(itm_typ), items)
         if isinstance(typ, SetLyraType):
             items = [self.visit(item, types, typ.typ, fname=fname) for item in node.elts]
         else:
@@ -399,7 +401,8 @@ class CFGVisitor(ast.NodeVisitor):
         if isinstance(typ, list):   # this comes from a subscript
             keys = [self.visit(key, types, typ[0], fname=fname) for key in node.keys]
             values = [self.visit(value, types, typ[1], fname=fname) for value in node.values]
-            return DictDisplayAccess(pp, DictLyraType(typ[0], typ[1]), keys, values)
+            val_typ = values[0].typ if isinstance(typ[1], list) else typ[1]
+            return DictDisplayAccess(pp, DictLyraType(typ[0], val_typ), keys, values)
         if isinstance(typ, DictLyraType):
             keys = [self.visit(key, types, typ.key_typ, fname=fname) for key in node.keys]
             values = [self.visit(value, types, typ.val_typ, fname=fname) for value in node.values]
@@ -649,7 +652,9 @@ class CFGVisitor(ast.NodeVisitor):
             else:
                 _typ = key.typ
             target = self.visit(node.value, types, [_typ, typ], fname=fname)
-            if isinstance(target.typ, ListLyraType):
+            if isinstance(target.typ, DictLyraType):
+                return SubscriptionAccess(pp, target.typ.val_typ, target, key)
+            elif isinstance(target.typ, ListLyraType):
                 return SubscriptionAccess(pp, target.typ.typ, target, key)
             else:  # String
                 return SubscriptionAccess(pp, target.typ, target, key)
