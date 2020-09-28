@@ -9,7 +9,7 @@ The elements of the lattice are a bounded number of indexed lattice elements.
 from ast import literal_eval
 from copy import deepcopy
 from math import inf
-from typing import Dict, List, Set, Type
+from typing import Dict, List, Set, Type, Any
 
 from lyra.abstract_domains.lattice import SequenceMixin, BottomMixin, Lattice
 from lyra.core.expressions import Literal
@@ -167,7 +167,7 @@ class IndexedLattice(BottomMixin, SequenceMixin):
     def summarize(self, keys: LyraType = None) -> 'Lattice':
         """Summarize the index into a single (sub)lattice element.
 
-        :param keys: if given, type to use to also summarize the keys (default: None)
+        :param keys: if given, type to use to also summarize the indexes (default: None)
         :return: the (sub)lattice element representing the summary of the index
         """
         def do(lattice, typ, key, current: Lattice) -> Lattice:
@@ -244,6 +244,42 @@ class IndexedLattice(BottomMixin, SequenceMixin):
         for idx in self.index:
             self.index[idx] = self.index[idx].meet(deepcopy(lattice))
         return self
+
+    def reverse(self, lattice: Lattice, keys: LyraType, itv: Lattice):
+        """Reverse the index.
+
+        :param lattice: the lattice in which to interpret the indexes
+        :param keys: type to use for the indexes
+        :param itv: the (sub)lattice element to start from
+        :return: the indexes that correspond to the given (sub)lattice element
+        """
+        def do(instance, typ, key, current: Lattice) -> Lattice:
+            updated: Lattice = current
+            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
+                if hasattr(lattice, 'from_literal'):
+                    literal = Literal(typ, key)
+                    if isinstance(instance, IndexedLattice):
+                        updated = updated.join(instance.from_literal(instance.lattice, literal))
+                    else:
+                        updated = updated.join(instance.from_literal(literal))
+                else:
+                    updated = updated.join(deepcopy(lattice).top())
+            else:
+                assert isinstance(typ, TupleLyraType)
+                val = literal_eval(key)
+                for i, subtyp in enumerate(typ.typs):
+                    updated = do(instance, subtyp, val[i], updated)
+            return updated
+
+        result = deepcopy(lattice).bottom()
+        for idx, value in self.index.items():
+            intersection = deepcopy(self.index[idx]).meet(deepcopy(itv))
+            if not intersection.is_bottom():
+                if idx == self.default:
+                    result = result.join(deepcopy(lattice).top())
+                else:
+                    result = do(lattice, keys, idx, result)
+        return result
 
     def __repr__(self):
         if self.is_bottom():

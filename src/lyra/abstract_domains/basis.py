@@ -7,6 +7,7 @@ Interface of an abstract domain mapping variables to lattice elements.
 :Author: Caterina Urban
 """
 from abc import ABCMeta
+from ast import literal_eval
 from copy import deepcopy
 from typing import Set, Dict, Type, Any, Union, List
 
@@ -933,12 +934,12 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             evaluated = self.visit(expr.target, state, evaluation)  # evaluate target
             if state.is_bottom():
                 return evaluation
+            key = self.visit(expr.key, state, evaluated)[expr.key]  # evaluate key
+            if state.is_bottom():
+                return evaluation
             if isinstance(expr.target.typ, SequenceLyraType):
                 # check (and modify) target length based on key
                 if LengthIdentifier(expr.target) in evaluated:
-                    key = self.visit(expr.key, state, evaluated)[expr.key]
-                    if state.is_bottom():
-                        return evaluation
                     if isinstance(key, IntervalLattice):
                         length: IntervalLattice = evaluated[LengthIdentifier(expr.target)]
                         if 0 <= key.lower:  # key is positive
@@ -959,9 +960,6 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             else:
                 assert isinstance(expr.target.typ, DictLyraType)
                 # check (and modify) target length based on key
-                key = self.visit(expr.key, state, evaluated)[expr.key]
-                if state.is_bottom():
-                    return evaluation
                 intersection = deepcopy(key).meet(deepcopy(evaluated[KeysIdentifier(expr.target)]))
                 if intersection.is_bottom():  # key does not belong to target keys
                     state.bottom()
@@ -1135,7 +1133,7 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
         Lattice operations and statements modify the current state.
     """
 
-    @copy_docstring(BasisWithSummarization._assign_subscription)
+    @copy_docstring(Basis._assign_subscription)
     def _assign_subscription(self, left: Subscription, right: Expression):
         """The subscription assignment is of the form target[key] = value. There are various cases:
 
@@ -1281,7 +1279,7 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                         self.values[values] = self.values[values].join(deepcopy(itv)).meet(summary)
         return self
 
-    @copy_docstring(State._assign_slicing)
+    @copy_docstring(Basis._assign_slicing)
     def _assign_slicing(self, left: Slicing, right: Expression):
         raise NotImplementedError  # TODO
 
@@ -1319,7 +1317,7 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
             self.store[container].join(current.store[container])
         return self
 
-    @copy_docstring(State._substitute_subscription)
+    @copy_docstring(Basis._substitute_subscription)
     def _substitute_subscription(self, left: Subscription, right: Expression):
         if isinstance(left.target, VariableIdentifier):
             evaluation = self._evaluation.visit(left.target, self, dict())
@@ -1359,7 +1357,7 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
             raise NotImplementedError  # TODO
         return self
 
-    @copy_docstring(State._substitute_slicing)
+    @copy_docstring(Basis._substitute_slicing)
     def _substitute_slicing(self, left: Slicing, right: Expression):
         raise NotImplementedError  # TODO
 
@@ -1555,12 +1553,12 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
             evaluated = self.visit(expr.target, state, evaluation)  # evaluate target
             if state.is_bottom():
                 return evaluation
+            key = self.visit(expr.key, state, evaluated)[expr.key]  # evaluate key
+            if state.is_bottom():
+                return evaluation
             if isinstance(expr.target.typ, SequenceLyraType):
                 # check (and modify) target length based on key
                 if LengthIdentifier(expr.target) in evaluated:
-                    key = self.visit(expr.key, state, evaluated)[expr.key]
-                    if state.is_bottom():
-                        return evaluation
                     if isinstance(key, IntervalLattice):
                         length: IntervalLattice = evaluated[LengthIdentifier(expr.target)]
                         if 0 <= key.lower:  # key is positive
@@ -1596,9 +1594,6 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
             else:
                 assert isinstance(expr.target.typ, DictLyraType)
                 # check (and modify) target length based on key
-                key = self.visit(expr.key, state, evaluated)[expr.key]
-                if state.is_bottom():
-                    return evaluation
                 intersection = deepcopy(key).meet(deepcopy(evaluated[KeysIdentifier(expr.target)]))
                 if intersection.is_bottom():  # key does not belong to target keys
                     state.bottom()
@@ -1730,14 +1725,21 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
             _key: List[str] = state._key.visit(expr.key, target.bound, state)   # value of key
             updated = state
             # refine value of target
-            itv = refined.summarize() if isinstance(refined, IndexedLattice) else refined
+            itv = refined.summarize() if isinstance(refined, IndexedLattice) else refined   # TODO: should we also summarize keys? I think so...
             if len(_key) == 1 and _key[0] != target.default:    # key is precise
                 target[_key[0]] = itv
             else:
                 target.weak_set(_key, itv)
             updated = self.visit(expr.target, evaluation, target, updated)
             # refine value of key
-
+            if isinstance(expr.target.typ, SequenceLyraType):
+                _typ = IntegerLyraType()    # the key type must be IntegerLyraType
+            else:
+                assert isinstance(expr.target.typ, DictLyraType)
+                _typ = expr.target.typ.key_typ
+            instance = state.lattices[_typ](**state.arguments[_typ])
+            key = evaluation[expr.target].reverse(instance, _typ, itv)
+            updated = self.visit(expr.key, evaluation, key, updated)
 
             # refined = deepcopy(evaluation[expr]).meet(value)
             # if isinstance(expr.target, VariableIdentifier):
