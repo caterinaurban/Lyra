@@ -164,10 +164,11 @@ class IndexedLattice(BottomMixin, SequenceMixin):
         """
         return len(self.index) > 1 or not self.index[self.default].is_top()
 
-    def summarize(self, keys: LyraType = None) -> 'Lattice':
+    def summarize(self, keys: LyraType = None, values: bool = True) -> 'Lattice':
         """Summarize the index into a single (sub)lattice element.
 
         :param keys: if given, type to use to also summarize the indexes (default: None)
+        :param values: if False, do not summarize the indexed (sub)lattice elements (default: True)
         :return: the (sub)lattice element representing the summary of the index
         """
         def do(lattice, typ, key, current: Lattice) -> Lattice:
@@ -193,8 +194,9 @@ class IndexedLattice(BottomMixin, SequenceMixin):
                 else:
                     summary = do(self.lattice, keys, idx, summary)
 
-        for value in self.index.values():
-            summary = summary.join(deepcopy(value))
+        if values:
+            for value in self.index.values():
+                summary = summary.join(deepcopy(value))
         return summary
 
     def weak_get(self, idxs: List[str]):

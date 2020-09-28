@@ -427,6 +427,43 @@ class BuiltInCallSemantics(CallSemantics):
             variable = argument.variable
             state.result = {LengthIdentifier(variable)}
             return state
+        elif isinstance(argument, ListDisplayAccess):
+            items = [self.semantics(item, state, interpreter).result for item in argument.items]
+            result = set()
+            for combination in itertools.product(*items):
+                display = ListDisplay(argument.typ, list(combination))
+                result.add(LengthIdentifier(display))
+            state.result = result
+            return state
+        elif isinstance(argument, TupleDisplayAccess):
+            items = [self.semantics(item, state, interpreter).result for item in argument.items]
+            result = set()
+            for combination in itertools.product(*items):
+                display = TupleDisplay(argument.typ, list(combination))
+                result.add(LengthIdentifier(display))
+            state.result = result
+            return state
+        elif isinstance(argument, SetDisplayAccess):
+            items = [self.semantics(item, state, interpreter).result for item in argument.items]
+            result = set()
+            for combination in itertools.product(*items):
+                display = SetDisplay(argument.typ, list(combination))
+                result.add(LengthIdentifier(display))
+            state.result = result
+            return state
+        elif isinstance(argument, DictDisplayAccess):
+            keys = [self.semantics(k, state, interpreter).result for k in argument.keys]
+            values = [self.semantics(v, state, interpreter).result for v in argument.values]
+            result = set()
+            if keys:  # not empty List[Set[Expression]]
+                for combination in itertools.product(*map(itertools.product, keys, values)):
+                    unzip = list(zip(*combination))
+                    display = DictDisplay(argument.typ, list(unzip[0]), list(unzip[1]))
+                    result.add(LengthIdentifier(display))
+            else:
+                result.add(LengthIdentifier(DictDisplay(argument.typ, list(), list())))
+            state.result = result
+            return state
         error = f"Semantics for length of {argument} is not yet implemented!"
         raise NotImplementedError(error)
 

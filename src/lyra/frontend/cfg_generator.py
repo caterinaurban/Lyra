@@ -360,9 +360,14 @@ class CFGVisitor(ast.NodeVisitor):
             return ListDisplayAccess(pp, ListLyraType(itm_typ), items)
         if isinstance(typ, ListLyraType):
             items = [self.visit(item, types, typ.typ, fname=fname) for item in node.elts]
+            return ListDisplayAccess(pp, typ, items)
         else:
             items = [self.visit(item, types, None, fname=fname) for item in node.elts]
-        return ListDisplayAccess(pp, typ, items)
+            if isinstance(items[0], LiteralEvaluation):
+                itm_typ = items[0].literal.typ
+            else:
+                itm_typ = items[0].typ
+            return ListDisplayAccess(pp, ListLyraType(itm_typ), items)
 
     def visit_Tuple(self, node, types=None, typ=None, fname=''):
         """Visitor function for a tuple.
@@ -375,9 +380,16 @@ class CFGVisitor(ast.NodeVisitor):
         if isinstance(typ, TupleLyraType):
             zipped = zip(node.elts, typ.typs)
             items = [self.visit(item, types, i_typ, fname=fname) for item, i_typ in zipped]
+            return TupleDisplayAccess(pp, typ, items)
         else:
             items = [self.visit(item, types, None, fname=fname) for item in node.elts]
-        return TupleDisplayAccess(pp, typ, items)
+            typs = list()
+            for item in items:
+                if isinstance(item, LiteralEvaluation):
+                    typs.append(item.literal.typ)
+                else:
+                    typs.append(item.typ)
+            return TupleDisplayAccess(pp, TupleLyraType(typs), items)
 
     def visit_Set(self, node, types=None, typ=None, fname=''):
         """Visitor function for a set.
@@ -389,9 +401,14 @@ class CFGVisitor(ast.NodeVisitor):
             return SetDisplayAccess(pp, SetLyraType(itm_typ), items)
         if isinstance(typ, SetLyraType):
             items = [self.visit(item, types, typ.typ, fname=fname) for item in node.elts]
+            return SetDisplayAccess(pp, typ, items)
         else:
             items = [self.visit(item, types, None, fname=fname) for item in node.elts]
-        return SetDisplayAccess(pp, typ, items)
+            if isinstance(items[0], LiteralEvaluation):
+                itm_typ = items[0].literal.typ
+            else:
+                itm_typ = items[0].typ
+            return SetDisplayAccess(pp, SetLyraType(itm_typ), items)
 
     def visit_Dict(self, node, types=None, typ=None, fname=''):
         """Visitor function for a dictionary.
@@ -406,10 +423,19 @@ class CFGVisitor(ast.NodeVisitor):
         if isinstance(typ, DictLyraType):
             keys = [self.visit(key, types, typ.key_typ, fname=fname) for key in node.keys]
             values = [self.visit(value, types, typ.val_typ, fname=fname) for value in node.values]
+            return DictDisplayAccess(pp, typ, keys, values)
         else:
             keys = [self.visit(key, types, None, fname=fname) for key in node.keys]
+            if isinstance(keys[0], LiteralEvaluation):
+                key_typ = keys[0].literal.typ
+            else:
+                key_typ = keys[0].typ
             values = [self.visit(value, types, None, fname=fname) for value in node.values]
-        return DictDisplayAccess(pp, typ, keys, values)
+            if isinstance(values[0], LiteralEvaluation):
+                val_typ = values[0].literal.typ
+            else:
+                val_typ = values[0].typ
+            return DictDisplayAccess(pp, DictLyraType(key_typ, val_typ), keys, values)
 
     # noinspection PyUnusedLocal
     def visit_NameConstant(self, node, types=None, typ=None, fname=''):

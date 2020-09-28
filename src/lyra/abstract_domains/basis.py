@@ -42,25 +42,6 @@ class Basis(Store, State, metaclass=ABCMeta):
         super().__init__(variables, lattices, arguments)
         State.__init__(self, precursory)
 
-    @copy_docstring(State._assign_variable)
-    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'Basis':
-        evaluation = self._evaluation.visit(right, self, dict())
-        if self.is_bottom():
-            return self
-        self.store[left] = evaluation[right]
-        if left.has_length:
-            self.lengths[left.length] = self._length.visit(right, self)
-            if left.is_dictionary:
-                if isinstance(right.typ, DictLyraType):
-                    _keys = KeysIdentifier(right)
-                    self.keys[left.keys] = evaluation.get(_keys, deepcopy(evaluation[right]))
-                    _values = ValuesIdentifier(right)
-                    self.values[left.values] = evaluation.get(_values, deepcopy(evaluation[right]))
-                else:
-                    self.keys[left.keys] = deepcopy(evaluation[right])
-                    self.values[left.values] = deepcopy(evaluation[right])
-        return self
-
     @copy_docstring(State.enter_if)
     def enter_if(self):
         return self  # nothing to be done
@@ -143,7 +124,8 @@ class Basis(Store, State, metaclass=ABCMeta):
         def visit_LengthIdentifier(self, expr: LengthIdentifier, state=None, evaluation=None):
             if expr in evaluation:
                 return evaluation  # nothing to be done
-            evaluation[expr] = deepcopy(state.lengths[expr])
+            evaluated = self.visit(expr.expression, state, evaluation)
+            evaluation[expr] = evaluated[LengthIdentifier(expr.expression)]
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_AttributeReference)
@@ -162,10 +144,18 @@ class Basis(Store, State, metaclass=ABCMeta):
                 evaluation[expr] = value.maybe()
             else:
                 evaluation[expr] = value.top()
+                if isinstance(expr.typ, (SequenceLyraType, DictLyraType)):
+                    evaluation[LengthIdentifier(expr)] = IntervalLattice(lower=0)
+                    if isinstance(expr.typ, DictLyraType):
+                        k = state.lattices[expr.typ.key_typ](**state.arguments[expr.typ.key_typ])
+                        evaluation[KeysIdentifier(expr)] = k.top()
+                        v = state.lattices[expr.typ.key_typ](**state.arguments[expr.typ.key_typ])
+                        evaluation[ValuesIdentifier(expr)] = v.top()
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Range)
         def visit_Range(self, expr: Range, state=None, evaluation=None):
+            # TODO: fix me (length)
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
@@ -173,6 +163,7 @@ class Basis(Store, State, metaclass=ABCMeta):
 
         @copy_docstring(ExpressionVisitor.visit_Keys)
         def visit_Keys(self, expr: Keys, state=None, evaluation=None):
+            # TODO: fix me (target is not necessarily a variable)
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.target_dict, state, evaluation)
@@ -183,6 +174,7 @@ class Basis(Store, State, metaclass=ABCMeta):
 
         @copy_docstring(ExpressionVisitor.visit_Values)
         def visit_Values(self, expr: Values, state=None, evaluation=None):
+            # TODO: fix me (target is not necessarily a variable)
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.target_dict, state, evaluation)
@@ -272,6 +264,7 @@ class Basis(Store, State, metaclass=ABCMeta):
 
         @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
         def visit_BinarySequenceOperation(self, expr, state=None, evaluation=None):
+            # TODO: fix me (length)
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated1 = self.visit(expr.left, state, evaluation)
@@ -653,6 +646,25 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
     .. warning::
         Lattice operations and statements modify the current state.
     """
+
+    @copy_docstring(State._assign_variable)
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'Basis':
+        evaluation = self._evaluation.visit(right, self, dict())
+        if self.is_bottom():
+            return self
+        self.store[left] = evaluation[right]
+        if left.has_length:
+            self.lengths[left.length] = self._length.visit(right, self)
+            if left.is_dictionary:
+                if isinstance(right.typ, DictLyraType):
+                    _keys = KeysIdentifier(right)
+                    self.keys[left.keys] = evaluation.get(_keys, deepcopy(evaluation[right]))
+                    _values = ValuesIdentifier(right)
+                    self.values[left.values] = evaluation.get(_values, deepcopy(evaluation[right]))
+                else:
+                    self.keys[left.keys] = deepcopy(evaluation[right])
+                    self.values[left.values] = deepcopy(evaluation[right])
+        return self
 
     @copy_docstring(State._assign_subscription)
     def _assign_subscription(self, left: Subscription, right: Expression):
@@ -1133,6 +1145,31 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
         Lattice operations and statements modify the current state.
     """
 
+    @copy_docstring(State._assign_variable)
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'Basis':
+        evaluation = self._evaluation.visit(right, self, dict())
+        if self.is_bottom():
+            return self
+        self.store[left] = evaluation[right]
+        if left.has_length:
+            self.lengths[left.length] = self._length.visit(right, self)
+            if left.is_dictionary:
+                if isinstance(right.typ, DictLyraType):
+                    _keys = KeysIdentifier(right)
+                    if _keys in evaluation:
+                        self.keys[left.keys] = evaluation[_keys]
+                    else:
+                        self.keys[left.keys] = evaluation[right].summarize(left.typ.key_typ, False)
+                    _values = ValuesIdentifier(right)
+                    if _values in evaluation:
+                        self.values[left.values] = evaluation[_values]
+                    else:
+                        self.values[left.values] = evaluation[right].summarize()
+                else:
+                    self.keys[left.keys] = deepcopy(evaluation[right])
+                    self.values[left.values] = deepcopy(evaluation[right])
+        return self
+
     @copy_docstring(Basis._assign_subscription)
     def _assign_subscription(self, left: Subscription, right: Expression):
         """The subscription assignment is of the form target[key] = value. There are various cases:
@@ -1587,6 +1624,12 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                         index = {'_': fetched}
                         idxd = state.lattices[expr.typ](**state.arguments[expr.typ], index=index)
                         evaluation[expr] = idxd
+                        evaluation[LengthIdentifier(expr)] = state._length.visit(expr, state)
+                        if isinstance(expr.typ, DictLyraType):
+                            _key_typ = expr.typ.key_typ
+                            _any = state.lattices[_key_typ](**state.arguments[_key_typ])
+                            evaluation[KeysIdentifier(expr)] = _any
+                            evaluation[ValuesIdentifier(expr)] = fetched
                     else:
                         evaluation[expr] = fetched
                 else:
@@ -1725,7 +1768,7 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
             _key: List[str] = state._key.visit(expr.key, target.bound, state)   # value of key
             updated = state
             # refine value of target
-            itv = refined.summarize() if isinstance(refined, IndexedLattice) else refined   # TODO: should we also summarize keys? I think so...
+            itv = refined.summarize() if isinstance(refined, IndexedLattice) else refined
             if len(_key) == 1 and _key[0] != target.default:    # key is precise
                 target[_key[0]] = itv
             else:
