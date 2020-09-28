@@ -155,32 +155,49 @@ class Basis(Store, State, metaclass=ABCMeta):
 
         @copy_docstring(ExpressionVisitor.visit_Range)
         def visit_Range(self, expr: Range, state=None, evaluation=None):
-            # TODO: fix me (length)
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
+            evaluation[LengthIdentifier(expr)] = IntervalLattice(lower=0)
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Keys)
         def visit_Keys(self, expr: Keys, state=None, evaluation=None):
-            # TODO: fix me (target is not necessarily a variable)
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.target_dict, state, evaluation)
             if state.is_bottom():
                 return evaluation
-            evaluation[expr] = evaluated[expr.target_dict.keys]
+            assert isinstance(expr.typ, SetLyraType)
+            keys = evaluated[KeysIdentifier(expr.target_dict)]
+            if isinstance(keys, IndexedLattice):
+                evaluation[expr] = keys.summarize()
+                if keys.default not in keys.used:
+                    length = IntervalLattice(lower=keys.size, upper=keys.size)
+                    evaluation[LengthIdentifier(expr)] = length
+            else:
+                evaluation[expr] = deepcopy(keys)
+                evaluation[LengthIdentifier(expr)] = IntervalLattice(lower=0)
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_Values)
         def visit_Values(self, expr: Values, state=None, evaluation=None):
-            # TODO: fix me (target is not necessarily a variable)
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluated = self.visit(expr.target_dict, state, evaluation)
             if state.is_bottom():
                 return evaluation
-            evaluation[expr] = evaluated[expr.target_dict.values]
+            values = evaluated[ValuesIdentifier(expr.target_dict)]
+            assert isinstance(expr.typ, SetLyraType)
+            if isinstance(values, IndexedLattice):
+                evaluation[expr] = values.summarize()
+                if values.default not in values.used:
+                    length = IntervalLattice(lower=values.size, upper=values.size)
+                    evaluation[LengthIdentifier(expr)] = length
+            else:
+                evaluation[expr] = deepcopy(values)
+                evaluation[LengthIdentifier(expr)] = IntervalLattice(lower=0)
+            # evaluation[LengthIdentifier(expr)] = ...
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -654,7 +671,11 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             return self
         self.store[left] = evaluation[right]
         if left.has_length:
-            self.lengths[left.length] = self._length.visit(right, self)
+            _length = LengthIdentifier(right)
+            if _length in evaluation:
+                self.lengths[left.length] = evaluation[_length]
+            else:
+                self.lengths[left.length] = self._length.visit(right, self)
             if left.is_dictionary:
                 if isinstance(right.typ, DictLyraType):
                     _keys = KeysIdentifier(right)
@@ -1152,7 +1173,11 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
             return self
         self.store[left] = evaluation[right]
         if left.has_length:
-            self.lengths[left.length] = self._length.visit(right, self)
+            _length = LengthIdentifier(right)
+            if _length in evaluation:
+                self.lengths[left.length] = evaluation[_length]
+            else:
+                self.lengths[left.length] = self._length.visit(right, self)
             if left.is_dictionary:
                 if isinstance(right.typ, DictLyraType):
                     _keys = KeysIdentifier(right)
