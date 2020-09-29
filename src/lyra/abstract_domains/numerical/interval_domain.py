@@ -213,6 +213,8 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
             if expr in evaluation:
                 return evaluation    # nothing to be done
             evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
+            if isinstance(expr.typ, StringLyraType):
+                evaluation[LengthIdentifier(expr)] = IntervalLattice(len(expr.val), len(expr.val))
             return evaluation
 
         @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Range)
@@ -337,6 +339,8 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithIndexing):
                 evaluation[expr] = value
             else:
                 evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
+            if isinstance(expr.typ, StringLyraType):
+                evaluation[LengthIdentifier(expr)] = IntervalLattice(len(expr.val), len(expr.val))
             return evaluation
 
         @copy_docstring(BasisWithSummarization.ExpressionEvaluation.visit_Range)

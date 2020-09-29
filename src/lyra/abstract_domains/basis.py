@@ -106,6 +106,8 @@ class Basis(Store, State, metaclass=ABCMeta):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
+            if isinstance(expr.typ, StringLyraType):
+                evaluation[LengthIdentifier(expr)] = IntervalLattice(len(expr.val), len(expr.val))
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_VariableIdentifier)
@@ -159,45 +161,6 @@ class Basis(Store, State, metaclass=ABCMeta):
                 return evaluation  # nothing to be done
             evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
             evaluation[LengthIdentifier(expr)] = IntervalLattice(lower=0)
-            return evaluation
-
-        @copy_docstring(ExpressionVisitor.visit_Keys)
-        def visit_Keys(self, expr: Keys, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            evaluated = self.visit(expr.target_dict, state, evaluation)
-            if state.is_bottom():
-                return evaluation
-            assert isinstance(expr.typ, SetLyraType)
-            keys = evaluated[KeysIdentifier(expr.target_dict)]
-            if isinstance(keys, IndexedLattice):
-                evaluation[expr] = keys.summarize()
-                if keys.default not in keys.used:
-                    length = IntervalLattice(lower=keys.size, upper=keys.size)
-                    evaluation[LengthIdentifier(expr)] = length
-            else:
-                evaluation[expr] = deepcopy(keys)
-                evaluation[LengthIdentifier(expr)] = IntervalLattice(lower=0)
-            return evaluation
-
-        @copy_docstring(ExpressionVisitor.visit_Values)
-        def visit_Values(self, expr: Values, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            evaluated = self.visit(expr.target_dict, state, evaluation)
-            if state.is_bottom():
-                return evaluation
-            values = evaluated[ValuesIdentifier(expr.target_dict)]
-            assert isinstance(expr.typ, SetLyraType)
-            if isinstance(values, IndexedLattice):
-                evaluation[expr] = values.summarize()
-                if values.default not in values.used:
-                    length = IntervalLattice(lower=values.size, upper=values.size)
-                    evaluation[LengthIdentifier(expr)] = length
-            else:
-                evaluation[expr] = deepcopy(values)
-                evaluation[LengthIdentifier(expr)] = IntervalLattice(lower=0)
-            # evaluation[LengthIdentifier(expr)] = ...
             return evaluation
 
         @copy_docstring(ExpressionVisitor.visit_UnaryArithmeticOperation)
@@ -278,27 +241,6 @@ class Basis(Store, State, metaclass=ABCMeta):
                     evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
                 return evaluated2
             raise ValueError(f"Binary arithmetic operator '{str(expr.operator)}' is unsupported!")
-
-        @copy_docstring(ExpressionVisitor.visit_BinarySequenceOperation)
-        def visit_BinarySequenceOperation(self, expr, state=None, evaluation=None):
-            # TODO: fix me (length)
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            evaluated1 = self.visit(expr.left, state, evaluation)
-            if state.is_bottom():
-                return evaluation
-            evaluated2 = self.visit(expr.right, state, evaluated1)
-            if state.is_bottom():
-                return evaluation
-            value1 = evaluated2[expr.left]
-            value2 = evaluated2[expr.right]
-            if expr.operator == BinarySequenceOperation.Operator.Concat:
-                if isinstance(value1, SequenceMixin):
-                    evaluated2[expr] = deepcopy(value1).concat(value2)
-                else:
-                    evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
-                return evaluated2
-            raise ValueError(f"Binary sequence operator '{str(expr.operator)}' is unsupported!")
 
         @copy_docstring(ExpressionVisitor.visit_BinaryBooleanOperation)
         def visit_BinaryBooleanOperation(self, expr, state=None, evaluation=None):
@@ -1017,6 +959,32 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             evaluation[expr] = deepcopy(evaluated[target])
             return evaluation
 
+        @copy_docstring(ExpressionVisitor.visit_Keys)
+        def visit_Keys(self, expr: Keys, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target_dict, state, evaluation)
+            if state.is_bottom():
+                return evaluation
+            assert isinstance(expr.typ, SetLyraType)
+            keys = evaluated[KeysIdentifier(expr.target_dict)]
+            evaluation[expr] = deepcopy(keys)
+            evaluation[LengthIdentifier(expr)] = IntervalLattice(lower=0)
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_Values)
+        def visit_Values(self, expr: Values, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target_dict, state, evaluation)
+            if state.is_bottom():
+                return evaluation
+            values = evaluated[ValuesIdentifier(expr.target_dict)]
+            assert isinstance(expr.typ, SetLyraType)
+            evaluation[expr] = deepcopy(values)
+            evaluation[LengthIdentifier(expr)] = IntervalLattice(lower=0)
+            return evaluation
+
         @copy_docstring(ExpressionVisitor.visit_CastOperation)
         def visit_CastOperation(self, expr: CastOperation, state=None, evaluation=None):
             if expr in evaluation:
@@ -1046,15 +1014,19 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             if state.is_bottom():
                 return evaluation
             value1 = evaluated2[expr.left]
+            len1 = evaluated2[LengthIdentifier(expr.left)]
             value2 = evaluated2[expr.right]
+            len2 = evaluated2[LengthIdentifier(expr.right)]
             if expr.operator == BinarySequenceOperation.Operator.Concat:
                 if isinstance(value1, SequenceMixin):
                     if isinstance(expr.typ, ContainerLyraType):     # summarization
                         evaluated2[expr] = deepcopy(value1).join(value2)
                     else:
                         evaluated2[expr] = deepcopy(value1).concat(value2)
+                    evaluated2[LengthIdentifier(expr)] = deepcopy(len1).add(deepcopy(len2))
                 else:
                     evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
+                    evaluated2[LengthIdentifier(expr)] = IntervalLattice(lower=0)
                 return evaluated2
             raise ValueError(f"Binary sequence operator '{str(expr.operator)}' is unsupported!")
 
@@ -1690,6 +1662,44 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
         def visit_Slicing(self, expr: 'Slicing', state=None, evaluation=None):
             raise NotImplementedError   # TODO
 
+        @copy_docstring(ExpressionVisitor.visit_Keys)
+        def visit_Keys(self, expr: Keys, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target_dict, state, evaluation)
+            if state.is_bottom():
+                return evaluation
+            assert isinstance(expr.typ, SetLyraType)
+            keys = evaluated[KeysIdentifier(expr.target_dict)]
+            if isinstance(keys, IndexedLattice):
+                evaluation[expr] = keys.summarize()
+                if keys.default not in keys.used:
+                    length = IntervalLattice(lower=keys.size, upper=keys.size)
+                    evaluation[LengthIdentifier(expr)] = length
+            else:
+                evaluation[expr] = deepcopy(keys)
+                evaluation[LengthIdentifier(expr)] = IntervalLattice(lower=0)
+            return evaluation
+
+        @copy_docstring(ExpressionVisitor.visit_Values)
+        def visit_Values(self, expr: Values, state=None, evaluation=None):
+            if expr in evaluation:
+                return evaluation  # nothing to be done
+            evaluated = self.visit(expr.target_dict, state, evaluation)
+            if state.is_bottom():
+                return evaluation
+            values = evaluated[ValuesIdentifier(expr.target_dict)]
+            assert isinstance(expr.typ, SetLyraType)
+            if isinstance(values, IndexedLattice):
+                evaluation[expr] = values.summarize()
+                if values.default not in values.used:
+                    length = IntervalLattice(lower=values.size, upper=values.size)
+                    evaluation[LengthIdentifier(expr)] = length
+            else:
+                evaluation[expr] = deepcopy(values)
+                evaluation[LengthIdentifier(expr)] = IntervalLattice(lower=0)
+            return evaluation
+
         @copy_docstring(ExpressionVisitor.visit_CastOperation)
         def visit_CastOperation(self, expr: 'CastOperation'):
             raise NotImplementedError   # TODO
@@ -1705,12 +1715,16 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
             if state.is_bottom():
                 return evaluation
             value1 = evaluated2[expr.left]
+            len1 = evaluated2[LengthIdentifier(expr.left)]
             value2 = evaluated2[expr.right]
+            len2 = evaluated2[LengthIdentifier(expr.right)]
             if expr.operator == BinarySequenceOperation.Operator.Concat:
                 if isinstance(value1, SequenceMixin):
                     evaluated2[expr] = deepcopy(value1).concat(value2)
+                    evaluated2[LengthIdentifier(expr)] = deepcopy(len1).add(deepcopy(len2))
                 else:
                     evaluated2[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
+                    evaluated2[LengthIdentifier(expr)] = IntervalLattice(lower=0)
                 return evaluated2
             raise ValueError(f"Binary sequence operator '{str(expr.operator)}' is unsupported!")
 
