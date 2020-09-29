@@ -317,6 +317,53 @@ class IndexedLattice(BottomMixin, SequenceMixin):
                     result = result and itv.less_equal(other.index[self.default])
         return result
 
+    def merge(self, other: 'IndexedLattice', keys: LyraType = None) -> 'Lattice':
+        """Merge lattice elements.
+
+        :param other: other lattice element
+        :param keys: if given, type to use to also merge the indexes (default: None)
+        :return: current lattice element modified to be the least upper bound
+
+        """
+        def do(lattice, typ, key, current: Lattice) -> Lattice:
+            updated: Lattice = current
+            if isinstance(typ, (BooleanLyraType, IntegerLyraType, FloatLyraType, StringLyraType)):
+                if hasattr(lattice, 'from_literal'):
+                    literal = Literal(typ, key)
+                    updated = updated.join(lattice.from_literal(literal))
+                else:
+                    updated = updated.join(lattice().top())
+            else:
+                assert isinstance(typ, TupleLyraType)
+                val = literal_eval(key)
+                for i, subtyp in enumerate(typ.typs):
+                    updated = do(lattice, subtyp, val[i], updated)
+            return updated
+
+        if self.is_bottom() or other.is_top():
+            return self._replace(other)
+        elif other.is_bottom() or self.is_top():
+            return self
+        else:   # _join with a twist, if keys is given
+            mine: Set[str] = set(self.index.keys())
+            yours: Set[str] = set(other.index.keys())
+            for idx in mine.intersection(yours):  # common indexes should be joined
+                self.index[idx] = self.index[idx].join(other.index[idx])
+            for idx in mine.difference(yours):  # join indexes fixed only by self with default
+                if keys:
+                    key: Lattice = do(self.lattice, keys, idx, self.lattice().bottom())
+                    self.index['_'] = self.index['_'].join(key).join(self.index[idx])
+                else:
+                    self.index['_'] = self.index['_'].join(self.index[idx])
+                del self.index[idx]
+            for idx in yours.difference(mine):  # join indexes fixed only by other with default
+                if keys:
+                    key: Lattice = do(self.lattice, keys, idx, self.lattice().bottom())
+                    self.index['_'] = self.index['_'].join(key).join(other.index[idx])
+                else:
+                    self.index['_'] = self.index['_'].join(other.index[idx])
+            return self
+
     @copy_docstring(BottomMixin._join)
     def _join(self, other: 'IndexedLattice') -> 'IndexedLattice':
         # e.g., 1@[1, 1], 3@[3, 3], _@[-oo, 0] ⨆ 0@[0, 0], 1@[2, 2], _@[0, +oo]
