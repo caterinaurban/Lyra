@@ -237,8 +237,15 @@ class IntervalStateWithSummarization(IntervalStateMixin, BasisWithSummarization)
                 upper = evaluated[stop].upper
                 value = state.lattices[expr.typ](lower=lower, upper=upper)
                 evaluation[expr] = value
+                if lower != -inf and upper != inf:
+                    size = len(range(lower, upper + 1))
+                    length = IntervalLattice(lower=size, upper=size)
+                else:
+                    length = IntervalLattice(lower=0)
+                evaluation[LengthIdentifier(expr)] = length
             else:
                 evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
+                evaluation[LengthIdentifier(expr)] = IntervalLattice(lower=0, upper=0)
             return evaluation
 
     _evaluation = ExpressionEvaluation()  # static class member shared between all instances
@@ -363,59 +370,16 @@ class IntervalStateWithIndexing(IntervalStateMixin, BasisWithIndexing):
                     index = dict()
                     for i in range(lower, upper + 1):
                         index[str(i)] = state.lattices[expr.typ.typ](lower=i, upper=i)
+                    length = IntervalLattice(lower=len(index), upper=len(index))
                 else:
                     index = {'_': state.lattices[expr.typ.typ](lower=lower, upper=upper)}
+                    length = IntervalLattice(lower=0)
                 value = state.lattices[expr.typ](**state.arguments[expr.typ], index=index)
                 evaluation[expr] = value
+                evaluation[LengthIdentifier(expr)] = length
             else:
                 evaluation[expr] = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
-            return evaluation
-
-        @copy_docstring(ExpressionVisitor.visit_CastOperation)
-        def visit_CastOperation(self, expr: CastOperation, state=None, evaluation=None):
-            if expr in evaluation:
-                return evaluation  # nothing to be done
-            evaluated = self.visit(expr.expression, state, evaluation)
-            if state.is_bottom():
-                return evaluation
-            iscontainer = isinstance(expr.expression.typ, (SequenceLyraType, ContainerLyraType))
-            isstring = isinstance(expr.expression.typ, StringLyraType)
-            isset = isinstance(expr.expression.typ, SetLyraType)
-            isdictionary = isinstance(expr.expression.typ, DictLyraType)
-            if isinstance(expr.typ, BooleanLyraType) and iscontainer:
-                current: IndexedLattice = evaluated[expr.expression]
-                if current.is_empty():
-                    value = state.lattices[expr.typ](**state.arguments[expr.typ]).false()
-                elif current.is_nonempty():
-                    value = state.lattices[expr.typ](**state.arguments[expr.typ]).true()
-                else:
-                    value = state.lattices[expr.typ](**state.arguments[expr.typ]).maybe()
-                evaluation[expr] = value
-            elif isinstance(expr.typ, (IntegerLyraType, FloatLyraType)) and isstring:
-                current: IndexedLattice = evaluated[expr.expression]
-                if isinstance(current, IntervalLattice):
-                    evaluation[expr] = deepcopy(current)
-                else:
-                    evaluation[expr] = current.summarize()
-            elif isinstance(expr.typ, StringLyraType):
-                value = state.lattices[expr.typ](**state.arguments[expr.typ]).top()
-                evaluation[expr] = value
-            elif isinstance(expr.typ, (ListLyraType, TupleLyraType)) and isset:
-                current: IntervalLattice = deepcopy(evaluated[expr.expression])
-                indexed = {'_': current}
-                value = state.lattices[expr.typ](**state.arguments[expr.typ], index=indexed)
-                evaluation[expr] = value
-            elif isinstance(expr.typ, (ListLyraType, SetLyraType, TupleLyraType)) and isdictionary:
-                current = deepcopy(evaluated[KeysIdentifier(expr.expression)])
-                if isinstance(current, IntervalLattice):
-                    indexed = {'_': current}
-                    value = state.lattices[expr.typ](**state.arguments[expr.typ], index=indexed)
-                    evaluation[expr] = value
-                else:
-                    assert isinstance(current, IndexedLattice)
-                    evaluation[expr] = current
-            else:   # default case
-                evaluation[expr] = deepcopy(evaluated[expr.expression])
+                evaluation[LengthIdentifier(expr)] = IntervalLattice(lower=0, upper=0)
             return evaluation
 
     _evaluation = ExpressionEvaluation()
