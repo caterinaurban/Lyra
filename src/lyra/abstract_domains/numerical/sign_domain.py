@@ -11,14 +11,15 @@ is represented by their sign (negative, zero, positive, ...).
 from collections import defaultdict
 
 from lyra.abstract_domains.basis import BasisWithSummarization
-from lyra.abstract_domains.lattice import ArithmeticMixin, BooleanMixin
+from lyra.abstract_domains.lattice import ArithmeticMixin, BooleanMixin, SequenceMixin
+from lyra.abstract_domains.numerical.interval_lattice import IntervalLattice
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import *
 from lyra.core.types import FloatLyraType
 from lyra.core.utils import copy_docstring
 
 
-class SignLattice(ArithmeticMixin, BooleanMixin):
+class SignLattice(ArithmeticMixin, BooleanMixin, SequenceMixin):
     """Sign lattice.
 
     .. image:: _static/sign.png
@@ -272,6 +273,12 @@ class SignLattice(ArithmeticMixin, BooleanMixin):
     def is_maybe(self) -> bool:
         return not self.negative and self.zero and self.positive
 
+    # string operations
+
+    @copy_docstring(SequenceMixin._concat)
+    def _concat(self, other: 'SignLattice'):
+        return self.join(other)
+
 
 class SignState(BasisWithSummarization):
     """Sign analysis state. An element of the sign abstract domain.
@@ -433,6 +440,8 @@ class SignState(BasisWithSummarization):
             if expr in evaluation:
                 return evaluation  # nothing to be done
             evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
+            if isinstance(expr.typ, StringLyraType):
+                evaluation[LengthIdentifier(expr)] = IntervalLattice(len(expr.val), len(expr.val))
             return evaluation
 
     _evaluation = ExpressionEvaluation()  # static class member shared between instances

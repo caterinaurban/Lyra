@@ -13,9 +13,10 @@ from typing import Set
 
 from lyra.abstract_domains.basis import BasisWithSummarization
 from lyra.abstract_domains.lattice import TopMixin, SequenceMixin
+from lyra.abstract_domains.numerical.interval_lattice import IntervalLattice
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import Literal, VariableIdentifier, BinaryComparisonOperation, \
-    Subscription
+    Subscription, LengthIdentifier
 from lyra.core.types import StringLyraType
 from lyra.core.utils import copy_docstring
 
@@ -183,6 +184,8 @@ class StringSetState(BasisWithSummarization):
             if expr in evaluation:
                 return evaluation
             evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
+            if isinstance(expr.typ, StringLyraType):
+                evaluation[LengthIdentifier(expr)] = IntervalLattice(len(expr.val), len(expr.val))
             return evaluation
 
     _evaluation = ExpressionEvaluation()  # static class member shared between all instances

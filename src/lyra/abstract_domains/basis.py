@@ -884,13 +884,13 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
             _value = state.lattices[expr.typ.key_typ](**state.arguments[expr.typ.key_typ]).bottom()
             value = state.lattices[expr.typ](**state.arguments[expr.typ]).bottom()
             value_ = state.lattices[expr.typ.val_typ](**state.arguments[expr.typ.val_typ]).bottom()
-            for key in expr.keys:
+            for key, val in zip(expr.keys, expr.values):
                 evaluated = self.visit(key, state, evaluated)
                 if state.is_bottom():
                     return evaluation
                 value = value.join(evaluated[key])
                 _value = _value.join(evaluated[key])
-            for val in expr.values:
+                #
                 evaluated = self.visit(val, state, evaluated)
                 if state.is_bottom():
                     return evaluation
@@ -922,16 +922,16 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                         if length.upper <= key.lower:  # key is larger than length
                             state.bottom()
                             return evaluation
-                        lower = IntervalLattice(lower=key.lower + 1)                            # TODO: move to refinement?
-                        if isinstance(expr.target, VariableIdentifier):                         # TODO: move to refinement?
-                            state.lengths[expr.target.length] = length.meet(lower)              # TODO: move to refinement?
+                        lower = IntervalLattice(lower=key.lower + 1)
+                        if isinstance(expr.target, VariableIdentifier):
+                            state.lengths[expr.target.length] = length.meet(lower)
                     elif key.upper < 0:  # key is negative
                         if length.upper + key.upper < 0:  # key is smaller than length
                             state.bottom()
                             return evaluation
-                        upper = IntervalLattice(lower=-key.upper)                               # TODO: move to refinement?
-                        if isinstance(expr.target, VariableIdentifier):                         # TODO: move to refinement?
-                            state.lengths[expr.target.length] = length.meet(upper)              # TODO: move to refinement?
+                        upper = IntervalLattice(lower=-key.upper)
+                        if isinstance(expr.target, VariableIdentifier):
+                            state.lengths[expr.target.length] = length.meet(upper)
                 evaluated[expr] = deepcopy(target)  # return value of target
                 if isinstance(expr.typ, (StringLyraType, ContainerLyraType)):
                     if isinstance(expr.target.typ, StringLyraType):
@@ -950,9 +950,9 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
                 if intersection.is_bottom():  # key does not belong to target keys
                     state.bottom()
                     return evaluation
-                if isinstance(expr.target, VariableIdentifier):                                     # TODO: move to refinement?
-                    length: IntervalLattice = state.lengths[expr.target.length]                     # TODO: move to refinement?
-                    state.lengths[expr.target.length] = length.meet(IntervalLattice(lower=1))       # TODO: move to refinement?
+                if isinstance(expr.target, VariableIdentifier):
+                    length: IntervalLattice = state.lengths[expr.target.length]
+                    state.lengths[expr.target.length] = length.meet(IntervalLattice(lower=1))
                 # return value of target values
                 evaluated[expr] = deepcopy(values)
                 if isinstance(expr.typ, (StringLyraType, ContainerLyraType)):
@@ -1100,7 +1100,25 @@ class BasisWithSummarization(StateWithSummarization, Basis, metaclass=ABCMeta):
         @copy_docstring(ExpressionVisitor.visit_Subscription)
         def visit_Subscription(self, expr: Subscription, evaluation=None, value=None, state=None):
             refined = evaluation[expr]      # weak update
-            return self.visit(expr.target, evaluation, refined, state)
+            updated = self.visit(expr.target, evaluation, refined, state)
+            key = evaluation[expr.key]
+            if isinstance(expr.target.typ, SequenceLyraType):
+                if isinstance(key, IntervalLattice):
+                    length: IntervalLattice = evaluation[LengthIdentifier(expr.target)]
+                    if 0 <= key.lower:  # key is positive
+                        lower = IntervalLattice(lower=key.lower + 1)
+                        if isinstance(expr.target, VariableIdentifier):
+                            updated.lengths[expr.target.length] = length.meet(lower)
+                    elif key.upper < 0:  # key is negative
+                        upper = IntervalLattice(lower=-key.upper)
+                        if isinstance(expr.target, VariableIdentifier):
+                            updated.lengths[expr.target.length] = length.meet(upper)
+            else:
+                assert isinstance(expr.target.typ, DictLyraType)
+                if isinstance(expr.target, VariableIdentifier):
+                    length: IntervalLattice = state.lengths[expr.target.length]
+                    state.lengths[expr.target.length] = length.meet(IntervalLattice(lower=1))
+            return updated
 
         @copy_docstring(ExpressionVisitor.visit_Slicing)
         def visit_Slicing(self, expr: Slicing, evaluation=None, value=None, state=None):
@@ -1652,16 +1670,16 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                         if length.upper <= key.lower:  # key is larger than length
                             state.bottom()
                             return evaluation
-                        lower = IntervalLattice(lower=key.lower + 1)                            # TODO: move to refinement?
-                        if isinstance(expr.target, VariableIdentifier):                         # TODO: move to refinement?
-                            state.lengths[expr.target.length] = length.meet(lower)              # TODO: move to refinement?
+                        lower = IntervalLattice(lower=key.lower + 1)
+                        if isinstance(expr.target, VariableIdentifier):
+                            state.lengths[expr.target.length] = length.meet(lower)
                     elif key.upper < 0:  # key is negative
                         if length.upper + key.upper < 0:  # key is smaller than length
                             state.bottom()
                             return evaluation
-                        upper = IntervalLattice(lower=-key.upper)                               # TODO: move to refinement?
-                        if isinstance(expr.target, VariableIdentifier):                         # TODO: move to refinement?
-                            state.lengths[expr.target.length] = length.meet(upper)              # TODO: move to refinement?
+                        upper = IntervalLattice(lower=-key.upper)
+                        if isinstance(expr.target, VariableIdentifier):
+                            state.lengths[expr.target.length] = length.meet(upper)
                 # return value of key in target
                 if isinstance(expr.typ, (SequenceLyraType, DictLyraType)):
                     index = {'_': fetched}
@@ -1698,9 +1716,9 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                 if intersection.is_bottom():  # key does not belong to target keys
                     state.bottom()
                     return evaluation
-                if isinstance(expr.target, VariableIdentifier):                                     # TODO: move to refinement?
-                    length: IntervalLattice = state.lengths[expr.target.length]                     # TODO: move to refinement?
-                    state.lengths[expr.target.length] = length.meet(IntervalLattice(lower=1))       # TODO: move to refinement?
+                if isinstance(expr.target, VariableIdentifier):
+                    length: IntervalLattice = state.lengths[expr.target.length]
+                    state.lengths[expr.target.length] = length.meet(IntervalLattice(lower=1))
                 # return value of key in target (refined with value of target values)
                 if isinstance(expr.typ, (SequenceLyraType, DictLyraType)):
                     assert isinstance(values, IndexedLattice)
@@ -1892,6 +1910,23 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
             else:
                 target.weak_set(_key, itv)
             updated = self.visit(expr.target, evaluation, target, updated)
+            key = evaluation[expr.key]
+            if isinstance(expr.target.typ, SequenceLyraType):
+                if isinstance(key, IntervalLattice):
+                    length: IntervalLattice = evaluation[LengthIdentifier(expr.target)]
+                    if 0 <= key.lower:  # key is positive
+                        lower = IntervalLattice(lower=key.lower + 1)
+                        if isinstance(expr.target, VariableIdentifier):
+                            updated.lengths[expr.target.length] = length.meet(lower)
+                    elif key.upper < 0:  # key is negative
+                        upper = IntervalLattice(lower=-key.upper)
+                        if isinstance(expr.target, VariableIdentifier):
+                            updated.lengths[expr.target.length] = length.meet(upper)
+            else:
+                assert isinstance(expr.target.typ, DictLyraType)
+                if isinstance(expr.target, VariableIdentifier):
+                    length: IntervalLattice = state.lengths[expr.target.length]
+                    state.lengths[expr.target.length] = length.meet(IntervalLattice(lower=1))
             # refine value of key
             if isinstance(expr.target.typ, SequenceLyraType):
                 _typ = IntegerLyraType()    # the key type must be IntegerLyraType
@@ -1899,8 +1934,8 @@ class BasisWithIndexing(Basis, metaclass=ABCMeta):
                 assert isinstance(expr.target.typ, DictLyraType)
                 _typ = expr.target.typ.key_typ
             instance = state.lattices[_typ](**state.arguments[_typ])
-            key = evaluation[expr.target].reverse(instance, _typ, itv)
-            updated = self.visit(expr.key, evaluation, key, updated)
+            reversed = evaluation[expr.target].reverse(instance, _typ, itv)
+            updated = self.visit(expr.key, evaluation, reversed, updated)
 
             # refined = deepcopy(evaluation[expr]).meet(value)
             # if isinstance(expr.target, VariableIdentifier):

@@ -14,6 +14,7 @@ from copy import deepcopy
 
 from lyra.abstract_domains.basis import BasisWithSummarization
 from lyra.abstract_domains.lattice import BottomMixin, SequenceMixin
+from lyra.abstract_domains.numerical.interval_lattice import IntervalLattice
 from lyra.abstract_domains.state import State
 from lyra.core.expressions import *
 from lyra.core.types import StringLyraType
@@ -210,6 +211,8 @@ class CharacterState(BasisWithSummarization):
             if expr in evaluation:
                 return evaluation
             evaluation[expr] = state.lattices[expr.typ].from_literal(expr)
+            if isinstance(expr.typ, StringLyraType):
+                evaluation[LengthIdentifier(expr)] = IntervalLattice(len(expr.val), len(expr.val))
             return evaluation
 
     _evaluation = ExpressionEvaluation()  # static class member shared between all instances
