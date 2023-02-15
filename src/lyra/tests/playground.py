@@ -21,8 +21,8 @@
 # from lyra.engine.usage.fulara_usage_analysis import FularaIntervalUsageAnalysis
 # FularaIntervalUsageAnalysis().main("usage/running_example.py")
 
-# from lyra.engine.usage.dataframe_usage_analysis import DataFrameColumnUsageAnalysis
-# DataFrameColumnUsageAnalysis().main("example.py")
+from lyra.engine.usage.dataframe_usage_analysis import DataFrameColumnUsageAnalysis
+DataFrameColumnUsageAnalysis().main("example.py")
 
 ######################
 # Numerical Analyses #

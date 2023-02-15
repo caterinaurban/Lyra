@@ -621,6 +621,7 @@ class CFGVisitor(ast.NodeVisitor):
                 assert isinstance(arguments[0].typ, SetLyraType)
                 return Call(pp, name, arguments, arguments[0].typ)
             arguments = [self.visit(node.func.value, types, libraries, None, fname=fname)]     # target
+            # TODO: deal with keywords
             arguments.extend([self.visit(arg, types, libraries, None, fname=fname) for arg in node.args])
             return Call(pp, name, arguments, typ)
 
