@@ -162,6 +162,23 @@ class DictLyraType(ContainerLyraType):
         return f"Dict[{repr(self.key_typ)}, {repr(self.val_typ)}]"
 
 
+class DataFrameLyraType(ContainerLyraType):
+
+    def __init__(self, library: str):
+        """DataFrame type creation.
+
+        :param library: library identifier
+        """
+        self._library = library
+
+    @property
+    def library(self):
+        return self._library
+
+    def __repr__(self):
+        return "{}.DataFrame".format(self.library)
+
+
 def resolve_type_annotation(annotation):
     """Type annotation resolution."""
 
@@ -193,5 +210,9 @@ def resolve_type_annotation(annotation):
 
     if isinstance(annotation, ast.NameConstant):
         return annotation.value
+
+    if isinstance(annotation, ast.Attribute):
+        if annotation.attr == 'DataFrame':
+            return DataFrameLyraType(annotation.value.id)
 
     raise NotImplementedError(f"Type annotation {annotation} is not yet supported!")

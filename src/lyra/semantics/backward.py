@@ -76,7 +76,7 @@ class UserDefinedCallSemantics(BackwardSemantics):
         return state
 
     def return_semantics(self, stmt: Return, state: State, interpreter: Interpreter):
-        """Backward semantics of an return statement.
+        """Backward semantics of a return statement.
 
         :param stmt: return statement to be executed
         :param state: state before executing the return statement

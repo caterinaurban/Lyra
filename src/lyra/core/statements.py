@@ -74,6 +74,26 @@ class Statement(metaclass=ABCMeta):
         """
 
 
+class LibraryAccess(Statement):
+    """Library access representation."""
+
+    def __init__(self, pp, library: str, name: str):
+        super().__init__(pp)
+        self._library = library
+        self._name = name
+
+    @property
+    def library(self):
+        return self._library
+
+    @property
+    def name(self):
+        return self._name
+
+    def __repr__(self):
+        return "{0.library}".format(self)
+
+
 """
 Expression Statements.
 https://docs.python.org/3.4/reference/simple_stmts.html#expression-statements
@@ -377,6 +397,31 @@ class Raise(Statement):
 
     def __repr__(self):
         return "raise Exception"
+
+
+"""
+Import Statements.
+https://docs.python.org/3.4/reference/simple_stmts.html#the-import-statement
+"""
+
+
+class Import(Statement):
+
+    def __init__(self, pp, library: str, name: str):
+        super().__init__(pp)
+        self._library = library
+        self._name = name
+
+    @property
+    def library(self):
+        return self._library
+
+    @property
+    def name(self):
+        return self._name
+
+    def __repr__(self):
+        return "import {} as {}".format(self.library, self.name)
 
 
 """
