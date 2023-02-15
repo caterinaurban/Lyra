@@ -3,11 +3,33 @@ from lyra.abstract_domains.state import State
 from lyra.core.expressions import Slicing, Expression, Subscription, VariableIdentifier, BinaryComparisonOperation
 
 
-class DataFrameColumnUsageState(Stack, State):
-    def push(self):
+class DataFrameColumnUsageState(State):
+
+    def __init__(self, precursory: State = None):
+        super().__init__(precursory=precursory)
+
+    def bottom(self):
         pass
 
-    def pop(self):
+    def top(self):
+        pass
+
+    def is_bottom(self) -> bool:
+        pass
+
+    def is_top(self) -> bool:
+        pass
+
+    def _less_equal(self, other: 'Lattice') -> bool:
+        pass
+
+    def _join(self, other: 'Lattice') -> 'Lattice':
+        pass
+
+    def _meet(self, other: 'Lattice'):
+        pass
+
+    def _widening(self, other: 'Lattice'):
         pass
 
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'State':
@@ -81,4 +103,3 @@ class DataFrameColumnUsageState(Stack, State):
 
     def _substitute_slicing(self, left: Slicing, right: Expression) -> 'State':
         pass
-
