@@ -60,6 +60,10 @@ class Semantics:
         error = f"Semantics for statement {stmt} of type {type(stmt)} not yet implemented! "
         raise NotImplementedError(error + f"You must provide method {name}(...)")
 
+    def import_semantics(self, stmt: Statement, state: State, interpreter: Interpreter) -> State:
+        """Semantics of an import statement."""
+        return state
+
 
 class ExpressionSemantics(Semantics):
     """Semantics of expression evaluations and accesses."""
