@@ -1,6 +1,7 @@
 from copy import deepcopy
 from typing import Set, Union, List
 
+from lyra.abstract_domains.lattice import BoundedLattice
 from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
@@ -10,10 +11,11 @@ from lyra.core.expressions import Slicing, Expression, Subscription, VariableIde
 ColumnName = Union[str, None]
 
 
-class DataFrameColumnUsageState(State):
+class DataFrameColumnUsageState(BoundedLattice, State):
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
-        super().__init__(precursory=precursory)
+        super().__init__()                  # BoundedLattice
+        State.__init__(self, precursory)    # State
         self._store = {v: {None: UsageLattice()} for v in variables}
 
     @property
@@ -21,32 +23,24 @@ class DataFrameColumnUsageState(State):
         return self._store
 
     def __repr__(self):
+        def do(columns):
+            def name(column):
+                return str(column) if column else '_'
+            itms = sorted(columns.items(), key=lambda x: name(x[0]))
+            return "{" + ", ".join("{}: {}".format(name(column), usage) for column, usage in itms) + "}"
         items = sorted(self.store.items(), key=lambda x: x[0].name)
-        # TODO: proper printing
-        return "; ".join("{} -> {}".format(variable, value) for variable, value in items)
-
-    def bottom(self):
-        return self
-
-    def top(self):
-        return self
-
-    def is_bottom(self) -> bool:
-        return self
-
-    def is_top(self) -> bool:
-        return self
+        return "; ".join("{} -> {}".format(variable, do(value)) for variable, value in items)
 
     def _less_equal(self, other: 'Lattice') -> bool:
         return self
 
-    def _join(self, other: 'Lattice') -> 'Lattice':
+    def _join(self, other: 'DataFrameColumnUsageState') -> 'DataFrameColumnUsageState':
         return self
 
-    def _meet(self, other: 'Lattice'):
+    def _meet(self, other: 'DataFrameColumnUsageState') -> 'DataFrameColumnUsageState':
         return self
 
-    def _widening(self, other: 'Lattice'):
+    def _widening(self, other: 'DataFrameColumnUsageState') -> 'DataFrameColumnUsageState':
         return self
 
     def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
@@ -111,7 +105,7 @@ class DataFrameColumnUsageState(State):
 
     def _output(self, output: Expression) -> 'DataFrameColumnUsageState':
         if isinstance(output, VariableIdentifier):
-            self.store[output] = {col: UsageLattice.top() for col in self.store[output].keys}
+            self.store[output] = {col: UsageLattice().top() for col in self.store[output].keys()}
         return self
 
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
