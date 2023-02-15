@@ -6,6 +6,7 @@ Lyra's internal forward semantics of statements.
 
 :Authors: Caterina Urban
 """
+from abc import ABCMeta
 from typing import Union
 
 from lyra.abstract_domains.lattice import EnvironmentMixin
@@ -14,6 +15,7 @@ from lyra.core.expressions import BinarySequenceOperation, ListDisplay, Variable
 from lyra.core.types import ListLyraType, IntegerLyraType, SetLyraType, SequenceLyraType, \
     ContainerLyraType, DictLyraType
 from lyra.engine.interpreter import Interpreter
+from lyra.semantics.pandas import DefaultPandasSemantics
 from lyra.semantics.semantics import Semantics, DefaultSemantics
 
 from lyra.abstract_domains.state import State
@@ -147,4 +149,9 @@ class AssignmentSemantics(ForwardSemantics):
 # noinspection PyAbstractClass
 class DefaultForwardSemantics(DefaultSemantics, UserDefinedCallSemantics, AssignmentSemantics):
     """Default forward semantics of statements."""
+    pass
+
+
+class DefaultPandasForwardSemantics(DefaultPandasSemantics, UserDefinedCallSemantics, AssignmentSemantics, metaclass=ABCMeta):
+    """Default forward semantics of statements with support for Pandas library calls."""
     pass

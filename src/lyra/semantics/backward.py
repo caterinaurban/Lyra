@@ -6,12 +6,14 @@ Lyra's internal backward semantics of statements.
 
 :Authors: Caterina Urban
 """
+from abc import ABCMeta
 from typing import Union
 
 from lyra.abstract_domains.lattice import EnvironmentMixin
 from lyra.core.expressions import BinarySequenceOperation, ListDisplay, VariableIdentifier, SetDisplay
 from lyra.core.types import ListLyraType, SetLyraType
 from lyra.engine.interpreter import Interpreter
+from lyra.semantics.pandas import DefaultPandasSemantics
 from lyra.semantics.semantics import Semantics, DefaultSemantics
 
 from lyra.abstract_domains.state import State
@@ -123,4 +125,9 @@ class AssignmentSemantics(BackwardSemantics):
 # noinspection PyAbstractClass
 class DefaultBackwardSemantics(DefaultSemantics, UserDefinedCallSemantics, AssignmentSemantics):
     """Default backward semantics of statements."""
+    pass
+
+
+class DefaultPandasBackwardSemantics(DefaultPandasSemantics, UserDefinedCallSemantics, AssignmentSemantics, metaclass=ABCMeta):
+    """Default backward semantics of statements with support for Pandas library calls."""
     pass
