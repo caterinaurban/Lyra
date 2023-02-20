@@ -1,5 +1,6 @@
+import itertools
 from copy import deepcopy
-from typing import Set, Union, List
+from typing import Set, Union, List, Dict
 
 from lyra.abstract_domains.lattice import BoundedLattice
 from lyra.abstract_domains.stack import Stack
@@ -14,8 +15,8 @@ ColumnName = Union[str, None]
 class DataFrameColumnUsageState(BoundedLattice, State):
 
     def __init__(self, variables: Set[VariableIdentifier], precursory: State = None):
-        super().__init__()                  # BoundedLattice
-        State.__init__(self, precursory)    # State
+        super().__init__()  # BoundedLattice
+        State.__init__(self, precursory)  # State
         self._store = {v: {None: UsageLattice()} for v in variables}
 
     @property
@@ -26,16 +27,39 @@ class DataFrameColumnUsageState(BoundedLattice, State):
         def do(columns):
             def name(column):
                 return str(column) if column else '_'
+
             itms = sorted(columns.items(), key=lambda x: name(x[0]))
             return "{" + ", ".join("{}: {}".format(name(column), usage) for column, usage in itms) + "}"
+
         items = sorted(self.store.items(), key=lambda x: x[0].name)
         return "; ".join("{} -> {}".format(variable, do(value)) for variable, value in items)
 
     def _less_equal(self, other: 'DataFrameColumnUsageState') -> bool:
         raise NotImplementedError('_less_equal in DataFrameColumnUsageState is not yet implemented!')
 
+    @staticmethod
+    def _merge_var_stores(s1: Dict[ColumnName, UsageLattice], s2: Dict[ColumnName, UsageLattice]) -> dict:
+        result = {}
+        for column in s1:
+            if s2.get(column):
+                lat1 = s1[column]
+                lat2 = s2[column]
+                result[column] = lat1.join(lat2)
+            else:
+                result[column] = s1[column]
+
+        result.update({key: value for key, value in s2.items() if key not in s1.keys()})
+        return result
+
     def _join(self, other: 'DataFrameColumnUsageState') -> 'DataFrameColumnUsageState':
-        raise NotImplementedError('_join in DataFrameColumnUsageState is not yet implemented!')
+        for var in other.store:
+            usage = self.store.get(var, None)
+            if not usage:
+                self.store[var] = other.store[var]
+                continue
+            self.store[var] = self._merge_var_stores(self.store[var], other.store[var])
+
+        return self
 
     def _meet(self, other: 'DataFrameColumnUsageState') -> 'DataFrameColumnUsageState':
         raise NotImplementedError('_meet in DataFrameColumnUsageState is not yet implemented!')
@@ -106,6 +130,10 @@ class DataFrameColumnUsageState(BoundedLattice, State):
     def _output(self, output: Expression) -> 'DataFrameColumnUsageState':
         if isinstance(output, VariableIdentifier):
             self.store[output] = {col: UsageLattice().top() for col in self.store[output].keys()}
+        elif isinstance(output, Subscription):
+            analysis = self.store.get(output.target, {None: UsageLattice()})
+            analysis[output.key] = UsageLattice(UsageLattice.Status.U)
+            self.store[output.target] = analysis
         return self
 
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
@@ -114,6 +142,7 @@ class DataFrameColumnUsageState(BoundedLattice, State):
         if used or scoped:
             # the assigned variable is used or scoped
             self.store[left] = {None: UsageLattice().written()}
+            # TODO: deal with rhs of assignment
         return self
 
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
