@@ -8,6 +8,7 @@ from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import Slicing, Expression, Subscription, VariableIdentifier, BinaryComparisonOperation, \
     Literal, ListDisplay
+from lyra.core.types import DataFrameLyraType
 
 ColumnName = Union[str, None]
 
@@ -28,8 +29,8 @@ class DataFrameColumnUsageState(BoundedLattice, State):
             def name(column):
                 return str(column) if column else '_'
 
-            itms = sorted(columns.items(), key=lambda x: name(x[0]))
-            return "{" + ", ".join("{}: {}".format(name(column), usage) for column, usage in itms) + "}"
+            _items = sorted(columns.items(), key=lambda x: name(x[0]))
+            return "{" + ", ".join("{}: {}".format(name(column), usage) for column, usage in _items) + "}"
 
         items = sorted(self.store.items(), key=lambda x: x[0].name)
         return "; ".join("{} -> {}".format(variable, do(value)) for variable, value in items)
@@ -41,12 +42,13 @@ class DataFrameColumnUsageState(BoundedLattice, State):
     def _merge_var_stores(s1: Dict[ColumnName, UsageLattice], s2: Dict[ColumnName, UsageLattice]) -> dict:
         result = {}
         for column in s1:
-            if s2.get(column):
-                lat1 = s1[column]
-                lat2 = s2[column]
-                result[column] = lat1.join(lat2)
-            else:
+            if s2.get(column) is None:
                 result[column] = s1[column]
+                continue
+
+            lat1 = s1[column]
+            lat2 = s2[column]
+            result[column] = lat1.join(lat2)
 
         result.update({key: value for key, value in s2.items() if key not in s1.keys()})
         return result
@@ -132,7 +134,7 @@ class DataFrameColumnUsageState(BoundedLattice, State):
             self.store[output] = {col: UsageLattice().top() for col in self.store[output].keys()}
         elif isinstance(output, Subscription):
             analysis = self.store.get(output.target, {None: UsageLattice()})
-            analysis[output.key] = UsageLattice(UsageLattice.Status.U)
+            analysis[output.key] = UsageLattice().top()
             self.store[output.target] = analysis
         return self
 
@@ -142,7 +144,14 @@ class DataFrameColumnUsageState(BoundedLattice, State):
         if used or scoped:
             # the assigned variable is used or scoped
             self.store[left] = {None: UsageLattice().written()}
-            # TODO: deal with rhs of assignment
+
+            if not (isinstance(right, Subscription) and isinstance(right.typ, DataFrameLyraType)):
+                return self
+
+            for idn in right.ids():
+                if right.key not in self.store[idn].keys():
+                    self.store[idn][right.key] = self.store[idn][None]
+
         return self
 
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
