@@ -20,24 +20,24 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
     """Backward semantics of statements with support for Pandas library calls for dataframe column usage analysis."""
 
     def _summarized_view(
-        self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
         dfs = self.semantics(stmt.arguments[0], state, interpreter).result
         return state.output(dfs)
 
     def slicing_access_semantics(
-        self,
-        stmt: SlicingAccess,
-        state: DataFrameColumnUsageState,
-        interpreter: Interpreter,
+            self,
+            stmt: SlicingAccess,
+            state: DataFrameColumnUsageState,
+            interpreter: Interpreter,
     ) -> DataFrameColumnUsageState:
         return state
 
     def subscription_access_semantics(
-        self,
-        stmt: SubscriptionAccess,
-        state: DataFrameColumnUsageState,
-        interpreter: Interpreter,
+            self,
+            stmt: SubscriptionAccess,
+            state: DataFrameColumnUsageState,
+            interpreter: Interpreter,
     ) -> DataFrameColumnUsageState:
         target = self.semantics(stmt.target, state, interpreter).result
         key = self.semantics(stmt.key, state, interpreter).result
@@ -49,6 +49,9 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                         subscription = Subscription(primary.typ, primary, idx)
                         result.add(subscription)
                 elif isinstance(index, Literal):
+                    subscription = Subscription(primary.typ, primary, index)
+                    result.add(subscription)
+                elif isinstance(index, VariableIdentifier):
                     subscription = Subscription(primary.typ, primary, index)
                     result.add(subscription)
                 else:
@@ -63,33 +66,45 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         return state
 
     def drop_call_semantics(
-        self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
         dataframes = self.semantics(stmt.arguments[0], state, interpreter).result
         columns = self.semantics(stmt.arguments[1], state, interpreter).result
         return state.drop_dataframe_column(dataframes, columns)
 
     def head_call_semantics(
-        self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
         return self._summarized_view(stmt, state, interpreter)
 
     def tail_call_semantics(
-        self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
         return self._summarized_view(stmt, state, interpreter)
 
     def describe_call_semantics(
-        self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
         return self._summarized_view(stmt, state, interpreter)
 
     def info_call_semantics(
-        self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
         return self._summarized_view(stmt, state, interpreter)
 
     def read_csv_call_semantics(
-        self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
         return state  # TODO
+
+    def loc_call_semantics(
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+    ) -> DataFrameColumnUsageState:
+        dfs = self.semantics(stmt.arguments[0], state, interpreter).result
+        pass
+
+    def iloc_call_semantics(
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+    ) -> DataFrameColumnUsageState:
+        dfs = self.semantics(stmt.arguments[0], state, interpreter).result
+        pass
