@@ -92,6 +92,16 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
     ) -> DataFrameColumnUsageState:
         return self._summarized_view(stmt, state, interpreter)
 
+    def min_call_semantics(
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+    ) -> DataFrameColumnUsageState:
+        return state
+
+    def max_call_semantics(
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+    ) -> DataFrameColumnUsageState:
+        return state
+
     def read_csv_call_semantics(
             self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:

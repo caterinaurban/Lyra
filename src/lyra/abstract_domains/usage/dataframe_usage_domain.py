@@ -1,10 +1,8 @@
-import itertools
 from copy import deepcopy
-from typing import Set, Union, List, Dict
-from collections import deque
+from typing import Set, Union, Dict
 
 from lyra.abstract_domains.lattice import BoundedLattice
-from lyra.core.expressions import _walk
+from lyra.core.expressions import walk
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import Slicing, Expression, Subscription, VariableIdentifier, BinaryComparisonOperation, \
@@ -17,7 +15,7 @@ ColumnName = Union[str, None]
 def _get_columns(df: VariableIdentifier, expr: Expression):
     columns = set()
 
-    for e in _walk(expr):
+    for e in walk(expr):
         if isinstance(e, Subscription) and isinstance(e.typ, DataFrameLyraType):
             if not e.target == df:
                 continue
@@ -178,6 +176,9 @@ class DataFrameColumnUsageState(BoundedLattice, State):
         return self
 
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
+        if left.key in self.store[left.target]:
+            self.store[left.target][left.key] = UsageLattice().written()
+
         for _id in right.ids():
             if not isinstance(_id.typ, DataFrameLyraType):
                 continue
