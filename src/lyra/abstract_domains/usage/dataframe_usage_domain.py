@@ -1,16 +1,29 @@
 import itertools
 from copy import deepcopy
 from typing import Set, Union, List, Dict
+from collections import deque
 
 from lyra.abstract_domains.lattice import BoundedLattice
-from lyra.abstract_domains.stack import Stack
+from lyra.core.expressions import _walk
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import Slicing, Expression, Subscription, VariableIdentifier, BinaryComparisonOperation, \
-    Literal, ListDisplay
+    Literal, ListDisplay, BinaryArithmeticOperation
 from lyra.core.types import DataFrameLyraType
 
 ColumnName = Union[str, None]
+
+
+def _get_columns(df: VariableIdentifier, expr: Expression):
+    columns = set()
+
+    for e in _walk(expr):
+        if isinstance(e, Subscription) and isinstance(e.typ, DataFrameLyraType):
+            if not e.target == df:
+                continue
+            columns.add(e.key)
+
+    return columns
 
 
 class DataFrameColumnUsageState(BoundedLattice, State):
@@ -139,6 +152,10 @@ class DataFrameColumnUsageState(BoundedLattice, State):
         return self
 
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
+        if left == right:
+            self.store[left] = {None: UsageLattice()}
+            return self
+
         used = any(usage.is_top() for usage in self.store[left].values())
         scoped = any(usage.is_scoped() for usage in self.store[left].values())
         if used or scoped:
@@ -149,13 +166,26 @@ class DataFrameColumnUsageState(BoundedLattice, State):
                 return self
 
             for idn in right.ids():
-                if right.key not in self.store[idn].keys():
-                    self.store[idn][right.key] = self.store[idn][None]
+                if right.key in self.store[idn].keys():
+                    continue
+
+                # We know now that columns in the identifier exists, so we add the information to the store
+                self.store[idn][right.key] = self.store[idn][None]
+
+                # Also the new variable `left` has the information of the columns in `idn`
+                self.store[left][right.key] = UsageLattice().written()
 
         return self
 
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
-        raise NotImplementedError('_substitute_subscription in DataFrameColumnUsageState is not yet implemented!')
+        for _id in right.ids():
+            if not isinstance(_id.typ, DataFrameLyraType):
+                continue
+
+            columns = _get_columns(_id, right)
+            self.store[_id].update({column: UsageLattice().top() for column in columns})
+
+        return self
 
     def _substitute_slicing(self, left: Slicing, right: Expression) -> 'DataFrameColumnUsageState':
         raise NotImplementedError('_substitute_slicing in DataFrameColumnUsageState is not yet implemented!')

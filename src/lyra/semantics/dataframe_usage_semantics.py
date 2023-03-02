@@ -96,15 +96,3 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
             self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
         return state  # TODO
-
-    def loc_call_semantics(
-            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
-    ) -> DataFrameColumnUsageState:
-        dfs = self.semantics(stmt.arguments[0], state, interpreter).result
-        pass
-
-    def iloc_call_semantics(
-            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
-    ) -> DataFrameColumnUsageState:
-        dfs = self.semantics(stmt.arguments[0], state, interpreter).result
-        pass
