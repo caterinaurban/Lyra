@@ -150,7 +150,7 @@ class DataFrameColumnUsageState(BoundedLattice, State):
         return self
 
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
-        if left == right:
+        if type(left) == type(right) and left == right:
             self.store[left] = {None: UsageLattice()}
             return self
 
