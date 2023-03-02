@@ -150,10 +150,6 @@ class DataFrameColumnUsageState(BoundedLattice, State):
         return self
 
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
-        if type(left) == type(right) and left == right:
-            self.store[left] = {None: UsageLattice()}
-            return self
-
         used = any(usage.is_top() for usage in self.store[left].values())
         scoped = any(usage.is_scoped() for usage in self.store[left].values())
         if used or scoped:
@@ -172,7 +168,9 @@ class DataFrameColumnUsageState(BoundedLattice, State):
 
                 # Also the new variable `left` has the information of the columns in `idn`
                 self.store[left][right.key] = UsageLattice().written()
+            return self
 
+        self.store[left] = {None: UsageLattice()}
         return self
 
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
