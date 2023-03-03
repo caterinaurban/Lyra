@@ -2,7 +2,7 @@ import itertools
 
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.dataframe_usage_domain import DataFrameColumnUsageState
-from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay
+from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation
 from lyra.core.statements import Call, SubscriptionAccess, SlicingAccess
 from lyra.core.types import (
     StringLyraType,
@@ -43,25 +43,25 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         key = self.semantics(stmt.key, state, interpreter).result
         result = set()
         for primary, index in itertools.product(target, key):
-            if isinstance(primary.typ, DataFrameLyraType):
-                if isinstance(index, ListDisplay):
-                    for idx in index.items:
-                        subscription = Subscription(primary.typ, primary, idx)
-                        result.add(subscription)
-                elif isinstance(index, Literal):
-                    subscription = Subscription(primary.typ, primary, index)
-                    result.add(subscription)
-                elif isinstance(index, VariableIdentifier):
-                    subscription = Subscription(primary.typ, primary, index)
-                    result.add(subscription)
-                else:
-                    error = f"Semantics for subscription of {primary} and {index} is not yet implemented!"
-                    raise NotImplementedError(error)
-            else:
+            if not isinstance(primary.typ, DataFrameLyraType):
                 error = (
                     f"Semantics for subscription of {primary} is not yet implemented!"
                 )
                 raise NotImplementedError(error)
+
+            if isinstance(index, ListDisplay):
+                for idx in index.items:
+                    subscription = Subscription(primary.typ, primary, idx)
+                    result.add(subscription)
+            elif isinstance(index, (Literal, VariableIdentifier)):
+                subscription = Subscription(primary.typ, primary, index)
+                result.add(subscription)
+            elif isinstance(index, BinaryArithmeticOperation):
+                ...
+            else:
+                error = f"Semantics for subscription of {primary} and {index} is not yet implemented!"
+                raise NotImplementedError(error)
+
         state.result = result
         return state
 

@@ -6,7 +6,7 @@ from lyra.core.expressions import walk
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import Slicing, Expression, Subscription, VariableIdentifier, BinaryComparisonOperation, \
-    Literal, ListDisplay, BinaryArithmeticOperation
+    Literal, ListDisplay
 from lyra.core.types import DataFrameLyraType
 
 ColumnName = Union[str, None]
@@ -150,27 +150,26 @@ class DataFrameColumnUsageState(BoundedLattice, State):
         return self
 
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
-        used = any(usage.is_top() for usage in self.store[left].values())
-        scoped = any(usage.is_scoped() for usage in self.store[left].values())
-        if used or scoped:
-            # the assigned variable is used or scoped
-            self.store[left] = {None: UsageLattice().written()}
-
-            if not (isinstance(right, Subscription) and isinstance(right.typ, DataFrameLyraType)):
-                return self
-
-            for idn in right.ids():
-                if right.key in self.store[idn].keys():
-                    continue
-
-                # We know now that columns in the identifier exists, so we add the information to the store
-                self.store[idn][right.key] = self.store[idn][None]
-
-                # Also the new variable `left` has the information of the columns in `idn`
-                self.store[left][right.key] = UsageLattice().written()
+        # Ignore variable if the substitution is not a DataFrame
+        if not isinstance(right.typ, DataFrameLyraType):
             return self
 
-        self.store[left] = {None: UsageLattice()}
+        # Clean it up variable if right is not a subscription
+        if not isinstance(right, Subscription):
+            self.store[left] = {None: UsageLattice()}
+            return self
+
+        self.store[left] = {}
+        for idn in right.ids():
+            # new variable `left` has the information of the columns in `idn`
+            self.store[left][right.key] = UsageLattice()
+
+            if right.key in self.store[idn].keys():
+                continue
+
+            # We know now that columns in the identifier exists, so we add the information to the store
+            self.store[idn][right.key] = self.store[idn][None]
+
         return self
 
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
