@@ -159,10 +159,9 @@ class DataFrameColumnUsageState(BoundedLattice, State):
             self.store[left] = {None: UsageLattice()}
             return self
 
-        self.store[left] = {}
         for idn in right.ids():
             # new variable `left` has the information of the columns in `idn`
-            self.store[left][right.key] = UsageLattice()
+            # self.store[left][right.key] = UsageLattice()
 
             if right.key in self.store[idn].keys():
                 continue
