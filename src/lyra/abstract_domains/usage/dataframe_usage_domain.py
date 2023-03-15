@@ -143,8 +143,10 @@ class DataFrameColumnUsageState(BoundedLattice, State):
     def output(self, output: Set[Expression]) -> 'State':
         # Clean it up variables marks as written
         for df in output:
-            if self.store.get(df) is not None:
-                self.store[df] = {k: v for k, v in self.store[df].items() if v != UsageLattice().written()}
+            if self.store.get(df) is None:
+                continue
+
+            self.store[df] = {k: v for k, v in self.store[df].items() if v != UsageLattice().written()}
 
         return super().output(output)
 
