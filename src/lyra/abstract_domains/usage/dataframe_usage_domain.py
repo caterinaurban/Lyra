@@ -140,6 +140,14 @@ class DataFrameColumnUsageState(BoundedLattice, State):
     def forget_variable(self, variable: VariableIdentifier) -> 'DataFrameColumnUsageState':
         raise NotImplementedError('forget_variable in DataFrameColumnUsageState is not yet implemented!')
 
+    def output(self, output: Set[Expression]) -> 'State':
+        # Clean it up variables marks as written
+        for df in output:
+            if self.store.get(df) is not None:
+                self.store[df] = {k: v for k, v in self.store[df].items() if v != UsageLattice().written()}
+
+        return super().output(output)
+
     def _output(self, output: Expression) -> 'DataFrameColumnUsageState':
         if isinstance(output, VariableIdentifier):
             self.store[output] = {col: UsageLattice().top() for col in self.store[output].keys()}
@@ -160,15 +168,12 @@ class DataFrameColumnUsageState(BoundedLattice, State):
             return self
 
         for idn in right.ids():
-            # new variable `left` has the information of the columns in `idn`
-            # self.store[left][right.key] = UsageLattice()
-
             if right.key in self.store[idn].keys():
                 continue
 
-            # We know now that columns in the identifier exists, so we add the information to the store
-            self.store[idn][right.key] = self.store[idn][None]
+            self.store[idn][right.key] = self.store[left].get(right.key, self.store[left][None])
 
+        self.store[left] = {None: UsageLattice()}
         return self
 
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
