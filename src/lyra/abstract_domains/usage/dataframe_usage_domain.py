@@ -140,6 +140,13 @@ class DataFrameColumnUsageState(BoundedLattice, State):
     def forget_variable(self, variable: VariableIdentifier) -> 'DataFrameColumnUsageState':
         raise NotImplementedError('forget_variable in DataFrameColumnUsageState is not yet implemented!')
 
+    # def _substitute(self, left: Expression, right: Expression) -> 'State':
+    #     if not isinstance(left.typ, DataFrameLyraType):
+    #         return super()._substitute(left, right)
+    #
+    #     self.store[left.target][left.key] = UsageLattice().written()
+    #     return self
+
     def output(self, output: Set[Expression]) -> 'State':
         # Clean it up variables marks as written
         for df in output:
@@ -173,14 +180,14 @@ class DataFrameColumnUsageState(BoundedLattice, State):
             if right.key in self.store[idn].keys():
                 continue
 
-            self.store[idn][right.key] = self.store[left].get(right.key, self.store[left][None])
+            state = self.store[left].get(right.key, self.store[left][None])
+            self.store[idn][right.key] = UsageLattice() if state == UsageLattice().written() else state
 
         self.store[left] = {None: UsageLattice()}
         return self
 
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
-        if left.key in self.store[left.target]:
-            self.store[left.target][left.key] = UsageLattice().written()
+        self.store[left.target][left.key] = UsageLattice().written()
 
         for _id in right.ids():
             if not isinstance(_id.typ, DataFrameLyraType):
