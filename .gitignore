@@ -98,3 +98,6 @@ ENV/
 
 # examples
 /src/lyra/tests/example.py
+
+# mac
+.DS_Store
