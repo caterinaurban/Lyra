@@ -173,7 +173,7 @@ class DataFrameColumnUsageState(BoundedLattice, State):
 
         # Clean it up variable if right is not a subscription
         if not isinstance(right, Subscription):
-            self.store[left] = {None: UsageLattice()}
+            self.store[left] = {None: UsageLattice().written()}
             return self
 
         for idn in right.ids():
@@ -183,7 +183,7 @@ class DataFrameColumnUsageState(BoundedLattice, State):
             state = self.store[left].get(right.key, self.store[left][None])
             self.store[idn][right.key] = UsageLattice() if state == UsageLattice().written() else state
 
-        self.store[left] = {None: UsageLattice()}
+        self.store[left] = {None: UsageLattice().written()}
         return self
 
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
