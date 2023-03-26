@@ -140,25 +140,10 @@ class DataFrameColumnUsageState(BoundedLattice, State):
     def forget_variable(self, variable: VariableIdentifier) -> 'DataFrameColumnUsageState':
         raise NotImplementedError('forget_variable in DataFrameColumnUsageState is not yet implemented!')
 
-    # def _substitute(self, left: Expression, right: Expression) -> 'State':
-    #     if not isinstance(left.typ, DataFrameLyraType):
-    #         return super()._substitute(left, right)
-    #
-    #     self.store[left.target][left.key] = UsageLattice().written()
-    #     return self
-
-    def output(self, output: Set[Expression]) -> 'State':
-        # Clean it up variables marks as written
-        for df in output:
-            if self.store.get(df) is None:
-                continue
-
-            self.store[df] = {k: v for k, v in self.store[df].items() if v != UsageLattice().written()}
-
-        return super().output(output)
-
     def _output(self, output: Expression) -> 'DataFrameColumnUsageState':
         if isinstance(output, VariableIdentifier):
+            # Removing written states
+            self.store[output] = {k: v for k, v in self.store[output].items() if v != UsageLattice().written()}
             self.store[output] = {col: UsageLattice().top() for col in self.store[output].keys()}
         elif isinstance(output, Subscription):
             analysis = self.store.get(output.target, {None: UsageLattice()})
@@ -211,6 +196,20 @@ class DataFrameColumnUsageState(BoundedLattice, State):
                         self.store[dataframe][col] = UsageLattice()
             return self
         raise ValueError(f"Unexpected dropping of columns to {dataframe}!")
+
+    # def _concat_dataframes(self, dataframes: Expression):
+    #     if isinstance(dataframes, ListDisplay):
+    #         for df in dataframes.items:
+    #             df
+    #
+    #     return self
+    #
+    # def concat_dataframes(self, dataframes: Set[Expression]) -> 'DataFrameColumnUsageState':
+    #     if self.is_bottom():
+    #         return self
+    #     self.big_join([deepcopy(self)._concat_dataframes(df) for df in dataframes])
+    #     self.result = set()
+    #     return self
 
     def drop_dataframe_column(self, dataframes: Set[Expression], columns: Set[Expression]):
         if self.is_bottom():

@@ -77,6 +77,11 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
     ) -> DataFrameColumnUsageState:
         return self._summarized_view(stmt, state, interpreter)
 
+    def hist_call_semantics(
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+    ) -> DataFrameColumnUsageState:
+        return self._summarized_view(stmt, state, interpreter)
+
     def tail_call_semantics(
             self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
@@ -95,11 +100,40 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
     def min_call_semantics(
             self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
+        dfs = self.semantics(stmt.arguments[0], state, interpreter).result
+        state.result = {df for df in dfs}
         return state
 
     def max_call_semantics(
             self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
+        dfs = self.semantics(stmt.arguments[0], state, interpreter).result
+        state.result = {df for df in dfs}
+        return state
+
+    def median_call_semantics(
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+    ) -> DataFrameColumnUsageState:
+        dfs = self.semantics(stmt.arguments[0], state, interpreter).result
+        state.result = {df for df in dfs}
+        return state
+
+    def fillna_call_semantics(
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+    ) -> DataFrameColumnUsageState:
+        dfs = self.semantics(stmt.arguments[0], state, interpreter).result
+        state.result = {df for df in dfs}
+        return state
+
+    def concat_call_semantics(self, stmt: Call, state: DataFrameColumnUsageState,
+                              interpreter: Interpreter) -> DataFrameColumnUsageState:
+        dfs = self.semantics(stmt.arguments[1], state, interpreter).result
+        return state
+
+    def replace_call_semantics(self, stmt: Call, state: DataFrameColumnUsageState,
+                               interpreter: Interpreter) -> DataFrameColumnUsageState:
+        dfs = self.semantics(stmt.arguments[0], state, interpreter).result
+        state.result = {df for df in dfs}
         return state
 
     def read_csv_call_semantics(
