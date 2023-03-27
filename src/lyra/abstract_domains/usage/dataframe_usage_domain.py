@@ -2,7 +2,7 @@ from copy import deepcopy
 from typing import Set, Union, Dict
 
 from lyra.abstract_domains.lattice import BoundedLattice
-from lyra.core.expressions import walk
+from lyra.core.expressions import walk, Input
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.core.expressions import Slicing, Expression, Subscription, VariableIdentifier, BinaryComparisonOperation, \
@@ -153,21 +153,36 @@ class DataFrameColumnUsageState(BoundedLattice, State):
 
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
         # Ignore variable if the substitution is not a DataFrame
-        if not isinstance(right.typ, DataFrameLyraType):
-            return self
-
-        # Clean it up variable if right is not a subscription
-        if not isinstance(right, Subscription):
+        if isinstance(right, Input):
             self.store[left] = {None: UsageLattice().written()}
             return self
 
-        for idn in right.ids():
-            if right.key in self.store[idn].keys():
-                continue
+        if not isinstance(right.typ, DataFrameLyraType):
+            return self
 
-            state = self.store[left].get(right.key, self.store[left][None])
-            self.store[idn][right.key] = UsageLattice() if state == UsageLattice().written() else state
+        if isinstance(right, Subscription):
+            for idn in right.ids():
+                if right.key in self.store[idn].keys():
+                    continue
 
+                state = self.store[left].get(right.key, self.store[left][None])
+                self.store[idn][right.key] = UsageLattice() if state == UsageLattice().written() else state
+
+            self.store[left] = {None: UsageLattice().written()}
+            return self
+
+        if isinstance(right, VariableIdentifier):
+            # Because we know the columns that are on the right side, we keep it on the left side
+            # Ignoring written columns (because we don't know if there are created or modified columns)
+
+            self.store[left].update({
+                col: usage for col, usage in self.store[right].items()
+                if (col is not None) or (usage != UsageLattice().written())
+            })
+            self.store[left][None] = UsageLattice().written()
+            return self
+
+        # W state in other case
         self.store[left] = {None: UsageLattice().written()}
         return self
 

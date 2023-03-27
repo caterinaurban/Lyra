@@ -2,7 +2,7 @@ import itertools
 
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.dataframe_usage_domain import DataFrameColumnUsageState
-from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation
+from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation, Input
 from lyra.core.statements import Call, SubscriptionAccess, SlicingAccess, VariableAccess
 from lyra.core.types import (
     StringLyraType,
@@ -120,7 +120,22 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         state.result = {df for df in dfs}
         return state
 
+    def concat_call_semantics(self, stmt: Call, state: DataFrameColumnUsageState,
+                              interpreter: Interpreter) -> DataFrameColumnUsageState:
+        # Concat always recieves a sequence (or mapping) of dfs
+        lists_dfs = self.semantics(stmt.arguments[1], state, interpreter).result
+        result = set()
+        for lists in lists_dfs:
+            if not isinstance(lists, ListDisplay):
+                error = f"Semantics for subscription of {list} is not yet implemented!"
+                raise NotImplementedError(error)
+
+            result.update(lists.items)
+        state.result = result
+        return state
+
     def read_csv_call_semantics(
             self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
-        return state  # TODO
+        state.result = {Input(typ=StringLyraType())}
+        return state
