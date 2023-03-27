@@ -197,20 +197,6 @@ class DataFrameColumnUsageState(BoundedLattice, State):
             return self
         raise ValueError(f"Unexpected dropping of columns to {dataframe}!")
 
-    # def _concat_dataframes(self, dataframes: Expression):
-    #     if isinstance(dataframes, ListDisplay):
-    #         for df in dataframes.items:
-    #             df
-    #
-    #     return self
-    #
-    # def concat_dataframes(self, dataframes: Set[Expression]) -> 'DataFrameColumnUsageState':
-    #     if self.is_bottom():
-    #         return self
-    #     self.big_join([deepcopy(self)._concat_dataframes(df) for df in dataframes])
-    #     self.result = set()
-    #     return self
-
     def drop_dataframe_column(self, dataframes: Set[Expression], columns: Set[Expression]):
         if self.is_bottom():
             return self

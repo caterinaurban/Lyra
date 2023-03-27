@@ -25,14 +25,6 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         dfs = self.semantics(stmt.arguments[0], state, interpreter).result
         return state.output(dfs)
 
-    def slicing_access_semantics(
-            self,
-            stmt: SlicingAccess,
-            state: DataFrameColumnUsageState,
-            interpreter: Interpreter,
-    ) -> DataFrameColumnUsageState:
-        return state
-
     def subscription_access_semantics(
             self,
             stmt: SubscriptionAccess,
@@ -48,7 +40,6 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                     f"Semantics for subscription of {primary} is not yet implemented!"
                 )
                 raise NotImplementedError(error)
-
             if isinstance(index, ListDisplay):
                 for idx in index.items:
                     subscription = Subscription(primary.typ, primary, idx)
@@ -56,8 +47,6 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
             elif isinstance(index, (Literal, VariableIdentifier)):
                 subscription = Subscription(primary.typ, primary, index)
                 result.add(subscription)
-            elif isinstance(index, BinaryArithmeticOperation):
-                ...
             else:
                 error = f"Semantics for subscription of {primary} and {index} is not yet implemented!"
                 raise NotImplementedError(error)
@@ -123,11 +112,6 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
     ) -> DataFrameColumnUsageState:
         dfs = self.semantics(stmt.arguments[0], state, interpreter).result
         state.result = {df for df in dfs}
-        return state
-
-    def concat_call_semantics(self, stmt: Call, state: DataFrameColumnUsageState,
-                              interpreter: Interpreter) -> DataFrameColumnUsageState:
-        dfs = self.semantics(stmt.arguments[1], state, interpreter).result
         return state
 
     def replace_call_semantics(self, stmt: Call, state: DataFrameColumnUsageState,
