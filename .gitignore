@@ -95,3 +95,9 @@ ENV/
 
 # generated docs
 /docs/_build/
+
+# examples
+/src/lyra/tests/example.py
+
+# mac
+.DS_Store

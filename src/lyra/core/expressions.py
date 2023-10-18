@@ -72,7 +72,7 @@ class Expression(metaclass=ABCMeta):
         :return: set of identifiers that appear in the expression
         """
         ids = set()
-        for expr in _walk(self):
+        for expr in walk(self):
             if isinstance(expr, VariableIdentifier):
                 ids.add(expr)
         return ids
@@ -93,7 +93,7 @@ def _iter_child_exprs(expr: Expression):
                     yield item
 
 
-def _walk(expr: Expression):
+def walk(expr: Expression):
     """
     Recursively yield all expressions in an expression tree
     starting at ``expr`` (including ``expr`` itself),
