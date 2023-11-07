@@ -330,9 +330,28 @@ class CFGVisitor(ast.NodeVisitor):
     # Literals
 
     # noinspection PyUnusedLocal
+    def visit_Constant(self, node, types=None, libraries=None, typ=None, fname=''):
+        pp = ProgramPoint(node.lineno, node.col_offset)
+        if isinstance(node.value, bool):
+            expr = Literal(BooleanLyraType(), str(node.value))
+            return LiteralEvaluation(pp, expr)
+        elif isinstance(node.value, int):
+            expr = Literal(IntegerLyraType(), str(node.n))
+            return LiteralEvaluation(pp, expr)
+        elif isinstance(node.value, float):
+            expr = Literal(FloatLyraType(), str(node.n))
+            return LiteralEvaluation(pp, expr)
+        elif isinstance(node.value, str):
+            expr = Literal(StringLyraType(), node.s)
+            return LiteralEvaluation(pp, expr)
+        raise NotImplementedError(f"Num of type {node.n.__class__.__name__} is unsupported!")
+
+    # noinspection PyUnusedLocal
     def visit_Num(self, node, types=None, libraries=None, typ=None, fname=''):
         """Visitor function for a number (integer, float, or complex).
         The n attribute stores the value, already converted to the relevant type."""
+        import warnings
+        warnings.warn('Class deprecated since Python 3.8', DeprecationWarning)
         pp = ProgramPoint(node.lineno, node.col_offset)
         if isinstance(node.n, int):
             expr = Literal(IntegerLyraType(), str(node.n))
@@ -345,6 +364,8 @@ class CFGVisitor(ast.NodeVisitor):
     # noinspection PyMethodMayBeStatic, PyUnusedLocal
     def visit_Str(self, node, types=None, libraries=None, typ=None, fname=''):
         """Visitor function for a string. The s attribute stores the value."""
+        import warnings
+        warnings.warn('Class deprecated since Python 3.8', DeprecationWarning)
         pp = ProgramPoint(node.lineno, node.col_offset)
         expr = Literal(StringLyraType(), node.s)
         return LiteralEvaluation(pp, expr)
@@ -441,6 +462,8 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_NameConstant(self, node, types=None, libraries=None, typ=None, fname=''):
         """Visitor function for True, False or None.
         The value attribute stores the constant."""
+        import warnings
+        warnings.warn('Class deprecated since Python 3.8', DeprecationWarning)
         if isinstance(node.value, bool):
             pp = ProgramPoint(node.lineno, node.col_offset)
             expr = Literal(BooleanLyraType(), str(node.value))
