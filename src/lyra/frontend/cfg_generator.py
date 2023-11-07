@@ -697,8 +697,8 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute slice is one of Index, Slice, or ExtSlice.
         The attribute ctx is Load, Store, or Del."""
         pp = ProgramPoint(node.lineno, node.col_offset)
-        if isinstance(node.slice, ast.Index):
-            key = self.visit(node.slice.value, types, libraries, None, fname=fname)
+        if isinstance(node.slice, ast.Constant) or isinstance(node.slice, ast.Name):
+            key = self.visit(node.slice, types, libraries, None, fname=fname)
             if isinstance(key, LiteralEvaluation):
                 _typ = key.literal.typ
             else:
