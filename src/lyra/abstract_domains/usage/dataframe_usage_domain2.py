@@ -5,6 +5,7 @@ from typing import Set, Union
 from lyra.abstract_domains.lattice import BoundedLattice
 from lyra.core.expressions import walk, Input
 from lyra.abstract_domains.state import State
+from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.abstract_domains.usage.usage_domain import UsageStore
 from lyra.core.expressions import Slicing, Expression, Subscription, \
@@ -59,7 +60,7 @@ class DataFrameColumnUsageLattice(UsageStore):
         return "{" + super().__repr__() + "}"
 
 # TODO rename? this is not only about DataFrames
-class DataFrameColumnUsageState(UsageStore, State):
+class DataFrameColumnUsageState(Stack, State):
     """Input data usage analysis state for both dataframes and normal
     variables.
 
@@ -74,8 +75,27 @@ class DataFrameColumnUsageState(UsageStore, State):
         lattices[DataFrameLyraType(library="pd")] = DataFrameColumnUsageLattice
         # TODO make this library-independent
 
-        super().__init__(variables, lattices) # UsageStore
+        # init Stack
+        super().__init__(UsageStore,
+                         {'variables': variables, 'lattices': lattices})
         State.__init__(self, precursory) # State
+
+    # push and pop functions copied from SimpleUsageState
+    # TODO check that they are right
+    @copy_docstring(Stack.push)
+    def push(self):
+        if self.is_bottom() or self.is_top():
+            return self
+        self.stack.append(deepcopy(self.lattice).increase())
+        return self
+
+    @copy_docstring(Stack.pop)
+    def pop(self):
+        if self.is_bottom() or self.is_top():
+            return self
+        current = self.stack.pop()
+        self.lattice.decrease(current)
+        return self
 
     def _assign_any(self, left: Expression, right: Expression):
         raise RuntimeError("Unexpected assignment in a backward analysis!")
