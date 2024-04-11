@@ -10,6 +10,7 @@ from lyra.abstract_domains.usage.usage_domain import UsageStore
 from lyra.core.expressions import Slicing, Expression, Subscription, \
     VariableIdentifier, BinaryComparisonOperation, Literal, ListDisplay
 from lyra.core.types import LyraType, DataFrameLyraType
+from lyra.core.utils import copy_docstring
 
 ColumnName = Union[str, None]
 
@@ -76,14 +77,20 @@ class DataFrameColumnUsageState(UsageStore, State):
         super().__init__(variables, lattices) # UsageStore
         State.__init__(self, precursory) # State
 
-    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
-        raise NotImplementedError('_assign_variable in DataFrameColumnUsageState is not yet implemented!')
+    def _assign_any(self, left: Expression, right: Expression):
+        raise RuntimeError("Unexpected assignment in a backward analysis!")
 
-    def _assign_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
-        raise NotImplementedError('_assign_subscription in DataFrameColumnUsageState is not yet implemented!')
+    @copy_docstring(State._assign_variable)
+    def _assign_variable(self, left: VariableIdentifier, right: Expression) -> 'SimpleUsageState':
+        return self._assign_any(left, right)
 
-    def _assign_slicing(self, left: Slicing, right: Expression) -> 'DataFrameColumnUsageState':
-        raise NotImplementedError('_assign_slicing in DataFrameColumnUsageState is not yet implemented!')
+    @copy_docstring(State._assign_subscription)
+    def _assign_subscription(self, left: Subscription, right: Expression) -> 'SimpleUsageState':
+        return self._assign_any(left, right)
+
+    @copy_docstring(State._assign_slicing)
+    def _assign_slicing(self, left: Slicing, right: Expression) -> 'SimpleUsageState':
+        return self._assign_any(left, right)
 
     def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'DataFrameColumnUsageState':
         raise NotImplementedError('_assume_variable in DataFrameColumnUsageState is not yet implemented!')
