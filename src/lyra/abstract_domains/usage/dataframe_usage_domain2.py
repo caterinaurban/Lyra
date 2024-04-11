@@ -65,7 +65,7 @@ def _get_columns(df: VariableIdentifier, expr: Expression) -> Set['DataFrameColu
                 # if the column name cannot be transformed into a column
                 # identifier, then act as if there were no columns so the next
                 # action applies to the wole dataframe
-                return {}
+                return None
 
     return columns
 
@@ -93,15 +93,23 @@ class DataFrameColumnUsageLattice(UsageStore):
                 + ", ".join("{} -> {}".format(variable, value) for variable, value in items) \
                 + "}"
 
-    def top(self, columns={}):
+    def _top_whole_dataframe(self):
+        """Overwrite a whole dataframe.
+        This loses the column information.
+        """
+        self.__init__()
+        self.store[DataFrameColumnIdentifier(None)].top()
+        return self
+
+    def top(self, columns=None):
         """Use some columns of a dataframe.
 
         If no column is provided, then the whole dataframe is used.
 
         :param columns: Set of columns to overwrite.
         """
-        if columns == {}:
-            super().top()
+        if not columns:
+            self._top_whole_dataframe()
             return self
         else:
             for col in columns:
@@ -125,7 +133,7 @@ class DataFrameColumnUsageLattice(UsageStore):
 
         :param columns: Set of columns to overwrite.
         """
-        if columns == {}:
+        if not columns:
             self._written_whole_dataframe()
             return self
         else:
@@ -245,10 +253,13 @@ class DataFrameColumnUsageState(Stack, State):
 
     @copy_docstring(State._output)
     def _output(self, output: Expression) -> 'DataFrameColumnUsageState':
-        if isinstance(output, Subscription):
-            raise NotImplementedError(f'_output for subscription {output} not yet implemented!')
-        else:
-            for identifier in output.ids():
+        # TODO factorize with code from _substitute_variable
+        # TODO this takes time O(|output| * |output.ids()|), make it O(|output|)
+        for identifier in output.ids():
+            if isinstance(identifier.typ, DataFrameLyraType):
+                columns = _get_columns(identifier, output)
+                self.lattice.store[identifier].top(columns)
+            else:
                 self.lattice.store[identifier].top()
         return self
 
@@ -256,22 +267,25 @@ class DataFrameColumnUsageState(Stack, State):
         # expression of the form x = e
         # only change the state if the assigned variable is U or S
         if self.lattice.store[left].is_top() or self.lattice.store[left].is_scoped():
-            self.lattice.store[left].written()
             # if left.is_dictionary:
             #     self.lattice.keys[left.keys].written()
             #     self.lattice.values[left.values].written()
             for identifier in right.ids():
                 if isinstance(identifier.typ, DataFrameLyraType):
-                    used_columns = _get_columns(identifier, right)
-                    self.lattice.store[identifier].top(used_columns)
+                    columns = _get_columns(identifier, right)
+                    self.lattice.store[identifier].top(columns)
                 else:
                     self.lattice.store[identifier].top()
                 # if identifier.is_dictionary:
                 #     self.lattice.keys[identifier.keys].top()
                 #     self.lattice.values[identifier.values].top()
+            # The lhs is overwritten, unless it also appears on the rhs, in
+            # which case it is used
+            if left in right.ids():
+                self.lattice.store[left].top()
+            else:
+                self.lattice.store[left].written()
         return self
-
-
 
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
         raise NotImplementedError('_substitute_subscription in DataFrameColumnUsageState is not yet implemented!')
