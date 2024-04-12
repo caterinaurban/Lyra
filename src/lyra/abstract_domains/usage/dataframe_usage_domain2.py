@@ -94,12 +94,25 @@ class DataFrameColumnUsageLattice(UsageStore):
                 + ", ".join("{} -> {}".format(variable, value) for variable, value in items) \
                 + "}"
 
+    def _get_default(self):
+        default_col = DataFrameColumnIdentifier(None)
+        if default_col in self.store:
+            return self.store[default_col]
+        else:
+            raise Exception(f"DataFrameColumnUsageLattice._get_default {self} did not have a default column!")
+
+    def get(self, col: DataFrameColumnIdentifier):
+        if col in self.store:
+            return self.store[col]
+        else:
+            return self._get_default()
+
     def _top_whole_dataframe(self):
         """Make the whole dataframe used.
         This loses the column information.
         """
         self.__init__()
-        self.store[DataFrameColumnIdentifier(None)].top()
+        self._get_default().top()
         return self
 
     def top(self, columns=None):
@@ -127,7 +140,7 @@ class DataFrameColumnUsageLattice(UsageStore):
         This loses the column information.
         """
         self.__init__()
-        self.store[DataFrameColumnIdentifier(None)].written()
+        self._get_default().written()
         return self
 
     def written(self, columns={}):
@@ -335,8 +348,8 @@ class DataFrameColumnUsageState(Stack, State):
         else:
             # If the key is a valid column name
             # only change the state if the assigned column is U or S
-            if self.lattice.store[target].store[key].is_top() or self.lattice.store[target].store[key].is_scoped():
-                self.lattice.store[target].store[key].written()
+            if self.lattice.store[target].get(key).is_top() or self.lattice.store[target].get(key).is_scoped():
+                self.lattice.store[target].get(key).written()
                 # use rhs identifiers
                 for identifier in right.ids():
                     if isinstance(identifier.typ, DataFrameLyraType):
@@ -344,6 +357,7 @@ class DataFrameColumnUsageState(Stack, State):
                         self.lattice.store[identifier].top(columns)
                     else:
                         self.lattice.store[identifier].top()
+        return self
 
     def _substitute_slicing(self, left: Slicing, right: Expression) -> 'DataFrameColumnUsageState':
         raise NotImplementedError('_substitute_slicing in DataFrameColumnUsageState is not yet implemented!')
