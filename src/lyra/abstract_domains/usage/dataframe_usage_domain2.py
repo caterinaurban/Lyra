@@ -1,3 +1,4 @@
+import itertools
 from collections import defaultdict
 from copy import deepcopy
 from typing import Set, Union
@@ -94,7 +95,7 @@ class DataFrameColumnUsageLattice(UsageStore):
                 + "}"
 
     def _top_whole_dataframe(self):
-        """Overwrite a whole dataframe.
+        """Make the whole dataframe used.
         This loses the column information.
         """
         self.__init__()
@@ -106,7 +107,7 @@ class DataFrameColumnUsageLattice(UsageStore):
 
         If no column is provided, then the whole dataframe is used.
 
-        :param columns: Set of columns to overwrite.
+        :param columns: Set of columns to mark used.
         """
         if not columns:
             self._top_whole_dataframe()
@@ -152,6 +153,30 @@ class DataFrameColumnUsageLattice(UsageStore):
 
     def is_any_scoped(self):
         return any(element.is_scoped() for element in self.store.values())
+
+    def _bottom_whole_dataframe(self):
+        """Make whole dataframe unused (resets it).
+        This loses the column information.
+        """
+        self.__init__()
+        return self
+
+    def bottom(self, columns=None):
+        """Make some columns of a dataframe unused.
+
+        If no column is provided, then the whole dataframe is unused.
+
+        :param columns: Set of columns to mark unused.
+        """
+        if not columns:
+            self._bottom_whole_dataframe()
+            return self
+        else:
+            for col in columns:
+                if col not in self.variables:
+                    self.add_variable(col)
+                self.store[col].bottom()
+        return self
 
 # TODO rename? this is not only about DataFrames
 class DataFrameColumnUsageState(Stack, State):
@@ -322,4 +347,30 @@ class DataFrameColumnUsageState(Stack, State):
 
     def _substitute_slicing(self, left: Slicing, right: Expression) -> 'DataFrameColumnUsageState':
         raise NotImplementedError('_substitute_slicing in DataFrameColumnUsageState is not yet implemented!')
+
+    def _drop_dataframe_column(self, dataframe: Expression, columns: Set[Expression]):
+        # TODO maybe some of this logic should be handled by the semantics, and not here
+        if isinstance(dataframe, VariableIdentifier):
+            # If any column cannot be made into a DataFrameColumnIdentifier,
+            # then mark the whole dataframe as unused
+            try:
+                cols_to_unuse : Set[DataFrameColumnIdentifier] = set()
+                for col in columns:
+                    if isinstance(col, ListDisplay):
+                        for c in col.items:
+                            cols_to_unuse.add(DataFrameColumnIdentifier(c))
+                    else:
+                        cols_to_unuse.add(DataFrameColumnIdentifier(col))
+            except ValueError:
+                columns = None
+            self.lattice.store[dataframe].bottom(cols_to_unuse)
+            return self
+        raise ValueError(f"Unexpected dropping of columns to {dataframe}!")
+
+    def drop_dataframe_column(self, dataframes: Set[Expression], columns: Set[Expression]):
+        if self.is_bottom():
+            return self
+        self.big_join([deepcopy(self)._drop_dataframe_column(df, columns) for df in dataframes])
+        self.result = set()
+        return self
 
