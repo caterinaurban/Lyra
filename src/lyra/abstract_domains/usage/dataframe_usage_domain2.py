@@ -118,6 +118,9 @@ class DataFrameColumnUsageLattice(UsageStore):
                 self.store[col].top()
         return self
 
+    def any_top(self):
+        return any(element.is_top() for element in self.store.values())
+
     def _written_whole_dataframe(self):
         """Overwrite a whole dataframe.
         This loses the column information.
@@ -146,6 +149,9 @@ class DataFrameColumnUsageLattice(UsageStore):
     def is_scoped(self):
         """The current dataframe is scoped if all of its columns are scoped"""
         return all(element.is_scoped() for element in self.store.values())
+
+    def any_scoped(self):
+        return any(element.is_scoped() for element in self.store.values())
 
 # TODO rename? this is not only about DataFrames
 class DataFrameColumnUsageState(Stack, State):
@@ -263,10 +269,11 @@ class DataFrameColumnUsageState(Stack, State):
                 self.lattice.store[identifier].top()
         return self
 
+    @copy_docstring(State._substitute_variable)
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
         # expression of the form x = e
-        # only change the state if the assigned variable is U or S
-        if self.lattice.store[left].is_top() or self.lattice.store[left].is_scoped():
+        # only change the state if one of the columns of the the assigned variable is U or S
+        if self.lattice.store[left].any_top() or self.lattice.store[left].any_scoped():
             # if left.is_dictionary:
             #     self.lattice.keys[left.keys].written()
             #     self.lattice.values[left.values].written()
