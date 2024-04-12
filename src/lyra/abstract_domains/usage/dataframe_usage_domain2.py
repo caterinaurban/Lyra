@@ -294,8 +294,33 @@ class DataFrameColumnUsageState(Stack, State):
                 self.lattice.store[left].written()
         return self
 
+    @copy_docstring(State._substitute_subscription)
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
-        raise NotImplementedError('_substitute_subscription in DataFrameColumnUsageState is not yet implemented!')
+        # expression of the form df["a"] = e
+        target = left.target
+        try:
+            key = DataFrameColumnIdentifier(left.key)
+            condition = self.lattice.store[target].store[key].is_top() or self.lattice.store[target].store[key].is_scoped()
+        except ValueError:
+            condition = self.lattice.store[target].
+
+        # only change the state if the assigned column is U or S
+        if self.lattice.store[target].store[key].is_top() or self.lattice.store[target].store[key].is_scoped():
+            # use rhs identifiers
+            for identifier in right.ids():
+                if isinstance(identifier.typ, DataFrameLyraType):
+                    columns = _get_columns(identifier, right)
+                    self.lattice.store[identifier].top(columns)
+                else:
+                    self.lattice.store[identifier].top()
+            try:
+                columns = {DataFrameColumnIdentifier(key)}
+            except ValueError:
+                columns = None
+            self.lattice.store[target].top(columns)
+
+            # TODO use lhs identifiers?
+            # TODO what if lhs is df[x] where x is a variable?
 
     def _substitute_slicing(self, left: Slicing, right: Expression) -> 'DataFrameColumnUsageState':
         raise NotImplementedError('_substitute_slicing in DataFrameColumnUsageState is not yet implemented!')
