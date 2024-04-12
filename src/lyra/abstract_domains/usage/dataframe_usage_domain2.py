@@ -118,6 +118,9 @@ class DataFrameColumnUsageLattice(UsageStore):
                 self.store[col].top()
         return self
 
+    def is_any_top(self):
+        return any(element.is_top() for element in self.store.values())
+
     def _written_whole_dataframe(self):
         """Overwrite a whole dataframe.
         This loses the column information.
@@ -146,6 +149,9 @@ class DataFrameColumnUsageLattice(UsageStore):
     def is_scoped(self):
         """The current dataframe is scoped if all of its columns are scoped"""
         return all(element.is_scoped() for element in self.store.values())
+
+    def is_any_scoped(self):
+        return any(element.is_scoped() for element in self.store.values())
 
 # TODO rename? this is not only about DataFrames
 class DataFrameColumnUsageState(Stack, State):
@@ -265,8 +271,11 @@ class DataFrameColumnUsageState(Stack, State):
 
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
         # expression of the form x = e
-        # only change the state if the assigned variable is U or S
-        if self.lattice.store[left].is_top() or self.lattice.store[left].is_scoped():
+        # For now, change the state if one of the columns of the assigned dataframe is U or S
+        # TODO make this finer by propagating used columns up to the columns of
+        # the rhs
+        if self.lattice.store[left].is_any_top() or self.lattice.store[left].is_any_scoped():
+            self.lattice.store[left].written()
             # if left.is_dictionary:
             #     self.lattice.keys[left.keys].written()
             #     self.lattice.values[left.values].written()
@@ -279,13 +288,8 @@ class DataFrameColumnUsageState(Stack, State):
                 # if identifier.is_dictionary:
                 #     self.lattice.keys[identifier.keys].top()
                 #     self.lattice.values[identifier.values].top()
-            # The lhs is overwritten, unless it also appears on the rhs, in
-            # which case it is used
-            if left in right.ids():
-                self.lattice.store[left].top()
-            else:
-                self.lattice.store[left].written()
         return self
+    # TODO handle df1 = df2 when df1 -> {"a"->U, _->W} for instance
 
     @copy_docstring(State._substitute_subscription)
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
@@ -293,27 +297,28 @@ class DataFrameColumnUsageState(Stack, State):
         target = left.target
         try:
             key = DataFrameColumnIdentifier(left.key)
-            condition = self.lattice.store[target].store[key].is_top() or self.lattice.store[target].store[key].is_scoped()
         except ValueError:
-            condition = self.lattice.store[target].
-
-        # only change the state if the assigned column is U or S
-        if self.lattice.store[target].store[key].is_top() or self.lattice.store[target].store[key].is_scoped():
-            # use rhs identifiers
-            for identifier in right.ids():
-                if isinstance(identifier.typ, DataFrameLyraType):
-                    columns = _get_columns(identifier, right)
-                    self.lattice.store[identifier].top(columns)
-                else:
-                    self.lattice.store[identifier].top()
-            try:
-                columns = {DataFrameColumnIdentifier(key)}
-            except ValueError:
-                columns = None
-            self.lattice.store[target].top(columns)
-
-            # TODO use lhs identifiers?
-            # TODO what if lhs is df[x] where x is a variable?
+            # If the key cannot be coerced to a column name
+            if self.lattice.store[target].is_any_scoped():
+                # TODO figure out what to do here, perhaps mark everything as used? or scoped?
+                raise NotImplementedError("Handling of substitute_subscription with unknown scoped column is not implemented")
+            elif self.lattice.store[target].is_any_top():
+                # If at least one column is used, we don't know if this column
+                # is overwritten or stays used, and what happens to other
+                # columns. To overapproximate: mark all columns as used.
+                self.lattice.store[target]._top_whole_dataframe()
+        else:
+            # If the key is a valid column name
+            # only change the state if the assigned column is U or S
+            if self.lattice.store[target].store[key].is_top() or self.lattice.store[target].store[key].is_scoped():
+                self.lattice.store[target].store[key].written()
+                # use rhs identifiers
+                for identifier in right.ids():
+                    if isinstance(identifier.typ, DataFrameLyraType):
+                        columns = _get_columns(identifier, right)
+                        self.lattice.store[identifier].top(columns)
+                    else:
+                        self.lattice.store[identifier].top()
 
     def _substitute_slicing(self, left: Slicing, right: Expression) -> 'DataFrameColumnUsageState':
         raise NotImplementedError('_substitute_slicing in DataFrameColumnUsageState is not yet implemented!')
