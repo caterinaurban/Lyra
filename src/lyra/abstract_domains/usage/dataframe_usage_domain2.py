@@ -16,6 +16,8 @@ from lyra.core.utils import copy_docstring
 
 ColumnName = Union[str, None]
 
+def is_used(x):
+    return x.is_top() or x.is_scoped()
 
 class DataFrameColumnType(LyraType):
     """Dummy type for names of columns of dataframes.
@@ -143,7 +145,7 @@ class DataFrameColumnUsageLattice(UsageStore):
         self._get_default().written()
         return self
 
-    def written(self, columns={}):
+    def written(self, columns=None):
         """Overwrite some columns of a dataframe.
 
         If no column is provided, then the whole dataframe is overwritten.
@@ -313,6 +315,7 @@ class DataFrameColumnUsageState(Stack, State):
         # TODO make this finer by propagating used columns up to the columns of
         # the rhs
         if self.lattice.store[left].is_any_top() or self.lattice.store[left].is_any_scoped():
+            old_left_store = deepcopy(self.lattice.store[left])
             self.lattice.store[left].written()
             # if left.is_dictionary:
             #     self.lattice.keys[left.keys].written()
@@ -320,7 +323,14 @@ class DataFrameColumnUsageState(Stack, State):
             for identifier in right.ids():
                 if isinstance(identifier.typ, DataFrameLyraType):
                     columns = _get_columns(identifier, right)
-                    self.lattice.store[identifier].top(columns)
+                    # filter for only the columns that are used on the lhs, to
+                    # "transfer" usage
+                    used_columns = {col for col in columns if is_used(old_left_store.get(col))}
+                    unused_columns = columns.difference(used_columns)
+                    if used_columns:
+                        self.lattice.store[identifier].top(used_columns)
+                    if unused_columns:
+                        self.lattice.store[identifier].bottom(unused_columns)
                 else:
                     self.lattice.store[identifier].top()
                 # if identifier.is_dictionary:
@@ -348,13 +358,21 @@ class DataFrameColumnUsageState(Stack, State):
         else:
             # If the key is a valid column name
             # only change the state if the assigned column is U or S
-            if self.lattice.store[target].get(key).is_top() or self.lattice.store[target].get(key).is_scoped():
-                self.lattice.store[target].get(key).written()
+            if is_used(self.lattice.store[target].get(key)):
+                self.lattice.store[target].written({key})
                 # use rhs identifiers
                 for identifier in right.ids():
                     if isinstance(identifier.typ, DataFrameLyraType):
                         columns = _get_columns(identifier, right)
-                        self.lattice.store[identifier].top(columns)
+                        if columns:
+                            # contrary to what happens in
+                            # `_substitute_variable`, here we know that the
+                            # column on the lhs is used, so the "transfer" is
+                            # done by marking the rhs columns involved as top
+                            self.lattice.store[identifier].top(columns)
+                        else:
+                            # TODO make this guard also catch df["A"] + df
+                            raise Exception("Expected dataframe on right hand side of subscription substitution to be subscripted, but no column name was found.")
                     else:
                         self.lattice.store[identifier].top()
         return self
