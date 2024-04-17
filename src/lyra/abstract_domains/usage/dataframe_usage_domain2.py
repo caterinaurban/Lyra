@@ -193,6 +193,16 @@ class DataFrameColumnUsageLattice(UsageStore):
                 self.store[col].bottom()
         return self
 
+    def is_bottom(self):
+        """A dataframe is bottom if and only if it is {_ -> N}.
+        For instance, {"A" -> N, _ -> N} is NOT bottom.
+
+        This is coherent with self.bottom() returning {_ -> N}.
+        """
+        if len(self.store) == 0:
+            raise Exception(f"DataFrameColumnUsageLattice.is_bottom {self} did not have a default column!")
+        return len(self.store) == 1 and self._get_default().is_bottom()
+
 # TODO rename? this is not only about DataFrames
 class DataFrameColumnUsageState(Stack, State):
     """Input data usage analysis state for both dataframes and normal
@@ -312,7 +322,7 @@ class DataFrameColumnUsageState(Stack, State):
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
         # expression of the form x = e
         # For now, change the state if one of the columns of the assigned dataframe is U or S
-        # TODO make this finer by propagating used columns up to the columns of
+        # DONE make this finer by propagating used columns up to the columns of
         # the rhs
         if self.lattice.store[left].is_any_top() or self.lattice.store[left].is_any_scoped():
             old_left_store = deepcopy(self.lattice.store[left])
