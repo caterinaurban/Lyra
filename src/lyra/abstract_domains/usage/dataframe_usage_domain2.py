@@ -314,7 +314,21 @@ class DataFrameColumnUsageState(Stack, State):
         for identifier in output.ids():
             if isinstance(identifier.typ, DataFrameLyraType):
                 columns = _get_columns(identifier, output)
-                self.lattice.store[identifier].top(columns)
+                if columns:
+                    # If columns are mentioned explicitly, then mark them as
+                    # used
+                    self.lattice.store[identifier].top(columns)
+                else:
+                    # If no columns are mentioned explicitly, then mark all
+                    # columns that are not overwritten as used to keep column
+                    # name information, and lose information about overwritten
+                    # columns.
+                    # TODO make this handle head(df["A"] + df) properly
+                    columns_not_written = {col for col, elt in self.lattice.store[identifier].store.items() if not elt.is_written()}
+                    self.lattice.store[identifier].top(columns_not_written)
+                    columns_written = {col for col, elt in self.lattice.store[identifier].store.items() if elt.is_written()}
+                    for col in columns_written:
+                        self.lattice.store[identifier].remove_variable(col)
             else:
                 self.lattice.store[identifier].top()
         return self
