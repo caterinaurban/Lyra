@@ -160,6 +160,10 @@ class ExpressionVisitor(metaclass=ABCMeta):
         """Visit of dictionary display."""
 
     @abstractmethod
+    def visit_Concat(self, expr: 'Concat'):
+        """Visit of pandas concatenation."""
+
+    @abstractmethod
     def visit_AttributeReference(self, expr: 'AttributeReference'):
         """Visit of an attribute reference."""
 
@@ -270,6 +274,10 @@ class NegationFreeExpression(ExpressionVisitor):
     def visit_DictDisplay(self, expr: 'DictDisplay', invert=False):
         return expr  # nothing to be done
 
+    @copy_docstring(ExpressionVisitor.visit_Concat)
+    def visit_Concat(self, expr: 'Concat', invert=False):
+        return expr  # nothing to be done
+
     @copy_docstring(ExpressionVisitor.visit_AttributeReference)
     def visit_AttributeReference(self, expr: 'AttributeReference', invert=False):
         return expr     # nothing to be done
@@ -377,6 +385,10 @@ class NegationFreeNormalExpression(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_DictDisplay)
     def visit_DictDisplay(self, expr: 'DictDisplay', invert=False):
+        return expr  # nothing to be done
+
+    @copy_docstring(ExpressionVisitor.visit_Concat)
+    def visit_Concat(self, expr: 'Concat', invert=False):
         return expr  # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_AttributeReference)
@@ -539,6 +551,10 @@ class Lyra2APRON(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_DictDisplay)
     def visit_DictDisplay(self, expr: 'DictDisplay', environment=None, usub=False):
+        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
+
+    @copy_docstring(ExpressionVisitor.visit_Concat)
+    def visit_Concat(self, expr: 'Concat', environment=None, usub=False):
         raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
 
     @copy_docstring(ExpressionVisitor.visit_AttributeReference)
