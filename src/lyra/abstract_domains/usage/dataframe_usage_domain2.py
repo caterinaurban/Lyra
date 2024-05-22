@@ -346,7 +346,9 @@ class DataFrameColumnUsageState(Stack, State):
             #     self.lattice.values[left.values].written()
             for identifier in right.ids():
                 if isinstance(identifier.typ, DataFrameLyraType):
-                    columns = _get_columns(identifier, right)
+                    # columns = _get_columns(identifier, right)
+                    self.lattice.store[identifier].unify(old_left_store) # copy columns from lhs
+                    columns = _get_columns(identifier, right) or self.lattice.store[identifier].variables
                     # filter for only the columns that are used on the lhs, to
                     # "transfer" usage
                     used_columns = {col for col in columns if is_used(old_left_store.get(col))}
@@ -361,7 +363,6 @@ class DataFrameColumnUsageState(Stack, State):
                 #     self.lattice.keys[identifier.keys].top()
                 #     self.lattice.values[identifier.values].top()
         return self
-    # TODO handle df1 = df2 when df1 -> {"a"->U, _->W} for instance
 
     @copy_docstring(State._substitute_subscription)
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
