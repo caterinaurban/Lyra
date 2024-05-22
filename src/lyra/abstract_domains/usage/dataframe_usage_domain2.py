@@ -10,7 +10,8 @@ from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.abstract_domains.usage.usage_domain import UsageStore
 from lyra.core.expressions import Slicing, Expression, Subscription, \
-    VariableIdentifier, BinaryComparisonOperation, Literal, ListDisplay
+        VariableIdentifier, BinaryComparisonOperation, Literal, ListDisplay, \
+        Concat
 from lyra.core.types import LyraType, DataFrameLyraType, StringLyraType
 from lyra.core.utils import copy_docstring
 
@@ -344,6 +345,12 @@ class DataFrameColumnUsageState(Stack, State):
             # if left.is_dictionary:
             #     self.lattice.keys[left.keys].written()
             #     self.lattice.values[left.values].written()
+            if isinstance(right, Concat):
+                # concatenation loses column information and marks every rhs
+                # column used if lhs has one
+                for identifier in right.ids():
+                    self.lattice.store[identifier].top()
+                return self
             for identifier in right.ids():
                 if isinstance(identifier.typ, DataFrameLyraType):
                     # columns = _get_columns(identifier, right)
