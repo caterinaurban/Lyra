@@ -1,9 +1,3 @@
-"""
-Pandas DataFrame Usage Analysis
-===============================
-
-:Author: Caterina Urban, Kevin Pinochet
-"""
 from lyra.abstract_domains.usage.dataframe_usage_domain import DataFrameColumnUsageState
 from lyra.engine.backward import BackwardInterpreter
 from lyra.engine.runner import Runner

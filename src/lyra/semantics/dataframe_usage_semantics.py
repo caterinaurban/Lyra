@@ -2,7 +2,7 @@ import itertools
 
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.dataframe_usage_domain import DataFrameColumnUsageState
-from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation, Input
+from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation, Input, Concat
 from lyra.core.statements import Call, SubscriptionAccess, SlicingAccess, VariableAccess
 from lyra.core.types import (
     StringLyraType,
@@ -125,12 +125,12 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         # Concat always recieves a sequence (or mapping) of dfs
         lists_dfs = self.semantics(stmt.arguments[1], state, interpreter).result
         result = set()
-        for lists in lists_dfs:
-            if not isinstance(lists, ListDisplay):
+        for l in lists_dfs:
+            if not isinstance(l, ListDisplay):
                 error = f"Semantics for subscription of {list} is not yet implemented!"
                 raise NotImplementedError(error)
 
-            result.update(lists.items)
+            result.add(Concat(items=l.items))
         state.result = result
         return state
 
