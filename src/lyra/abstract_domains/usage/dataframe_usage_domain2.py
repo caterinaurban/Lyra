@@ -163,6 +163,10 @@ class DataFrameColumnUsageLattice(UsageStore):
                 self.store[col].written()
         return self
 
+    def is_written(self):
+        """The current dataframe is written if all of its columns are written"""
+        return all(element.is_written() for element in self.store.values())
+
     def is_scoped(self):
         """The current dataframe is scoped if all of its columns are scoped"""
         return all(element.is_scoped() for element in self.store.values())
@@ -257,47 +261,74 @@ class DataFrameColumnUsageState(Stack, State):
     def _assign_slicing(self, left: Slicing, right: Expression) -> 'SimpleUsageState':
         return self._assign_any(left, right)
 
-    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'DataFrameColumnUsageState':
-        raise NotImplementedError('_assume_variable in DataFrameColumnUsageState is not yet implemented!')
+    def _assume_any(self, condition: Expression) -> 'SimpleUsageState':
+        effect = False  # effect of the current nesting level on the outcome of the program
+        for variable in self.lattice.variables:
+            value = self.lattice.store[variable]
+            if value.is_written() or value.is_top():
+                effect = True
+                break
+        if effect:  # the current nesting level has an effect on the outcome of the program
+            for identifier in condition.ids():
+                self.lattice.store[identifier].top()
+                if identifier.is_dictionary:
+                    self.lattice.keys[identifier.keys].top()
+                    self.lattice.values[identifier.values].top()
+        return self
 
-    def _assume_subscription(self, condition: Subscription, neg: bool = False) -> 'DataFrameColumnUsageState':
-        raise NotImplementedError('_assume_subscription in DataFrameColumnUsageState is not yet implemented!')
+    @copy_docstring(State._assume_variable)
+    def _assume_variable(self, condition: VariableIdentifier, neg: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
 
-    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise NotImplementedError('_assume_eq_comparison in DataFrameColumnUsageState is not yet implemented!')
+    @copy_docstring(State._assume_subscription)
+    def _assume_subscription(self, condition: Subscription, neg: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
 
-    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise NotImplementedError('_assume_noteq_comparison in DataFrameColumnUsageState is not yet implemented!')
+    @copy_docstring(State._assume_eq_comparison)
+    def _assume_eq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
 
-    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise NotImplementedError('_assume_lt_comparison in DataFrameColumnUsageState is not yet implemented!')
+    @copy_docstring(State._assume_noteq_comparison)
+    def _assume_noteq_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
 
-    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise NotImplementedError('_assume_lte_comparison in DataFrameColumnUsageState is not yet implemented!')
+    @copy_docstring(State._assume_lt_comparison)
+    def _assume_lt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
 
-    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise NotImplementedError('_assume_gt_comparison in DataFrameColumnUsageState is not yet implemented!')
+    @copy_docstring(State._assume_lte_comparison)
+    def _assume_lte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
 
-    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise NotImplementedError('_assume_gte_comparison in DataFrameColumnUsageState is not yet implemented!')
+    @copy_docstring(State._assume_gt_comparison)
+    def _assume_gt_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
 
-    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise NotImplementedError('_assume_is_comparison in DataFrameColumnUsageState is not yet implemented!')
+    @copy_docstring(State._assume_gte_comparison)
+    def _assume_gte_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
 
-    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise NotImplementedError('_assume_isnot_comparison in DataFrameColumnUsageState is not yet implemented!')
+    @copy_docstring(State._assume_is_comparison)
+    def _assume_is_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
 
-    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise NotImplementedError('_assume_in_comparison in DataFrameColumnUsageState is not yet implemented!')
+    @copy_docstring(State._assume_isnot_comparison)
+    def _assume_isnot_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
 
-    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False):
-        raise NotImplementedError('_assume_notin_comparison in DataFrameColumnUsageState is not yet implemented!')
+    @copy_docstring(State._assume_in_comparison)
+    def _assume_in_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
+
+    @copy_docstring(State._assume_notin_comparison)
+    def _assume_notin_comparison(self, condition: BinaryComparisonOperation, bwd: bool = False) -> 'SimpleUsageState':
+        return self._assume_any(condition)
 
     def enter_if(self) -> 'DataFrameColumnUsageState':
-        raise NotImplementedError('enter_if in DataFrameColumnUsageState is not yet implemented!')
+        return self.push()
 
     def exit_if(self) -> 'DataFrameColumnUsageState':
-        raise NotImplementedError('exit_if in DataFrameColumnUsageState is not yet implemented!')
+        return self.pop()
 
     def enter_loop(self) -> 'DataFrameColumnUsageState':
         raise NotImplementedError('enter_loop in DataFrameColumnUsageState is not yet implemented!')
@@ -339,7 +370,11 @@ class DataFrameColumnUsageState(Stack, State):
         # For now, change the state if one of the columns of the assigned dataframe is U or S
         # DONE make this finer by propagating used columns up to the columns of
         # the rhs
-        if self.lattice.store[left].is_any_top() or self.lattice.store[left].is_any_scoped():
+        if isinstance(self.lattice.store[left], DataFrameColumnUsageLattice):
+            is_top_or_scoped = self.lattice.store[left].is_any_top() or self.lattice.store[left].is_any_scoped()
+        else:
+            is_top_or_scoped = self.lattice.store[left].is_top() or self.lattice.store[left].is_scoped()
+        if is_top_or_scoped:
             old_left_store = deepcopy(self.lattice.store[left])
             self.lattice.store[left].written()
             # if left.is_dictionary:
