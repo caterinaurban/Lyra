@@ -124,14 +124,14 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                               interpreter: Interpreter) -> DataFrameColumnUsageState:
         # Concat always recieves a sequence (or mapping) of dfs
         lists_dfs = self.semantics(stmt.arguments[1], state, interpreter).result
-        result_set = set()
-        for lists in lists_dfs:
-            if not isinstance(lists, ListDisplay):
+        result = set()
+        for l in lists_dfs:
+            if not isinstance(l, ListDisplay):
                 error = f"Semantics for subscription of {list} is not yet implemented!"
                 raise NotImplementedError(error)
 
-            result_set.update(lists.items)
-        state.result = {Concat(items=list(result_set))}
+            result.add(Concat(items=l.items))
+        state.result = result
         return state
 
     def read_csv_call_semantics(
