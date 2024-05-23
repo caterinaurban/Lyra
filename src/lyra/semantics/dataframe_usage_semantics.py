@@ -2,7 +2,8 @@ import itertools
 
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.dataframe_usage_domain import DataFrameColumnUsageState
-from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation, Input, Concat
+from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation, Input
+from lyra.core.dataframe_expressions import Concat
 from lyra.core.statements import Call, SubscriptionAccess, SlicingAccess, VariableAccess
 from lyra.core.types import (
     StringLyraType,

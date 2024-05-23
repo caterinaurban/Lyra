@@ -160,10 +160,6 @@ class ExpressionVisitor(metaclass=ABCMeta):
         """Visit of dictionary display."""
 
     @abstractmethod
-    def visit_Concat(self, expr: 'Concat'):
-        """Visit of pandas concatenation."""
-
-    @abstractmethod
     def visit_AttributeReference(self, expr: 'AttributeReference'):
         """Visit of an attribute reference."""
 
@@ -274,10 +270,6 @@ class NegationFreeExpression(ExpressionVisitor):
     def visit_DictDisplay(self, expr: 'DictDisplay', invert=False):
         return expr  # nothing to be done
 
-    @copy_docstring(ExpressionVisitor.visit_Concat)
-    def visit_Concat(self, expr: 'Concat', invert=False):
-        return expr  # nothing to be done
-
     @copy_docstring(ExpressionVisitor.visit_AttributeReference)
     def visit_AttributeReference(self, expr: 'AttributeReference', invert=False):
         return expr     # nothing to be done
@@ -385,10 +377,6 @@ class NegationFreeNormalExpression(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_DictDisplay)
     def visit_DictDisplay(self, expr: 'DictDisplay', invert=False):
-        return expr  # nothing to be done
-
-    @copy_docstring(ExpressionVisitor.visit_Concat)
-    def visit_Concat(self, expr: 'Concat', invert=False):
         return expr  # nothing to be done
 
     @copy_docstring(ExpressionVisitor.visit_AttributeReference)
@@ -551,10 +539,6 @@ class Lyra2APRON(ExpressionVisitor):
 
     @copy_docstring(ExpressionVisitor.visit_DictDisplay)
     def visit_DictDisplay(self, expr: 'DictDisplay', environment=None, usub=False):
-        raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
-
-    @copy_docstring(ExpressionVisitor.visit_Concat)
-    def visit_Concat(self, expr: 'Concat', environment=None, usub=False):
         raise ValueError(f"Conversion of {expr} to APRON is unsupported!")
 
     @copy_docstring(ExpressionVisitor.visit_AttributeReference)
@@ -943,35 +927,6 @@ class DictDisplay(Expression):
         keys = map(str, self.keys)
         values = map(str, self.values)
         return '{' + ', '.join(' : '.join(x) for x in zip(keys, values)) + '}'
-
-"""
-Dataframe Expressions
-"""
-
-class Concat(Expression):
-    """Dataframe concat expression.
-    """
-
-    def __init__(self, items: List[Expression] = None):
-        """Dataframe concat construction.
-
-        :param items: set of items being concatenated
-        """
-        self._items = items or []
-
-    @property
-    def items(self):
-        return self._items
-
-    def __eq__(self, other: 'ConcatExpression'):
-        return self.items == other.items
-
-    def __hash__(self):
-        return hash(str(self.items))
-
-    def __str__(self):
-        items = map(str, self.items)
-        return "Concat(" + ", ".join(items) + ")"
 
 
 """

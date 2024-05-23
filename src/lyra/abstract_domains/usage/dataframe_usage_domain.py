@@ -10,8 +10,8 @@ from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.abstract_domains.usage.usage_domain import UsageStore
 from lyra.core.expressions import Slicing, Expression, Subscription, \
-        VariableIdentifier, BinaryComparisonOperation, Literal, ListDisplay, \
-        Concat
+        VariableIdentifier, BinaryComparisonOperation, Literal, ListDisplay
+from lyra.core.dataframe_expressions import Concat
 from lyra.core.types import LyraType, DataFrameLyraType, StringLyraType
 from lyra.core.utils import copy_docstring
 
