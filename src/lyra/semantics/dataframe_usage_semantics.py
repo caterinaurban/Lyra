@@ -140,3 +140,8 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
     ) -> DataFrameColumnUsageState:
         state.result = {Input(typ=StringLyraType())}
         return state
+
+    def DataFrame_call_semantics(
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+    ) -> DataFrameColumnUsageState:
+        raise NotImplementedError("Semantics for pd.DataFrame not yet implemented")
