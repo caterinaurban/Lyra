@@ -394,11 +394,8 @@ class DataFrameColumnUsageState(Stack, State):
                     # filter for only the columns that are used on the lhs, to
                     # "transfer" usage
                     used_columns = {col for col in columns if is_used(old_left_store.get(col))}
-                    unused_columns = columns.difference(used_columns)
                     if used_columns:
                         self.lattice.store[identifier].top(used_columns)
-                    if unused_columns:
-                        self.lattice.store[identifier].bottom(unused_columns)
                 else:
                     self.lattice.store[identifier].top()
                 # if identifier.is_dictionary:
