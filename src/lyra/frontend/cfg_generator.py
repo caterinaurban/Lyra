@@ -7,7 +7,7 @@ from lyra.core.expressions import Literal, Identifier, AttributeIdentifier
 from lyra.core.statements import *
 from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
     FloatLyraType, ListLyraType, TupleLyraType, StringLyraType, DictLyraType, SetLyraType, \
-    AttributeAccessLyraType
+    DataFrameLyraType, AttributeAccessLyraType
 from lyra.visualization.graph_renderer import CFGRenderer
 
 
@@ -710,11 +710,21 @@ class CFGVisitor(ast.NodeVisitor):
 
     # Subscripting
 
+    def _handle_loc(self, node: ast.Subscript, types=None, libraries=None, typ=None, fname=''):
+        raise NotImplementedError("_handle_loc is not implemented yet!")
+
     def visit_Subscript(self, node: ast.Subscript, types=None, libraries=None, typ=None, fname=''):
         """Visitor function for a subscript.
         The attribute value stores the target of the subscript (often a Name).
         The attribute slice is one of Index, Slice, or ExtSlice.
         The attribute ctx is Load, Store, or Del."""
+
+        # If the target is an attribute access for a dataframe, then the
+        # subscription should be handled separately
+        target = self.visit(node.value, types, libraries, None, fname=fname)
+        if isinstance(target.typ, AttributeAccessLyraType) and isinstance(target.typ.target_typ, DataFrameLyraType):
+            return self._handle_loc(node, types, libraries, typ, fname)
+
         pp = ProgramPoint(node.lineno, node.col_offset)
         constant = isinstance(node.slice, ast.Constant)
         name = isinstance(node.slice, ast.Name)
