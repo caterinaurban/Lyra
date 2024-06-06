@@ -10,7 +10,7 @@ Lyra's internal representation of Python statements.
 from abc import ABCMeta, abstractmethod
 from typing import List
 
-from lyra.core.expressions import Expression, VariableIdentifier
+from lyra.core.expressions import Expression, VariableIdentifier, AttributeIdentifier
 from lyra.core.types import LyraType
 
 
@@ -322,21 +322,17 @@ class SlicingAccess(ExpressionAccess):
 class AttributeAccess(ExpressionAccess):
     """Attribute access representation."""
 
-    def __init__(self, pp, typ, ref: Expression):
+    def __init__(self, pp, typ, target: Statement, attr: AttributeIdentifier):
         """Attribute access construction.
 
         :param pp: program point associated with the slicing access
         :param typ: type of the attribute
-        :param ref: attribute reference expression
+        :param target: object that contains the attribute
+        :param attr: attribute being accessed
         """
         super().__init__(pp, typ)
-        self._ref: Statement = ref
-        self._target: Statement = ref.target
-        self._attr: Identifier = ref.attribute
-
-    @property
-    def ref(self):
-        return self._ref
+        self._target: Statement = target
+        self._attr: AttributeIdentifier = attr
 
     @property
     def target(self):
@@ -347,7 +343,7 @@ class AttributeAccess(ExpressionAccess):
         return self._attr
 
     def __repr__(self):
-        return repr(self.ref)
+        return "{}.{}".format(self.target, self.attr)
 
 
 """

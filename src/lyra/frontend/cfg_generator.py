@@ -3,10 +3,11 @@ import optparse
 import sys
 
 from lyra.core.cfg import *
-from lyra.core.expressions import Literal, AttributeReference, Identifier
+from lyra.core.expressions import Literal, Identifier, AttributeIdentifier
 from lyra.core.statements import *
 from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
-    FloatLyraType, ListLyraType, TupleLyraType, StringLyraType, DictLyraType, SetLyraType
+    FloatLyraType, ListLyraType, TupleLyraType, StringLyraType, DictLyraType, SetLyraType, \
+    AttributeAccessLyraType
 from lyra.visualization.graph_renderer import CFGRenderer
 
 
@@ -512,12 +513,12 @@ class CFGVisitor(ast.NodeVisitor):
 
         pp = ProgramPoint(node.lineno, node.col_offset)
 
-        value = self.visit(node.value, types, libraries, fname=fname)
+        value = self.visit(node.value, types, libraries, None, fname=fname)
         # FIXME I'm not doing anything of the context for now?
         target = self.visit(node.value, types, libraries, None, fname=fname)
-        attr = Identifier(StringLyraType(), node.attr) # FIXME type? Identifier?
-        ref = AttributeReference(typ, value, node.attr)
-        return AttributeAccess(pp, attr.typ, ref)
+        attr = AttributeIdentifier(StringLyraType(), node.attr) # TODO type?
+        access_typ = AttributeAccessLyraType(target.typ, None)
+        return AttributeAccess(pp, access_typ, target, attr)
 
     # Expressions
 

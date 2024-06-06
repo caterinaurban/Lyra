@@ -50,13 +50,12 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                     error = f"Semantics for subscription of {primary} and {index} is not yet implemented!"
                     raise NotImplementedError(error)
             elif isinstance(primary, AttributeReference):
-                if primary.attribute != "loc":
+                if primary.attribute.name != "loc":
                     error = (
                         f"Semantics for subscription of attribute access {primary} is not yet implemented!"
                     )
                     raise NotImplementedError(error)
                 raise NotImplementedError(f"Semantics for loc subscription {primary} of {index} not yet implemented!")
-                
             else:
                 error = (
                     f"Semantics for subscription of {primary} is not yet implemented!"
@@ -85,15 +84,6 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
             else:
                 raise NotImplementedError(f"Semantics of other than pd.loc ({target}) not implemented yet")
         state.result = result
-        return state
-
-    def attribute_access_semantics(self, stmt: AttributeAccess, state, interpreter) -> State:
-        """Semantics of an attribute access.
-        """
-        print("Dataframe attribute access")
-        target = self.semantics(stmt.target, state, interpreter).result
-        attr = stmt.attr
-        state.result = {AttributeReference(stmt.typ, t, attr) for t in target}
         return state
 
     def drop_call_semantics(
