@@ -332,7 +332,7 @@ class AttributeAccess(ExpressionAccess):
         super().__init__(pp, typ)
         self._ref: Statement = ref
         self._target: Statement = ref.target
-        self._attr: AttributeIdentifier = ref.attribute
+        self._attr: Identifier = ref.attribute
 
     @property
     def ref(self):

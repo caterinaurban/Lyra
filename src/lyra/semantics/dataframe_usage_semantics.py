@@ -2,9 +2,9 @@ import itertools
 
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.dataframe_usage_domain import DataFrameColumnUsageState
-from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation, Input
+from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation, Input, AttributeReference
 from lyra.core.dataframe_expressions import Concat
-from lyra.core.statements import Call, SubscriptionAccess, SlicingAccess, VariableAccess
+from lyra.core.statements import Call, SubscriptionAccess, SlicingAccess, VariableAccess, AttributeAccess
 from lyra.core.types import (
     StringLyraType,
     ListLyraType,
@@ -36,23 +36,64 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         key = self.semantics(stmt.key, state, interpreter).result
         result = set()
         for primary, index in itertools.product(target, key):
-            if not isinstance(primary.typ, DataFrameLyraType):
+            # FIXME maybe there should be a type for loc?? currently it is
+            # string...
+            if isinstance(primary.typ, DataFrameLyraType):
+                if isinstance(index, ListDisplay):
+                    for idx in index.items:
+                        subscription = Subscription(primary.typ, primary, idx)
+                        result.add(subscription)
+                elif isinstance(index, (Literal, VariableIdentifier)):
+                    subscription = Subscription(primary.typ, primary, index)
+                    result.add(subscription)
+                else:
+                    error = f"Semantics for subscription of {primary} and {index} is not yet implemented!"
+                    raise NotImplementedError(error)
+            elif isinstance(primary, AttributeReference):
+                if primary.attribute != "loc":
+                    error = (
+                        f"Semantics for subscription of attribute access {primary} is not yet implemented!"
+                    )
+                    raise NotImplementedError(error)
+                raise NotImplementedError(f"Semantics for loc subscription {primary} of {index} not yet implemented!")
+                
+            else:
                 error = (
                     f"Semantics for subscription of {primary} is not yet implemented!"
                 )
                 raise NotImplementedError(error)
-            if isinstance(index, ListDisplay):
-                for idx in index.items:
-                    subscription = Subscription(primary.typ, primary, idx)
-                    result.add(subscription)
-            elif isinstance(index, (Literal, VariableIdentifier)):
-                subscription = Subscription(primary.typ, primary, index)
-                result.add(subscription)
-            else:
-                error = f"Semantics for subscription of {primary} and {index} is not yet implemented!"
-                raise NotImplementedError(error)
 
         state.result = result
+        return state
+
+
+    def slicing_access_semantics(self, stmt: SlicingAccess, state, interpreter) -> DataFrameColumnUsageState:
+        """Semantics of a slicing access. Only for df.loc for now.
+
+        :param stmt: slicing access statement to be executed
+        :param state: state before executing the slicing access
+        :return: state modified by the slicing access
+        """
+        target = self.semantics(stmt.target, state, interpreter).result
+        lower = self.semantics(stmt.lower, state, interpreter).result if stmt.lower else {None}
+        upper = self.semantics(stmt.upper, state, interpreter).result if stmt.upper else {None}
+        stride = self.semantics(stmt.stride, state, interpreter).result if stmt.stride else {None}
+        result = set()
+        for primary, start, stop, step in itertools.product(target, lower, upper, stride):
+            if isinstance(primary, AttributeReference) and primary.attribute == "loc":
+                raise NotImplementedError(f"Semantics of slicing of {primary} by {start}:{stop}:{step} not implemented yet")
+            else:
+                raise NotImplementedError(f"Semantics of other than pd.loc ({target}) not implemented yet")
+        state.result = result
+        return state
+
+    def attribute_access_semantics(self, stmt: AttributeAccess, state, interpreter) -> State:
+        """Semantics of an attribute access.
+        """
+        print("Dataframe attribute access")
+        target = self.semantics(stmt.target, state, interpreter).result
+        attr = stmt.attr
+        state.result = {AttributeReference(stmt.typ, t, attr) for t in target}
         return state
 
     def drop_call_semantics(
