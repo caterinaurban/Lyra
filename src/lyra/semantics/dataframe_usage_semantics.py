@@ -12,6 +12,7 @@ from lyra.core.types import (
     DictLyraType,
     TupleLyraType,
     DataFrameLyraType,
+    AttributeAccessLyraType,
 )
 from lyra.engine.interpreter import Interpreter
 from lyra.semantics.backward import DefaultPandasBackwardSemantics
@@ -32,6 +33,17 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
             state: DataFrameColumnUsageState,
             interpreter: Interpreter,
     ) -> DataFrameColumnUsageState:
+        target = self.semantics(stmt.target, state, interpreter).result
+        # If the targets are not specifically dataframes or loc, call the
+        # parent method.
+        # Assumption: every element of the `target` set is of the same type,
+        # and semantics call did not fail
+        t = list(target)[0]
+        t_attribute = isinstance(t.typ, AttributeAccessLyraType) and isinstance(target.typ.target_typ, DataFrameLyraType)
+        t_dataframe = isinstance(t.typ, DataFrameLyraType)
+        if not (t_attribute or t_dataframe):
+            return super().subscription_access_semantics(stmt, state, interpreter)
+
         target = self.semantics(stmt.target, state, interpreter).result
         key = self.semantics(stmt.key, state, interpreter).result
         result = set()
@@ -74,6 +86,16 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         :return: state modified by the slicing access
         """
         target = self.semantics(stmt.target, state, interpreter).result
+        # If the targets are not specifically dataframes or loc, call the
+        # parent method.
+        # Assumption: every element of the `target` set is of the same type,
+        # and semantics call did not fail
+        t = list(target)[0]
+        t_attribute = isinstance(t.typ, AttributeAccessLyraType) and isinstance(target.typ.target_typ, DataFrameLyraType)
+        t_dataframe = isinstance(t.typ, DataFrameLyraType)
+        if not (t_attribute or t_dataframe):
+            return super().slicing_access_semantics(stmt, state, interpreter)
+
         lower = self.semantics(stmt.lower, state, interpreter).result if stmt.lower else {None}
         upper = self.semantics(stmt.upper, state, interpreter).result if stmt.upper else {None}
         stride = self.semantics(stmt.stride, state, interpreter).result if stmt.stride else {None}
