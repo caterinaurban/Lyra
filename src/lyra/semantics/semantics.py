@@ -20,9 +20,11 @@ from lyra.core.expressions import BinaryBooleanOperation, Input, TupleDisplay, L
 from lyra.core.expressions import BinaryOperation, BinaryComparisonOperation
 from lyra.core.expressions import UnaryArithmeticOperation, UnaryBooleanOperation
 from lyra.core.expressions import UnaryOperation
+from lyra.core.expressions import AttributeReference
 from lyra.core.statements import Statement, VariableAccess, LiteralEvaluation, Call, \
     TupleDisplayAccess, ListDisplayAccess, SetDisplayAccess, DictDisplayAccess, \
-    SubscriptionAccess, SlicingAccess
+    SubscriptionAccess, SlicingAccess, \
+    AttributeAccess
 from lyra.core.types import LyraType, BooleanLyraType, IntegerLyraType, FloatLyraType, \
     StringLyraType, TupleLyraType, ListLyraType, SetLyraType, DictLyraType
 from lyra.engine.interpreter import Interpreter
@@ -203,6 +205,14 @@ class ExpressionSemantics(Semantics):
             slicing = Slicing(primary.typ, primary, start, stop, step)
             result.add(slicing)
         state.result = result
+        return state
+
+    def attribute_access_semantics(self, stmt: AttributeAccess, state, interpreter) -> State:
+        """Semantics of an attribute access.
+        """
+        target = self.semantics(stmt.target, state, interpreter).result
+        attr = stmt.attr
+        state.result = {AttributeReference(stmt.typ, t, attr) for t in target}
         return state
 
 

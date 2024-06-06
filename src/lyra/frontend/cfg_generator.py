@@ -3,7 +3,7 @@ import optparse
 import sys
 
 from lyra.core.cfg import *
-from lyra.core.expressions import Literal
+from lyra.core.expressions import Literal, AttributeReference, Identifier
 from lyra.core.statements import *
 from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
     FloatLyraType, ListLyraType, TupleLyraType, StringLyraType, DictLyraType, SetLyraType
@@ -500,6 +500,24 @@ class CFGVisitor(ast.NodeVisitor):
             return VariableAccess(pp, types[_name], expr)
         assert isinstance(node.ctx, ast.Del)
         raise NotImplementedError(f"Name deletion is unsupported!")
+
+    # Attribute
+
+    def visit_Attribute(self, node: ast.Attribute, types=None, libraries=None, typ=None, fname=''):
+        """Visitor function for an attribute of an object
+        Attribute(expr value, identifier attr, expr_context ctx)
+        The attribute value stores the expression that must contain the attribute
+        The attribute attr stores the identifier representing the attribute
+        The attribute ctx is Load, Store, or Del."""
+
+        pp = ProgramPoint(node.lineno, node.col_offset)
+
+        value = self.visit(node.value, types, libraries, fname=fname)
+        # FIXME I'm not doing anything of the context for now?
+        target = self.visit(node.value, types, libraries, None, fname=fname)
+        attr = Identifier(StringLyraType(), node.attr) # FIXME type? Identifier?
+        ref = AttributeReference(typ, value, node.attr)
+        return AttributeAccess(pp, attr.typ, ref)
 
     # Expressions
 

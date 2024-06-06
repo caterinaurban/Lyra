@@ -319,6 +319,36 @@ class SlicingAccess(ExpressionAccess):
         stride = ":{}".format(self.stride) if self.stride else ""
         return target + lower + upper + stride + "]"
 
+class AttributeAccess(ExpressionAccess):
+    """Attribute access representation."""
+
+    def __init__(self, pp, typ, ref: Expression):
+        """Attribute access construction.
+
+        :param pp: program point associated with the slicing access
+        :param typ: type of the attribute
+        :param ref: attribute reference expression
+        """
+        super().__init__(pp, typ)
+        self._ref: Statement = ref
+        self._target: Statement = ref.target
+        self._attr: AttributeIdentifier = ref.attribute
+
+    @property
+    def ref(self):
+        return self._ref
+
+    @property
+    def target(self):
+        return self._target
+
+    @property
+    def attr(self):
+        return self._attr
+
+    def __repr__(self):
+        return repr(self.ref)
+
 
 """
 Assignment Statements.
