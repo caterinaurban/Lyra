@@ -2,7 +2,8 @@ import itertools
 
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.dataframe_usage_domain import DataFrameColumnUsageState
-from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation, Input, AttributeReference
+from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation, Input, AttributeReference, \
+        TupleDisplay
 from lyra.core.dataframe_expressions import Concat
 from lyra.core.statements import Call, SubscriptionAccess, SlicingAccess, VariableAccess, AttributeAccess
 from lyra.core.types import (
@@ -39,7 +40,7 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         # Assumption: every element of the `target` set is of the same type,
         # and semantics call did not fail
         t = list(target)[0]
-        t_attribute = isinstance(t.typ, AttributeAccessLyraType) and isinstance(target.typ.target_typ, DataFrameLyraType)
+        t_attribute = isinstance(t.typ, AttributeAccessLyraType) and isinstance(t.typ.target_typ, DataFrameLyraType)
         t_dataframe = isinstance(t.typ, DataFrameLyraType)
         if not (t_attribute or t_dataframe):
             return super().subscription_access_semantics(stmt, state, interpreter)
@@ -50,7 +51,26 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         for primary, index in itertools.product(target, key):
             # FIXME maybe there should be a type for loc?? currently it is
             # string...
-            if isinstance(primary.typ, DataFrameLyraType):
+            if isinstance(primary, AttributeReference):
+                target = primary.target
+                if primary.attribute.name != "loc":
+                    error = (
+                        f"Semantics for subscription of attribute access {primary} is not yet implemented!"
+                    )
+                    raise NotImplementedError(error)
+                if isinstance(index, TupleDisplay):
+                    rows = index.items[0]
+                    cols = index.items[1]
+                    if isinstance(cols, ListDisplay):
+                        for idx in cols.items:
+                            subscription = Subscription(target.typ, target, idx)
+                            result.add(subscription)
+                    elif isinstance(cols, (Literal, VariableIdentifier)):
+                        subscription = Subscription(target.typ, target, cols)
+                        result.add(subscription)
+                else:
+                    raise NotImplementedError(f"Semantics for loc subscription {primary} of {index} not yet implemented!")
+            elif isinstance(primary.typ, DataFrameLyraType):
                 if isinstance(index, ListDisplay):
                     for idx in index.items:
                         subscription = Subscription(primary.typ, primary, idx)
@@ -61,13 +81,6 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                 else:
                     error = f"Semantics for subscription of {primary} and {index} is not yet implemented!"
                     raise NotImplementedError(error)
-            elif isinstance(primary, AttributeReference):
-                if primary.attribute.name != "loc":
-                    error = (
-                        f"Semantics for subscription of attribute access {primary} is not yet implemented!"
-                    )
-                    raise NotImplementedError(error)
-                raise NotImplementedError(f"Semantics for loc subscription {primary} of {index} not yet implemented!")
             else:
                 error = (
                     f"Semantics for subscription of {primary} is not yet implemented!"

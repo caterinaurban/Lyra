@@ -710,20 +710,14 @@ class CFGVisitor(ast.NodeVisitor):
 
     # Subscripting
 
-    def _handle_loc(self, node: ast.Subscript, types=None, libraries=None, typ=None, fname=''):
-        raise NotImplementedError("_handle_loc is not implemented yet!")
-
     def visit_Subscript(self, node: ast.Subscript, types=None, libraries=None, typ=None, fname=''):
         """Visitor function for a subscript.
         The attribute value stores the target of the subscript (often a Name).
         The attribute slice is one of Index, Slice, or ExtSlice.
         The attribute ctx is Load, Store, or Del."""
 
-        # If the target is an attribute access for a dataframe, then the
-        # subscription should be handled separately
         target = self.visit(node.value, types, libraries, None, fname=fname)
-        if isinstance(target.typ, AttributeAccessLyraType) and isinstance(target.typ.target_typ, DataFrameLyraType):
-            return self._handle_loc(node, types, libraries, typ, fname)
+        is_loc = isinstance(target.typ, AttributeAccessLyraType) and isinstance(target.typ.target_typ, DataFrameLyraType)
 
         pp = ProgramPoint(node.lineno, node.col_offset)
         constant = isinstance(node.slice, ast.Constant)
@@ -731,6 +725,7 @@ class CFGVisitor(ast.NodeVisitor):
         binop = isinstance(node.slice, ast.BinOp)
         subscript = isinstance(node.slice, ast.Subscript)
         list = isinstance(node.slice, ast.List)
+        tuple = isinstance(node.slice, ast.Tuple)
         if constant or name or binop or subscript or list:
             key = self.visit(node.slice, types, libraries, None, fname=fname)
             if isinstance(key, LiteralEvaluation):
@@ -756,6 +751,14 @@ class CFGVisitor(ast.NodeVisitor):
             if node.slice.step:
                 step = self.visit(node.slice.step, types, libraries, None, fname=fname)
             return SlicingAccess(pp, typ, value, lower, upper, step)
+        elif tuple and is_loc:
+            key = self.visit(node.slice, types, libraries, None, fname=fname)
+            if isinstance(key, LiteralEvaluation):
+                _typ = key.literal.typ
+            else:
+                _typ = key.typ
+            target = self.visit(node.value, types, libraries, [_typ, typ], fname=fname)
+            return SubscriptionAccess(pp, target.typ, target, key)
         raise NotImplementedError(f"Subscription {node.slice.__class__.__name__} is unsupported!")
 
     # Statements
