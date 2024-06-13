@@ -726,6 +726,7 @@ class CFGVisitor(ast.NodeVisitor):
         subscript = isinstance(node.slice, ast.Subscript)
         list = isinstance(node.slice, ast.List)
         tuple = isinstance(node.slice, ast.Tuple)
+        compare = isinstance(node.slice, ast.Compare)
         if constant or name or binop or subscript or list:
             key = self.visit(node.slice, types, libraries, None, fname=fname)
             if isinstance(key, LiteralEvaluation):
@@ -753,11 +754,11 @@ class CFGVisitor(ast.NodeVisitor):
             return SlicingAccess(pp, typ, value, lower, upper, step)
         elif tuple and is_loc:
             key = self.visit(node.slice, types, libraries, None, fname=fname)
-            if isinstance(key, LiteralEvaluation):
-                _typ = key.literal.typ
-            else:
-                _typ = key.typ
-            target = self.visit(node.value, types, libraries, [_typ, typ], fname=fname)
+            target = self.visit(node.value, types, libraries, None, fname=fname)
+            return SubscriptionAccess(pp, target.typ, target, key)
+        elif compare and is_loc:
+            key = self.visit(node.slice, types, libraries, BooleanLyraType(), fname=fname)
+            target = self.visit(node.value, types, libraries, None, fname=fname)
             return SubscriptionAccess(pp, target.typ, target, key)
         raise NotImplementedError(f"Subscription {node.slice.__class__.__name__} is unsupported!")
 
