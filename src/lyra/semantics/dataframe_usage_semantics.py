@@ -59,6 +59,7 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                     )
                     raise NotImplementedError(error)
                 if isinstance(index, TupleDisplay):
+                    # FIXME row filtering not handled yet
                     rows = index.items[0]
                     cols = index.items[1]
                     if isinstance(cols, ListDisplay):
@@ -69,7 +70,9 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                         subscription = Subscription(target.typ, target, cols)
                         result.add(subscription)
                 else:
-                    raise NotImplementedError(f"Semantics for loc subscription {primary} of {index} not yet implemented!")
+                    result.add(index)
+                    result.add(target)
+                    # raise NotImplementedError(f"Semantics for loc subscription {primary} of {index} not yet implemented!")
             elif isinstance(primary.typ, DataFrameLyraType):
                 if isinstance(index, ListDisplay):
                     for idx in index.items:
