@@ -11,7 +11,7 @@ from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.abstract_domains.usage.usage_domain import UsageStore
 from lyra.core.expressions import Slicing, Expression, Subscription, \
         VariableIdentifier, BinaryComparisonOperation, Literal, ListDisplay
-from lyra.core.dataframe_expressions import Concat
+from lyra.core.dataframe_expressions import Concat, Loc
 from lyra.core.types import LyraType, DataFrameLyraType, StringLyraType
 from lyra.core.utils import copy_docstring
 
@@ -70,7 +70,19 @@ def _get_columns(df: VariableIdentifier, expr: Expression) -> Set['DataFrameColu
                 # identifier, then act as if there were no columns so the next
                 # action applies to the wole dataframe
                 return None
-
+        if isinstance(e, Loc) and e.typ is DataFrameLyraType: # FIXME I don't understand why Loc is DataFrameLyraType and not an instance?
+            if not e.target == df:
+                continue
+            if not e.columns:
+                # if somewhere in expr a loc is applied without a column
+                # filter, then it supersedes all columns already found
+                return None
+            else:
+                # otherwise append all mentioned columns
+                try:
+                    columns.update({DataFrameColumnIdentifier(col) for col in e.columns})
+                except ValueError:
+                    return None
     return columns
 
 

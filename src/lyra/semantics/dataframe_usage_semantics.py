@@ -4,7 +4,7 @@ from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.dataframe_usage_domain import DataFrameColumnUsageState
 from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation, Input, AttributeReference, \
         TupleDisplay
-from lyra.core.dataframe_expressions import Concat
+from lyra.core.dataframe_expressions import Concat, Loc
 from lyra.core.statements import Call, SubscriptionAccess, SlicingAccess, VariableAccess, AttributeAccess
 from lyra.core.types import (
     StringLyraType,
@@ -62,17 +62,17 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                     # FIXME row filtering not handled yet
                     rows = index.items[0]
                     cols = index.items[1]
+                    cols_set = set()
                     if isinstance(cols, ListDisplay):
-                        for idx in cols.items:
-                            subscription = Subscription(target.typ, target, idx)
-                            result.add(subscription)
+                        cols_set = set(cols.items)
                     elif isinstance(cols, (Literal, VariableIdentifier)):
-                        subscription = Subscription(target.typ, target, cols)
-                        result.add(subscription)
+                        cols_set = {cols}
+                    else:
+                        error = f"Semantics for loc of {primary} with columns {cols} is not yet implemented!"
+                        raise NotImplementedError(error)
+                    result.add(Loc(target, rows, cols=cols_set))
                 else:
-                    result.add(index)
-                    result.add(target)
-                    # raise NotImplementedError(f"Semantics for loc subscription {primary} of {index} not yet implemented!")
+                    result.add(Loc(target, rows=index, cols=None)) # FIXME what happens when cols is None?
             elif isinstance(primary.typ, DataFrameLyraType):
                 if isinstance(index, ListDisplay):
                     for idx in index.items:
