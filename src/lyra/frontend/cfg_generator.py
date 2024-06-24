@@ -753,7 +753,7 @@ class CFGVisitor(ast.NodeVisitor):
                 step = self.visit(node.slice.step, types, libraries, None, fname=fname)
             return SlicingAccess(pp, typ, value, lower, upper, step)
         elif tuple and is_loc:
-            key = self.visit(node.slice, types, libraries, None, fname=fname)
+            key = self.visit(node.slice, types, libraries, TupleLyraType([BooleanLyraType(),None]), fname=fname)
             target = self.visit(node.value, types, libraries, None, fname=fname)
             return SubscriptionAccess(pp, target.typ, target, key)
         elif compare and is_loc:
