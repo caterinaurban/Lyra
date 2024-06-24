@@ -179,6 +179,9 @@ class DataFrameColumnUsageLattice(UsageStore):
         """The current dataframe is written if all of its columns are written"""
         return all(element.is_written() for element in self.store.values())
 
+    def is_any_written(self):
+        return any(element.is_written() for element in self.store.values())
+
     def is_scoped(self):
         """The current dataframe is scoped if all of its columns are scoped"""
         return all(element.is_scoped() for element in self.store.values())
@@ -219,6 +222,14 @@ class DataFrameColumnUsageLattice(UsageStore):
         if len(self.store) == 0:
             raise Exception(f"DataFrameColumnUsageLattice.is_bottom {self} did not have a default column!")
         return len(self.store) == 1 and self._get_default().is_bottom()
+
+    def decrease(self, other: 'DataFrameColumnUsageLattice') -> 'DataFrameColumnUsageLattice':
+        # TODO docstring
+        self.unify(other)
+
+        for var in self.store:
+            self.get(var).decrease(other.get(var))
+        return self
 
 # TODO rename? this is not only about DataFrames
 class DataFrameColumnUsageState(Stack, State):
@@ -277,15 +288,21 @@ class DataFrameColumnUsageState(Stack, State):
         effect = False  # effect of the current nesting level on the outcome of the program
         for variable in self.lattice.variables:
             value = self.lattice.store[variable]
-            if value.is_written() or value.is_top():
-                effect = True
-                break
+            if isinstance(value, DataFrameColumnUsageLattice):
+                if value.is_any_written() or value.is_any_top():
+                    effect = True
+                    break
+            else:
+                if value.is_written() or value.is_top():
+                    effect = True
+                    break
         if effect:  # the current nesting level has an effect on the outcome of the program
-            for identifier in condition.ids():
-                self.lattice.store[identifier].top()
-                if identifier.is_dictionary:
-                    self.lattice.keys[identifier.keys].top()
-                    self.lattice.values[identifier.values].top()
+            self._output(condition)
+            # for identifier in condition.ids():
+            #     self.lattice.store[identifier].top()
+            #     if identifier.is_dictionary:
+            #         self.lattice.keys[identifier.keys].top()
+            #         self.lattice.values[identifier.values].top()
         return self
 
     @copy_docstring(State._assume_variable)
@@ -377,6 +394,16 @@ class DataFrameColumnUsageState(Stack, State):
                 self.lattice.store[identifier].top()
         return self
 
+    @copy_docstring(State._substitute)
+    def _substitute(self, left: Expression, right: Expression) -> 'State':
+        """Substitute an expression to another expression.
+        Extends State._substitute"""
+
+        if isinstance(left, Loc):
+            return self._substitute_loc(left, right)
+        else:
+            return super()._substitute(left,right)
+
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
         # expression of the form x = e
         # For now, change the state if one of the columns of the assigned dataframe is U or S
@@ -455,6 +482,22 @@ class DataFrameColumnUsageState(Stack, State):
 
     def _substitute_slicing(self, left: Slicing, right: Expression) -> 'DataFrameColumnUsageState':
         raise NotImplementedError('_substitute_slicing in DataFrameColumnUsageState is not yet implemented!')
+
+    def _substitute_loc(self, left: Loc, right: Expression) -> 'DataFrameColumnUsageState':
+        self.push()
+        substs = set()
+        if left.columns:
+            for col in left.columns:
+                substs.add(Subscription(typ=left.typ, target=left.target, key=col))
+        else:
+            # if no columns are specified, then the substitution will be for the whole target
+            substs = {left.target}
+        self.substitute(left=substs, right={right})
+        self.assume({left.rows}, bwd=True)
+        self.pop()
+        return self
+    # raise NotImplementedError('_substitute_loc in DataFrameColumnUsageState is not yet implemented!')
+
 
     def _drop_dataframe_column(self, dataframe: Expression, columns: Set[Expression]):
         # TODO maybe some of this logic should be handled by the semantics, and not here
