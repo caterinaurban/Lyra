@@ -428,13 +428,16 @@ class DataFrameColumnUsageState(Stack, State):
             for identifier in right.ids():
                 if isinstance(identifier.typ, DataFrameLyraType):
                     # columns = _get_columns(identifier, right)
-                    self.lattice.store[identifier].unify(old_left_store) # copy columns from lhs
+                    # self.lattice.store[identifier].unify(old_left_store) # copy columns from lhs
                     columns = _get_columns(identifier, right) or self.lattice.store[identifier].variables
                     # filter for only the columns that are used on the lhs, to
                     # "transfer" usage
                     used_columns = {col for col in columns if is_used(old_left_store.get(col))}
                     if used_columns:
                         self.lattice.store[identifier].top(used_columns)
+                    written_columns = {col for col in columns if old_left_store.get(col).is_written()}
+                    if written_columns:
+                        self.lattice.store[identifier].written(written_columns)
                 else:
                     self.lattice.store[identifier].top()
                 # if identifier.is_dictionary:
