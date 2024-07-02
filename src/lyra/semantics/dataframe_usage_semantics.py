@@ -117,8 +117,13 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         stride = self.semantics(stmt.stride, state, interpreter).result if stmt.stride else {None}
         result = set()
         for primary, start, stop, step in itertools.product(target, lower, upper, stride):
-            if isinstance(primary, AttributeReference) and primary.attribute == "loc":
-                raise NotImplementedError(f"Semantics of slicing of {primary} by {start}:{stop}:{step} not implemented yet")
+            if isinstance(primary, AttributeReference) and primary.attribute.name == "loc":
+                # There is no native expression for `start:stop:step`, but what
+                # is interesting in the case of `df.loc[start:stop:step]` is
+                # only to know that `start`, `stop`, and `step` are mentioned.
+                # Thus, a tuple `(start, stop, step)` carries the right
+                # information.
+                result.add(Loc(primary.target, rows=TupleDisplay(typ=None, items=[start,stop,step]), cols=None))
             else:
                 raise NotImplementedError(f"Semantics of other than pd.loc ({target}) not implemented yet")
         state.result = result
