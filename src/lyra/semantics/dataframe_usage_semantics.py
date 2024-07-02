@@ -107,7 +107,7 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         # Assumption: every element of the `target` set is of the same type,
         # and semantics call did not fail
         t = list(target)[0]
-        t_attribute = isinstance(t.typ, AttributeAccessLyraType) and isinstance(target.typ.target_typ, DataFrameLyraType)
+        t_attribute = isinstance(t.typ, AttributeAccessLyraType) and isinstance(t.typ.target_typ, DataFrameLyraType)
         t_dataframe = isinstance(t.typ, DataFrameLyraType)
         if not (t_attribute or t_dataframe):
             return super().slicing_access_semantics(stmt, state, interpreter)

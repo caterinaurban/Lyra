@@ -40,7 +40,7 @@ class Loc(Expression):
     see https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html
     """
 
-    def __init__(self, target: Expression, rows: Expression, cols: List[Expression] = None): # FIXME List or Set?
+    def __init__(self, target: Expression, rows: Expression, cols: Set[Expression] = None):
         """Dataframe loc construction.
         For target.loc[rows, cols]
 
