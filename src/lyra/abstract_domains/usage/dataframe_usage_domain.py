@@ -496,8 +496,7 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
                             # done by marking the rhs columns involved as top
                             self.lattice.store[identifier].top(columns)
                         else:
-                            # TODO make this guard also catch df["A"] + df
-                            raise Exception("Expected dataframe on right hand side of subscription substitution to be subscripted, but no column name was found.")
+                            raise Exception("Expected dataframe on right hand side of subscription substitution, but no column name was found.")
                     else:
                         self.lattice.store[identifier].top()
         return self

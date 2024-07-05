@@ -13,10 +13,12 @@ import unittest
 import sys
 
 from lyra.abstract_domains.usage.usage_domain import SimpleUsageState
+from lyra.abstract_domains.usage.dataframe_usage_domain import DataFrameColumnUsageState
 from lyra.engine.backward import BackwardInterpreter
 # from lyra.engine.usage.fulara_usage_analysis import FularaIntervalUsageAnalysis
 from lyra.engine.usage.dataframe_usage_analysis import DataFrameColumnUsageAnalysis
 from lyra.semantics.backward import DefaultBackwardSemantics
+from lyra.semantics.dataframe_usage_semantics import DataFrameColumnUsageSemantics
 from lyra.unittests.runner import TestRunner
 
 
@@ -44,14 +46,10 @@ class FularaIntervalUsageTest(TestRunner):
 class DataFrameColumnUsageTest(TestRunner):
 
     def interpreter(self):
-        analysis = DataFrameColumnUsageAnalysis()
-        analysis._cfgs = self.cfgs
-        return analysis.interpreter()
+        return BackwardInterpreter(self.cfgs, self.fargs, DataFrameColumnUsageSemantics(), 3)
 
-    def state(self):  # initial state
-        analysis = DataFrameColumnUsageAnalysis()
-        analysis._cfgs = self.cfgs
-        return analysis.state()
+    def state(self):
+        return DataFrameColumnUsageState(self.variables)
 
 def test_suite():
     suite = unittest.TestSuite()
