@@ -219,3 +219,19 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
             self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
         raise NotImplementedError("Semantics for pd.DataFrame not yet implemented")
+
+    def user_defined_call_semantics(
+            self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
+    ) -> DataFrameColumnUsageState:
+        if stmt.name in interpreter.fargs:
+            # If the function name is indeed user defined, then use the
+            # existing function
+            return super().user_defined_call_semantics(stmt, state, interpreter)
+        else:
+            # Otherwise, the semantics of the call is just the set of columns
+            # mentioned in the arguments
+            dfs = set()
+            for arg in stmt.arguments:
+                dfs.update(self.semantics(arg, state, interpreter).result)
+            state.result = dfs
+            return state

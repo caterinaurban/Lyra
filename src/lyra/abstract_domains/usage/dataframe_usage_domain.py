@@ -3,7 +3,7 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import Set, Union
 
-from lyra.abstract_domains.lattice import BoundedLattice
+from lyra.abstract_domains.lattice import BoundedLattice, EnvironmentMixin
 from lyra.core.expressions import walk, Input
 from lyra.abstract_domains.state import State
 from lyra.abstract_domains.stack import Stack
@@ -232,11 +232,10 @@ class DataFrameColumnUsageLattice(UsageStore):
         return self
 
 # TODO rename? this is not only about DataFrames
-class DataFrameColumnUsageState(Stack, State):
+class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
     """Input data usage analysis state for both dataframes and normal
     variables.
 
-    TODO add stack
     """
 
     def __init__(self, variables, precursory: State = None):
@@ -251,6 +250,24 @@ class DataFrameColumnUsageState(Stack, State):
         super().__init__(UsageStore,
                          {'variables': variables, 'lattices': lattices})
         State.__init__(self, precursory) # State
+
+    # TODO add_variable, remove_variable, unify -> call the ones from the lattice
+
+    @copy_docstring(EnvironmentMixin.add_variable)
+    def add_variable(self, variable: VariableIdentifier):
+        self.lattice.add_variable(variable)
+        return self
+
+    @copy_docstring(EnvironmentMixin.remove_variable)
+    def remove_variable(self, variable: VariableIdentifier):
+        self.lattice.remove_variable(variable)
+        return self
+
+    @copy_docstring(EnvironmentMixin.unify)
+    def unify(self, other: 'DataFrameColumnsUsageState'):
+        self.lattice.unify(other.lattice)
+        return self
+
 
     # push and pop functions copied from SimpleUsageState
     # TODO check that they are right
@@ -365,8 +382,10 @@ class DataFrameColumnUsageState(Stack, State):
     def exit_loop(self) -> 'DataFrameColumnUsageState':
         raise NotImplementedError('exit_loop in DataFrameColumnUsageState is not yet implemented!')
 
+    @copy_docstring(State.forget_variable)
     def forget_variable(self, variable: VariableIdentifier) -> 'DataFrameColumnUsageState':
-        raise NotImplementedError('forget_variable in DataFrameColumnUsageState is not yet implemented!')
+        super().forget_variable(variable)
+        return self
 
     @copy_docstring(State._output)
     def _output(self, output: Expression) -> 'DataFrameColumnUsageState':
