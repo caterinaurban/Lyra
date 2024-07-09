@@ -178,6 +178,22 @@ class DataFrameLyraType(ContainerLyraType):
     def __repr__(self):
         return "{}.DataFrame".format(self.library)
 
+class SeriesLyraType(ContainerLyraType):
+
+    def __init__(self, library: str):
+        """Series type creation.
+
+        :param library: library identifier
+        """
+        self._library = library
+
+    @property
+    def library(self):
+        return self._library
+
+    def __repr__(self):
+        return "{}.Series".format(self.library)
+
 class AttributeAccessLyraType(LyraType):
     """Attribute access type representation."""
 
@@ -239,5 +255,7 @@ def resolve_type_annotation(annotation):
     if isinstance(annotation, ast.Attribute):
         if annotation.attr == 'DataFrame':
             return DataFrameLyraType(annotation.value.id)
+        elif annotation.attr == 'Series':
+            return SeriesLyraType(annotation.value.id)
 
     raise NotImplementedError(f"Type annotation {annotation} is not yet supported!")
