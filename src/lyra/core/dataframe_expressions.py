@@ -4,8 +4,8 @@ Dataframe Expressions
 
 from typing import List, Set
 
-from lyra.core.expressions import Expression
-from lyra.core.types import DataFrameLyraType
+from lyra.core.expressions import Expression, Call
+from lyra.core.types import LyraType, DataFrameLyraType
 
 # class DataFrameExpressionVisitor(metaclass=ABCMeta):
 
@@ -76,3 +76,33 @@ class Loc(Expression):
 
     def __str__(self):
         return "{}.loc[{}, {}]".format(str(self.target), str(self.rows), str(self.columns))
+
+class UnknownCall(Call):
+    """Unknown function call representation."""
+
+    def __init__(self, typ: LyraType, fname: str, fargs: List[Expression] = None):
+        """Unknown call construction.
+
+        :param typ: return type of the call
+        """
+        super().__init__(typ)
+        self._fname = fname
+        self._fargs = fargs or []
+
+    @property
+    def fname(self):
+        return self._fname
+
+    @property
+    def fargs(self):
+        return self._fargs
+
+    def __eq__(self, other: 'UnknownCall'):
+        return self.typ == other.typ and self.fname == other.fname
+
+    def __hash__(self):
+        return hash((self.typ, self.fname))
+
+    def __str__(self):
+        return "{}({})".format(self.fname, ",".join([str(arg) for arg in self.fargs]))
+

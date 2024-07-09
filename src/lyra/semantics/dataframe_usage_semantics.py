@@ -4,7 +4,7 @@ from lyra.abstract_domains.state import State
 from lyra.abstract_domains.usage.dataframe_usage_domain import DataFrameColumnUsageState
 from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation, Input, AttributeReference, \
         TupleDisplay
-from lyra.core.dataframe_expressions import Concat, Loc
+from lyra.core.dataframe_expressions import Concat, Loc, UnknownCall
 from lyra.core.statements import Call, SubscriptionAccess, SlicingAccess, VariableAccess, AttributeAccess
 from lyra.core.types import (
     StringLyraType,
@@ -228,10 +228,18 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
             # existing function
             return super().user_defined_call_semantics(stmt, state, interpreter)
         else:
-            # Otherwise, the semantics of the call is just the set of columns
-            # mentioned in the arguments
-            dfs = set()
-            for arg in stmt.arguments:
-                dfs.update(self.semantics(arg, state, interpreter).result)
-            state.result = dfs
+            # Otherwise, the semantics of the call is just an UnknownCall
+            # expression
+            ## Otherwise, the semantics of the call is just the set of columns
+            ## mentioned in the arguments
+            ## dfs = set()
+            ## for arg in stmt.arguments:
+            ##     dfs.update(self.semantics(arg, state, interpreter).result)
+            ## state.result = dfs
+            result = set()
+            arguments = [self.semantics(arg, state, interpreter).result for arg in stmt.arguments]
+            for fargs in itertools.product(*arguments):
+                call = UnknownCall(typ = stmt.typ, fname = stmt.name, fargs=list(fargs))
+                result.add(call)
+            state.result = result
             return state
