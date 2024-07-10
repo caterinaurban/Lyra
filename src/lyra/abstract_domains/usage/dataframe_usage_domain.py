@@ -547,6 +547,11 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
                         cols_to_unuse.add(DataFrameColumnIdentifier(col))
             except ValueError:
                 columns = None
+
+            for col in cols_to_unuse:
+                if col in self.lattice.store[dataframe].store and is_used(self.lattice.store[dataframe].store[col]):
+                    print(f"Warning: column {col} of {dataframe} dropped before use!") # TODO add line information?
+
             self.lattice.store[dataframe].bottom(cols_to_unuse)
             return self
         raise ValueError(f"Unexpected dropping of columns to {dataframe}!")
