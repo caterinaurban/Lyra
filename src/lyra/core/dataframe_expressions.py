@@ -98,10 +98,10 @@ class UnknownCall(Call):
         return self._fargs
 
     def __eq__(self, other: 'UnknownCall'):
-        return self.typ == other.typ and self.fname == other.fname
+        return self.typ == other.typ and self.fname == other.fname and self.fargs == self.fargs
 
     def __hash__(self):
-        return hash((self.typ, self.fname))
+        return hash((self.typ, self.fname, (hash(arg) for arg in self.fargs)))
 
     def __str__(self):
         return "{}({})".format(self.fname, ",".join([str(arg) for arg in self.fargs]))

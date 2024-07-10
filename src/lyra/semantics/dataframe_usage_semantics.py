@@ -236,6 +236,7 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
             ## for arg in stmt.arguments:
             ##     dfs.update(self.semantics(arg, state, interpreter).result)
             ## state.result = dfs
+            # FIXME works with step by step debugger, but not without??
             result = set()
             arguments = [self.semantics(arg, state, interpreter).result for arg in stmt.arguments]
             for fargs in itertools.product(*arguments):
