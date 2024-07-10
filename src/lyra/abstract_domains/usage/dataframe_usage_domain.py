@@ -10,7 +10,8 @@ from lyra.abstract_domains.stack import Stack
 from lyra.abstract_domains.usage.usage_lattice import UsageLattice
 from lyra.abstract_domains.usage.usage_domain import UsageStore
 from lyra.core.expressions import Slicing, Expression, Subscription, \
-        VariableIdentifier, BinaryComparisonOperation, Literal, ListDisplay
+        VariableIdentifier, BinaryComparisonOperation, Literal, ListDisplay, \
+        AttributeReference
 from lyra.core.dataframe_expressions import Concat, Loc
 from lyra.core.types import LyraType, DataFrameLyraType, StringLyraType
 from lyra.core.utils import copy_docstring
@@ -420,6 +421,12 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
 
         if isinstance(left, Loc):
             return self._substitute_loc(left, right)
+        elif isinstance(left, AttributeReference):
+            if isinstance(left.target.typ, DataFrameLyraType) and left.attribute.name == "index":
+                # `df.index = ...` does nothing
+                return self
+            else:
+                raise Exception(f"unknown attribute for dataframe: {left.attribute}")
         else:
             return super()._substitute(left,right)
 
