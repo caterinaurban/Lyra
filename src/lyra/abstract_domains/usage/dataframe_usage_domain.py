@@ -2,6 +2,7 @@ import itertools
 from collections import defaultdict
 from copy import deepcopy
 from typing import Set, Union
+from enum import Enum
 
 from lyra.abstract_domains.lattice import BoundedLattice, EnvironmentMixin
 from lyra.core.expressions import walk, Input
@@ -28,33 +29,65 @@ class DataFrameColumnType(LyraType):
     def __repr__(self):
         return "DataFrameColumn"
 
+class DataFrameColumnKind(Enum):
+    NAMED = 0
+    INDEX = 1
+    DEFAULT = 2
+
+    def __lt__(self, other: 'DataFrameColumnKind'):
+        return self.value < other.value
+
 class DataFrameColumnIdentifier(VariableIdentifier):
     """Fake "variable" identifier for the sole purpose of embedding column
     names into VariableIdentifier and to reuse Store."""
 
-    def __init__(self, name: ColumnName):
+    def __init__(self, name: ColumnName, kind: DataFrameColumnKind = None):
         """Dataframe column identifier construction.
 
-        :param name: name of the column identifier, a string or None (that
-                     represents any column)
+        For backwards compatibility, if no kind is given, then the column
+        identifier will be DEFAULT if no name is given, and NAMED otherwise.
+
+        :param name: name of the column identifier, a string or None (for DEFAULT and INDEX kinds)
+        :param kind: kind of the column identifier, DEFAULT, INDEX, or NAMED
         """
 
-        if isinstance(name, str) or name is None:
-            super().__init__(typ=DataFrameColumnType, name=name)
-        elif isinstance(name, Literal) and name.typ == StringLyraType():
-            super().__init__(typ=DataFrameColumnType, name=name.val)
-        elif isinstance(name, DataFrameColumnIdentifier):
-            return
+        if name is None and kind is None:
+            self._kind = DataFrameColumnKind.DEFAULT
+        elif kind is None:
+            self._kind = DataFrameColumnKind.NAMED
         else:
-            raise ValueError("Cannot create DataFrameColumnIdentifier out of "
-                             f"{name} of type {type(name)}")
+            self._kind = kind
+
+        if self.kind == DataFrameColumnKind.DEFAULT:
+            super().__init__(typ=DataFrameColumnType, name="!default")
+        elif self.kind == DataFrameColumnKind.INDEX:
+            super().__init__(typ=DataFrameColumnType, name="!index")
+        else: # NAMED
+            if isinstance(name, str):
+                super().__init__(typ=DataFrameColumnType, name=name)
+            elif isinstance(name, Literal) and name.typ == StringLyraType():
+                super().__init__(typ=DataFrameColumnType, name=name.val)
+            elif isinstance(name, DataFrameColumnIdentifier):
+                return
+            else:
+                raise ValueError("Cannot create DataFrameColumnIdentifier out of "
+                                 f"{name} of type {type(name)}")
+
+    @property
+    def kind(self):
+        return self._kind
 
     # used when sorting column names
     def __lt__(self, other):
-        return other.name is None or str(self) < str(other)
+        return self.kind < other.kind or self.name < other.name
 
     def __str__(self):
-        return "_" if self.name is None else super().__str__()
+        if self.kind == DataFrameColumnKind.DEFAULT:
+            return "_"
+        elif self.kind == DataFrameColumnKind.INDEX:
+            return "(index)"
+        elif self.kind == DataFrameColumnKind.NAMED:
+            return super().__str__()
 
 def _get_columns(df: VariableIdentifier, expr: Expression) -> Set['DataFrameColumnIdentifier']:
     """Return the set of the columns of [df] present in [expr]"""
