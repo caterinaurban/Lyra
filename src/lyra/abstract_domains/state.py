@@ -466,7 +466,8 @@ class State(Lattice, metaclass=ABCMeta):
         """
         if self.is_bottom():
             return self
-        self.big_join([deepcopy(self)._output(expr) for expr in output])
+        if output:
+            self.big_join([deepcopy(self)._output(expr) for expr in output])
         self.result = set()  # outputs have no result, only side-effects
         return self
 
