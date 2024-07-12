@@ -164,14 +164,15 @@ class DataFrameColumnUsageLattice(UsageStore):
             return self.store[col]
         elif col.kind == DataFrameColumnKind.INDEX:
             # create the fake "index" column on the go
-            self.add_variable(col)
-            # NOTE REU: If any column is used or scoped, then possibly the index was too.
-            # This overapproximates greatly, as some operations that use
-            # columns don't use the index.
-            if self.is_any_top():
-                self.store[col].top()
-            elif self.is_any_scoped():
-                self.store[col].scoped()
+            if col not in self.store:
+                self.add_variable(col)
+                # NOTE REU: If any column is used or scoped, then possibly the index was too.
+                # This overapproximates greatly, as some operations that use
+                # columns don't use the index.
+                if self.is_any_top():
+                    self.store[col].top()
+                elif self.is_any_scoped():
+                    self.store[col].scoped()
             return self.store[col]
         else:
             return self._get_default()
