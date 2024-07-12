@@ -74,11 +74,7 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                 else:
                     result.add(Loc(target, rows=index, cols=None)) # FIXME what happens when cols is None?
             elif isinstance(primary.typ, DataFrameLyraType):
-                if isinstance(index, ListDisplay):
-                    for idx in index.items:
-                        subscription = Subscription(primary.typ, primary, idx)
-                        result.add(subscription)
-                elif isinstance(index, (Literal, VariableIdentifier)):
+                if isinstance(index, (Literal, VariableIdentifier, ListDisplay)):
                     subscription = Subscription(primary.typ, primary, index)
                     result.add(subscription)
                 else:

@@ -11,7 +11,6 @@ def f(x: pd.DataFrame) -> pd.DataFrame:
     return x
 
 # STATE: a -> {A -> U, B -> U, _ -> N}; b -> {_ -> W}; x -> {X -> U, Y -> U, _ -> N}; y -> {_ -> W}
-# FIXME not the same behavior with debugger?
 y = g(x[["X","Y"]])
 
 # STATE: a -> {A -> U, B -> U, _ -> N}; b -> {_ -> W}; x -> {_ -> N}; y -> {_ -> U}

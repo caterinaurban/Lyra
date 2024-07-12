@@ -102,7 +102,11 @@ def _get_columns(df: VariableIdentifier, expr: Expression) -> Set['DataFrameColu
             if not e.target == df:
                 continue
             try:
-                columns.add(DataFrameColumnIdentifier(e.key))
+                if isinstance(e.key, ListDisplay):
+                    for k in e.key.items:
+                        columns.add(DataFrameColumnIdentifier(k))
+                else:
+                    columns.add(DataFrameColumnIdentifier(e.key))
             except ValueError:
                 # if the column name cannot be transformed into a column
                 # identifier, then act as if there were no columns so the next
