@@ -49,8 +49,6 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         key = self.semantics(stmt.key, state, interpreter).result
         result = set()
         for primary, index in itertools.product(target, key):
-            # FIXME maybe there should be a type for loc?? currently it is
-            # string...
             if isinstance(primary, AttributeReference):
                 target = primary.target
                 if primary.attribute.name != "loc":
@@ -59,7 +57,6 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                     )
                     raise NotImplementedError(error)
                 if isinstance(index, TupleDisplay):
-                    # FIXME row filtering not handled yet
                     rows = index.items[0]
                     cols = index.items[1]
                     cols_set = set()
@@ -72,7 +69,7 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                         raise NotImplementedError(error)
                     result.add(Loc(target, rows, cols=cols_set))
                 else:
-                    result.add(Loc(target, rows=index, cols=None)) # FIXME what happens when cols is None?
+                    result.add(Loc(target, rows=index, cols=None))
             elif isinstance(primary.typ, DataFrameLyraType):
                 if isinstance(index, (Literal, VariableIdentifier, ListDisplay)):
                     subscription = Subscription(primary.typ, primary, index)
