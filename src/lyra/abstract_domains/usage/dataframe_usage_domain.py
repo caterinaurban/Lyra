@@ -44,12 +44,18 @@ class DataFrameColumnIdentifier(VariableIdentifier):
     def __init__(self, name: ColumnName, kind: DataFrameColumnKind = None):
         """Dataframe column identifier construction.
 
-        For backwards compatibility, if no kind is given, then the column
-        identifier will be DEFAULT if no name is given, and NAMED otherwise.
+        For backwards compatibility:
+            - if the `name` parameter is already a column identifier, use it
+            - in other cases, if no kind is given, then the column identifier
+              will be DEFAULT if no name is given, and NAMED otherwise.
 
         :param name: name of the column identifier, a string or None (for DEFAULT and INDEX kinds)
         :param kind: kind of the column identifier, DEFAULT, INDEX, or NAMED
         """
+        if isinstance(name, DataFrameColumnIdentifier):
+            self._kind = name.kind
+            super().__init__(typ=DataFrameColumnType, name=name.name)
+            return
 
         if name is None and kind is None:
             self._kind = DataFrameColumnKind.DEFAULT
@@ -67,8 +73,6 @@ class DataFrameColumnIdentifier(VariableIdentifier):
                 super().__init__(typ=DataFrameColumnType, name=name)
             elif isinstance(name, Literal) and name.typ == StringLyraType():
                 super().__init__(typ=DataFrameColumnType, name=name.val)
-            elif isinstance(name, DataFrameColumnIdentifier):
-                return
             else:
                 raise ValueError("Cannot create DataFrameColumnIdentifier out of "
                                  f"{name} of type {type(name)}")
@@ -123,7 +127,8 @@ def _get_columns(df: VariableIdentifier, expr: Expression) -> Set['DataFrameColu
 class DataFrameColumnUsageLattice(UsageStore):
     """A store mapping each column of a dataframe to its usage status.
 
-    There is a special column _ to represent all other (unnamed) columns.
+    There is a special column _ to represent all other (unnamed) columns, and a
+    special column index for the index of the dataframe.
     """
 
     def __init__(self):
@@ -152,6 +157,17 @@ class DataFrameColumnUsageLattice(UsageStore):
 
     def get(self, col: DataFrameColumnIdentifier):
         if col in self.store:
+            return self.store[col]
+        elif col.kind == DataFrameColumnKind.INDEX:
+            # create the fake "index" column on the go
+            self.add_variable(col)
+            # NOTE REU: If any column is used or scoped, then possibly the index was too.
+            # This overapproximates greatly, as some operations that use
+            # columns don't use the index.
+            if self.is_any_top():
+                self.store[col].top()
+            elif self.is_any_scoped():
+                self.store[col].scoped()
             return self.store[col]
         else:
             return self._get_default()
@@ -426,6 +442,8 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
         # TODO factorize with code from _substitute_variable
         # TODO this takes time O(|output| * |output.ids()|), make it O(|output|)
         for identifier in output.ids():
+            if identifier.typ == DataFrameColumnType:
+                continue
             if isinstance(identifier.typ, DataFrameLyraType):
                 columns = _get_columns(identifier, output)
                 if columns:
@@ -536,7 +554,7 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
                             # done by marking the rhs columns involved as top
                             self.lattice.store[identifier].top(columns)
                         else:
-                            # NOTE REU: actually it is ok if some dataframes
+                            # NOTE: actually it is ok if some dataframes
                             # don't have columns mentioned (and it is
                             # independent from their begin call arguments):
                             # this should be a typing issue...

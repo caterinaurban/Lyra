@@ -1,7 +1,7 @@
 import itertools
 
 from lyra.abstract_domains.state import State
-from lyra.abstract_domains.usage.dataframe_usage_domain import DataFrameColumnUsageState
+from lyra.abstract_domains.usage.dataframe_usage_domain import DataFrameColumnUsageState, DataFrameColumnIdentifier, DataFrameColumnKind
 from lyra.core.expressions import Subscription, Literal, VariableIdentifier, ListDisplay, BinaryArithmeticOperation, Input, AttributeReference, \
         TupleDisplay
 from lyra.core.dataframe_expressions import Concat, Loc, UnknownCall
@@ -128,6 +128,20 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                 raise NotImplementedError(f"Semantics of other than pd.loc ({target}) not implemented yet")
         state.result = result
         return state
+
+    def attribute_access_semantics(self, stmt: AttributeAccess, state, interpreter) -> State:
+        target = self.semantics(stmt.target, state, interpreter).result
+        is_target_dataframe = any(isinstance(t.typ, DataFrameLyraType) for t in target)
+        if is_target_dataframe and stmt.attr.name == "index":
+            result = set()
+            index = DataFrameColumnIdentifier(name=None, kind=DataFrameColumnKind.INDEX)
+            for t in target:
+                subscription = Subscription(t.typ, t, index)
+                result.add(subscription)
+            state.result = result
+            return state
+        else:
+            return super().attribute_access_semantics(stmt, state, interpreter)
 
     def drop_call_semantics(
             self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
