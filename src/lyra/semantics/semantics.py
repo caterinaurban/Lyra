@@ -210,6 +210,10 @@ class ExpressionSemantics(Semantics):
     def attribute_access_semantics(self, stmt: AttributeAccess, state, interpreter) -> State:
         """Semantics of an attribute access.
         """
+        # This simply transforms the statement into an expression (or
+        # expressions), and does not depend on the attribute name. The behavior
+        # that depends on the attribute name is therefore delegated to whoever
+        # handles the AttributeReference expression.
         target = self.semantics(stmt.target, state, interpreter).result
         attr = stmt.attr
         state.result = {AttributeReference(stmt.typ, t, attr) for t in target}

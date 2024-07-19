@@ -1,5 +1,7 @@
 """
 Dataframe Expressions
+
+Expressions that are specific to pandas dataframes.
 """
 
 from typing import List, Set
@@ -12,12 +14,14 @@ from lyra.core.types import LyraType, DataFrameLyraType
 
 class Concat(Expression):
     """Dataframe concat expression.
+
+    see https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.concat.html
     """
 
     def __init__(self, items: List[Expression] = None):
         """Dataframe concat construction.
 
-        :param items: set of items being concatenated
+        :param items: list of dataframes or columns being concatenated
         """
         self._items = items or []
 
@@ -37,6 +41,7 @@ class Concat(Expression):
 
 class Loc(Expression):
     """Dataframe loc expression.
+
     see https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html
     """
 

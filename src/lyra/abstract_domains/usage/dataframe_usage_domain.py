@@ -17,8 +17,6 @@ from lyra.core.dataframe_expressions import Concat, Loc
 from lyra.core.types import LyraType, DataFrameLyraType, StringLyraType
 from lyra.core.utils import copy_docstring
 
-ColumnName = Union[str, None]
-
 def is_used(x):
     return x.is_top() or x.is_scoped()
 
@@ -30,16 +28,31 @@ class DataFrameColumnType(LyraType):
         return "DataFrameColumn"
 
 class DataFrameColumnKind(Enum):
+    """The three kinds of column names.
+
+    - NAMED columns are the most common kind, eg df["A"] uses a NAMED column
+      "A"
+    - The INDEX column is a special column for the index of the dataframe, eg
+      df.index. To avoid overloading the output, this column is only explicitly
+      present if the code mentions it.
+    - The DEFAULT column is a special column to represent all non-named
+      columns, when there is no column name information, eg just df
+    """
     NAMED = 0
     INDEX = 1
     DEFAULT = 2
 
     def __lt__(self, other: 'DataFrameColumnKind'):
+        """This order is so that all named columns are printed before special
+        columns"""
         return self.value < other.value
+
 
 class DataFrameColumnIdentifier(VariableIdentifier):
     """Fake "variable" identifier for the sole purpose of embedding column
     names into VariableIdentifier and to reuse Store."""
+
+    ColumnName = Union[str, None, "DataFrameColumnIdentifier"]
 
     def __init__(self, name: ColumnName, kind: DataFrameColumnKind = None):
         """Dataframe column identifier construction.
@@ -64,6 +77,8 @@ class DataFrameColumnIdentifier(VariableIdentifier):
         else:
             self._kind = kind
 
+        # even special columns need (dummy) names to be Identifiers, so we give
+        # them names that are illegal to avoid collisions
         if self.kind == DataFrameColumnKind.DEFAULT:
             super().__init__(typ=DataFrameColumnType, name="!default")
         elif self.kind == DataFrameColumnKind.INDEX:
@@ -74,6 +89,9 @@ class DataFrameColumnIdentifier(VariableIdentifier):
             elif isinstance(name, Literal) and name.typ == StringLyraType():
                 super().__init__(typ=DataFrameColumnType, name=name.val)
             else:
+                # This ValueError may be caught in the code because any column,
+                # even if it cannot be represented, can be overapproximated
+                # with the whole dataframe.
                 raise ValueError("Cannot create DataFrameColumnIdentifier out of "
                                  f"{name} of type {type(name)}")
 
@@ -112,7 +130,7 @@ def _get_columns(df: VariableIdentifier, expr: Expression) -> Set['DataFrameColu
                 # identifier, then act as if there were no columns so the next
                 # action applies to the wole dataframe
                 return None
-        if isinstance(e, Loc) and e.typ is DataFrameLyraType: # FIXME I don't understand why Loc is DataFrameLyraType and not an instance?
+        if isinstance(e, Loc) and e.typ is DataFrameLyraType:
             if not e.target == df:
                 continue
             if not e.columns:
@@ -144,8 +162,6 @@ class DataFrameColumnUsageLattice(UsageStore):
         lattices = {DataFrameColumnType: UsageLattice}
         super().__init__(variables, lattices)
 
-    # FIXME methods such as add_variable must create DataFrameColumnIdentifiers
-
     def __repr__(self):
         items = sorted(self.store.items())
         return "{" \
@@ -153,6 +169,7 @@ class DataFrameColumnUsageLattice(UsageStore):
                 + "}"
 
     def _get_default(self):
+        """Get the value of the DEFAULT column"""
         default_col = DataFrameColumnIdentifier(None)
         if default_col in self.store:
             return self.store[default_col]
@@ -160,13 +177,17 @@ class DataFrameColumnUsageLattice(UsageStore):
             raise Exception(f"DataFrameColumnUsageLattice._get_default {self} did not have a default column!")
 
     def get(self, col: DataFrameColumnIdentifier):
+        """Get the value of a column safely: if the column is NAMED and does
+        not exist, fall back to the DEFAULT one. If the column is INDEX create
+        it on the go.
+        """
         if col in self.store:
             return self.store[col]
         elif col.kind == DataFrameColumnKind.INDEX:
             # create the fake "index" column on the go
             if col not in self.store:
                 self.add_variable(col)
-                # NOTE REU: If any column is used or scoped, then possibly the index was too.
+                # NOTE If any column is used or scoped, then possibly the index was too.
                 # This overapproximates greatly, as some operations that use
                 # columns don't use the index.
                 if self.is_any_top():
@@ -175,6 +196,7 @@ class DataFrameColumnUsageLattice(UsageStore):
                     self.store[col].scoped()
             return self.store[col]
         else:
+            # fall back
             return self._get_default()
 
     def _top_whole_dataframe(self):
@@ -278,19 +300,18 @@ class DataFrameColumnUsageLattice(UsageStore):
             raise Exception(f"DataFrameColumnUsageLattice.is_bottom {self} did not have a default column!")
         return len(self.store) == 1 and self._get_default().is_bottom()
 
+    @copy_docstring(UsageStore.decrease)
     def decrease(self, other: 'DataFrameColumnUsageLattice') -> 'DataFrameColumnUsageLattice':
-        # TODO docstring
+        # First unify to make sure both dataframes have the same variables
         self.unify(other)
 
         for var in self.store:
             self.get(var).decrease(other.get(var))
         return self
 
-# TODO rename? this is not only about DataFrames
 class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
     """Input data usage analysis state for both dataframes and normal
     variables.
-
     """
 
     def __init__(self, variables, precursory: State = None):
@@ -305,8 +326,6 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
         super().__init__(UsageStore,
                          {'variables': variables, 'lattices': lattices})
         State.__init__(self, precursory) # State
-
-    # TODO add_variable, remove_variable, unify -> call the ones from the lattice
 
     @copy_docstring(EnvironmentMixin.add_variable)
     def add_variable(self, variable: VariableIdentifier):
@@ -324,8 +343,6 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
         return self
 
 
-    # push and pop functions copied from SimpleUsageState
-    # TODO check that they are right
     @copy_docstring(Stack.push)
     def push(self):
         if self.is_bottom() or self.is_top():
@@ -370,11 +387,6 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
                     break
         if effect:  # the current nesting level has an effect on the outcome of the program
             self._output(condition)
-            # for identifier in condition.ids():
-            #     self.lattice.store[identifier].top()
-            #     if identifier.is_dictionary:
-            #         self.lattice.keys[identifier.keys].top()
-            #         self.lattice.values[identifier.values].top()
         return self
 
     @copy_docstring(State._assume_variable)
@@ -444,7 +456,8 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
 
     @copy_docstring(State._output)
     def _output(self, output: Expression) -> 'DataFrameColumnUsageState':
-        # TODO factorize with code from _substitute_variable
+        """Mark as used every variable, and every dataframe column (or whole
+        dataframe is no column is mentioned), of the `output` expression"""
         # TODO this takes time O(|output| * |output.ids()|), make it O(|output|)
         for identifier in output.ids():
             if identifier.typ == DataFrameColumnType:
@@ -460,7 +473,6 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
                     # columns that are not overwritten as used to keep column
                     # name information, and lose information about overwritten
                     # columns.
-                    # TODO make this handle head(df["A"] + df) properly
                     columns_not_written = {col for col, elt in self.lattice.store[identifier].store.items() if not elt.is_written()}
                     self.lattice.store[identifier].top(columns_not_written)
                     columns_written = {col for col, elt in self.lattice.store[identifier].store.items() if elt.is_written()}
@@ -488,19 +500,14 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
 
     def _substitute_variable(self, left: VariableIdentifier, right: Expression) -> 'DataFrameColumnUsageState':
         # expression of the form x = e
-        # For now, change the state if one of the columns of the assigned dataframe is U or S
-        # DONE make this finer by propagating used columns up to the columns of
-        # the rhs
         if isinstance(self.lattice.store[left], DataFrameColumnUsageLattice):
             is_top_or_scoped = self.lattice.store[left].is_any_top() or self.lattice.store[left].is_any_scoped()
         else:
             is_top_or_scoped = self.lattice.store[left].is_top() or self.lattice.store[left].is_scoped()
         if is_top_or_scoped:
+            # keep a copy of lhs because we need to check the value of the previous state while creating a new one
             old_left_store = deepcopy(self.lattice.store[left])
             self.lattice.store[left].written()
-            # if left.is_dictionary:
-            #     self.lattice.keys[left.keys].written()
-            #     self.lattice.values[left.values].written()
             if isinstance(right, Concat):
                 # concatenation loses column information and marks every rhs
                 # column used if lhs has one
@@ -529,14 +536,13 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
 
     @copy_docstring(State._substitute_subscription)
     def _substitute_subscription(self, left: Subscription, right: Expression) -> 'DataFrameColumnUsageState':
-        # expression of the form df["a"] = e
+        # for statements of the form df["a"] = right
         target = left.target
         try:
             key = DataFrameColumnIdentifier(left.key)
         except ValueError:
             # If the key cannot be coerced to a column name
             if self.lattice.store[target].is_any_scoped():
-                # TODO figure out what to do here, perhaps mark everything as used? or scoped?
                 raise NotImplementedError("Handling of substitute_subscription with unknown scoped column is not implemented")
             elif self.lattice.store[target].is_any_top():
                 # If at least one column is used, we don't know if this column
@@ -559,12 +565,11 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
                             # done by marking the rhs columns involved as top
                             self.lattice.store[identifier].top(columns)
                         else:
-                            # NOTE: actually it is ok if some dataframes
-                            # don't have columns mentioned (and it is
-                            # independent from their begin call arguments):
-                            # this should be a typing issue...
+                            # NOTE: it is ok if some dataframes don't have
+                            # columns mentioned (and it is independent from
+                            # their begin call arguments): this should be a
+                            # typing issue...
                             self.lattice.store[identifier].top()
-                            # raise Exception("Expected dataframe on right hand side of subscription substitution, but no column name was found.")
                     else:
                         self.lattice.store[identifier].top()
         return self
@@ -573,6 +578,12 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
         raise NotImplementedError('_substitute_slicing in DataFrameColumnUsageState is not yet implemented!')
 
     def _substitute_loc(self, left: Loc, right: Expression) -> 'DataFrameColumnUsageState':
+        """The behavior for Loc when a row filter is applied simulates that of
+        an if statement, because the row filter contains conditions.
+        Therefore df.loc[cond, cols] = e is essentially equivalent to
+          if cond:
+              df[cols] = e
+        """
         self.push()
         substs = set()
         if left.columns:
@@ -585,11 +596,12 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
         self.assume({left.rows}, bwd=True)
         self.pop()
         return self
-    # raise NotImplementedError('_substitute_loc in DataFrameColumnUsageState is not yet implemented!')
 
 
-    def _drop_dataframe_column(self, dataframe: Expression, columns: Set[Expression]):
-        # TODO maybe some of this logic should be handled by the semantics, and not here
+    def _drop_dataframe_column(self, dataframe: Expression, columns: Set[Expression], pp = None):
+        """Mark selected columns as unused in the dataframe.
+        Also print warnings for dropped columns that we know will be used later in the program.
+        """
         if isinstance(dataframe, VariableIdentifier):
             # If any column cannot be made into a DataFrameColumnIdentifier,
             # then mark the whole dataframe as unused
@@ -604,18 +616,19 @@ class DataFrameColumnUsageState(Stack, State, EnvironmentMixin):
             except ValueError:
                 columns = None
 
+            # Check for "drop-before-use" errors
             for col in cols_to_unuse:
                 if col in self.lattice.store[dataframe].store and is_used(self.lattice.store[dataframe].store[col]):
-                    print(f"Warning: column {col} of {dataframe} dropped before use!") # TODO add line information?
+                    print(f"Warning: at {pp} column {col} of {dataframe} dropped before use!")
 
             self.lattice.store[dataframe].bottom(cols_to_unuse)
             return self
         raise ValueError(f"Unexpected dropping of columns to {dataframe}!")
 
-    def drop_dataframe_column(self, dataframes: Set[Expression], columns: Set[Expression]):
+    def drop_dataframe_column(self, dataframes: Set[Expression], columns: Set[Expression], pp = None):
         if self.is_bottom():
             return self
-        self.big_join([deepcopy(self)._drop_dataframe_column(df, columns) for df in dataframes])
+        self.big_join([deepcopy(self)._drop_dataframe_column(df, columns, pp) for df in dataframes])
         self.result = set()
         return self
 

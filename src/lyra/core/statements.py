@@ -328,7 +328,7 @@ class AttributeAccess(ExpressionAccess):
         :param pp: program point associated with the slicing access
         :param typ: type of the attribute
         :param target: object that contains the attribute
-        :param attr: attribute being accessed
+        :param attr: name of the attribute being accessed
         """
         super().__init__(pp, typ)
         self._target: Statement = target

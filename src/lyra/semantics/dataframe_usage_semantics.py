@@ -25,6 +25,11 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
     def _summarized_view(
             self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
     ) -> DataFrameColumnUsageState:
+        """Common semantics for all calls that simply use whole columns or dataframes.
+        This function assumes the call takes exactly one argument, that may be
+        a container (eg. df[["A","B"]].head())
+        See head_call_semantics for instance.
+        """
         dfs = self.semantics(stmt.arguments[0], state, interpreter).result
         return state.output(dfs)
 
@@ -35,8 +40,8 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
             interpreter: Interpreter,
     ) -> DataFrameColumnUsageState:
         target = self.semantics(stmt.target, state, interpreter).result
-        # If the targets are not specifically dataframes or loc, call the
-        # parent method.
+        # If the targets are not specifically dataframes or loc, fall back to
+        # the generic semantics
         # Assumption: every element of the `target` set is of the same type,
         # and semantics call did not fail
         t = list(target)[0]
@@ -44,6 +49,9 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         t_dataframe = isinstance(t.typ, DataFrameLyraType)
         if not (t_attribute or t_dataframe):
             return super().subscription_access_semantics(stmt, state, interpreter)
+
+        # Otherwise, the subscription can be a df.loc or simply the subsription
+        # of a dataframe
 
         target = self.semantics(stmt.target, state, interpreter).result
         key = self.semantics(stmt.key, state, interpreter).result
@@ -56,7 +64,12 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                         f"Semantics for subscription of attribute access {primary} is not yet implemented!"
                     )
                     raise NotImplementedError(error)
+                # If the subscription is a loc, then create a Loc expression.
+                # The filter on the rows is kept as-is, because we are only
+                # interested in walking that expression to see which variables
+                # (or df columns) it uses.
                 if isinstance(index, TupleDisplay):
+                    # df.loc[rows, cols]
                     rows = index.items[0]
                     cols = index.items[1]
                     cols_set = set()
@@ -69,8 +82,11 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
                         raise NotImplementedError(error)
                     result.add(Loc(target, rows, cols=cols_set))
                 else:
+                    # df.loc[rows]
                     result.add(Loc(target, rows=index, cols=None))
             elif isinstance(primary.typ, DataFrameLyraType):
+                # If the subscription is a simple dataframe subscription, the
+                # semantics is just a Subscription expression
                 if isinstance(index, (Literal, VariableIdentifier, ListDisplay)):
                     subscription = Subscription(primary.typ, primary, index)
                     result.add(subscription)
@@ -88,15 +104,15 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
 
 
     def slicing_access_semantics(self, stmt: SlicingAccess, state, interpreter) -> DataFrameColumnUsageState:
-        """Semantics of a slicing access. Only for df.loc for now.
+        """Semantics of a slicing access. For now only for df.loc with no column filter
 
         :param stmt: slicing access statement to be executed
         :param state: state before executing the slicing access
         :return: state modified by the slicing access
         """
         target = self.semantics(stmt.target, state, interpreter).result
-        # If the targets are not specifically dataframes or loc, call the
-        # parent method.
+        # If the targets are not specifically dataframes or loc, fall back to
+        # the generic semantics
         # Assumption: every element of the `target` set is of the same type,
         # and semantics call did not fail
         t = list(target)[0]
@@ -123,9 +139,15 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
         return state
 
     def attribute_access_semantics(self, stmt: AttributeAccess, state, interpreter) -> State:
+        # Note that df.loc is not handled here because the full expression is
+        # actually a subscription (or a slice) whose target is an
+        # AttributeAccess.
+        # On the other hand, df.index is simply an AttributeAccess.
         target = self.semantics(stmt.target, state, interpreter).result
         is_target_dataframe = any(isinstance(t.typ, DataFrameLyraType) for t in target)
         if is_target_dataframe and stmt.attr.name == "index":
+            # The semantics for df.index is df[(index)] where "(index)" is a
+            # special dataframe column. See DataFrameColumnIdentifier.
             result = set()
             index = DataFrameColumnIdentifier(name=None, kind=DataFrameColumnKind.INDEX)
             for t in target:
@@ -134,6 +156,8 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
             state.result = result
             return state
         else:
+            # If the attribute is not specific to dataframes, fall back to the
+            # generic semantics.
             return super().attribute_access_semantics(stmt, state, interpreter)
 
     def drop_call_semantics(
@@ -141,7 +165,7 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
     ) -> DataFrameColumnUsageState:
         dataframes = self.semantics(stmt.arguments[0], state, interpreter).result
         columns = self.semantics(stmt.arguments[1], state, interpreter).result
-        return state.drop_dataframe_column(dataframes, columns)
+        return state.drop_dataframe_column(dataframes, columns, pp=stmt.pp)
 
     def head_call_semantics(
             self, stmt: Call, state: DataFrameColumnUsageState, interpreter: Interpreter
@@ -204,7 +228,8 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
 
     def concat_call_semantics(self, stmt: Call, state: DataFrameColumnUsageState,
                               interpreter: Interpreter) -> DataFrameColumnUsageState:
-        # Concat always recieves a sequence (or mapping) of dfs
+        # Assumption: the argument of the concat call is always a sequence (or mapping) of dataframes
+        # The semantics is simply to build a Concat expression that will be handled later
         lists_dfs = self.semantics(stmt.arguments[1], state, interpreter).result
         result = set()
         for l in lists_dfs:
@@ -236,14 +261,7 @@ class DataFrameColumnUsageSemantics(DefaultPandasBackwardSemantics):
             return super().user_defined_call_semantics(stmt, state, interpreter)
         else:
             # Otherwise, the semantics of the call is just an UnknownCall
-            # expression
-            ## Otherwise, the semantics of the call is just the set of columns
-            ## mentioned in the arguments
-            ## dfs = set()
-            ## for arg in stmt.arguments:
-            ##     dfs.update(self.semantics(arg, state, interpreter).result)
-            ## state.result = dfs
-            # FIXME works with step by step debugger, but not without??
+            # expression, that will contain the arguments.
             result = set()
             arguments = [self.semantics(arg, state, interpreter).result for arg in stmt.arguments]
             for fargs in itertools.product(*arguments):

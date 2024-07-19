@@ -466,6 +466,9 @@ class State(Lattice, metaclass=ABCMeta):
         """
         if self.is_bottom():
             return self
+        # because big_join of an empty list of states defaults to bottom, we
+        # have to check that output is not empty first so that the whole state
+        # is not reset.
         if output:
             self.big_join([deepcopy(self)._output(expr) for expr in output])
         self.result = set()  # outputs have no result, only side-effects

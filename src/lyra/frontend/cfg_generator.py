@@ -506,17 +506,17 @@ class CFGVisitor(ast.NodeVisitor):
 
     def visit_Attribute(self, node: ast.Attribute, types=None, libraries=None, typ=None, fname=''):
         """Visitor function for an attribute of an object
+
         Attribute(expr value, identifier attr, expr_context ctx)
-        The attribute value stores the expression that must contain the attribute
+            "value.attr"
+        The attribute value stores the target of the attribute
         The attribute attr stores the identifier representing the attribute
-        The attribute ctx is Load, Store, or Del."""
+        The attribute ctx is not used."""
 
         pp = ProgramPoint(node.lineno, node.col_offset)
 
-        value = self.visit(node.value, types, libraries, None, fname=fname)
-        # FIXME I'm not doing anything of the context for now?
         target = self.visit(node.value, types, libraries, None, fname=fname)
-        attr = AttributeIdentifier(StringLyraType(), node.attr) # TODO type?
+        attr = AttributeIdentifier(StringLyraType(), node.attr)
         access_typ = AttributeAccessLyraType(target.typ, None)
         return AttributeAccess(pp, access_typ, target, attr)
 
