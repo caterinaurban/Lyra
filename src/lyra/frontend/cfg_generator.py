@@ -3,10 +3,11 @@ import optparse
 import sys
 
 from lyra.core.cfg import *
-from lyra.core.expressions import Literal
+from lyra.core.expressions import Literal, Identifier, AttributeIdentifier
 from lyra.core.statements import *
 from lyra.core.types import IntegerLyraType, BooleanLyraType, resolve_type_annotation, \
-    FloatLyraType, ListLyraType, TupleLyraType, StringLyraType, DictLyraType, SetLyraType
+    FloatLyraType, ListLyraType, TupleLyraType, StringLyraType, DictLyraType, SetLyraType, \
+    DataFrameLyraType, AttributeAccessLyraType
 from lyra.visualization.graph_renderer import CFGRenderer
 
 
@@ -501,6 +502,24 @@ class CFGVisitor(ast.NodeVisitor):
         assert isinstance(node.ctx, ast.Del)
         raise NotImplementedError(f"Name deletion is unsupported!")
 
+    # Attribute
+
+    def visit_Attribute(self, node: ast.Attribute, types=None, libraries=None, typ=None, fname=''):
+        """Visitor function for an attribute of an object
+
+        Attribute(expr value, identifier attr, expr_context ctx)
+            "value.attr"
+        The attribute value stores the target of the attribute
+        The attribute attr stores the identifier representing the attribute
+        The attribute ctx is not used."""
+
+        pp = ProgramPoint(node.lineno, node.col_offset)
+
+        target = self.visit(node.value, types, libraries, None, fname=fname)
+        attr = AttributeIdentifier(StringLyraType(), node.attr)
+        access_typ = AttributeAccessLyraType(target.typ, None)
+        return AttributeAccess(pp, access_typ, target, attr)
+
     # Expressions
 
     # noinspection PyUnusedLocal
@@ -696,12 +715,18 @@ class CFGVisitor(ast.NodeVisitor):
         The attribute value stores the target of the subscript (often a Name).
         The attribute slice is one of Index, Slice, or ExtSlice.
         The attribute ctx is Load, Store, or Del."""
+
+        target = self.visit(node.value, types, libraries, None, fname=fname)
+        is_loc = isinstance(target.typ, AttributeAccessLyraType) and isinstance(target.typ.target_typ, DataFrameLyraType)
+
         pp = ProgramPoint(node.lineno, node.col_offset)
         constant = isinstance(node.slice, ast.Constant)
         name = isinstance(node.slice, ast.Name)
         binop = isinstance(node.slice, ast.BinOp)
         subscript = isinstance(node.slice, ast.Subscript)
         list = isinstance(node.slice, ast.List)
+        tuple = isinstance(node.slice, ast.Tuple)
+        compare = isinstance(node.slice, ast.Compare)
         if constant or name or binop or subscript or list:
             key = self.visit(node.slice, types, libraries, None, fname=fname)
             if isinstance(key, LiteralEvaluation):
@@ -727,6 +752,14 @@ class CFGVisitor(ast.NodeVisitor):
             if node.slice.step:
                 step = self.visit(node.slice.step, types, libraries, None, fname=fname)
             return SlicingAccess(pp, typ, value, lower, upper, step)
+        elif tuple and is_loc:
+            key = self.visit(node.slice, types, libraries, TupleLyraType([BooleanLyraType(),None]), fname=fname)
+            target = self.visit(node.value, types, libraries, None, fname=fname)
+            return SubscriptionAccess(pp, target.typ, target, key)
+        elif compare and is_loc:
+            key = self.visit(node.slice, types, libraries, BooleanLyraType(), fname=fname)
+            target = self.visit(node.value, types, libraries, None, fname=fname)
+            return SubscriptionAccess(pp, target.typ, target, key)
         raise NotImplementedError(f"Subscription {node.slice.__class__.__name__} is unsupported!")
 
     # Statements
