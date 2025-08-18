@@ -799,6 +799,16 @@ class ValuesIdentifier(Identifier):
     def expression(self):
         return self._expression
 
+class AttributeIdentifier(Identifier):
+    """Attribute name identifier representation."""
+
+    def __init__(self, typ: LyraType, name: str):
+        """Attribute name identifier construction.
+
+        :param typ: type of the identifier
+        :param name: name of the identifier
+        """
+        super().__init__(typ, name, special=False)
 
 class ListDisplay(Expression):
     """List display representation.

@@ -100,7 +100,7 @@ class Store(EnvironmentMixin):
         _lengths, _keys, _values = self.lengths.items(), self.keys.items(), self.values.items()
         chain = itertools.chain(_store, _lengths, _keys, _values)
         items = sorted(chain, key=lambda x: x[0].name)
-        return "; ".join("{} -> {}".format(variable, value) for variable, value in items)
+        return "; ".join("{} -> {}".format(variable, value) for variable, value in items if not isinstance(variable, LengthIdentifier))
 
     @copy_docstring(Lattice.bottom)
     def bottom(self) -> 'Store':
